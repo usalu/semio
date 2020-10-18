@@ -1,0 +1,99 @@
+"(1to500)
+Massing studies and infrastructure i
+	ncluding public transportation"
+AbstractionLevel Masterplan
+    
+    "Defines the designated use of a parcel"
+    Parameter Use
+        "Mainly factories in the landscape"
+        Industrial
+
+        Residential
+
+        "Building areas where buildings are touching and streets are formed by enclosing buildings"
+        Urban
+
+        Mixed
+    
+    "Describes an emotion regarding a building"
+    Parameter Emotions[Multiple]
+        Ecstasy
+        Admiration
+        Terror
+        Amazement
+        Grief
+        Loathing
+        Rage
+        Vigilance
+    
+    "Describes a volume with a use"
+    Object BuildingVolume
+        ClosedCurve Parcel
+        Use Use #Use[dgd]
+        Number Height
+        Emotions Reactions
+    
+    "Describes adjacent building volumes"
+    Object BuildingBlock
+        BuildingVolume[x] BuildingVolumes # {Parcel.Area * Height} Volume[cm]
+
+"(1to200) General information about layout and accessability of the apartment"
+AbstractionLevel Apartmentplan(Masterplan)
+    
+    "Describing how an aprartment can be reached with"
+    Parameter Accessability
+        Walking
+        Rollator
+        Wheelchair
+    
+    "Most general information about an apartment"
+    Object Apartment
+        "Only one storey footpring of apartment."
+        ClosedCurve Boundary #{Area}AreaLiving[sqm]
+        Point Entrance
+        Integer CountPeople #AmountHabitants[habitants]
+        Accessability Accessability #Accessability
+    
+    "General inforamtion about how the building is accessed"
+    Object Circulation
+        ClosedCurve Boundary
+        Point[1<=x] MainEntrances
+        ClosedCurve Staircase
+
+"(1to100) Inforamtion about rooms, relations between them and openings(windows and doors)"
+AbstractionLevel Roomplan(Apartmentplan)
+    
+    "Generic base class for openings"
+    Object Opening
+        Point Center
+        Number Width
+        Number Height
+    
+    "Abstract window definition"
+    Object Window(Opening)
+        Number ParapetHeight
+    
+    "Direction of door wing"
+    Parameter DoorDirection
+        Inside
+        Outside
+    
+    "Abstract door definition"
+    Object Door(Opening)
+        DoorDirection DoorDirection
+    
+    "Activities that happen in a room"
+    Parameter Activities[Multiple]
+        Sleeping
+        Relaxing
+        Working
+        Cooking
+        Showering
+        Bathing
+    
+    "Abstract definition of a room with doors and windows"
+    Object Room
+        ClosedCurve Boundary
+        Window[1<=x] Windows
+        Door[1<=y < 3] Doors
+        Activities Activities
