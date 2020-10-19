@@ -19,11 +19,10 @@ namespace SemIOCompiler
         public const int WaitingTime = 1500;
         static void Main(string[] args)
         {
-            /*string path = @"D:\Desktop\Bachelorarbeit\Prototype\SemIOCompiler\SemIOCode\";
-            string fileName = "SampleCode.sio";
+            /*string path = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\SemIOCode\";
+            string fileName = "DoesThisReallyWork.sio";
             string semIOCode = System.IO.File.ReadAllText(path+ fileName);
-
-            string outputPath = @"D:\Desktop\Bachelorarbeit\Prototype\SemIOCompiler\";
+            string outputPath = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
 
             CompilerResults compilerResults;
             bool isCompiled;
@@ -36,7 +35,6 @@ namespace SemIOCompiler
             {
                 isCompiled = false;
             }
-
             Console.WriteLine("Compilation successful? " + isCompiled);
             Console.ReadLine();*/
 

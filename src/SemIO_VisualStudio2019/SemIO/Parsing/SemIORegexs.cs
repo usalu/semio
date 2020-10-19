@@ -66,8 +66,11 @@ namespace SemIO.Parsing
         public static string objectPattern = "(" + descriptionOneSpacePattern + "?" + spacePattern + "Object" + @"\s+" + namePattern + @"\s*" + argumentsPattern + "?" + codeBlockExpectedPattern
                                           //parameters
                                           + endOfLinePattern + "*" + parameterPattern + "(" + parameterPattern + "|" + endOfLinePattern + ")" + "*" + ")";
+
+        public static string abstractionLevelHeaderPattern = "(" + descriptionPattern + "?" + "AbstractionLevel" + @"\s+" + namePattern + @"\s*" + argumentsPattern + "?" + codeBlockExpectedPattern + ")";
+
         //optional description , name , parent name abstractionLevel
-        public static string abstractionLevelPattern = "(" + descriptionPattern + "?" + "AbstractionLevel" + @"\s+" + namePattern + @"\s*" + argumentsPattern + "?" + codeBlockExpectedPattern
+        public static string abstractionLevelPattern = "(" + abstractionLevelHeaderPattern
                                           //all objects and parameters
                                           + endOfLinePattern + "*" + "(" + objectPattern + "|" + parameterTypePattern + ")"
                                           + "(" + "(" + objectPattern + "|" + parameterTypePattern + "|" + endOfLinePattern + ")" + ")*" + ")";
@@ -80,6 +83,7 @@ namespace SemIO.Parsing
         public static Regex ParameterTypeRegex = new Regex(parameterTypePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         public static Regex ParameterTypeValuesRegex = new Regex(parameterTypeValuePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
+        public static Regex AbstractionLevelHeaderRegex = new Regex(abstractionLevelHeaderPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         public static Regex AbstractionLevelRegex = new Regex(abstractionLevelPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         public static Regex DescriptionRegex = new Regex(descriptionPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);

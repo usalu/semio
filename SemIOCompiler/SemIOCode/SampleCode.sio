@@ -7,12 +7,9 @@ AbstractionLevel Masterplan
     Parameter Use
         "Mainly factories in the landscape"
         Industrial
-
         Residential
-
         "Building areas where buildings are touching and streets are formed by enclosing buildings"
         Urban
-
         Mixed
     
     "Describes an emotion regarding a building"
@@ -90,7 +87,18 @@ AbstractionLevel Roomplan(Apartmentplan)
         Cooking
         Showering
         Bathing
-    
+
+    "Describing how much noise will be emmited from the room"
+    Parameter NoiseLevel
+        "under 20 dB"
+        VeryQuiet
+        "20 - 40 dB"
+        Quiet
+        "40 - 60 dB"
+        ConversationLevel
+        "over 60 dB"
+        Loud    
+
     "Abstract definition of a room with doors and windows"
     Object Room
         ClosedCurve Boundary

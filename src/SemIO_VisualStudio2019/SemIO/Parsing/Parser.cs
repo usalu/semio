@@ -26,52 +26,52 @@ namespace SemIO.Parsing
             List<AbstractionLevelModel> abstractionLevels = new List<AbstractionLevelModel>();
             foreach (Match match in SemIORegexs.AbstractionLevelRegex.Matches(semIOCode))
             {
-                //extracting optional description
-                var parsedAbstractionLevelDescription = Parser.ParseDescription(match.Value);
-
+               
                 //extracting name and parent name
-                var parsedAbstractionLevelNames = Parser.ParseAbstractionLevelNames(parsedAbstractionLevelDescription.RemainingCode);
+                var parsedAbstractionLevelHeader = ParseAbstractionLevelHeader(match.Value);
 
                 //extracting possible parameters
-                var parsedParameterTypes = Parser.ParseParameterTypes(parsedAbstractionLevelNames.RemainingCode);
+                var parsedParameterTypes = ParseParameterTypes(parsedAbstractionLevelHeader.RemainingCode);
 
                 //extracting objects
                 var parsedObjectTypes = Parser.ParseObjectTypes(parsedParameterTypes.RemainingCode);
 
-                abstractionLevels.Add(new AbstractionLevelModel(parsedAbstractionLevelNames.Name,
-                    parsedAbstractionLevelDescription.Description, 
+                abstractionLevels.Add(new AbstractionLevelModel(parsedAbstractionLevelHeader.Name,
+                    parsedAbstractionLevelHeader.Description, 
                     parsedParameterTypes.ParameterTypes,
                     parsedObjectTypes.ObjectTypes,
-                    parsedAbstractionLevelNames.ParentName));
+                    parsedAbstractionLevelHeader.ParentName));
             }
 
             return abstractionLevels.Count == 0 ? null: abstractionLevels;
         }
 
         /// <summary>
-        /// Parse the name and the parent name of a abstraction level code.
-        /// NOTE: The description must be already parsed and removed otherwise the regexs will not work.
+        /// Parse all header information of the abstraction level (name, parent name, description)
         /// </summary>
-        /// <param name="abstractionLevelCode">The code that describes the abstraction level WITHOUT description part</param>
+        /// <param name="abstractionLevelCode">The code that describes the abstraction level INCLUDING optional description part</param>
         /// <returns>All the header information and the remaining code excluding the header code</returns>
-        public static (string Name, string ParentName, string RemainingCode) ParseAbstractionLevelNames(string abstractionLevelCode)
+        public static (string Name, string ParentName, string Description, string RemainingCode) ParseAbstractionLevelHeader(string abstractionLevelCode)
         {
+            //extracting optional description
+            var parsedAbstractionLevelDescription = ParseDescription(abstractionLevelCode);
+
             //The first name is the keyword "AbstractionLevel" and the second is the name of the abstraction level
-            var nameMatch = SemIORegexs.NameRegex.Matches(abstractionLevelCode)[1];
-            var startCodeBlockMatch = SemIORegexs.CodeBlockExpectedRegex.Match(abstractionLevelCode);
+            var headerMatch = SemIORegexs.AbstractionLevelHeaderRegex.Match(parsedAbstractionLevelDescription.RemainingCode);
+            var nameMatches = SemIORegexs.NameRegex.Matches(headerMatch.Value);
             var parentName = "";
 
             //Checks if abstractionLevel is derived from another abstractionLevel.
-            //If the code block doesn't start after the name then there must be the parent name in round brackets.
-            if (nameMatch.Index + nameMatch.Length != startCodeBlockMatch.Index)
+            //If the there are 3 names the last one is the parent name
+            if (nameMatches.Count == 3)
             {
                 parentName = SemIORegexs.ArgumentRegex.Match(abstractionLevelCode).Value;
                 //Remove brackets
                 parentName = parentName.Substring(1, parentName.Length - 2);
             }
 
-            return (SemIORegexs.WhiteSpaceRegex.Replace(nameMatch.Value, ""), parentName,
-                abstractionLevelCode.Substring(startCodeBlockMatch.Index + startCodeBlockMatch.Length - 1));
+            return (nameMatches[1].Value, parentName, parsedAbstractionLevelDescription.Description,
+                SemIORegexs.AbstractionLevelHeaderRegex.Replace(abstractionLevelCode,""));
         }
 
         /// <summary>
