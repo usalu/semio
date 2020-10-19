@@ -422,6 +422,23 @@ namespace AbstractionLevels.RoomplanRepository.ParameterTypes
         [System.ComponentModel.Description("")]
         Bathing = 32,
     }
+    
+    [System.ComponentModel.Description("Describing how much noise will be emmited from the room")]
+    public enum NoiseLevel
+    {
+        
+        [System.ComponentModel.Description("under 20 dB")]
+        VeryQuiet = 0,
+        
+        [System.ComponentModel.Description("20 - 40 dB")]
+        Quiet = 1,
+        
+        [System.ComponentModel.Description("40 - 60 dB")]
+        ConversationLevel = 2,
+        
+        [System.ComponentModel.Description("over 60 dB")]
+        Loud = 3,
+    }
 }
 namespace AbstractionLevels.RoomplanRepository.ObjectTypes
 {

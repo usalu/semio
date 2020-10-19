@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SemIO;
+using SemIO.Parsing;
 using SemIO.Parsing.ParserModels.Project;
 
 namespace SemIOCompiler
@@ -20,7 +21,7 @@ namespace SemIOCompiler
         static void Main(string[] args)
         {
             /*string path = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\SemIOCode\";
-            string fileName = "DoesThisReallyWork.sio";
+            string fileName = "ueli.sio";
             string semIOCode = System.IO.File.ReadAllText(path+ fileName);
             string outputPath = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
 
@@ -38,7 +39,7 @@ namespace SemIOCompiler
             Console.WriteLine("Compilation successful? " + isCompiled);
             Console.ReadLine();*/
 
-            /*string print = SemIORegexs.parameterTypePattern;
+            /*string print = SemIORegexs.abstractionLevelPattern;
             Console.WriteLine(print);
             Console.ReadLine();*/
             //System.IO.File.WriteAllText(path+"Pattern.txt", print);
