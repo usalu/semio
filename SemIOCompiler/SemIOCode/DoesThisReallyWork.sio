@@ -7,22 +7,28 @@ Massing studies and infrastructure i
 AbstractionLevel
 
 	Masterplan
+  
     
-    "Defines the design
-	ated use of a parcel"
+    "Describes adjacent building volu
+mes"
+    Object BuildingBlock
+        
+        BuildingVolume
+		 [
+ x  
+]
+           BuildingVolumes
+	#
+ {
+ Parcel.Area 
+*
+		Height}
+	Volume [
+cm
 
-    Parameter Use
+		 ]
 
-        "This de	s
-	c ri ption is really
-mess  		y"
-        Industrial
-
-        Residential
-
-        "Zw	is"
-        Mixed
-    
+  
     "Describes an emotion regard
 	ing a building"
     Parameter
@@ -50,10 +56,20 @@ Emotions
         Number Height
         Emotions Reactions
 
-    "Describes adjacent building volumes"
-    Object BuildingBlock
-        BuildingVolume[x] BuildingVolumes # {Parcel.Area * Height} Volume[cm]
+    "Defines the design
+	ated use of a parcel"
 
+    Parameter Use
+
+        "This de	s
+	c ri ption is really
+mess  		y"
+        Industrial
+
+        Residential
+
+        "Zw	is"
+        Mixed
 
 "(1to200) General information about layout and accessability of the apartment"
 AbstractionLevel Apartmentplan(Masterplan)
