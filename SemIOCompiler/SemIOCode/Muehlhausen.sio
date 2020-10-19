@@ -1,0 +1,28 @@
+AbstractionLevel Muehlhausenentwicklungsplan
+
+	Parameter Spurzahl
+		einspurig
+		zweispurig
+		dreispurig	
+	
+	Object Parzelle
+		Number Steigung
+		Point Eingangspunkt
+
+	Object Strasse
+		Spurzahl Spur
+
+AbstractionLevel Strassenplan (Muehlhausenentwicklungsplan)
+
+	Parameter Bordsteinkante
+		niedrig
+		hoch
+
+	Parameter Activities[Multiple]
+		Durchgangsstrasse
+		Spielstrasse
+
+	Object Gehweg
+		Number Breite
+		Activities Benutzung
+		Bordsteinkante Hoehe
