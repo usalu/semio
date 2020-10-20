@@ -1,0 +1,56 @@
+"Your description for the ABSTRACTION LEVEL. By the way you don't have to change anything
+in this file to compile it. It is 100& correct by default and will compile out of the box."
+AbstractionLevel ABSTRACTIONLEVELNAME
+    
+	"Your description for the PARAMETERTYPENAME. You can use the PARAMETERTYPENAME as PARAMETERTYPE for an Object"
+	Parameter PARAMETERTYPENAME
+		"Your description for the discrete VALUE that PARAMETERTYPENAME can take."
+		VALUE
+
+		"Your description for the discrete ANOTHERVALUE that PARAMETERTYPENAME can take. This doesn't really need 
+a descrption so I will leave the next description away."
+		ANOTHERVALUE
+
+		ONEMOREVALUE
+
+		"Your description for the discrete LASTVALUE. Of course feel free to add as many more values as you wish"
+		LASTVALUE
+    
+
+	"Note that ANOTHERPARAMETERTYPENAME can take multiple values at the same time because of the [Multiple] tag."
+	Parameter ANOTHERPARAMETERTYPENAME[Multiple]
+		VALUE
+		SECONDVALUE
+		THATSENOUGHVALUE
+    
+	"This is your first Object that has parameters. The PARAMETERTYPE can be a Parameter from above 
+	or a standard one like Point, Text, Curve, Number, ..."
+	Object OBJECTNAME
+
+		"Does it need to start with text? No of course not. Feel free to add any parameter to define an object"
+		Text PARMATERNAMEOFTEXT
+
+		Point PARMATERNAMEOFPoint
+
+		"Wowoo this looks funky. Actually it is only a Paramter from above with a name."
+		PARAMETERTYPENAME PARAMTERTYPENAMENAME
+
+		"Feel free you use the same name."
+		ANOTHERPARAMETERTYPENAME ANOTHERPARAMETERTYPENAME 
+        
+	
+	"You can make mark an Object as a specification of another Object. For example if the first object is opening then
+	you can make two more objects door and window that both are openings."
+	Object ANOTHEROBJECTNAME (OBJECTNAME)
+		"You understood that it doesn't need to necissaraly be a Number"
+		Number NUMBERNAME
+
+"Speaking of specification. Also abstraction levels can be a more in depth version of another abstraction level.
+a masterplan is more fuzzy than a roomplan. So you need to say which one is more precise."
+AbstractionLevel ANOTHERABSTRACTIONLEVELNAME(ABSTRACTIONLEVELNAME)
+	
+	"I don't need any special parameters for this abstraction level. Therefore I don't need any Parameters."
+	Object OBJECTNAME
+		Surface SURFACENAME
+		"Last one and now go to compile this code. It will actually compile just like this!"
+		Solid SOLIDNAME

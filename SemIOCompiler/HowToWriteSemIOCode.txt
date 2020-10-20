@@ -1,0 +1,58 @@
+What do you need to follow to write a SemIO code:
+
+If you want to just jump in and start to compile go \SemIOCode\Template.sio file and just exchange
+the text in caps with your own names and add or remove some parameters.
+
+Here is some background information:
+
+There are 3 important keywords: AbstractionLevel, Object, Parameter
+
+The most important syntax rule you need to follow is that behind every keyword 
+and their values need to be a specific amount of spaces units.
+You can insert as much white spaces (space, tab, newline) as you like anywhere BUT before the keyword.
+
+One space unit is either way
+	one tab or 
+    4 spaces.
+
+Here are the examples:
+AbstractionLevel ABSTRACTIONLEVELNAME (needs 0 space unit before the keyword "AbstractionLevel")
+
+	Object OBJECTNAME (needs 1 space unit before the keyword "Object")
+		PARAMETERTYPE PARAMETERNAME (needs 1 space unit before the PARAMETERTYPE)
+		ANOTHERPARAMETERTYPE ANOTHERPARAMETERTYPENAME
+
+	Parameter PARAMETERTYPENAME (needs 1 space unit before the keyword "Parameter")
+		VALUENAME (needs 2 space units before VALUENAME)
+		ANOTHERVALUENAME
+
+Everything writting in caps is not strict and you have to choose a name that fits your need.
+
+With the keyword Parameter you define your own PARAMETERTYPE that can be used as a parameter for your object type.
+
+There are a few already defined PARAMETERTYPEs:
+
+Text, Number, NaturalNumber, Integer, Percent, TrueOrFalse, 
+Point, Vector, Curve, ClosedCurve, Line, PolyLine, Surface, Solid
+
+Besides that you can a description to everything like with quotation marks
+
+" YOUR DESCRIPTION"
+AbstractionLevel ABSTRACTIONLEVELNAME
+
+	" YOUR DESCRIPTION NEEDS TO START WITH THE SAME SPACE UNIT COUNT
+BUT CAN END SOMEWHERE DIFFRENT AND CONTAIN ANY CHARACTER LIKE # , .-!"§$%&/()=?
+		AS LONG AS IT ENDS WITH A QUOTATION MARK"
+
+	Object OBJECTNAME (needs 1 space unit before the keyword "Object")
+		PARAMETERTYPE PARAMETERNAME (needs 1 space unit before the PARAMETERTYPE)
+		ANOTHERPARAMETERTYPE ANOTHERPARAMETERTYPENAME
+
+
+I will not talk about the things in brackets. You don't have to understand for now.
+(Basicially round bracket means innheritance and sqaure bracket is type speciication
+but don't worry if that doesn't make any sense to you.)
+
+Hopefully that's enough for you to write your first SemIO code.
+
+Good luck in trying, have fun!
