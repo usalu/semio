@@ -1,15 +1,17 @@
-"(1to500)
-Massing studies and infrastructure i
-	ncluding public transportation"
+"Massing studies and infrastructure including public transportation (Simillar to 1to500)"
 AbstractionLevel Masterplan
     
     "Defines the designated use of a parcel"
     Parameter Use
+
         "Mainly factories in the landscape"
         Industrial
+
         Residential
+
         "Building areas where buildings are touching and streets are formed by enclosing buildings"
         Urban
+
         Mixed
     
     "Describes an emotion regarding a building"
@@ -34,7 +36,7 @@ AbstractionLevel Masterplan
     Object BuildingBlock
         BuildingVolume[x] BuildingVolumes # {Parcel.Area * Height} Volume[cm]
 
-"(1to200) General information about layout and accessability of the apartment"
+"General information about layout and accessability of the apartment equivalent to 1to200 in analogue scale"
 AbstractionLevel Apartmentplan(Masterplan)
     
     "Describing how an aprartment can be reached with"
@@ -57,7 +59,7 @@ AbstractionLevel Apartmentplan(Masterplan)
         Point[1<=x] MainEntrances
         ClosedCurve Staircase
 
-"(1to100) Inforamtion about rooms, relations between them and openings(windows and doors)"
+"Inforamtion about rooms, relations between them and openings(windows and doors). Comparable to 1to100"
 AbstractionLevel Roomplan(Apartmentplan)
     
     "Generic base class for openings"
@@ -90,12 +92,16 @@ AbstractionLevel Roomplan(Apartmentplan)
 
     "Describing how much noise will be emmited from the room"
     Parameter NoiseLevel
+
         "under 20 dB"
         VeryQuiet
+
         "20 - 40 dB"
         Quiet
+
         "40 - 60 dB"
         ConversationLevel
+
         "over 60 dB"
         Loud    
 

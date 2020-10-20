@@ -1,14 +1,14 @@
 ﻿namespace SemIOLibrary.Parameters.BaseParameters
 {
-    public class Proposition : Parameter
+    public class TrueOrFalse : Parameter
     {
         public bool Value { get; set; }
 
-        public Proposition()
+        public TrueOrFalse()
         {
         }
 
-        public Proposition(bool value)
+        public TrueOrFalse(bool value)
         {
             Value = value;
         }
