@@ -21,7 +21,7 @@ namespace SemIOCompiler
         static void Main(string[] args)
         {
             /*string path = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\SemIOCode\";
-            string fileName = "ueli.sio";
+            string fileName = "SampleCode.sio";
             string semIOCode = System.IO.File.ReadAllText(path+ fileName);
             string outputPath = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
 

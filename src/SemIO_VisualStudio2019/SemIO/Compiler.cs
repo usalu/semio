@@ -45,6 +45,9 @@ namespace SemIO
 
             var cSharpCodeProvider = new CSharpCodeProvider();
             var vbCodeProvider = new VBCodeProvider();
+            var jSCodeProvider = CodeDomProvider.CreateProvider("JScript");
+            var cPPCodeProvider = CodeDomProvider.CreateProvider("C++");
+            //var cPPCodeProvider = CodeDomProvider.CreateProvider("C");
 
             //compile unit that contains the whole project
             CodeCompileUnit projectCompileUnit = new CodeCompileUnit();
@@ -80,6 +83,17 @@ namespace SemIO
             StringWriter stringWriterVB = new StringWriter();
             vbCodeProvider.GenerateCodeFromCompileUnit(projectCompileUnit, stringWriterVB, codeGeneratorOptions);
             System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{project.Name}.vb", stringWriterVB.ToString());
+
+            //generated JS code
+            StringWriter stringWriterJS = new StringWriter();
+            jSCodeProvider.GenerateCodeFromCompileUnit(projectCompileUnit, stringWriterJS, codeGeneratorOptions);
+            System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{project.Name}.js", stringWriterJS.ToString());
+
+            //generated C++ code
+            StringWriter stringWriterCPP = new StringWriter();
+            cPPCodeProvider.GenerateCodeFromCompileUnit(projectCompileUnit, stringWriterCPP, codeGeneratorOptions);
+            System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{project.Name}.cpp", stringWriterCPP.ToString());
+
 
             return cr;
         }
