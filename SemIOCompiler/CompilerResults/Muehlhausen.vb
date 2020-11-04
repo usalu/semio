@@ -21,6 +21,8 @@ Imports SemIOLibrary.Parameters.BaseParameters
 Imports SemIOLibrary.Parameters.BaseParameters.Numbers
 Imports SemIOLibrary.Parameters.GeometryParameters
 Imports SemIOLibrary.Parameters.GeometryParameters.Curves
+Imports SemIOLibrary.Parameters.GeometryParameters.Points
+Imports SemIOLibrary.Parameters.GeometryParameters.Solids
 Imports SemIOLibrary.Parameters.GeometryParameters.Surfaces
 Imports System
 

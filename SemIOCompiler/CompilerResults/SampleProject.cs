@@ -68,6 +68,8 @@ namespace AbstractionLevels.MasterplanRepository.ObjectTypes
     using SemIOLibrary.Parameters;
     using SemIOLibrary.Parameters.GeometryParameters;
     using SemIOLibrary.Parameters.GeometryParameters.Surfaces;
+    using SemIOLibrary.Parameters.GeometryParameters.Solids;
+    using SemIOLibrary.Parameters.GeometryParameters.Points;
     using SemIOLibrary.Parameters.GeometryParameters.Curves;
     using SemIOLibrary.Parameters.BaseParameters;
     using SemIOLibrary.Parameters.BaseParameters.Numbers;
@@ -164,7 +166,8 @@ namespace AbstractionLevels.MasterplanRepository
     using AbstractionLevels.MasterplanRepository.ObjectTypes;
     
     
-    [System.ComponentModel.Description("(1to500)\r\nMassing studies and infrastructure i\r\n\tncluding public transportation")]
+    [System.ComponentModel.Description("Massing studies and infrastructure including public transportation (Simillar to 1" +
+        "to500)")]
     public class Masterplan
     {
         
@@ -223,6 +226,8 @@ namespace AbstractionLevels.ApartmentplanRepository.ObjectTypes
     using SemIOLibrary.Parameters;
     using SemIOLibrary.Parameters.GeometryParameters;
     using SemIOLibrary.Parameters.GeometryParameters.Surfaces;
+    using SemIOLibrary.Parameters.GeometryParameters.Solids;
+    using SemIOLibrary.Parameters.GeometryParameters.Points;
     using SemIOLibrary.Parameters.GeometryParameters.Curves;
     using SemIOLibrary.Parameters.BaseParameters;
     using SemIOLibrary.Parameters.BaseParameters.Numbers;
@@ -350,7 +355,8 @@ namespace AbstractionLevels.ApartmentplanRepository
     using AbstractionLevels.MasterplanRepository;
     
     
-    [System.ComponentModel.Description("(1to200) General information about layout and accessability of the apartment")]
+    [System.ComponentModel.Description("General information about layout and accessability of the apartment equivalent to" +
+        " 1to200 in analogue scale")]
     public class Apartmentplan : Masterplan
     {
         
@@ -447,6 +453,8 @@ namespace AbstractionLevels.RoomplanRepository.ObjectTypes
     using SemIOLibrary.Parameters;
     using SemIOLibrary.Parameters.GeometryParameters;
     using SemIOLibrary.Parameters.GeometryParameters.Surfaces;
+    using SemIOLibrary.Parameters.GeometryParameters.Solids;
+    using SemIOLibrary.Parameters.GeometryParameters.Points;
     using SemIOLibrary.Parameters.GeometryParameters.Curves;
     using SemIOLibrary.Parameters.BaseParameters;
     using SemIOLibrary.Parameters.BaseParameters.Numbers;
@@ -614,8 +622,8 @@ namespace AbstractionLevels.RoomplanRepository
     using AbstractionLevels.ApartmentplanRepository;
     
     
-    [System.ComponentModel.Description("(1to100) Inforamtion about rooms, relations between them and openings(windows and" +
-        " doors)")]
+    [System.ComponentModel.Description("Inforamtion about rooms, relations between them and openings(windows and doors). " +
+        "Comparable to 1to100")]
     public class Roomplan : Apartmentplan
     {
         

@@ -24,6 +24,8 @@ Imports SemIOLibrary.Parameters.BaseParameters
 Imports SemIOLibrary.Parameters.BaseParameters.Numbers
 Imports SemIOLibrary.Parameters.GeometryParameters
 Imports SemIOLibrary.Parameters.GeometryParameters.Curves
+Imports SemIOLibrary.Parameters.GeometryParameters.Points
+Imports SemIOLibrary.Parameters.GeometryParameters.Solids
 Imports SemIOLibrary.Parameters.GeometryParameters.Surfaces
 Imports System
 
@@ -149,7 +151,8 @@ End Namespace
 
 Namespace AbstractionLevels.MasterplanRepository
     
-    <System.ComponentModel.Description("(1to500)"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Massing studies and infrastructure i"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&Global.Microsoft.VisualBasic.ChrW(9)&"ncluding public transportation")>  _
+    <System.ComponentModel.Description("Massing studies and infrastructure including public transportation (Simillar to 1"& _ 
+        "to500)")>  _
     Public Class Masterplan
         
         Private _buildingVolumeCollection As System.Collections.Generic.List(Of BuildingVolume)
@@ -289,7 +292,8 @@ End Namespace
 
 Namespace AbstractionLevels.ApartmentplanRepository
     
-    <System.ComponentModel.Description("(1to200) General information about layout and accessability of the apartment")>  _
+    <System.ComponentModel.Description("General information about layout and accessability of the apartment equivalent to"& _ 
+        " 1to200 in analogue scale")>  _
     Public Class Apartmentplan
         Inherits Masterplan
         
@@ -500,8 +504,8 @@ End Namespace
 
 Namespace AbstractionLevels.RoomplanRepository
     
-    <System.ComponentModel.Description("(1to100) Inforamtion about rooms, relations between them and openings(windows and"& _ 
-        " doors)")>  _
+    <System.ComponentModel.Description("Inforamtion about rooms, relations between them and openings(windows and doors). "& _ 
+        "Comparable to 1to100")>  _
     Public Class Roomplan
         Inherits Apartmentplan
         

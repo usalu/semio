@@ -34,6 +34,8 @@ namespace AbstractionLevels.MuehlhausenentwicklungsplanRepository.ObjectTypes
     using SemIOLibrary.Parameters;
     using SemIOLibrary.Parameters.GeometryParameters;
     using SemIOLibrary.Parameters.GeometryParameters.Surfaces;
+    using SemIOLibrary.Parameters.GeometryParameters.Solids;
+    using SemIOLibrary.Parameters.GeometryParameters.Points;
     using SemIOLibrary.Parameters.GeometryParameters.Curves;
     using SemIOLibrary.Parameters.BaseParameters;
     using SemIOLibrary.Parameters.BaseParameters.Numbers;
@@ -168,6 +170,8 @@ namespace AbstractionLevels.StrassenplanRepository.ObjectTypes
     using SemIOLibrary.Parameters;
     using SemIOLibrary.Parameters.GeometryParameters;
     using SemIOLibrary.Parameters.GeometryParameters.Surfaces;
+    using SemIOLibrary.Parameters.GeometryParameters.Solids;
+    using SemIOLibrary.Parameters.GeometryParameters.Points;
     using SemIOLibrary.Parameters.GeometryParameters.Curves;
     using SemIOLibrary.Parameters.BaseParameters;
     using SemIOLibrary.Parameters.BaseParameters.Numbers;
