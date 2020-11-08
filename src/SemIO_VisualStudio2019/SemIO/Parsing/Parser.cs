@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using SemIO.Parsing.ParserModels;
 using SemIO.Parsing.ParserModels.Project.AbstractionLevels;
-using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects;
+using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things;
 
 namespace SemIO.Parsing
 {
@@ -33,13 +33,13 @@ namespace SemIO.Parsing
                 //extracting possible parameters
                 var parsedParameterTypes = ParseParameterTypes(parsedAbstractionLevelHeader.RemainingCode);
 
-                //extracting objects
-                var parsedObjectTypes = Parser.ParseObjectTypes(parsedParameterTypes.RemainingCode);
+                //extracting things
+                var parsedThingTypes = Parser.ParseThingTypes(parsedParameterTypes.RemainingCode);
 
                 abstractionLevels.Add(new AbstractionLevelModel(parsedAbstractionLevelHeader.Name,
                     parsedAbstractionLevelHeader.Description, 
                     parsedParameterTypes.ParameterTypes,
-                    parsedObjectTypes.ObjectTypes,
+                    parsedThingTypes.ThingTypes,
                     parsedAbstractionLevelHeader.ParentName));
             }
 
@@ -75,12 +75,12 @@ namespace SemIO.Parsing
         }
 
         /// <summary>
-        /// Parse the optional description of a first order object (only abstraction levels in the moment)
+        /// Parse the optional description of a first order thing (only abstraction levels in the moment)
         /// and return the remaining code.
         /// </summary>
         /// <param name="abstractionLevelCode">The code that describes the abstraction level
         /// optionally (obviously) INCLUDING the description part</param>
-        /// <returns>The pure object (abstraction level) code
+        /// <returns>The pure thing (abstraction level) code
         /// and the optional description (empty string if none)</returns>
         public static (string Description, string RemainingCode) ParseDescription(string abstractionLevelCode)
         {
@@ -93,37 +93,37 @@ namespace SemIO.Parsing
         }
 
         /// <summary>
-        /// Parse the optional description of a second order object like a parameter type or a custom object
+        /// Parse the optional description of a second order thing like a parameter type or a custom thing
         /// and returns the remaining code.
         /// </summary>
-        /// <param name="secondOrderObjectCode">A second order code means it starts with
+        /// <param name="secondOrderThingCode">A second order code means it starts with
         /// 1 semIO space unit (4 spaces or one tab)</param>
-        /// <returns>The pure second order object code and the optional description (empty string if none)</returns>
-        public static (string Description, string RemainingCode) ParseDescriptionOneSpace(string secondOrderObjectCode)
+        /// <returns>The pure second order thing code and the optional description (empty string if none)</returns>
+        public static (string Description, string RemainingCode) ParseDescriptionOneSpace(string secondOrderThingCode)
         {
-            var match = SemIORegexs.DescriptionOneSpaceRegex.Match(secondOrderObjectCode);
+            var match = SemIORegexs.DescriptionOneSpaceRegex.Match(secondOrderThingCode);
             //remove quotation marks and return only text in between
             char[] seperator = new[] { '\"' };
             return match.Success
-                ? (match.Value.Split(seperator, 3)[1], secondOrderObjectCode.Substring(match.Value.Length))
-                : ("", secondOrderObjectCode);
+                ? (match.Value.Split(seperator, 3)[1], secondOrderThingCode.Substring(match.Value.Length))
+                : ("", secondOrderThingCode);
         }
 
         /// <summary>
-        /// Parse the optional description of a third order object like a parameter or a parameter type value
+        /// Parse the optional description of a third order thing like a parameter or a parameter type value
         /// and returns the remaining code.
         /// </summary>
-        /// <param name="thirdOrderObjectCode">A third order code means it starts with
+        /// <param name="thirdOrderThingCode">A third order code means it starts with
         /// 2 semIO space units (4 spaces or one tab)</param>
-        /// <returns>The pure second order object code and the optional description (empty string if none)</returns>
-        public static (string Description, string RemainingCode) ParseDescriptionTwoSpace(string thirdOrderObjectCode)
+        /// <returns>The pure second order thing code and the optional description (empty string if none)</returns>
+        public static (string Description, string RemainingCode) ParseDescriptionTwoSpace(string thirdOrderThingCode)
         {
-            var match = SemIORegexs.DescriptionTwoSpaceRegex.Match(thirdOrderObjectCode);
+            var match = SemIORegexs.DescriptionTwoSpaceRegex.Match(thirdOrderThingCode);
             //remove quotation marks and return only text in between
             char[] seperator = new[] { '\"' };
             return match.Success
-                ? (match.Value.Split(seperator, 3)[1], thirdOrderObjectCode.Substring(match.Value.Length))
-                : ("", thirdOrderObjectCode);
+                ? (match.Value.Split(seperator, 3)[1], thirdOrderThingCode.Substring(match.Value.Length))
+                : ("", thirdOrderThingCode);
         }
 
         /// <summary>
@@ -182,66 +182,66 @@ namespace SemIO.Parsing
         }
 
         /// <summary>
-        /// Parse all the objects from an abstraction level code and return the code without the object definitions.
+        /// Parse all the things from an abstraction level code and return the code without the thing definitions.
         /// </summary>
-        /// <param name="abstractionLevelCode">The code of an abstraction level containing all the object definitions</param>
-        /// <returns>All objects and the remaining abstraction level code with the object definitions removed</returns>
-        public static (List<ObjectModel> ObjectTypes, string RemainingCode) ParseObjectTypes(string abstractionLevelCode)
+        /// <param name="abstractionLevelCode">The code of an abstraction level containing all the thing definitions</param>
+        /// <returns>All things and the remaining abstraction level code with the thing definitions removed</returns>
+        public static (List<ThingModel> ThingTypes, string RemainingCode) ParseThingTypes(string abstractionLevelCode)
         {
             return (
-                SemIORegexs.ObjectTypeRegex.Matches(abstractionLevelCode).OfType<Match>().Select(x => ParseObjectType(x.Value))
+                SemIORegexs.ThingTypeRegex.Matches(abstractionLevelCode).OfType<Match>().Select(x => ParseThingType(x.Value))
                     .ToList(),
-                SemIORegexs.ObjectTypeRegex.Replace(abstractionLevelCode, ""));
+                SemIORegexs.ThingTypeRegex.Replace(abstractionLevelCode, ""));
         }
 
         /// <summary>
-        /// Parse an object from the object code. NOTE: If the code contains anything besides the code definition
+        /// Parse an thing from the thing code. NOTE: If the code contains anything besides the code definition
         /// the parsing will not work.
         /// </summary>
-        /// <param name="objectCode">The code describing th object INCLUDING optional description</param>
-        /// <returns>The object that was parsed</returns>
-        public static ObjectModel ParseObjectType(string objectCode)
+        /// <param name="thingCode">The code describing th thing INCLUDING optional description</param>
+        /// <returns>The thing that was parsed</returns>
+        public static ThingModel ParseThingType(string thingCode)
         {
             //extract optional description
-            var parsedDescription = ParseDescriptionOneSpace(objectCode);
+            var parsedDescription = ParseDescriptionOneSpace(thingCode);
 
             //extract name and parent names
-            var parsedObjectTypeName = ParseObjectTypeName(parsedDescription.RemainingCode);
+            var parsedThingTypeName = ParseThingTypeName(parsedDescription.RemainingCode);
 
-            return new ObjectModel(parsedObjectTypeName.Name, parsedDescription.Description,
-                SemIORegexs.ParameterRegex.Matches(parsedObjectTypeName.RemainingCode).OfType<Match>()
-                    .Select(x => ParseParameter(x.Value)).ToList(), parsedObjectTypeName.NameParents);
+            return new ThingModel(parsedThingTypeName.Name, parsedDescription.Description,
+                SemIORegexs.ParameterRegex.Matches(parsedThingTypeName.RemainingCode).OfType<Match>()
+                    .Select(x => ParseParameter(x.Value)).ToList(), parsedThingTypeName.NameParents);
         }
 
         /// <summary>
-        /// Extract the header information (object name, the parent object names)
-        /// and return the remaining object code without the header.
+        /// Extract the header information (thing name, the parent thing names)
+        /// and return the remaining thing code without the header.
         /// NOTE: The parsing only works if the descriptions is NOT included.
         /// </summary>
-        /// <param name="objectCode">Pure object code WITHOUT description</param>
+        /// <param name="thingCode">Pure thing code WITHOUT description</param>
         /// <returns>Header information and remaining code with cut out header</returns>
-        public static (string Name, List<string> NameParents, string RemainingCode) ParseObjectTypeName(
-            string objectCode)
+        public static (string Name, List<string> NameParents, string RemainingCode) ParseThingTypeName(
+            string thingCode)
         {
-            var codeBlockExpectedMatch = SemIORegexs.CodeBlockExpectedRegex.Match(objectCode);
-            //check if there are parent objects defined that need to be inherited later
-            var parentMatch = SemIORegexs.ArgumentsRegex.Match(objectCode.Substring(0, codeBlockExpectedMatch.Index));
+            var codeBlockExpectedMatch = SemIORegexs.CodeBlockExpectedRegex.Match(thingCode);
+            //check if there are parent things defined that need to be inherited later
+            var parentMatch = SemIORegexs.ArgumentsRegex.Match(thingCode.Substring(0, codeBlockExpectedMatch.Index));
 
-            return (SemIORegexs.NameRegex.Matches(objectCode)[1].Value, parentMatch.Success
+            return (SemIORegexs.NameRegex.Matches(thingCode)[1].Value, parentMatch.Success
                     ? parentMatch.Value.Substring(1, parentMatch.Value.Length-2).Split(',').ToList()
                     : new List<string>(),
                 parentMatch.Success
-                    ? SemIORegexs.ArgumentsRegex.Replace(objectCode, "")
-                    : objectCode.Substring(codeBlockExpectedMatch.Index + codeBlockExpectedMatch.Length));
+                    ? SemIORegexs.ArgumentsRegex.Replace(thingCode, "")
+                    : thingCode.Substring(codeBlockExpectedMatch.Index + codeBlockExpectedMatch.Length));
         }
 
         /// <summary>
-        /// Parse a single parameter of an object including multiplicity and benchmark tag.
+        /// Parse a single parameter of an thing including multiplicity and benchmark tag.
         /// </summary>
         /// <param name="parameterCode">Code describing the parameter with the parameter type,
         /// parameter name, multiplicity and benchmark tag</param>
-        /// <returns>The parsed object parameter</returns>
-        public static ObjectParameter ParseParameter(string parameterCode)
+        /// <returns>The parsed thing parameter</returns>
+        public static ThingParameter ParseParameter(string parameterCode)
         {
             var parsedDescription = ParseDescriptionTwoSpace(parameterCode);
             var names = SemIORegexs.NameRegex.Matches(parsedDescription.RemainingCode);
@@ -261,12 +261,12 @@ namespace SemIO.Parsing
             //extract optional benchmark tag
             var benchmark = ParseBenchmark(parsedDescription.RemainingCode);
 
-            return new ObjectParameter(names[multiplicity.ExactSize == 1 ? 1 : 2].Value,
+            return new ThingParameter(names[multiplicity.ExactSize == 1 ? 1 : 2].Value,
                 parsedDescription.Description, names[0].Value, multiplicity);
         }
 
         /// <summary>
-        /// Extract the multiplicity from the multiplicity tag of a object parameter
+        /// Extract the multiplicity from the multiplicity tag of a thing parameter
         /// </summary>
         /// <param name="codeMultiplicity">The code of the multiplicity tag</param>
         /// <returns>Extracted multiplicity from the multiplicity tag</returns>

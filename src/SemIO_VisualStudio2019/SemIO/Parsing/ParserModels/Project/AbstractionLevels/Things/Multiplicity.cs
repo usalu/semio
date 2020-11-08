@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects
+namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things
 {
     /// <summary>
     /// Limits the size of a collection. Either way only a specific number is allowed, one boundary is set,

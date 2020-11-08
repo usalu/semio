@@ -1,11 +1,11 @@
 ﻿
 
-namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects
+namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things
 {
     /// <summary>
-    /// Parameter for an object of an abstraction level containing a name, a type and a multiplicity
+    /// Parameter for an thing of an abstraction level containing a name, a type and a multiplicity
     /// </summary>
-    public class ObjectParameter : InformedClass, IParameter
+    public class ThingParameter : InformedClass, IParameter
     {
         /*private string _parameterTypeName;
         public string ParameterTypeName
@@ -17,7 +17,7 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects
 
         public Multiplicity Multiplicity { get; set; }
 
-        public ObjectParameter(string name, string description, string parameterTypeName, Multiplicity multiplicity = null)
+        public ThingParameter(string name, string description, string parameterTypeName, Multiplicity multiplicity = null)
             : base(name, description)
         {
             ParameterTypeName = parameterTypeName;

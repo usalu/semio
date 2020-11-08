@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects;
+using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things;
 
 namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels
 {
@@ -12,21 +12,21 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels
     {
         public string ParentAbstractionLevelName { get; }
         public List<ParameterType> ParameterTypes { get; }
-        public List<ObjectModel> ObjectTypes { get; }
+        public List<ThingModel> ThingTypes { get; }
 
         public AbstractionLevelModel(string name, string description, string parentAbstractionLevelName = "") : base(name, description)
         {
             ParentAbstractionLevelName = parentAbstractionLevelName;
             ParameterTypes = new List<ParameterType>();
-            ObjectTypes = new List<ObjectModel>();
+            ThingTypes = new List<ThingModel>();
         }
 
         internal AbstractionLevelModel(string name, string description, List<ParameterType> customParameterTypes,
-            List<ObjectModel> objectTypes, string parentAbstractionLevelName = "") 
+            List<ThingModel> thingTypes, string parentAbstractionLevelName = "") 
             : base(name, description)
         {
             ParameterTypes = customParameterTypes;
-            ObjectTypes = objectTypes;
+            ThingTypes = thingTypes;
             ParentAbstractionLevelName = parentAbstractionLevelName;
         }
 
@@ -55,7 +55,7 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels
             return parameterType;
         }
 
-        public bool ExistsObjectType(string name) => ObjectTypes.Exists(x => x.Name == name);
+        public bool ExistsThingType(string name) => ThingTypes.Exists(x => x.Name == name);
         public bool ExistsParameterTypeName(string name) => ParameterTypes.Exists(x => x.Name == name);
 
     }

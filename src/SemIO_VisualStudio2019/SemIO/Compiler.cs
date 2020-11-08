@@ -10,7 +10,7 @@ using Microsoft.VisualBasic;
 using SemIO.Parsing.ParserModels;
 using SemIO.Parsing.ParserModels.Project;
 using SemIO.Parsing.ParserModels.Project.AbstractionLevels;
-using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects;
+using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things;
 
 namespace SemIO
 {
@@ -113,13 +113,13 @@ namespace SemIO
         /// <summary>
         /// Retrieve a CodeNamespaceCollection that describes one abstraction level
         /// </summary>
-        /// <param name="abstractionLevel">The abstraction level with parameter types and objects</param>
-        /// <returns>The namespaces with all generated code for parameter types and objects</returns>
+        /// <param name="abstractionLevel">The abstraction level with parameter types and things</param>
+        /// <returns>The namespaces with all generated code for parameter types and things</returns>
         private static CodeNamespaceCollection GetAbstractionLevelNamespaces(AbstractionLevelModel abstractionLevel)
         {
             CodeNamespaceCollection abstractionLevelNamespaces = new CodeNamespaceCollection();
 
-            //AbstractionLevels is the basic namespace of most objects in the assembly
+            //AbstractionLevels is the basic namespace of most things in the assembly
             //Only benchmarks will be not located on an abstraction level
             string repositoryName = "AbstractionLevels." + abstractionLevel.Name + "Repository";
 
@@ -130,11 +130,11 @@ namespace SemIO
             parameterTypesNamespace.Types.AddRange(abstractionLevel.ParameterTypes.Select(GetParameterType).ToArray());
             abstractionLevelNamespaces.Add(parameterTypesNamespace);
 
-            //Add object types
-            string objectsNamespaceName = repositoryName + ".ObjectTypes";
-            CodeNamespace objectTypesNamespace = new CodeNamespace(objectsNamespaceName);
+            //Add thing types
+            string thingsNamespaceName = repositoryName + ".ThingTypes";
+            CodeNamespace thingTypesNamespace = new CodeNamespace(thingsNamespaceName);
             //base import + parameter types for parameter property
-            List<CodeNamespaceImport> objectImports = new List<CodeNamespaceImport>()
+            List<CodeNamespaceImport> thingImports = new List<CodeNamespaceImport>()
             {
                 new CodeNamespaceImport("System"),
                 new CodeNamespaceImport(parameterTypesNamespaceName),
@@ -144,11 +144,11 @@ namespace SemIO
             foreach (var type in Assembly.Load("SemIOLibrary").GetTypes())
                 if (!semIOLibraryNamespaces.Exists(x => type.Namespace == x))
                     semIOLibraryNamespaces.Add(type.Namespace);
-            objectImports.AddRange(semIOLibraryNamespaces.Select(x => new CodeNamespaceImport(x)));
-            objectTypesNamespace.Imports.AddRange(objectImports.ToArray());
-            foreach (var objectType in abstractionLevel.ObjectTypes)
-                objectTypesNamespace.Types.Add(GetObjectType(objectType));
-            abstractionLevelNamespaces.Add(objectTypesNamespace);
+            thingImports.AddRange(semIOLibraryNamespaces.Select(x => new CodeNamespaceImport(x)));
+            thingTypesNamespace.Imports.AddRange(thingImports.ToArray());
+            foreach (var thingType in abstractionLevel.ThingTypes)
+                thingTypesNamespace.Types.Add(GetThingType(thingType));
+            abstractionLevelNamespaces.Add(thingTypesNamespace);
             
             //Add goal types, Left to implement
 
@@ -166,7 +166,7 @@ namespace SemIO
                 Imports =
                 {
                     new CodeNamespaceImport("System"),
-                    new CodeNamespaceImport(objectsNamespaceName),
+                    new CodeNamespaceImport(thingsNamespaceName),
                 }
             };
             //If their exists a parent abstraction level the using directive needs to be added
@@ -183,7 +183,7 @@ namespace SemIO
         /// a proper type for an abstraction level in the assembly
         /// </summary>
         /// <param name="abstractionLevel"></param>
-        /// <returns>Type declaration with all a list property for all created objects</returns>
+        /// <returns>Type declaration with all a list property for all created things</returns>
         private static CodeTypeDeclaration GetAbstractionLevelType(AbstractionLevelModel abstractionLevel)
         {
             CodeTypeDeclaration abstractionLevelTypeDeclaration = new CodeTypeDeclaration(abstractionLevel.Name)
@@ -196,9 +196,9 @@ namespace SemIO
                 }
             };
             
-            //add a list<object> property for every object type to the abstraction level type
-            foreach (ObjectModel objectType in abstractionLevel.ObjectTypes)
-                abstractionLevelTypeDeclaration.Members.AddRange(GetParameterCollectionPropertyCollection(objectType));
+            //add a list<thing> property for every thing type to the abstraction level type
+            foreach (ThingModel thingType in abstractionLevel.ThingTypes)
+                abstractionLevelTypeDeclaration.Members.AddRange(GetParameterCollectionPropertyCollection(thingType));
 
             //add the parent abstraction level to as inheritance in case there exists one
             if (abstractionLevel.ParentAbstractionLevelName != "")
@@ -249,36 +249,36 @@ namespace SemIO
 
         /// <summary>
         ///  Build a code type declaration that contains all information to build a proper type for an
-        /// object of an abstraction level. The parameters are either way other objects, parameter types or
+        /// thing of an abstraction level. The parameters are either way other things, parameter types or
         /// types from the semIOLibrary.
         /// </summary>
-        /// <param name="objectType">The abstraction level object type</param>
+        /// <param name="thingType">The abstraction level thing type</param>
         /// <returns>Type declaration with all parameters</returns>
-        private static CodeTypeDeclaration GetObjectType(ObjectModel objectType)
+        private static CodeTypeDeclaration GetThingType(ThingModel thingType)
         {
-            CodeTypeDeclaration objectCodeTypeDeclaration = new CodeTypeDeclaration(objectType.Name)
+            CodeTypeDeclaration thingCodeTypeDeclaration = new CodeTypeDeclaration(thingType.Name)
             {
                 IsClass = true,
                 CustomAttributes =
                 {
                     new CodeAttributeDeclaration("System.ComponentModel.Description",
-                        new CodeAttributeArgument(new CodePrimitiveExpression(objectType.Description)))
+                        new CodeAttributeArgument(new CodePrimitiveExpression(thingType.Description)))
                 }
             };
 
-            foreach (var parentName in objectType.ParentNames)
-                objectCodeTypeDeclaration.BaseTypes.Add(parentName);
+            foreach (var parentName in thingType.ParentNames)
+                thingCodeTypeDeclaration.BaseTypes.Add(parentName);
             
-            //setting up all the parameters of that object
-            foreach (var parameter in objectType.Parameters)
-                objectCodeTypeDeclaration.Members.AddRange(GetParameterPropertyCollection(parameter));
+            //setting up all the parameters of that thing
+            foreach (var parameter in thingType.Parameters)
+                thingCodeTypeDeclaration.Members.AddRange(GetParameterPropertyCollection(parameter));
 
-            return objectCodeTypeDeclaration;
+            return thingCodeTypeDeclaration;
         }
 
         /// <summary>
         /// Get a public property with a simple get and set method and a private member field
-        /// for a class for a generic parameter. This parameter can be an object, a parameter type.
+        /// for a class for a generic parameter. This parameter can be an thing, a parameter type.
         /// </summary>
         /// <param name="parameter">A generic parameter that contains a name, a type and description</param>
         /// <returns>The property with get and set method and the field member</returns>

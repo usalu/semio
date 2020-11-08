@@ -48,9 +48,9 @@
     <Compile Include="Parsing\ParserModels\InformedClass.cs" />
     <Compile Include="Parsing\ParserModels\IParameter.cs" />
     <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\AbstractionLevelModel.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Objects\Multiplicity.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Objects\ObjectParameter.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Objects\ObjectModel.cs" />
+    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\Multiplicity.cs" />
+    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\ThingParameter.cs" />
+    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\ThingModel.cs" />
     <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\ParameterType.cs" />
     <Compile Include="Parsing\ParserModels\Project\ProjectModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

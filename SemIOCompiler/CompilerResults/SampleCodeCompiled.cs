@@ -61,7 +61,7 @@ namespace AbstractionLevels.MasterplanRepository.ParameterTypes
         Vigilance = 128,
     }
 }
-namespace AbstractionLevels.MasterplanRepository.ObjectTypes
+namespace AbstractionLevels.MasterplanRepository.ThingTypes
 {
     using System;
     using AbstractionLevels.MasterplanRepository.ParameterTypes;
@@ -163,7 +163,7 @@ namespace AbstractionLevels.MasterplanRepository.ObjectTypes
 namespace AbstractionLevels.MasterplanRepository
 {
     using System;
-    using AbstractionLevels.MasterplanRepository.ObjectTypes;
+    using AbstractionLevels.MasterplanRepository.ThingTypes;
     
     
     [System.ComponentModel.Description("Massing studies and infrastructure including public transportation (Simillar to 1" +
@@ -219,7 +219,7 @@ namespace AbstractionLevels.ApartmentplanRepository.ParameterTypes
         Wheelchair = 2,
     }
 }
-namespace AbstractionLevels.ApartmentplanRepository.ObjectTypes
+namespace AbstractionLevels.ApartmentplanRepository.ThingTypes
 {
     using System;
     using AbstractionLevels.ApartmentplanRepository.ParameterTypes;
@@ -351,7 +351,7 @@ namespace AbstractionLevels.ApartmentplanRepository.ObjectTypes
 namespace AbstractionLevels.ApartmentplanRepository
 {
     using System;
-    using AbstractionLevels.ApartmentplanRepository.ObjectTypes;
+    using AbstractionLevels.ApartmentplanRepository.ThingTypes;
     using AbstractionLevels.MasterplanRepository;
     
     
@@ -446,7 +446,7 @@ namespace AbstractionLevels.RoomplanRepository.ParameterTypes
         Loud = 3,
     }
 }
-namespace AbstractionLevels.RoomplanRepository.ObjectTypes
+namespace AbstractionLevels.RoomplanRepository.ThingTypes
 {
     using System;
     using AbstractionLevels.RoomplanRepository.ParameterTypes;
@@ -618,7 +618,7 @@ namespace AbstractionLevels.RoomplanRepository.ObjectTypes
 namespace AbstractionLevels.RoomplanRepository
 {
     using System;
-    using AbstractionLevels.RoomplanRepository.ObjectTypes;
+    using AbstractionLevels.RoomplanRepository.ThingTypes;
     using AbstractionLevels.ApartmentplanRepository;
     
     

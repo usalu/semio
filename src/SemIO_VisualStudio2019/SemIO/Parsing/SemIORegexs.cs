@@ -37,14 +37,14 @@ namespace SemIO.Parsing
         public static string parameterTypePattern = "(" + descriptionOneSpacePattern + "?" + spacePattern + "Parameter" + @"\s+" + namePattern + @"\s*" + multisetPattern + "?" + codeBlockExpectedPattern
                                                          //values
                                                          + endOfLinePattern + "*" + parameterTypeValuePattern + "(" + parameterTypeValuePattern + "|" + endOfLinePattern + ")" + "*" + ")";
-        //giving bounds for size of collections for a parameter of an object
+        //giving bounds for size of collections for a parameter of an thing
         public static string multiplicityPattern = "(" + "[[]" + "(" + numberWrappedWithSpacesPattern + "((<=)|<)" + ")?" + nameWrappedWithSpacesPattern + "(" + "((<=)|<)" + numberWrappedWithSpacesPattern + ")?" + "]" + ")";
-        //accessing sub properties of an object. object names connected by a point
+        //accessing sub properties of an thing. thing names connected by a point
         public static string propertyPattern = "(" + namePattern + "(" + @"\s*" + "[.]" + @"\s*" + namePattern + ")*" + ")";
         //property that is wrapped by all whitespaces around it
         public static string propertyPatternWrappedWithSpacesPattern = "(" + @"\s*" + propertyPattern + @"\s*" + ")";
         
-        /*//when benchmark is created for a sub property of an object. Example Extract Area for a planar, non intersecting, closed Curve
+        /*//when benchmark is created for a sub property of an thing. Example Extract Area for a planar, non intersecting, closed Curve
         public static string castPattern = "(" + "[(]" + propertyPatternWrappedWithSpacesPattern + "[)]" + ")";*/
         
         /*//when benchmark does some calculations. CAUTION this is a very bad syntactical evaluator. Correct terms don't work with regex
@@ -62,8 +62,8 @@ namespace SemIO.Parsing
         public static string parameterPattern = "(" + descriptionTwoSpacePattern + "?" + spacePattern + "{2}" + namePattern + "(" + "(" + @"\s*"
                                                           //multiplicity, name parameter, benchmark tag
                                                           + multiplicityPattern + @"\s*" + ")" + "|" + @"\s+" + ")" + namePattern + "(" + @"\s*" + benchmarkPattern + ")?" + endOfLinePattern + "?" + ")";
-        //optional description, name, name parent objects
-        public static string objectPattern = "(" + descriptionOneSpacePattern + "?" + spacePattern + "Object" + @"\s+" + namePattern + @"\s*" + argumentsPattern + "?" + codeBlockExpectedPattern
+        //optional description, name, name parent things
+        public static string thingPattern = "(" + descriptionOneSpacePattern + "?" + spacePattern + "Thing" + @"\s+" + namePattern + @"\s*" + argumentsPattern + "?" + codeBlockExpectedPattern
                                           //parameters
                                           + endOfLinePattern + "*" + parameterPattern + "(" + parameterPattern + "|" + endOfLinePattern + ")" + "*" + ")";
 
@@ -71,13 +71,13 @@ namespace SemIO.Parsing
 
         //optional description , name , parent name abstractionLevel
         public static string abstractionLevelPattern = "(" + abstractionLevelHeaderPattern
-                                          //all objects and parameters
-                                          + endOfLinePattern + "*" + "(" + objectPattern + "|" + parameterTypePattern + ")"
-                                          + "(" + "(" + objectPattern + "|" + parameterTypePattern + "|" + endOfLinePattern + ")" + ")*" + ")";
+                                          //all things and parameters
+                                          + endOfLinePattern + "*" + "(" + thingPattern + "|" + parameterTypePattern + ")"
+                                          + "(" + "(" + thingPattern + "|" + parameterTypePattern + "|" + endOfLinePattern + ")" + ")*" + ")";
 
         //All regex definition that are needed for parsing semIO code
 
-        public static Regex ObjectTypeRegex = new Regex(objectPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public static Regex ThingTypeRegex = new Regex(thingPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         public static Regex ParameterRegex = new Regex(parameterPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         public static Regex ParameterTypeRegex = new Regex(parameterTypePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);

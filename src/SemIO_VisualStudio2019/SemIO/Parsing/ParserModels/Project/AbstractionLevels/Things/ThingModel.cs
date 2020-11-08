@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 
-namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Objects
+namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things
 {
     /// <summary>
-    /// Object of an abstraction level that can be used as a parameter for an abstraction level inside the abstraction level.
+    /// Thing of an abstraction level that can be used as a parameter for an abstraction level inside the abstraction level.
     /// NOTE: This class only exists inside an abstraction level and can only be used inside there.
     /// </summary>
-    public class ObjectModel : InformedClass, IParameter
+    public class ThingModel : InformedClass, IParameter
     {
         public string ParameterTypeName => Name;// + "Model";
-        public List<ObjectParameter> Parameters { get; }
+        public List<ThingParameter> Parameters { get; }
         public List<string> ParentNames { get; }
 
-        public ObjectModel(string name, string description, List<ObjectParameter> parameters,
+        public ThingModel(string name, string description, List<ThingParameter> parameters,
             List<string> parentNames = null) : base(name, description)
         {
             if (parentNames != null)

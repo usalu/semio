@@ -64,7 +64,7 @@ import SemIOLibrary.Parameters.GeometryParameters.Curves;
 import SemIOLibrary.Parameters.BaseParameters;
 import SemIOLibrary.Parameters.BaseParameters.Numbers;
 
-package AbstractionLevels.MasterplanRepository.ObjectTypes
+package AbstractionLevels.MasterplanRepository.ThingTypes
 {
     
     public System.ComponentModel.Description("Describes a volume with a use") 
@@ -141,7 +141,7 @@ package AbstractionLevels.MasterplanRepository.ObjectTypes
 //@set @debug(off)
 
 import System;
-import AbstractionLevels.MasterplanRepository.ObjectTypes;
+import AbstractionLevels.MasterplanRepository.ThingTypes;
 
 package AbstractionLevels.MasterplanRepository
 {
@@ -207,7 +207,7 @@ import SemIOLibrary.Parameters.GeometryParameters.Curves;
 import SemIOLibrary.Parameters.BaseParameters;
 import SemIOLibrary.Parameters.BaseParameters.Numbers;
 
-package AbstractionLevels.ApartmentplanRepository.ObjectTypes
+package AbstractionLevels.ApartmentplanRepository.ThingTypes
 {
     
     public System.ComponentModel.Description("Most general information about an apartment") 
@@ -308,7 +308,7 @@ package AbstractionLevels.ApartmentplanRepository.ObjectTypes
 //@set @debug(off)
 
 import System;
-import AbstractionLevels.ApartmentplanRepository.ObjectTypes;
+import AbstractionLevels.ApartmentplanRepository.ThingTypes;
 import AbstractionLevels.MasterplanRepository;
 
 package AbstractionLevels.ApartmentplanRepository
@@ -403,7 +403,7 @@ import SemIOLibrary.Parameters.GeometryParameters.Curves;
 import SemIOLibrary.Parameters.BaseParameters;
 import SemIOLibrary.Parameters.BaseParameters.Numbers;
 
-package AbstractionLevels.RoomplanRepository.ObjectTypes
+package AbstractionLevels.RoomplanRepository.ThingTypes
 {
     
     public System.ComponentModel.Description("Generic base class for openings") 
@@ -538,7 +538,7 @@ package AbstractionLevels.RoomplanRepository.ObjectTypes
 //@set @debug(off)
 
 import System;
-import AbstractionLevels.RoomplanRepository.ObjectTypes;
+import AbstractionLevels.RoomplanRepository.ThingTypes;
 import AbstractionLevels.ApartmentplanRepository;
 
 package AbstractionLevels.RoomplanRepository

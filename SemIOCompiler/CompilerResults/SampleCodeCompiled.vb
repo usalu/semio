@@ -12,13 +12,13 @@ Option Strict Off
 Option Explicit On
 
 Imports AbstractionLevels.ApartmentplanRepository
-Imports AbstractionLevels.ApartmentplanRepository.ObjectTypes
 Imports AbstractionLevels.ApartmentplanRepository.ParameterTypes
+Imports AbstractionLevels.ApartmentplanRepository.ThingTypes
 Imports AbstractionLevels.MasterplanRepository
-Imports AbstractionLevels.MasterplanRepository.ObjectTypes
 Imports AbstractionLevels.MasterplanRepository.ParameterTypes
-Imports AbstractionLevels.RoomplanRepository.ObjectTypes
+Imports AbstractionLevels.MasterplanRepository.ThingTypes
 Imports AbstractionLevels.RoomplanRepository.ParameterTypes
+Imports AbstractionLevels.RoomplanRepository.ThingTypes
 Imports SemIOLibrary.Parameters
 Imports SemIOLibrary.Parameters.BaseParameters
 Imports SemIOLibrary.Parameters.BaseParameters.Numbers
@@ -78,7 +78,7 @@ Namespace AbstractionLevels.MasterplanRepository.ParameterTypes
     End Enum
 End Namespace
 
-Namespace AbstractionLevels.MasterplanRepository.ObjectTypes
+Namespace AbstractionLevels.MasterplanRepository.ThingTypes
     
     <System.ComponentModel.Description("Describes a volume with a use")>  _
     Public Class BuildingVolume
@@ -195,7 +195,7 @@ Namespace AbstractionLevels.ApartmentplanRepository.ParameterTypes
     End Enum
 End Namespace
 
-Namespace AbstractionLevels.ApartmentplanRepository.ObjectTypes
+Namespace AbstractionLevels.ApartmentplanRepository.ThingTypes
     
     <System.ComponentModel.Description("Most general information about an apartment")>  _
     Public Class Apartment
@@ -373,7 +373,7 @@ Namespace AbstractionLevels.RoomplanRepository.ParameterTypes
     End Enum
 End Namespace
 
-Namespace AbstractionLevels.RoomplanRepository.ObjectTypes
+Namespace AbstractionLevels.RoomplanRepository.ThingTypes
     
     <System.ComponentModel.Description("Generic base class for openings")>  _
     Public Class Opening

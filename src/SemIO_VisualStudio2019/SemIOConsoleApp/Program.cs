@@ -209,7 +209,7 @@ namespace SemIOCompiler
             Type[] types = assembly.GetTypes();
             Type[] abstractionLevelTypes = types.Where(x => x.Namespace.EndsWith("Repository")).ToArray();
             Type[] parameterTypeTypes = types.Where(x => x.Namespace.EndsWith("ParameterTypes")).ToArray();
-            Type[] objectTypes = types.Where(x => x.Namespace.EndsWith("ObjectTypes")).ToArray();
+            Type[] thingTypes = types.Where(x => x.Namespace.EndsWith("ThingTypes")).ToArray();
             Console.WriteLine("\n" + assemblyName + $" contains in total " +
                               HumanFriendlyInteger.IntegerToWritten(abstractionLevelTypes.Length).ToLower()
                               + " abstraction levels.");
@@ -219,23 +219,23 @@ namespace SemIOCompiler
             Thread.Sleep(WaitingTime);
             foreach (var al in abstractionLevelTypes)
             {
-                var objectsAL = objectTypes.Where(x => x.Namespace.StartsWith(
-                    "AbstractionLevels." + al.Name + "Repository.ObjectTypes")).ToArray();
+                var thingsAL = thingTypes.Where(x => x.Namespace.StartsWith(
+                    "AbstractionLevels." + al.Name + "Repository.ThingTypes")).ToArray();
                 var parameterTypesAL = parameterTypeTypes.Where(x => x.Namespace.StartsWith(
                     "AbstractionLevels." + al.Name + "Repository.ParameterTypes")).ToArray();
 
                 Console.WriteLine("\nThe abstraction level " + al.Name + $" has " +
-                                  HumanFriendlyInteger.IntegerToWritten(objectsAL.Length).ToLower()
-                                  + " objects and " +
+                                  HumanFriendlyInteger.IntegerToWritten(thingsAL.Length).ToLower()
+                                  + " things and " +
                                   HumanFriendlyInteger.IntegerToWritten(parameterTypesAL.Length).ToLower()
                                   + " parameter types.");
                 Thread.Sleep(WaitingTime);
-                Console.WriteLine("\nThose are your objects: ");
+                Console.WriteLine("\nThose are your things: ");
                 Thread.Sleep(WaitingTime);
-                foreach (var objectType in objectsAL)
+                foreach (var thingType in thingsAL)
                 {
-                    var parameters = objectType.GetProperties();
-                    Console.WriteLine("\n" + objectType.Name + " has following properties: ");
+                    var parameters = thingType.GetProperties();
+                    Console.WriteLine("\n" + thingType.Name + " has following properties: ");
                     Thread.Sleep(WaitingTime);
                     foreach (var prm in parameters)
                     {

@@ -1,7 +1,7 @@
 ﻿namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels
 {
     /// <summary>
-    /// Parameter types of an abstraction level that can be used as parameters for objects inside the abstraction level.
+    /// Parameter types of an abstraction level that can be used as parameters for things inside the abstraction level.
     /// NOTE: This class only exists inside an abstraction level and can only be used inside there.
     /// </summary>
     public class ParameterType : InformedClass, IParameter

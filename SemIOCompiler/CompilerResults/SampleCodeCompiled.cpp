@@ -12,7 +12,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace MasterplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     ref class BuildingVolume;
     ref class BuildingBlock;
         }
@@ -31,7 +31,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace ApartmentplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     ref class Apartment;
     ref class Circulation;
         }
@@ -50,7 +50,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace RoomplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     ref class Opening;
     ref class Window;
     ref class Door;
@@ -130,7 +130,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace MasterplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     using namespace System;
     using namespace AbstractionLevels::MasterplanRepository::ParameterTypes;
     using namespace SemIOLibrary::Parameters;
@@ -191,13 +191,13 @@ namespace AbstractionLevels {
     public ref class BuildingBlock
     {
         
-        private: AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  _buildingVolumes;
+        private: AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  _buildingVolumes;
         
         public: [System::ComponentModel::Description(L"")]
-        property AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  BuildingVolumes
+        property AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  BuildingVolumes
         {
-            AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  get();
-            System::Void set(AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  value);
+            AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  get();
+            System::Void set(AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  value);
         }
     };
         }
@@ -205,7 +205,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace MasterplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     
     
     inline ClosedCurve^  BuildingVolume::Parcel::get()
@@ -245,11 +245,11 @@ namespace AbstractionLevels {
     }
     
     
-    inline AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  BuildingBlock::BuildingVolumes::get()
+    inline AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  BuildingBlock::BuildingVolumes::get()
     {
         return this->_buildingVolumes;
     }
-    inline System::Void BuildingBlock::BuildingVolumes::set(AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^  value)
+    inline System::Void BuildingBlock::BuildingVolumes::set(AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^  value)
     {
         this->_buildingVolumes = value;
     }
@@ -259,7 +259,7 @@ namespace AbstractionLevels {
 namespace AbstractionLevels {
     namespace MasterplanRepository {
     using namespace System;
-    using namespace AbstractionLevels::MasterplanRepository::ObjectTypes;
+    using namespace AbstractionLevels::MasterplanRepository::ThingTypes;
     using namespace System;
     ref class Masterplan;
     
@@ -269,22 +269,22 @@ L"to500)")]
     public ref class Masterplan
     {
         
-        private: System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  _buildingVolumeCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  _buildingVolumeCollection;
         
-        private: System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  _buildingBlockCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  _buildingBlockCollection;
         
         public: [System::ComponentModel::Description(L"Describes a volume with a use")]
-        property System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  BuildingVolumeCollection
+        property System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  BuildingVolumeCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  value);
         }
         
         public: [System::ComponentModel::Description(L"Describes adjacent building volumes")]
-        property System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  BuildingBlockCollection
+        property System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  BuildingBlockCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  value);
         }
     };
     }
@@ -293,19 +293,19 @@ namespace AbstractionLevels {
     namespace MasterplanRepository {
     
     
-    inline System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  Masterplan::BuildingVolumeCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  Masterplan::BuildingVolumeCollection::get()
     {
         return this->_buildingVolumeCollection;
     }
-    inline System::Void Masterplan::BuildingVolumeCollection::set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingVolume^ >^  value)
+    inline System::Void Masterplan::BuildingVolumeCollection::set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingVolume^ >^  value)
     {
     }
     
-    inline System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  Masterplan::BuildingBlockCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  Masterplan::BuildingBlockCollection::get()
     {
         return this->_buildingBlockCollection;
     }
-    inline System::Void Masterplan::BuildingBlockCollection::set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ObjectTypes::BuildingBlock^ >^  value)
+    inline System::Void Masterplan::BuildingBlockCollection::set(System::Collections::Generic::List<AbstractionLevels::MasterplanRepository::ThingTypes::BuildingBlock^ >^  value)
     {
     }
     }
@@ -342,7 +342,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace ApartmentplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     using namespace System;
     using namespace AbstractionLevels::ApartmentplanRepository::ParameterTypes;
     using namespace SemIOLibrary::Parameters;
@@ -435,7 +435,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace ApartmentplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     
     
     inline ClosedCurve^  Apartment::Boundary::get()
@@ -507,7 +507,7 @@ namespace AbstractionLevels {
 namespace AbstractionLevels {
     namespace ApartmentplanRepository {
     using namespace System;
-    using namespace AbstractionLevels::ApartmentplanRepository::ObjectTypes;
+    using namespace AbstractionLevels::ApartmentplanRepository::ThingTypes;
     using namespace AbstractionLevels::MasterplanRepository;
     using namespace System;
     ref class Apartmentplan;
@@ -518,22 +518,22 @@ L" 1to200 in analogue scale")]
     public ref class Apartmentplan : public AbstractionLevels::MasterplanRepository::Masterplan
     {
         
-        private: System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  _apartmentCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  _apartmentCollection;
         
-        private: System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  _circulationCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  _circulationCollection;
         
         public: [System::ComponentModel::Description(L"Most general information about an apartment")]
-        property System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  ApartmentCollection
+        property System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  ApartmentCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  value);
         }
         
         public: [System::ComponentModel::Description(L"General inforamtion about how the building is accessed")]
-        property System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  CirculationCollection
+        property System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  CirculationCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  value);
         }
     };
     }
@@ -542,19 +542,19 @@ namespace AbstractionLevels {
     namespace ApartmentplanRepository {
     
     
-    inline System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  Apartmentplan::ApartmentCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  Apartmentplan::ApartmentCollection::get()
     {
         return this->_apartmentCollection;
     }
-    inline System::Void Apartmentplan::ApartmentCollection::set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Apartment^ >^  value)
+    inline System::Void Apartmentplan::ApartmentCollection::set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Apartment^ >^  value)
     {
     }
     
-    inline System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  Apartmentplan::CirculationCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  Apartmentplan::CirculationCollection::get()
     {
         return this->_circulationCollection;
     }
-    inline System::Void Apartmentplan::CirculationCollection::set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ObjectTypes::Circulation^ >^  value)
+    inline System::Void Apartmentplan::CirculationCollection::set(System::Collections::Generic::List<AbstractionLevels::ApartmentplanRepository::ThingTypes::Circulation^ >^  value)
     {
     }
     }
@@ -631,7 +631,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace RoomplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     using namespace System;
     using namespace AbstractionLevels::RoomplanRepository::ParameterTypes;
     using namespace SemIOLibrary::Parameters;
@@ -682,7 +682,7 @@ namespace AbstractionLevels {
     };
     
     [System::ComponentModel::Description(L"Abstract window definition")]
-    public ref class Window : public AbstractionLevels::RoomplanRepository::ObjectTypes::Opening
+    public ref class Window : public AbstractionLevels::RoomplanRepository::ThingTypes::Opening
     {
         
         private: System::Number^  _parapetHeight;
@@ -696,7 +696,7 @@ namespace AbstractionLevels {
     };
     
     [System::ComponentModel::Description(L"Abstract door definition")]
-    public ref class Door : public AbstractionLevels::RoomplanRepository::ObjectTypes::Opening
+    public ref class Door : public AbstractionLevels::RoomplanRepository::ThingTypes::Opening
     {
         
         private: AbstractionLevels::RoomplanRepository::ParameterTypes::DoorDirection _doorDirection;
@@ -715,9 +715,9 @@ namespace AbstractionLevels {
         
         private: ClosedCurve^  _boundary;
         
-        private: AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  _windows;
+        private: AbstractionLevels::RoomplanRepository::ThingTypes::Window^  _windows;
         
-        private: AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  _doors;
+        private: AbstractionLevels::RoomplanRepository::ThingTypes::Door^  _doors;
         
         private: AbstractionLevels::RoomplanRepository::ParameterTypes::Activities _activities;
         
@@ -729,17 +729,17 @@ namespace AbstractionLevels {
         }
         
         public: [System::ComponentModel::Description(L"")]
-        property AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  Windows
+        property AbstractionLevels::RoomplanRepository::ThingTypes::Window^  Windows
         {
-            AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  get();
-            System::Void set(AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  value);
+            AbstractionLevels::RoomplanRepository::ThingTypes::Window^  get();
+            System::Void set(AbstractionLevels::RoomplanRepository::ThingTypes::Window^  value);
         }
         
         public: [System::ComponentModel::Description(L"")]
-        property AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  Doors
+        property AbstractionLevels::RoomplanRepository::ThingTypes::Door^  Doors
         {
-            AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  get();
-            System::Void set(AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  value);
+            AbstractionLevels::RoomplanRepository::ThingTypes::Door^  get();
+            System::Void set(AbstractionLevels::RoomplanRepository::ThingTypes::Door^  value);
         }
         
         public: [System::ComponentModel::Description(L"")]
@@ -754,7 +754,7 @@ namespace AbstractionLevels {
 }
 namespace AbstractionLevels {
     namespace RoomplanRepository {
-        namespace ObjectTypes {
+        namespace ThingTypes {
     
     
     inline Point^  Opening::Center::get()
@@ -814,20 +814,20 @@ namespace AbstractionLevels {
         this->_boundary = value;
     }
     
-    inline AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  Room::Windows::get()
+    inline AbstractionLevels::RoomplanRepository::ThingTypes::Window^  Room::Windows::get()
     {
         return this->_windows;
     }
-    inline System::Void Room::Windows::set(AbstractionLevels::RoomplanRepository::ObjectTypes::Window^  value)
+    inline System::Void Room::Windows::set(AbstractionLevels::RoomplanRepository::ThingTypes::Window^  value)
     {
         this->_windows = value;
     }
     
-    inline AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  Room::Doors::get()
+    inline AbstractionLevels::RoomplanRepository::ThingTypes::Door^  Room::Doors::get()
     {
         return this->_doors;
     }
-    inline System::Void Room::Doors::set(AbstractionLevels::RoomplanRepository::ObjectTypes::Door^  value)
+    inline System::Void Room::Doors::set(AbstractionLevels::RoomplanRepository::ThingTypes::Door^  value)
     {
         this->_doors = value;
     }
@@ -846,7 +846,7 @@ namespace AbstractionLevels {
 namespace AbstractionLevels {
     namespace RoomplanRepository {
     using namespace System;
-    using namespace AbstractionLevels::RoomplanRepository::ObjectTypes;
+    using namespace AbstractionLevels::RoomplanRepository::ThingTypes;
     using namespace AbstractionLevels::ApartmentplanRepository;
     using namespace System;
     ref class Roomplan;
@@ -857,40 +857,40 @@ L"Comparable to 1to100")]
     public ref class Roomplan : public AbstractionLevels::ApartmentplanRepository::Apartmentplan
     {
         
-        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  _openingCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  _openingCollection;
         
-        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  _windowCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  _windowCollection;
         
-        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  _doorCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  _doorCollection;
         
-        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  _roomCollection;
+        private: System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  _roomCollection;
         
         public: [System::ComponentModel::Description(L"Generic base class for openings")]
-        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  OpeningCollection
+        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  OpeningCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  value);
         }
         
         public: [System::ComponentModel::Description(L"Abstract window definition")]
-        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  WindowCollection
+        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  WindowCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  value);
         }
         
         public: [System::ComponentModel::Description(L"Abstract door definition")]
-        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  DoorCollection
+        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  DoorCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  value);
         }
         
         public: [System::ComponentModel::Description(L"Abstract definition of a room with doors and windows")]
-        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  RoomCollection
+        property System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  RoomCollection
         {
-            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  get();
-            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  value);
+            System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  get();
+            System::Void set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  value);
         }
     };
     }
@@ -899,35 +899,35 @@ namespace AbstractionLevels {
     namespace RoomplanRepository {
     
     
-    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  Roomplan::OpeningCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  Roomplan::OpeningCollection::get()
     {
         return this->_openingCollection;
     }
-    inline System::Void Roomplan::OpeningCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Opening^ >^  value)
+    inline System::Void Roomplan::OpeningCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Opening^ >^  value)
     {
     }
     
-    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  Roomplan::WindowCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  Roomplan::WindowCollection::get()
     {
         return this->_windowCollection;
     }
-    inline System::Void Roomplan::WindowCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Window^ >^  value)
+    inline System::Void Roomplan::WindowCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Window^ >^  value)
     {
     }
     
-    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  Roomplan::DoorCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  Roomplan::DoorCollection::get()
     {
         return this->_doorCollection;
     }
-    inline System::Void Roomplan::DoorCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Door^ >^  value)
+    inline System::Void Roomplan::DoorCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Door^ >^  value)
     {
     }
     
-    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  Roomplan::RoomCollection::get()
+    inline System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  Roomplan::RoomCollection::get()
     {
         return this->_roomCollection;
     }
-    inline System::Void Roomplan::RoomCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ObjectTypes::Room^ >^  value)
+    inline System::Void Roomplan::RoomCollection::set(System::Collections::Generic::List<AbstractionLevels::RoomplanRepository::ThingTypes::Room^ >^  value)
     {
     }
     }
