@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemIOCompiler", "SemIOConso
 		{AC029182-5689-4FEE-AC27-E3D00FCF0EC4} = {AC029182-5689-4FEE-AC27-E3D00FCF0EC4}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemIO-ANTLR", "SemIO-ANTLR\SemIO-ANTLR.csproj", "{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,14 @@ Global
 		{22A74F3F-FD2D-49E8-AAFE-620B8703C305}.Debug64|Any CPU.Build.0 = Debug|Any CPU
 		{22A74F3F-FD2D-49E8-AAFE-620B8703C305}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22A74F3F-FD2D-49E8-AAFE-620B8703C305}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug32|Any CPU.ActiveCfg = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug32|Any CPU.Build.0 = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug64|Any CPU.ActiveCfg = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Debug64|Any CPU.Build.0 = Debug|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6ED36E52-B8AE-48B0-A901-C3FAFCDEEB38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
