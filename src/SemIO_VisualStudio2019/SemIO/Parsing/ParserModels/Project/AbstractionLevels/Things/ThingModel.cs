@@ -21,5 +21,11 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things
                 ParentNames = new List<string>(0);
             Parameters = parameters;
         }
+
+        public ThingModel(string name, List<ThingParameter> parameters,
+            List<string> parentNames = null) : this(name,"",parameters,parentNames)
+        {
+        }
+
     }
 }

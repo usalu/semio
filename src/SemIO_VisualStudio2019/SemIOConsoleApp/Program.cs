@@ -23,7 +23,7 @@ namespace SemIOCompiler
             /*string path = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\SemIOCode\";
             string fileName = "SampleCode.sio";
             string semIOCode = System.IO.File.ReadAllText(path+ fileName);
-            string outputPath = @"D:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
+            string outputPath = @"E:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
 
             CompilerResults compilerResults;
             bool isCompiled;
@@ -50,14 +50,29 @@ namespace SemIOCompiler
 
         private static void StartSemIO()
         {
-            Console.WriteLine("Hello there!");
-            Thread.Sleep(WaitingTime);
-            Console.WriteLine("\nI am your semIO compiler.");
-            Thread.Sleep(WaitingTime);
-            Console.WriteLine("\nNice to meet you!");
-            Thread.Sleep(WaitingTime);
+            //Console.WriteLine("Hello there!");
+            //Thread.Sleep(WaitingTime);
+            //Console.WriteLine("\nI am your semIO compiler.");
+            //Thread.Sleep(WaitingTime);
+            //Console.WriteLine("\nNice to meet you!");
+            //Thread.Sleep(WaitingTime);
 
-            Compile(GetName(), GetSemIOCode(true), GetOutputPath(false,true),true);
+            //Compile(GetName(), GetSemIOCode(true), GetOutputPath(false,true),true);
+
+            string outputPath = @"E:\Dokumente\GitHub\SemIO\src\SemIO_VisualStudio2019\SemIOConsoleApp\bin\Debug\";
+
+            CompileExampleProject(outputPath);
+        }
+
+        private static void CompileExampleProject(string outputPath)
+        {
+            CompilerResults compilerResults;
+            ExampleProject exampleProject = new ExampleProject();
+            compilerResults = Compiler.CompileProjectAssembly("ExampleProject", exampleProject.projectModel, outputPath);
+            PrintCompilerResult(compilerResults);
+            string assemblyName = compilerResults.CompiledAssembly.GetName().Name;
+            Console.WriteLine("\nThe assembly you created is stored under:");
+            Console.WriteLine(outputPath + @"*\CompilerResults\" + assemblyName + ".dll");
         }
 
         private static string GetName()
@@ -139,7 +154,8 @@ namespace SemIOCompiler
             bool isCompiled;
             try
             {
-                compilerResults = Compiler.CompileProjectAssembly(name, semIOCode,path);
+
+                compilerResults = Compiler.CompileProjectAssembly(name, new ProjectModel(name,"",semIOCode),path);
 
                 Console.WriteLine("\nThat's it...");
                 Thread.Sleep(WaitingTime);

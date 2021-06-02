@@ -24,5 +24,17 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things
             Multiplicity = multiplicity ?? new Multiplicity(1);
             
         }
+
+        public ThingParameter(string name, string description, Multiplicity multiplicity = null)
+            : this(name, description,name,multiplicity)
+        {
+
+        }
+
+        public ThingParameter(string name, Multiplicity multiplicity = null)
+            : this(name, "", name, multiplicity)
+        {
+
+        }
     }
 }
