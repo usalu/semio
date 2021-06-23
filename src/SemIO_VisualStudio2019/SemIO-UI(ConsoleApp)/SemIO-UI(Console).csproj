@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>SemIOCompiler</RootNamespace>
     <AssemblyName>SemIOCompiler</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -53,10 +54,6 @@
     <ProjectReference Include="..\SemIO-Library\SemIO-Library.csproj">
       <Project>{ac029182-5689-4fee-ac27-e3d00fcf0ec4}</Project>
       <Name>SemIO-Library</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SemIO-Kernel\SemIO-Kernel.csproj">
-      <Project>{a5c0a861-b571-4dbc-a68a-bd19fda99370}</Project>
-      <Name>SemIO-Kernel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
