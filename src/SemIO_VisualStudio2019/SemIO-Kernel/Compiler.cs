@@ -15,7 +15,7 @@ using SemIO.Parsing.ParserModels.Project.AbstractionLevels.Things;
 
 namespace SemIO
 {
-    public class Compiler
+    public static class Compiler
     {
 
         /// <summary>
@@ -44,9 +44,10 @@ namespace SemIO
 
             var cSharpCodeProvider = new CSharpCodeProvider();
             var vbCodeProvider = new VBCodeProvider();
-            var jSCodeProvider = CodeDomProvider.CreateProvider("JScript");
-            var cPPCodeProvider = CodeDomProvider.CreateProvider("C++");
-            //var cPPCodeProvider = CodeDomProvider.CreateProvider("C");
+
+            //var jSCodeProvider = CodeDomProvider.CreateProvider("JScript");
+            //var cppCodeProvider = CodeDomProvider.CreateProvider("C++");
+            //var cCodeProvider = CodeDomProvider.CreateProvider("C");
 
             //compile unit that contains the whole projectModel
             CodeCompileUnit projectModelCompileUnit = new CodeCompileUnit();
@@ -83,15 +84,15 @@ namespace SemIO
             vbCodeProvider.GenerateCodeFromCompileUnit(projectModelCompileUnit, stringWriterVB, codeGeneratorOptions);
             System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{projectModel.Name}.vb", stringWriterVB.ToString());
 
-            //generated JS code
-            StringWriter stringWriterJS = new StringWriter();
-            jSCodeProvider.GenerateCodeFromCompileUnit(projectModelCompileUnit, stringWriterJS, codeGeneratorOptions);
-            System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{projectModel.Name}.js", stringWriterJS.ToString());
+            ////generated JS code
+            //StringWriter stringWriterJS = new StringWriter();
+            //jSCodeProvider.GenerateCodeFromCompileUnit(projectModelCompileUnit, stringWriterJS, codeGeneratorOptions);
+            //System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{projectModel.Name}.js", stringWriterJS.ToString());
 
-            //generated C++ code
-            StringWriter stringWriterCPP = new StringWriter();
-            cPPCodeProvider.GenerateCodeFromCompileUnit(projectModelCompileUnit, stringWriterCPP, codeGeneratorOptions);
-            System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{projectModel.Name}.cpp", stringWriterCPP.ToString());
+            ////generated C++ code
+            //StringWriter stringWriterCPP = new StringWriter();
+            //cppCodeProvider.GenerateCodeFromCompileUnit(projectModelCompileUnit, stringWriterCPP, codeGeneratorOptions);
+            //System.IO.File.WriteAllText($@"{assemblyFolder}CompilerResults\{projectModel.Name}.cpp", stringWriterCPP.ToString());
 
 
             return cr;

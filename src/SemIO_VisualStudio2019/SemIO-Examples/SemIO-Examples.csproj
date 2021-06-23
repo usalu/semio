@@ -4,16 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A5C0A861-B571-4DBC-A68A-BD19FDA99370}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SemIO</RootNamespace>
-    <AssemblyName>SemIO</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <ProjectGuid>{CD30138F-60E7-42B5-B275-6B8E319DE345}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SemIO_Examples</RootNamespace>
+    <AssemblyName>SemIO-Examples</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -41,27 +43,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compiler.cs" />
-    <Compile Include="ExampleProject.cs" />
-    <Compile Include="Parsing\Parser.cs" />
-    <Compile Include="Parsing\SemIORegexs.cs" />
-    <Compile Include="Parsing\ParserModels\Benchmark.cs" />
-    <Compile Include="Parsing\ParserModels\InformedClass.cs" />
-    <Compile Include="Parsing\ParserModels\IParameter.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\AbstractionLevelModel.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\Multiplicity.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\ThingParameter.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\Things\ThingModel.cs" />
-    <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\ParameterType.cs" />
-    <Compile Include="Parsing\ParserModels\Project\ProjectModel.cs" />
+    <Compile Include="Dietzoldwerk.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SemIOLibrary\SemIOLibrary.csproj">
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SemIO-Kernel\SemIO-Kernel.csproj">
+      <Project>{a5c0a861-b571-4dbc-a68a-bd19fda99370}</Project>
+      <Name>SemIO-Kernel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SemIO-Library\SemIO-Library.csproj">
       <Project>{ac029182-5689-4fee-ac27-e3d00fcf0ec4}</Project>
-      <Name>SemIOLibrary</Name>
+      <Name>SemIO-Library</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -50,13 +50,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SemIOLibrary\SemIOLibrary.csproj">
+    <ProjectReference Include="..\SemIO-Library\SemIO-Library.csproj">
       <Project>{ac029182-5689-4fee-ac27-e3d00fcf0ec4}</Project>
-      <Name>SemIOLibrary</Name>
+      <Name>SemIO-Library</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SemIO\SemIO.csproj">
+    <ProjectReference Include="..\SemIO-Kernel\SemIO-Kernel.csproj">
       <Project>{a5c0a861-b571-4dbc-a68a-bd19fda99370}</Project>
-      <Name>SemIO</Name>
+      <Name>SemIO-Kernel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
