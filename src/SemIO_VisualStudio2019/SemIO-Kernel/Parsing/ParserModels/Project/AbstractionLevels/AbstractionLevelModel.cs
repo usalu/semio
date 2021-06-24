@@ -21,7 +21,7 @@ namespace SemIO.Parsing.ParserModels.Project.AbstractionLevels
             ThingTypes = new List<ThingModel>();
         }
 
-        internal AbstractionLevelModel(string name, string description, List<ParameterType> customParameterTypes,
+        public AbstractionLevelModel(string name, string description, List<ParameterType> customParameterTypes,
             List<ThingModel> thingTypes, string parentAbstractionLevelName = "") 
             : base(name, description)
         {

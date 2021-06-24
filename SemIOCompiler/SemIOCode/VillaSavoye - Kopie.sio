@@ -1,0 +1,164 @@
+AbstractionLevel Problembeschreibung
+
+	"A shelter against hear, cold, rain, thieves and the inquisitve.
+	A receptacle for light and sun.
+	A certain number of cells apporpiated to cooking, 
+	work and personal life."
+	Thing Haus
+		
+		"One for cooking and one for eating. 
+		One for work, one to wash yourself in and one for sleep"
+		Zimmer[5<=x] Zimmer
+
+	Thing Zelle
+
+		Nutzung Nutzung
+
+	Thing Zimmer(Zelle)
+
+		Text Geschoss
+		
+	Parameter Nutzung
+		Kochen
+		Arbeiten
+		PersoenlichesLeben
+
+	"A surface over which one can walk at ease, 
+	a bed on which to stretch yourself, 
+	a chair in which to rest or work, 
+	a work-table, 
+	receptacles in which each thing can be put 
+	at once in its right place."
+	Thing Schlafzimmer(Zimmer)
+
+		Bett Bett
+
+		Stuhl[1<=x] Stuehle
+
+		ArbeitsTisch Tisch
+
+		Behaelter[y] Behaelter
+
+	"Fittings to hold your books and protect them from dust and 
+	to hold your collection of paintings and works of art. 
+	And in such a way that the walls of your room are unencumbered. 
+	You could then bring out your pictures one at a time when you want them."
+	Thing Wohnzimmer(Zimmer)
+
+		Behaelter[x] Behaelter
+
+	Thing Behaelter[Multiple]
+
+		ObjektArten BehalteneObjekte
+
+	Parameter ObjektArten
+		Buecher
+		Malereien
+		SonsitgeKunst
+
+
+AbstractionLevel NeueArchitektur(Problembeschreibung)
+
+	Thing NeuesGebaeude
+
+		Pilotiraster Pilotiraster
+
+		NichtTragendeWand [x] NichtTragendeWaende
+		
+		BegruentesDach BegruentesDach
+
+		FassadenElemement[y] FassadenElememente
+
+	"Diese Pfosten ordnen sich in bestimmten gleichen Abstaenden an, 
+	ohne dabei auf die innere Anordnung des Hauses Ruecksicht zu nehmen."
+	Thing Pilotiraster
+		
+		Piloti[0<x] Pilotis
+
+		Einzelfundament[0<x] Einzelfundamente
+
+		Number AchsabstandLaengs
+
+		Number AchsabstandQuer
+
+	"Pfosten wie Pfostenfundamente werden nach den ihnen zukommenden Lasten genau berechnet."
+	Thing Piloti
+
+		Point Mittelpunkt
+
+		ClosedCurve Profil 
+
+	"An Stelle der frueheren Fundamente, 
+	auf welchen das Gebaeude ohne rechnerische Kontrolle ruhte, 
+	treten Einzelfundamente und an Stelle der Mauern einzelne Pfosten."
+	Thing Einzelfundament
+
+		Point Mittelpunkt
+
+		Number MaximalLast
+
+	"Das flache Dach erfordert zunaechst konsequente Ausnuetzung 
+	zu Wohnzwecken: Dachterrasse, Dachgarten."
+	Thing BegruentesDach
+
+		Dachterrasse Terasse
+
+		Dachgarten Garten
+
+	Thing Dachgarten
+
+		Bepflanzung Bepflanzung
+
+	"Es koennen Straeucher, sogar kleine Baeume 
+	bis zu 3 bis 4 Meter Hoehe ohne weiteres gepflanzt werden."
+	Thing Bepflanzung
+
+		Strauch[x] Straeucher
+
+		KleinerBaum[y] KleineBaeume
+
+	"Sandschicht, mit Betonplatten bedeckt, in den Fugen derselben Rasen; 
+	die Erde der Blumenbeete mit der Sandschicht in direkter Verbindung."
+	Thing Dachterrasse
+
+		Sandschicht Sandschicht
+
+		Betonplatte[x] Betonplatten
+
+	"Bei einem Bau kann man daher ohne weiteres die 
+	tragenden von den nichttragenden Teilen trennen."
+	Thing NichtTragendeWand
+
+	Thing FassadenElemement
+
+		Number Breite
+
+		Langfenster[x] Langfenster
+
+	Thing Langfenster
+
+		Number Bruestungshohe
+
+		Number Fensterhoehe
+
+AbstractionLevel Grundstueck(NeueArchitektur)
+
+	Thing Wohngebaude(NeuesGebaeude)
+
+		Number AnzahlBewohner
+
+		Number Breite
+
+		Number Laenge
+			
+	Thing VillaSavoye(Wohngebaude)
+
+		NichtTragendeWaendMitFensterTisch[x] NichtTragendeWaendeMitFensterTisch
+
+	Thing NichtTragendeWaendeMitFensterTisch(NichtTragendeWand)
+
+		IntegrierterTisch Tisch
+
+	Thing IntegrierterTisch
+
+		Number Tiefe
