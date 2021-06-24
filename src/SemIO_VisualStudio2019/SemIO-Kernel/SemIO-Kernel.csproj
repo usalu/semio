@@ -7,8 +7,8 @@
     <ProjectGuid>{4527007B-804A-4ADF-BB17-1BC1B52D78C3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SemIO_Kernel</RootNamespace>
-    <AssemblyName>SemIO_Kernel</AssemblyName>
+    <RootNamespace>SemIOKernel</RootNamespace>
+    <AssemblyName>SemIOKernel</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="Compiler.cs" />
     <Compile Include="Parsing\Parser.cs" />
-    <Compile Include="Parsing\ParserModels\Benchmark.cs" />
+    <Compile Include="Parsing\ParserModels\Evaluable.cs" />
     <Compile Include="Parsing\ParserModels\InformedClass.cs" />
     <Compile Include="Parsing\ParserModels\IParameter.cs" />
     <Compile Include="Parsing\ParserModels\Project\AbstractionLevels\AbstractionLevelModel.cs" />

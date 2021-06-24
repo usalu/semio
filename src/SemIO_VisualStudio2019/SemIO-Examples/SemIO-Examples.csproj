@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{CD30138F-60E7-42B5-B275-6B8E319DE345}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>SemIO_Examples</RootNamespace>
-    <AssemblyName>SemIO-Examples</AssemblyName>
+    <RootNamespace>SemIOExamples</RootNamespace>
+    <AssemblyName>SemIOExamples</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
