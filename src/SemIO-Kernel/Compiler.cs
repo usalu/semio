@@ -169,7 +169,7 @@ namespace SemIO
                     new CodeNamespaceImport(thingsNamespaceName),
                 }
             };
-            //If their exists a parent abstraction level the using directive needs to be added
+            //If there exists a parent abstraction level the using directive needs to be added
             if(abstractionLevel.ParentAbstractionLevelName!="")
                 abstractionLevelNamespace.Imports.Add(new CodeNamespaceImport(
                 "AbstractionLevels." + abstractionLevel.ParentAbstractionLevelName + "Repository"));
