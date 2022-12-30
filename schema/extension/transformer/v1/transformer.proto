@@ -1,0 +1,23 @@
+// syntax = "proto3";
+
+// package semio.extension.transformer.v1;
+
+// import "semio.proto";
+// import "google/protobuf/any.proto";
+
+// // A service for rewriting layouts (graphs).
+// service LayoutRewriterService{
+//     rpc RewriteLayout(RewriteLayoutRequest) return (RewriteLayoutResponse);
+// }
+
+// // A rewrite layout request is a description for layout (graph) rewrites.
+// message RewriteLayoutRequest{
+//     repeated Decision decisions = 1;
+//     // An optional initial layout that is used a starting layout to apply the decisions
+//     Layout initial_layout = 2;
+
+// }
+
+// message RewriteLayoutResponse{
+//     Layout layout = 1;
+// }

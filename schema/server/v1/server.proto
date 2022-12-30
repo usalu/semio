@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package semio.server.v1;
+
+import "model.proto";
+import "google/protobuf/any.proto";
+
+service DesignService{
+    rpc LayoutDesign(LayoutDesignRequest) returns (LayoutDesignResponse);
+}
+
+message LayoutDesignRequest{
+    Layout layout = 1;
+}
+
+message LayoutDesignResponse{
+    Design design = 1;
+}

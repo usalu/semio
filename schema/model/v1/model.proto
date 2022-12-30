@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package semio.model.v1;
+
+message Point{
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+message Quaternion{
+    double w = 1;
+    double x = 2;
+    double y = 3;
+    double z = 4;
+}
+
+message Pose{
+    Point point_of_view = 1;
+    Quaternion view = 2;
+}
+
+message Representation{
+    string type = 1;
+    google.protobuf.Any body = 2;
+    string name = 3;
+    int64 lod = 4;
+    google.protobuf.Any metadata = 5;
+}
+
+message Representations{
+    repeated Representation representations = 1;
+}
+
+message Sobject{
+    Pose pose = 1;
+    map<string,google.protobuf.Any> parameters = 2;
+}
+
+message AttractionStragegy{
+    Representation attracted_representation = 1;
+    string port = 2;
+    map<string,google.protobuf.Any> parameters = 2;
+}
+
+message Attraction{
+    Sobject attractor = 1;
+    Sobject attracted = 2;
+    AttractionStragegy attractor_attractionStrategy = 3;
+    AttractionStragegy attracted_attractionStrategy = 4;
+}
+
+message Layout{
+    repeated Sobject sobjects = 1;
+    repeated Attraction attractions = 2;
+}
+
+message AttractionChain{
+    repeated Attraction attractions = 1;
+}
+
+message Choreography{
+    repeated Sobject solitary_sobjects = 1;
+    repeated AttractionChain attractionChains = 2;
+}
+
+message Element{
+    Pose pose = 1;
+    Representations representations = 2;
+}
+
+message Design{
+    repeated Element elements = 1;
+}
+
+// TODO Think about a generalized, descriptive way of representing graph rewrite rules with the goal to depend on very little functionality to make it easier to implement this service.
+// message LayoutModification{
+//     Layout context_layout = 1;
+//     Layout modified_context_layout = 2;
+// }
+
+// message DecisionStrategy{
+//     bool expire
+// }
+
+// message Decision{
+//     LayoutModification layout_modification = 1;
+
+// }
