@@ -2,10 +2,8 @@ name: Regenerate gRPC code
 
 on:
   push:
-    branches:
-      - 'main'
-    paths:
-      - 'schema'
+    branches: [main]
+    paths: [schema/**]
 
 jobs:
   regenerate-grpc-code:
