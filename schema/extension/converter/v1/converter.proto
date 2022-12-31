@@ -1,19 +1,17 @@
 syntax = "proto3";
 
-package semioc.extension.converter.v1;
+package semio.extension.converter.v1;
 
-import "semioc.proto";
+import "model.proto";
 import "google/protobuf/any.proto";
 
 // A converter service can convert an element from one representation into another representation.
 service Converter{
-    //Port number is GENERALPREFIX + SERVICEPREFIX + SERVICE = 5 02 (adapter) 00
-    option (google.api.default_host) = "localhost:50200";
-    rpc ConvertRepresentation(RepresentationTranslationRequest) returns (Representation);
+    rpc ConvertRepresentation(RepresentationTranslationRequest) returns (semio.model.v1.Representation);
 }
 
 message RepresentationConversionRequest{
-    Representation representation = 1;
+    semio.model.v1.Representation representation = 1;
     string target_type = 2;
     google.protobuf.Any options = 3;
 }

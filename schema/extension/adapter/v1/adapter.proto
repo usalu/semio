@@ -2,34 +2,34 @@ syntax = "proto3";
 
 package semio.extension.adapter.v1;
 
-import "semio.proto";
+import "model.proto";
 import "google/protobuf/any.proto";
 import "google/api/client.proto";
 
-// An adapter service is an adapter for elements to a specific parameteric platform where your elements are defined in.
+// An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
 service Adapter{
-    //Port number is GENERALPREFIX + SERVICEPREFIX + SERVICE = 5 01 (adapter) 00
-    option (google.api.default_host) = "localhost:50100";
-    rpc RequestAttractionPoint (Attraction) returns (AttractionResponse){};
-    rpc RequestRepresentation (RepresentationRequest) returns (Representation){};
-    rpc RequestRepresentations (RepresentationsRequest) returns (Representations){};
+    // Attract the attracted to the attractor
+    rpc Attract (semio.model.v1.Attraction) returns (AttractionResponse){};
+    rpc RequestRepresentation (RepresentationRequest) returns (semio.model.v1.Representation){};
+    rpc RequestRepresentations (RepresentationsRequest) returns (semio.model.v1.Representations){};
 }
 
+
 message AttractionResponse{
-    Pose attracted_target_pose = 1;
-    Point attraction_point = 2;
+    semio.model.v1.Pose attracted_target_pose = 1;
+    semio.model.v1.Point attraction_point = 2;
 }
 
 message RepresentationRequest{
-    map<string,string> parameters = 1;
-    string name = 2;
-    string type = 3;
+    semio.model.v1.Sobject sobject = 1;
+    string type = 2;
+    string name = 3;
     int64 lod = 4;
 }
 
 message RepresentationsRequest{
-    map<string,string> parameters = 1;
-    repeated string names = 2;
-    repeated string types = 3;
+    semio.model.v1.Sobject sobject = 1;
+    repeated string types = 2;
+    repeated string names = 3;
     repeated int64 lods = 4;
 }

@@ -22,6 +22,13 @@ message Pose{
     Quaternion view = 2;
 }
 
+//Might just add verbosity and increase boilerplate code for clients
+// message Parameter{
+//     string name = 1;
+//     google.protobuf.Any value = 2;
+//     string type = 3;
+// }
+
 message Representation{
     string type = 1;
     google.protobuf.Any body = 2;
@@ -35,21 +42,31 @@ message Representations{
 }
 
 message Sobject{
-    Pose pose = 1;
-    map<string,google.protobuf.Any> parameters = 2;
-}
-
-message AttractionStragegy{
-    Representation attracted_representation = 1;
-    string port = 2;
+    string id = 1;
+    Pose pose = 2;
     map<string,google.protobuf.Any> parameters = 3;
 }
 
+message AttractionStragegy{
+    // An optional representation of the participant. 
+    Representation representation = 1;
+    // An optional port name to connect to.
+    string port = 2;
+    // Optional parameters to bias the attraction.
+    map<string,google.protobuf.Any> parameters = 3;
+}
+
+// An attraction participant participates in an attraction process.
+message AttractionParticipant{
+    // Participating sobject
+    string sobject_id = 1;
+    // Attraction strategy of participant
+    AttractionStragegy strategy = 2;
+}
+
 message Attraction{
-    Sobject attractor = 1;
-    Sobject attracted = 2;
-    AttractionStragegy attractor_attractionStrategy = 3;
-    AttractionStragegy attracted_attractionStrategy = 4;
+    AttractionParticipant attractor = 1;
+    AttractionParticipant attracted = 2;
 }
 
 message Layout{
