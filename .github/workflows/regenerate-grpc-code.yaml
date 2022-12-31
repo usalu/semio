@@ -1,0 +1,22 @@
+name: Regenerate gRPC code
+
+on:
+  push:
+    branches: [main]
+    paths: [schema]
+
+jobs:
+  regenerate-grpc-code:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Regenerate gRPC server and client source code
+      run: |
+        python -m pip install grpcio-tools
+        python -m grpc_tools.protoc -I schema/server/v1 -I schema/model/v1 --python_out=server/gen --pyi_out=server/gen --grpc_python_out=server/gen server.proto model.proto
+    - name: Commit and push changes
+      uses: devops-infra/action-commit-push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        commit_message: Regenerated gRPC code

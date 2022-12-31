@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
 package semio.model.v1;
+
+import "google/protobuf/any.proto";
 
 message Point{
     double x = 1;
@@ -42,7 +42,7 @@ message Sobject{
 message AttractionStragegy{
     Representation attracted_representation = 1;
     string port = 2;
-    map<string,google.protobuf.Any> parameters = 2;
+    map<string,google.protobuf.Any> parameters = 3;
 }
 
 message Attraction{
