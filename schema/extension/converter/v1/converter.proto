@@ -10,6 +10,7 @@ service Converter{
     rpc ConvertRepresentation(RepresentationTranslationRequest) returns (semio.model.v1.Representation);
 }
 
+// A request for converting a represenation
 message RepresentationConversionRequest{
     semio.model.v1.Representation representation = 1;
     string target_type = 2;
