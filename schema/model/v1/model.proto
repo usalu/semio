@@ -10,6 +10,7 @@ message Point{
     double z = 3;
 }
 
+// Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
 message Quaternion{
     double w = 1;
     double x = 2;
