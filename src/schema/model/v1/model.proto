@@ -81,6 +81,7 @@ message Layout{
     repeated Attraction attractions = 2;
 }
 
+// An attraction chain is list of attractions where each attraction depends on the previous attraction.
 message AttractionChain{
     repeated Attraction attractions = 1;
 }
