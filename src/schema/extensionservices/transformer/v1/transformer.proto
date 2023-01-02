@@ -6,7 +6,7 @@ import "model.proto";
 
 // A service for rewriting layouts (graphs).
 service LayoutRewriterService{
-    rpc RewriteLayout(RewriteLayoutRequest) return (semio.model.v1.Layout);
+    rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
 // A rewrite layout request is a description for layout (graph) rewrites.
