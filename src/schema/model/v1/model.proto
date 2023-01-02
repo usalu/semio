@@ -92,26 +92,31 @@ message Choreography{
     repeated AttractionChain attractionChains = 2;
 }
 
+// An element is the atom of a design. It has several representations and a pose.
 message Element{
     Pose pose = 1;
     Representations representations = 2;
 }
 
+// A design is an aggregation of elements.
 message Design{
     repeated Element elements = 1;
 }
 
-
+// A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system.
 message LayoutModification{
     Layout context_layout = 1;
     Layout modified_context_layout = 2;
 }
 
-message DecisionStrategy{
+// A decision strategy holds information on how modifications are applied.
+message LayoutModificationStrategy{
+    // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
     int64 match_count = 1;
 }
 
+// A decision is a layout modification with a strategy on how to apply it to a new layout.
 message Decision{
-    LayoutModification layout_modification = 1;
-    DecisionStrategy strategy = 2;
+    LayoutModification modification = 1;
+    LayoutModificationStrategy strategy = 2;
 }
