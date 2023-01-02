@@ -16,10 +16,10 @@ class AdapterStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Attract = channel.unary_unary(
-                '/semio.extension.adapter.v1.Adapter/Attract',
-                request_serializer=model__pb2.Attraction.SerializeToString,
-                response_deserializer=adapter__pb2.AttractionResponse.FromString,
+        self.RequestAttractionPoint = channel.unary_unary(
+                '/semio.extension.adapter.v1.Adapter/RequestAttractionPoint',
+                request_serializer=adapter__pb2.AttractionPointRequest.SerializeToString,
+                response_deserializer=model__pb2.Point.FromString,
                 )
         self.RequestRepresentation = channel.unary_unary(
                 '/semio.extension.adapter.v1.Adapter/RequestRepresentation',
@@ -37,21 +37,23 @@ class AdapterServicer(object):
     """An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
     """
 
-    def Attract(self, request, context):
-        """Attract the attracted to the attractor
+    def RequestAttractionPoint(self, request, context):
+        """Request an attraction point for the attracted.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def RequestRepresentation(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Request a specific representation
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def RequestRepresentations(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Request potentially all representations
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -59,10 +61,10 @@ class AdapterServicer(object):
 
 def add_AdapterServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Attract': grpc.unary_unary_rpc_method_handler(
-                    servicer.Attract,
-                    request_deserializer=model__pb2.Attraction.FromString,
-                    response_serializer=adapter__pb2.AttractionResponse.SerializeToString,
+            'RequestAttractionPoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestAttractionPoint,
+                    request_deserializer=adapter__pb2.AttractionPointRequest.FromString,
+                    response_serializer=model__pb2.Point.SerializeToString,
             ),
             'RequestRepresentation': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestRepresentation,
@@ -86,7 +88,7 @@ class Adapter(object):
     """
 
     @staticmethod
-    def Attract(request,
+    def RequestAttractionPoint(request,
             target,
             options=(),
             channel_credentials=None,
@@ -96,9 +98,9 @@ class Adapter(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.Adapter/Attract',
-            model__pb2.Attraction.SerializeToString,
-            adapter__pb2.AttractionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.Adapter/RequestAttractionPoint',
+            adapter__pb2.AttractionPointRequest.SerializeToString,
+            model__pb2.Point.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

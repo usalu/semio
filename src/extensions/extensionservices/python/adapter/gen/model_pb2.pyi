@@ -53,6 +53,14 @@ class Choreography(_message.Message):
     solitary_sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     def __init__(self, solitary_sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractionChains: _Optional[_Iterable[_Union[AttractionChain, _Mapping]]] = ...) -> None: ...
 
+class Decision(_message.Message):
+    __slots__ = ["modification", "strategy"]
+    MODIFICATION_FIELD_NUMBER: _ClassVar[int]
+    STRATEGY_FIELD_NUMBER: _ClassVar[int]
+    modification: LayoutModification
+    strategy: LayoutModificationStrategy
+    def __init__(self, modification: _Optional[_Union[LayoutModification, _Mapping]] = ..., strategy: _Optional[_Union[LayoutModificationStrategy, _Mapping]] = ...) -> None: ...
+
 class Design(_message.Message):
     __slots__ = ["elements"]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
@@ -74,6 +82,20 @@ class Layout(_message.Message):
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ...) -> None: ...
+
+class LayoutModification(_message.Message):
+    __slots__ = ["context_layout", "modified_context_layout"]
+    CONTEXT_LAYOUT_FIELD_NUMBER: _ClassVar[int]
+    MODIFIED_CONTEXT_LAYOUT_FIELD_NUMBER: _ClassVar[int]
+    context_layout: Layout
+    modified_context_layout: Layout
+    def __init__(self, context_layout: _Optional[_Union[Layout, _Mapping]] = ..., modified_context_layout: _Optional[_Union[Layout, _Mapping]] = ...) -> None: ...
+
+class LayoutModificationStrategy(_message.Message):
+    __slots__ = ["match_count"]
+    MATCH_COUNT_FIELD_NUMBER: _ClassVar[int]
+    match_count: int
+    def __init__(self, match_count: _Optional[int] = ...) -> None: ...
 
 class Point(_message.Message):
     __slots__ = ["x", "y", "z"]

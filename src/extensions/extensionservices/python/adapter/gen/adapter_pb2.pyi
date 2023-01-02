@@ -6,13 +6,13 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class AttractionResponse(_message.Message):
-    __slots__ = ["attracted_target_pose", "attraction_point"]
-    ATTRACTED_TARGET_POSE_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTION_POINT_FIELD_NUMBER: _ClassVar[int]
-    attracted_target_pose: _model_pb2.Pose
-    attraction_point: _model_pb2.Point
-    def __init__(self, attracted_target_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., attraction_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
+class AttractionPointRequest(_message.Message):
+    __slots__ = ["attracted_attractionStrategy", "attractor_url"]
+    ATTRACTED_ATTRACTIONSTRATEGY_FIELD_NUMBER: _ClassVar[int]
+    ATTRACTOR_URL_FIELD_NUMBER: _ClassVar[int]
+    attracted_attractionStrategy: _model_pb2.AttractionStragegy
+    attractor_url: str
+    def __init__(self, attractor_url: _Optional[str] = ..., attracted_attractionStrategy: _Optional[_Union[_model_pb2.AttractionStragegy, _Mapping]] = ...) -> None: ...
 
 class RepresentationRequest(_message.Message):
     __slots__ = ["lod", "name", "sobject", "type"]
