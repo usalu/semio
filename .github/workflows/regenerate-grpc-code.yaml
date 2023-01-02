@@ -24,15 +24,15 @@ jobs:
         out="src/extensions/genextensionservices/python/adapter/gen"
         rm -r -f $out
         mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extensionservice/adapter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out adapter.proto model.proto
+        python -m grpc_tools.protoc -I src/schema/extensionservices/adapter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out adapter.proto model.proto
         out="src/extensions/genextensionservices/python/converter/gen"
         rm -r -f $out
         mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extensionservice/converter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out converter.proto model.proto
+        python -m grpc_tools.protoc -I src/schema/extensionservices/converter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out converter.proto model.proto
         out="src/extensions/genextensionservices/python/transformer/gen"
         rm -r -f $out
         mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extensionservice/transformer/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out transformer.proto model.proto
+        python -m grpc_tools.protoc -I src/schema/extensionservices/transformer/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out transformer.proto model.proto
     - name: Install gRPC node source code generator
       run: |
         npm install -g grpc-tools
@@ -42,15 +42,15 @@ jobs:
         out="src/extensions/genextensionservices/python/adapter/gen"
         rm -r -f $out
         mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservice/adapter/v1 -I src/schema/model/v1 adapter.proto model.proto
+        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/adapter/v1 -I src/schema/model/v1 adapter.proto model.proto
         out="src/extensions/genextensionservices/python/converter/gen"
         rm -r -f $out
         mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservice/converter/v1 -I src/schema/model/v1 converter.proto model.proto
+        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/converter/v1 -I src/schema/model/v1 converter.proto model.proto
         out="src/extensions/genextensionservices/python/transformer/gen"
         rm -r -f $out
         mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservice/transformer/v1 -I src/schema/model/v1 transformer.proto model.proto
+        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/transformer/v1 -I src/schema/model/v1 transformer.proto model.proto
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:
