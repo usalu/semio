@@ -86,6 +86,7 @@ message AttractionChain{
     repeated Attraction attractions = 1;
 }
 
+// A choreography is an extact assembly and redundant free plan for sobjects and attraction chains.
 message Choreography{
     repeated Sobject solitary_sobjects = 1;
     repeated AttractionChain attractionChains = 2;
