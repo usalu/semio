@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package semio.server.v1;
+
+import "model.proto";
+import "adapter.proto";
+import "converter.proto";
+import "adapter.proto";
+
+// A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
+service Manager{
+    rpc RequestRepresentation (semio.extension.adapter.v1.RepresentationRequest) returns (semio.model.v1.Representation){};
+    rpc Attract (semio.model.v1.Attraction) returns (AttractionResponse){};
+}
