@@ -75,6 +75,7 @@ message Attraction{
     AttractionParticipant attracted = 2;
 }
 
+// A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
 message Layout{
     repeated Sobject sobjects = 1;
     repeated Attraction attractions = 2;
