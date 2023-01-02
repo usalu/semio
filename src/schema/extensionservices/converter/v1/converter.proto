@@ -7,7 +7,7 @@ import "google/protobuf/any.proto";
 
 // A converter service can convert an element from one representation into another representation.
 service Converter{
-    rpc ConvertRepresentation(RepresentationTranslationRequest) returns (semio.model.v1.Representation);
+    rpc ConvertRepresentation(RepresentationConversionRequest) returns (semio.model.v1.Representation);
 }
 
 // A request for converting a represenation

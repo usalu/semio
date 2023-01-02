@@ -101,17 +101,17 @@ message Design{
     repeated Element elements = 1;
 }
 
-// TODO Think about a generalized, descriptive way of representing graph rewrite rules with the goal to depend on very little functionality to make it easier to implement this service.
-// message LayoutModification{
-//     Layout context_layout = 1;
-//     Layout modified_context_layout = 2;
-// }
 
-// message DecisionStrategy{
-//     bool expire
-// }
+message LayoutModification{
+    Layout context_layout = 1;
+    Layout modified_context_layout = 2;
+}
 
-// message Decision{
-//     LayoutModification layout_modification = 1;
+message DecisionStrategy{
+    int64 match_count = 1;
+}
 
-// }
+message Decision{
+    LayoutModification layout_modification = 1;
+    DecisionStrategy strategy = 2;
+}
