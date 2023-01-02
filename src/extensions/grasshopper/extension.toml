@@ -1,0 +1,7 @@
+name = "Semio.gh"
+port = 5
+
+[[services]]
+
+[translation]
+source.names = "rhino"

@@ -3,14 +3,14 @@ syntax = "proto3";
 package semio.extension.adapter.v1;
 
 import "model.proto";
-import "google/protobuf/any.proto";
-import "google/api/client.proto";
 
 // An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
 service Adapter{
-    // Attract the attracted to the attractor
+    // Attract the attracted to the attractor.
     rpc Attract (semio.model.v1.Attraction) returns (AttractionResponse){};
+    // Request a specific representation
     rpc RequestRepresentation (RepresentationRequest) returns (semio.model.v1.Representation){};
+    // Request potentially all representations
     rpc RequestRepresentations (RepresentationsRequest) returns (semio.model.v1.Representations){};
 }
 

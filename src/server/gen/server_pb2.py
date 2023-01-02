@@ -14,13 +14,13 @@ _sym_db = _symbol_database.Default()
 import model_pb2 as model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\x12\x0fsemio.server.v1\x1a\x0bmodel.proto2O\n\rDesignService\x12>\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Designb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\x12\x0fsemio.server.v1\x1a\x0bmodel.proto2H\n\x06Server\x12>\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Designb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'server_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _DESIGNSERVICE._serialized_start=46
-  _DESIGNSERVICE._serialized_end=125
+  _SERVER._serialized_start=46
+  _SERVER._serialized_end=118
 # @@protoc_insertion_point(module_scope)

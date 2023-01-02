@@ -5,7 +5,7 @@ import grpc
 import model_pb2 as model__pb2
 
 
-class DesignServiceStub(object):
+class ServerStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,13 +15,13 @@ class DesignServiceStub(object):
             channel: A grpc.Channel.
         """
         self.LayoutDesign = channel.unary_unary(
-                '/semio.server.v1.DesignService/LayoutDesign',
+                '/semio.server.v1.Server/LayoutDesign',
                 request_serializer=model__pb2.Layout.SerializeToString,
                 response_deserializer=model__pb2.Design.FromString,
                 )
 
 
-class DesignServiceServicer(object):
+class ServerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def LayoutDesign(self, request, context):
@@ -31,7 +31,7 @@ class DesignServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_DesignServiceServicer_to_server(servicer, server):
+def add_ServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LayoutDesign': grpc.unary_unary_rpc_method_handler(
                     servicer.LayoutDesign,
@@ -40,12 +40,12 @@ def add_DesignServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.server.v1.DesignService', rpc_method_handlers)
+            'semio.server.v1.Server', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class DesignService(object):
+class Server(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -59,7 +59,7 @@ class DesignService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.DesignService/LayoutDesign',
+        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.Server/LayoutDesign',
             model__pb2.Layout.SerializeToString,
             model__pb2.Design.FromString,
             options, channel_credentials,

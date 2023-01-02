@@ -1,3 +1,0 @@
-[submodule "schema/thirdparty/google"]
-	path = schema/thirdparty/google
-	url = https://github.com/googleapis/api-common-protos.git
