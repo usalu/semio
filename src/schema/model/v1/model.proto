@@ -69,6 +69,7 @@ message AttractionParticipant{
     AttractionStragegy strategy = 2;
 }
 
+// An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
 message Attraction{
     AttractionParticipant attractor = 1;
     AttractionParticipant attracted = 2;
