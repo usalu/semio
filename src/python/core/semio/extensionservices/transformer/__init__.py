@@ -1,0 +1,3 @@
+# TODO Automate imports
+from .gen.transformer_pb2 import RewriteLayoutRequest
+from .gen.transformer_pb2_grpc import LayoutRewriterServiceServicer, add_LayoutRewriterServiceServicer_to_server

@@ -13,7 +13,13 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install gRPC python source code generator
       run: python -m pip install grpcio-tools
-    - name: Regenerate gRPC server source code
+    - name: Regenerate gRPC python model source code
+      run: |
+        out="src/model/python/gen"
+        rm -r -f $out
+        mkdir -p $out
+        python -m grpc_tools.protoc -I src/schema/model/v1 --python_out=$out --pyi_out=$out model.proto
+    - name: Regenerate gRPC python server source code
       run: |
         out="src/server/gen"
         rm -r -f $out
@@ -37,6 +43,13 @@ jobs:
       run: |
         npm install -g grpc-tools
         npm install grpc_tools_node_protoc_ts --save-dev
+    - name: Regenerate gRPC node model
+      run: |
+        out="src/model/node/gen"
+        rm -r -f $out
+        mkdir -p $out
+        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out -I src/schema/model/v1 model.proto
+
     - name: Regenerate gRPC node extension services source code
       run: |
         out="src/extensions/extensionservices/node/adapter/gen"
