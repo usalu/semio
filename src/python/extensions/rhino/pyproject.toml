@@ -16,6 +16,7 @@ mathutils = "^3.3.0"
 multipledispatch = "^0.6.0"
 pytest-lazy-fixture = "^0.6.3"
 dacite = "^1.6.0"
+semio = {path = "../../core", develop = true}
 
 [build-system]
 requires = ["poetry-core"]

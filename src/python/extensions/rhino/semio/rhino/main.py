@@ -5,8 +5,8 @@ print(dir())
 # from logging import basicConfig
 # from concurrent.futures import ThreadPoolExecutor
 # from grpc import server
-# from ...model import Point
-# from extensionservices.adapter import AttractionPointRequest, RepresentationRequest, RepresentationsRequest, AdapterServicer, add_AdapterServicer_to_server
+# from semio.model import Point
+# from semio.extensionservices.adapter import AttractionPointRequest, RepresentationRequest, RepresentationsRequest, AdapterServicer, add_AdapterServicer_to_server
 
 # from dataclasses import dataclass,field, InitVar
 

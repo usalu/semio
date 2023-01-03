@@ -18,6 +18,9 @@ pydantic = "^1.10.2"
 dacite = "^1.6.0"
 grpcio = "^1.51.1"
 
+[tool.poetry.group.dev.dependencies]
+grpcio-tools = "^1.51.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

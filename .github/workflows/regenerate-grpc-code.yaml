@@ -15,27 +15,27 @@ jobs:
       run: python -m pip install grpcio-tools
     - name: Regenerate gRPC python model source code
       run: |
-        out="src/model/python/gen"
+        out="src/python/core/semio/model/gen"
         rm -r -f $out
         mkdir -p $out
         python -m grpc_tools.protoc -I src/schema/model/v1 --python_out=$out --pyi_out=$out model.proto
     - name: Regenerate gRPC python server source code
       run: |
-        out="src/server/gen"
+        out="src/python/core/semio/server/gen"
         rm -r -f $out
         mkdir -p $out
         python -m grpc_tools.protoc -I src/schema/server/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out server.proto model.proto
     - name: Regenerate gRPC python extension services source code
       run: |
-        out="src/extensions/extensionservices/python/adapter/gen"
+        out="src/python/core/semio/extensionservices/adapter/gen"
         rm -r -f $out
         mkdir -p $out
         python -m grpc_tools.protoc -I src/schema/extensionservices/adapter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out adapter.proto model.proto
-        out="src/extensions/extensionservices/python/converter/gen"
+        out="src/python/core/semio/extensionservices/converter/gen"
         rm -r -f $out
         mkdir -p $out
         python -m grpc_tools.protoc -I src/schema/extensionservices/converter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out converter.proto model.proto
-        out="src/extensions/extensionservices/python/transformer/gen"
+        out="src/python/core/semio/extensionservices/transformer/gen"
         rm -r -f $out
         mkdir -p $out
         python -m grpc_tools.protoc -I src/schema/extensionservices/transformer/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out transformer.proto model.proto
@@ -45,14 +45,13 @@ jobs:
         npm install grpc_tools_node_protoc_ts --save-dev
     - name: Regenerate gRPC node model
       run: |
-        out="src/model/node/gen"
+        out="src/node/model/gen"
         rm -r -f $out
         mkdir -p $out
         grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out -I src/schema/model/v1 model.proto
-
     - name: Regenerate gRPC node extension services source code
       run: |
-        out="src/extensions/extensionservices/node/adapter/gen"
+        out="src/node/extensionservices/adapter/gen"
         rm -r -f $out
         mkdir -p $out
         grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/adapter/v1 -I src/schema/model/v1 adapter.proto model.proto
@@ -60,10 +59,15 @@ jobs:
         rm -r -f $out
         mkdir -p $out
         grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/converter/v1 -I src/schema/model/v1 converter.proto model.proto
-        out="src/extensions/extensionservices/node/transformer/gen"
+        out="src/node/extensionservices/transformer/gen"
         rm -r -f $out
         mkdir -p $out
         grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extensionservices/transformer/v1 -I src/schema/model/v1 transformer.proto model.proto
+    - name: Uninstall gRPC node source code generator
+      run: |
+        rm -r -f node_modules 
+        rm -r -f package.json
+        rm -r -f package-lock.json
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:
