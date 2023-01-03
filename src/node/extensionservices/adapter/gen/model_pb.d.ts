@@ -154,6 +154,8 @@ export namespace Representations {
 export class Sobject extends jspb.Message { 
     getId(): string;
     setId(value: string): Sobject;
+    getUrl(): string;
+    setUrl(value: string): Sobject;
 
     hasPose(): boolean;
     clearPose(): void;
@@ -176,6 +178,7 @@ export class Sobject extends jspb.Message {
 export namespace Sobject {
     export type AsObject = {
         id: string,
+        url: string,
         pose?: Pose.AsObject,
 
         parametersMap: Array<[string, google_protobuf_any_pb.Any.AsObject]>,
@@ -186,8 +189,8 @@ export class AttractionStragegy extends jspb.Message {
 
     hasRepresentation(): boolean;
     clearRepresentation(): void;
-    getRepresentation(): Representation | undefined;
-    setRepresentation(value?: Representation): AttractionStragegy;
+    getRepresentation(): google_protobuf_any_pb.Any | undefined;
+    setRepresentation(value?: google_protobuf_any_pb.Any): AttractionStragegy;
     getPort(): string;
     setPort(value: string): AttractionStragegy;
 
@@ -206,7 +209,7 @@ export class AttractionStragegy extends jspb.Message {
 
 export namespace AttractionStragegy {
     export type AsObject = {
-        representation?: Representation.AsObject,
+        representation?: google_protobuf_any_pb.Any.AsObject,
         port: string,
 
         parametersMap: Array<[string, google_protobuf_any_pb.Any.AsObject]>,

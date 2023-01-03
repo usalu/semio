@@ -42,8 +42,8 @@ class AttractionStragegy(_message.Message):
     REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.MessageMap[str, _any_pb2.Any]
     port: str
-    representation: Representation
-    def __init__(self, representation: _Optional[_Union[Representation, _Mapping]] = ..., port: _Optional[str] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+    representation: _any_pb2.Any
+    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
 
 class Choreography(_message.Message):
     __slots__ = ["attractionChains", "solitary_sobjects"]
@@ -148,7 +148,7 @@ class Representations(_message.Message):
     def __init__(self, representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
 
 class Sobject(_message.Message):
-    __slots__ = ["id", "parameters", "pose"]
+    __slots__ = ["id", "parameters", "pose", "url"]
     class ParametersEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -159,7 +159,9 @@ class Sobject(_message.Message):
     ID_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     POSE_FIELD_NUMBER: _ClassVar[int]
+    URL_FIELD_NUMBER: _ClassVar[int]
     id: str
     parameters: _containers.MessageMap[str, _any_pb2.Any]
     pose: Pose
-    def __init__(self, id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+    url: str
+    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...

@@ -14,13 +14,15 @@ _sym_db = _symbol_database.Default()
 import model_pb2 as model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\x12\x0fsemio.server.v1\x1a\x0bmodel.proto2H\n\x06Server\x12>\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Designb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\x12\x0fsemio.server.v1\x1a\x0bmodel.proto\"R\n\x13LayoutDesignRequest\x12&\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.Layout\x12\x13\n\x0btarget_type\x18\x02 \x01(\t2H\n\x06Server\x12>\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Designb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'server_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _SERVER._serialized_start=46
-  _SERVER._serialized_end=118
+  _LAYOUTDESIGNREQUEST._serialized_start=46
+  _LAYOUTDESIGNREQUEST._serialized_end=128
+  _SERVER._serialized_start=130
+  _SERVER._serialized_end=202
 # @@protoc_insertion_point(module_scope)

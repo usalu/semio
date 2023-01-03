@@ -1494,6 +1494,7 @@ proto.semio.model.v1.Sobject.prototype.toObject = function(opt_includeInstance) 
 proto.semio.model.v1.Sobject.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    url: jspb.Message.getFieldWithDefault(msg, 2, ""),
     pose: (f = msg.getPose()) && proto.semio.model.v1.Pose.toObject(includeInstance, f),
     parametersMap: (f = msg.getParametersMap()) ? f.toObject(includeInstance, proto.google.protobuf.Any.toObject) : []
   };
@@ -1537,11 +1538,15 @@ proto.semio.model.v1.Sobject.deserializeBinaryFromReader = function(msg, reader)
       msg.setId(value);
       break;
     case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUrl(value);
+      break;
+    case 3:
       var value = new proto.semio.model.v1.Pose;
       reader.readMessage(value,proto.semio.model.v1.Pose.deserializeBinaryFromReader);
       msg.setPose(value);
       break;
-    case 3:
+    case 4:
       var value = msg.getParametersMap();
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.google.protobuf.Any.deserializeBinaryFromReader, "", new proto.google.protobuf.Any());
@@ -1583,17 +1588,24 @@ proto.semio.model.v1.Sobject.serializeBinaryToWriter = function(message, writer)
       f
     );
   }
+  f = message.getUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
   f = message.getPose();
   if (f != null) {
     writer.writeMessage(
-      2,
+      3,
       f,
       proto.semio.model.v1.Pose.serializeBinaryToWriter
     );
   }
   f = message.getParametersMap(true);
   if (f && f.getLength() > 0) {
-    f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.google.protobuf.Any.serializeBinaryToWriter);
+    f.serializeBinary(4, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.google.protobuf.Any.serializeBinaryToWriter);
   }
 };
 
@@ -1617,12 +1629,30 @@ proto.semio.model.v1.Sobject.prototype.setId = function(value) {
 
 
 /**
- * optional Pose pose = 2;
+ * optional string url = 2;
+ * @return {string}
+ */
+proto.semio.model.v1.Sobject.prototype.getUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.semio.model.v1.Sobject} returns this
+ */
+proto.semio.model.v1.Sobject.prototype.setUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional Pose pose = 3;
  * @return {?proto.semio.model.v1.Pose}
  */
 proto.semio.model.v1.Sobject.prototype.getPose = function() {
   return /** @type{?proto.semio.model.v1.Pose} */ (
-    jspb.Message.getWrapperField(this, proto.semio.model.v1.Pose, 2));
+    jspb.Message.getWrapperField(this, proto.semio.model.v1.Pose, 3));
 };
 
 
@@ -1631,7 +1661,7 @@ proto.semio.model.v1.Sobject.prototype.getPose = function() {
  * @return {!proto.semio.model.v1.Sobject} returns this
 */
 proto.semio.model.v1.Sobject.prototype.setPose = function(value) {
-  return jspb.Message.setWrapperField(this, 2, value);
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
@@ -1649,19 +1679,19 @@ proto.semio.model.v1.Sobject.prototype.clearPose = function() {
  * @return {boolean}
  */
 proto.semio.model.v1.Sobject.prototype.hasPose = function() {
-  return jspb.Message.getField(this, 2) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * map<string, google.protobuf.Any> parameters = 3;
+ * map<string, google.protobuf.Any> parameters = 4;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,!proto.google.protobuf.Any>}
  */
 proto.semio.model.v1.Sobject.prototype.getParametersMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,!proto.google.protobuf.Any>} */ (
-      jspb.Message.getMapField(this, 3, opt_noLazyCreate,
+      jspb.Message.getMapField(this, 4, opt_noLazyCreate,
       proto.google.protobuf.Any));
 };
 
@@ -1707,7 +1737,7 @@ proto.semio.model.v1.AttractionStragegy.prototype.toObject = function(opt_includ
  */
 proto.semio.model.v1.AttractionStragegy.toObject = function(includeInstance, msg) {
   var f, obj = {
-    representation: (f = msg.getRepresentation()) && proto.semio.model.v1.Representation.toObject(includeInstance, f),
+    representation: (f = msg.getRepresentation()) && google_protobuf_any_pb.Any.toObject(includeInstance, f),
     port: jspb.Message.getFieldWithDefault(msg, 2, ""),
     parametersMap: (f = msg.getParametersMap()) ? f.toObject(includeInstance, proto.google.protobuf.Any.toObject) : []
   };
@@ -1747,8 +1777,8 @@ proto.semio.model.v1.AttractionStragegy.deserializeBinaryFromReader = function(m
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.semio.model.v1.Representation;
-      reader.readMessage(value,proto.semio.model.v1.Representation.deserializeBinaryFromReader);
+      var value = new google_protobuf_any_pb.Any;
+      reader.readMessage(value,google_protobuf_any_pb.Any.deserializeBinaryFromReader);
       msg.setRepresentation(value);
       break;
     case 2:
@@ -1795,7 +1825,7 @@ proto.semio.model.v1.AttractionStragegy.serializeBinaryToWriter = function(messa
     writer.writeMessage(
       1,
       f,
-      proto.semio.model.v1.Representation.serializeBinaryToWriter
+      google_protobuf_any_pb.Any.serializeBinaryToWriter
     );
   }
   f = message.getPort();
@@ -1813,17 +1843,17 @@ proto.semio.model.v1.AttractionStragegy.serializeBinaryToWriter = function(messa
 
 
 /**
- * optional Representation representation = 1;
- * @return {?proto.semio.model.v1.Representation}
+ * optional google.protobuf.Any representation = 1;
+ * @return {?proto.google.protobuf.Any}
  */
 proto.semio.model.v1.AttractionStragegy.prototype.getRepresentation = function() {
-  return /** @type{?proto.semio.model.v1.Representation} */ (
-    jspb.Message.getWrapperField(this, proto.semio.model.v1.Representation, 1));
+  return /** @type{?proto.google.protobuf.Any} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_any_pb.Any, 1));
 };
 
 
 /**
- * @param {?proto.semio.model.v1.Representation|undefined} value
+ * @param {?proto.google.protobuf.Any|undefined} value
  * @return {!proto.semio.model.v1.AttractionStragegy} returns this
 */
 proto.semio.model.v1.AttractionStragegy.prototype.setRepresentation = function(value) {
