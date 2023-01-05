@@ -1,4 +1,7 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.extraPaths": ["${workspaceFolder}/src/python/core"]
+    "python.analysis.extraPaths": ["${workspaceFolder}/src/python/core"],
+    "files.exclude": {
+        "**/__pycache__": true
+    }
 }

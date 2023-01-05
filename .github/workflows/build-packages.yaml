@@ -1,0 +1,30 @@
+name: Build Python Packages
+
+on:
+  push:
+    branches: [main]
+    paths: [src/python/**]
+
+jobs:
+  build-python-packages:
+    runs-on: ubuntu-latest
+    needs: regenerate-grpc-code
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install poetry
+      run: curl -sSL https://install.python-poetry.org | python3 -
+    - name: Build core Python package
+      run: | 
+        cd ./src/python/core
+        poetry build
+    - name: Build Rhino Extension Python package
+      run: | 
+        cd ..
+        cd ..
+        cd ./extensions/core
+        poetry build
+    - name: Commit and push changes
+      uses: devops-infra/action-commit-push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        commit_message: Built Python packages
