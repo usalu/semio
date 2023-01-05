@@ -1,27 +1,30 @@
-name: Build Python Packages
+name: Build Packages
 
 on:
   push:
     branches: [main]
     paths: [src/python/**]
+  workflow_run:
+    branches: [main]
+    workflows: ["Generate gRPC code"]
+
 
 jobs:
   build-python-packages:
     runs-on: ubuntu-latest
-    needs: regenerate-grpc-code
     steps:
     - uses: actions/checkout@v2
     - name: Install poetry
       run: curl -sSL https://install.python-poetry.org | python3 -
     - name: Build core Python package
       run: | 
-        cd ./src/python/core
+        cd ./src/packages/python
         poetry build
     - name: Build Rhino Extension Python package
       run: | 
         cd ..
         cd ..
-        cd ./extensions/core
+        cd ./extensions/rhino
         poetry build
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
