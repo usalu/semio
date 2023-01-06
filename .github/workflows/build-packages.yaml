@@ -3,7 +3,7 @@ name: Build Packages
 on:
   push:
     branches: [main]
-    paths: [src/python/**]
+    paths: [src/packages/python/**]
   workflow_run:
     branches: [main]
     workflows: ["Generate gRPC code"]
@@ -16,13 +16,18 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install poetry
       run: curl -sSL https://install.python-poetry.org | python3 -
-    - name: Build core Python package
+    - name: Build core package
       run: | 
         cd ./src/packages/python
         poetry build
+    - name: Build server package
+      run: |
+        cd ..
+        cd ..
+        cd ./server
+        poetry build
     - name: Build Rhino Extension Python package
       run: | 
-        cd ..
         cd ..
         cd ./extensions/rhino
         poetry build
