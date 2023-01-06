@@ -18,18 +18,18 @@ jobs:
       run: curl -sSL https://install.python-poetry.org | python3 -
     - name: Build core package
       run: | 
-        cd ./src/packages/python
+        cd src/packages/python
         poetry build
     - name: Build server package
       run: |
         cd ..
         cd ..
-        cd ./server
+        cd server
         poetry build
     - name: Build Rhino Extension Python package
       run: | 
         cd ..
-        cd ./extensions/rhino
+        cd extensions/rhino
         poetry build
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
