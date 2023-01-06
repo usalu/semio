@@ -1,12 +1,14 @@
 name: Build Packages
 
 on:
-  push:
-    branches: [main]
-    paths: [src/packages/python/**, src/server/**,src/extensions/rhino/**]
   workflow_run:
     branches: [main]
     workflows: ["Generate gRPC code"]
+    types: 
+      - completed
+  push:
+    branches: [main]
+    paths: [src/packages/python/**, src/server/**,src/extensions/rhino/**]
 
 
 jobs:
@@ -19,7 +21,7 @@ jobs:
     - name: Build core package
       run: | 
         cd src/packages/python
-        python -m poetry build
+        poetry build
     - name: Build server package
       run: |
         cd ..
