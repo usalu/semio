@@ -115,7 +115,7 @@ class GrasshopperAdapter(AdapterServicer):
 
 
 class GrasshopperExtensionServer(BaseModel):
-    port: int = 50051
+    port: int = 59001
 
     def serve(self):
         basicConfig()

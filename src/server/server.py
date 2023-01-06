@@ -14,8 +14,8 @@ class Server(BaseModel, ServerServicer):
 
     def LayoutDesign(self, request : LayoutDesignRequest, context):
         elements =  []
-        design = Design(elements)
-        raise NotImplementedError('Method not implemented!')
+        design = Design(elements=elements)
+        return design
 
     def serve(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
