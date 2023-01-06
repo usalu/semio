@@ -5,4 +5,4 @@ from os.path import join
 sys.path.append(join(path.dirname(__file__),('gen')))
 
 from .gen.transformer_pb2 import *
-from .gen.transformer_pb2_grpc import LayoutRewriterServiceServicer, add_LayoutRewriterServiceServicer_to_server
+from .gen.transformer_pb2_grpc import LayoutRewriterServicer, add_LayoutRewriterServicer_to_server, LayoutRewriterStub

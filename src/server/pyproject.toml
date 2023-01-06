@@ -11,10 +11,10 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pydantic = "^1.10.4"
-networkx = "^2.8.8"
-mathutils = "^3.3.0"
-semio = {path = "../packages/python", develop = true}
+pydantic = "*"
+networkx = "*"
+mathutils = "*"
+semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.1.0-py3-none-any.whl"}
 
 [build-system]
 requires = ["poetry-core"]

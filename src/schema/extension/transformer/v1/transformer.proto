@@ -5,7 +5,7 @@ package semio.extension.transformer.v1;
 import "model.proto";
 
 // A service for rewriting layouts (graphs).
-service LayoutRewriterService{
+service LayoutRewriter{
     rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
