@@ -6,7 +6,7 @@ import model_pb2 as model__pb2
 import transformer_pb2 as transformer__pb2
 
 
-class LayoutRewriterServiceStub(object):
+class LayoutRewriterStub(object):
     """A service for rewriting layouts (graphs).
     """
 
@@ -17,13 +17,13 @@ class LayoutRewriterServiceStub(object):
             channel: A grpc.Channel.
         """
         self.RewriteLayout = channel.unary_unary(
-                '/semio.extension.transformer.v1.LayoutRewriterService/RewriteLayout',
+                '/semio.extension.transformer.v1.LayoutRewriter/RewriteLayout',
                 request_serializer=transformer__pb2.RewriteLayoutRequest.SerializeToString,
                 response_deserializer=model__pb2.Layout.FromString,
                 )
 
 
-class LayoutRewriterServiceServicer(object):
+class LayoutRewriterServicer(object):
     """A service for rewriting layouts (graphs).
     """
 
@@ -34,7 +34,7 @@ class LayoutRewriterServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_LayoutRewriterServiceServicer_to_server(servicer, server):
+def add_LayoutRewriterServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'RewriteLayout': grpc.unary_unary_rpc_method_handler(
                     servicer.RewriteLayout,
@@ -43,12 +43,12 @@ def add_LayoutRewriterServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.extension.transformer.v1.LayoutRewriterService', rpc_method_handlers)
+            'semio.extension.transformer.v1.LayoutRewriter', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class LayoutRewriterService(object):
+class LayoutRewriter(object):
     """A service for rewriting layouts (graphs).
     """
 
@@ -63,7 +63,7 @@ class LayoutRewriterService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.transformer.v1.LayoutRewriterService/RewriteLayout',
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.transformer.v1.LayoutRewriter/RewriteLayout',
             transformer__pb2.RewriteLayoutRequest.SerializeToString,
             model__pb2.Layout.FromString,
             options, channel_credentials,

@@ -29,9 +29,9 @@ function deserialize_semio_model_v1_Layout(buffer_arg) {
 
 
 // A service for rewriting layouts (graphs).
-var LayoutRewriterServiceService = exports.LayoutRewriterServiceService = {
+var LayoutRewriterService = exports.LayoutRewriterService = {
   rewriteLayout: {
-    path: '/semio.extension.transformer.v1.LayoutRewriterService/RewriteLayout',
+    path: '/semio.extension.transformer.v1.LayoutRewriter/RewriteLayout',
     requestStream: false,
     responseStream: false,
     requestType: transformer_pb.RewriteLayoutRequest,
@@ -43,4 +43,4 @@ var LayoutRewriterServiceService = exports.LayoutRewriterServiceService = {
   },
 };
 
-exports.LayoutRewriterServiceClient = grpc.makeGenericClientConstructor(LayoutRewriterServiceService);
+exports.LayoutRewriterClient = grpc.makeGenericClientConstructor(LayoutRewriterService);
