@@ -6,18 +6,15 @@ import grpc
 from pydantic import BaseModel
 
 from semio.model import Design,Element
-from semio.model import Design,Element
 
-from semio.server import ServerServicer, add_ServerServicer_to_server
+from semio.server import ServerServicer, add_ServerServicer_to_server, LayoutDesignRequest
 
 class Server(BaseModel, ServerServicer):
     port: int = 50000
 
-    def LayoutDesign(self, request :, context):
+    def LayoutDesign(self, request : LayoutDesignRequest, context):
         elements =  []
         design = Design(elements)
-
-
         raise NotImplementedError('Method not implemented!')
 
     def serve(self):
