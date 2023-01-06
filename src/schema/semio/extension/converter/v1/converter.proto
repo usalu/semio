@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package semio.extension.converter.v1;
+
+import "model/v1/model.proto";
+import "google/protobuf/any.proto";
+
+// A converter service can convert an element from one representation into another representation.
+service ConverterService{
+    rpc ConvertRepresentation(RepresentationConversionRequest) returns (semio.model.v1.Representation);
+}
+
+// A request for converting a represenation
+message RepresentationConversionRequest{
+    semio.model.v1.Representation representation = 1;
+    string target_type = 2;
+    google.protobuf.Any options = 3;
+}

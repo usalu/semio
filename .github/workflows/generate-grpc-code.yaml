@@ -2,7 +2,6 @@ name: Generate gRPC code
 
 on:
   push:
-    branches: [main]
     paths: [src/schema/**]
 
 jobs:
@@ -11,6 +10,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: bufbuild/buf-setup-action
+      with:
+        version: "1.11.0"
+        github_token: ${{ github.token }}
+    - uses: arduino/setup-protoc@v1
+
+
     - name: Install gRPC python source code generator
       run: |
         python -m pip install grpcio-tools
@@ -25,7 +31,7 @@ jobs:
         out="src/packages/python/semio/server/gen"
         rm -r -f $out
         mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/server/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out server.proto
+        python -m grpc_tools.protoc -I src/schema/server/v1 -I src/schema/model/v1 -I src/schema/thirdparty/google/google/api --python_out=$out --pyi_out=$out --grpc_python_out=$out server.proto
     - name: Generate gRPC python extension services source code
       run: |
         out="src/packages/python/semio/extension/adapter/gen"
@@ -42,7 +48,8 @@ jobs:
         python -m grpc_tools.protoc -I src/schema/extension/transformer/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out transformer.proto
     - name: Install gRPC node source code generator
       run: |
-        npm install -g grpc-tools
+        npm install @grpc/grpc-js
+        npm install google-protobuf
         npm install grpc_tools_node_protoc_ts --save-dev
     - name: Generate gRPC node model
       run: |

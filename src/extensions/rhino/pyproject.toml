@@ -10,11 +10,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 rhino3dm = "*"
 compute-rhino3d = "*"
 pydantic = "*"
 semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.1.0-py3-none-any.whl"}
+#semio = {path = "../../packages/python/dist/semio-0.1.0-py3-none-any.whl"}
 
 [build-system]
 requires = ["poetry-core"]

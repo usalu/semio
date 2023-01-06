@@ -1,0 +1,16 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  - plugin: buf.build/grpc/python
+    out: gen
+  - plugin: buf.build/protocolbuffers/python
+    out: gen
+  - plugin: buf.build/grpc/node
+    out: gen
+  - plugin: buf.build/protocolbuffers/js
+    out: gen
+  - plugin: buf.build/grpc-ecosystem/openapiv2
+    out: gen
+  - plugin: buf.build/community/chrusty-jsonschema
+    out: gen

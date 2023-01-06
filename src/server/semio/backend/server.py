@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from semio.model import Design,Element
 
-from semio.server import ServerServicer, add_ServerServicer_to_server, LayoutDesignRequest
+from semio.server import ServerServiceServicer, add_ServerServiceServicer_to_server, LayoutDesignRequest
 
 class Server(BaseModel, ServerServicer):
     port: int = 50000
