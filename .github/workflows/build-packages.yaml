@@ -19,18 +19,18 @@ jobs:
     - name: Build core package
       run: | 
         cd src/packages/python
-        poetry build
+        python -m poetry build
     - name: Build server package
       run: |
         cd ..
         cd ..
         cd server
-        poetry build
+        python -m poetry build
     - name: Build Rhino Extension Python package
       run: | 
         cd ..
         cd extensions/rhino
-        poetry build
+        python -m poetry build
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:
