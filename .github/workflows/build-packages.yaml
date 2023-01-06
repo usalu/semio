@@ -3,7 +3,7 @@ name: Build Packages
 on:
   push:
     branches: [main]
-    paths: [src/packages/python/**]
+    paths: [src/packages/python/**, src/server/**,src/extensions/rhino/**]
   workflow_run:
     branches: [main]
     workflows: ["Generate gRPC code"]
