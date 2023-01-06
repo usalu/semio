@@ -25,12 +25,12 @@ jobs:
         cd ..
         cd ..
         cd server
-        python -m poetry build
+        poetry build
     - name: Build Rhino Extension Python package
       run: | 
         cd ..
         cd extensions/rhino
-        python -m poetry build
+        poetry build
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:
