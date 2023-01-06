@@ -18,6 +18,26 @@ message Quaternion{
     double z = 4;
 }
 
+// // A 4x4 transformation matrix
+// message Transform{
+//     double m00 = 1;
+//     double m01 = 2;
+//     double m02 = 3;
+//     double m03 = 4;
+//     double m10 = 5;
+//     double m11 = 6;
+//     double m12 = 7;
+//     double m13 = 8;
+//     double m20 = 9;
+//     double m21 = 10;
+//     double m22 = 11;
+//     double m23 = 12;
+//     double m30 = 13;
+//     double m31 = 14;
+//     double m32 = 15;
+//     double m33 = 16;
+// }
+
 // A pose is a reference frame with an point of view (origin) and orientation (view).
 message Pose{
     Point point_of_view = 1;

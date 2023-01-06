@@ -13,6 +13,9 @@ class Server(BaseModel, ServerServicer):
     port: int = 50000
 
     def LayoutDesign(self, request : LayoutDesignRequest, context):
+        layout = request.layout
+
+
         elements =  []
         design = Design(elements=elements)
         return design

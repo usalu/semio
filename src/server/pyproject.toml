@@ -12,6 +12,8 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.9"
 pydantic = "^1.10.4"
+networkx = "^2.8.8"
+mathutils = "^3.3.0"
 semio = {path = "../packages/python", develop = true}
 
 [build-system]
