@@ -6,7 +6,9 @@ from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
 class ServerServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """The server service is the gateway for all other apis of semio.
+    option (google.api.default_host) = "localhost:50000";
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -22,10 +24,16 @@ class ServerServiceStub(object):
 
 
 class ServerServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """The server service is the gateway for all other apis of semio.
+    option (google.api.default_host) = "localhost:50000";
+    """
 
     def LayoutDesign(self, request, context):
         """Lay out a design from a layout and return a design.
+        option (google.api.http) = {
+        post: "v1/layout-design"
+        body: "*"
+        };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -47,7 +55,9 @@ def add_ServerServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class ServerService(object):
-    """Missing associated documentation comment in .proto file."""
+    """The server service is the gateway for all other apis of semio.
+    option (google.api.default_host) = "localhost:50000";
+    """
 
     @staticmethod
     def LayoutDesign(request,

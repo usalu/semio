@@ -4,6 +4,12 @@
     "definitions": {
         "Representation": {
             "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "lod": {
+                    "type": "string"
+                },
                 "body": {
                     "properties": {
                         "type_url": {
@@ -19,18 +25,12 @@
                     },
                     "additionalProperties": true,
                     "type": "object"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "lod": {
-                    "type": "string"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Might just add verbosity and increase boilerplate code for clients\r\n message Parameter{\r\n     string name = 1;\r\n     google.protobuf.Any value = 2;\r\n     string type = 3;\r\n }",
-            "description": "Might just add verbosity and increase boilerplate code for clients\r message Parameter{\r     string name = 1;\r     google.protobuf.Any value = 2;\r     string type = 3;\r }  A representation for an element."
+            "title": "Might just add verbosity and increase boilerplate code for clients\n message Parameter{\n     string name = 1;\n     google.protobuf.Any value = 2;\n     string type = 3;\n }",
+            "description": "Might just add verbosity and increase boilerplate code for clients message Parameter{     string name = 1;     google.protobuf.Any value = 2;     string type = 3; }  A representation for an element."
         }
     }
 }

@@ -135,7 +135,7 @@ class Representation(_message.Message):
     body: _any_pb2.Any
     lod: int
     name: str
-    def __init__(self, body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ...) -> None: ...
+    def __init__(self, name: _Optional[str] = ..., lod: _Optional[int] = ..., body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
 
 class Representations(_message.Message):
     __slots__ = ["representations"]

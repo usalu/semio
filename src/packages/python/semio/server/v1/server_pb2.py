@@ -12,26 +12,18 @@ _sym_db = _symbol_database.Default()
 
 
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
-from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
-from google.api import client_pb2 as google_dot_api_dot_client__pb2
-from google.api import resource_pb2 as google_dot_api_dot_resource__pb2
-from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16server/v1/server.proto\x12\x0fsemio.server.v1\x1a\x14model/v1/model.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2\x80\x01\n\rServerService\x12[\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Design\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10v1/layout-design\x1a\x12\xca\x41\x0flocalhost:50000B\x80\x01\n\x13\x63om.semio.server.v1B\x0bServerProtoP\x01\xa2\x02\x03SSX\xaa\x02\x0fSemio.Server.V1\xca\x02\x0fSemio\\Server\\V1\xe2\x02\x1bSemio\\Server\\V1\\GPBMetadata\xea\x02\x11Semio::Server::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16server/v1/server.proto\x12\x0fsemio.server.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2Q\n\rServerService\x12@\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Design\"\x00\x42\xb3\x01\n\x13\x63om.semio.server.v1B\x0bServerProtoP\x01Z1github.com/usalu/semio/src/schema/semio/server/v1\xa2\x02\x03SSX\xaa\x02\x0fSemio.Server.V1\xca\x02\x0fSemio\\Server\\V1\xe2\x02\x1bSemio\\Server\\V1\\GPBMetadata\xea\x02\x11Semio::Server::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'server.v1.server_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\023com.semio.server.v1B\013ServerProtoP\001\242\002\003SSX\252\002\017Semio.Server.V1\312\002\017Semio\\Server\\V1\342\002\033Semio\\Server\\V1\\GPBMetadata\352\002\021Semio::Server::V1'
-  _SERVERSERVICE._options = None
-  _SERVERSERVICE._serialized_options = b'\312A\017localhost:50000'
-  _SERVERSERVICE.methods_by_name['LayoutDesign']._options = None
-  _SERVERSERVICE.methods_by_name['LayoutDesign']._serialized_options = b'\202\323\344\223\002\025:\001*\"\020v1/layout-design'
-  _LAYOUTDESIGNREQUEST._serialized_start=176
-  _LAYOUTDESIGNREQUEST._serialized_end=278
-  _SERVERSERVICE._serialized_start=281
-  _SERVERSERVICE._serialized_end=409
+  DESCRIPTOR._serialized_options = b'\n\023com.semio.server.v1B\013ServerProtoP\001Z1github.com/usalu/semio/src/schema/semio/server/v1\242\002\003SSX\252\002\017Semio.Server.V1\312\002\017Semio\\Server\\V1\342\002\033Semio\\Server\\V1\\GPBMetadata\352\002\021Semio::Server::V1'
+  _LAYOUTDESIGNREQUEST._serialized_start=65
+  _LAYOUTDESIGNREQUEST._serialized_end=167
+  _SERVERSERVICE._serialized_start=169
+  _SERVERSERVICE._serialized_end=250
 # @@protoc_insertion_point(module_scope)
