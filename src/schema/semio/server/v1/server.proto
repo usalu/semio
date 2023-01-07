@@ -2,26 +2,27 @@ syntax = "proto3";
 
 package semio.server.v1;
 
-import "model/v1/model.proto";
-
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
+import "model/v1/model.proto";
 
-service ServerService{
-    option (google.api.default_host) = "localhost:50000";
+option go_package = "github.com/usalu/semio/src/schema/semio/server/v1";
 
-    // Lay out a design from a layout and return a design.
-    rpc LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design){
-        option (google.api.http) = {
-            post: "v1/layout-design"
-            body: "*"
-        };
-    }
+service ServerService {
+  option (google.api.default_host) = "localhost:50000";
+
+  // Lay out a design from a layout and return a design.
+  rpc LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design) {
+    option (google.api.http) = {
+      post: "v1/layout-design"
+      body: "*"
+    };
+  }
 }
 
-message LayoutDesignRequest{
-    semio.model.v1.Layout layout = 1;
-    string target_type = 2;
+message LayoutDesignRequest {
+  semio.model.v1.Layout layout = 1;
+  string target_type = 2;
 }

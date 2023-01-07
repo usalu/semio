@@ -4,24 +4,24 @@ package semio.model.v1;
 
 import "google/protobuf/any.proto";
 
-message Point{
-    double x = 1;
-    double y = 2;
-    double z = 3;
+message Point {
+  double x = 1;
+  double y = 2;
+  double z = 3;
 }
 
 // Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
-message Quaternion{
-    double w = 1;
-    double x = 2;
-    double y = 3;
-    double z = 4;
+message Quaternion {
+  double w = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
 }
 
 // A pose is a reference frame with an point of view (origin) and orientation (view).
-message Pose{
-    Point point_of_view = 1;
-    Quaternion view = 2;
+message Pose {
+  Point point_of_view = 1;
+  Quaternion view = 2;
 }
 
 //Might just add verbosity and increase boilerplate code for clients
@@ -32,91 +32,91 @@ message Pose{
 // }
 
 // A representation for an element.
-message Representation{
-    google.protobuf.Any body = 1;
-    string name = 2;
-    int64 lod = 3;
+message Representation {
+  google.protobuf.Any body = 1;
+  string name = 2;
+  int64 lod = 3;
 }
 
 // Several representations for an element.
-message Representations{
-    repeated Representation representations = 1;
+message Representations {
+  repeated Representation representations = 1;
 }
 
 // Instance information of an element.
-message Sobject{
-    string id = 1;
-    string url = 2;
-    Pose pose = 3;
-    map<string,google.protobuf.Any> parameters = 4;
+message Sobject {
+  string id = 1;
+  string url = 2;
+  Pose pose = 3;
+  map<string, google.protobuf.Any> parameters = 4;
 }
 
 // An attraction strategy of an attraction participant defines parameters that affect the attraction process.
-message AttractionStragegy{
-    // An optional representation of the participant. 
-    google.protobuf.Any representation = 1;
-    // An optional port name to connect to.
-    string port = 2;
-    // Optional parameters to bias the attraction.
-    map<string,google.protobuf.Any> parameters = 3;
+message AttractionStragegy {
+  // An optional representation of the participant.
+  google.protobuf.Any representation = 1;
+  // An optional port name to connect to.
+  string port = 2;
+  // Optional parameters to bias the attraction.
+  map<string, google.protobuf.Any> parameters = 3;
 }
 
 // An attraction participant participates in an attraction process.
-message AttractionParticipant{
-    // Participating sobject
-    string sobject_id = 1;
-    // Attraction strategy of participant
-    AttractionStragegy strategy = 2;
+message AttractionParticipant {
+  // Participating sobject
+  string sobject_id = 1;
+  // Attraction strategy of participant
+  AttractionStragegy strategy = 2;
 }
 
 // An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
-message Attraction{
-    AttractionParticipant attractor = 1;
-    AttractionParticipant attracted = 2;
+message Attraction {
+  AttractionParticipant attractor = 1;
+  AttractionParticipant attracted = 2;
 }
 
 // A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
-message Layout{
-    repeated Sobject sobjects = 1;
-    repeated Attraction attractions = 2;
+message Layout {
+  repeated Sobject sobjects = 1;
+  repeated Attraction attractions = 2;
 }
 
 // An attraction chain is list of attractions where each attraction depends on the previous attraction.
-message AttractionChain{
-    repeated Attraction attractions = 1;
+message AttractionChain {
+  repeated Attraction attractions = 1;
 }
 
 // A choreography is an extact assembly and redundant free plan for sobjects and attraction chains.
-message Choreography{
-    repeated Sobject solitary_sobjects = 1;
-    repeated AttractionChain attractionChains = 2;
+message Choreography {
+  repeated Sobject solitary_sobjects = 1;
+  repeated AttractionChain attractionChains = 2;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
-message Element{
-    Pose pose = 1;
-    Representations representations = 2;
+message Element {
+  Pose pose = 1;
+  Representations representations = 2;
 }
 
 // A design is an aggregation of elements.
-message Design{
-    repeated Element elements = 1;
+message Design {
+  repeated Element elements = 1;
 }
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system.
-message LayoutModification{
-    Layout context_layout = 1;
-    Layout modified_context_layout = 2;
+message LayoutModification {
+  Layout context_layout = 1;
+  Layout modified_context_layout = 2;
 }
 
 // A decision strategy holds information on how modifications are applied.
-message LayoutModificationStrategy{
-    // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
-    int64 match_count = 1;
+message LayoutModificationStrategy {
+  // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
+  int64 match_count = 1;
 }
 
 // A decision is a layout modification with a strategy on how to apply it to a new layout.
-message Decision{
-    LayoutModification modification = 1;
-    LayoutModificationStrategy strategy = 2;
+message Decision {
+  LayoutModification modification = 1;
+  LayoutModificationStrategy strategy = 2;
 }

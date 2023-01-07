@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/CustomHttpPattern",
+    "definitions": {
+        "CustomHttpPattern": {
+            "properties": {
+                "kind": {
+                    "type": "string",
+                    "description": "The name of this custom HTTP verb."
+                },
+                "path": {
+                    "type": "string",
+                    "description": "The path matched by this custom verb."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Custom Http Pattern",
+            "description": "A custom pattern is used for defining custom HTTP verb."
+        }
+    }
+}

@@ -128,18 +128,14 @@ class Quaternion(_message.Message):
     def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
 class Representation(_message.Message):
-    __slots__ = ["body", "lod", "metadata", "name", "type"]
+    __slots__ = ["body", "lod", "name"]
     BODY_FIELD_NUMBER: _ClassVar[int]
     LOD_FIELD_NUMBER: _ClassVar[int]
-    METADATA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    TYPE_FIELD_NUMBER: _ClassVar[int]
     body: _any_pb2.Any
     lod: int
-    metadata: _any_pb2.Any
     name: str
-    type: str
-    def __init__(self, type: _Optional[str] = ..., body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ..., metadata: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
+    def __init__(self, body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ...) -> None: ...
 
 class Representations(_message.Message):
     __slots__ = ["representations"]

@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/PythonSettings",
+    "definitions": {
+        "PythonSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Python Settings",
+            "description": "Settings for Python client libraries."
+        },
+        "google.api.CommonLanguageSettings": {
+            "properties": {
+                "reference_docs_uri": {
+                    "type": "string",
+                    "description": "Link to automatically generated reference documentation.  Example: https://cloud.google.com/nodejs/docs/reference/asset/latest"
+                },
+                "destinations": {
+                    "items": {
+                        "enum": [
+                            "CLIENT_LIBRARY_DESTINATION_UNSPECIFIED",
+                            0,
+                            "GITHUB",
+                            10,
+                            "PACKAGE_MANAGER",
+                            20
+                        ]
+                    },
+                    "type": "array",
+                    "title": "Client Library Destination",
+                    "description": "To where should client libraries be published?"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Common Language Settings",
+            "description": "Required information for every language."
+        }
+    }
+}

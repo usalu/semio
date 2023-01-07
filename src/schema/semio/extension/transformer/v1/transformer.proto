@@ -5,13 +5,13 @@ package semio.extension.transformer.v1;
 import "model/v1/model.proto";
 
 // A service for transforming (rewriting) layouts (graphs).
-service Transformer{
-    rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
+service Transformer {
+  rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
 // A rewrite layout request is a description for layout (graph) rewrites.
-message RewriteLayoutRequest{
-    repeated semio.model.v1.Decision decisions = 1;
-    // An optional initial layout that is used a starting layout to apply the decisions
-    semio.model.v1.Layout initial_layout = 2;
+message RewriteLayoutRequest {
+  repeated semio.model.v1.Decision decisions = 1;
+  // An optional initial layout that is used a starting layout to apply the decisions
+  semio.model.v1.Layout initial_layout = 2;
 }

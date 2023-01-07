@@ -17,6 +17,7 @@ jobs:
     - name: Generate code
       run: |
         cd ./src/schema/semio
+        buf format -w semio
         buf generate --include-imports --include-wkt
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master

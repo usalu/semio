@@ -1,0 +1,260 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/RewriteLayoutRequest",
+    "definitions": {
+        "RewriteLayoutRequest": {
+            "properties": {
+                "decisions": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Decision"
+                    },
+                    "type": "array"
+                },
+                "initial_layout": {
+                    "$ref": "#/definitions/semio.model.v1.Layout",
+                    "additionalProperties": true,
+                    "description": "An optional initial layout that is used a starting layout to apply the decisions"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rewrite Layout Request",
+            "description": "A rewrite layout request is a description for layout (graph) rewrites."
+        },
+        "semio.model.v1.Attraction": {
+            "properties": {
+                "attractor": {
+                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                    "additionalProperties": true
+                },
+                "attracted": {
+                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction",
+            "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
+        },
+        "semio.model.v1.AttractionParticipant": {
+            "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "Participating sobject"
+                },
+                "strategy": {
+                    "$ref": "#/definitions/semio.model.v1.AttractionStragegy",
+                    "additionalProperties": true,
+                    "description": "Attraction strategy of participant"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction Participant",
+            "description": "An attraction participant participates in an attraction process."
+        },
+        "semio.model.v1.AttractionStragegy": {
+            "properties": {
+                "representation": {
+                    "properties": {
+                        "type_url": {
+                            "type": "string",
+                            "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Must be a valid serialized protocol buffer of the above specified type.",
+                            "format": "binary",
+                            "binaryEncoding": "base64"
+                        }
+                    },
+                    "additionalProperties": true,
+                    "type": "object",
+                    "description": "An optional representation of the participant."
+                },
+                "port": {
+                    "type": "string",
+                    "description": "An optional port name to connect to."
+                },
+                "parameters": {
+                    "additionalProperties": {
+                        "properties": {
+                            "type_url": {
+                                "type": "string",
+                                "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "Must be a valid serialized protocol buffer of the above specified type.",
+                                "format": "binary",
+                                "binaryEncoding": "base64"
+                            }
+                        },
+                        "additionalProperties": true,
+                        "type": "object"
+                    },
+                    "type": "object",
+                    "description": "Optional parameters to bias the attraction."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction Stragegy",
+            "description": "An attraction strategy of an attraction participant defines parameters that affect the attraction process."
+        },
+        "semio.model.v1.Decision": {
+            "properties": {
+                "modification": {
+                    "$ref": "#/definitions/semio.model.v1.LayoutModification",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "$ref": "#/definitions/semio.model.v1.LayoutModificationStrategy",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Decision",
+            "description": "A decision is a layout modification with a strategy on how to apply it to a new layout."
+        },
+        "semio.model.v1.Layout": {
+            "properties": {
+                "sobjects": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Sobject"
+                    },
+                    "type": "array"
+                },
+                "attractions": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Attraction"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Layout",
+            "description": "A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other."
+        },
+        "semio.model.v1.LayoutModification": {
+            "properties": {
+                "context_layout": {
+                    "$ref": "#/definitions/semio.model.v1.Layout",
+                    "additionalProperties": true
+                },
+                "modified_context_layout": {
+                    "$ref": "#/definitions/semio.model.v1.Layout",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Layout Modification",
+            "description": "A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system."
+        },
+        "semio.model.v1.LayoutModificationStrategy": {
+            "properties": {
+                "match_count": {
+                    "type": "string",
+                    "description": "The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Layout Modification Strategy",
+            "description": "A decision strategy holds information on how modifications are applied."
+        },
+        "semio.model.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point"
+        },
+        "semio.model.v1.Pose": {
+            "properties": {
+                "point_of_view": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                },
+                "view": {
+                    "$ref": "#/definitions/semio.model.v1.Quaternion",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pose",
+            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+        },
+        "semio.model.v1.Quaternion": {
+            "properties": {
+                "w": {
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Quaternion",
+            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+        },
+        "semio.model.v1.Sobject": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "pose": {
+                    "$ref": "#/definitions/semio.model.v1.Pose",
+                    "additionalProperties": true
+                },
+                "parameters": {
+                    "additionalProperties": {
+                        "properties": {
+                            "type_url": {
+                                "type": "string",
+                                "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "Must be a valid serialized protocol buffer of the above specified type.",
+                                "format": "binary",
+                                "binaryEncoding": "base64"
+                            }
+                        },
+                        "additionalProperties": true,
+                        "type": "object"
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Sobject",
+            "description": "Instance information of an element."
+        }
+    }
+}

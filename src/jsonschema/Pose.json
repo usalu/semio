@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Pose",
+    "definitions": {
+        "Pose": {
+            "properties": {
+                "point_of_view": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                },
+                "view": {
+                    "$ref": "#/definitions/semio.model.v1.Quaternion",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pose",
+            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+        },
+        "semio.model.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point"
+        },
+        "semio.model.v1.Quaternion": {
+            "properties": {
+                "w": {
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Quaternion",
+            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+        }
+    }
+}

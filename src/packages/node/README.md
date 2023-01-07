@@ -1,0 +1,1 @@
+Optimally it would be consumed as buf remote package but npm install @buf/usalu_semio.grpc_node doesn't work somehow.

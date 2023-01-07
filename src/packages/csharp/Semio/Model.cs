@@ -30,62 +30,60 @@ namespace Semio.Model.V1 {
             "GAEgASgBUgF3EgwKAXgYAiABKAFSAXgSDAoBeRgDIAEoAVIBeRIMCgF6GAQg",
             "ASgBUgF6InEKBFBvc2USOQoNcG9pbnRfb2ZfdmlldxgBIAEoCzIVLnNlbWlv",
             "Lm1vZGVsLnYxLlBvaW50Ugtwb2ludE9mVmlldxIuCgR2aWV3GAIgASgLMhou",
-            "c2VtaW8ubW9kZWwudjEuUXVhdGVybmlvblIEdmlldyKmAQoOUmVwcmVzZW50",
-            "YXRpb24SEgoEdHlwZRgBIAEoCVIEdHlwZRIoCgRib2R5GAIgASgLMhQuZ29v",
-            "Z2xlLnByb3RvYnVmLkFueVIEYm9keRISCgRuYW1lGAMgASgJUgRuYW1lEhAK",
-            "A2xvZBgEIAEoA1IDbG9kEjAKCG1ldGFkYXRhGAUgASgLMhQuZ29vZ2xlLnBy",
-            "b3RvYnVmLkFueVIIbWV0YWRhdGEiWwoPUmVwcmVzZW50YXRpb25zEkgKD3Jl",
-            "cHJlc2VudGF0aW9ucxgBIAMoCzIeLnNlbWlvLm1vZGVsLnYxLlJlcHJlc2Vu",
-            "dGF0aW9uUg9yZXByZXNlbnRhdGlvbnMi8wEKB1NvYmplY3QSDgoCaWQYASAB",
-            "KAlSAmlkEhAKA3VybBgCIAEoCVIDdXJsEigKBHBvc2UYAyABKAsyFC5zZW1p",
-            "by5tb2RlbC52MS5Qb3NlUgRwb3NlEkcKCnBhcmFtZXRlcnMYBCADKAsyJy5z",
-            "ZW1pby5tb2RlbC52MS5Tb2JqZWN0LlBhcmFtZXRlcnNFbnRyeVIKcGFyYW1l",
-            "dGVycxpTCg9QYXJhbWV0ZXJzRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSKgoF",
-            "dmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgV2YWx1ZToCOAEi",
-            "jwIKEkF0dHJhY3Rpb25TdHJhZ2VneRI8Cg5yZXByZXNlbnRhdGlvbhgBIAEo",
-            "CzIULmdvb2dsZS5wcm90b2J1Zi5BbnlSDnJlcHJlc2VudGF0aW9uEhIKBHBv",
-            "cnQYAiABKAlSBHBvcnQSUgoKcGFyYW1ldGVycxgDIAMoCzIyLnNlbWlvLm1v",
-            "ZGVsLnYxLkF0dHJhY3Rpb25TdHJhZ2VneS5QYXJhbWV0ZXJzRW50cnlSCnBh",
-            "cmFtZXRlcnMaUwoPUGFyYW1ldGVyc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5",
-            "EioKBXZhbHVlGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueVIFdmFsdWU6",
-            "AjgBInYKFUF0dHJhY3Rpb25QYXJ0aWNpcGFudBIdCgpzb2JqZWN0X2lkGAEg",
-            "ASgJUglzb2JqZWN0SWQSPgoIc3RyYXRlZ3kYAiABKAsyIi5zZW1pby5tb2Rl",
-            "bC52MS5BdHRyYWN0aW9uU3RyYWdlZ3lSCHN0cmF0ZWd5IpYBCgpBdHRyYWN0",
-            "aW9uEkMKCWF0dHJhY3RvchgBIAEoCzIlLnNlbWlvLm1vZGVsLnYxLkF0dHJh",
-            "Y3Rpb25QYXJ0aWNpcGFudFIJYXR0cmFjdG9yEkMKCWF0dHJhY3RlZBgCIAEo",
-            "CzIlLnNlbWlvLm1vZGVsLnYxLkF0dHJhY3Rpb25QYXJ0aWNpcGFudFIJYXR0",
-            "cmFjdGVkInsKBkxheW91dBIzCghzb2JqZWN0cxgBIAMoCzIXLnNlbWlvLm1v",
-            "ZGVsLnYxLlNvYmplY3RSCHNvYmplY3RzEjwKC2F0dHJhY3Rpb25zGAIgAygL",
-            "Mhouc2VtaW8ubW9kZWwudjEuQXR0cmFjdGlvblILYXR0cmFjdGlvbnMiTwoP",
-            "QXR0cmFjdGlvbkNoYWluEjwKC2F0dHJhY3Rpb25zGAEgAygLMhouc2VtaW8u",
-            "bW9kZWwudjEuQXR0cmFjdGlvblILYXR0cmFjdGlvbnMioQEKDENob3Jlb2dy",
-            "YXBoeRJEChFzb2xpdGFyeV9zb2JqZWN0cxgBIAMoCzIXLnNlbWlvLm1vZGVs",
-            "LnYxLlNvYmplY3RSEHNvbGl0YXJ5U29iamVjdHMSSwoQYXR0cmFjdGlvbkNo",
-            "YWlucxgCIAMoCzIfLnNlbWlvLm1vZGVsLnYxLkF0dHJhY3Rpb25DaGFpblIQ",
-            "YXR0cmFjdGlvbkNoYWlucyJ+CgdFbGVtZW50EigKBHBvc2UYASABKAsyFC5z",
-            "ZW1pby5tb2RlbC52MS5Qb3NlUgRwb3NlEkkKD3JlcHJlc2VudGF0aW9ucxgC",
-            "IAEoCzIfLnNlbWlvLm1vZGVsLnYxLlJlcHJlc2VudGF0aW9uc1IPcmVwcmVz",
-            "ZW50YXRpb25zIj0KBkRlc2lnbhIzCghlbGVtZW50cxgBIAMoCzIXLnNlbWlv",
-            "Lm1vZGVsLnYxLkVsZW1lbnRSCGVsZW1lbnRzIqMBChJMYXlvdXRNb2RpZmlj",
-            "YXRpb24SPQoOY29udGV4dF9sYXlvdXQYASABKAsyFi5zZW1pby5tb2RlbC52",
-            "MS5MYXlvdXRSDWNvbnRleHRMYXlvdXQSTgoXbW9kaWZpZWRfY29udGV4dF9s",
-            "YXlvdXQYAiABKAsyFi5zZW1pby5tb2RlbC52MS5MYXlvdXRSFW1vZGlmaWVk",
-            "Q29udGV4dExheW91dCI9ChpMYXlvdXRNb2RpZmljYXRpb25TdHJhdGVneRIf",
-            "CgttYXRjaF9jb3VudBgBIAEoA1IKbWF0Y2hDb3VudCKaAQoIRGVjaXNpb24S",
-            "RgoMbW9kaWZpY2F0aW9uGAEgASgLMiIuc2VtaW8ubW9kZWwudjEuTGF5b3V0",
-            "TW9kaWZpY2F0aW9uUgxtb2RpZmljYXRpb24SRgoIc3RyYXRlZ3kYAiABKAsy",
-            "Ki5zZW1pby5tb2RlbC52MS5MYXlvdXRNb2RpZmljYXRpb25TdHJhdGVneVII",
-            "c3RyYXRlZ3lCegoSY29tLnNlbWlvLm1vZGVsLnYxQgpNb2RlbFByb3RvUAGi",
-            "AgNTTViqAg5TZW1pby5Nb2RlbC5WMcoCDlNlbWlvXE1vZGVsXFYx4gIaU2Vt",
-            "aW9cTW9kZWxcVjFcR1BCTWV0YWRhdGHqAhBTZW1pbzo6TW9kZWw6OlYxYgZw",
-            "cm90bzM="));
+            "c2VtaW8ubW9kZWwudjEuUXVhdGVybmlvblIEdmlldyJgCg5SZXByZXNlbnRh",
+            "dGlvbhIoCgRib2R5GAEgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueVIEYm9k",
+            "eRISCgRuYW1lGAIgASgJUgRuYW1lEhAKA2xvZBgDIAEoA1IDbG9kIlsKD1Jl",
+            "cHJlc2VudGF0aW9ucxJICg9yZXByZXNlbnRhdGlvbnMYASADKAsyHi5zZW1p",
+            "by5tb2RlbC52MS5SZXByZXNlbnRhdGlvblIPcmVwcmVzZW50YXRpb25zIvMB",
+            "CgdTb2JqZWN0Eg4KAmlkGAEgASgJUgJpZBIQCgN1cmwYAiABKAlSA3VybBIo",
+            "CgRwb3NlGAMgASgLMhQuc2VtaW8ubW9kZWwudjEuUG9zZVIEcG9zZRJHCgpw",
+            "YXJhbWV0ZXJzGAQgAygLMicuc2VtaW8ubW9kZWwudjEuU29iamVjdC5QYXJh",
+            "bWV0ZXJzRW50cnlSCnBhcmFtZXRlcnMaUwoPUGFyYW1ldGVyc0VudHJ5EhAK",
+            "A2tleRgBIAEoCVIDa2V5EioKBXZhbHVlGAIgASgLMhQuZ29vZ2xlLnByb3Rv",
+            "YnVmLkFueVIFdmFsdWU6AjgBIo8CChJBdHRyYWN0aW9uU3RyYWdlZ3kSPAoO",
+            "cmVwcmVzZW50YXRpb24YASABKAsyFC5nb29nbGUucHJvdG9idWYuQW55Ug5y",
+            "ZXByZXNlbnRhdGlvbhISCgRwb3J0GAIgASgJUgRwb3J0ElIKCnBhcmFtZXRl",
+            "cnMYAyADKAsyMi5zZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uU3RyYWdlZ3ku",
+            "UGFyYW1ldGVyc0VudHJ5UgpwYXJhbWV0ZXJzGlMKD1BhcmFtZXRlcnNFbnRy",
+            "eRIQCgNrZXkYASABKAlSA2tleRIqCgV2YWx1ZRgCIAEoCzIULmdvb2dsZS5w",
+            "cm90b2J1Zi5BbnlSBXZhbHVlOgI4ASJ2ChVBdHRyYWN0aW9uUGFydGljaXBh",
+            "bnQSHQoKc29iamVjdF9pZBgBIAEoCVIJc29iamVjdElkEj4KCHN0cmF0ZWd5",
+            "GAIgASgLMiIuc2VtaW8ubW9kZWwudjEuQXR0cmFjdGlvblN0cmFnZWd5Ughz",
+            "dHJhdGVneSKWAQoKQXR0cmFjdGlvbhJDCglhdHRyYWN0b3IYASABKAsyJS5z",
+            "ZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uUGFydGljaXBhbnRSCWF0dHJhY3Rv",
+            "chJDCglhdHRyYWN0ZWQYAiABKAsyJS5zZW1pby5tb2RlbC52MS5BdHRyYWN0",
+            "aW9uUGFydGljaXBhbnRSCWF0dHJhY3RlZCJ7CgZMYXlvdXQSMwoIc29iamVj",
+            "dHMYASADKAsyFy5zZW1pby5tb2RlbC52MS5Tb2JqZWN0Ughzb2JqZWN0cxI8",
+            "CgthdHRyYWN0aW9ucxgCIAMoCzIaLnNlbWlvLm1vZGVsLnYxLkF0dHJhY3Rp",
+            "b25SC2F0dHJhY3Rpb25zIk8KD0F0dHJhY3Rpb25DaGFpbhI8CgthdHRyYWN0",
+            "aW9ucxgBIAMoCzIaLnNlbWlvLm1vZGVsLnYxLkF0dHJhY3Rpb25SC2F0dHJh",
+            "Y3Rpb25zIqEBCgxDaG9yZW9ncmFwaHkSRAoRc29saXRhcnlfc29iamVjdHMY",
+            "ASADKAsyFy5zZW1pby5tb2RlbC52MS5Tb2JqZWN0UhBzb2xpdGFyeVNvYmpl",
+            "Y3RzEksKEGF0dHJhY3Rpb25DaGFpbnMYAiADKAsyHy5zZW1pby5tb2RlbC52",
+            "MS5BdHRyYWN0aW9uQ2hhaW5SEGF0dHJhY3Rpb25DaGFpbnMifgoHRWxlbWVu",
+            "dBIoCgRwb3NlGAEgASgLMhQuc2VtaW8ubW9kZWwudjEuUG9zZVIEcG9zZRJJ",
+            "Cg9yZXByZXNlbnRhdGlvbnMYAiABKAsyHy5zZW1pby5tb2RlbC52MS5SZXBy",
+            "ZXNlbnRhdGlvbnNSD3JlcHJlc2VudGF0aW9ucyI9CgZEZXNpZ24SMwoIZWxl",
+            "bWVudHMYASADKAsyFy5zZW1pby5tb2RlbC52MS5FbGVtZW50UghlbGVtZW50",
+            "cyKjAQoSTGF5b3V0TW9kaWZpY2F0aW9uEj0KDmNvbnRleHRfbGF5b3V0GAEg",
+            "ASgLMhYuc2VtaW8ubW9kZWwudjEuTGF5b3V0Ug1jb250ZXh0TGF5b3V0Ek4K",
+            "F21vZGlmaWVkX2NvbnRleHRfbGF5b3V0GAIgASgLMhYuc2VtaW8ubW9kZWwu",
+            "djEuTGF5b3V0UhVtb2RpZmllZENvbnRleHRMYXlvdXQiPQoaTGF5b3V0TW9k",
+            "aWZpY2F0aW9uU3RyYXRlZ3kSHwoLbWF0Y2hfY291bnQYASABKANSCm1hdGNo",
+            "Q291bnQimgEKCERlY2lzaW9uEkYKDG1vZGlmaWNhdGlvbhgBIAEoCzIiLnNl",
+            "bWlvLm1vZGVsLnYxLkxheW91dE1vZGlmaWNhdGlvblIMbW9kaWZpY2F0aW9u",
+            "EkYKCHN0cmF0ZWd5GAIgASgLMiouc2VtaW8ubW9kZWwudjEuTGF5b3V0TW9k",
+            "aWZpY2F0aW9uU3RyYXRlZ3lSCHN0cmF0ZWd5QnoKEmNvbS5zZW1pby5tb2Rl",
+            "bC52MUIKTW9kZWxQcm90b1ABogIDU01YqgIOU2VtaW8uTW9kZWwuVjHKAg5T",
+            "ZW1pb1xNb2RlbFxWMeICGlNlbWlvXE1vZGVsXFYxXEdQQk1ldGFkYXRh6gIQ",
+            "U2VtaW86Ok1vZGVsOjpWMWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.AnyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Point), global::Semio.Model.V1.Point.Parser, new[]{ "X", "Y", "Z" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Quaternion), global::Semio.Model.V1.Quaternion.Parser, new[]{ "W", "X", "Y", "Z" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Pose), global::Semio.Model.V1.Pose.Parser, new[]{ "PointOfView", "View" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Representation), global::Semio.Model.V1.Representation.Parser, new[]{ "Type", "Body", "Name", "Lod", "Metadata" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Representation), global::Semio.Model.V1.Representation.Parser, new[]{ "Body", "Name", "Lod" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Representations), global::Semio.Model.V1.Representations.Parser, new[]{ "Representations_" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Sobject), global::Semio.Model.V1.Sobject.Parser, new[]{ "Id", "Url", "Pose", "Parameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.AttractionStragegy), global::Semio.Model.V1.AttractionStragegy.Parser, new[]{ "Representation", "Port", "Parameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
@@ -955,11 +953,9 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public Representation(Representation other) : this() {
-      type_ = other.type_;
       body_ = other.body_ != null ? other.body_.Clone() : null;
       name_ = other.name_;
       lod_ = other.lod_;
-      metadata_ = other.metadata_ != null ? other.metadata_.Clone() : null;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -969,20 +965,8 @@ namespace Semio.Model.V1 {
       return new Representation(this);
     }
 
-    /// <summary>Field number for the "type" field.</summary>
-    public const int TypeFieldNumber = 1;
-    private string type_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string Type {
-      get { return type_; }
-      set {
-        type_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
     /// <summary>Field number for the "body" field.</summary>
-    public const int BodyFieldNumber = 2;
+    public const int BodyFieldNumber = 1;
     private global::Google.Protobuf.WellKnownTypes.Any body_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -994,7 +978,7 @@ namespace Semio.Model.V1 {
     }
 
     /// <summary>Field number for the "name" field.</summary>
-    public const int NameFieldNumber = 3;
+    public const int NameFieldNumber = 2;
     private string name_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -1006,7 +990,7 @@ namespace Semio.Model.V1 {
     }
 
     /// <summary>Field number for the "lod" field.</summary>
-    public const int LodFieldNumber = 4;
+    public const int LodFieldNumber = 3;
     private long lod_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -1014,18 +998,6 @@ namespace Semio.Model.V1 {
       get { return lod_; }
       set {
         lod_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "metadata" field.</summary>
-    public const int MetadataFieldNumber = 5;
-    private global::Google.Protobuf.WellKnownTypes.Any metadata_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Google.Protobuf.WellKnownTypes.Any Metadata {
-      get { return metadata_; }
-      set {
-        metadata_ = value;
       }
     }
 
@@ -1044,11 +1016,9 @@ namespace Semio.Model.V1 {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Type != other.Type) return false;
       if (!object.Equals(Body, other.Body)) return false;
       if (Name != other.Name) return false;
       if (Lod != other.Lod) return false;
-      if (!object.Equals(Metadata, other.Metadata)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1056,11 +1026,9 @@ namespace Semio.Model.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Type.Length != 0) hash ^= Type.GetHashCode();
       if (body_ != null) hash ^= Body.GetHashCode();
       if (Name.Length != 0) hash ^= Name.GetHashCode();
       if (Lod != 0L) hash ^= Lod.GetHashCode();
-      if (metadata_ != null) hash ^= Metadata.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1079,25 +1047,17 @@ namespace Semio.Model.V1 {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Type.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(Type);
-      }
       if (body_ != null) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(10);
         output.WriteMessage(Body);
       }
       if (Name.Length != 0) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(18);
         output.WriteString(Name);
       }
       if (Lod != 0L) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(24);
         output.WriteInt64(Lod);
-      }
-      if (metadata_ != null) {
-        output.WriteRawTag(42);
-        output.WriteMessage(Metadata);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -1109,25 +1069,17 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Type.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(Type);
-      }
       if (body_ != null) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(10);
         output.WriteMessage(Body);
       }
       if (Name.Length != 0) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(18);
         output.WriteString(Name);
       }
       if (Lod != 0L) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(24);
         output.WriteInt64(Lod);
-      }
-      if (metadata_ != null) {
-        output.WriteRawTag(42);
-        output.WriteMessage(Metadata);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -1139,9 +1091,6 @@ namespace Semio.Model.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Type.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Type);
-      }
       if (body_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Body);
       }
@@ -1150,9 +1099,6 @@ namespace Semio.Model.V1 {
       }
       if (Lod != 0L) {
         size += 1 + pb::CodedOutputStream.ComputeInt64Size(Lod);
-      }
-      if (metadata_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Metadata);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1166,9 +1112,6 @@ namespace Semio.Model.V1 {
       if (other == null) {
         return;
       }
-      if (other.Type.Length != 0) {
-        Type = other.Type;
-      }
       if (other.body_ != null) {
         if (body_ == null) {
           Body = new global::Google.Protobuf.WellKnownTypes.Any();
@@ -1180,12 +1123,6 @@ namespace Semio.Model.V1 {
       }
       if (other.Lod != 0L) {
         Lod = other.Lod;
-      }
-      if (other.metadata_ != null) {
-        if (metadata_ == null) {
-          Metadata = new global::Google.Protobuf.WellKnownTypes.Any();
-        }
-        Metadata.MergeFrom(other.Metadata);
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1203,29 +1140,18 @@ namespace Semio.Model.V1 {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            Type = input.ReadString();
-            break;
-          }
-          case 18: {
             if (body_ == null) {
               Body = new global::Google.Protobuf.WellKnownTypes.Any();
             }
             input.ReadMessage(Body);
             break;
           }
-          case 26: {
+          case 18: {
             Name = input.ReadString();
             break;
           }
-          case 32: {
+          case 24: {
             Lod = input.ReadInt64();
-            break;
-          }
-          case 42: {
-            if (metadata_ == null) {
-              Metadata = new global::Google.Protobuf.WellKnownTypes.Any();
-            }
-            input.ReadMessage(Metadata);
             break;
           }
         }
@@ -1244,29 +1170,18 @@ namespace Semio.Model.V1 {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            Type = input.ReadString();
-            break;
-          }
-          case 18: {
             if (body_ == null) {
               Body = new global::Google.Protobuf.WellKnownTypes.Any();
             }
             input.ReadMessage(Body);
             break;
           }
-          case 26: {
+          case 18: {
             Name = input.ReadString();
             break;
           }
-          case 32: {
+          case 24: {
             Lod = input.ReadInt64();
-            break;
-          }
-          case 42: {
-            if (metadata_ == null) {
-              Metadata = new global::Google.Protobuf.WellKnownTypes.Any();
-            }
-            input.ReadMessage(Metadata);
             break;
           }
         }
