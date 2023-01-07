@@ -15,67 +15,10 @@ jobs:
         version: "1.11.0"
         github_token: ${{ github.token }}
     - uses: arduino/setup-protoc@v1
-
-
-    - name: Install gRPC python source code generator
+    - name: Generate code
       run: |
-        python -m pip install grpcio-tools
-    - name: Generate gRPC python model source code
-      run: |
-        out="src/packages/python/semio/model/gen"
-        rm -r -f $out
-        mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/model/v1 --python_out=$out --pyi_out=$out model.proto
-    - name: Generate gRPC python server source code
-      run: |
-        out="src/packages/python/semio/server/gen"
-        rm -r -f $out
-        mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/server/v1 -I src/schema/model/v1 -I src/schema/thirdparty/google/google/api --python_out=$out --pyi_out=$out --grpc_python_out=$out server.proto
-    - name: Generate gRPC python extension services source code
-      run: |
-        out="src/packages/python/semio/extension/adapter/gen"
-        rm -r -f $out
-        mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extension/adapter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out adapter.proto
-        out="src/packages/python/semio/extension/converter/gen"
-        rm -r -f $out
-        mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extension/converter/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out converter.proto
-        out="src/packages/python/semio/extension/transformer/gen"
-        rm -r -f $out
-        mkdir -p $out
-        python -m grpc_tools.protoc -I src/schema/extension/transformer/v1 -I src/schema/model/v1 --python_out=$out --pyi_out=$out --grpc_python_out=$out transformer.proto
-    - name: Install gRPC node source code generator
-      run: |
-        npm install @grpc/grpc-js
-        npm install google-protobuf
-        npm install grpc_tools_node_protoc_ts --save-dev
-    - name: Generate gRPC node model
-      run: |
-        out="src/node/model/gen"
-        rm -r -f $out
-        mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out -I src/schema/model/v1 model.proto
-    - name: Generate gRPC node extension services source code
-      run: |
-        out="src/node/extension/adapter/gen"
-        rm -r -f $out
-        mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extension/adapter/v1 -I src/schema/model/v1 adapter.proto
-        out="src/node/extension//converter/gen"
-        rm -r -f $out
-        mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extension/converter/v1 -I src/schema/model/v1 converter.proto
-        out="src/node/extension/transformer/gen"
-        rm -r -f $out
-        mkdir -p $out
-        grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:$out --js_out=import_style=commonjs:$out --grpc_out=grpc_js:$out -I src/schema/extension/transformer/v1 -I src/schema/model/v1 transformer.proto
-    - name: Uninstall gRPC node source code generator
-      run: |
-        rm -r -f node_modules 
-        rm -r -f package.json
-        rm -r -f package-lock.json
+        cd ./src/schema/semio
+        buf generate --include-imports --include-wkt
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:

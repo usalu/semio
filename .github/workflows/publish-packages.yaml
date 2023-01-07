@@ -1,0 +1,24 @@
+name: Publish packages
+
+on:
+  push:
+    paths: [src/schema/**]
+
+jobs:
+  generate-grpc-code:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: bufbuild/buf-setup-action
+      with:
+        version: "1.11.0"
+        github_token: ${{ github.token }}
+    - uses: bufbuild/buf-lint-action@v1
+      with:
+        input: "src/schema/semio"
+    - uses: bufbuild/buf-push-action@v1        
+      with:          
+        input: "src/schema/semio"
+        buf_token: ${{ secrets.BUF_TOKEN }}
+
