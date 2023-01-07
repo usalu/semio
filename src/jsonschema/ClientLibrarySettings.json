@@ -1,0 +1,234 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/ClientLibrarySettings",
+    "definitions": {
+        "ClientLibrarySettings": {
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "description": "Version of the API to apply these settings to."
+                },
+                "launch_stage": {
+                    "enum": [
+                        "LAUNCH_STAGE_UNSPECIFIED",
+                        0,
+                        "UNIMPLEMENTED",
+                        6,
+                        "PRELAUNCH",
+                        7,
+                        "EARLY_ACCESS",
+                        1,
+                        "ALPHA",
+                        2,
+                        "BETA",
+                        3,
+                        "GA",
+                        4,
+                        "DEPRECATED",
+                        5
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Launch Stage",
+                    "description": "The launch stage as defined by [Google Cloud Platform Launch Stages](https://cloud.google.com/terms/launch-stages)."
+                },
+                "rest_numeric_enums": {
+                    "type": "boolean",
+                    "description": "When using transport=rest, the client request will encode enums as numbers rather than strings."
+                },
+                "java_settings": {
+                    "$ref": "#/definitions/google.api.JavaSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for legacy Java features, supported in the Service YAML."
+                },
+                "cpp_settings": {
+                    "$ref": "#/definitions/google.api.CppSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for C++ client libraries."
+                },
+                "php_settings": {
+                    "$ref": "#/definitions/google.api.PhpSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for PHP client libraries."
+                },
+                "python_settings": {
+                    "$ref": "#/definitions/google.api.PythonSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for Python client libraries."
+                },
+                "node_settings": {
+                    "$ref": "#/definitions/google.api.NodeSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for Node client libraries."
+                },
+                "dotnet_settings": {
+                    "$ref": "#/definitions/google.api.DotnetSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for .NET client libraries."
+                },
+                "ruby_settings": {
+                    "$ref": "#/definitions/google.api.RubySettings",
+                    "additionalProperties": true,
+                    "description": "Settings for Ruby client libraries."
+                },
+                "go_settings": {
+                    "$ref": "#/definitions/google.api.GoSettings",
+                    "additionalProperties": true,
+                    "description": "Settings for Go client libraries."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Client Library Settings",
+            "description": "Details about how and where to publish client libraries."
+        },
+        "google.api.CommonLanguageSettings": {
+            "properties": {
+                "reference_docs_uri": {
+                    "type": "string",
+                    "description": "Link to automatically generated reference documentation.  Example: https://cloud.google.com/nodejs/docs/reference/asset/latest"
+                },
+                "destinations": {
+                    "items": {
+                        "enum": [
+                            "CLIENT_LIBRARY_DESTINATION_UNSPECIFIED",
+                            0,
+                            "GITHUB",
+                            10,
+                            "PACKAGE_MANAGER",
+                            20
+                        ]
+                    },
+                    "type": "array",
+                    "title": "Client Library Destination",
+                    "description": "To where should client libraries be published?"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Common Language Settings",
+            "description": "Required information for every language."
+        },
+        "google.api.CppSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Cpp Settings",
+            "description": "Settings for C++ client libraries."
+        },
+        "google.api.DotnetSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Dotnet Settings",
+            "description": "Settings for Dotnet client libraries."
+        },
+        "google.api.GoSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Go Settings",
+            "description": "Settings for Go client libraries."
+        },
+        "google.api.JavaSettings": {
+            "properties": {
+                "library_package": {
+                    "type": "string",
+                    "description": "The package name to use in Java. Clobbers the java_package option set in the protobuf. This should be used **only** by APIs who have already set the language_settings.java.package_name\" field in gapic.yaml. API teams should use the protobuf java_package option where possible. Example of a YAML configuration::  publishing:    java_settings:      library_package: com.google.cloud.pubsub.v1"
+                },
+                "service_class_names": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Configure the Java class name to use instead of the service's for its corresponding generated GAPIC client. Keys are fully-qualified service names as they appear in the protobuf (including the full the language_settings.java.interface_names\" field in gapic.yaml. API teams should otherwise use the service name as it appears in the protobuf. Example of a YAML configuration::  publishing:    java_settings:      service_class_names:        - google.pubsub.v1.Publisher: TopicAdmin        - google.pubsub.v1.Subscriber: SubscriptionAdmin"
+                },
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Java Settings",
+            "description": "Settings for Java client libraries."
+        },
+        "google.api.NodeSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Node Settings",
+            "description": "Settings for Node client libraries."
+        },
+        "google.api.PhpSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Php Settings",
+            "description": "Settings for Php client libraries."
+        },
+        "google.api.PythonSettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Python Settings",
+            "description": "Settings for Python client libraries."
+        },
+        "google.api.RubySettings": {
+            "properties": {
+                "common": {
+                    "$ref": "#/definitions/google.api.CommonLanguageSettings",
+                    "additionalProperties": true,
+                    "description": "Some settings."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ruby Settings",
+            "description": "Settings for Ruby client libraries."
+        }
+    }
+}

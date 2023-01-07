@@ -2,13 +2,15 @@ syntax = "proto3";
 
 package semio.server.v1;
 
+option go_package = "github.com/usalu/semio/src/schema/semio/manager/v1";
+
 import "model/v1/model.proto";
 import "extension/adapter/v1/adapter.proto";
 import "extension/converter/v1/converter.proto";
 import "extension/transformer/v1/transformer.proto";
 
 // A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
-service ManagerService{
-    rpc RequestRepresentation (semio.extension.adapter.v1.RepresentationRequest) returns (semio.model.v1.Representation){};
-    rpc RequestAttractionPoint (semio.extension.adapter.v1.AttractionPointRequest) returns (semio.model.v1.Point){};
+service ManagerService {
+  rpc RequestRepresentation(semio.extension.adapter.v1.RepresentationRequest) returns (semio.model.v1.Representation) {}
+  rpc RequestAttractionPoint(semio.extension.adapter.v1.AttractionPointRequest) returns (semio.model.v1.Point) {}
 }

@@ -1,0 +1,53 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/MethodSettings",
+    "definitions": {
+        "MethodSettings": {
+            "properties": {
+                "selector": {
+                    "type": "string",
+                    "description": "The fully qualified name of the method, for which the options below apply. This is used to find the method to apply the options."
+                },
+                "long_running": {
+                    "$ref": "#/definitions/google.api.MethodSettings.LongRunning",
+                    "additionalProperties": true,
+                    "description": "Describes settings to use for long-running operations when generating API methods for RPCs. Complements RPCs that use the annotations in google/longrunning/operations.proto. Example of a YAML configuration::  publishing:    method_behavior:      - selector: CreateAdDomain        long_running:          initial_poll_delay:            seconds: 60 # 1 minute          poll_delay_multiplier: 1.5          max_poll_delay:            seconds: 360 # 6 minutes          total_poll_timeout:             seconds: 54000 # 90 minutes"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Method Settings",
+            "description": "Describes the generator configuration for a method."
+        },
+        "google.api.MethodSettings.LongRunning": {
+            "properties": {
+                "initial_poll_delay": {
+                    "pattern": "^([0-9]+\\.?[0-9]*|\\.[0-9]+)s$",
+                    "type": "string",
+                    "description": "Initial delay after which the first poll request will be made. Default value: 5 seconds.",
+                    "format": "regex"
+                },
+                "poll_delay_multiplier": {
+                    "type": "number",
+                    "description": "Multiplier to gradually increase delay between subsequent polls until it reaches max_poll_delay. Default value: 1.5."
+                },
+                "max_poll_delay": {
+                    "pattern": "^([0-9]+\\.?[0-9]*|\\.[0-9]+)s$",
+                    "type": "string",
+                    "description": "Maximum time between two subsequent poll requests. Default value: 45 seconds.",
+                    "format": "regex"
+                },
+                "total_poll_timeout": {
+                    "pattern": "^([0-9]+\\.?[0-9]*|\\.[0-9]+)s$",
+                    "type": "string",
+                    "description": "Total polling timeout. Default value: 5 minutes.",
+                    "format": "regex"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Long Running",
+            "description": "Describes settings to use when generating API methods that use the long-running operation pattern. All default values below are from those used in the client library generators (e.g. [Java](https://github.com/googleapis/gapic-generator-java/blob/04c2faa191a9b5a10b92392fe8482279c4404803/src/main/java/com/google/api/generator/gapic/composer/common/RetrySettingsComposer.java))."
+        }
+    }
+}

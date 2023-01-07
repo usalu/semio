@@ -1,5 +1,5 @@
-from model.v1 import model_pb2 as _model_pb2
 from google.protobuf import any_pb2 as _any_pb2
+from model.v1 import model_pb2 as _model_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
