@@ -1,8 +1,0 @@
-name = "Semio.three.js"
-port = 5
-
-[[services]]
-
-[translation]
-source.extensions = ["3dm"]
-target.name = ["three.js"]

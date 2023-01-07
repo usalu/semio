@@ -8,16 +8,15 @@ plugins:
     out: ../packages/python/semio
   - plugin: buf.build/protocolbuffers/python
     out: ../packages/python/Semio
+  - plugin: buf.build/community/timostamm-protobuf-ts
+    out: ../packages/node/src
   # - plugin: buf.build/grpc/csharp
   #   out: ../packages/csharp/Semio
   # - plugin: buf.build/protocolbuffers/csharp
   #   out: ../packages/csharp/semio
-  - plugin: buf.build/grpc/node
-    out: ../packages/node/semio
-  - plugin: buf.build/protocolbuffers/js
-    out: ../packages/node/semio
-  - plugin: buf.build/community/chrusty-jsonschema
-    out: ../jsonschema
+    
+  # - plugin: buf.build/community/chrusty-jsonschema
+  #   out: ../jsonschema
   # # Go gateway server https://github.com/grpc-ecosystem/grpc-gateway
   # - name: go
   #   out: ../packages/go
@@ -34,17 +33,18 @@ plugins:
   #     - generate_unbound_methods=true
   # - plugin: buf.build/grpc-ecosystem/openapiv2
   #   out: ../openapi
-  - plugin: buf.build/grpc/go
-    out: ../packages/go/semio
-    opt:
-    - paths=source_relative
-  - plugin: buf.build/protocolbuffers/go
-    out: ../packages/go/semio
-    opt:
-    - paths=source_relative
-  - plugin: buf.build/grpc-ecosystem/plugins/grpc-gateway
-    out: ../packages/go
-    opt:
-    - paths=source_relative
+  
+  # - plugin: buf.build/grpc/go
+  #   out: ../packages/go/semio
+  #   opt:
+  #   - paths=source_relative
+  # - plugin: buf.build/protocolbuffers/go
+  #   out: ../packages/go/semio
+  #   opt:
+  #   - paths=source_relative
+  # - plugin: buf.build/grpc-ecosystem/plugins/grpc-gateway
+  #   out: ../packages/go
+  #   opt:
+  #   - paths=source_relative
   # - plugin: buf.build/grpc-ecosystem/plugins/openapiv2
   #   out: ../openapi

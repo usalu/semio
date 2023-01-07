@@ -24,8 +24,9 @@ jobs:
     - uses: arduino/setup-protoc@v1
     - name: Generate code
       run: |
-        cd ./src/schema/semio
+        cd ./src/schema
         buf format -w semio
+        cd ./semio
         buf generate --include-imports --include-wkt
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
