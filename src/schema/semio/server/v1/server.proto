@@ -10,7 +10,6 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 
 service ServerService{
-
     option (google.api.default_host) = "localhost:50000";
 
     // Lay out a design from a layout and return a design.
