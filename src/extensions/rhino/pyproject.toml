@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "semio-rhino"
-version = "0.1.0"
+version = "0.0.1"
 description = "A semio extension for Rhino including Grasshopper through Compute."
 authors = ["Ueli Saluz <semio@posteo.org>"]
 license = "AGPL"

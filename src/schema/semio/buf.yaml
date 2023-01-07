@@ -1,0 +1,10 @@
+version: v1
+name: buf.build/usalu/semio
+deps:
+  - buf.build/googleapis/googleapis
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - BASIC

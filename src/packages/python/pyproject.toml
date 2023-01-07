@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "semio"
-version = "0.1.0"
-description = "Semio enables designers to explicitly formalize design intent leading to a new way of designing."
+version = "0.0.1"
+description = "Use this package to develop Semio APIs in Python."
 authors = ["Ueli Saluz <semio@posteo.org>"]
-license = "AGPL"
+repository = "https://github.com/usalu/semio"
+keywords = ["semio", "api", "development"]
+license = "AGPL-3.0-or-later"
 readme = "README.md"
 
 [tool.poetry.dependencies]

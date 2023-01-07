@@ -8,4 +8,11 @@ plugins:
     out: ../packages/python/semio
   - plugin: buf.build/protocolbuffers/python
     out: ../packages/python/semio
-    
+  - plugin: buf.build/grpc/csharp
+    out: ../packages/charp/semio
+  - plugin: buf.build/protocolbuffers/csharp
+    out: ../packages/charp/semio
+  - plugin: buf.build/grpc/node
+    out: ../packages/node/semio
+  - plugin: buf.build/protocolbuffers/js
+    out: ../packages/node/semio

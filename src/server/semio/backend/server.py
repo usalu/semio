@@ -9,20 +9,18 @@ from semio.model import Design,Element
 
 from semio.server import ServerServiceServicer, add_ServerServiceServicer_to_server, LayoutDesignRequest
 
-class Server(BaseModel, ServerServicer):
+class Server(BaseModel, ServerServiceServicer):
     port: int = 50000
 
-    def LayoutDesign(self, request : LayoutDesignRequest, context):
-        layout = request.layout
-
-
+    def LayoutDesign(self, request :LayoutDesignRequest, context):
+        layout = request.layout.sobjects
         elements =  []
         design = Design(elements=elements)
         return design
 
     def serve(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        add_ServerServicer_to_server(Server(), server)
+        add_ServerServiceServicer_to_server(Server(), server)
         server.add_insecure_port('[::]:' + str(self.port))
         server.start()
         print("Server started, listening on " + str(self.port))
