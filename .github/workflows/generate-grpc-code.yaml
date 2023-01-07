@@ -7,7 +7,6 @@ on:
 jobs:
   generate-grpc-code:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - uses: bufbuild/buf-setup-action
