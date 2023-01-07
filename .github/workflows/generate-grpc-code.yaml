@@ -17,9 +17,8 @@ jobs:
     #     sudo npm install -g typescript
     #     sudo npm install -g protoc-gen-ts
     #     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
-    - uses: bufbuild/buf-setup-action
+    - uses: bufbuild/buf-setup-action@v1.11.0
       with:
-        version: "1.11.0"
         github_token: ${{ github.token }}
     - uses: arduino/setup-protoc@v1
     - name: Generate code
