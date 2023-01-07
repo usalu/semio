@@ -2,10 +2,11 @@ name: Publish packages
 
 on:
   push:
+    branches: [main]
     paths: [src/schema/**]
 
 jobs:
-  generate-grpc-code:
+  buf-push:
     runs-on: ubuntu-latest
 
     steps:
