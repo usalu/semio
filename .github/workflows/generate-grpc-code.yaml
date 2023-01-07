@@ -1,6 +1,7 @@
 name: Generate gRPC code
 
 on:
+  workflow_dispatch:
   push:
     paths: [src/schema/**]
 
