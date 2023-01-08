@@ -9,7 +9,14 @@ plugins:
   - plugin: buf.build/protocolbuffers/python
     out: ../packages/python/Semio
   - plugin: buf.build/community/timostamm-protobuf-ts
-    out: ../packages/node/src
+    out: ../packages/node
+    opt:
+      - server_grpc1
+      - generate_dependencies
+  # - plugin: buf.build/grpc/node
+  #   out: ../packages/node/src
+  # - plugin: buf.build/protocolbuffers/js
+  #   out: ../packages/node/src
   # - plugin: buf.build/grpc/csharp
   #   out: ../packages/csharp/Semio
   # - plugin: buf.build/protocolbuffers/csharp

@@ -2,7 +2,7 @@
   "name": "semio-three",
   "version": "0.0.1",
   "description": "Semio extension for three.js.",
-  "main": "mains.js",
+  "main": "dist/mains.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/main.ts",
     "build": "tsc"
@@ -25,7 +25,11 @@
   "devDependencies": {
     "@types/node": "^18.11.18",
     "nodemon": "^2.0.20",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.8.1",
+    "semio": "../../packages/node",
+    "three": "^0.148.0"
   }
 }

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "semio-server"
-version = "0.1.0"
+version = "0.0.1"
 description = "A backend server for semio."
 authors = ["Ueli Saluz <semio@posteo.org>"]
 license = "AGPL"
@@ -14,8 +14,8 @@ python = "^3.8"
 pydantic = "*"
 networkx = "*"
 mathutils = "*"
-semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.1.0-py3-none-any.whl"}
-#semio = {path = "../packages/python/dist/semio-0.1.0-py3-none-any.whl"}
+semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-py3-none-any.whl"}
+#semio = {path = "../packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 
 [build-system]
 requires = ["poetry-core"]
