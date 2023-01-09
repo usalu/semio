@@ -29,6 +29,8 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.8.1",
+    "@protobuf-ts/grpc-transport": "^2.8.2",
+    "@protobuf-ts/runtime-rpc": "^2.8.2",
     "semio": "../../packages/node",
     "three": "^0.148.0"
   }
