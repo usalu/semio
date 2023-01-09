@@ -27,6 +27,154 @@ export interface LayoutDesignRequest {
      */
     targetType: string;
 }
+/**
+ * @generated from protobuf message semio.server.v1.ManagingService
+ */
+export interface ManagingService {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string address = 2;
+     */
+    address: string;
+}
+/**
+ * @generated from protobuf message semio.server.v1.TranslatingService
+ */
+export interface TranslatingService {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string address = 2;
+     */
+    address: string;
+}
+/**
+ * @generated from protobuf message semio.server.v1.AdaptingService
+ */
+export interface AdaptingService {
+    /**
+     * @generated from protobuf field: string platform_name = 3;
+     */
+    platformName: string;
+}
+/**
+ * @generated from protobuf message semio.server.v1.ConvertingService
+ */
+export interface ConvertingService {
+    /**
+     * @generated from protobuf field: string source_type_url = 3;
+     */
+    sourceTypeUrl: string;
+    /**
+     * @generated from protobuf field: string target_type_url = 4;
+     */
+    targetTypeUrl: string;
+}
+/**
+ * @generated from protobuf message semio.server.v1.TransformingService
+ */
+export interface TransformingService {
+}
+/**
+ * @generated from protobuf message semio.server.v1.ExtendingService
+ */
+export interface ExtendingService {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string address = 2;
+     */
+    address: string;
+    /**
+     * @generated from protobuf field: repeated semio.server.v1.AdaptingService adaptingServices = 3;
+     */
+    adaptingServices: AdaptingService[];
+    /**
+     * @generated from protobuf field: repeated semio.server.v1.ConvertingService convertingServices = 4;
+     */
+    convertingServices: ConvertingService[];
+    /**
+     * @generated from protobuf field: repeated semio.server.v1.TransformingService transformingServices = 5;
+     */
+    transformingServices: TransformingService[];
+}
+/**
+ * @generated from protobuf message semio.server.v1.ServerServices
+ */
+export interface ServerServices {
+    /**
+     * @generated from protobuf field: semio.server.v1.ManagingService managingService = 1;
+     */
+    managingService?: ManagingService;
+    /**
+     * @generated from protobuf field: semio.server.v1.TranslatingService translatingService = 2;
+     */
+    translatingService?: TranslatingService;
+    /**
+     * @generated from protobuf field: repeated semio.server.v1.ExtendingService extendingServices = 3;
+     */
+    extendingServices: ExtendingService[];
+}
+/**
+ * @generated from protobuf message semio.server.v1.ServiceRegistrationRequest
+ */
+export interface ServiceRegistrationRequest {
+    /**
+     * @generated from protobuf field: bool replace_existing = 1;
+     */
+    replaceExisting: boolean;
+    /**
+     * @generated from protobuf oneof: server_service
+     */
+    serverService: {
+        oneofKind: "managingService";
+        /**
+         * @generated from protobuf field: semio.server.v1.ManagingService managingService = 2;
+         */
+        managingService: ManagingService;
+    } | {
+        oneofKind: "translatingService";
+        /**
+         * @generated from protobuf field: semio.server.v1.TranslatingService translatingService = 3;
+         */
+        translatingService: TranslatingService;
+    } | {
+        oneofKind: "extendingService";
+        /**
+         * @generated from protobuf field: semio.server.v1.ExtendingService extendingService = 4;
+         */
+        extendingService: ExtendingService;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message semio.server.v1.ServiceRegistrationResponse
+ */
+export interface ServiceRegistrationResponse {
+    /**
+     * @generated from protobuf field: bool success = 1;
+     */
+    success: boolean;
+    /**
+     * The old address of the same service type if there was one.
+     *
+     * @generated from protobuf field: string old_address = 2;
+     */
+    oldAddress: string;
+}
+/**
+ * @generated from protobuf message semio.server.v1.GetRegisteredServicesRequest
+ */
+export interface GetRegisteredServicesRequest {
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class LayoutDesignRequest$Type extends MessageType<LayoutDesignRequest> {
     constructor() {
@@ -81,9 +229,539 @@ class LayoutDesignRequest$Type extends MessageType<LayoutDesignRequest> {
  * @generated MessageType for protobuf message semio.server.v1.LayoutDesignRequest
  */
 export const LayoutDesignRequest = new LayoutDesignRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ManagingService$Type extends MessageType<ManagingService> {
+    constructor() {
+        super("semio.server.v1.ManagingService", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ManagingService>): ManagingService {
+        const message = { name: "", address: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ManagingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ManagingService): ManagingService {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string address */ 2:
+                    message.address = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ManagingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string address = 2; */
+        if (message.address !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.address);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ManagingService
+ */
+export const ManagingService = new ManagingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class TranslatingService$Type extends MessageType<TranslatingService> {
+    constructor() {
+        super("semio.server.v1.TranslatingService", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<TranslatingService>): TranslatingService {
+        const message = { name: "", address: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<TranslatingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: TranslatingService): TranslatingService {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string address */ 2:
+                    message.address = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: TranslatingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string address = 2; */
+        if (message.address !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.address);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.TranslatingService
+ */
+export const TranslatingService = new TranslatingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdaptingService$Type extends MessageType<AdaptingService> {
+    constructor() {
+        super("semio.server.v1.AdaptingService", [
+            { no: 3, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AdaptingService>): AdaptingService {
+        const message = { platformName: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<AdaptingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AdaptingService): AdaptingService {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string platform_name */ 3:
+                    message.platformName = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AdaptingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string platform_name = 3; */
+        if (message.platformName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.platformName);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.AdaptingService
+ */
+export const AdaptingService = new AdaptingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ConvertingService$Type extends MessageType<ConvertingService> {
+    constructor() {
+        super("semio.server.v1.ConvertingService", [
+            { no: 3, name: "source_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ConvertingService>): ConvertingService {
+        const message = { sourceTypeUrl: "", targetTypeUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ConvertingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ConvertingService): ConvertingService {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string source_type_url */ 3:
+                    message.sourceTypeUrl = reader.string();
+                    break;
+                case /* string target_type_url */ 4:
+                    message.targetTypeUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ConvertingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string source_type_url = 3; */
+        if (message.sourceTypeUrl !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.sourceTypeUrl);
+        /* string target_type_url = 4; */
+        if (message.targetTypeUrl !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.targetTypeUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ConvertingService
+ */
+export const ConvertingService = new ConvertingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class TransformingService$Type extends MessageType<TransformingService> {
+    constructor() {
+        super("semio.server.v1.TransformingService", []);
+    }
+    create(value?: PartialMessage<TransformingService>): TransformingService {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<TransformingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: TransformingService): TransformingService {
+        return target ?? this.create();
+    }
+    internalBinaryWrite(message: TransformingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.TransformingService
+ */
+export const TransformingService = new TransformingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExtendingService$Type extends MessageType<ExtendingService> {
+    constructor() {
+        super("semio.server.v1.ExtendingService", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "adaptingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AdaptingService },
+            { no: 4, name: "convertingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ConvertingService },
+            { no: 5, name: "transformingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => TransformingService }
+        ]);
+    }
+    create(value?: PartialMessage<ExtendingService>): ExtendingService {
+        const message = { name: "", address: "", adaptingServices: [], convertingServices: [], transformingServices: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ExtendingService>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ExtendingService): ExtendingService {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string address */ 2:
+                    message.address = reader.string();
+                    break;
+                case /* repeated semio.server.v1.AdaptingService adaptingServices */ 3:
+                    message.adaptingServices.push(AdaptingService.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated semio.server.v1.ConvertingService convertingServices */ 4:
+                    message.convertingServices.push(ConvertingService.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated semio.server.v1.TransformingService transformingServices */ 5:
+                    message.transformingServices.push(TransformingService.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ExtendingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string address = 2; */
+        if (message.address !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.address);
+        /* repeated semio.server.v1.AdaptingService adaptingServices = 3; */
+        for (let i = 0; i < message.adaptingServices.length; i++)
+            AdaptingService.internalBinaryWrite(message.adaptingServices[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.server.v1.ConvertingService convertingServices = 4; */
+        for (let i = 0; i < message.convertingServices.length; i++)
+            ConvertingService.internalBinaryWrite(message.convertingServices[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.server.v1.TransformingService transformingServices = 5; */
+        for (let i = 0; i < message.transformingServices.length; i++)
+            TransformingService.internalBinaryWrite(message.transformingServices[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ExtendingService
+ */
+export const ExtendingService = new ExtendingService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ServerServices$Type extends MessageType<ServerServices> {
+    constructor() {
+        super("semio.server.v1.ServerServices", [
+            { no: 1, name: "managingService", kind: "message", T: () => ManagingService },
+            { no: 2, name: "translatingService", kind: "message", T: () => TranslatingService },
+            { no: 3, name: "extendingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ExtendingService }
+        ]);
+    }
+    create(value?: PartialMessage<ServerServices>): ServerServices {
+        const message = { extendingServices: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ServerServices>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ServerServices): ServerServices {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* semio.server.v1.ManagingService managingService */ 1:
+                    message.managingService = ManagingService.internalBinaryRead(reader, reader.uint32(), options, message.managingService);
+                    break;
+                case /* semio.server.v1.TranslatingService translatingService */ 2:
+                    message.translatingService = TranslatingService.internalBinaryRead(reader, reader.uint32(), options, message.translatingService);
+                    break;
+                case /* repeated semio.server.v1.ExtendingService extendingServices */ 3:
+                    message.extendingServices.push(ExtendingService.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ServerServices, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* semio.server.v1.ManagingService managingService = 1; */
+        if (message.managingService)
+            ManagingService.internalBinaryWrite(message.managingService, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* semio.server.v1.TranslatingService translatingService = 2; */
+        if (message.translatingService)
+            TranslatingService.internalBinaryWrite(message.translatingService, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.server.v1.ExtendingService extendingServices = 3; */
+        for (let i = 0; i < message.extendingServices.length; i++)
+            ExtendingService.internalBinaryWrite(message.extendingServices[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ServerServices
+ */
+export const ServerServices = new ServerServices$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ServiceRegistrationRequest$Type extends MessageType<ServiceRegistrationRequest> {
+    constructor() {
+        super("semio.server.v1.ServiceRegistrationRequest", [
+            { no: 1, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "managingService", kind: "message", oneof: "serverService", T: () => ManagingService },
+            { no: 3, name: "translatingService", kind: "message", oneof: "serverService", T: () => TranslatingService },
+            { no: 4, name: "extendingService", kind: "message", oneof: "serverService", T: () => ExtendingService }
+        ]);
+    }
+    create(value?: PartialMessage<ServiceRegistrationRequest>): ServiceRegistrationRequest {
+        const message = { replaceExisting: false, serverService: { oneofKind: undefined } };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ServiceRegistrationRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ServiceRegistrationRequest): ServiceRegistrationRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool replace_existing */ 1:
+                    message.replaceExisting = reader.bool();
+                    break;
+                case /* semio.server.v1.ManagingService managingService */ 2:
+                    message.serverService = {
+                        oneofKind: "managingService",
+                        managingService: ManagingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).managingService)
+                    };
+                    break;
+                case /* semio.server.v1.TranslatingService translatingService */ 3:
+                    message.serverService = {
+                        oneofKind: "translatingService",
+                        translatingService: TranslatingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).translatingService)
+                    };
+                    break;
+                case /* semio.server.v1.ExtendingService extendingService */ 4:
+                    message.serverService = {
+                        oneofKind: "extendingService",
+                        extendingService: ExtendingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).extendingService)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ServiceRegistrationRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool replace_existing = 1; */
+        if (message.replaceExisting !== false)
+            writer.tag(1, WireType.Varint).bool(message.replaceExisting);
+        /* semio.server.v1.ManagingService managingService = 2; */
+        if (message.serverService.oneofKind === "managingService")
+            ManagingService.internalBinaryWrite(message.serverService.managingService, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* semio.server.v1.TranslatingService translatingService = 3; */
+        if (message.serverService.oneofKind === "translatingService")
+            TranslatingService.internalBinaryWrite(message.serverService.translatingService, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* semio.server.v1.ExtendingService extendingService = 4; */
+        if (message.serverService.oneofKind === "extendingService")
+            ExtendingService.internalBinaryWrite(message.serverService.extendingService, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ServiceRegistrationRequest
+ */
+export const ServiceRegistrationRequest = new ServiceRegistrationRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ServiceRegistrationResponse$Type extends MessageType<ServiceRegistrationResponse> {
+    constructor() {
+        super("semio.server.v1.ServiceRegistrationResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "old_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ServiceRegistrationResponse>): ServiceRegistrationResponse {
+        const message = { success: false, oldAddress: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ServiceRegistrationResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ServiceRegistrationResponse): ServiceRegistrationResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string old_address */ 2:
+                    message.oldAddress = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ServiceRegistrationResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string old_address = 2; */
+        if (message.oldAddress !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.oldAddress);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.ServiceRegistrationResponse
+ */
+export const ServiceRegistrationResponse = new ServiceRegistrationResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetRegisteredServicesRequest$Type extends MessageType<GetRegisteredServicesRequest> {
+    constructor() {
+        super("semio.server.v1.GetRegisteredServicesRequest", []);
+    }
+    create(value?: PartialMessage<GetRegisteredServicesRequest>): GetRegisteredServicesRequest {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<GetRegisteredServicesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: GetRegisteredServicesRequest): GetRegisteredServicesRequest {
+        return target ?? this.create();
+    }
+    internalBinaryWrite(message: GetRegisteredServicesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.server.v1.GetRegisteredServicesRequest
+ */
+export const GetRegisteredServicesRequest = new GetRegisteredServicesRequest$Type();
 /**
  * @generated ServiceType for protobuf service semio.server.v1.ServerService
  */
 export const ServerService = new ServiceType("semio.server.v1.ServerService", [
-    { name: "LayoutDesign", options: {}, I: Layout, O: Design }
+    { name: "LayoutDesign", options: {}, I: Layout, O: Design },
+    { name: "RegisterService", options: {}, I: ServiceRegistrationRequest, O: ServiceRegistrationResponse },
+    { name: "GetRegisteredServices", options: {}, I: GetRegisteredServicesRequest, O: ServerServices }
 ]);

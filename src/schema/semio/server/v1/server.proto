@@ -21,9 +21,71 @@ service ServerService {
     //   body: "*"
     // };
   }
+
+  // Register a service to the server.
+  rpc RegisterService(ServiceRegistrationRequest) returns (ServiceRegistrationResponse) {
+  }
+
+  // Get all registered services.
+  rpc GetRegisteredServices(GetRegisteredServicesRequest) returns (ServerServices) {
+  }
 }
 
 message LayoutDesignRequest {
   semio.model.v1.Layout layout = 1;
   string target_type = 2;
+}
+
+message ManagingService{
+  string name = 1;
+  string address = 2;
+}
+
+message TranslatingService{
+  string name = 1;
+  string address = 2;
+}
+
+message AdaptingService{
+  string platform_name = 3;
+}
+
+message ConvertingService{
+  string source_type_url = 3;
+  string target_type_url = 4;
+}
+
+message TransformingService{
+}
+
+message ExtendingService{
+  string name = 1;
+  string address = 2;
+  repeated AdaptingService adaptingServices = 3;
+  repeated ConvertingService convertingServices = 4;
+  repeated TransformingService transformingServices = 5;
+}
+
+message ServerServices {
+  ManagingService managingService = 1;
+  TranslatingService translatingService = 2;
+  repeated ExtendingService extendingServices = 3;
+}
+
+message ServiceRegistrationRequest{
+  bool replace_existing = 1;
+  oneof server_service {
+    ManagingService managingService = 2;
+    TranslatingService translatingService = 3;
+    ExtendingService extendingService = 4;
+  }
+}
+
+message ServiceRegistrationResponse{
+  bool success = 1;
+  // The old address of the same service type if there was one.
+  string old_address = 2;
+}
+
+message GetRegisteredServicesRequest {
 }

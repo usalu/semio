@@ -3,6 +3,7 @@
 import grpc
 
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
+from server.v1 import server_pb2 as server_dot_v1_dot_server__pb2
 
 
 class ServerServiceStub(object):
@@ -20,6 +21,16 @@ class ServerServiceStub(object):
                 '/semio.server.v1.ServerService/LayoutDesign',
                 request_serializer=model_dot_v1_dot_model__pb2.Layout.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
+                )
+        self.RegisterService = channel.unary_unary(
+                '/semio.server.v1.ServerService/RegisterService',
+                request_serializer=server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.SerializeToString,
+                response_deserializer=server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.FromString,
+                )
+        self.GetRegisteredServices = channel.unary_unary(
+                '/semio.server.v1.ServerService/GetRegisteredServices',
+                request_serializer=server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.SerializeToString,
+                response_deserializer=server_dot_v1_dot_server__pb2.ServerServices.FromString,
                 )
 
 
@@ -39,6 +50,20 @@ class ServerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RegisterService(self, request, context):
+        """Register a service to the server.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetRegisteredServices(self, request, context):
+        """Get all registered services.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ServerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -46,6 +71,16 @@ def add_ServerServiceServicer_to_server(servicer, server):
                     servicer.LayoutDesign,
                     request_deserializer=model_dot_v1_dot_model__pb2.Layout.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Design.SerializeToString,
+            ),
+            'RegisterService': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterService,
+                    request_deserializer=server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.FromString,
+                    response_serializer=server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.SerializeToString,
+            ),
+            'GetRegisteredServices': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRegisteredServices,
+                    request_deserializer=server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.FromString,
+                    response_serializer=server_dot_v1_dot_server__pb2.ServerServices.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -73,5 +108,39 @@ class ServerService(object):
         return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/LayoutDesign',
             model_dot_v1_dot_model__pb2.Layout.SerializeToString,
             model_dot_v1_dot_model__pb2.Design.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RegisterService(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/RegisterService',
+            server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.SerializeToString,
+            server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetRegisteredServices(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/GetRegisteredServices',
+            server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.SerializeToString,
+            server_dot_v1_dot_server__pb2.ServerServices.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

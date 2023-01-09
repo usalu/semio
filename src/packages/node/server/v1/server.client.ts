@@ -4,6 +4,10 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { ServerService } from "./server";
+import type { ServerServices } from "./server";
+import type { GetRegisteredServicesRequest } from "./server";
+import type { ServiceRegistrationResponse } from "./server";
+import type { ServiceRegistrationRequest } from "./server";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Design } from "../../model/v1/model";
 import type { Layout } from "../../model/v1/model";
@@ -28,6 +32,18 @@ export interface IServerServiceClient {
      * @generated from protobuf rpc: LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design);
      */
     layoutDesign(input: Layout, options?: RpcOptions): UnaryCall<Layout, Design>;
+    /**
+     * Register a service to the server.
+     *
+     * @generated from protobuf rpc: RegisterService(semio.server.v1.ServiceRegistrationRequest) returns (semio.server.v1.ServiceRegistrationResponse);
+     */
+    registerService(input: ServiceRegistrationRequest, options?: RpcOptions): UnaryCall<ServiceRegistrationRequest, ServiceRegistrationResponse>;
+    /**
+     * Get all registered services.
+     *
+     * @generated from protobuf rpc: GetRegisteredServices(semio.server.v1.GetRegisteredServicesRequest) returns (semio.server.v1.ServerServices);
+     */
+    getRegisteredServices(input: GetRegisteredServicesRequest, options?: RpcOptions): UnaryCall<GetRegisteredServicesRequest, ServerServices>;
 }
 /**
  * The server service is the gateway for all other apis of semio.
@@ -55,5 +71,23 @@ export class ServerServiceClient implements IServerServiceClient, ServiceInfo {
     layoutDesign(input: Layout, options?: RpcOptions): UnaryCall<Layout, Design> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<Layout, Design>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Register a service to the server.
+     *
+     * @generated from protobuf rpc: RegisterService(semio.server.v1.ServiceRegistrationRequest) returns (semio.server.v1.ServiceRegistrationResponse);
+     */
+    registerService(input: ServiceRegistrationRequest, options?: RpcOptions): UnaryCall<ServiceRegistrationRequest, ServiceRegistrationResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ServiceRegistrationRequest, ServiceRegistrationResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Get all registered services.
+     *
+     * @generated from protobuf rpc: GetRegisteredServices(semio.server.v1.GetRegisteredServicesRequest) returns (semio.server.v1.ServerServices);
+     */
+    getRegisteredServices(input: GetRegisteredServicesRequest, options?: RpcOptions): UnaryCall<GetRegisteredServicesRequest, ServerServices> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetRegisteredServicesRequest, ServerServices>("unary", this._transport, method, opt, input);
     }
 }

@@ -7,28 +7,28 @@ import type * as grpc from "@grpc/grpc-js";
 /**
  * A service for transforming (rewriting) layouts (graphs).
  *
- * @generated from protobuf service semio.extension.transformer.v1.Transformer
+ * @generated from protobuf service semio.extension.transformer.v1.TransformerService
  */
-export interface ITransformer extends grpc.UntypedServiceImplementation {
+export interface ITransformerService extends grpc.UntypedServiceImplementation {
     /**
      * @generated from protobuf rpc: RewriteLayout(semio.extension.transformer.v1.RewriteLayoutRequest) returns (semio.model.v1.Layout);
      */
     rewriteLayout: grpc.handleUnaryCall<RewriteLayoutRequest, Layout>;
 }
 /**
- * @grpc/grpc-js definition for the protobuf service semio.extension.transformer.v1.Transformer.
+ * @grpc/grpc-js definition for the protobuf service semio.extension.transformer.v1.TransformerService.
  *
- * Usage: Implement the interface ITransformer and add to a grpc server.
+ * Usage: Implement the interface ITransformerService and add to a grpc server.
  *
  * ```typescript
  * const server = new grpc.Server();
- * const service: ITransformer = ...
- * server.addService(transformerDefinition, service);
+ * const service: ITransformerService = ...
+ * server.addService(transformerServiceDefinition, service);
  * ```
  */
-export const transformerDefinition: grpc.ServiceDefinition<ITransformer> = {
+export const transformerServiceDefinition: grpc.ServiceDefinition<ITransformerService> = {
     rewriteLayout: {
-        path: "/semio.extension.transformer.v1.Transformer/RewriteLayout",
+        path: "/semio.extension.transformer.v1.TransformerService/RewriteLayout",
         originalName: "RewriteLayout",
         requestStream: false,
         responseStream: false,

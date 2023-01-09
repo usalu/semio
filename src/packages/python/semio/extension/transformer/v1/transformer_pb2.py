@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*extension/transformer/v1/transformer.proto\x12\x1esemio.extension.transformer.v1\x1a\x14model/v1/model.proto\"\x8d\x01\n\x14RewriteLayoutRequest\x12\x36\n\tdecisions\x18\x01 \x03(\x0b\x32\x18.semio.model.v1.DecisionR\tdecisions\x12=\n\x0einitial_layout\x18\x02 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\rinitialLayout2l\n\x0bTransformer\x12]\n\rRewriteLayout\x12\x34.semio.extension.transformer.v1.RewriteLayoutRequest\x1a\x16.semio.model.v1.LayoutB\x93\x02\n\"com.semio.extension.transformer.v1B\x10TransformerProtoP\x01Z@github.com/usalu/semio/src/schema/semio/extension/transformer/v1\xa2\x02\x03SET\xaa\x02\x1eSemio.Extension.Transformer.V1\xca\x02\x1eSemio\\Extension\\Transformer\\V1\xe2\x02*Semio\\Extension\\Transformer\\V1\\GPBMetadata\xea\x02!Semio::Extension::Transformer::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*extension/transformer/v1/transformer.proto\x12\x1esemio.extension.transformer.v1\x1a\x14model/v1/model.proto\"\x8d\x01\n\x14RewriteLayoutRequest\x12\x36\n\tdecisions\x18\x01 \x03(\x0b\x32\x18.semio.model.v1.DecisionR\tdecisions\x12=\n\x0einitial_layout\x18\x02 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\rinitialLayout2s\n\x12TransformerService\x12]\n\rRewriteLayout\x12\x34.semio.extension.transformer.v1.RewriteLayoutRequest\x1a\x16.semio.model.v1.LayoutB\x93\x02\n\"com.semio.extension.transformer.v1B\x10TransformerProtoP\x01Z@github.com/usalu/semio/src/schema/semio/extension/transformer/v1\xa2\x02\x03SET\xaa\x02\x1eSemio.Extension.Transformer.V1\xca\x02\x1eSemio\\Extension\\Transformer\\V1\xe2\x02*Semio\\Extension\\Transformer\\V1\\GPBMetadata\xea\x02!Semio::Extension::Transformer::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension.transformer.v1.transformer_pb2', globals())
@@ -24,6 +24,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._serialized_options = b'\n\"com.semio.extension.transformer.v1B\020TransformerProtoP\001Z@github.com/usalu/semio/src/schema/semio/extension/transformer/v1\242\002\003SET\252\002\036Semio.Extension.Transformer.V1\312\002\036Semio\\Extension\\Transformer\\V1\342\002*Semio\\Extension\\Transformer\\V1\\GPBMetadata\352\002!Semio::Extension::Transformer::V1'
   _REWRITELAYOUTREQUEST._serialized_start=101
   _REWRITELAYOUTREQUEST._serialized_end=242
-  _TRANSFORMER._serialized_start=244
-  _TRANSFORMER._serialized_end=352
+  _TRANSFORMERSERVICE._serialized_start=244
+  _TRANSFORMERSERVICE._serialized_end=359
 # @@protoc_insertion_point(module_scope)

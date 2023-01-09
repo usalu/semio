@@ -86,8 +86,8 @@ class RewriteLayoutRequest$Type extends MessageType<RewriteLayoutRequest> {
  */
 export const RewriteLayoutRequest = new RewriteLayoutRequest$Type();
 /**
- * @generated ServiceType for protobuf service semio.extension.transformer.v1.Transformer
+ * @generated ServiceType for protobuf service semio.extension.transformer.v1.TransformerService
  */
-export const Transformer = new ServiceType("semio.extension.transformer.v1.Transformer", [
+export const TransformerService = new ServiceType("semio.extension.transformer.v1.TransformerService", [
     { name: "RewriteLayout", options: {}, I: RewriteLayoutRequest, O: Layout }
 ]);

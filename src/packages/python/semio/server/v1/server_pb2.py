@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16server/v1/server.proto\x12\x0fsemio.server.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2Q\n\rServerService\x12@\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Design\"\x00\x42\xb3\x01\n\x13\x63om.semio.server.v1B\x0bServerProtoP\x01Z1github.com/usalu/semio/src/schema/semio/server/v1\xa2\x02\x03SSX\xaa\x02\x0fSemio.Server.V1\xca\x02\x0fSemio\\Server\\V1\xe2\x02\x1bSemio\\Server\\V1\\GPBMetadata\xea\x02\x11Semio::Server::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16server/v1/server.proto\x12\x0fsemio.server.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType\"?\n\x0fManagingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\"B\n\x12TranslatingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\"6\n\x0f\x41\x64\x61ptingService\x12#\n\rplatform_name\x18\x03 \x01(\tR\x0cplatformName\"c\n\x11\x43onvertingService\x12&\n\x0fsource_type_url\x18\x03 \x01(\tR\rsourceTypeUrl\x12&\n\x0ftarget_type_url\x18\x04 \x01(\tR\rtargetTypeUrl\"\x15\n\x13TransformingService\"\xbc\x02\n\x10\x45xtendingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\x12L\n\x10\x61\x64\x61ptingServices\x18\x03 \x03(\x0b\x32 .semio.server.v1.AdaptingServiceR\x10\x61\x64\x61ptingServices\x12R\n\x12\x63onvertingServices\x18\x04 \x03(\x0b\x32\".semio.server.v1.ConvertingServiceR\x12\x63onvertingServices\x12X\n\x14transformingServices\x18\x05 \x03(\x0b\x32$.semio.server.v1.TransformingServiceR\x14transformingServices\"\x82\x02\n\x0eServerServices\x12J\n\x0fmanagingService\x18\x01 \x01(\x0b\x32 .semio.server.v1.ManagingServiceR\x0fmanagingService\x12S\n\x12translatingService\x18\x02 \x01(\x0b\x32#.semio.server.v1.TranslatingServiceR\x12translatingService\x12O\n\x11\x65xtendingServices\x18\x03 \x03(\x0b\x32!.semio.server.v1.ExtendingServiceR\x11\x65xtendingServices\"\xcf\x02\n\x1aServiceRegistrationRequest\x12)\n\x10replace_existing\x18\x01 \x01(\x08R\x0freplaceExisting\x12L\n\x0fmanagingService\x18\x02 \x01(\x0b\x32 .semio.server.v1.ManagingServiceH\x00R\x0fmanagingService\x12U\n\x12translatingService\x18\x03 \x01(\x0b\x32#.semio.server.v1.TranslatingServiceH\x00R\x12translatingService\x12O\n\x10\x65xtendingService\x18\x04 \x01(\x0b\x32!.semio.server.v1.ExtendingServiceH\x00R\x10\x65xtendingServiceB\x10\n\x0eserver_service\"X\n\x1bServiceRegistrationResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x1f\n\x0bold_address\x18\x02 \x01(\tR\noldAddress\"\x1e\n\x1cGetRegisteredServicesRequest2\xac\x02\n\rServerService\x12@\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Design\"\x00\x12n\n\x0fRegisterService\x12+.semio.server.v1.ServiceRegistrationRequest\x1a,.semio.server.v1.ServiceRegistrationResponse\"\x00\x12i\n\x15GetRegisteredServices\x12-.semio.server.v1.GetRegisteredServicesRequest\x1a\x1f.semio.server.v1.ServerServices\"\x00\x42\xb3\x01\n\x13\x63om.semio.server.v1B\x0bServerProtoP\x01Z1github.com/usalu/semio/src/schema/semio/server/v1\xa2\x02\x03SSX\xaa\x02\x0fSemio.Server.V1\xca\x02\x0fSemio\\Server\\V1\xe2\x02\x1bSemio\\Server\\V1\\GPBMetadata\xea\x02\x11Semio::Server::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'server.v1.server_pb2', globals())
@@ -24,6 +24,26 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._serialized_options = b'\n\023com.semio.server.v1B\013ServerProtoP\001Z1github.com/usalu/semio/src/schema/semio/server/v1\242\002\003SSX\252\002\017Semio.Server.V1\312\002\017Semio\\Server\\V1\342\002\033Semio\\Server\\V1\\GPBMetadata\352\002\021Semio::Server::V1'
   _LAYOUTDESIGNREQUEST._serialized_start=65
   _LAYOUTDESIGNREQUEST._serialized_end=167
-  _SERVERSERVICE._serialized_start=169
-  _SERVERSERVICE._serialized_end=250
+  _MANAGINGSERVICE._serialized_start=169
+  _MANAGINGSERVICE._serialized_end=232
+  _TRANSLATINGSERVICE._serialized_start=234
+  _TRANSLATINGSERVICE._serialized_end=300
+  _ADAPTINGSERVICE._serialized_start=302
+  _ADAPTINGSERVICE._serialized_end=356
+  _CONVERTINGSERVICE._serialized_start=358
+  _CONVERTINGSERVICE._serialized_end=457
+  _TRANSFORMINGSERVICE._serialized_start=459
+  _TRANSFORMINGSERVICE._serialized_end=480
+  _EXTENDINGSERVICE._serialized_start=483
+  _EXTENDINGSERVICE._serialized_end=799
+  _SERVERSERVICES._serialized_start=802
+  _SERVERSERVICES._serialized_end=1060
+  _SERVICEREGISTRATIONREQUEST._serialized_start=1063
+  _SERVICEREGISTRATIONREQUEST._serialized_end=1398
+  _SERVICEREGISTRATIONRESPONSE._serialized_start=1400
+  _SERVICEREGISTRATIONRESPONSE._serialized_end=1488
+  _GETREGISTEREDSERVICESREQUEST._serialized_start=1490
+  _GETREGISTEREDSERVICESREQUEST._serialized_end=1520
+  _SERVERSERVICE._serialized_start=1523
+  _SERVERSERVICE._serialized_end=1823
 # @@protoc_insertion_point(module_scope)

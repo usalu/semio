@@ -3,7 +3,7 @@
 // tslint:disable
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { Transformer } from "./transformer";
+import { TransformerService } from "./transformer";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Layout } from "../../../model/v1/model";
 import type { RewriteLayoutRequest } from "./transformer";
@@ -12,9 +12,9 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
  * A service for transforming (rewriting) layouts (graphs).
  *
- * @generated from protobuf service semio.extension.transformer.v1.Transformer
+ * @generated from protobuf service semio.extension.transformer.v1.TransformerService
  */
-export interface ITransformerClient {
+export interface ITransformerServiceClient {
     /**
      * @generated from protobuf rpc: RewriteLayout(semio.extension.transformer.v1.RewriteLayoutRequest) returns (semio.model.v1.Layout);
      */
@@ -23,12 +23,12 @@ export interface ITransformerClient {
 /**
  * A service for transforming (rewriting) layouts (graphs).
  *
- * @generated from protobuf service semio.extension.transformer.v1.Transformer
+ * @generated from protobuf service semio.extension.transformer.v1.TransformerService
  */
-export class TransformerClient implements ITransformerClient, ServiceInfo {
-    typeName = Transformer.typeName;
-    methods = Transformer.methods;
-    options = Transformer.options;
+export class TransformerServiceClient implements ITransformerServiceClient, ServiceInfo {
+    typeName = TransformerService.typeName;
+    methods = TransformerService.methods;
+    options = TransformerService.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

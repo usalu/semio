@@ -6,7 +6,7 @@ from extension.transformer.v1 import transformer_pb2 as extension_dot_transforme
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-class TransformerStub(object):
+class TransformerServiceStub(object):
     """A service for transforming (rewriting) layouts (graphs).
     """
 
@@ -17,13 +17,13 @@ class TransformerStub(object):
             channel: A grpc.Channel.
         """
         self.RewriteLayout = channel.unary_unary(
-                '/semio.extension.transformer.v1.Transformer/RewriteLayout',
+                '/semio.extension.transformer.v1.TransformerService/RewriteLayout',
                 request_serializer=extension_dot_transformer_dot_v1_dot_transformer__pb2.RewriteLayoutRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Layout.FromString,
                 )
 
 
-class TransformerServicer(object):
+class TransformerServiceServicer(object):
     """A service for transforming (rewriting) layouts (graphs).
     """
 
@@ -34,7 +34,7 @@ class TransformerServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_TransformerServicer_to_server(servicer, server):
+def add_TransformerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'RewriteLayout': grpc.unary_unary_rpc_method_handler(
                     servicer.RewriteLayout,
@@ -43,12 +43,12 @@ def add_TransformerServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.extension.transformer.v1.Transformer', rpc_method_handlers)
+            'semio.extension.transformer.v1.TransformerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class Transformer(object):
+class TransformerService(object):
     """A service for transforming (rewriting) layouts (graphs).
     """
 
@@ -63,7 +63,7 @@ class Transformer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.transformer.v1.Transformer/RewriteLayout',
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.transformer.v1.TransformerService/RewriteLayout',
             extension_dot_transformer_dot_v1_dot_transformer__pb2.RewriteLayoutRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Layout.FromString,
             options, channel_credentials,

@@ -1,7 +1,10 @@
 name = "Semio.gh"
 port = 5
 
-[[services]]
+[services]
 
-[translation]
-source.names = "rhino"
+[[adapting]]
+platform = "rhino"
+
+[[adapting]]
+platform = "grasshopper"

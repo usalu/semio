@@ -7,7 +7,7 @@ option go_package = "github.com/usalu/semio/src/schema/semio/extension/transform
 import "model/v1/model.proto";
 
 // A service for transforming (rewriting) layouts (graphs).
-service Transformer {
+service TransformerService {
   rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
