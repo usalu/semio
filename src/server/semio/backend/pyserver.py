@@ -5,18 +5,15 @@ from typing import Tuple
 
 import grpc
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from semio.model import Design,Element,Pose,Point
 
-from semio.server import (ServerServiceServicer, add_ServerServiceServicer_to_server,
-LayoutDesignRequest, 
-ServerServices, ManagingService, TranslatingService,ExtendingService,AdaptingService,ConvertingService,TransformingService,
-ServiceRegistrationRequest,ServiceRegistrationResponse )
+from semio.gateway import (GatewayServer, GatewayServices,
+LayoutDesignRequest, ServiceRegistrationRequest,ServiceRegistrationResponse)
 
-class Server(BaseModel, ServerServiceServicer):
-    port: int =  Field(default=50000,description="Port of server.")
-    services: ServerServices = Field(default_factory=ServerServices)
+class Gateway(GatewayServer):
+    services: GatewayServices = Field(default_factory=GatewayServices)
 
     def getAdapterAddress(self, platformName:str) -> str:
         """Get the adapter address for a platform by its name"""
@@ -42,13 +39,13 @@ class Server(BaseModel, ServerServiceServicer):
         #             return extendingService.address
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
-    def LayoutDesign(self, request:LayoutDesignRequest, context):
+    def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
         # layout = request.layout.sobjects
         elements =  [Element(pose=Pose(point_of_view=Point(x=46)))]
         design = Design(elements=elements)
         return design
 
-    def RegisterService(self, request, context):
+    def RegisterService(self, request: ServiceRegistrationRequest, context) -> ServiceRegistrationResponse:
         oldAddress = ""
         service = request.WhichOneof('server_service')
         if service == 'managingService':
@@ -69,21 +66,23 @@ class Server(BaseModel, ServerServiceServicer):
             self.services.extendingServices.append(request.extendingService)
         return ServiceRegistrationResponse(success=True,old_address=oldAddress)
 
-    def GetRegisteredServices(self, request, context):
+    def GetRegisteredServices(self, request, context) -> GatewayServices:
         return self.services
 
-    def serve(self):
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        add_ServerServiceServicer_to_server(self, server)
-        server.add_insecure_port('[::]:' + str(self.port))
-        server.start()
-        print("Server started, listening on " + str(self.port))
-        server.wait_for_termination()
-    
-    class Config:
-        arbitrary_types_allowed = True
+    # def serve(self):
+    #     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    #     add_ServerServiceServicer_to_server(self, server)
+    #     SERVICE_NAMES = (
+    #     DESCRIPTOR.services_by_name['ServerService'].full_name,
+    #     reflection.SERVICE_NAME,
+    #     )
+    #     reflection.enable_server_reflection(SERVICE_NAMES, server)
+    #     server.add_insecure_port('[::]:' + str(self.port))
+    #     server.start()
+    #     print("Server started, listening on " + str(self.port))
+    #     server.wait_for_termination()
 
 if __name__ == '__main__':
     logging.basicConfig()
-    server = Server()
-    server.serve()
+    gateway = Gateway()
+    gateway.serve()

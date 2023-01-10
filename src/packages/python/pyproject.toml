@@ -12,6 +12,7 @@ readme = "README.md"
 python = "^3.8"
 grpcio = "*"
 protobuf = "*"
+grpcio-reflection = "^1.51.1"
 
 [build-system]
 requires = ["poetry-core"]

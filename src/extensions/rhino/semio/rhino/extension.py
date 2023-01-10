@@ -1,8 +1,11 @@
 from logging import basicConfig
 from concurrent.futures import ThreadPoolExecutor
-from grpc import server
+from grpc import server, insecure_channel
+
 from semio.model import Point
-from semio.extensionservices.adapter import AttractionPointRequest, RepresentationRequest, RepresentationsRequest, AdapterServicer, add_AdapterServicer_to_server
+from semio.gateway import ServiceRegistrationRequest, ExtendingService, ConvertingService, TransformingService, AdaptingService
+from semio.extension.adapter import AttractionPointRequest, RepresentationRequest, RepresentationsRequest, AdapterServiceServicer, add_AdapterServiceServicer_to_server
+from semio.utils import Server
 
 import compute_rhino3d
 import compute_rhino3d.Grasshopper as gh
@@ -88,7 +91,7 @@ def callGrasshopper(path,parameters, computeUrl = "http://localhost:6500/", comp
 
 
 # TODO Make proper request with warnings, errors, argument checking, etc
-class GrasshopperAdapter(AdapterServicer):
+class GrasshopperAdapter(BaseModel, AdapterServiceServicer):
     """An adapter for the REST Endpoint for Grasshopper3D of the Compute Rhino server."""
     computeUrl:str = "http://localhost:6500/"
     computeAuthToken:str = ""
@@ -114,18 +117,32 @@ class GrasshopperAdapter(AdapterServicer):
         pass
 
 
-class GrasshopperExtensionServer(BaseModel):
-    port: int = 59001
+class RhinoExtensionServer(BaseModel,Server):
 
-    def serve(self):
-        basicConfig()
-        ghServer = server(ThreadPoolExecutor(max_workers=10))
-        add_AdapterServicer_to_server(GrasshopperAdapter(), ghServer)
-        ghServer.add_insecure_port('[::]:' + str(self.port))
-        ghServer.start()
+    def setup(self,server):
+        add_AdapterServiceServicer_to_server(GrasshopperAdapter(), server)
+
+       
+        with insecure_channel('localhost:50000') as channel:
+            stub = ServerServiceStub(channel)
+            response = stub.RegisterService(ServiceRegistrationRequest(extendingService=rhinoExtension))
+            if not response.success:
+
+                
+
+        rhinoServer.start()
         print("Server started, listening on " + str(self.port))
-        ghServer.wait_for_termination()
+        rhinoServer.wait_for_termination()
+
+    
 
 if __name__=="__main__":
-    ghServer = GrasshopperExtensionServer()
-    ghServer.serve()
+    rhinoServer = RhinoExtensionServer(59001, ,ExtendingService(
+            name='semio.rhino', 
+            address=f'localhost:{self.port}',
+            adaptingServices=[
+                AdaptingService(platform_name='mcneel/rhino'),
+                AdaptingService(platform_name='mcneel/grasshopper')
+            ]
+        ))
+    rhinoServer.serve()

@@ -34,6 +34,16 @@ class ExtendingService(_message.Message):
     transformingServices: _containers.RepeatedCompositeFieldContainer[TransformingService]
     def __init__(self, name: _Optional[str] = ..., address: _Optional[str] = ..., adaptingServices: _Optional[_Iterable[_Union[AdaptingService, _Mapping]]] = ..., convertingServices: _Optional[_Iterable[_Union[ConvertingService, _Mapping]]] = ..., transformingServices: _Optional[_Iterable[_Union[TransformingService, _Mapping]]] = ...) -> None: ...
 
+class GatewayServices(_message.Message):
+    __slots__ = ["extendingServices", "managingService", "translatingService"]
+    EXTENDINGSERVICES_FIELD_NUMBER: _ClassVar[int]
+    MANAGINGSERVICE_FIELD_NUMBER: _ClassVar[int]
+    TRANSLATINGSERVICE_FIELD_NUMBER: _ClassVar[int]
+    extendingServices: _containers.RepeatedCompositeFieldContainer[ExtendingService]
+    managingService: ManagingService
+    translatingService: TranslatingService
+    def __init__(self, managingService: _Optional[_Union[ManagingService, _Mapping]] = ..., translatingService: _Optional[_Union[TranslatingService, _Mapping]] = ..., extendingServices: _Optional[_Iterable[_Union[ExtendingService, _Mapping]]] = ...) -> None: ...
+
 class GetRegisteredServicesRequest(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
@@ -53,16 +63,6 @@ class ManagingService(_message.Message):
     address: str
     name: str
     def __init__(self, name: _Optional[str] = ..., address: _Optional[str] = ...) -> None: ...
-
-class ServerServices(_message.Message):
-    __slots__ = ["extendingServices", "managingService", "translatingService"]
-    EXTENDINGSERVICES_FIELD_NUMBER: _ClassVar[int]
-    MANAGINGSERVICE_FIELD_NUMBER: _ClassVar[int]
-    TRANSLATINGSERVICE_FIELD_NUMBER: _ClassVar[int]
-    extendingServices: _containers.RepeatedCompositeFieldContainer[ExtendingService]
-    managingService: ManagingService
-    translatingService: TranslatingService
-    def __init__(self, managingService: _Optional[_Union[ManagingService, _Mapping]] = ..., translatingService: _Optional[_Union[TranslatingService, _Mapping]] = ..., extendingServices: _Optional[_Iterable[_Union[ExtendingService, _Mapping]]] = ...) -> None: ...
 
 class ServiceRegistrationRequest(_message.Message):
     __slots__ = ["extendingService", "managingService", "replace_existing", "translatingService"]

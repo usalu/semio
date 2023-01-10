@@ -2,12 +2,12 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from gateway.v1 import gateway_pb2 as gateway_dot_v1_dot_gateway__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
-from server.v1 import server_pb2 as server_dot_v1_dot_server__pb2
 
 
-class ServerServiceStub(object):
-    """The server service is the gateway for all other apis of semio.
+class GatewayServiceStub(object):
+    """The gateway service is the gateway for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -18,24 +18,24 @@ class ServerServiceStub(object):
             channel: A grpc.Channel.
         """
         self.LayoutDesign = channel.unary_unary(
-                '/semio.server.v1.ServerService/LayoutDesign',
+                '/semio.gateway.v1.GatewayService/LayoutDesign',
                 request_serializer=model_dot_v1_dot_model__pb2.Layout.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
                 )
         self.RegisterService = channel.unary_unary(
-                '/semio.server.v1.ServerService/RegisterService',
-                request_serializer=server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.SerializeToString,
-                response_deserializer=server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.FromString,
+                '/semio.gateway.v1.GatewayService/RegisterService',
+                request_serializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.SerializeToString,
+                response_deserializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.FromString,
                 )
         self.GetRegisteredServices = channel.unary_unary(
-                '/semio.server.v1.ServerService/GetRegisteredServices',
-                request_serializer=server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.SerializeToString,
-                response_deserializer=server_dot_v1_dot_server__pb2.ServerServices.FromString,
+                '/semio.gateway.v1.GatewayService/GetRegisteredServices',
+                request_serializer=gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.SerializeToString,
+                response_deserializer=gateway_dot_v1_dot_gateway__pb2.GatewayServices.FromString,
                 )
 
 
-class ServerServiceServicer(object):
-    """The server service is the gateway for all other apis of semio.
+class GatewayServiceServicer(object):
+    """The gateway service is the gateway for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -65,7 +65,7 @@ class ServerServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_ServerServiceServicer_to_server(servicer, server):
+def add_GatewayServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LayoutDesign': grpc.unary_unary_rpc_method_handler(
                     servicer.LayoutDesign,
@@ -74,23 +74,23 @@ def add_ServerServiceServicer_to_server(servicer, server):
             ),
             'RegisterService': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterService,
-                    request_deserializer=server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.FromString,
-                    response_serializer=server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.SerializeToString,
+                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.FromString,
+                    response_serializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.SerializeToString,
             ),
             'GetRegisteredServices': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisteredServices,
-                    request_deserializer=server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.FromString,
-                    response_serializer=server_dot_v1_dot_server__pb2.ServerServices.SerializeToString,
+                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.FromString,
+                    response_serializer=gateway_dot_v1_dot_gateway__pb2.GatewayServices.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.server.v1.ServerService', rpc_method_handlers)
+            'semio.gateway.v1.GatewayService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class ServerService(object):
-    """The server service is the gateway for all other apis of semio.
+class GatewayService(object):
+    """The gateway service is the gateway for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -105,7 +105,7 @@ class ServerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/LayoutDesign',
+        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/LayoutDesign',
             model_dot_v1_dot_model__pb2.Layout.SerializeToString,
             model_dot_v1_dot_model__pb2.Design.FromString,
             options, channel_credentials,
@@ -122,9 +122,9 @@ class ServerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/RegisterService',
-            server_dot_v1_dot_server__pb2.ServiceRegistrationRequest.SerializeToString,
-            server_dot_v1_dot_server__pb2.ServiceRegistrationResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/RegisterService',
+            gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.SerializeToString,
+            gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -139,8 +139,8 @@ class ServerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ServerService/GetRegisteredServices',
-            server_dot_v1_dot_server__pb2.GetRegisteredServicesRequest.SerializeToString,
-            server_dot_v1_dot_server__pb2.ServerServices.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/GetRegisteredServices',
+            gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.SerializeToString,
+            gateway_dot_v1_dot_gateway__pb2.GatewayServices.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
