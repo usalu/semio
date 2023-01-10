@@ -69,19 +69,6 @@ class Gateway(GatewayServer):
     def GetRegisteredServices(self, request, context) -> GatewayServices:
         return self.services
 
-    # def serve(self):
-    #     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    #     add_ServerServiceServicer_to_server(self, server)
-    #     SERVICE_NAMES = (
-    #     DESCRIPTOR.services_by_name['ServerService'].full_name,
-    #     reflection.SERVICE_NAME,
-    #     )
-    #     reflection.enable_server_reflection(SERVICE_NAMES, server)
-    #     server.add_insecure_port('[::]:' + str(self.port))
-    #     server.start()
-    #     print("Server started, listening on " + str(self.port))
-    #     server.wait_for_termination()
-
 if __name__ == '__main__':
     logging.basicConfig()
     gateway = Gateway()

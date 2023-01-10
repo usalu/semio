@@ -2,12 +2,12 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from extension.translator.v1 import translator_pb2 as extension_dot_translator_dot_v1_dot_translator__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
 class TranslatorServiceStub(object):
-    """The server service is the gateway for all other apis of semio.
-    option (google.api.default_host) = "localhost:50000";
+    """A translator service can (mostly) translate representations of the specific extension platform.
     """
 
     def __init__(self, channel):
@@ -17,23 +17,18 @@ class TranslatorServiceStub(object):
             channel: A grpc.Channel.
         """
         self.TranslateRepresentation = channel.unary_unary(
-                '/semio.server.v1.TranslatorService/TranslateRepresentation',
-                request_serializer=model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+                '/semio.extension.translator.v1.TranslatorService/TranslateRepresentation',
+                request_serializer=extension_dot_translator_dot_v1_dot_translator__pb2.TranslateRepresentationRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Representation.FromString,
                 )
 
 
 class TranslatorServiceServicer(object):
-    """The server service is the gateway for all other apis of semio.
-    option (google.api.default_host) = "localhost:50000";
+    """A translator service can (mostly) translate representations of the specific extension platform.
     """
 
     def TranslateRepresentation(self, request, context):
-        """Lay out a design from a layout and return a design.
-        option (google.api.http) = {
-        post: "v1/layout-design"
-        body: "*"
-        };
+        """Translate a representation from one pose (coordinate system) into another one.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,19 +39,18 @@ def add_TranslatorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'TranslateRepresentation': grpc.unary_unary_rpc_method_handler(
                     servicer.TranslateRepresentation,
-                    request_deserializer=model_dot_v1_dot_model__pb2.Layout.FromString,
+                    request_deserializer=extension_dot_translator_dot_v1_dot_translator__pb2.TranslateRepresentationRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Representation.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.server.v1.TranslatorService', rpc_method_handlers)
+            'semio.extension.translator.v1.TranslatorService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
 class TranslatorService(object):
-    """The server service is the gateway for all other apis of semio.
-    option (google.api.default_host) = "localhost:50000";
+    """A translator service can (mostly) translate representations of the specific extension platform.
     """
 
     @staticmethod
@@ -70,8 +64,8 @@ class TranslatorService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.TranslatorService/TranslateRepresentation',
-            model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.translator.v1.TranslatorService/TranslateRepresentation',
+            extension_dot_translator_dot_v1_dot_translator__pb2.TranslateRepresentationRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Representation.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

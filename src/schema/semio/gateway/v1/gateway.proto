@@ -42,17 +42,16 @@ message ManagingService{
 }
 
 message TranslatingService{
-  string name = 1;
-  string address = 2;
+  string platform_name = 1;
 }
 
 message AdaptingService{
-  string platform_name = 3;
+  string platform_name = 1;
 }
 
 message ConvertingService{
-  string source_type_url = 3;
-  string target_type_url = 4;
+  string source_type_url = 1;
+  string target_type_url = 2;
 }
 
 message TransformingService{
@@ -64,20 +63,19 @@ message ExtendingService{
   repeated AdaptingService adaptingServices = 3;
   repeated ConvertingService convertingServices = 4;
   repeated TransformingService transformingServices = 5;
+  repeated TranslatingService translatingServices = 6;
 }
 
 message GatewayServices {
   ManagingService managingService = 1;
-  TranslatingService translatingService = 2;
-  repeated ExtendingService extendingServices = 3;
+  repeated ExtendingService extendingServices = 2;
 }
 
 message ServiceRegistrationRequest{
   bool replace_existing = 1;
   oneof server_service {
     ManagingService managingService = 2;
-    TranslatingService translatingService = 3;
-    ExtendingService extendingService = 4;
+    ExtendingService extendingService = 3;
   }
 }
 

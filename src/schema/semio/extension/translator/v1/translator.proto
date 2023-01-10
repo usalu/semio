@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package semio.extension.translator.v1;
+
+import "model/v1/model.proto";
+
+option go_package = "github.com/usalu/semio/src/schema/semio/extension/translator/v1";
+
+// A translator service can (mostly) translate representations of the specific extension platform.
+service TranslatorService {
+
+  // Translate a representation from one pose (coordinate system) into another one.
+  rpc TranslateRepresentation(TranslateRepresentationRequest) returns (semio.model.v1.Representation);
+}
+
+message TranslateRepresentationRequest {
+    semio.model.v1.Representation representation = 1;
+    semio.model.v1.Pose target_pose = 2;
+    semio.model.v1.Pose source_pose = 3;
+}

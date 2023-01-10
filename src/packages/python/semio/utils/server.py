@@ -3,36 +3,42 @@ import grpc
 from grpc_reflection.v1alpha import reflection
 from grpc.aio import ServicerContext
 
-from typing import Tuple, Any
+from abc import ABC, abstractclassmethod,abstractmethod
+from typing import Tuple, Any, Iterable
 from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 
-class SemioService(BaseModel):
+class SemioServiceDescription(BaseModel):
     servicer:type
     # TODO Update typing to be more specific
     add_Service_to_server: Callable[[Any,Any],Any]
     # TODO Update typing to be more specific
     descriptor: Any
 
-class SemioServer(BaseModel):
-    port: int =  Field(default=50000,description="Port of server.")
+class SemioServer(BaseModel,ABC):
+    port: int =  8080
     name: str = ""
-    servicesDescriptions: list[SemioService] = Field(default=None, description="All services")
+    
+    # TODO replace with abstractclassmethod
+    @abstractmethod
+    def getServicesDescriptions(self) -> Iterable[SemioServiceDescription]:
+        pass
 
     def serve(self) -> None:
         """Call this function to start the server."""
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port('[::]:' + str(self.port))
-        for serviceDescription in SemioServer.servicesDescriptions:
-            serviceDescription.add_Service_to_server(serviceDescription.servicer(),server)
+        for serviceDescription in self.getServicesDescriptions():
+            serviceDescription.add_Service_to_server(type(self)(),server)
+            serviceName = serviceDescription.servicer.__name__.replace('Servicer','')
             SERVICE_NAMES = (
-                serviceDescription.descriptor.services_by_name[serviceDescription.servicer.__name__].full_name,
+                serviceDescription.descriptor.services_by_name[serviceName].full_name,
                 reflection.SERVICE_NAME,
             )
             reflection.enable_server_reflection(SERVICE_NAMES, server)    
         server.start()
-        print(f"Server {self.name} started, listening on " + str(self.port))
+        print(f"{self.name} started, listening on " + str(self.port))
         server.wait_for_termination()
 
     class Config:
