@@ -12,6 +12,8 @@ from semio.model import Design,Element,Pose,Point
 from semio.gateway import (GatewayServer, GatewayServices,
 LayoutDesignRequest, ServiceRegistrationRequest,ServiceRegistrationResponse)
 
+from semio.extension import ExtensionProxy
+
 class Gateway(GatewayServer):
     services: GatewayServices = Field(default_factory=GatewayServices)
 
@@ -40,7 +42,7 @@ class Gateway(GatewayServer):
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
     def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
-        # layout = request.layout.sobjects
+        layout = request.layout
         elements =  [Element(pose=Pose(point_of_view=Point(x=46)))]
         design = Design(elements=elements)
         return design

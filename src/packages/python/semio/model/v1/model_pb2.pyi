@@ -1,57 +1,56 @@
 from google.protobuf import any_pb2 as _any_pb2
 from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+LAYOUTSTRATEGY_BREADTHFIRST: LayoutStragey
+LAYOUTSTRATEGY_DEPTHFIRST: LayoutStragey
 
 class Attraction(_message.Message):
-    __slots__ = ["attracted", "attractor"]
+    __slots__ = ["attracted", "attractor", "id"]
     ATTRACTED_FIELD_NUMBER: _ClassVar[int]
     ATTRACTOR_FIELD_NUMBER: _ClassVar[int]
+    ID_FIELD_NUMBER: _ClassVar[int]
     attracted: AttractionParticipant
     attractor: AttractionParticipant
-    def __init__(self, attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
+    id: str
+    def __init__(self, id: _Optional[str] = ..., attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
 
-class AttractionChain(_message.Message):
-    __slots__ = ["attractions"]
-    ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
-    attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
-    def __init__(self, attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ...) -> None: ...
-
-class AttractionParticipant(_message.Message):
-    __slots__ = ["sobject_id", "strategy"]
-    SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
-    STRATEGY_FIELD_NUMBER: _ClassVar[int]
-    sobject_id: str
-    strategy: AttractionStragegy
-    def __init__(self, sobject_id: _Optional[str] = ..., strategy: _Optional[_Union[AttractionStragegy, _Mapping]] = ...) -> None: ...
-
-class AttractionStragegy(_message.Message):
-    __slots__ = ["parameters", "port", "representation"]
-    class ParametersEntry(_message.Message):
+class AttractionParameters(_message.Message):
+    __slots__ = ["bias", "port", "representation"]
+    class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
         value: _any_pb2.Any
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
-    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    BIAS_FIELD_NUMBER: _ClassVar[int]
     PORT_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
-    parameters: _containers.MessageMap[str, _any_pb2.Any]
+    bias: _containers.MessageMap[str, _any_pb2.Any]
     port: str
     representation: _any_pb2.Any
-    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., bias: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
 
-class Choreography(_message.Message):
-    __slots__ = ["attractionChains", "solitary_sobjects"]
-    ATTRACTIONCHAINS_FIELD_NUMBER: _ClassVar[int]
-    SOLITARY_SOBJECTS_FIELD_NUMBER: _ClassVar[int]
-    attractionChains: _containers.RepeatedCompositeFieldContainer[AttractionChain]
-    solitary_sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
-    def __init__(self, solitary_sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractionChains: _Optional[_Iterable[_Union[AttractionChain, _Mapping]]] = ...) -> None: ...
+class AttractionParticipant(_message.Message):
+    __slots__ = ["parameters", "patricipant_id"]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    PATRICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
+    parameters: AttractionParameters
+    patricipant_id: str
+    def __init__(self, patricipant_id: _Optional[str] = ..., parameters: _Optional[_Union[AttractionParameters, _Mapping]] = ...) -> None: ...
+
+class AttractionTree(_message.Message):
+    __slots__ = ["attraction_id", "childrean"]
+    ATTRACTION_ID_FIELD_NUMBER: _ClassVar[int]
+    CHILDREAN_FIELD_NUMBER: _ClassVar[int]
+    attraction_id: str
+    childrean: _containers.RepeatedCompositeFieldContainer[AttractionTree]
+    def __init__(self, attraction_id: _Optional[str] = ..., childrean: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class Decision(_message.Message):
     __slots__ = ["modification", "strategy"]
@@ -76,20 +75,31 @@ class Element(_message.Message):
     def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Union[Representations, _Mapping]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attractions", "sobjects"]
+    __slots__ = ["attractionTrees", "attractions", "sobjects", "stragegy"]
+    class AttractionTreesEntry(_message.Message):
+        __slots__ = ["key", "value"]
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: AttractionTree
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[AttractionTree, _Mapping]] = ...) -> None: ...
     ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
+    ATTRACTIONTREES_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
+    STRAGEGY_FIELD_NUMBER: _ClassVar[int]
+    attractionTrees: _containers.MessageMap[str, AttractionTree]
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ...) -> None: ...
+    stragegy: LayoutStragey
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., stragegy: _Optional[_Union[LayoutStragey, str]] = ..., attractionTrees: _Optional[_Mapping[str, AttractionTree]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
-    __slots__ = ["context_layout", "modified_context_layout"]
-    CONTEXT_LAYOUT_FIELD_NUMBER: _ClassVar[int]
-    MODIFIED_CONTEXT_LAYOUT_FIELD_NUMBER: _ClassVar[int]
-    context_layout: Layout
-    modified_context_layout: Layout
-    def __init__(self, context_layout: _Optional[_Union[Layout, _Mapping]] = ..., modified_context_layout: _Optional[_Union[Layout, _Mapping]] = ...) -> None: ...
+    __slots__ = ["context", "modified_context"]
+    CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    MODIFIED_CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    context: Layout
+    modified_context: Layout
+    def __init__(self, context: _Optional[_Union[Layout, _Mapping]] = ..., modified_context: _Optional[_Union[Layout, _Mapping]] = ...) -> None: ...
 
 class LayoutModificationStrategy(_message.Message):
     __slots__ = ["match_count"]
@@ -161,3 +171,6 @@ class Sobject(_message.Message):
     pose: Pose
     url: str
     def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+
+class LayoutStragey(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []

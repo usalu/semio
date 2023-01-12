@@ -7,12 +7,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class AttractionPointRequest(_message.Message):
-    __slots__ = ["attracted_attractionStrategy", "attractor_url"]
-    ATTRACTED_ATTRACTIONSTRATEGY_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTOR_URL_FIELD_NUMBER: _ClassVar[int]
-    attracted_attractionStrategy: _model_pb2.AttractionStragegy
-    attractor_url: str
-    def __init__(self, attractor_url: _Optional[str] = ..., attracted_attractionStrategy: _Optional[_Union[_model_pb2.AttractionStragegy, _Mapping]] = ...) -> None: ...
+    __slots__ = ["parameters", "url"]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    URL_FIELD_NUMBER: _ClassVar[int]
+    parameters: _model_pb2.AttractionParameters
+    url: str
+    def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Union[_model_pb2.AttractionParameters, _Mapping]] = ...) -> None: ...
 
 class RepresentationRequest(_message.Message):
     __slots__ = ["lod", "name", "sobject", "type"]

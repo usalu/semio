@@ -45,20 +45,16 @@ export interface ManagingService {
  */
 export interface TranslatingService {
     /**
-     * @generated from protobuf field: string name = 1;
+     * @generated from protobuf field: string platform_name = 1;
      */
-    name: string;
-    /**
-     * @generated from protobuf field: string address = 2;
-     */
-    address: string;
+    platformName: string;
 }
 /**
  * @generated from protobuf message semio.gateway.v1.AdaptingService
  */
 export interface AdaptingService {
     /**
-     * @generated from protobuf field: string platform_name = 3;
+     * @generated from protobuf field: string platform_name = 1;
      */
     platformName: string;
 }
@@ -67,11 +63,11 @@ export interface AdaptingService {
  */
 export interface ConvertingService {
     /**
-     * @generated from protobuf field: string source_type_url = 3;
+     * @generated from protobuf field: string source_type_url = 1;
      */
     sourceTypeUrl: string;
     /**
-     * @generated from protobuf field: string target_type_url = 4;
+     * @generated from protobuf field: string target_type_url = 2;
      */
     targetTypeUrl: string;
 }
@@ -104,6 +100,10 @@ export interface ExtendingService {
      * @generated from protobuf field: repeated semio.gateway.v1.TransformingService transformingServices = 5;
      */
     transformingServices: TransformingService[];
+    /**
+     * @generated from protobuf field: repeated semio.gateway.v1.TranslatingService translatingServices = 6;
+     */
+    translatingServices: TranslatingService[];
 }
 /**
  * @generated from protobuf message semio.gateway.v1.GatewayServices
@@ -114,11 +114,7 @@ export interface GatewayServices {
      */
     managingService?: ManagingService;
     /**
-     * @generated from protobuf field: semio.gateway.v1.TranslatingService translatingService = 2;
-     */
-    translatingService?: TranslatingService;
-    /**
-     * @generated from protobuf field: repeated semio.gateway.v1.ExtendingService extendingServices = 3;
+     * @generated from protobuf field: repeated semio.gateway.v1.ExtendingService extendingServices = 2;
      */
     extendingServices: ExtendingService[];
 }
@@ -140,15 +136,9 @@ export interface ServiceRegistrationRequest {
          */
         managingService: ManagingService;
     } | {
-        oneofKind: "translatingService";
-        /**
-         * @generated from protobuf field: semio.gateway.v1.TranslatingService translatingService = 3;
-         */
-        translatingService: TranslatingService;
-    } | {
         oneofKind: "extendingService";
         /**
-         * @generated from protobuf field: semio.gateway.v1.ExtendingService extendingService = 4;
+         * @generated from protobuf field: semio.gateway.v1.ExtendingService extendingService = 3;
          */
         extendingService: ExtendingService;
     } | {
@@ -287,12 +277,11 @@ export const ManagingService = new ManagingService$Type();
 class TranslatingService$Type extends MessageType<TranslatingService> {
     constructor() {
         super("semio.gateway.v1.TranslatingService", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<TranslatingService>): TranslatingService {
-        const message = { name: "", address: "" };
+        const message = { platformName: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<TranslatingService>(this, message, value);
@@ -303,11 +292,8 @@ class TranslatingService$Type extends MessageType<TranslatingService> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string name */ 1:
-                    message.name = reader.string();
-                    break;
-                case /* string address */ 2:
-                    message.address = reader.string();
+                case /* string platform_name */ 1:
+                    message.platformName = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -321,12 +307,9 @@ class TranslatingService$Type extends MessageType<TranslatingService> {
         return message;
     }
     internalBinaryWrite(message: TranslatingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string name = 1; */
-        if (message.name !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.name);
-        /* string address = 2; */
-        if (message.address !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.address);
+        /* string platform_name = 1; */
+        if (message.platformName !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.platformName);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -341,7 +324,7 @@ export const TranslatingService = new TranslatingService$Type();
 class AdaptingService$Type extends MessageType<AdaptingService> {
     constructor() {
         super("semio.gateway.v1.AdaptingService", [
-            { no: 3, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<AdaptingService>): AdaptingService {
@@ -356,7 +339,7 @@ class AdaptingService$Type extends MessageType<AdaptingService> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string platform_name */ 3:
+                case /* string platform_name */ 1:
                     message.platformName = reader.string();
                     break;
                 default:
@@ -371,9 +354,9 @@ class AdaptingService$Type extends MessageType<AdaptingService> {
         return message;
     }
     internalBinaryWrite(message: AdaptingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string platform_name = 3; */
+        /* string platform_name = 1; */
         if (message.platformName !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.platformName);
+            writer.tag(1, WireType.LengthDelimited).string(message.platformName);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -388,8 +371,8 @@ export const AdaptingService = new AdaptingService$Type();
 class ConvertingService$Type extends MessageType<ConvertingService> {
     constructor() {
         super("semio.gateway.v1.ConvertingService", [
-            { no: 3, name: "source_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "source_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<ConvertingService>): ConvertingService {
@@ -404,10 +387,10 @@ class ConvertingService$Type extends MessageType<ConvertingService> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string source_type_url */ 3:
+                case /* string source_type_url */ 1:
                     message.sourceTypeUrl = reader.string();
                     break;
-                case /* string target_type_url */ 4:
+                case /* string target_type_url */ 2:
                     message.targetTypeUrl = reader.string();
                     break;
                 default:
@@ -422,12 +405,12 @@ class ConvertingService$Type extends MessageType<ConvertingService> {
         return message;
     }
     internalBinaryWrite(message: ConvertingService, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string source_type_url = 3; */
+        /* string source_type_url = 1; */
         if (message.sourceTypeUrl !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.sourceTypeUrl);
-        /* string target_type_url = 4; */
+            writer.tag(1, WireType.LengthDelimited).string(message.sourceTypeUrl);
+        /* string target_type_url = 2; */
         if (message.targetTypeUrl !== "")
-            writer.tag(4, WireType.LengthDelimited).string(message.targetTypeUrl);
+            writer.tag(2, WireType.LengthDelimited).string(message.targetTypeUrl);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -472,11 +455,12 @@ class ExtendingService$Type extends MessageType<ExtendingService> {
             { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "adaptingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AdaptingService },
             { no: 4, name: "convertingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ConvertingService },
-            { no: 5, name: "transformingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => TransformingService }
+            { no: 5, name: "transformingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => TransformingService },
+            { no: 6, name: "translatingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => TranslatingService }
         ]);
     }
     create(value?: PartialMessage<ExtendingService>): ExtendingService {
-        const message = { name: "", address: "", adaptingServices: [], convertingServices: [], transformingServices: [] };
+        const message = { name: "", address: "", adaptingServices: [], convertingServices: [], transformingServices: [], translatingServices: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<ExtendingService>(this, message, value);
@@ -501,6 +485,9 @@ class ExtendingService$Type extends MessageType<ExtendingService> {
                     break;
                 case /* repeated semio.gateway.v1.TransformingService transformingServices */ 5:
                     message.transformingServices.push(TransformingService.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated semio.gateway.v1.TranslatingService translatingServices */ 6:
+                    message.translatingServices.push(TranslatingService.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -529,6 +516,9 @@ class ExtendingService$Type extends MessageType<ExtendingService> {
         /* repeated semio.gateway.v1.TransformingService transformingServices = 5; */
         for (let i = 0; i < message.transformingServices.length; i++)
             TransformingService.internalBinaryWrite(message.transformingServices[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.gateway.v1.TranslatingService translatingServices = 6; */
+        for (let i = 0; i < message.translatingServices.length; i++)
+            TranslatingService.internalBinaryWrite(message.translatingServices[i], writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -544,8 +534,7 @@ class GatewayServices$Type extends MessageType<GatewayServices> {
     constructor() {
         super("semio.gateway.v1.GatewayServices", [
             { no: 1, name: "managingService", kind: "message", T: () => ManagingService },
-            { no: 2, name: "translatingService", kind: "message", T: () => TranslatingService },
-            { no: 3, name: "extendingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ExtendingService }
+            { no: 2, name: "extendingServices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ExtendingService }
         ]);
     }
     create(value?: PartialMessage<GatewayServices>): GatewayServices {
@@ -563,10 +552,7 @@ class GatewayServices$Type extends MessageType<GatewayServices> {
                 case /* semio.gateway.v1.ManagingService managingService */ 1:
                     message.managingService = ManagingService.internalBinaryRead(reader, reader.uint32(), options, message.managingService);
                     break;
-                case /* semio.gateway.v1.TranslatingService translatingService */ 2:
-                    message.translatingService = TranslatingService.internalBinaryRead(reader, reader.uint32(), options, message.translatingService);
-                    break;
-                case /* repeated semio.gateway.v1.ExtendingService extendingServices */ 3:
+                case /* repeated semio.gateway.v1.ExtendingService extendingServices */ 2:
                     message.extendingServices.push(ExtendingService.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -584,12 +570,9 @@ class GatewayServices$Type extends MessageType<GatewayServices> {
         /* semio.gateway.v1.ManagingService managingService = 1; */
         if (message.managingService)
             ManagingService.internalBinaryWrite(message.managingService, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.gateway.v1.TranslatingService translatingService = 2; */
-        if (message.translatingService)
-            TranslatingService.internalBinaryWrite(message.translatingService, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.gateway.v1.ExtendingService extendingServices = 3; */
+        /* repeated semio.gateway.v1.ExtendingService extendingServices = 2; */
         for (let i = 0; i < message.extendingServices.length; i++)
-            ExtendingService.internalBinaryWrite(message.extendingServices[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+            ExtendingService.internalBinaryWrite(message.extendingServices[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -606,8 +589,7 @@ class ServiceRegistrationRequest$Type extends MessageType<ServiceRegistrationReq
         super("semio.gateway.v1.ServiceRegistrationRequest", [
             { no: 1, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "managingService", kind: "message", oneof: "serverService", T: () => ManagingService },
-            { no: 3, name: "translatingService", kind: "message", oneof: "serverService", T: () => TranslatingService },
-            { no: 4, name: "extendingService", kind: "message", oneof: "serverService", T: () => ExtendingService }
+            { no: 3, name: "extendingService", kind: "message", oneof: "serverService", T: () => ExtendingService }
         ]);
     }
     create(value?: PartialMessage<ServiceRegistrationRequest>): ServiceRegistrationRequest {
@@ -631,13 +613,7 @@ class ServiceRegistrationRequest$Type extends MessageType<ServiceRegistrationReq
                         managingService: ManagingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).managingService)
                     };
                     break;
-                case /* semio.gateway.v1.TranslatingService translatingService */ 3:
-                    message.serverService = {
-                        oneofKind: "translatingService",
-                        translatingService: TranslatingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).translatingService)
-                    };
-                    break;
-                case /* semio.gateway.v1.ExtendingService extendingService */ 4:
+                case /* semio.gateway.v1.ExtendingService extendingService */ 3:
                     message.serverService = {
                         oneofKind: "extendingService",
                         extendingService: ExtendingService.internalBinaryRead(reader, reader.uint32(), options, (message.serverService as any).extendingService)
@@ -661,12 +637,9 @@ class ServiceRegistrationRequest$Type extends MessageType<ServiceRegistrationReq
         /* semio.gateway.v1.ManagingService managingService = 2; */
         if (message.serverService.oneofKind === "managingService")
             ManagingService.internalBinaryWrite(message.serverService.managingService, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* semio.gateway.v1.TranslatingService translatingService = 3; */
-        if (message.serverService.oneofKind === "translatingService")
-            TranslatingService.internalBinaryWrite(message.serverService.translatingService, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* semio.gateway.v1.ExtendingService extendingService = 4; */
+        /* semio.gateway.v1.ExtendingService extendingService = 3; */
         if (message.serverService.oneofKind === "extendingService")
-            ExtendingService.internalBinaryWrite(message.serverService.extendingService, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+            ExtendingService.internalBinaryWrite(message.serverService.extendingService, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

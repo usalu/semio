@@ -1,13 +1,9 @@
-# from pydantic import Field
-
-# from gateway import ExtendingService
-# from utils import Server
-
-# class ExtensionServer (Server):
-#     gatway_address: str = "localhost:51000"
-#     extension: ExtendingService = Field(default_factory=ExtendingService)
 
 # TODO This file can be generated
+from pydantic import Field
+
+from gateway import ExtendingService
+
 from grpc import insecure_channel
 
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioServerDescription
@@ -23,16 +19,26 @@ from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_
 DEFAULT_EXTENSION_PORT = 59001
 
 class ExtensionServer(SemioServer):
-    def __init__(self,port = DEFAULT_EXTENSION_PORT, name = "Python Semio Gateway Server", **kw):
+    extension: ExtendingService = Field(default_factory=ExtendingService)
+
+    def __init__(self,port = DEFAULT_EXTENSION_PORT, name = "Python Semio Extension Server", **kw):
         super().__init__(port=port,name=name, **kw)
 
     def getServicesDescriptions(self):
-        return [SemioServiceDescription(servicer=GatewayServiceServicer,add_Service_to_server=add_GatewayServiceServicer_to_server,descriptor=DESCRIPTOR)]
+        return [
+            SemioServiceDescription(servicer=AdapterServiceServicer,add_Service_to_server=add_AdapterServiceServicer_to_server,descriptor=ADAPTER_DESCRIPTOR),
+            SemioServiceDescription(servicer=ConverterServiceServicer,add_Service_to_server=add_ConverterServiceServicer_to_server,descriptor=CONVERTER_DESCRIPTOR),
+            SemioServiceDescription(servicer=TransformerServiceServicer,add_Service_to_server=add_TransformerServiceServicer_to_server,descriptor=TRANSFORMER_DESCRIPTOR),
+            SemioServiceDescription(servicer=TranslatorServiceServicer,add_Service_to_server=add_TranslatorServiceServicer_to_server,descriptor=TRANSLATOR_DESCRIPTOR)
+        ]
 
 class ExtensionProxy(SemioProxy):
-    def __init__(self,address ='localhost:'+str(DEFAULT_GATEWAY_PORT), **kw):
+    def __init__(self,address ='localhost:'+str(DEFAULT_EXTENSION_PORT), **kw):
         super().__init__(address=address,**kw)
-        self._stub = GatewayServiceStub(insecure_channel(self.address))
+        self._adapterStub = AdapterServiceStub(insecure_channel(self.address))
+        self._converterStub = ConverterServiceStub(insecure_channel(self.address))
+        self._transformerStub = TransformerServiceStub(insecure_channel(self.address))
+        self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
     # def getServerDescription(self):
     #     return [SemioServerDescription(stub=GatewayServiceStub)]

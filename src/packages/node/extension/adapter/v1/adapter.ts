@@ -16,19 +16,23 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Sobject } from "../../../model/v1/model";
-import { AttractionStragegy } from "../../../model/v1/model";
+import { AttractionParameters } from "../../../model/v1/model";
 /**
  * @generated from protobuf message semio.extension.adapter.v1.AttractionPointRequest
  */
 export interface AttractionPointRequest {
     /**
-     * @generated from protobuf field: string attractor_url = 1;
+     * Url of attractor.
+     *
+     * @generated from protobuf field: string url = 1;
      */
-    attractorUrl: string;
+    url: string;
     /**
-     * @generated from protobuf field: semio.model.v1.AttractionStragegy attracted_attractionStrategy = 2;
+     * Parameters of the attracted.
+     *
+     * @generated from protobuf field: semio.model.v1.AttractionParameters parameters = 2;
      */
-    attractedAttractionStrategy?: AttractionStragegy;
+    parameters?: AttractionParameters;
 }
 /**
  * @generated from protobuf message semio.extension.adapter.v1.RepresentationRequest
@@ -76,12 +80,12 @@ export interface RepresentationsRequest {
 class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
     constructor() {
         super("semio.extension.adapter.v1.AttractionPointRequest", [
-            { no: 1, name: "attractor_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "attracted_attractionStrategy", kind: "message", T: () => AttractionStragegy }
+            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "parameters", kind: "message", T: () => AttractionParameters }
         ]);
     }
     create(value?: PartialMessage<AttractionPointRequest>): AttractionPointRequest {
-        const message = { attractorUrl: "" };
+        const message = { url: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AttractionPointRequest>(this, message, value);
@@ -92,11 +96,11 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string attractor_url */ 1:
-                    message.attractorUrl = reader.string();
+                case /* string url */ 1:
+                    message.url = reader.string();
                     break;
-                case /* semio.model.v1.AttractionStragegy attracted_attractionStrategy */ 2:
-                    message.attractedAttractionStrategy = AttractionStragegy.internalBinaryRead(reader, reader.uint32(), options, message.attractedAttractionStrategy);
+                case /* semio.model.v1.AttractionParameters parameters */ 2:
+                    message.parameters = AttractionParameters.internalBinaryRead(reader, reader.uint32(), options, message.parameters);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -110,12 +114,12 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
         return message;
     }
     internalBinaryWrite(message: AttractionPointRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string attractor_url = 1; */
-        if (message.attractorUrl !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.attractorUrl);
-        /* semio.model.v1.AttractionStragegy attracted_attractionStrategy = 2; */
-        if (message.attractedAttractionStrategy)
-            AttractionStragegy.internalBinaryWrite(message.attractedAttractionStrategy, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string url = 1; */
+        if (message.url !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.url);
+        /* semio.model.v1.AttractionParameters parameters = 2; */
+        if (message.parameters)
+            AttractionParameters.internalBinaryWrite(message.parameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

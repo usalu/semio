@@ -26,13 +26,6 @@ message Pose {
   Quaternion view = 2;
 }
 
-//Might just add verbosity and increase boilerplate code for clients
-// message Parameter{
-//     string name = 1;
-//     google.protobuf.Any value = 2;
-//     string type = 3;
-// }
-
 // A representation for an element.
 message Representation {
   string name = 1;
@@ -53,45 +46,49 @@ message Sobject {
   map<string, google.protobuf.Any> parameters = 4;
 }
 
-// An attraction strategy of an attraction participant defines parameters that affect the attraction process.
-message AttractionStragegy {
-  // An optional representation of the participant.
-  google.protobuf.Any representation = 1;
-  // An optional port name to connect to.
-  string port = 2;
-  // Optional parameters to bias the attraction.
-  map<string, google.protobuf.Any> parameters = 3;
+message AttractionParameters {
+   // An optional representation of the participant.
+   google.protobuf.Any representation = 1;
+   // An optional port name to connect to.
+   string port = 2;
+   // Optional parameters to bias the attraction.
+   map<string, google.protobuf.Any> bias = 3;
 }
 
 // An attraction participant participates in an attraction process.
 message AttractionParticipant {
-  // Participating sobject
-  string sobject_id = 1;
-  // Attraction strategy of participant
-  AttractionStragegy strategy = 2;
+  // Id of participating sobject.
+  string patricipant_id = 1;
+  AttractionParameters parameters = 2;
+  
 }
 
 // An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
 message Attraction {
-  AttractionParticipant attractor = 1;
-  AttractionParticipant attracted = 2;
+  // Id of attraction.
+  string id = 1;
+  AttractionParticipant attractor = 2;
+  AttractionParticipant attracted = 3;
+}
+
+// A layout strategy affects in which orders attractions are triggered.
+enum LayoutStragey {
+  LAYOUTSTRATEGY_BREADTHFIRST = 0;
+  LAYOUTSTRATEGY_DEPTHFIRST = 1;
 }
 
 // A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
+  LayoutStragey stragegy = 3;
+  // Optional attraction trees with root sobject id as key and attraction tree as value.
+  map<string,AttractionTree> attractionTrees = 4;
 }
 
-// An attraction chain is list of attractions where each attraction depends on the previous attraction.
-message AttractionChain {
-  repeated Attraction attractions = 1;
-}
-
-// A choreography is an extact assembly and redundant free plan for sobjects and attraction chains.
-message Choreography {
-  repeated Sobject solitary_sobjects = 1;
-  repeated AttractionChain attractionChains = 2;
+message AttractionTree{
+  string attraction_id = 1;
+  repeated AttractionTree childrean = 2;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
@@ -107,8 +104,8 @@ message Design {
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system.
 message LayoutModification {
-  Layout context_layout = 1;
-  Layout modified_context_layout = 2;
+  Layout context = 1;
+  Layout modified_context = 2;
 }
 
 // A decision strategy holds information on how modifications are applied.

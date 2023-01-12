@@ -67,8 +67,6 @@ export interface Pose {
      */
     view?: Quaternion;
 }
-// Might just add verbosity and increase boilerplate code for clients// message Parameter{//     string name = 1;//     google.protobuf.Any value = 2;//     string type = 3;// }
-
 /**
  * A representation for an element.
  *
@@ -125,11 +123,9 @@ export interface Sobject {
     };
 }
 /**
- * An attraction strategy of an attraction participant defines parameters that affect the attraction process.
- *
- * @generated from protobuf message semio.model.v1.AttractionStragegy
+ * @generated from protobuf message semio.model.v1.AttractionParameters
  */
-export interface AttractionStragegy {
+export interface AttractionParameters {
     /**
      * An optional representation of the participant.
      *
@@ -145,9 +141,9 @@ export interface AttractionStragegy {
     /**
      * Optional parameters to bias the attraction.
      *
-     * @generated from protobuf field: map<string, google.protobuf.Any> parameters = 3;
+     * @generated from protobuf field: map<string, google.protobuf.Any> bias = 3;
      */
-    parameters: {
+    bias: {
         [key: string]: Any;
     };
 }
@@ -158,17 +154,15 @@ export interface AttractionStragegy {
  */
 export interface AttractionParticipant {
     /**
-     * Participating sobject
+     * Id of participating sobject.
      *
-     * @generated from protobuf field: string sobject_id = 1;
+     * @generated from protobuf field: string patricipant_id = 1;
      */
-    sobjectId: string;
+    patricipantId: string;
     /**
-     * Attraction strategy of participant
-     *
-     * @generated from protobuf field: semio.model.v1.AttractionStragegy strategy = 2;
+     * @generated from protobuf field: semio.model.v1.AttractionParameters parameters = 2;
      */
-    strategy?: AttractionStragegy;
+    parameters?: AttractionParameters;
 }
 /**
  * An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
@@ -177,11 +171,17 @@ export interface AttractionParticipant {
  */
 export interface Attraction {
     /**
-     * @generated from protobuf field: semio.model.v1.AttractionParticipant attractor = 1;
+     * Id of attraction.
+     *
+     * @generated from protobuf field: string id = 1;
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: semio.model.v1.AttractionParticipant attractor = 2;
      */
     attractor?: AttractionParticipant;
     /**
-     * @generated from protobuf field: semio.model.v1.AttractionParticipant attracted = 2;
+     * @generated from protobuf field: semio.model.v1.AttractionParticipant attracted = 3;
      */
     attracted?: AttractionParticipant;
 }
@@ -199,32 +199,31 @@ export interface Layout {
      * @generated from protobuf field: repeated semio.model.v1.Attraction attractions = 2;
      */
     attractions: Attraction[];
+    /**
+     * @generated from protobuf field: semio.model.v1.LayoutStragey stragegy = 3;
+     */
+    stragegy: LayoutStragey;
+    /**
+     * Optional attraction trees with root sobject id as key and attraction tree as value.
+     *
+     * @generated from protobuf field: map<string, semio.model.v1.AttractionTree> attractionTrees = 4;
+     */
+    attractionTrees: {
+        [key: string]: AttractionTree;
+    };
 }
 /**
- * An attraction chain is list of attractions where each attraction depends on the previous attraction.
- *
- * @generated from protobuf message semio.model.v1.AttractionChain
+ * @generated from protobuf message semio.model.v1.AttractionTree
  */
-export interface AttractionChain {
+export interface AttractionTree {
     /**
-     * @generated from protobuf field: repeated semio.model.v1.Attraction attractions = 1;
+     * @generated from protobuf field: string attraction_id = 1;
      */
-    attractions: Attraction[];
-}
-/**
- * A choreography is an extact assembly and redundant free plan for sobjects and attraction chains.
- *
- * @generated from protobuf message semio.model.v1.Choreography
- */
-export interface Choreography {
+    attractionId: string;
     /**
-     * @generated from protobuf field: repeated semio.model.v1.Sobject solitary_sobjects = 1;
+     * @generated from protobuf field: repeated semio.model.v1.AttractionTree childrean = 2;
      */
-    solitarySobjects: Sobject[];
-    /**
-     * @generated from protobuf field: repeated semio.model.v1.AttractionChain attractionChains = 2;
-     */
-    attractionChains: AttractionChain[];
+    childrean: AttractionTree[];
 }
 /**
  * An element is the atom of a design. It has several representations and a pose.
@@ -259,13 +258,13 @@ export interface Design {
  */
 export interface LayoutModification {
     /**
-     * @generated from protobuf field: semio.model.v1.Layout context_layout = 1;
+     * @generated from protobuf field: semio.model.v1.Layout context = 1;
      */
-    contextLayout?: Layout;
+    context?: Layout;
     /**
-     * @generated from protobuf field: semio.model.v1.Layout modified_context_layout = 2;
+     * @generated from protobuf field: semio.model.v1.Layout modified_context = 2;
      */
-    modifiedContextLayout?: Layout;
+    modifiedContext?: Layout;
 }
 /**
  * A decision strategy holds information on how modifications are applied.
@@ -294,6 +293,21 @@ export interface Decision {
      * @generated from protobuf field: semio.model.v1.LayoutModificationStrategy strategy = 2;
      */
     strategy?: LayoutModificationStrategy;
+}
+/**
+ * A layout strategy affects in which orders attractions are triggered.
+ *
+ * @generated from protobuf enum semio.model.v1.LayoutStragey
+ */
+export enum LayoutStragey {
+    /**
+     * @generated from protobuf enum value: LAYOUTSTRATEGY_BREADTHFIRST = 0;
+     */
+    LAYOUTSTRATEGY_BREADTHFIRST = 0,
+    /**
+     * @generated from protobuf enum value: LAYOUTSTRATEGY_DEPTHFIRST = 1;
+     */
+    LAYOUTSTRATEGY_DEPTHFIRST = 1
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Point$Type extends MessageType<Point> {
@@ -675,22 +689,22 @@ class Sobject$Type extends MessageType<Sobject> {
  */
 export const Sobject = new Sobject$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AttractionStragegy$Type extends MessageType<AttractionStragegy> {
+class AttractionParameters$Type extends MessageType<AttractionParameters> {
     constructor() {
-        super("semio.model.v1.AttractionStragegy", [
+        super("semio.model.v1.AttractionParameters", [
             { no: 1, name: "representation", kind: "message", T: () => Any },
             { no: 2, name: "port", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Any } }
+            { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Any } }
         ]);
     }
-    create(value?: PartialMessage<AttractionStragegy>): AttractionStragegy {
-        const message = { port: "", parameters: {} };
+    create(value?: PartialMessage<AttractionParameters>): AttractionParameters {
+        const message = { port: "", bias: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<AttractionStragegy>(this, message, value);
+            reflectionMergePartial<AttractionParameters>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionStragegy): AttractionStragegy {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionParameters): AttractionParameters {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -701,8 +715,8 @@ class AttractionStragegy$Type extends MessageType<AttractionStragegy> {
                 case /* string port */ 2:
                     message.port = reader.string();
                     break;
-                case /* map<string, google.protobuf.Any> parameters */ 3:
-                    this.binaryReadMap3(message.parameters, reader, options);
+                case /* map<string, google.protobuf.Any> bias */ 3:
+                    this.binaryReadMap3(message.bias, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -715,8 +729,8 @@ class AttractionStragegy$Type extends MessageType<AttractionStragegy> {
         }
         return message;
     }
-    private binaryReadMap3(map: AttractionStragegy["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof AttractionStragegy["parameters"] | undefined, val: AttractionStragegy["parameters"][any] | undefined;
+    private binaryReadMap3(map: AttractionParameters["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof AttractionParameters["bias"] | undefined, val: AttractionParameters["bias"][any] | undefined;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
@@ -726,23 +740,23 @@ class AttractionStragegy$Type extends MessageType<AttractionStragegy> {
                 case 2:
                     val = Any.internalBinaryRead(reader, reader.uint32(), options);
                     break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.AttractionStragegy.parameters");
+                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.AttractionParameters.bias");
             }
         }
         map[key ?? ""] = val ?? Any.create();
     }
-    internalBinaryWrite(message: AttractionStragegy, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: AttractionParameters, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* google.protobuf.Any representation = 1; */
         if (message.representation)
             Any.internalBinaryWrite(message.representation, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         /* string port = 2; */
         if (message.port !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.port);
-        /* map<string, google.protobuf.Any> parameters = 3; */
-        for (let k of Object.keys(message.parameters)) {
+        /* map<string, google.protobuf.Any> bias = 3; */
+        for (let k of Object.keys(message.bias)) {
             writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
             writer.tag(2, WireType.LengthDelimited).fork();
-            Any.internalBinaryWrite(message.parameters[k], writer, options);
+            Any.internalBinaryWrite(message.bias[k], writer, options);
             writer.join().join();
         }
         let u = options.writeUnknownFields;
@@ -752,19 +766,19 @@ class AttractionStragegy$Type extends MessageType<AttractionStragegy> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.model.v1.AttractionStragegy
+ * @generated MessageType for protobuf message semio.model.v1.AttractionParameters
  */
-export const AttractionStragegy = new AttractionStragegy$Type();
+export const AttractionParameters = new AttractionParameters$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
     constructor() {
         super("semio.model.v1.AttractionParticipant", [
-            { no: 1, name: "sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "strategy", kind: "message", T: () => AttractionStragegy }
+            { no: 1, name: "patricipant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "parameters", kind: "message", T: () => AttractionParameters }
         ]);
     }
     create(value?: PartialMessage<AttractionParticipant>): AttractionParticipant {
-        const message = { sobjectId: "" };
+        const message = { patricipantId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AttractionParticipant>(this, message, value);
@@ -775,11 +789,11 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string sobject_id */ 1:
-                    message.sobjectId = reader.string();
+                case /* string patricipant_id */ 1:
+                    message.patricipantId = reader.string();
                     break;
-                case /* semio.model.v1.AttractionStragegy strategy */ 2:
-                    message.strategy = AttractionStragegy.internalBinaryRead(reader, reader.uint32(), options, message.strategy);
+                case /* semio.model.v1.AttractionParameters parameters */ 2:
+                    message.parameters = AttractionParameters.internalBinaryRead(reader, reader.uint32(), options, message.parameters);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -793,12 +807,12 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         return message;
     }
     internalBinaryWrite(message: AttractionParticipant, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string sobject_id = 1; */
-        if (message.sobjectId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.sobjectId);
-        /* semio.model.v1.AttractionStragegy strategy = 2; */
-        if (message.strategy)
-            AttractionStragegy.internalBinaryWrite(message.strategy, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string patricipant_id = 1; */
+        if (message.patricipantId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.patricipantId);
+        /* semio.model.v1.AttractionParameters parameters = 2; */
+        if (message.parameters)
+            AttractionParameters.internalBinaryWrite(message.parameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -813,12 +827,13 @@ export const AttractionParticipant = new AttractionParticipant$Type();
 class Attraction$Type extends MessageType<Attraction> {
     constructor() {
         super("semio.model.v1.Attraction", [
-            { no: 1, name: "attractor", kind: "message", T: () => AttractionParticipant },
-            { no: 2, name: "attracted", kind: "message", T: () => AttractionParticipant }
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "attractor", kind: "message", T: () => AttractionParticipant },
+            { no: 3, name: "attracted", kind: "message", T: () => AttractionParticipant }
         ]);
     }
     create(value?: PartialMessage<Attraction>): Attraction {
-        const message = {};
+        const message = { id: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Attraction>(this, message, value);
@@ -829,10 +844,13 @@ class Attraction$Type extends MessageType<Attraction> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.AttractionParticipant attractor */ 1:
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* semio.model.v1.AttractionParticipant attractor */ 2:
                     message.attractor = AttractionParticipant.internalBinaryRead(reader, reader.uint32(), options, message.attractor);
                     break;
-                case /* semio.model.v1.AttractionParticipant attracted */ 2:
+                case /* semio.model.v1.AttractionParticipant attracted */ 3:
                     message.attracted = AttractionParticipant.internalBinaryRead(reader, reader.uint32(), options, message.attracted);
                     break;
                 default:
@@ -847,12 +865,15 @@ class Attraction$Type extends MessageType<Attraction> {
         return message;
     }
     internalBinaryWrite(message: Attraction, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.AttractionParticipant attractor = 1; */
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* semio.model.v1.AttractionParticipant attractor = 2; */
         if (message.attractor)
-            AttractionParticipant.internalBinaryWrite(message.attractor, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.AttractionParticipant attracted = 2; */
+            AttractionParticipant.internalBinaryWrite(message.attractor, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.AttractionParticipant attracted = 3; */
         if (message.attracted)
-            AttractionParticipant.internalBinaryWrite(message.attracted, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            AttractionParticipant.internalBinaryWrite(message.attracted, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -868,11 +889,13 @@ class Layout$Type extends MessageType<Layout> {
     constructor() {
         super("semio.model.v1.Layout", [
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
-            { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction }
+            { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction },
+            { no: 3, name: "stragegy", kind: "enum", T: () => ["semio.model.v1.LayoutStragey", LayoutStragey] },
+            { no: 4, name: "attractionTrees", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => AttractionTree } }
         ]);
     }
     create(value?: PartialMessage<Layout>): Layout {
-        const message = { sobjects: [], attractions: [] };
+        const message = { sobjects: [], attractions: [], stragegy: 0, attractionTrees: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Layout>(this, message, value);
@@ -889,6 +912,12 @@ class Layout$Type extends MessageType<Layout> {
                 case /* repeated semio.model.v1.Attraction attractions */ 2:
                     message.attractions.push(Attraction.internalBinaryRead(reader, reader.uint32(), options));
                     break;
+                case /* semio.model.v1.LayoutStragey stragegy */ 3:
+                    message.stragegy = reader.int32();
+                    break;
+                case /* map<string, semio.model.v1.AttractionTree> attractionTrees */ 4:
+                    this.binaryReadMap4(message.attractionTrees, reader, options);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -900,6 +929,22 @@ class Layout$Type extends MessageType<Layout> {
         }
         return message;
     }
+    private binaryReadMap4(map: Layout["attractionTrees"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof Layout["attractionTrees"] | undefined, val: Layout["attractionTrees"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = AttractionTree.internalBinaryRead(reader, reader.uint32(), options);
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Layout.attractionTrees");
+            }
+        }
+        map[key ?? ""] = val ?? AttractionTree.create();
+    }
     internalBinaryWrite(message: Layout, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* repeated semio.model.v1.Sobject sobjects = 1; */
         for (let i = 0; i < message.sobjects.length; i++)
@@ -907,6 +952,16 @@ class Layout$Type extends MessageType<Layout> {
         /* repeated semio.model.v1.Attraction attractions = 2; */
         for (let i = 0; i < message.attractions.length; i++)
             Attraction.internalBinaryWrite(message.attractions[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.LayoutStragey stragegy = 3; */
+        if (message.stragegy !== 0)
+            writer.tag(3, WireType.Varint).int32(message.stragegy);
+        /* map<string, semio.model.v1.AttractionTree> attractionTrees = 4; */
+        for (let k of Object.keys(message.attractionTrees)) {
+            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
+            writer.tag(2, WireType.LengthDelimited).fork();
+            AttractionTree.internalBinaryWrite(message.attractionTrees[k], writer, options);
+            writer.join().join();
+        }
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -918,26 +973,30 @@ class Layout$Type extends MessageType<Layout> {
  */
 export const Layout = new Layout$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AttractionChain$Type extends MessageType<AttractionChain> {
+class AttractionTree$Type extends MessageType<AttractionTree> {
     constructor() {
-        super("semio.model.v1.AttractionChain", [
-            { no: 1, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction }
+        super("semio.model.v1.AttractionTree", [
+            { no: 1, name: "attraction_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "childrean", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
-    create(value?: PartialMessage<AttractionChain>): AttractionChain {
-        const message = { attractions: [] };
+    create(value?: PartialMessage<AttractionTree>): AttractionTree {
+        const message = { attractionId: "", childrean: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<AttractionChain>(this, message, value);
+            reflectionMergePartial<AttractionTree>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionChain): AttractionChain {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionTree): AttractionTree {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated semio.model.v1.Attraction attractions */ 1:
-                    message.attractions.push(Attraction.internalBinaryRead(reader, reader.uint32(), options));
+                case /* string attraction_id */ 1:
+                    message.attractionId = reader.string();
+                    break;
+                case /* repeated semio.model.v1.AttractionTree childrean */ 2:
+                    message.childrean.push(AttractionTree.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -950,10 +1009,13 @@ class AttractionChain$Type extends MessageType<AttractionChain> {
         }
         return message;
     }
-    internalBinaryWrite(message: AttractionChain, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.model.v1.Attraction attractions = 1; */
-        for (let i = 0; i < message.attractions.length; i++)
-            Attraction.internalBinaryWrite(message.attractions[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+    internalBinaryWrite(message: AttractionTree, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string attraction_id = 1; */
+        if (message.attractionId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.attractionId);
+        /* repeated semio.model.v1.AttractionTree childrean = 2; */
+        for (let i = 0; i < message.childrean.length; i++)
+            AttractionTree.internalBinaryWrite(message.childrean[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -961,63 +1023,9 @@ class AttractionChain$Type extends MessageType<AttractionChain> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.model.v1.AttractionChain
+ * @generated MessageType for protobuf message semio.model.v1.AttractionTree
  */
-export const AttractionChain = new AttractionChain$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Choreography$Type extends MessageType<Choreography> {
-    constructor() {
-        super("semio.model.v1.Choreography", [
-            { no: 1, name: "solitary_sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
-            { no: 2, name: "attractionChains", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionChain }
-        ]);
-    }
-    create(value?: PartialMessage<Choreography>): Choreography {
-        const message = { solitarySobjects: [], attractionChains: [] };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Choreography>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Choreography): Choreography {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* repeated semio.model.v1.Sobject solitary_sobjects */ 1:
-                    message.solitarySobjects.push(Sobject.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* repeated semio.model.v1.AttractionChain attractionChains */ 2:
-                    message.attractionChains.push(AttractionChain.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Choreography, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.model.v1.Sobject solitary_sobjects = 1; */
-        for (let i = 0; i < message.solitarySobjects.length; i++)
-            Sobject.internalBinaryWrite(message.solitarySobjects[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.model.v1.AttractionChain attractionChains = 2; */
-        for (let i = 0; i < message.attractionChains.length; i++)
-            AttractionChain.internalBinaryWrite(message.attractionChains[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message semio.model.v1.Choreography
- */
-export const Choreography = new Choreography$Type();
+export const AttractionTree = new AttractionTree$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Element$Type extends MessageType<Element> {
     constructor() {
@@ -1123,8 +1131,8 @@ export const Design = new Design$Type();
 class LayoutModification$Type extends MessageType<LayoutModification> {
     constructor() {
         super("semio.model.v1.LayoutModification", [
-            { no: 1, name: "context_layout", kind: "message", T: () => Layout },
-            { no: 2, name: "modified_context_layout", kind: "message", T: () => Layout }
+            { no: 1, name: "context", kind: "message", T: () => Layout },
+            { no: 2, name: "modified_context", kind: "message", T: () => Layout }
         ]);
     }
     create(value?: PartialMessage<LayoutModification>): LayoutModification {
@@ -1139,11 +1147,11 @@ class LayoutModification$Type extends MessageType<LayoutModification> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.Layout context_layout */ 1:
-                    message.contextLayout = Layout.internalBinaryRead(reader, reader.uint32(), options, message.contextLayout);
+                case /* semio.model.v1.Layout context */ 1:
+                    message.context = Layout.internalBinaryRead(reader, reader.uint32(), options, message.context);
                     break;
-                case /* semio.model.v1.Layout modified_context_layout */ 2:
-                    message.modifiedContextLayout = Layout.internalBinaryRead(reader, reader.uint32(), options, message.modifiedContextLayout);
+                case /* semio.model.v1.Layout modified_context */ 2:
+                    message.modifiedContext = Layout.internalBinaryRead(reader, reader.uint32(), options, message.modifiedContext);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1157,12 +1165,12 @@ class LayoutModification$Type extends MessageType<LayoutModification> {
         return message;
     }
     internalBinaryWrite(message: LayoutModification, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.Layout context_layout = 1; */
-        if (message.contextLayout)
-            Layout.internalBinaryWrite(message.contextLayout, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Layout modified_context_layout = 2; */
-        if (message.modifiedContextLayout)
-            Layout.internalBinaryWrite(message.modifiedContextLayout, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Layout context = 1; */
+        if (message.context)
+            Layout.internalBinaryWrite(message.context, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Layout modified_context = 2; */
+        if (message.modifiedContext)
+            Layout.internalBinaryWrite(message.modifiedContext, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

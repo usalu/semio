@@ -17,8 +17,10 @@ service AdapterService {
 }
 
 message AttractionPointRequest {
-  string attractor_url = 1;
-  semio.model.v1.AttractionStragegy attracted_attractionStrategy = 2;
+  // Url of attractor.
+  string url = 1;
+  // Parameters of the attracted.
+  semio.model.v1.AttractionParameters parameters = 2;
 }
 
 message RepresentationRequest {
