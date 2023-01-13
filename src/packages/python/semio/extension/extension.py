@@ -2,25 +2,23 @@
 # TODO This file can be generated
 from pydantic import Field
 
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioServerDescription, SemioService
-
+from utils import SemioService
 from manager import ExtendingService
 
 from grpc import insecure_channel
 
-
-
-from .adapter import DESCRIPTOR as ADAPTER_DESCRIPTOR, add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
-from .converter import DESCRIPTOR as CONVERTER_DESCRIPTOR, add_ConverterServiceServicer_to_server, ConverterServiceServicer, ConverterServiceStub
-from .transformer import DESCRIPTOR as TRANSFORMER_DESCRIPTOR, add_TransformerServiceServicer_to_server, TransformerServiceServicer, TransformerServiceStub
-from .translator import DESCRIPTOR as TRANSLATOR_DESCRIPTOR, add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
-
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioServerDescription
+from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR
+from .adapter.v1.adapter_pb2_grpc import add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
+from .converter.v1.converter_pb2 import DESCRIPTOR as CONVERTER_DESCRIPTOR
+from .converter.v1.converter_pb2_grpc import add_ConverterServiceServicer_to_server, ConverterServiceServicer, ConverterServiceStub
+from .transformer.v1.transformer_pb2 import DESCRIPTOR as TRANSFORMER_DESCRIPTOR
+from .transformer.v1.transformer_pb2_grpc import add_TransformerServiceServicer_to_server, TransformerServiceServicer, TransformerServiceStub
+from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR
+from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
 
 DEFAULT_EXTENSION_PORT = 59001
-
-
-class AdapterService(ExtensionService):
 
 
 class ExtensionService(SemioService):

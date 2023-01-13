@@ -9,8 +9,8 @@ from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewaySe
 
 DEFAULT_GATEWAY_PORT = 50000
 
+
 class GatewayServer(SemioServer, ABC):
-    gatewayService: SemioService
     def __init__(self,port = DEFAULT_GATEWAY_PORT, name = "Python Semio Gateway Server", **kw):
         super().__init__(port=port,name=name, **kw)
 

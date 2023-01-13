@@ -36,31 +36,13 @@ message AttractionResponse{
   semio.model.v1.Point attraction_point = 2;
 }
 
-
-message ConvertingService{
-  string source_type_url = 1;
-  string target_type_url = 2;
-}
-
-message TransformingService{
-}
-
-message ExtendingService{
-  string name = 1;
-  string address = 2;
-  repeated AdaptingService adaptingServices = 3;
-  repeated ConvertingService convertingServices = 4;
-  repeated TransformingService transformingServices = 5;
-  repeated TranslatingService translatingServices = 6;
-}
-
-message ExtendingServices {
+message Extendings {
   repeated ExtendingService extendingServices = 1;
 }
 
 message ExtensionRegistrationRequest{
   bool replace_existing = 1;
-  ExtendingService extendingService = 2;
+  semio.extension.v1.Extending extending = 2;
 }
 
 message ExtensionRegistrationResponse{

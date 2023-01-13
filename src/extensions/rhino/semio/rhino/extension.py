@@ -1,14 +1,10 @@
-from logging import basicConfig
-from concurrent.futures import ThreadPoolExecutor
-from grpc import server, insecure_channel
-
 from semio.model import Point
-from semio.extension import AdapterService
-from semio.utils import Semio
+from semio.extension import ExtensionServer
+from semio.extension.adapter import AdapterService, AttractionPointRequest, RepresentationRequest, RepresentationsRequest
 
+from .grasshopper import parseSingleResults, parseSingleValue, prepareParameter, callGrasshopper
 
-# TODO Make proper request with warnings, errors, argument checking, etc
-class GrasshopperAdapter(BaseModel, AdapterService):
+class GrasshopperAdapter(AdapterService):
     """An adapter for the REST Endpoint for Grasshopper3D of the Compute Rhino server."""
     computeUrl:str = "http://localhost:6500/"
     computeAuthToken:str = ""
@@ -36,12 +32,5 @@ class GrasshopperAdapter(BaseModel, AdapterService):
        
 
 if __name__=="__main__":
-    rhinoServer = ExtensionServer(5900 ,ExtendingService(
-            name='semio.rhino', 
-            address=f'localhost:{self.port}',
-            adaptingServices=[
-                AdaptingService(platform_name='mcneel/rhino'),
-                AdaptingService(platform_name='mcneel/grasshopper')
-            ]
-        ))
+    rhinoServer = ExtensionServer(5900,name='semio.rhino', adapters=[GrasshopperAdapter()])=
     rhinoServer.serve()
