@@ -75,23 +75,18 @@ class Element(_message.Message):
     def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Union[Representations, _Mapping]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attractionTrees", "attractions", "sobjects", "stragegy"]
-    class AttractionTreesEntry(_message.Message):
-        __slots__ = ["key", "value"]
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: AttractionTree
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[AttractionTree, _Mapping]] = ...) -> None: ...
+    __slots__ = ["attractionTrees", "attractions", "root_sobject_id", "sobjects", "stragegy"]
     ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
     ATTRACTIONTREES_FIELD_NUMBER: _ClassVar[int]
+    ROOT_SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
     STRAGEGY_FIELD_NUMBER: _ClassVar[int]
-    attractionTrees: _containers.MessageMap[str, AttractionTree]
+    attractionTrees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
+    root_sobject_id: str
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     stragegy: LayoutStragey
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., stragegy: _Optional[_Union[LayoutStragey, str]] = ..., attractionTrees: _Optional[_Mapping[str, AttractionTree]] = ...) -> None: ...
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., root_sobject_id: _Optional[str] = ..., stragegy: _Optional[_Union[LayoutStragey, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]

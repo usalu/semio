@@ -15,75 +15,15 @@ service GatewayService {
   //   option (google.api.default_host) = "localhost:50000";
 
   // Lay out a design from a layout and return a design.
-  rpc LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design) {
+  rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
     // option (google.api.http) = {
     //   post: "v1/layout-design"
     //   body: "*"
     // };
-  }
-
-  // Register a service to the server.
-  rpc RegisterService(ServiceRegistrationRequest) returns (ServiceRegistrationResponse) {
-  }
-
-  // Get all registered services.
-  rpc GetRegisteredServices(GetRegisteredServicesRequest) returns (GatewayServices) {
   }
 }
 
 message LayoutDesignRequest {
   semio.model.v1.Layout layout = 1;
   string target_type = 2;
-}
-
-message ManagingService{
-  string name = 1;
-  string address = 2;
-}
-
-message TranslatingService{
-  string platform_name = 1;
-}
-
-message AdaptingService{
-  string platform_name = 1;
-}
-
-message ConvertingService{
-  string source_type_url = 1;
-  string target_type_url = 2;
-}
-
-message TransformingService{
-}
-
-message ExtendingService{
-  string name = 1;
-  string address = 2;
-  repeated AdaptingService adaptingServices = 3;
-  repeated ConvertingService convertingServices = 4;
-  repeated TransformingService transformingServices = 5;
-  repeated TranslatingService translatingServices = 6;
-}
-
-message GatewayServices {
-  ManagingService managingService = 1;
-  repeated ExtendingService extendingServices = 2;
-}
-
-message ServiceRegistrationRequest{
-  bool replace_existing = 1;
-  oneof server_service {
-    ManagingService managingService = 2;
-    ExtendingService extendingService = 3;
-  }
-}
-
-message ServiceRegistrationResponse{
-  bool success = 1;
-  // The old address of the same service type if there was one.
-  string old_address = 2;
-}
-
-message GetRegisteredServicesRequest {
 }

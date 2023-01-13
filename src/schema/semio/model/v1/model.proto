@@ -81,9 +81,10 @@ enum LayoutStragey {
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
-  LayoutStragey stragegy = 3;
+  string root_sobject_id = 3;
+  LayoutStragey stragegy = 4;
   // Optional attraction trees with root sobject id as key and attraction tree as value.
-  map<string,AttractionTree> attractionTrees = 4;
+  repeated AttractionTree attractionTrees = 5;
 }
 
 message AttractionTree{

@@ -16,6 +16,11 @@ service AdapterService {
   rpc RequestRepresentations(RepresentationsRequest) returns (semio.model.v1.Representations) {}
 }
 
+message Adapting{
+  string platform_name = 1;
+}
+
+
 message AttractionPointRequest {
   // Url of attractor.
   string url = 1;

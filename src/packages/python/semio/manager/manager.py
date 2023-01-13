@@ -19,10 +19,10 @@ class ManagerProxy(SemioProxy):
         super().__init__(address=address,**kw)
         self._stub = ManagerServiceStub(insecure_channel(self.address))
 
-    def RequestRepresentation(self, request, context = None):
-        return self._stub.RequestRepresentation(request,context)
+    def RequestElement(self, request, context = None):
+        return self._stub.RequestElement(request,context)
 
-    def RequestAttractionPoint(self, request, context = None):
-        return self._stub.RequestAttractionPoint(request,context)
+    def RequestAttraction(self, request, context = None):
+        return self._stub.RequestAttraction(request,context)
 
 

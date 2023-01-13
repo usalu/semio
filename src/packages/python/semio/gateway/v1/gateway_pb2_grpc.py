@@ -19,18 +19,8 @@ class GatewayServiceStub(object):
         """
         self.LayoutDesign = channel.unary_unary(
                 '/semio.gateway.v1.GatewayService/LayoutDesign',
-                request_serializer=model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+                request_serializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
-                )
-        self.RegisterService = channel.unary_unary(
-                '/semio.gateway.v1.GatewayService/RegisterService',
-                request_serializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.SerializeToString,
-                response_deserializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.FromString,
-                )
-        self.GetRegisteredServices = channel.unary_unary(
-                '/semio.gateway.v1.GatewayService/GetRegisteredServices',
-                request_serializer=gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.SerializeToString,
-                response_deserializer=gateway_dot_v1_dot_gateway__pb2.GatewayServices.FromString,
                 )
 
 
@@ -50,37 +40,13 @@ class GatewayServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RegisterService(self, request, context):
-        """Register a service to the server.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetRegisteredServices(self, request, context):
-        """Get all registered services.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_GatewayServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LayoutDesign': grpc.unary_unary_rpc_method_handler(
                     servicer.LayoutDesign,
-                    request_deserializer=model_dot_v1_dot_model__pb2.Layout.FromString,
+                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Design.SerializeToString,
-            ),
-            'RegisterService': grpc.unary_unary_rpc_method_handler(
-                    servicer.RegisterService,
-                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.FromString,
-                    response_serializer=gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.SerializeToString,
-            ),
-            'GetRegisteredServices': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetRegisteredServices,
-                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.FromString,
-                    response_serializer=gateway_dot_v1_dot_gateway__pb2.GatewayServices.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -106,41 +72,7 @@ class GatewayService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/LayoutDesign',
-            model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+            gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Design.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def RegisterService(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/RegisterService',
-            gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationRequest.SerializeToString,
-            gateway_dot_v1_dot_gateway__pb2.ServiceRegistrationResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetRegisteredServices(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/GetRegisteredServices',
-            gateway_dot_v1_dot_gateway__pb2.GetRegisteredServicesRequest.SerializeToString,
-            gateway_dot_v1_dot_gateway__pb2.GatewayServices.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

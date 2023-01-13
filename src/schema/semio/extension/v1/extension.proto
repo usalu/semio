@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package semio.extension.v1;
+
+import "model/v1/model.proto";
+import "extension/adapter/v1/adapter.proto";
+import "extension/converting/v1/converting.proto";
+import "extension/transforming/v1/transforming.proto";
+import "extension/translating/v1/translating.proto";
+
+option go_package = "github.com/usalu/semio/src/schema/semio/extension/v1";
+
+message Extentending{
+  repeated semio.extension.adapter.v1.Adapting adaptings = 1;
+  repeated semio.extension.adapter.v1.Converting convertings = 1;
+  repeated semio.extension.adapter.v1.Transforming transformings = 1;
+  repeated semio.extension.adapter.v1.Translating translatings = 1;
+}

@@ -200,17 +200,19 @@ export interface Layout {
      */
     attractions: Attraction[];
     /**
-     * @generated from protobuf field: semio.model.v1.LayoutStragey stragegy = 3;
+     * @generated from protobuf field: string root_sobject_id = 3;
+     */
+    rootSobjectId: string;
+    /**
+     * @generated from protobuf field: semio.model.v1.LayoutStragey stragegy = 4;
      */
     stragegy: LayoutStragey;
     /**
      * Optional attraction trees with root sobject id as key and attraction tree as value.
      *
-     * @generated from protobuf field: map<string, semio.model.v1.AttractionTree> attractionTrees = 4;
+     * @generated from protobuf field: repeated semio.model.v1.AttractionTree attractionTrees = 5;
      */
-    attractionTrees: {
-        [key: string]: AttractionTree;
-    };
+    attractionTrees: AttractionTree[];
 }
 /**
  * @generated from protobuf message semio.model.v1.AttractionTree
@@ -890,12 +892,13 @@ class Layout$Type extends MessageType<Layout> {
         super("semio.model.v1.Layout", [
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
             { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction },
-            { no: 3, name: "stragegy", kind: "enum", T: () => ["semio.model.v1.LayoutStragey", LayoutStragey] },
-            { no: 4, name: "attractionTrees", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => AttractionTree } }
+            { no: 3, name: "root_sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "stragegy", kind: "enum", T: () => ["semio.model.v1.LayoutStragey", LayoutStragey] },
+            { no: 5, name: "attractionTrees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
     create(value?: PartialMessage<Layout>): Layout {
-        const message = { sobjects: [], attractions: [], stragegy: 0, attractionTrees: {} };
+        const message = { sobjects: [], attractions: [], rootSobjectId: "", stragegy: 0, attractionTrees: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Layout>(this, message, value);
@@ -912,11 +915,14 @@ class Layout$Type extends MessageType<Layout> {
                 case /* repeated semio.model.v1.Attraction attractions */ 2:
                     message.attractions.push(Attraction.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* semio.model.v1.LayoutStragey stragegy */ 3:
+                case /* string root_sobject_id */ 3:
+                    message.rootSobjectId = reader.string();
+                    break;
+                case /* semio.model.v1.LayoutStragey stragegy */ 4:
                     message.stragegy = reader.int32();
                     break;
-                case /* map<string, semio.model.v1.AttractionTree> attractionTrees */ 4:
-                    this.binaryReadMap4(message.attractionTrees, reader, options);
+                case /* repeated semio.model.v1.AttractionTree attractionTrees */ 5:
+                    message.attractionTrees.push(AttractionTree.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -929,22 +935,6 @@ class Layout$Type extends MessageType<Layout> {
         }
         return message;
     }
-    private binaryReadMap4(map: Layout["attractionTrees"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Layout["attractionTrees"] | undefined, val: Layout["attractionTrees"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = AttractionTree.internalBinaryRead(reader, reader.uint32(), options);
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Layout.attractionTrees");
-            }
-        }
-        map[key ?? ""] = val ?? AttractionTree.create();
-    }
     internalBinaryWrite(message: Layout, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* repeated semio.model.v1.Sobject sobjects = 1; */
         for (let i = 0; i < message.sobjects.length; i++)
@@ -952,16 +942,15 @@ class Layout$Type extends MessageType<Layout> {
         /* repeated semio.model.v1.Attraction attractions = 2; */
         for (let i = 0; i < message.attractions.length; i++)
             Attraction.internalBinaryWrite(message.attractions[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.LayoutStragey stragegy = 3; */
+        /* string root_sobject_id = 3; */
+        if (message.rootSobjectId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.rootSobjectId);
+        /* semio.model.v1.LayoutStragey stragegy = 4; */
         if (message.stragegy !== 0)
-            writer.tag(3, WireType.Varint).int32(message.stragegy);
-        /* map<string, semio.model.v1.AttractionTree> attractionTrees = 4; */
-        for (let k of Object.keys(message.attractionTrees)) {
-            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
-            writer.tag(2, WireType.LengthDelimited).fork();
-            AttractionTree.internalBinaryWrite(message.attractionTrees[k], writer, options);
-            writer.join().join();
-        }
+            writer.tag(4, WireType.Varint).int32(message.stragegy);
+        /* repeated semio.model.v1.AttractionTree attractionTrees = 5; */
+        for (let i = 0; i < message.attractionTrees.length; i++)
+            AttractionTree.internalBinaryWrite(message.attractionTrees[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

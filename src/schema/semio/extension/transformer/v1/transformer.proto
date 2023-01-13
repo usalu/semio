@@ -11,6 +11,9 @@ service TransformerService {
   rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
+message Transforming{
+}
+
 // A rewrite layout request is a description for layout (graph) rewrites.
 message RewriteLayoutRequest {
   repeated semio.model.v1.Decision decisions = 1;

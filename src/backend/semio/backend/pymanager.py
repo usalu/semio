@@ -7,14 +7,16 @@ import grpc
 
 from pydantic import Field
 
-from semio.model import Design,Element,Pose,Point
+from typing import Iterable
+from semio.model import Point,Sobject,Attraction,Layout,Element,Design
 
-from semio.gateway import (GatewayServer, GatewayServices,
+from semio.gateway import (GatewayServer, ManagingServices,
 LayoutDesignRequest, ServiceRegistrationRequest,ServiceRegistrationResponse)
 
-from semio.extension import ExtensionProxy
+from semio.manager import ManagerServer,AttractionRequest,AttractionResponse
 
-class Gateway(GatewayServer):
+
+class Manager(ManagerServer):
     services: GatewayServices = Field(default_factory=GatewayServices)
 
     def getAdapterAddress(self, platformName:str) -> str:
@@ -41,12 +43,6 @@ class Gateway(GatewayServer):
         #             return extendingService.address
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
-    def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
-        layout = request.layout
-        elements =  [Element(pose=Pose(point_of_view=Point(x=46)))]
-        design = Design(elements=elements)
-        return design
-
     def RegisterService(self, request: ServiceRegistrationRequest, context) -> ServiceRegistrationResponse:
         oldAddress = ""
         service = request.WhichOneof('server_service')
@@ -54,10 +50,6 @@ class Gateway(GatewayServer):
             if self.services.managingService.ByteSize()!=0 and not request.replace_existing:
                 raise ValueError('There is already a manager. If you wish to replace it set replace existing to true.')
             self.services.managingService = request.managingService
-        elif service == 'translatingService':
-            if self.services.translatingService.ByteSize()!=0 and not request.replace_existing:
-                raise ValueError('There is already a translator. If you wish to replace it set replace existing to true.')
-            self.services.translatingService = request.translatingService
         elif service == 'extendingService':
             for extendingService in self.services.extendingServices:
                 if extendingService.name == request.extendingService.name:
@@ -67,11 +59,3 @@ class Gateway(GatewayServer):
                         raise ValueError(f'There is already an extension with the name {extendingService.name}. If you wish to replace it set replace existing to true.')
             self.services.extendingServices.append(request.extendingService)
         return ServiceRegistrationResponse(success=True,old_address=oldAddress)
-
-    def GetRegisteredServices(self, request, context) -> GatewayServices:
-        return self.services
-
-if __name__ == '__main__':
-    logging.basicConfig()
-    gateway = Gateway()
-    gateway.serve()

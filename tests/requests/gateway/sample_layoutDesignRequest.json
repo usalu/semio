@@ -1,0 +1,68 @@
+{
+    "sobjects": [
+      {
+        "parameters": {
+          "Length": {
+            "@type": "type.googleapis.com/google.protobuf.StringValue",
+            "value": "330"
+          }
+        },
+        "id": "1",
+        "url": "elements/RectangleWithMiter.gh",
+        "pose": {
+          "pointOfView": {
+            "y": 10,
+            "x": -400,
+            "z": -5
+          },
+          "view": {
+            "w": 1,
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      },
+      {
+        "parameters": {
+          "Length": {
+            "@type": "type.googleapis.com/google.protobuf.StringValue",
+            "value": "220"
+          }
+        },
+        "id": "2",
+        "url": "elements/RectangleWithMiter.gh",
+        "pose": {
+          "pointOfView": {
+            "x": 30,
+            "y": 500,
+            "z": 20
+          },
+          "view": {
+            "w": 0,
+            "x": 0.707,
+            "y": -0.707,
+            "z": 0
+          }
+        }
+      }
+    ],
+    "attractions": [
+      {
+        "id": "1",
+        "attractor": {
+          "patricipantId": "1"
+        },
+        "attracted": {
+          "patricipantId": "2"
+        }
+      }
+    ],
+    "attractionTrees": [
+      {
+        "childrean": [],
+        "attractionId": "1"
+      }
+    ],
+    "stragegy": "LAYOUTSTRATEGY_BREADTHFIRST"
+  }

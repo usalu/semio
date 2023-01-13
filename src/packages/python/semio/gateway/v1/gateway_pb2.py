@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18gateway/v1/gateway.proto\x12\x10semio.gateway.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType\"?\n\x0fManagingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\"9\n\x12TranslatingService\x12#\n\rplatform_name\x18\x01 \x01(\tR\x0cplatformName\"6\n\x0f\x41\x64\x61ptingService\x12#\n\rplatform_name\x18\x01 \x01(\tR\x0cplatformName\"c\n\x11\x43onvertingService\x12&\n\x0fsource_type_url\x18\x01 \x01(\tR\rsourceTypeUrl\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"\x15\n\x13TransformingService\"\x97\x03\n\x10\x45xtendingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\x12M\n\x10\x61\x64\x61ptingServices\x18\x03 \x03(\x0b\x32!.semio.gateway.v1.AdaptingServiceR\x10\x61\x64\x61ptingServices\x12S\n\x12\x63onvertingServices\x18\x04 \x03(\x0b\x32#.semio.gateway.v1.ConvertingServiceR\x12\x63onvertingServices\x12Y\n\x14transformingServices\x18\x05 \x03(\x0b\x32%.semio.gateway.v1.TransformingServiceR\x14transformingServices\x12V\n\x13translatingServices\x18\x06 \x03(\x0b\x32$.semio.gateway.v1.TranslatingServiceR\x13translatingServices\"\xb0\x01\n\x0fGatewayServices\x12K\n\x0fmanagingService\x18\x01 \x01(\x0b\x32!.semio.gateway.v1.ManagingServiceR\x0fmanagingService\x12P\n\x11\x65xtendingServices\x18\x02 \x03(\x0b\x32\".semio.gateway.v1.ExtendingServiceR\x11\x65xtendingServices\"\xfa\x01\n\x1aServiceRegistrationRequest\x12)\n\x10replace_existing\x18\x01 \x01(\x08R\x0freplaceExisting\x12M\n\x0fmanagingService\x18\x02 \x01(\x0b\x32!.semio.gateway.v1.ManagingServiceH\x00R\x0fmanagingService\x12P\n\x10\x65xtendingService\x18\x03 \x01(\x0b\x32\".semio.gateway.v1.ExtendingServiceH\x00R\x10\x65xtendingServiceB\x10\n\x0eserver_service\"X\n\x1bServiceRegistrationResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x1f\n\x0bold_address\x18\x02 \x01(\tR\noldAddress\"\x1e\n\x1cGetRegisteredServicesRequest2\xb2\x02\n\x0eGatewayService\x12@\n\x0cLayoutDesign\x12\x16.semio.model.v1.Layout\x1a\x16.semio.model.v1.Design\"\x00\x12p\n\x0fRegisterService\x12,.semio.gateway.v1.ServiceRegistrationRequest\x1a-.semio.gateway.v1.ServiceRegistrationResponse\"\x00\x12l\n\x15GetRegisteredServices\x12..semio.gateway.v1.GetRegisteredServicesRequest\x1a!.semio.gateway.v1.GatewayServices\"\x00\x42\xba\x01\n\x14\x63om.semio.gateway.v1B\x0cGatewayProtoP\x01Z2github.com/usalu/semio/src/schema/semio/gateway/v1\xa2\x02\x03SGX\xaa\x02\x10Semio.Gateway.V1\xca\x02\x10Semio\\Gateway\\V1\xe2\x02\x1cSemio\\Gateway\\V1\\GPBMetadata\xea\x02\x12Semio::Gateway::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18gateway/v1/gateway.proto\x12\x10semio.gateway.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2a\n\x0eGatewayService\x12O\n\x0cLayoutDesign\x12%.semio.gateway.v1.LayoutDesignRequest\x1a\x16.semio.model.v1.Design\"\x00\x42\xba\x01\n\x14\x63om.semio.gateway.v1B\x0cGatewayProtoP\x01Z2github.com/usalu/semio/src/schema/semio/gateway/v1\xa2\x02\x03SGX\xaa\x02\x10Semio.Gateway.V1\xca\x02\x10Semio\\Gateway\\V1\xe2\x02\x1cSemio\\Gateway\\V1\\GPBMetadata\xea\x02\x12Semio::Gateway::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'gateway.v1.gateway_pb2', globals())
@@ -24,26 +24,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._serialized_options = b'\n\024com.semio.gateway.v1B\014GatewayProtoP\001Z2github.com/usalu/semio/src/schema/semio/gateway/v1\242\002\003SGX\252\002\020Semio.Gateway.V1\312\002\020Semio\\Gateway\\V1\342\002\034Semio\\Gateway\\V1\\GPBMetadata\352\002\022Semio::Gateway::V1'
   _LAYOUTDESIGNREQUEST._serialized_start=68
   _LAYOUTDESIGNREQUEST._serialized_end=170
-  _MANAGINGSERVICE._serialized_start=172
-  _MANAGINGSERVICE._serialized_end=235
-  _TRANSLATINGSERVICE._serialized_start=237
-  _TRANSLATINGSERVICE._serialized_end=294
-  _ADAPTINGSERVICE._serialized_start=296
-  _ADAPTINGSERVICE._serialized_end=350
-  _CONVERTINGSERVICE._serialized_start=352
-  _CONVERTINGSERVICE._serialized_end=451
-  _TRANSFORMINGSERVICE._serialized_start=453
-  _TRANSFORMINGSERVICE._serialized_end=474
-  _EXTENDINGSERVICE._serialized_start=477
-  _EXTENDINGSERVICE._serialized_end=884
-  _GATEWAYSERVICES._serialized_start=887
-  _GATEWAYSERVICES._serialized_end=1063
-  _SERVICEREGISTRATIONREQUEST._serialized_start=1066
-  _SERVICEREGISTRATIONREQUEST._serialized_end=1316
-  _SERVICEREGISTRATIONRESPONSE._serialized_start=1318
-  _SERVICEREGISTRATIONRESPONSE._serialized_end=1406
-  _GETREGISTEREDSERVICESREQUEST._serialized_start=1408
-  _GETREGISTEREDSERVICESREQUEST._serialized_end=1438
-  _GATEWAYSERVICE._serialized_start=1441
-  _GATEWAYSERVICE._serialized_end=1747
+  _GATEWAYSERVICE._serialized_start=172
+  _GATEWAYSERVICE._serialized_end=269
 # @@protoc_insertion_point(module_scope)

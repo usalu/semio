@@ -1,6 +1,5 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.extraPaths": ["${workspaceFolder}/src/packages/python/semio"],
     "files.exclude": {
         "**/__pycache__": true
     }

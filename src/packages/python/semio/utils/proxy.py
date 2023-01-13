@@ -2,16 +2,11 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Iterable
 
-class SemioServerDescription(BaseModel):
-    stub:type
+# class SemioServerDescription(BaseModel):
+#     stub:type
 
-class SemioProxy(BaseModel):
+class SemioProxy(BaseModel,ABC):
     address: str
-
-    # # TODO Update to abstract class method
-    # @abstractmethod
-    # def getServerDescription(self)-> Iterable[SemioServerDescription]:
-    #     pass
 
     class Config:
         extra = 'allow'

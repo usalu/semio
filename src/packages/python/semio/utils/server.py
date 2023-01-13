@@ -9,7 +9,11 @@ from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 
+class SemioService(BaseModel,ABC):
+    """This class implements the business logic of the rpc."""
+    
 class SemioServiceDescription(BaseModel):
+    service: SemioService
     servicer:type
     # TODO Update typing to be more specific
     add_Service_to_server: Callable[[Any,Any],Any]
@@ -30,7 +34,7 @@ class SemioServer(BaseModel,ABC):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port('[::]:' + str(self.port))
         for serviceDescription in self.getServicesDescriptions():
-            serviceDescription.add_Service_to_server(type(self)(),server)
+            serviceDescription.add_Service_to_server(serviceDescription.service,server)
             serviceName = serviceDescription.servicer.__name__.replace('Servicer','')
             SERVICE_NAMES = (
                 serviceDescription.descriptor.services_by_name[serviceName].full_name,

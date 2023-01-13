@@ -4,13 +4,9 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { GatewayService } from "./gateway";
-import type { GatewayServices } from "./gateway";
-import type { GetRegisteredServicesRequest } from "./gateway";
-import type { ServiceRegistrationResponse } from "./gateway";
-import type { ServiceRegistrationRequest } from "./gateway";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Design } from "../../model/v1/model";
-import type { Layout } from "../../model/v1/model";
+import type { LayoutDesignRequest } from "./gateway";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -29,21 +25,9 @@ export interface IGatewayServiceClient {
      *   body: "*"
      * };
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutDesign(semio.gateway.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
-    layoutDesign(input: Layout, options?: RpcOptions): UnaryCall<Layout, Design>;
-    /**
-     * Register a service to the server.
-     *
-     * @generated from protobuf rpc: RegisterService(semio.gateway.v1.ServiceRegistrationRequest) returns (semio.gateway.v1.ServiceRegistrationResponse);
-     */
-    registerService(input: ServiceRegistrationRequest, options?: RpcOptions): UnaryCall<ServiceRegistrationRequest, ServiceRegistrationResponse>;
-    /**
-     * Get all registered services.
-     *
-     * @generated from protobuf rpc: GetRegisteredServices(semio.gateway.v1.GetRegisteredServicesRequest) returns (semio.gateway.v1.GatewayServices);
-     */
-    getRegisteredServices(input: GetRegisteredServicesRequest, options?: RpcOptions): UnaryCall<GetRegisteredServicesRequest, GatewayServices>;
+    layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design>;
 }
 /**
  * The gateway service is the gateway for all other apis of semio.
@@ -66,28 +50,10 @@ export class GatewayServiceClient implements IGatewayServiceClient, ServiceInfo 
      *   body: "*"
      * };
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.model.v1.Layout) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutDesign(semio.gateway.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
-    layoutDesign(input: Layout, options?: RpcOptions): UnaryCall<Layout, Design> {
+    layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<Layout, Design>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * Register a service to the server.
-     *
-     * @generated from protobuf rpc: RegisterService(semio.gateway.v1.ServiceRegistrationRequest) returns (semio.gateway.v1.ServiceRegistrationResponse);
-     */
-    registerService(input: ServiceRegistrationRequest, options?: RpcOptions): UnaryCall<ServiceRegistrationRequest, ServiceRegistrationResponse> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ServiceRegistrationRequest, ServiceRegistrationResponse>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * Get all registered services.
-     *
-     * @generated from protobuf rpc: GetRegisteredServices(semio.gateway.v1.GetRegisteredServicesRequest) returns (semio.gateway.v1.GatewayServices);
-     */
-    getRegisteredServices(input: GetRegisteredServicesRequest, options?: RpcOptions): UnaryCall<GetRegisteredServicesRequest, GatewayServices> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetRegisteredServicesRequest, GatewayServices>("unary", this._transport, method, opt, input);
+        return stackIntercept<LayoutDesignRequest, Design>("unary", this._transport, method, opt, input);
     }
 }

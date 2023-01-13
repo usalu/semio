@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from extension.adapter.v1 import adapter_pb2 as extension_dot_adapter_dot_v1_dot_adapter__pb2
+from manager.v1 import manager_pb2 as manager_dot_v1_dot_manager__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
@@ -16,15 +16,25 @@ class ManagerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.RequestRepresentation = channel.unary_unary(
-                '/semio.server.v1.ManagerService/RequestRepresentation',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.SerializeToString,
+        self.RequestElement = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/RequestElement',
+                request_serializer=manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Representation.FromString,
                 )
-        self.RequestAttractionPoint = channel.unary_unary(
-                '/semio.server.v1.ManagerService/RequestAttractionPoint',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Point.FromString,
+        self.RequestAttraction = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/RequestAttraction',
+                request_serializer=manager_dot_v1_dot_manager__pb2.AttractionRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.AttractionResponse.FromString,
+                )
+        self.RegisterExtension = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/RegisterExtension',
+                request_serializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.FromString,
+                )
+        self.GetRegisteredExtensions = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
+                request_serializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.ExtendingServices.FromString,
                 )
 
 
@@ -32,14 +42,30 @@ class ManagerServiceServicer(object):
     """A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
     """
 
-    def RequestRepresentation(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def RequestElement(self, request, context):
+        """Request an element from instance information and a traget type.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RequestAttractionPoint(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def RequestAttraction(self, request, context):
+        """Request the attracted element for an attraction.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RegisterExtension(self, request, context):
+        """Register a service to the server.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetRegisteredExtensions(self, request, context):
+        """Get all registered extensions.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -47,19 +73,29 @@ class ManagerServiceServicer(object):
 
 def add_ManagerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'RequestRepresentation': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestRepresentation,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.FromString,
+            'RequestElement': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestElement,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.ElementRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Representation.SerializeToString,
             ),
-            'RequestAttractionPoint': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestAttractionPoint,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Point.SerializeToString,
+            'RequestAttraction': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestAttraction,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.AttractionRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.AttractionResponse.SerializeToString,
+            ),
+            'RegisterExtension': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterExtension,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.SerializeToString,
+            ),
+            'GetRegisteredExtensions': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRegisteredExtensions,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.ExtendingServices.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.server.v1.ManagerService', rpc_method_handlers)
+            'semio.manager.v1.ManagerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -69,7 +105,7 @@ class ManagerService(object):
     """
 
     @staticmethod
-    def RequestRepresentation(request,
+    def RequestElement(request,
             target,
             options=(),
             channel_credentials=None,
@@ -79,14 +115,14 @@ class ManagerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ManagerService/RequestRepresentation',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestElement',
+            manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Representation.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RequestAttractionPoint(request,
+    def RequestAttraction(request,
             target,
             options=(),
             channel_credentials=None,
@@ -96,8 +132,42 @@ class ManagerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.server.v1.ManagerService/RequestAttractionPoint',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Point.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestAttraction',
+            manager_dot_v1_dot_manager__pb2.AttractionRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.AttractionResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RegisterExtension(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RegisterExtension',
+            manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetRegisteredExtensions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
+            manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.ExtendingServices.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

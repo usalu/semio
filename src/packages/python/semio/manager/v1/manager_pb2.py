@@ -12,19 +12,40 @@ _sym_db = _symbol_database.Default()
 
 
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
-from extension.adapter.v1 import adapter_pb2 as extension_dot_adapter_dot_v1_dot_adapter__pb2
-from extension.converter.v1 import converter_pb2 as extension_dot_converter_dot_v1_dot_converter__pb2
-from extension.transformer.v1 import transformer_pb2 as extension_dot_transformer_dot_v1_dot_transformer__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18manager/v1/manager.proto\x12\x0fsemio.server.v1\x1a\x14model/v1/model.proto\x1a\"extension/adapter/v1/adapter.proto\x1a&extension/converter/v1/converter.proto\x1a*extension/transformer/v1/transformer.proto2\xe5\x01\n\x0eManagerService\x12l\n\x15RequestRepresentation\x12\x31.semio.extension.adapter.v1.RepresentationRequest\x1a\x1e.semio.model.v1.Representation\"\x00\x12\x65\n\x16RequestAttractionPoint\x12\x32.semio.extension.adapter.v1.AttractionPointRequest\x1a\x15.semio.model.v1.Point\"\x00\x42\xb5\x01\n\x13\x63om.semio.server.v1B\x0cManagerProtoP\x01Z2github.com/usalu/semio/src/schema/semio/manager/v1\xa2\x02\x03SSX\xaa\x02\x0fSemio.Server.V1\xca\x02\x0fSemio\\Server\\V1\xe2\x02\x1bSemio\\Server\\V1\\GPBMetadata\xea\x02\x11Semio::Server::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18manager/v1/manager.proto\x12\x10semio.manager.v1\x1a\x14model/v1/model.proto\"k\n\x0e\x45lementRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"w\n\x11\x41ttractionRequest\x12:\n\nattraction\x18\x01 \x01(\x0b\x32\x1a.semio.model.v1.AttractionR\nattraction\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"\x93\x01\n\x12\x41ttractionResponse\x12;\n\x0e\x61ttracted_pose\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PoseR\rattractedPose\x12@\n\x10\x61ttraction_point\x18\x02 \x01(\x0b\x32\x15.semio.model.v1.PointR\x0f\x61ttractionPoint\"9\n\x12TranslatingService\x12#\n\rplatform_name\x18\x01 \x01(\tR\x0cplatformName\"6\n\x0f\x41\x64\x61ptingService\x12#\n\rplatform_name\x18\x01 \x01(\tR\x0cplatformName\"c\n\x11\x43onvertingService\x12&\n\x0fsource_type_url\x18\x01 \x01(\tR\rsourceTypeUrl\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"\x15\n\x13TransformingService\"\x97\x03\n\x10\x45xtendingService\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07\x61\x64\x64ress\x18\x02 \x01(\tR\x07\x61\x64\x64ress\x12M\n\x10\x61\x64\x61ptingServices\x18\x03 \x03(\x0b\x32!.semio.manager.v1.AdaptingServiceR\x10\x61\x64\x61ptingServices\x12S\n\x12\x63onvertingServices\x18\x04 \x03(\x0b\x32#.semio.manager.v1.ConvertingServiceR\x12\x63onvertingServices\x12Y\n\x14transformingServices\x18\x05 \x03(\x0b\x32%.semio.manager.v1.TransformingServiceR\x14transformingServices\x12V\n\x13translatingServices\x18\x06 \x03(\x0b\x32$.semio.manager.v1.TranslatingServiceR\x13translatingServices\"e\n\x11\x45xtendingServices\x12P\n\x11\x65xtendingServices\x18\x01 \x03(\x0b\x32\".semio.manager.v1.ExtendingServiceR\x11\x65xtendingServices\"\x99\x01\n\x1c\x45xtensionRegistrationRequest\x12)\n\x10replace_existing\x18\x01 \x01(\x08R\x0freplaceExisting\x12N\n\x10\x65xtendingService\x18\x02 \x01(\x0b\x32\".semio.manager.v1.ExtendingServiceR\x10\x65xtendingService\"Z\n\x1d\x45xtensionRegistrationResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x1f\n\x0bold_address\x18\x02 \x01(\tR\noldAddress\" \n\x1eGetRegisteredExtensionsRequest2\xac\x03\n\x0eManagerService\x12R\n\x0eRequestElement\x12 .semio.manager.v1.ElementRequest\x1a\x1e.semio.model.v1.Representation\x12^\n\x11RequestAttraction\x12#.semio.manager.v1.AttractionRequest\x1a$.semio.manager.v1.AttractionResponse\x12t\n\x11RegisterExtension\x12..semio.manager.v1.ExtensionRegistrationRequest\x1a/.semio.manager.v1.ExtensionRegistrationResponse\x12p\n\x17GetRegisteredExtensions\x12\x30.semio.manager.v1.GetRegisteredExtensionsRequest\x1a#.semio.manager.v1.ExtendingServicesB\xba\x01\n\x14\x63om.semio.manager.v1B\x0cManagerProtoP\x01Z2github.com/usalu/semio/src/schema/semio/manager/v1\xa2\x02\x03SMX\xaa\x02\x10Semio.Manager.V1\xca\x02\x10Semio\\Manager\\V1\xe2\x02\x1cSemio\\Manager\\V1\\GPBMetadata\xea\x02\x12Semio::Manager::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'manager.v1.manager_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\023com.semio.server.v1B\014ManagerProtoP\001Z2github.com/usalu/semio/src/schema/semio/manager/v1\242\002\003SSX\252\002\017Semio.Server.V1\312\002\017Semio\\Server\\V1\342\002\033Semio\\Server\\V1\\GPBMetadata\352\002\021Semio::Server::V1'
-  _MANAGERSERVICE._serialized_start=188
-  _MANAGERSERVICE._serialized_end=417
+  DESCRIPTOR._serialized_options = b'\n\024com.semio.manager.v1B\014ManagerProtoP\001Z2github.com/usalu/semio/src/schema/semio/manager/v1\242\002\003SMX\252\002\020Semio.Manager.V1\312\002\020Semio\\Manager\\V1\342\002\034Semio\\Manager\\V1\\GPBMetadata\352\002\022Semio::Manager::V1'
+  _ELEMENTREQUEST._serialized_start=68
+  _ELEMENTREQUEST._serialized_end=175
+  _ATTRACTIONREQUEST._serialized_start=177
+  _ATTRACTIONREQUEST._serialized_end=296
+  _ATTRACTIONRESPONSE._serialized_start=299
+  _ATTRACTIONRESPONSE._serialized_end=446
+  _TRANSLATINGSERVICE._serialized_start=448
+  _TRANSLATINGSERVICE._serialized_end=505
+  _ADAPTINGSERVICE._serialized_start=507
+  _ADAPTINGSERVICE._serialized_end=561
+  _CONVERTINGSERVICE._serialized_start=563
+  _CONVERTINGSERVICE._serialized_end=662
+  _TRANSFORMINGSERVICE._serialized_start=664
+  _TRANSFORMINGSERVICE._serialized_end=685
+  _EXTENDINGSERVICE._serialized_start=688
+  _EXTENDINGSERVICE._serialized_end=1095
+  _EXTENDINGSERVICES._serialized_start=1097
+  _EXTENDINGSERVICES._serialized_end=1198
+  _EXTENSIONREGISTRATIONREQUEST._serialized_start=1201
+  _EXTENSIONREGISTRATIONREQUEST._serialized_end=1354
+  _EXTENSIONREGISTRATIONRESPONSE._serialized_start=1356
+  _EXTENSIONREGISTRATIONRESPONSE._serialized_end=1446
+  _GETREGISTEREDEXTENSIONSREQUEST._serialized_start=1448
+  _GETREGISTEREDEXTENSIONSREQUEST._serialized_end=1480
+  _MANAGERSERVICE._serialized_start=1483
+  _MANAGERSERVICE._serialized_end=1911
 # @@protoc_insertion_point(module_scope)
