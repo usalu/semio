@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from constants import DEFAULT_MANAGER_PORT
 
-from utils import SemioServer, SemioServiceDescription, SemioProxy,SemioService
+from utils import SemioServer, SemioServiceDescription, SemioProxy
 
 from .adapter import AdapterService
 from .converter import ConverterService
@@ -38,7 +38,7 @@ class ExtensionServer(SemioServer):
     def getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
             from manager import ManagerProxy
-            self.managerProxy = ManagerProxy(self.managerAddress)
+            self.managerProxy = ManagerProxy(self.managerProxyAddress)
         return self.managerProxy
 
     def getServicesDescriptions(self):

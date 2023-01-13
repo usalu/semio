@@ -35,5 +35,5 @@ class GrasshopperAdapter(AdapterService):
         pass
 
 if __name__=="__main__":
-    rhinoServer = ExtensionServer(5900,name='semio.rhino', adapters=[GrasshopperAdapter()])
+    rhinoServer = ExtensionServer(59002,name='semio.rhino', adapters=[GrasshopperAdapter()])
     rhinoServer.serve()
