@@ -34,7 +34,7 @@ class ManagerServiceStub(object):
         self.GetRegisteredExtensions = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
                 request_serializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
-                response_deserializer=manager_dot_v1_dot_manager__pb2.ExtendingServices.FromString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.Extendings.FromString,
                 )
 
 
@@ -91,7 +91,7 @@ def add_ManagerServiceServicer_to_server(servicer, server):
             'GetRegisteredExtensions': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisteredExtensions,
                     request_deserializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.FromString,
-                    response_serializer=manager_dot_v1_dot_manager__pb2.ExtendingServices.SerializeToString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.Extendings.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -168,6 +168,6 @@ class ManagerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
             manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
-            manager_dot_v1_dot_manager__pb2.ExtendingServices.FromString,
+            manager_dot_v1_dot_manager__pb2.Extendings.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

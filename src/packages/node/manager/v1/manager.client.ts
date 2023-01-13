@@ -4,7 +4,7 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { ManagerService } from "./manager";
-import type { ExtendingServices } from "./manager";
+import type { Extendings } from "./manager";
 import type { GetRegisteredExtensionsRequest } from "./manager";
 import type { ExtensionRegistrationResponse } from "./manager";
 import type { ExtensionRegistrationRequest } from "./manager";
@@ -42,9 +42,9 @@ export interface IManagerServiceClient {
     /**
      * Get all registered extensions.
      *
-     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.ExtendingServices);
+     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.Extendings);
      */
-    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, ExtendingServices>;
+    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, Extendings>;
 }
 /**
  * A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
@@ -87,10 +87,10 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     /**
      * Get all registered extensions.
      *
-     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.ExtendingServices);
+     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.Extendings);
      */
-    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, ExtendingServices> {
+    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, Extendings> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetRegisteredExtensionsRequest, ExtendingServices>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetRegisteredExtensionsRequest, Extendings>("unary", this._transport, method, opt, input);
     }
 }

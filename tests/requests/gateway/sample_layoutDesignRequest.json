@@ -1,4 +1,5 @@
 {
+  "layout": {
     "sobjects": [
       {
         "parameters": {
@@ -65,4 +66,5 @@
       }
     ],
     "stragegy": "LAYOUTSTRATEGY_BREADTHFIRST"
-  }
+}
+}

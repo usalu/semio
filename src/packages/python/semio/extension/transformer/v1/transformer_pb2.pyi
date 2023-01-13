@@ -13,3 +13,7 @@ class RewriteLayoutRequest(_message.Message):
     decisions: _containers.RepeatedCompositeFieldContainer[_model_pb2.Decision]
     initial_layout: _model_pb2.Layout
     def __init__(self, decisions: _Optional[_Iterable[_Union[_model_pb2.Decision, _Mapping]]] = ..., initial_layout: _Optional[_Union[_model_pb2.Layout, _Mapping]] = ...) -> None: ...
+
+class Transforming(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...

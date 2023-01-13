@@ -6,6 +6,14 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class Converting(_message.Message):
+    __slots__ = ["source_type_url", "target_type_url"]
+    SOURCE_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
+    TARGET_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
+    source_type_url: str
+    target_type_url: str
+    def __init__(self, source_type_url: _Optional[str] = ..., target_type_url: _Optional[str] = ...) -> None: ...
+
 class RepresentationConversionRequest(_message.Message):
     __slots__ = ["options", "representation", "target_type"]
     OPTIONS_FIELD_NUMBER: _ClassVar[int]

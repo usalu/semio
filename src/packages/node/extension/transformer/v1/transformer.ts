@@ -2,18 +2,23 @@
 // @generated from protobuf file "extension/transformer/v1/transformer.proto" (package "semio.extension.transformer.v1", syntax proto3)
 // tslint:disable
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
+import { WireType } from "@protobuf-ts/runtime";
 import type { BinaryWriteOptions } from "@protobuf-ts/runtime";
 import type { IBinaryWriter } from "@protobuf-ts/runtime";
-import { WireType } from "@protobuf-ts/runtime";
+import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import type { BinaryReadOptions } from "@protobuf-ts/runtime";
 import type { IBinaryReader } from "@protobuf-ts/runtime";
-import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Layout } from "../../../model/v1/model";
 import { Decision } from "../../../model/v1/model";
+/**
+ * @generated from protobuf message semio.extension.transformer.v1.Transforming
+ */
+export interface Transforming {
+}
 /**
  * A rewrite layout request is a description for layout (graph) rewrites.
  *
@@ -31,6 +36,32 @@ export interface RewriteLayoutRequest {
      */
     initialLayout?: Layout;
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class Transforming$Type extends MessageType<Transforming> {
+    constructor() {
+        super("semio.extension.transformer.v1.Transforming", []);
+    }
+    create(value?: PartialMessage<Transforming>): Transforming {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Transforming>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Transforming): Transforming {
+        return target ?? this.create();
+    }
+    internalBinaryWrite(message: Transforming, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.extension.transformer.v1.Transforming
+ */
+export const Transforming = new Transforming$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RewriteLayoutRequest$Type extends MessageType<RewriteLayoutRequest> {
     constructor() {

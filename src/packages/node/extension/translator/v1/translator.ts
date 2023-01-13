@@ -15,6 +15,15 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Pose } from "../../../model/v1/model";
 import { Representation } from "../../../model/v1/model";
 /**
+ * @generated from protobuf message semio.extension.translator.v1.Translating
+ */
+export interface Translating {
+    /**
+     * @generated from protobuf field: string type_url = 1;
+     */
+    typeUrl: string;
+}
+/**
  * @generated from protobuf message semio.extension.translator.v1.TranslateRepresentationRequest
  */
 export interface TranslateRepresentationRequest {
@@ -31,6 +40,53 @@ export interface TranslateRepresentationRequest {
      */
     sourcePose?: Pose;
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class Translating$Type extends MessageType<Translating> {
+    constructor() {
+        super("semio.extension.translator.v1.Translating", [
+            { no: 1, name: "type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Translating>): Translating {
+        const message = { typeUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Translating>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Translating): Translating {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string type_url */ 1:
+                    message.typeUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Translating, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string type_url = 1; */
+        if (message.typeUrl !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.typeUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.extension.translator.v1.Translating
+ */
+export const Translating = new Translating$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class TranslateRepresentationRequest$Type extends MessageType<TranslateRepresentationRequest> {
     constructor() {

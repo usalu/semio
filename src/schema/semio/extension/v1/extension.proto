@@ -10,9 +10,9 @@ import "extension/translator/v1/translator.proto";
 
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/v1";
 
-message Extentending{
+message Extending{
   repeated semio.extension.adapter.v1.Adapting adaptings = 1;
-  repeated semio.extension.converter.v1.Converting convertings = 1;
-  repeated semio.extension.transformer.v1.Transforming transformings = 1;
-  repeated semio.extension.translator.v1.Translating translatings = 1;
+  repeated semio.extension.converter.v1.Converting convertings = 2;
+  repeated semio.extension.transformer.v1.Transforming transformings = 3;
+  repeated semio.extension.translator.v1.Translating translatings = 4;
 }

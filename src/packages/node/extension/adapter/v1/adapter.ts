@@ -18,6 +18,15 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Sobject } from "../../../model/v1/model";
 import { AttractionParameters } from "../../../model/v1/model";
 /**
+ * @generated from protobuf message semio.extension.adapter.v1.Adapting
+ */
+export interface Adapting {
+    /**
+     * @generated from protobuf field: string platform_name = 1;
+     */
+    platformName: string;
+}
+/**
  * @generated from protobuf message semio.extension.adapter.v1.AttractionPointRequest
  */
 export interface AttractionPointRequest {
@@ -76,6 +85,53 @@ export interface RepresentationsRequest {
      */
     lods: bigint[];
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class Adapting$Type extends MessageType<Adapting> {
+    constructor() {
+        super("semio.extension.adapter.v1.Adapting", [
+            { no: 1, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Adapting>): Adapting {
+        const message = { platformName: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Adapting>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Adapting): Adapting {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string platform_name */ 1:
+                    message.platformName = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Adapting, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string platform_name = 1; */
+        if (message.platformName !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.platformName);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.extension.adapter.v1.Adapting
+ */
+export const Adapting = new Adapting$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
     constructor() {

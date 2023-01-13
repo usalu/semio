@@ -15,6 +15,19 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Any } from "../../../google/protobuf/any";
 import { Representation } from "../../../model/v1/model";
 /**
+ * @generated from protobuf message semio.extension.converter.v1.Converting
+ */
+export interface Converting {
+    /**
+     * @generated from protobuf field: string source_type_url = 1;
+     */
+    sourceTypeUrl: string;
+    /**
+     * @generated from protobuf field: string target_type_url = 2;
+     */
+    targetTypeUrl: string;
+}
+/**
  * A request for converting a represenation
  *
  * @generated from protobuf message semio.extension.converter.v1.RepresentationConversionRequest
@@ -33,6 +46,60 @@ export interface RepresentationConversionRequest {
      */
     options?: Any;
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class Converting$Type extends MessageType<Converting> {
+    constructor() {
+        super("semio.extension.converter.v1.Converting", [
+            { no: 1, name: "source_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Converting>): Converting {
+        const message = { sourceTypeUrl: "", targetTypeUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Converting>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Converting): Converting {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string source_type_url */ 1:
+                    message.sourceTypeUrl = reader.string();
+                    break;
+                case /* string target_type_url */ 2:
+                    message.targetTypeUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Converting, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string source_type_url = 1; */
+        if (message.sourceTypeUrl !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.sourceTypeUrl);
+        /* string target_type_url = 2; */
+        if (message.targetTypeUrl !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.targetTypeUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.extension.converter.v1.Converting
+ */
+export const Converting = new Converting$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RepresentationConversionRequest$Type extends MessageType<RepresentationConversionRequest> {
     constructor() {

@@ -5,9 +5,11 @@ package semio.manager.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/manager/v1";
 
 import "model/v1/model.proto";
+import "extension/v1/extension.proto";
 
 // A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
 service ManagerService {
+  
   // Request an element from instance information and a traget type.
   rpc RequestElement(ElementRequest) returns (semio.model.v1.Representation);
 
@@ -18,7 +20,7 @@ service ManagerService {
   rpc RegisterExtension(ExtensionRegistrationRequest) returns (ExtensionRegistrationResponse);
 
   // Get all registered extensions.
-  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (ExtendingServices);
+  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (Extendings);
 }
 
 message ElementRequest{
@@ -36,10 +38,6 @@ message AttractionResponse{
   semio.model.v1.Point attraction_point = 2;
 }
 
-message Extendings {
-  repeated ExtendingService extendingServices = 1;
-}
-
 message ExtensionRegistrationRequest{
   bool replace_existing = 1;
   semio.extension.v1.Extending extending = 2;
@@ -52,4 +50,8 @@ message ExtensionRegistrationResponse{
 }
 
 message GetRegisteredExtensionsRequest{
+}
+
+message Extendings{
+  repeated semio.extension.v1.Extending extendings = 1;
 }

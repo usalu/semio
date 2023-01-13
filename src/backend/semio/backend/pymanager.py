@@ -1,23 +1,10 @@
-from concurrent import futures
 import logging
 
-from typing import Tuple
-
-import grpc
-
-from pydantic import Field
-
-from typing import Iterable
 from semio.model import Point,Sobject,Attraction,Layout,Element,Design
-
-from semio.gateway import (GatewayServer, ManagingServices,
-LayoutDesignRequest, ServiceRegistrationRequest,ServiceRegistrationResponse)
-
+from semio.gateway import GatewayProxy,LayoutDesignRequest
 from semio.manager import ManagerServer,AttractionRequest,AttractionResponse
 
-
 class Manager(ManagerServer):
-    services: GatewayServices = Field(default_factory=GatewayServices)
 
     def getAdapterAddress(self, platformName:str) -> str:
         """Get the adapter address for a platform by its name"""
@@ -43,19 +30,36 @@ class Manager(ManagerServer):
         #             return extendingService.address
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
-    def RegisterService(self, request: ServiceRegistrationRequest, context) -> ServiceRegistrationResponse:
-        oldAddress = ""
-        service = request.WhichOneof('server_service')
-        if service == 'managingService':
-            if self.services.managingService.ByteSize()!=0 and not request.replace_existing:
-                raise ValueError('There is already a manager. If you wish to replace it set replace existing to true.')
-            self.services.managingService = request.managingService
-        elif service == 'extendingService':
-            for extendingService in self.services.extendingServices:
-                if extendingService.name == request.extendingService.name:
-                    if request.replace_existing:
-                        oldAddress = extendingService.address
-                    else:
-                        raise ValueError(f'There is already an extension with the name {extendingService.name}. If you wish to replace it set replace existing to true.')
-            self.services.extendingServices.append(request.extendingService)
-        return ServiceRegistrationResponse(success=True,old_address=oldAddress)
+    # def RegisterService(self, request: ServiceRegistrationRequest, context) -> ServiceRegistrationResponse:
+    #     oldAddress = ""
+    #     service = request.WhichOneof('server_service')
+    #     if service == 'managingService':
+    #         if self.services.managingService.ByteSize()!=0 and not request.replace_existing:
+    #             raise ValueError('There is already a manager. If you wish to replace it set replace existing to true.')
+    #         self.services.managingService = request.managingService
+    #     elif service == 'extendingService':
+    #         for extendingService in self.services.extendingServices:
+    #             if extendingService.name == request.extendingService.name:
+    #                 if request.replace_existing:
+    #                     oldAddress = extendingService.address
+    #                 else:
+    #                     raise ValueError(f'There is already an extension with the name {extendingService.name}. If you wish to replace it set replace existing to true.')
+    #         self.services.extendingServices.append(request.extendingService)
+    #     return ServiceRegistrationResponse(success=True,old_address=oldAddress)
+    
+    def RequestElement(self, request, context):
+        raise NotImplementedError('Method not implemented!')
+
+    def RequestAttraction(self, request, context):
+        raise NotImplementedError('Method not implemented!')
+
+    def RegisterExtension(self, request, context):
+        raise NotImplementedError('Method not implemented!')
+
+    def GetRegisteredExtensions(self, request, context):
+        raise NotImplementedError('Method not implemented!')
+
+if __name__ == '__main__':
+    logging.basicConfig()
+    manager = Manager()
+    manager.serve()
