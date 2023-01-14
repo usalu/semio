@@ -62,13 +62,17 @@ export interface AttractionResponse {
  */
 export interface ExtensionRegistrationRequest {
     /**
-     * @generated from protobuf field: bool replace_existing = 1;
+     * @generated from protobuf field: string address = 1;
      */
-    replaceExisting: boolean;
+    address: string;
     /**
      * @generated from protobuf field: semio.extension.v1.Extending extending = 2;
      */
     extending?: Extending;
+    /**
+     * @generated from protobuf field: bool replace_existing = 3;
+     */
+    replaceExisting: boolean;
 }
 /**
  * @generated from protobuf message semio.manager.v1.ExtensionRegistrationResponse
@@ -91,13 +95,17 @@ export interface ExtensionRegistrationResponse {
 export interface GetRegisteredExtensionsRequest {
 }
 /**
- * @generated from protobuf message semio.manager.v1.Extendings
+ * @generated from protobuf message semio.manager.v1.RegisteredExtensionsResponse
  */
-export interface Extendings {
+export interface RegisteredExtensionsResponse {
     /**
-     * @generated from protobuf field: repeated semio.extension.v1.Extending extendings = 1;
+     * A map with extensions where the address is the key and the extension description is the value.
+     *
+     * @generated from protobuf field: map<string, semio.extension.v1.Extending> extensions = 1;
      */
-    extendings: Extending[];
+    extensions: {
+        [key: string]: Extending;
+    };
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class ElementRequest$Type extends MessageType<ElementRequest> {
@@ -265,12 +273,13 @@ export const AttractionResponse = new AttractionResponse$Type();
 class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistrationRequest> {
     constructor() {
         super("semio.manager.v1.ExtensionRegistrationRequest", [
-            { no: 1, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "extending", kind: "message", T: () => Extending }
+            { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "extending", kind: "message", T: () => Extending },
+            { no: 3, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<ExtensionRegistrationRequest>): ExtensionRegistrationRequest {
-        const message = { replaceExisting: false };
+        const message = { address: "", replaceExisting: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<ExtensionRegistrationRequest>(this, message, value);
@@ -281,11 +290,14 @@ class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistratio
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* bool replace_existing */ 1:
-                    message.replaceExisting = reader.bool();
+                case /* string address */ 1:
+                    message.address = reader.string();
                     break;
                 case /* semio.extension.v1.Extending extending */ 2:
                     message.extending = Extending.internalBinaryRead(reader, reader.uint32(), options, message.extending);
+                    break;
+                case /* bool replace_existing */ 3:
+                    message.replaceExisting = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -299,12 +311,15 @@ class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistratio
         return message;
     }
     internalBinaryWrite(message: ExtensionRegistrationRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* bool replace_existing = 1; */
-        if (message.replaceExisting !== false)
-            writer.tag(1, WireType.Varint).bool(message.replaceExisting);
+        /* string address = 1; */
+        if (message.address !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.address);
         /* semio.extension.v1.Extending extending = 2; */
         if (message.extending)
             Extending.internalBinaryWrite(message.extending, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* bool replace_existing = 3; */
+        if (message.replaceExisting !== false)
+            writer.tag(3, WireType.Varint).bool(message.replaceExisting);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -396,26 +411,26 @@ class GetRegisteredExtensionsRequest$Type extends MessageType<GetRegisteredExten
  */
 export const GetRegisteredExtensionsRequest = new GetRegisteredExtensionsRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Extendings$Type extends MessageType<Extendings> {
+class RegisteredExtensionsResponse$Type extends MessageType<RegisteredExtensionsResponse> {
     constructor() {
-        super("semio.manager.v1.Extendings", [
-            { no: 1, name: "extendings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Extending }
+        super("semio.manager.v1.RegisteredExtensionsResponse", [
+            { no: 1, name: "extensions", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Extending } }
         ]);
     }
-    create(value?: PartialMessage<Extendings>): Extendings {
-        const message = { extendings: [] };
+    create(value?: PartialMessage<RegisteredExtensionsResponse>): RegisteredExtensionsResponse {
+        const message = { extensions: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Extendings>(this, message, value);
+            reflectionMergePartial<RegisteredExtensionsResponse>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Extendings): Extendings {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisteredExtensionsResponse): RegisteredExtensionsResponse {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated semio.extension.v1.Extending extendings */ 1:
-                    message.extendings.push(Extending.internalBinaryRead(reader, reader.uint32(), options));
+                case /* map<string, semio.extension.v1.Extending> extensions */ 1:
+                    this.binaryReadMap1(message.extensions, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -428,10 +443,30 @@ class Extendings$Type extends MessageType<Extendings> {
         }
         return message;
     }
-    internalBinaryWrite(message: Extendings, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.extension.v1.Extending extendings = 1; */
-        for (let i = 0; i < message.extendings.length; i++)
-            Extending.internalBinaryWrite(message.extendings[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+    private binaryReadMap1(map: RegisteredExtensionsResponse["extensions"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof RegisteredExtensionsResponse["extensions"] | undefined, val: RegisteredExtensionsResponse["extensions"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = Extending.internalBinaryRead(reader, reader.uint32(), options);
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for field semio.manager.v1.RegisteredExtensionsResponse.extensions");
+            }
+        }
+        map[key ?? ""] = val ?? Extending.create();
+    }
+    internalBinaryWrite(message: RegisteredExtensionsResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* map<string, semio.extension.v1.Extending> extensions = 1; */
+        for (let k of Object.keys(message.extensions)) {
+            writer.tag(1, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
+            writer.tag(2, WireType.LengthDelimited).fork();
+            Extending.internalBinaryWrite(message.extensions[k], writer, options);
+            writer.join().join();
+        }
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -439,9 +474,9 @@ class Extendings$Type extends MessageType<Extendings> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.manager.v1.Extendings
+ * @generated MessageType for protobuf message semio.manager.v1.RegisteredExtensionsResponse
  */
-export const Extendings = new Extendings$Type();
+export const RegisteredExtensionsResponse = new RegisteredExtensionsResponse$Type();
 /**
  * @generated ServiceType for protobuf service semio.manager.v1.ManagerService
  */
@@ -449,5 +484,5 @@ export const ManagerService = new ServiceType("semio.manager.v1.ManagerService",
     { name: "RequestElement", options: {}, I: ElementRequest, O: Representation },
     { name: "RequestAttraction", options: {}, I: AttractionRequest, O: AttractionResponse },
     { name: "RegisterExtension", options: {}, I: ExtensionRegistrationRequest, O: ExtensionRegistrationResponse },
-    { name: "GetRegisteredExtensions", options: {}, I: GetRegisteredExtensionsRequest, O: Extendings }
+    { name: "GetRegisteredExtensions", options: {}, I: GetRegisteredExtensionsRequest, O: RegisteredExtensionsResponse }
 ]);

@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
 from extension.service import ExtensionService
 from .v1.translator_pb2 import Translating
+from .v1.translator_pb2_grpc import TranslatorServiceServicer
 
-class TranslatorService(ExtensionService, ABC):
+class TranslatorService(ExtensionService,TranslatorServiceServicer):
 
-    @abstractmethod
-    def getDescription(self) -> Translating:
-        pass
+    def getDescriptions(self) -> list[Translating]:
+        return []

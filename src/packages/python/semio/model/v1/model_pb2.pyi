@@ -26,15 +26,15 @@ class AttractionParameters(_message.Message):
         KEY_FIELD_NUMBER: _ClassVar[int]
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
-        value: _any_pb2.Any
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     BIAS_FIELD_NUMBER: _ClassVar[int]
     PORT_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
-    bias: _containers.MessageMap[str, _any_pb2.Any]
+    bias: _containers.ScalarMap[str, str]
     port: str
     representation: _any_pb2.Any
-    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., bias: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class AttractionParticipant(_message.Message):
     __slots__ = ["parameters", "patricipant_id"]
@@ -155,17 +155,17 @@ class Sobject(_message.Message):
         KEY_FIELD_NUMBER: _ClassVar[int]
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
-        value: _any_pb2.Any
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     ID_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     POSE_FIELD_NUMBER: _ClassVar[int]
     URL_FIELD_NUMBER: _ClassVar[int]
     id: str
-    parameters: _containers.MessageMap[str, _any_pb2.Any]
+    parameters: _containers.ScalarMap[str, str]
     pose: Pose
     url: str
-    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, _any_pb2.Any]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class LayoutStragey(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

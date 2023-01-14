@@ -3,13 +3,10 @@
     "sobjects": [
       {
         "parameters": {
-          "Length": {
-            "@type": "type.googleapis.com/google.protobuf.StringValue",
-            "value": "330"
-          }
+          "Length": "330"
         },
         "id": "1",
-        "url": "elements/RectangleWithMiter.gh",
+        "url": "C:\\Git\\Studium\\PhD\\semio\\tests\\elements\\RectangleWithMiter.gh",
         "pose": {
           "pointOfView": {
             "y": 10,
@@ -26,13 +23,10 @@
       },
       {
         "parameters": {
-          "Length": {
-            "@type": "type.googleapis.com/google.protobuf.StringValue",
-            "value": "220"
-          }
+          "Length": "220"
         },
         "id": "2",
-        "url": "elements/RectangleWithMiter.gh",
+        "url": "C:\\Git\\Studium\\PhD\\semio\\tests\\elements\\RectangleWithMiter.gh",
         "pose": {
           "pointOfView": {
             "x": 30,

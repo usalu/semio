@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
 from extension.service  import ExtensionService
 from .v1.converter_pb2 import Converting
+from .v1.converter_pb2_grpc import ConverterServiceServicer
 
-class ConverterService(ExtensionService, ABC):
+class ConverterService(ExtensionService,ConverterServiceServicer):
 
-    @abstractmethod
-    def getDescription(self) -> Converting:
-        pass
+    def getDescriptions(self) -> list[Converting]:
+        return []

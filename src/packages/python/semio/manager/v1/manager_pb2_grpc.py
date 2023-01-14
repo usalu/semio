@@ -34,7 +34,7 @@ class ManagerServiceStub(object):
         self.GetRegisteredExtensions = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
                 request_serializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
-                response_deserializer=manager_dot_v1_dot_manager__pb2.Extendings.FromString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.RegisteredExtensionsResponse.FromString,
                 )
 
 
@@ -44,6 +44,10 @@ class ManagerServiceServicer(object):
 
     def RequestElement(self, request, context):
         """Request an element from instance information and a traget type.
+        The target type tries to be provided by one of the following strategies (lowest number wins).
+        1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+        2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+        3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -51,6 +55,10 @@ class ManagerServiceServicer(object):
 
     def RequestAttraction(self, request, context):
         """Request the attracted element for an attraction.
+        The target type tries to be provided by one of the following strategies (lowest number wins).
+        1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+        2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+        3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -91,7 +99,7 @@ def add_ManagerServiceServicer_to_server(servicer, server):
             'GetRegisteredExtensions': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisteredExtensions,
                     request_deserializer=manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.FromString,
-                    response_serializer=manager_dot_v1_dot_manager__pb2.Extendings.SerializeToString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.RegisteredExtensionsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -168,6 +176,6 @@ class ManagerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
             manager_dot_v1_dot_manager__pb2.GetRegisteredExtensionsRequest.SerializeToString,
-            manager_dot_v1_dot_manager__pb2.Extendings.FromString,
+            manager_dot_v1_dot_manager__pb2.RegisteredExtensionsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

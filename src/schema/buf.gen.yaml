@@ -17,10 +17,10 @@ plugins:
   #   out: ../packages/node/src
   # - plugin: buf.build/protocolbuffers/js
   #   out: ../packages/node/src
-  # - plugin: buf.build/grpc/csharp
-  #   out: ../packages/csharp/Semio
-  # - plugin: buf.build/protocolbuffers/csharp
-  #   out: ../packages/csharp/semio
+  - plugin: buf.build/grpc/csharp
+    out: ../packages/csharp/Semio
+  - plugin: buf.build/protocolbuffers/csharp
+    out: ../packages/csharp/semio
     
   # - plugin: buf.build/community/chrusty-jsonschema
   #   out: ../jsonschema

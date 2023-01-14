@@ -4,7 +4,7 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { ManagerService } from "./manager";
-import type { Extendings } from "./manager";
+import type { RegisteredExtensionsResponse } from "./manager";
 import type { GetRegisteredExtensionsRequest } from "./manager";
 import type { ExtensionRegistrationResponse } from "./manager";
 import type { ExtensionRegistrationRequest } from "./manager";
@@ -23,12 +23,20 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 export interface IManagerServiceClient {
     /**
      * Request an element from instance information and a traget type.
+     * The target type tries to be provided by one of the following strategies (lowest number wins).
+     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
+     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Representation);
      */
     requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Representation>;
     /**
      * Request the attracted element for an attraction.
+     * The target type tries to be provided by one of the following strategies (lowest number wins).
+     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
+     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
      */
@@ -42,9 +50,9 @@ export interface IManagerServiceClient {
     /**
      * Get all registered extensions.
      *
-     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.Extendings);
+     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.RegisteredExtensionsResponse);
      */
-    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, Extendings>;
+    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, RegisteredExtensionsResponse>;
 }
 /**
  * A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
@@ -59,6 +67,10 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     }
     /**
      * Request an element from instance information and a traget type.
+     * The target type tries to be provided by one of the following strategies (lowest number wins).
+     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
+     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Representation);
      */
@@ -68,6 +80,10 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     }
     /**
      * Request the attracted element for an attraction.
+     * The target type tries to be provided by one of the following strategies (lowest number wins).
+     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
+     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
      */
@@ -87,10 +103,10 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     /**
      * Get all registered extensions.
      *
-     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.Extendings);
+     * @generated from protobuf rpc: GetRegisteredExtensions(semio.manager.v1.GetRegisteredExtensionsRequest) returns (semio.manager.v1.RegisteredExtensionsResponse);
      */
-    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, Extendings> {
+    getRegisteredExtensions(input: GetRegisteredExtensionsRequest, options?: RpcOptions): UnaryCall<GetRegisteredExtensionsRequest, RegisteredExtensionsResponse> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetRegisteredExtensionsRequest, Extendings>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetRegisteredExtensionsRequest, RegisteredExtensionsResponse>("unary", this._transport, method, opt, input);
     }
 }

@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
 from extension.service import ExtensionService
 from .v1.adapter_pb2 import Adapting
+from .v1.adapter_pb2_grpc import AdapterServiceServicer
 
-class AdapterService(ExtensionService, ABC):
+class AdapterService(ExtensionService,AdapterServiceServicer):
 
-    @abstractmethod
-    def getDescription(self) -> Adapting:
-        pass
+    def getDescriptions(self) -> list[Adapting]:
+        return []

@@ -11,16 +11,24 @@ import "extension/v1/extension.proto";
 service ManagerService {
   
   // Request an element from instance information and a traget type.
+  // The target type tries to be provided by one of the following strategies (lowest number wins).
+  // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+  // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+  // 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
   rpc RequestElement(ElementRequest) returns (semio.model.v1.Representation);
 
-  //Request the attracted element for an attraction.
+  // Request the attracted element for an attraction.
+  // The target type tries to be provided by one of the following strategies (lowest number wins).
+  // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+  // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+  // 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
   rpc RequestAttraction(AttractionRequest) returns (AttractionResponse);
 
   // Register a service to the server.
   rpc RegisterExtension(ExtensionRegistrationRequest) returns (ExtensionRegistrationResponse);
 
   // Get all registered extensions.
-  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (Extendings);
+  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
 }
 
 message ElementRequest{
@@ -39,8 +47,9 @@ message AttractionResponse{
 }
 
 message ExtensionRegistrationRequest{
-  bool replace_existing = 1;
+  string address = 1;
   semio.extension.v1.Extending extending = 2;
+  bool replace_existing = 3;
 }
 
 message ExtensionRegistrationResponse{
@@ -52,6 +61,7 @@ message ExtensionRegistrationResponse{
 message GetRegisteredExtensionsRequest{
 }
 
-message Extendings{
-  repeated semio.extension.v1.Extending extendings = 1;
+message RegisteredExtensionsResponse{
+  // A map with extensions where the address is the key and the extension description is the value.
+  map <string,semio.extension.v1.Extending> extensions = 1;
 }

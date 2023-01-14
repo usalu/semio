@@ -31,6 +31,7 @@ class SemioServer(BaseModel,ABC):
 
     def serve(self) -> None:
         """Call this function to start the server."""
+        self.initialize()
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port('[::]:' + str(self.port))
         for serviceDescription in self.getServicesDescriptions():
@@ -44,9 +45,14 @@ class SemioServer(BaseModel,ABC):
         server.start()
         print(f"{self.name} started, listening on " + str(self.port))
         server.wait_for_termination()
+    
+    def initialize(self):
+        """Override this method to add additional initialization."""
+        return
 
     class Config:
         arbitrary_types_allowed = True
+        extra = 'allow'
 
 
 # class AsyncServer(BaseModel):

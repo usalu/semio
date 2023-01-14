@@ -20,19 +20,19 @@ import { Adapting } from "../adapter/v1/adapter";
  */
 export interface Extending {
     /**
-     * @generated from protobuf field: repeated semio.extension.adapter.v1.Adapting adaptings = 1;
+     * @generated from protobuf field: repeated semio.extension.adapter.v1.Adapting adaptings = 3;
      */
     adaptings: Adapting[];
     /**
-     * @generated from protobuf field: repeated semio.extension.converter.v1.Converting convertings = 2;
+     * @generated from protobuf field: repeated semio.extension.converter.v1.Converting convertings = 4;
      */
     convertings: Converting[];
     /**
-     * @generated from protobuf field: repeated semio.extension.transformer.v1.Transforming transformings = 3;
+     * @generated from protobuf field: repeated semio.extension.transformer.v1.Transforming transformings = 5;
      */
     transformings: Transforming[];
     /**
-     * @generated from protobuf field: repeated semio.extension.translator.v1.Translating translatings = 4;
+     * @generated from protobuf field: repeated semio.extension.translator.v1.Translating translatings = 6;
      */
     translatings: Translating[];
 }
@@ -40,10 +40,10 @@ export interface Extending {
 class Extending$Type extends MessageType<Extending> {
     constructor() {
         super("semio.extension.v1.Extending", [
-            { no: 1, name: "adaptings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Adapting },
-            { no: 2, name: "convertings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Converting },
-            { no: 3, name: "transformings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Transforming },
-            { no: 4, name: "translatings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Translating }
+            { no: 3, name: "adaptings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Adapting },
+            { no: 4, name: "convertings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Converting },
+            { no: 5, name: "transformings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Transforming },
+            { no: 6, name: "translatings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Translating }
         ]);
     }
     create(value?: PartialMessage<Extending>): Extending {
@@ -58,16 +58,16 @@ class Extending$Type extends MessageType<Extending> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated semio.extension.adapter.v1.Adapting adaptings */ 1:
+                case /* repeated semio.extension.adapter.v1.Adapting adaptings */ 3:
                     message.adaptings.push(Adapting.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated semio.extension.converter.v1.Converting convertings */ 2:
+                case /* repeated semio.extension.converter.v1.Converting convertings */ 4:
                     message.convertings.push(Converting.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated semio.extension.transformer.v1.Transforming transformings */ 3:
+                case /* repeated semio.extension.transformer.v1.Transforming transformings */ 5:
                     message.transformings.push(Transforming.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated semio.extension.translator.v1.Translating translatings */ 4:
+                case /* repeated semio.extension.translator.v1.Translating translatings */ 6:
                     message.translatings.push(Translating.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -82,18 +82,18 @@ class Extending$Type extends MessageType<Extending> {
         return message;
     }
     internalBinaryWrite(message: Extending, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.extension.adapter.v1.Adapting adaptings = 1; */
+        /* repeated semio.extension.adapter.v1.Adapting adaptings = 3; */
         for (let i = 0; i < message.adaptings.length; i++)
-            Adapting.internalBinaryWrite(message.adaptings[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.extension.converter.v1.Converting convertings = 2; */
+            Adapting.internalBinaryWrite(message.adaptings[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.extension.converter.v1.Converting convertings = 4; */
         for (let i = 0; i < message.convertings.length; i++)
-            Converting.internalBinaryWrite(message.convertings[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.extension.transformer.v1.Transforming transformings = 3; */
+            Converting.internalBinaryWrite(message.convertings[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.extension.transformer.v1.Transforming transformings = 5; */
         for (let i = 0; i < message.transformings.length; i++)
-            Transforming.internalBinaryWrite(message.transformings[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.extension.translator.v1.Translating translatings = 4; */
+            Transforming.internalBinaryWrite(message.transformings[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.extension.translator.v1.Translating translatings = 6; */
         for (let i = 0; i < message.translatings.length; i++)
-            Translating.internalBinaryWrite(message.translatings[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+            Translating.internalBinaryWrite(message.translatings[i], writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

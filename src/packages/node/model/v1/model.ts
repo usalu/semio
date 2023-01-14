@@ -116,10 +116,10 @@ export interface Sobject {
      */
     pose?: Pose;
     /**
-     * @generated from protobuf field: map<string, google.protobuf.Any> parameters = 4;
+     * @generated from protobuf field: map<string, string> parameters = 4;
      */
     parameters: {
-        [key: string]: Any;
+        [key: string]: string;
     };
 }
 /**
@@ -141,10 +141,10 @@ export interface AttractionParameters {
     /**
      * Optional parameters to bias the attraction.
      *
-     * @generated from protobuf field: map<string, google.protobuf.Any> bias = 3;
+     * @generated from protobuf field: map<string, string> bias = 3;
      */
     bias: {
-        [key: string]: Any;
+        [key: string]: string;
     };
 }
 /**
@@ -609,7 +609,7 @@ class Sobject$Type extends MessageType<Sobject> {
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "pose", kind: "message", T: () => Pose },
-            { no: 4, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Any } }
+            { no: 4, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<Sobject>): Sobject {
@@ -633,7 +633,7 @@ class Sobject$Type extends MessageType<Sobject> {
                 case /* semio.model.v1.Pose pose */ 3:
                     message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
                     break;
-                case /* map<string, google.protobuf.Any> parameters */ 4:
+                case /* map<string, string> parameters */ 4:
                     this.binaryReadMap4(message.parameters, reader, options);
                     break;
                 default:
@@ -656,12 +656,12 @@ class Sobject$Type extends MessageType<Sobject> {
                     key = reader.string();
                     break;
                 case 2:
-                    val = Any.internalBinaryRead(reader, reader.uint32(), options);
+                    val = reader.string();
                     break;
                 default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Sobject.parameters");
             }
         }
-        map[key ?? ""] = val ?? Any.create();
+        map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message: Sobject, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string id = 1; */
@@ -673,13 +673,9 @@ class Sobject$Type extends MessageType<Sobject> {
         /* semio.model.v1.Pose pose = 3; */
         if (message.pose)
             Pose.internalBinaryWrite(message.pose, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* map<string, google.protobuf.Any> parameters = 4; */
-        for (let k of Object.keys(message.parameters)) {
-            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
-            writer.tag(2, WireType.LengthDelimited).fork();
-            Any.internalBinaryWrite(message.parameters[k], writer, options);
-            writer.join().join();
-        }
+        /* map<string, string> parameters = 4; */
+        for (let k of Object.keys(message.parameters))
+            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.parameters[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -696,7 +692,7 @@ class AttractionParameters$Type extends MessageType<AttractionParameters> {
         super("semio.model.v1.AttractionParameters", [
             { no: 1, name: "representation", kind: "message", T: () => Any },
             { no: 2, name: "port", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Any } }
+            { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<AttractionParameters>): AttractionParameters {
@@ -717,7 +713,7 @@ class AttractionParameters$Type extends MessageType<AttractionParameters> {
                 case /* string port */ 2:
                     message.port = reader.string();
                     break;
-                case /* map<string, google.protobuf.Any> bias */ 3:
+                case /* map<string, string> bias */ 3:
                     this.binaryReadMap3(message.bias, reader, options);
                     break;
                 default:
@@ -740,12 +736,12 @@ class AttractionParameters$Type extends MessageType<AttractionParameters> {
                     key = reader.string();
                     break;
                 case 2:
-                    val = Any.internalBinaryRead(reader, reader.uint32(), options);
+                    val = reader.string();
                     break;
                 default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.AttractionParameters.bias");
             }
         }
-        map[key ?? ""] = val ?? Any.create();
+        map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message: AttractionParameters, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* google.protobuf.Any representation = 1; */
@@ -754,13 +750,9 @@ class AttractionParameters$Type extends MessageType<AttractionParameters> {
         /* string port = 2; */
         if (message.port !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.port);
-        /* map<string, google.protobuf.Any> bias = 3; */
-        for (let k of Object.keys(message.bias)) {
-            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
-            writer.tag(2, WireType.LengthDelimited).fork();
-            Any.internalBinaryWrite(message.bias[k], writer, options);
-            writer.join().join();
-        }
+        /* map<string, string> bias = 3; */
+        for (let k of Object.keys(message.bias))
+            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

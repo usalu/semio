@@ -43,7 +43,7 @@ message Sobject {
   string id = 1;
   string url = 2;
   Pose pose = 3;
-  map<string, google.protobuf.Any> parameters = 4;
+  map<string,string> parameters = 4;
 }
 
 message AttractionParameters {
@@ -52,7 +52,7 @@ message AttractionParameters {
    // An optional port name to connect to.
    string port = 2;
    // Optional parameters to bias the attraction.
-   map<string, google.protobuf.Any> bias = 3;
+   map<string,string> bias = 3;
 }
 
 // An attraction participant participates in an attraction process.

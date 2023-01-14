@@ -3,7 +3,7 @@ from extension.v1 import extension_pb2 as _extension_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -31,19 +31,15 @@ class ElementRequest(_message.Message):
     target_type_url: str
     def __init__(self, sobject: _Optional[_Union[_model_pb2.Sobject, _Mapping]] = ..., target_type_url: _Optional[str] = ...) -> None: ...
 
-class Extendings(_message.Message):
-    __slots__ = ["extendings"]
-    EXTENDINGS_FIELD_NUMBER: _ClassVar[int]
-    extendings: _containers.RepeatedCompositeFieldContainer[_extension_pb2.Extending]
-    def __init__(self, extendings: _Optional[_Iterable[_Union[_extension_pb2.Extending, _Mapping]]] = ...) -> None: ...
-
 class ExtensionRegistrationRequest(_message.Message):
-    __slots__ = ["extending", "replace_existing"]
+    __slots__ = ["address", "extending", "replace_existing"]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
     EXTENDING_FIELD_NUMBER: _ClassVar[int]
     REPLACE_EXISTING_FIELD_NUMBER: _ClassVar[int]
+    address: str
     extending: _extension_pb2.Extending
     replace_existing: bool
-    def __init__(self, replace_existing: bool = ..., extending: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ...) -> None: ...
+    def __init__(self, address: _Optional[str] = ..., extending: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ..., replace_existing: bool = ...) -> None: ...
 
 class ExtensionRegistrationResponse(_message.Message):
     __slots__ = ["old_address", "success"]
@@ -56,3 +52,16 @@ class ExtensionRegistrationResponse(_message.Message):
 class GetRegisteredExtensionsRequest(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
+
+class RegisteredExtensionsResponse(_message.Message):
+    __slots__ = ["extensions"]
+    class ExtensionsEntry(_message.Message):
+        __slots__ = ["key", "value"]
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: _extension_pb2.Extending
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ...) -> None: ...
+    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    extensions: _containers.MessageMap[str, _extension_pb2.Extending]
+    def __init__(self, extensions: _Optional[_Mapping[str, _extension_pb2.Extending]] = ...) -> None: ...

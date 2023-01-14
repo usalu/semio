@@ -1,5 +1,0 @@
-C:\Git\Studium\PhD\semio\src\packages\csharp\Semio\obj\Debug\net6.0\Semio.csproj.AssemblyReference.cache
-C:\Git\Studium\PhD\semio\src\packages\csharp\Semio\obj\Debug\net6.0\Semio.GeneratedMSBuildEditorConfig.editorconfig
-C:\Git\Studium\PhD\semio\src\packages\csharp\Semio\obj\Debug\net6.0\Semio.AssemblyInfoInputs.cache
-C:\Git\Studium\PhD\semio\src\packages\csharp\Semio\obj\Debug\net6.0\Semio.AssemblyInfo.cs
-C:\Git\Studium\PhD\semio\src\packages\csharp\Semio\obj\Debug\net6.0\Semio.csproj.CoreCompileInputs.cache
