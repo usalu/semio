@@ -51,7 +51,7 @@ namespace Semio.Manager.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Semio.Manager.V1.ElementRequest> __Marshaller_semio_manager_v1_ElementRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Manager.V1.ElementRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    static readonly grpc::Marshaller<global::Semio.Model.V1.Representation> __Marshaller_semio_model_v1_Representation = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Model.V1.Representation.Parser));
+    static readonly grpc::Marshaller<global::Semio.Model.V1.Element> __Marshaller_semio_model_v1_Element = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Model.V1.Element.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Semio.Manager.V1.AttractionRequest> __Marshaller_semio_manager_v1_AttractionRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Manager.V1.AttractionRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
@@ -66,12 +66,12 @@ namespace Semio.Manager.V1 {
     static readonly grpc::Marshaller<global::Semio.Manager.V1.RegisteredExtensionsResponse> __Marshaller_semio_manager_v1_RegisteredExtensionsResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Manager.V1.RegisteredExtensionsResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    static readonly grpc::Method<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Representation> __Method_RequestElement = new grpc::Method<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Representation>(
+    static readonly grpc::Method<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Element> __Method_RequestElement = new grpc::Method<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Element>(
         grpc::MethodType.Unary,
         __ServiceName,
         "RequestElement",
         __Marshaller_semio_manager_v1_ElementRequest,
-        __Marshaller_semio_model_v1_Representation);
+        __Marshaller_semio_model_v1_Element);
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Semio.Manager.V1.AttractionRequest, global::Semio.Manager.V1.AttractionResponse> __Method_RequestAttraction = new grpc::Method<global::Semio.Manager.V1.AttractionRequest, global::Semio.Manager.V1.AttractionResponse>(
@@ -118,7 +118,7 @@ namespace Semio.Manager.V1 {
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::System.Threading.Tasks.Task<global::Semio.Model.V1.Representation> RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Semio.Model.V1.Element> RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -205,7 +205,7 @@ namespace Semio.Manager.V1 {
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::Semio.Model.V1.Representation RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Semio.Model.V1.Element RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return RequestElement(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -220,7 +220,7 @@ namespace Semio.Manager.V1 {
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::Semio.Model.V1.Representation RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::CallOptions options)
+      public virtual global::Semio.Model.V1.Element RequestElement(global::Semio.Manager.V1.ElementRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_RequestElement, null, options, request);
       }
@@ -237,7 +237,7 @@ namespace Semio.Manager.V1 {
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Representation> RequestElementAsync(global::Semio.Manager.V1.ElementRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Element> RequestElementAsync(global::Semio.Manager.V1.ElementRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return RequestElementAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -252,7 +252,7 @@ namespace Semio.Manager.V1 {
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Representation> RequestElementAsync(global::Semio.Manager.V1.ElementRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Element> RequestElementAsync(global::Semio.Manager.V1.ElementRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_RequestElement, null, options, request);
       }
@@ -443,7 +443,7 @@ namespace Semio.Manager.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     public static void BindService(grpc::ServiceBinderBase serviceBinder, ManagerServiceBase serviceImpl)
     {
-      serviceBinder.AddMethod(__Method_RequestElement, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Representation>(serviceImpl.RequestElement));
+      serviceBinder.AddMethod(__Method_RequestElement, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Manager.V1.ElementRequest, global::Semio.Model.V1.Element>(serviceImpl.RequestElement));
       serviceBinder.AddMethod(__Method_RequestAttraction, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Manager.V1.AttractionRequest, global::Semio.Manager.V1.AttractionResponse>(serviceImpl.RequestAttraction));
       serviceBinder.AddMethod(__Method_RegisterExtension, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Manager.V1.ExtensionRegistrationRequest, global::Semio.Manager.V1.ExtensionRegistrationResponse>(serviceImpl.RegisterExtension));
       serviceBinder.AddMethod(__Method_GetRegisteredExtensions, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Manager.V1.GetRegisteredExtensionsRequest, global::Semio.Manager.V1.RegisteredExtensionsResponse>(serviceImpl.GetRegisteredExtensions));

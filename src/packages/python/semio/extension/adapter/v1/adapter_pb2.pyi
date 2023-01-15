@@ -13,12 +13,21 @@ class Adapting(_message.Message):
     def __init__(self, platform_name: _Optional[str] = ...) -> None: ...
 
 class AttractionPointRequest(_message.Message):
-    __slots__ = ["parameters", "url"]
+    __slots__ = ["attraction_parameters", "parameters", "url"]
+    class ParametersEntry(_message.Message):
+        __slots__ = ["key", "value"]
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    ATTRACTION_PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     URL_FIELD_NUMBER: _ClassVar[int]
-    parameters: _model_pb2.AttractionParameters
+    attraction_parameters: _model_pb2.AttractionParameters
+    parameters: _containers.ScalarMap[str, str]
     url: str
-    def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Union[_model_pb2.AttractionParameters, _Mapping]] = ...) -> None: ...
+    def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Mapping[str, str]] = ..., attraction_parameters: _Optional[_Union[_model_pb2.AttractionParameters, _Mapping]] = ...) -> None: ...
 
 class RepresentationRequest(_message.Message):
     __slots__ = ["lod", "name", "sobject", "type"]
@@ -43,3 +52,9 @@ class RepresentationsRequest(_message.Message):
     sobject: _model_pb2.Sobject
     types: _containers.RepeatedScalarFieldContainer[str]
     def __init__(self, sobject: _Optional[_Union[_model_pb2.Sobject, _Mapping]] = ..., types: _Optional[_Iterable[str]] = ..., names: _Optional[_Iterable[str]] = ..., lods: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class RepresentationsResponse(_message.Message):
+    __slots__ = ["representations"]
+    REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
+    representations: _containers.RepeatedCompositeFieldContainer[_model_pb2.Representation]
+    def __init__(self, representations: _Optional[_Iterable[_Union[_model_pb2.Representation, _Mapping]]] = ...) -> None: ...

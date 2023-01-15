@@ -71,8 +71,8 @@ class Element(_message.Message):
     POSE_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
     pose: Pose
-    representations: Representations
-    def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Union[Representations, _Mapping]] = ...) -> None: ...
+    representations: _containers.RepeatedCompositeFieldContainer[Representation]
+    def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
 
 class Layout(_message.Message):
     __slots__ = ["attractionTrees", "attractions", "root_sobject_id", "sobjects", "stragegy"]
@@ -141,12 +141,6 @@ class Representation(_message.Message):
     lod: int
     name: str
     def __init__(self, name: _Optional[str] = ..., lod: _Optional[int] = ..., body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
-
-class Representations(_message.Message):
-    __slots__ = ["representations"]
-    REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
-    representations: _containers.RepeatedCompositeFieldContainer[Representation]
-    def __init__(self, representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
 
 class Sobject(_message.Message):
     __slots__ = ["id", "parameters", "pose", "url"]

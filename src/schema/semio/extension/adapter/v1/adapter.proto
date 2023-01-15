@@ -3,6 +3,7 @@ syntax = "proto3";
 package semio.extension.adapter.v1;
 
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/adapter/v1";
+option csharp_namespace = "Semio.Extension.Adapter.V1";
 
 import "model/v1/model.proto";
 
@@ -13,7 +14,7 @@ service AdapterService {
   // Request a specific representation
   rpc RequestRepresentation(RepresentationRequest) returns (semio.model.v1.Representation) {}
   // Request potentially all representations
-  rpc RequestRepresentations(RepresentationsRequest) returns (semio.model.v1.Representations) {}
+  rpc RequestRepresentations(RepresentationsRequest) returns (RepresentationsResponse) {}
 }
 
 message Adapting{
@@ -23,8 +24,10 @@ message Adapting{
 message AttractionPointRequest {
   // Url of attractor.
   string url = 1;
-  // Parameters of the attracted.
-  semio.model.v1.AttractionParameters parameters = 2;
+  // Parameters of attractor
+  map<string,string> parameters = 2;
+  // Attraction parameters of the attracted.
+  semio.model.v1.AttractionParameters attraction_parameters = 3;
 }
 
 message RepresentationRequest {
@@ -39,4 +42,8 @@ message RepresentationsRequest {
   repeated string types = 2;
   repeated string names = 3;
   repeated int64 lods = 4;
+}
+
+message RepresentationsResponse{
+  repeated semio.model.v1.Representation representations = 1;
 }

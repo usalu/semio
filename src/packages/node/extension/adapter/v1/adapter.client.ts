@@ -4,7 +4,7 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AdapterService } from "./adapter";
-import type { Representations } from "../../../model/v1/model";
+import type { RepresentationsResponse } from "./adapter";
 import type { RepresentationsRequest } from "./adapter";
 import type { Representation } from "../../../model/v1/model";
 import type { RepresentationRequest } from "./adapter";
@@ -34,9 +34,9 @@ export interface IAdapterServiceClient {
     /**
      * Request potentially all representations
      *
-     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.model.v1.Representations);
+     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.extension.adapter.v1.RepresentationsResponse);
      */
-    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, Representations>;
+    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, RepresentationsResponse>;
 }
 /**
  * An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
@@ -70,10 +70,10 @@ export class AdapterServiceClient implements IAdapterServiceClient, ServiceInfo 
     /**
      * Request potentially all representations
      *
-     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.model.v1.Representations);
+     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.extension.adapter.v1.RepresentationsResponse);
      */
-    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, Representations> {
+    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, RepresentationsResponse> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RepresentationsRequest, Representations>("unary", this._transport, method, opt, input);
+        return stackIntercept<RepresentationsRequest, RepresentationsResponse>("unary", this._transport, method, opt, input);
     }
 }

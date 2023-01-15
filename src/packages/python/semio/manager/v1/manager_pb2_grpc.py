@@ -19,7 +19,7 @@ class ManagerServiceStub(object):
         self.RequestElement = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/RequestElement',
                 request_serializer=manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Representation.FromString,
+                response_deserializer=model_dot_v1_dot_model__pb2.Element.FromString,
                 )
         self.RequestAttraction = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/RequestAttraction',
@@ -84,7 +84,7 @@ def add_ManagerServiceServicer_to_server(servicer, server):
             'RequestElement': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestElement,
                     request_deserializer=manager_dot_v1_dot_manager__pb2.ElementRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Representation.SerializeToString,
+                    response_serializer=model_dot_v1_dot_model__pb2.Element.SerializeToString,
             ),
             'RequestAttraction': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestAttraction,
@@ -125,7 +125,7 @@ class ManagerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestElement',
             manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Representation.FromString,
+            model_dot_v1_dot_model__pb2.Element.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

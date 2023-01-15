@@ -18,10 +18,13 @@ class Gateway(GatewayServer):
         self.managerProxy.RequestAttraction(AttractionRequest(attraction=attraction,target_type_url=targetTypeUrl))
 
     def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
-        element = self.getManagerProxy().RequestElement(request=ElementRequest(sobject=request.layout.sobjects[0]))
+        managerProxy = self.getManagerProxy()
+        elements = []
+        for sobject in request.layout.sobjects:
+            elements.append(managerProxy.RequestElement(request=ElementRequest(sobject=sobject)))
         # attractionTree = request.layout.attractionTrees[0]
         #elements = getElementsFromAttractionTree(request.layout.sobjects,request.layout.attractions,attractionTree)
-        return Design(elements=[element])
+        return Design(elements=elements)
 
 if __name__ == '__main__':
     logging.basicConfig()

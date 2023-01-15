@@ -29,7 +29,7 @@ class AdapterServiceStub(object):
         self.RequestRepresentations = channel.unary_unary(
                 '/semio.extension.adapter.v1.AdapterService/RequestRepresentations',
                 request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Representations.FromString,
+                response_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.FromString,
                 )
 
 
@@ -74,7 +74,7 @@ def add_AdapterServiceServicer_to_server(servicer, server):
             'RequestRepresentations': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestRepresentations,
                     request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Representations.SerializeToString,
+                    response_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -134,6 +134,6 @@ class AdapterService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestRepresentations',
             extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Representations.FromString,
+            extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

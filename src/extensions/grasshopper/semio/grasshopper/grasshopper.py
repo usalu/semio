@@ -119,7 +119,6 @@ def parseModelFromOutput(grasshopperReply, outputName):
     representationLayerIndex = model.Layers.AddLayer(outputName,(0,0,0,255))
     representationObjectAttributes = ObjectAttributes()
     for branch in valuesDictionary[outputName].values():
-        print (branch)
         for item in branch:
             try:
                 decodedObject = decode(item)

@@ -72,20 +72,20 @@ class ExtensionProxy(SemioProxy):
         self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
     def RequestAttractionPoint(self, request, context = None):
-        self._adapterStub.RequestAttractionPoint(request,context)
+        return self._adapterStub.RequestAttractionPoint(request,context)
 
-    def RequestRepresentation(self, sobject:Sobject,  type: str = 'native', name: str = 'Normal', lod: int = 0):
-        self._adapterStub.RequestRepresentation(request= RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))
+    def RequestRepresentation(self, sobject:Sobject,  type: str = 'native', name: str = 'normal', lod: int = 0):
+        return self._adapterStub.RequestRepresentation(request=RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))
 
     def RequestRepresentations(self, request, context = None):
-        self._adapterStub.RequestRepresentations(request,context)
+        return self._adapterStub.RequestRepresentations(request,context)
 
     def ConvertRepresentation(self, request, context = None):
-        self._converterStub.ConvertRepresentation(request,context)
+        return self._converterStub.ConvertRepresentation(request,context)
     
     def RewriteLayout(self, request, context = None):
-        self._transformerStub.RewriteLayout(request,context)
+        return self._transformerStub.RewriteLayout(request,context)
 
     def TranslateRepresentation(self, request, context = None):
-        self._translatorStub.TranslateRepresentation(request,context)
+        return self._translatorStub.TranslateRepresentation(request,context)
 

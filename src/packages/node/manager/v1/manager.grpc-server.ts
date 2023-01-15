@@ -7,7 +7,7 @@ import { ExtensionRegistrationResponse } from "./manager";
 import { ExtensionRegistrationRequest } from "./manager";
 import { AttractionResponse } from "./manager";
 import { AttractionRequest } from "./manager";
-import { Representation } from "../../model/v1/model";
+import { Element } from "../../model/v1/model";
 import { ElementRequest } from "./manager";
 import type * as grpc from "@grpc/grpc-js";
 /**
@@ -23,9 +23,9 @@ export interface IManagerService extends grpc.UntypedServiceImplementation {
      * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
      * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Representation);
+     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
      */
-    requestElement: grpc.handleUnaryCall<ElementRequest, Representation>;
+    requestElement: grpc.handleUnaryCall<ElementRequest, Element>;
     /**
      * Request the attracted element for an attraction.
      * The target type tries to be provided by one of the following strategies (lowest number wins).
@@ -66,9 +66,9 @@ export const managerServiceDefinition: grpc.ServiceDefinition<IManagerService> =
         originalName: "RequestElement",
         requestStream: false,
         responseStream: false,
-        responseDeserialize: bytes => Representation.fromBinary(bytes),
+        responseDeserialize: bytes => Element.fromBinary(bytes),
         requestDeserialize: bytes => ElementRequest.fromBinary(bytes),
-        responseSerialize: value => Buffer.from(Representation.toBinary(value)),
+        responseSerialize: value => Buffer.from(Element.toBinary(value)),
         requestSerialize: value => Buffer.from(ElementRequest.toBinary(value))
     },
     requestAttraction: {

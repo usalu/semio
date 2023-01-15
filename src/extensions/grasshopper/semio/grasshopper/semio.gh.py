@@ -3,6 +3,7 @@ from tempfile import TemporaryFile
 from semio.model import Point,Representation,Any
 from semio.extension import ExtensionServer
 from semio.extension.adapter import AdapterService, AttractionPointRequest, RepresentationRequest, RepresentationsRequest, Adapting
+from semio.constants import ELEMENT_TYPE_PLATFORM_DICTIONARY
 
 from grasshopper import parseModelFromOutput, callGrasshopper, encodeModel
 
@@ -29,12 +30,11 @@ class GrasshopperAdapter(AdapterService):
         parameters = {}
         if request.sobject.parameters:
             parameters.update(request.sobject.parameters)
-        
         representationName = 'REPRESENTATION'
-        if request.type != 'native':
-            representationName+=':'+ request.type
+        # if request.type != 'native':
+        #     representationName+='.'+ request.type
         model = parseModelFromOutput(callGrasshopper(request.sobject.url,parameters, self.computeUrl, self.computeUrl),representationName)
-        return Representation(body=Any(type_url=request.type,value=encodeModel(model)),name=request.name,lod=request.lod)
+        return Representation(body=Any(type_url=ELEMENT_TYPE_PLATFORM_DICTIONARY['gh'],value=encodeModel(model)),name=request.name,lod=request.lod)
 
     def RequestRepresentations(self, request : RepresentationsRequest, context):
         pass

@@ -11,7 +11,7 @@ import type { ExtensionRegistrationRequest } from "./manager";
 import type { AttractionResponse } from "./manager";
 import type { AttractionRequest } from "./manager";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { Representation } from "../../model/v1/model";
+import type { Element } from "../../model/v1/model";
 import type { ElementRequest } from "./manager";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
@@ -28,9 +28,9 @@ export interface IManagerServiceClient {
      * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
      * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Representation);
+     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
      */
-    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Representation>;
+    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
     /**
      * Request the attracted element for an attraction.
      * The target type tries to be provided by one of the following strategies (lowest number wins).
@@ -72,11 +72,11 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
      * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
      * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Representation);
+     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
      */
-    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Representation> {
+    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ElementRequest, Representation>("unary", this._transport, method, opt, input);
+        return stackIntercept<ElementRequest, Element>("unary", this._transport, method, opt, input);
     }
     /**
      * Request the attracted element for an attraction.

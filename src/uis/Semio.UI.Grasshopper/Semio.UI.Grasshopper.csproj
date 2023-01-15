@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Version>1.0</Version>
+    <Title>Semio.UI.Grasshopper</Title>
+    <Description>Description of Semio.UI.Grasshopper</Description>
+    <TargetExt>.gha</TargetExt>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+	<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\schema\semio" />
+	<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="Protos\gateway\v1\gateway.proto" ProtoRoot="..\..\schema\semio" />
+	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema\semio/>
+	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
+	<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" />
+	<Protobuf Include="..\..\schema\semio\extension\converter\v1\converter.proto" GrpcServices="Client" Link="Protos\extension\converter\v1\converter.proto" />
+	<Protobuf Include="..\..\schema\semio\extension\transformer\v1\transformer.proto" GrpcServices="Client" Link="Protos\extension\transformer\v1\transformer.proto" />
+	<Protobuf Include="..\..\schema\semio\extension\translator\v1\translator.proto" GrpcServices="Client" Link="Protos\extension\translator\v1\translator.proto" />-->
+
+	<PackageReference Include="Google.Protobuf" Version="3.21.12" />
+	<PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
+	<PackageReference Include="Grpc.Net.Client" Version="2.51.0" />
+	<PackageReference Include="Grpc.Tools" Version="2.51.0">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+	<PackageReference Include="RhinoCommon" Version="7.26.23009.7001" />
+	<PackageReference Include="System.Net.Http.WinHttpHandler" Version="7.0.0" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(Configuration) == 'Debug' AND $([MSBuild]::IsOSPlatform(Windows))">
+    <StartProgram>C:\Program Files\Rhino 7\System\Rhino.exe</StartProgram>
+    <StartArguments>
+    </StartArguments>
+    <StartAction>Program</StartAction>
+  </PropertyGroup>
+</Project>

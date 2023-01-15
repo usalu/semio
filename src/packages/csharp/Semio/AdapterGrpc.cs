@@ -59,7 +59,7 @@ namespace Semio.Extension.Adapter.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Semio.Extension.Adapter.V1.RepresentationsRequest> __Marshaller_semio_extension_adapter_v1_RepresentationsRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Extension.Adapter.V1.RepresentationsRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    static readonly grpc::Marshaller<global::Semio.Model.V1.Representations> __Marshaller_semio_model_v1_Representations = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Model.V1.Representations.Parser));
+    static readonly grpc::Marshaller<global::Semio.Extension.Adapter.V1.RepresentationsResponse> __Marshaller_semio_extension_adapter_v1_RepresentationsResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Semio.Extension.Adapter.V1.RepresentationsResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Semio.Extension.Adapter.V1.AttractionPointRequest, global::Semio.Model.V1.Point> __Method_RequestAttractionPoint = new grpc::Method<global::Semio.Extension.Adapter.V1.AttractionPointRequest, global::Semio.Model.V1.Point>(
@@ -78,12 +78,12 @@ namespace Semio.Extension.Adapter.V1 {
         __Marshaller_semio_model_v1_Representation);
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    static readonly grpc::Method<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Model.V1.Representations> __Method_RequestRepresentations = new grpc::Method<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Model.V1.Representations>(
+    static readonly grpc::Method<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Extension.Adapter.V1.RepresentationsResponse> __Method_RequestRepresentations = new grpc::Method<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Extension.Adapter.V1.RepresentationsResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "RequestRepresentations",
         __Marshaller_semio_extension_adapter_v1_RepresentationsRequest,
-        __Marshaller_semio_model_v1_Representations);
+        __Marshaller_semio_extension_adapter_v1_RepresentationsResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -126,7 +126,7 @@ namespace Semio.Extension.Adapter.V1 {
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::System.Threading.Tasks.Task<global::Semio.Model.V1.Representations> RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Semio.Extension.Adapter.V1.RepresentationsResponse> RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -265,7 +265,7 @@ namespace Semio.Extension.Adapter.V1 {
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::Semio.Model.V1.Representations RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Semio.Extension.Adapter.V1.RepresentationsResponse RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return RequestRepresentations(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -276,7 +276,7 @@ namespace Semio.Extension.Adapter.V1 {
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::Semio.Model.V1.Representations RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::CallOptions options)
+      public virtual global::Semio.Extension.Adapter.V1.RepresentationsResponse RequestRepresentations(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_RequestRepresentations, null, options, request);
       }
@@ -289,7 +289,7 @@ namespace Semio.Extension.Adapter.V1 {
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Representations> RequestRepresentationsAsync(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Semio.Extension.Adapter.V1.RepresentationsResponse> RequestRepresentationsAsync(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return RequestRepresentationsAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -300,7 +300,7 @@ namespace Semio.Extension.Adapter.V1 {
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual grpc::AsyncUnaryCall<global::Semio.Model.V1.Representations> RequestRepresentationsAsync(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Semio.Extension.Adapter.V1.RepresentationsResponse> RequestRepresentationsAsync(global::Semio.Extension.Adapter.V1.RepresentationsRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_RequestRepresentations, null, options, request);
       }
@@ -332,7 +332,7 @@ namespace Semio.Extension.Adapter.V1 {
     {
       serviceBinder.AddMethod(__Method_RequestAttractionPoint, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Extension.Adapter.V1.AttractionPointRequest, global::Semio.Model.V1.Point>(serviceImpl.RequestAttractionPoint));
       serviceBinder.AddMethod(__Method_RequestRepresentation, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Extension.Adapter.V1.RepresentationRequest, global::Semio.Model.V1.Representation>(serviceImpl.RequestRepresentation));
-      serviceBinder.AddMethod(__Method_RequestRepresentations, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Model.V1.Representations>(serviceImpl.RequestRepresentations));
+      serviceBinder.AddMethod(__Method_RequestRepresentations, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Semio.Extension.Adapter.V1.RepresentationsRequest, global::Semio.Extension.Adapter.V1.RepresentationsResponse>(serviceImpl.RequestRepresentations));
     }
 
   }

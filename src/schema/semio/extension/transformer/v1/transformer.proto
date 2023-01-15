@@ -3,6 +3,7 @@ syntax = "proto3";
 package semio.extension.transformer.v1;
 
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/transformer/v1";
+option csharp_namespace = "Semio.Extension.Transformer.V1";
 
 import "model/v1/model.proto";
 

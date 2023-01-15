@@ -2,13 +2,14 @@ syntax = "proto3";
 
 package semio.gateway.v1;
 
+option go_package = "github.com/usalu/semio/src/schema/semio/gateway/v1";
+option csharp_namespace = "Semio.Gateway.V1";
+
 import "model/v1/model.proto";
 // import "google/api/annotations.proto";
 // import "google/api/client.proto";
 // import "google/api/resource.proto";
 // import "google/protobuf/empty.proto";
-
-option go_package = "github.com/usalu/semio/src/schema/semio/gateway/v1";
 
 // The gateway service is the gateway for all other apis of semio.
 service GatewayService {

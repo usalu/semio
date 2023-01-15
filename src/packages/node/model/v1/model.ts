@@ -87,17 +87,6 @@ export interface Representation {
     body?: Any;
 }
 /**
- * Several representations for an element.
- *
- * @generated from protobuf message semio.model.v1.Representations
- */
-export interface Representations {
-    /**
-     * @generated from protobuf field: repeated semio.model.v1.Representation representations = 1;
-     */
-    representations: Representation[];
-}
-/**
  * Instance information of an element.
  *
  * @generated from protobuf message semio.model.v1.Sobject
@@ -238,9 +227,9 @@ export interface Element {
      */
     pose?: Pose;
     /**
-     * @generated from protobuf field: semio.model.v1.Representations representations = 2;
+     * @generated from protobuf field: repeated semio.model.v1.Representation representations = 2;
      */
-    representations?: Representations;
+    representations: Representation[];
 }
 /**
  * A design is an aggregation of elements.
@@ -555,53 +544,6 @@ class Representation$Type extends MessageType<Representation> {
  * @generated MessageType for protobuf message semio.model.v1.Representation
  */
 export const Representation = new Representation$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Representations$Type extends MessageType<Representations> {
-    constructor() {
-        super("semio.model.v1.Representations", [
-            { no: 1, name: "representations", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Representation }
-        ]);
-    }
-    create(value?: PartialMessage<Representations>): Representations {
-        const message = { representations: [] };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Representations>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Representations): Representations {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* repeated semio.model.v1.Representation representations */ 1:
-                    message.representations.push(Representation.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Representations, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.model.v1.Representation representations = 1; */
-        for (let i = 0; i < message.representations.length; i++)
-            Representation.internalBinaryWrite(message.representations[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message semio.model.v1.Representations
- */
-export const Representations = new Representations$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Sobject$Type extends MessageType<Sobject> {
     constructor() {
@@ -1012,11 +954,11 @@ class Element$Type extends MessageType<Element> {
     constructor() {
         super("semio.model.v1.Element", [
             { no: 1, name: "pose", kind: "message", T: () => Pose },
-            { no: 2, name: "representations", kind: "message", T: () => Representations }
+            { no: 2, name: "representations", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Representation }
         ]);
     }
     create(value?: PartialMessage<Element>): Element {
-        const message = {};
+        const message = { representations: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Element>(this, message, value);
@@ -1030,8 +972,8 @@ class Element$Type extends MessageType<Element> {
                 case /* semio.model.v1.Pose pose */ 1:
                     message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
                     break;
-                case /* semio.model.v1.Representations representations */ 2:
-                    message.representations = Representations.internalBinaryRead(reader, reader.uint32(), options, message.representations);
+                case /* repeated semio.model.v1.Representation representations */ 2:
+                    message.representations.push(Representation.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1048,9 +990,9 @@ class Element$Type extends MessageType<Element> {
         /* semio.model.v1.Pose pose = 1; */
         if (message.pose)
             Pose.internalBinaryWrite(message.pose, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Representations representations = 2; */
-        if (message.representations)
-            Representations.internalBinaryWrite(message.representations, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.model.v1.Representation representations = 2; */
+        for (let i = 0; i < message.representations.length; i++)
+            Representation.internalBinaryWrite(message.representations[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
