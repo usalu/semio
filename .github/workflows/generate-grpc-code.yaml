@@ -27,7 +27,7 @@ jobs:
         cd ./src/schema
         buf format -w semio
         cd ./semio
-        buf generate --include-imports --include-wkt
+        buf generate
     - name: Commit and push changes
       uses: devops-infra/action-commit-push@master
       with:
