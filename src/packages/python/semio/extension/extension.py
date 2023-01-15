@@ -1,4 +1,5 @@
 # This file should be automatically generated
+import logging
 
 from pydantic import Field
 
@@ -57,11 +58,17 @@ class ExtensionServer(SemioServer):
         return servicesDescriptions
     
     def initialize(self):
+        address = 'localhost:' +str(self.port)
         response = self.getManagerProxy().RegisterExtension(manager.ExtensionRegistrationRequest(
-            address='localhost:' +str(self.port),
+            address=address,
             extending=Extending(
                 adaptings=self.adapter.getDescriptions(), convertings=self.converter.getDescriptions(), 
                 transformings=self.transformer.getDescriptions(), translatings=self.translator.getDescriptions())))
+        if response.success:
+            logging.debug(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
+        else:
+            logging.debug(f'The extension {self.name} ({address}) couldn\'t be registered at manager {self.managerProxyAddress}.'+
+             f'Probably there is already an extension registered either at {address} or with name {self.name}. Make sure to set replace existing in the extension registration request to true if you want to override the other extension.')
 
 class ExtensionProxy(SemioProxy):
     def __init__(self,address, **kw):

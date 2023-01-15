@@ -132,6 +132,14 @@ class Quaternion(_message.Message):
     z: float
     def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
+class RawValue(_message.Message):
+    __slots__ = ["binaryArray", "text"]
+    BINARYARRAY_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    binaryArray: bytes
+    text: str
+    def __init__(self, binaryArray: _Optional[bytes] = ..., text: _Optional[str] = ...) -> None: ...
+
 class Representation(_message.Message):
     __slots__ = ["body", "lod", "name"]
     BODY_FIELD_NUMBER: _ClassVar[int]

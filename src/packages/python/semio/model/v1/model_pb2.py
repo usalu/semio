@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14model/v1/model.proto\x12\x0esemio.model.v1\x1a\x19google/protobuf/any.proto\"1\n\x05Point\x12\x0c\n\x01x\x18\x01 \x01(\x01R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x01R\x01y\x12\x0c\n\x01z\x18\x03 \x01(\x01R\x01z\"D\n\nQuaternion\x12\x0c\n\x01w\x18\x01 \x01(\x01R\x01w\x12\x0c\n\x01x\x18\x02 \x01(\x01R\x01x\x12\x0c\n\x01y\x18\x03 \x01(\x01R\x01y\x12\x0c\n\x01z\x18\x04 \x01(\x01R\x01z\"q\n\x04Pose\x12\x39\n\rpoint_of_view\x18\x01 \x01(\x0b\x32\x15.semio.model.v1.PointR\x0bpointOfView\x12.\n\x04view\x18\x02 \x01(\x0b\x32\x1a.semio.model.v1.QuaternionR\x04view\"`\n\x0eRepresentation\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n\x03lod\x18\x02 \x01(\x03R\x03lod\x12(\n\x04\x62ody\x18\x03 \x01(\x0b\x32\x14.google.protobuf.AnyR\x04\x62ody\"\xdd\x01\n\x07Sobject\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12(\n\x04pose\x18\x03 \x01(\x0b\x32\x14.semio.model.v1.PoseR\x04pose\x12G\n\nparameters\x18\x04 \x03(\x0b\x32\'.semio.model.v1.Sobject.ParametersEntryR\nparameters\x1a=\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xe5\x01\n\x14\x41ttractionParameters\x12<\n\x0erepresentation\x18\x01 \x01(\x0b\x32\x14.google.protobuf.AnyR\x0erepresentation\x12\x12\n\x04port\x18\x02 \x01(\tR\x04port\x12\x42\n\x04\x62ias\x18\x03 \x03(\x0b\x32..semio.model.v1.AttractionParameters.BiasEntryR\x04\x62ias\x1a\x37\n\tBiasEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x84\x01\n\x15\x41ttractionParticipant\x12%\n\x0epatricipant_id\x18\x01 \x01(\tR\rpatricipantId\x12\x44\n\nparameters\x18\x02 \x01(\x0b\x32$.semio.model.v1.AttractionParametersR\nparameters\"\xa6\x01\n\nAttraction\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x43\n\tattractor\x18\x02 \x01(\x0b\x32%.semio.model.v1.AttractionParticipantR\tattractor\x12\x43\n\tattracted\x18\x03 \x01(\x0b\x32%.semio.model.v1.AttractionParticipantR\tattracted\"\xa8\x02\n\x06Layout\x12\x33\n\x08sobjects\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.SobjectR\x08sobjects\x12<\n\x0b\x61ttractions\x18\x02 \x03(\x0b\x32\x1a.semio.model.v1.AttractionR\x0b\x61ttractions\x12&\n\x0froot_sobject_id\x18\x03 \x01(\tR\rrootSobjectId\x12\x39\n\x08stragegy\x18\x04 \x01(\x0e\x32\x1d.semio.model.v1.LayoutStrageyR\x08stragegy\x12H\n\x0f\x61ttractionTrees\x18\x05 \x03(\x0b\x32\x1e.semio.model.v1.AttractionTreeR\x0f\x61ttractionTrees\"s\n\x0e\x41ttractionTree\x12#\n\rattraction_id\x18\x01 \x01(\tR\x0c\x61ttractionId\x12<\n\tchildrean\x18\x02 \x03(\x0b\x32\x1e.semio.model.v1.AttractionTreeR\tchildrean\"}\n\x07\x45lement\x12(\n\x04pose\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PoseR\x04pose\x12H\n\x0frepresentations\x18\x02 \x03(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0frepresentations\"=\n\x06\x44\x65sign\x12\x33\n\x08\x65lements\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.ElementR\x08\x65lements\"\x89\x01\n\x12LayoutModification\x12\x30\n\x07\x63ontext\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x07\x63ontext\x12\x41\n\x10modified_context\x18\x02 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x0fmodifiedContext\"=\n\x1aLayoutModificationStrategy\x12\x1f\n\x0bmatch_count\x18\x01 \x01(\x03R\nmatchCount\"\x9a\x01\n\x08\x44\x65\x63ision\x12\x46\n\x0cmodification\x18\x01 \x01(\x0b\x32\".semio.model.v1.LayoutModificationR\x0cmodification\x12\x46\n\x08strategy\x18\x02 \x01(\x0b\x32*.semio.model.v1.LayoutModificationStrategyR\x08strategy*O\n\rLayoutStragey\x12\x1f\n\x1bLAYOUTSTRATEGY_BREADTHFIRST\x10\x00\x12\x1d\n\x19LAYOUTSTRATEGY_DEPTHFIRST\x10\x01\x42\xac\x01\n\x12\x63om.semio.model.v1B\nModelProtoP\x01Z0github.com/usalu/semio/src/schema/semio/model/v1\xa2\x02\x03SMX\xaa\x02\x0eSemio.Model.V1\xca\x02\x0eSemio\\Model\\V1\xe2\x02\x1aSemio\\Model\\V1\\GPBMetadata\xea\x02\x10Semio::Model::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14model/v1/model.proto\x12\x0esemio.model.v1\x1a\x19google/protobuf/any.proto\"1\n\x05Point\x12\x0c\n\x01x\x18\x01 \x01(\x01R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x01R\x01y\x12\x0c\n\x01z\x18\x03 \x01(\x01R\x01z\"D\n\nQuaternion\x12\x0c\n\x01w\x18\x01 \x01(\x01R\x01w\x12\x0c\n\x01x\x18\x02 \x01(\x01R\x01x\x12\x0c\n\x01y\x18\x03 \x01(\x01R\x01y\x12\x0c\n\x01z\x18\x04 \x01(\x01R\x01z\"q\n\x04Pose\x12\x39\n\rpoint_of_view\x18\x01 \x01(\x0b\x32\x15.semio.model.v1.PointR\x0bpointOfView\x12.\n\x04view\x18\x02 \x01(\x0b\x32\x1a.semio.model.v1.QuaternionR\x04view\"M\n\x08RawValue\x12\"\n\x0b\x62inaryArray\x18\x01 \x01(\x0cH\x00R\x0b\x62inaryArray\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04textB\x07\n\x05value\"`\n\x0eRepresentation\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n\x03lod\x18\x02 \x01(\x03R\x03lod\x12(\n\x04\x62ody\x18\x03 \x01(\x0b\x32\x14.google.protobuf.AnyR\x04\x62ody\"\xdd\x01\n\x07Sobject\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12(\n\x04pose\x18\x03 \x01(\x0b\x32\x14.semio.model.v1.PoseR\x04pose\x12G\n\nparameters\x18\x04 \x03(\x0b\x32\'.semio.model.v1.Sobject.ParametersEntryR\nparameters\x1a=\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xe5\x01\n\x14\x41ttractionParameters\x12<\n\x0erepresentation\x18\x01 \x01(\x0b\x32\x14.google.protobuf.AnyR\x0erepresentation\x12\x12\n\x04port\x18\x02 \x01(\tR\x04port\x12\x42\n\x04\x62ias\x18\x03 \x03(\x0b\x32..semio.model.v1.AttractionParameters.BiasEntryR\x04\x62ias\x1a\x37\n\tBiasEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x84\x01\n\x15\x41ttractionParticipant\x12%\n\x0epatricipant_id\x18\x01 \x01(\tR\rpatricipantId\x12\x44\n\nparameters\x18\x02 \x01(\x0b\x32$.semio.model.v1.AttractionParametersR\nparameters\"\xa6\x01\n\nAttraction\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x43\n\tattractor\x18\x02 \x01(\x0b\x32%.semio.model.v1.AttractionParticipantR\tattractor\x12\x43\n\tattracted\x18\x03 \x01(\x0b\x32%.semio.model.v1.AttractionParticipantR\tattracted\"\xa8\x02\n\x06Layout\x12\x33\n\x08sobjects\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.SobjectR\x08sobjects\x12<\n\x0b\x61ttractions\x18\x02 \x03(\x0b\x32\x1a.semio.model.v1.AttractionR\x0b\x61ttractions\x12&\n\x0froot_sobject_id\x18\x03 \x01(\tR\rrootSobjectId\x12\x39\n\x08stragegy\x18\x04 \x01(\x0e\x32\x1d.semio.model.v1.LayoutStrageyR\x08stragegy\x12H\n\x0f\x61ttractionTrees\x18\x05 \x03(\x0b\x32\x1e.semio.model.v1.AttractionTreeR\x0f\x61ttractionTrees\"s\n\x0e\x41ttractionTree\x12#\n\rattraction_id\x18\x01 \x01(\tR\x0c\x61ttractionId\x12<\n\tchildrean\x18\x02 \x03(\x0b\x32\x1e.semio.model.v1.AttractionTreeR\tchildrean\"}\n\x07\x45lement\x12(\n\x04pose\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PoseR\x04pose\x12H\n\x0frepresentations\x18\x02 \x03(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0frepresentations\"=\n\x06\x44\x65sign\x12\x33\n\x08\x65lements\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.ElementR\x08\x65lements\"\x89\x01\n\x12LayoutModification\x12\x30\n\x07\x63ontext\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x07\x63ontext\x12\x41\n\x10modified_context\x18\x02 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x0fmodifiedContext\"=\n\x1aLayoutModificationStrategy\x12\x1f\n\x0bmatch_count\x18\x01 \x01(\x03R\nmatchCount\"\x9a\x01\n\x08\x44\x65\x63ision\x12\x46\n\x0cmodification\x18\x01 \x01(\x0b\x32\".semio.model.v1.LayoutModificationR\x0cmodification\x12\x46\n\x08strategy\x18\x02 \x01(\x0b\x32*.semio.model.v1.LayoutModificationStrategyR\x08strategy*O\n\rLayoutStragey\x12\x1f\n\x1bLAYOUTSTRATEGY_BREADTHFIRST\x10\x00\x12\x1d\n\x19LAYOUTSTRATEGY_DEPTHFIRST\x10\x01\x42\xac\x01\n\x12\x63om.semio.model.v1B\nModelProtoP\x01Z0github.com/usalu/semio/src/schema/semio/model/v1\xa2\x02\x03SMX\xaa\x02\x0eSemio.Model.V1\xca\x02\x0eSemio\\Model\\V1\xe2\x02\x1aSemio\\Model\\V1\\GPBMetadata\xea\x02\x10Semio::Model::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'model.v1.model_pb2', globals())
@@ -26,40 +26,42 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _SOBJECT_PARAMETERSENTRY._serialized_options = b'8\001'
   _ATTRACTIONPARAMETERS_BIASENTRY._options = None
   _ATTRACTIONPARAMETERS_BIASENTRY._serialized_options = b'8\001'
-  _LAYOUTSTRAGEY._serialized_start=2127
-  _LAYOUTSTRAGEY._serialized_end=2206
+  _LAYOUTSTRAGEY._serialized_start=2206
+  _LAYOUTSTRAGEY._serialized_end=2285
   _POINT._serialized_start=67
   _POINT._serialized_end=116
   _QUATERNION._serialized_start=118
   _QUATERNION._serialized_end=186
   _POSE._serialized_start=188
   _POSE._serialized_end=301
-  _REPRESENTATION._serialized_start=303
-  _REPRESENTATION._serialized_end=399
-  _SOBJECT._serialized_start=402
-  _SOBJECT._serialized_end=623
-  _SOBJECT_PARAMETERSENTRY._serialized_start=562
-  _SOBJECT_PARAMETERSENTRY._serialized_end=623
-  _ATTRACTIONPARAMETERS._serialized_start=626
-  _ATTRACTIONPARAMETERS._serialized_end=855
-  _ATTRACTIONPARAMETERS_BIASENTRY._serialized_start=800
-  _ATTRACTIONPARAMETERS_BIASENTRY._serialized_end=855
-  _ATTRACTIONPARTICIPANT._serialized_start=858
-  _ATTRACTIONPARTICIPANT._serialized_end=990
-  _ATTRACTION._serialized_start=993
-  _ATTRACTION._serialized_end=1159
-  _LAYOUT._serialized_start=1162
-  _LAYOUT._serialized_end=1458
-  _ATTRACTIONTREE._serialized_start=1460
-  _ATTRACTIONTREE._serialized_end=1575
-  _ELEMENT._serialized_start=1577
-  _ELEMENT._serialized_end=1702
-  _DESIGN._serialized_start=1704
-  _DESIGN._serialized_end=1765
-  _LAYOUTMODIFICATION._serialized_start=1768
-  _LAYOUTMODIFICATION._serialized_end=1905
-  _LAYOUTMODIFICATIONSTRATEGY._serialized_start=1907
-  _LAYOUTMODIFICATIONSTRATEGY._serialized_end=1968
-  _DECISION._serialized_start=1971
-  _DECISION._serialized_end=2125
+  _RAWVALUE._serialized_start=303
+  _RAWVALUE._serialized_end=380
+  _REPRESENTATION._serialized_start=382
+  _REPRESENTATION._serialized_end=478
+  _SOBJECT._serialized_start=481
+  _SOBJECT._serialized_end=702
+  _SOBJECT_PARAMETERSENTRY._serialized_start=641
+  _SOBJECT_PARAMETERSENTRY._serialized_end=702
+  _ATTRACTIONPARAMETERS._serialized_start=705
+  _ATTRACTIONPARAMETERS._serialized_end=934
+  _ATTRACTIONPARAMETERS_BIASENTRY._serialized_start=879
+  _ATTRACTIONPARAMETERS_BIASENTRY._serialized_end=934
+  _ATTRACTIONPARTICIPANT._serialized_start=937
+  _ATTRACTIONPARTICIPANT._serialized_end=1069
+  _ATTRACTION._serialized_start=1072
+  _ATTRACTION._serialized_end=1238
+  _LAYOUT._serialized_start=1241
+  _LAYOUT._serialized_end=1537
+  _ATTRACTIONTREE._serialized_start=1539
+  _ATTRACTIONTREE._serialized_end=1654
+  _ELEMENT._serialized_start=1656
+  _ELEMENT._serialized_end=1781
+  _DESIGN._serialized_start=1783
+  _DESIGN._serialized_end=1844
+  _LAYOUTMODIFICATION._serialized_start=1847
+  _LAYOUTMODIFICATION._serialized_end=1984
+  _LAYOUTMODIFICATIONSTRATEGY._serialized_start=1986
+  _LAYOUTMODIFICATIONSTRATEGY._serialized_end=2047
+  _DECISION._serialized_start=2050
+  _DECISION._serialized_end=2204
 # @@protoc_insertion_point(module_scope)

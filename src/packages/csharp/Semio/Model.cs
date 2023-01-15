@@ -30,60 +30,62 @@ namespace Semio.Model.V1 {
             "GAEgASgBUgF3EgwKAXgYAiABKAFSAXgSDAoBeRgDIAEoAVIBeRIMCgF6GAQg",
             "ASgBUgF6InEKBFBvc2USOQoNcG9pbnRfb2ZfdmlldxgBIAEoCzIVLnNlbWlv",
             "Lm1vZGVsLnYxLlBvaW50Ugtwb2ludE9mVmlldxIuCgR2aWV3GAIgASgLMhou",
-            "c2VtaW8ubW9kZWwudjEuUXVhdGVybmlvblIEdmlldyJgCg5SZXByZXNlbnRh",
-            "dGlvbhISCgRuYW1lGAEgASgJUgRuYW1lEhAKA2xvZBgCIAEoA1IDbG9kEigK",
-            "BGJvZHkYAyABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgRib2R5It0BCgdT",
-            "b2JqZWN0Eg4KAmlkGAEgASgJUgJpZBIQCgN1cmwYAiABKAlSA3VybBIoCgRw",
-            "b3NlGAMgASgLMhQuc2VtaW8ubW9kZWwudjEuUG9zZVIEcG9zZRJHCgpwYXJh",
-            "bWV0ZXJzGAQgAygLMicuc2VtaW8ubW9kZWwudjEuU29iamVjdC5QYXJhbWV0",
-            "ZXJzRW50cnlSCnBhcmFtZXRlcnMaPQoPUGFyYW1ldGVyc0VudHJ5EhAKA2tl",
-            "eRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAEi5QEKFEF0",
-            "dHJhY3Rpb25QYXJhbWV0ZXJzEjwKDnJlcHJlc2VudGF0aW9uGAEgASgLMhQu",
-            "Z29vZ2xlLnByb3RvYnVmLkFueVIOcmVwcmVzZW50YXRpb24SEgoEcG9ydBgC",
-            "IAEoCVIEcG9ydBJCCgRiaWFzGAMgAygLMi4uc2VtaW8ubW9kZWwudjEuQXR0",
-            "cmFjdGlvblBhcmFtZXRlcnMuQmlhc0VudHJ5UgRiaWFzGjcKCUJpYXNFbnRy",
-            "eRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB",
-            "IoQBChVBdHRyYWN0aW9uUGFydGljaXBhbnQSJQoOcGF0cmljaXBhbnRfaWQY",
-            "ASABKAlSDXBhdHJpY2lwYW50SWQSRAoKcGFyYW1ldGVycxgCIAEoCzIkLnNl",
-            "bWlvLm1vZGVsLnYxLkF0dHJhY3Rpb25QYXJhbWV0ZXJzUgpwYXJhbWV0ZXJz",
-            "IqYBCgpBdHRyYWN0aW9uEg4KAmlkGAEgASgJUgJpZBJDCglhdHRyYWN0b3IY",
-            "AiABKAsyJS5zZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uUGFydGljaXBhbnRS",
-            "CWF0dHJhY3RvchJDCglhdHRyYWN0ZWQYAyABKAsyJS5zZW1pby5tb2RlbC52",
-            "MS5BdHRyYWN0aW9uUGFydGljaXBhbnRSCWF0dHJhY3RlZCKoAgoGTGF5b3V0",
-            "EjMKCHNvYmplY3RzGAEgAygLMhcuc2VtaW8ubW9kZWwudjEuU29iamVjdFII",
-            "c29iamVjdHMSPAoLYXR0cmFjdGlvbnMYAiADKAsyGi5zZW1pby5tb2RlbC52",
-            "MS5BdHRyYWN0aW9uUgthdHRyYWN0aW9ucxImCg9yb290X3NvYmplY3RfaWQY",
-            "AyABKAlSDXJvb3RTb2JqZWN0SWQSOQoIc3RyYWdlZ3kYBCABKA4yHS5zZW1p",
-            "by5tb2RlbC52MS5MYXlvdXRTdHJhZ2V5UghzdHJhZ2VneRJICg9hdHRyYWN0",
-            "aW9uVHJlZXMYBSADKAsyHi5zZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uVHJl",
-            "ZVIPYXR0cmFjdGlvblRyZWVzInMKDkF0dHJhY3Rpb25UcmVlEiMKDWF0dHJh",
-            "Y3Rpb25faWQYASABKAlSDGF0dHJhY3Rpb25JZBI8CgljaGlsZHJlYW4YAiAD",
-            "KAsyHi5zZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uVHJlZVIJY2hpbGRyZWFu",
-            "In0KB0VsZW1lbnQSKAoEcG9zZRgBIAEoCzIULnNlbWlvLm1vZGVsLnYxLlBv",
-            "c2VSBHBvc2USSAoPcmVwcmVzZW50YXRpb25zGAIgAygLMh4uc2VtaW8ubW9k",
-            "ZWwudjEuUmVwcmVzZW50YXRpb25SD3JlcHJlc2VudGF0aW9ucyI9CgZEZXNp",
-            "Z24SMwoIZWxlbWVudHMYASADKAsyFy5zZW1pby5tb2RlbC52MS5FbGVtZW50",
-            "UghlbGVtZW50cyKJAQoSTGF5b3V0TW9kaWZpY2F0aW9uEjAKB2NvbnRleHQY",
-            "ASABKAsyFi5zZW1pby5tb2RlbC52MS5MYXlvdXRSB2NvbnRleHQSQQoQbW9k",
-            "aWZpZWRfY29udGV4dBgCIAEoCzIWLnNlbWlvLm1vZGVsLnYxLkxheW91dFIP",
-            "bW9kaWZpZWRDb250ZXh0Ij0KGkxheW91dE1vZGlmaWNhdGlvblN0cmF0ZWd5",
-            "Eh8KC21hdGNoX2NvdW50GAEgASgDUgptYXRjaENvdW50IpoBCghEZWNpc2lv",
-            "bhJGCgxtb2RpZmljYXRpb24YASABKAsyIi5zZW1pby5tb2RlbC52MS5MYXlv",
-            "dXRNb2RpZmljYXRpb25SDG1vZGlmaWNhdGlvbhJGCghzdHJhdGVneRgCIAEo",
-            "CzIqLnNlbWlvLm1vZGVsLnYxLkxheW91dE1vZGlmaWNhdGlvblN0cmF0ZWd5",
-            "UghzdHJhdGVneSpPCg1MYXlvdXRTdHJhZ2V5Eh8KG0xBWU9VVFNUUkFURUdZ",
-            "X0JSRUFEVEhGSVJTVBAAEh0KGUxBWU9VVFNUUkFURUdZX0RFUFRIRklSU1QQ",
-            "AUKsAQoSY29tLnNlbWlvLm1vZGVsLnYxQgpNb2RlbFByb3RvUAFaMGdpdGh1",
-            "Yi5jb20vdXNhbHUvc2VtaW8vc3JjL3NjaGVtYS9zZW1pby9tb2RlbC92MaIC",
-            "A1NNWKoCDlNlbWlvLk1vZGVsLlYxygIOU2VtaW9cTW9kZWxcVjHiAhpTZW1p",
-            "b1xNb2RlbFxWMVxHUEJNZXRhZGF0YeoCEFNlbWlvOjpNb2RlbDo6VjFiBnBy",
-            "b3RvMw=="));
+            "c2VtaW8ubW9kZWwudjEuUXVhdGVybmlvblIEdmlldyJNCghSYXdWYWx1ZRIi",
+            "CgtiaW5hcnlBcnJheRgBIAEoDEgAUgtiaW5hcnlBcnJheRIUCgR0ZXh0GAIg",
+            "ASgJSABSBHRleHRCBwoFdmFsdWUiYAoOUmVwcmVzZW50YXRpb24SEgoEbmFt",
+            "ZRgBIAEoCVIEbmFtZRIQCgNsb2QYAiABKANSA2xvZBIoCgRib2R5GAMgASgL",
+            "MhQuZ29vZ2xlLnByb3RvYnVmLkFueVIEYm9keSLdAQoHU29iamVjdBIOCgJp",
+            "ZBgBIAEoCVICaWQSEAoDdXJsGAIgASgJUgN1cmwSKAoEcG9zZRgDIAEoCzIU",
+            "LnNlbWlvLm1vZGVsLnYxLlBvc2VSBHBvc2USRwoKcGFyYW1ldGVycxgEIAMo",
+            "CzInLnNlbWlvLm1vZGVsLnYxLlNvYmplY3QuUGFyYW1ldGVyc0VudHJ5Ugpw",
+            "YXJhbWV0ZXJzGj0KD1BhcmFtZXRlcnNFbnRyeRIQCgNrZXkYASABKAlSA2tl",
+            "eRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBIuUBChRBdHRyYWN0aW9uUGFy",
+            "YW1ldGVycxI8Cg5yZXByZXNlbnRhdGlvbhgBIAEoCzIULmdvb2dsZS5wcm90",
+            "b2J1Zi5BbnlSDnJlcHJlc2VudGF0aW9uEhIKBHBvcnQYAiABKAlSBHBvcnQS",
+            "QgoEYmlhcxgDIAMoCzIuLnNlbWlvLm1vZGVsLnYxLkF0dHJhY3Rpb25QYXJh",
+            "bWV0ZXJzLkJpYXNFbnRyeVIEYmlhcxo3CglCaWFzRW50cnkSEAoDa2V5GAEg",
+            "ASgJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4ASKEAQoVQXR0cmFj",
+            "dGlvblBhcnRpY2lwYW50EiUKDnBhdHJpY2lwYW50X2lkGAEgASgJUg1wYXRy",
+            "aWNpcGFudElkEkQKCnBhcmFtZXRlcnMYAiABKAsyJC5zZW1pby5tb2RlbC52",
+            "MS5BdHRyYWN0aW9uUGFyYW1ldGVyc1IKcGFyYW1ldGVycyKmAQoKQXR0cmFj",
+            "dGlvbhIOCgJpZBgBIAEoCVICaWQSQwoJYXR0cmFjdG9yGAIgASgLMiUuc2Vt",
+            "aW8ubW9kZWwudjEuQXR0cmFjdGlvblBhcnRpY2lwYW50UglhdHRyYWN0b3IS",
+            "QwoJYXR0cmFjdGVkGAMgASgLMiUuc2VtaW8ubW9kZWwudjEuQXR0cmFjdGlv",
+            "blBhcnRpY2lwYW50UglhdHRyYWN0ZWQiqAIKBkxheW91dBIzCghzb2JqZWN0",
+            "cxgBIAMoCzIXLnNlbWlvLm1vZGVsLnYxLlNvYmplY3RSCHNvYmplY3RzEjwK",
+            "C2F0dHJhY3Rpb25zGAIgAygLMhouc2VtaW8ubW9kZWwudjEuQXR0cmFjdGlv",
+            "blILYXR0cmFjdGlvbnMSJgoPcm9vdF9zb2JqZWN0X2lkGAMgASgJUg1yb290",
+            "U29iamVjdElkEjkKCHN0cmFnZWd5GAQgASgOMh0uc2VtaW8ubW9kZWwudjEu",
+            "TGF5b3V0U3RyYWdleVIIc3RyYWdlZ3kSSAoPYXR0cmFjdGlvblRyZWVzGAUg",
+            "AygLMh4uc2VtaW8ubW9kZWwudjEuQXR0cmFjdGlvblRyZWVSD2F0dHJhY3Rp",
+            "b25UcmVlcyJzCg5BdHRyYWN0aW9uVHJlZRIjCg1hdHRyYWN0aW9uX2lkGAEg",
+            "ASgJUgxhdHRyYWN0aW9uSWQSPAoJY2hpbGRyZWFuGAIgAygLMh4uc2VtaW8u",
+            "bW9kZWwudjEuQXR0cmFjdGlvblRyZWVSCWNoaWxkcmVhbiJ9CgdFbGVtZW50",
+            "EigKBHBvc2UYASABKAsyFC5zZW1pby5tb2RlbC52MS5Qb3NlUgRwb3NlEkgK",
+            "D3JlcHJlc2VudGF0aW9ucxgCIAMoCzIeLnNlbWlvLm1vZGVsLnYxLlJlcHJl",
+            "c2VudGF0aW9uUg9yZXByZXNlbnRhdGlvbnMiPQoGRGVzaWduEjMKCGVsZW1l",
+            "bnRzGAEgAygLMhcuc2VtaW8ubW9kZWwudjEuRWxlbWVudFIIZWxlbWVudHMi",
+            "iQEKEkxheW91dE1vZGlmaWNhdGlvbhIwCgdjb250ZXh0GAEgASgLMhYuc2Vt",
+            "aW8ubW9kZWwudjEuTGF5b3V0Ugdjb250ZXh0EkEKEG1vZGlmaWVkX2NvbnRl",
+            "eHQYAiABKAsyFi5zZW1pby5tb2RlbC52MS5MYXlvdXRSD21vZGlmaWVkQ29u",
+            "dGV4dCI9ChpMYXlvdXRNb2RpZmljYXRpb25TdHJhdGVneRIfCgttYXRjaF9j",
+            "b3VudBgBIAEoA1IKbWF0Y2hDb3VudCKaAQoIRGVjaXNpb24SRgoMbW9kaWZp",
+            "Y2F0aW9uGAEgASgLMiIuc2VtaW8ubW9kZWwudjEuTGF5b3V0TW9kaWZpY2F0",
+            "aW9uUgxtb2RpZmljYXRpb24SRgoIc3RyYXRlZ3kYAiABKAsyKi5zZW1pby5t",
+            "b2RlbC52MS5MYXlvdXRNb2RpZmljYXRpb25TdHJhdGVneVIIc3RyYXRlZ3kq",
+            "TwoNTGF5b3V0U3RyYWdleRIfChtMQVlPVVRTVFJBVEVHWV9CUkVBRFRIRklS",
+            "U1QQABIdChlMQVlPVVRTVFJBVEVHWV9ERVBUSEZJUlNUEAFCrAEKEmNvbS5z",
+            "ZW1pby5tb2RlbC52MUIKTW9kZWxQcm90b1ABWjBnaXRodWIuY29tL3VzYWx1",
+            "L3NlbWlvL3NyYy9zY2hlbWEvc2VtaW8vbW9kZWwvdjGiAgNTTViqAg5TZW1p",
+            "by5Nb2RlbC5WMcoCDlNlbWlvXE1vZGVsXFYx4gIaU2VtaW9cTW9kZWxcVjFc",
+            "R1BCTWV0YWRhdGHqAhBTZW1pbzo6TW9kZWw6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.AnyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Semio.Model.V1.LayoutStragey), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Point), global::Semio.Model.V1.Point.Parser, new[]{ "X", "Y", "Z" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Quaternion), global::Semio.Model.V1.Quaternion.Parser, new[]{ "W", "X", "Y", "Z" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Pose), global::Semio.Model.V1.Pose.Parser, new[]{ "PointOfView", "View" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.RawValue), global::Semio.Model.V1.RawValue.Parser, new[]{ "BinaryArray", "Text" }, new[]{ "Value" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Representation), global::Semio.Model.V1.Representation.Parser, new[]{ "Name", "Lod", "Body" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.Sobject), global::Semio.Model.V1.Sobject.Parser, new[]{ "Id", "Url", "Pose", "Parameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Model.V1.AttractionParameters), global::Semio.Model.V1.AttractionParameters.Parser, new[]{ "Representation", "Port", "Bias" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
@@ -926,6 +928,265 @@ namespace Semio.Model.V1 {
 
   }
 
+  public sealed partial class RawValue : pb::IMessage<RawValue>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<RawValue> _parser = new pb::MessageParser<RawValue>(() => new RawValue());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<RawValue> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[3]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RawValue() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RawValue(RawValue other) : this() {
+      switch (other.ValueCase) {
+        case ValueOneofCase.BinaryArray:
+          BinaryArray = other.BinaryArray;
+          break;
+        case ValueOneofCase.Text:
+          Text = other.Text;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RawValue Clone() {
+      return new RawValue(this);
+    }
+
+    /// <summary>Field number for the "binaryArray" field.</summary>
+    public const int BinaryArrayFieldNumber = 1;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pb::ByteString BinaryArray {
+      get { return valueCase_ == ValueOneofCase.BinaryArray ? (pb::ByteString) value_ : pb::ByteString.Empty; }
+      set {
+        value_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        valueCase_ = ValueOneofCase.BinaryArray;
+      }
+    }
+
+    /// <summary>Field number for the "text" field.</summary>
+    public const int TextFieldNumber = 2;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Text {
+      get { return valueCase_ == ValueOneofCase.Text ? (string) value_ : ""; }
+      set {
+        value_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        valueCase_ = ValueOneofCase.Text;
+      }
+    }
+
+    private object value_;
+    /// <summary>Enum of possible cases for the "value" oneof.</summary>
+    public enum ValueOneofCase {
+      None = 0,
+      BinaryArray = 1,
+      Text = 2,
+    }
+    private ValueOneofCase valueCase_ = ValueOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ValueOneofCase ValueCase {
+      get { return valueCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearValue() {
+      valueCase_ = ValueOneofCase.None;
+      value_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as RawValue);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(RawValue other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (BinaryArray != other.BinaryArray) return false;
+      if (Text != other.Text) return false;
+      if (ValueCase != other.ValueCase) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (valueCase_ == ValueOneofCase.BinaryArray) hash ^= BinaryArray.GetHashCode();
+      if (valueCase_ == ValueOneofCase.Text) hash ^= Text.GetHashCode();
+      hash ^= (int) valueCase_;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (valueCase_ == ValueOneofCase.BinaryArray) {
+        output.WriteRawTag(10);
+        output.WriteBytes(BinaryArray);
+      }
+      if (valueCase_ == ValueOneofCase.Text) {
+        output.WriteRawTag(18);
+        output.WriteString(Text);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (valueCase_ == ValueOneofCase.BinaryArray) {
+        output.WriteRawTag(10);
+        output.WriteBytes(BinaryArray);
+      }
+      if (valueCase_ == ValueOneofCase.Text) {
+        output.WriteRawTag(18);
+        output.WriteString(Text);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (valueCase_ == ValueOneofCase.BinaryArray) {
+        size += 1 + pb::CodedOutputStream.ComputeBytesSize(BinaryArray);
+      }
+      if (valueCase_ == ValueOneofCase.Text) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Text);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(RawValue other) {
+      if (other == null) {
+        return;
+      }
+      switch (other.ValueCase) {
+        case ValueOneofCase.BinaryArray:
+          BinaryArray = other.BinaryArray;
+          break;
+        case ValueOneofCase.Text:
+          Text = other.Text;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            BinaryArray = input.ReadBytes();
+            break;
+          }
+          case 18: {
+            Text = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            BinaryArray = input.ReadBytes();
+            break;
+          }
+          case 18: {
+            Text = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   /// <summary>
   /// A representation for an element.
   /// </summary>
@@ -943,7 +1204,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1218,7 +1479,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1516,7 +1777,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1789,7 +2050,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2030,7 +2291,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[7]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2317,7 +2578,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[8]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2624,7 +2885,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[9]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2842,7 +3103,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[10]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3069,7 +3330,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[11]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3250,7 +3511,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[12]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3497,7 +3758,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[13]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3692,7 +3953,7 @@ namespace Semio.Model.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[14]; }
+      get { return global::Semio.Model.V1.ModelReflection.Descriptor.MessageTypes[15]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
