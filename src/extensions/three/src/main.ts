@@ -5,15 +5,42 @@ import {RepresentationConversionRequest} from 'semio/extension/converter/v1/conv
 import {IConverterService,converterServiceDefinition} from 'semio/extension/converter/v1/converter.grpc-server'
 import {ExtensionRegistrationRequest} from 'semio/manager/v1/manager'
 import {ManagerServiceClient} from 'semio/manager/v1/manager.client'
+import {THREE as SEMIO_THREE,RHINO} from 'semio/constants'
+import * as THREE from 'three'
+import {Rhino3dmLoader} from 'three/examples/jsm/loaders/3DMLoader'
+import fs from 'fs';
+import tmp from 'tmp';
+tmp.setGracefulCleanup();
 
-const name = "semio.three.js"
-const address = '[::]:59003';
+
+const name = "semio.three"
+const address = '[::]:' + SEMIO_THREE['DEFAULT_PORT'];
 
 const threeConverterService: IConverterService = {
 
     convertRepresentation(call: ServerUnaryCall<RepresentationConversionRequest, Representation>, callback: sendUnaryData<Representation>): void {
       switch (call.request.targetType){
-        case 
+        case RHINO['EXTENSION']:
+            const tempRhinoFileName = tmp.tmpNameSync();
+            fs.writeFile(tempRhinoFileName, new TextDecoder().decode(call.request.representation?.body?.value),err =>{console.log(err);
+            });
+            
+            const loader = new Rhino3dmLoader();
+            loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@0.15.0-beta/' );
+            loader.load(
+                tempRhinoFileName,
+                rhinoThreeObject => { 
+                    return {
+                        body: {
+                            value: rhinoThreeObject.toJSON()
+                        }
+                    }
+                },
+                xhr => {},
+                error => { console.log(error);}
+            );
+            break;
+
       }
         console.log("Converting representation...")
       callback(null,{name:"HelloRep", lod:BigInt(435)});
@@ -48,6 +75,7 @@ async function registerExtension() {
     const client = new ManagerServiceClient(new GrpcTransport({ host: "localhost:50002", channelCredentials: ChannelCredentials.createInsecure()}))
     const registration = client.registerExtension({
         replaceExisting: true,
+        name: name,
         address: address,
         extending:{
             adaptings: [],

@@ -49,8 +49,9 @@ message AttractionResponse{
 
 message ExtensionRegistrationRequest{
   string address = 1;
-  semio.extension.v1.Extending extending = 2;
-  bool replace_existing = 3;
+  string name = 2;
+  semio.extension.v1.Extending extending = 3;
+  bool replace_existing = 4;
 }
 
 message ExtensionRegistrationResponse{

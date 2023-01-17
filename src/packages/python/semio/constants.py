@@ -1,15 +1,20 @@
-DEFAULT_GATEWAY_PORT = 50001
-DEFAULT_MANAGER_PORT = 50002
+import os
+from json import loads
 
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-RHINO_URL = 'mcneel/rhino/grasshopper'
-GRASSHOPPER_URL = 'mcneel/rhino/grasshopper'
-THREE_URL = 'mrdoob/three'
+with open(os.path.join(__location__, 'constants.json')) as constantsFile:
+    constantsJson = constantsFile.read()
 
-ELEMENT_TYPE_PLATFORM_DICTIONARY = {
-    '3dm':RHINO_URL,
-    'gh':GRASSHOPPER_URL,
-    'ghx':GRASSHOPPER_URL,
-    'three': THREE_URL
-}
-GENERAL_EXTENSIONS = ['txt','json','xml']
+    CONSTANTS = loads(constantsJson)
+
+    DEFAULT_GATEWAY_PORT = CONSTANTS['DEFAULT_GATEWAY_PORT']
+    DEFAULT_MANAGER_PORT = CONSTANTS['DEFAULT_MANAGER_PORT']
+
+    PLATFORMS = CONSTANTS['PLATFORMS']
+
+    THREE = PLATFORMS['three']
+    RHINO = PLATFORMS['rhino']
+    GRASSHOPPER = PLATFORMS['gh']
+    

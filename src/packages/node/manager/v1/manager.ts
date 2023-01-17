@@ -66,11 +66,15 @@ export interface ExtensionRegistrationRequest {
      */
     address: string;
     /**
-     * @generated from protobuf field: semio.extension.v1.Extending extending = 2;
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: semio.extension.v1.Extending extending = 3;
      */
     extending?: Extending;
     /**
-     * @generated from protobuf field: bool replace_existing = 3;
+     * @generated from protobuf field: bool replace_existing = 4;
      */
     replaceExisting: boolean;
 }
@@ -274,12 +278,13 @@ class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistratio
     constructor() {
         super("semio.manager.v1.ExtensionRegistrationRequest", [
             { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "extending", kind: "message", T: () => Extending },
-            { no: 3, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "extending", kind: "message", T: () => Extending },
+            { no: 4, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<ExtensionRegistrationRequest>): ExtensionRegistrationRequest {
-        const message = { address: "", replaceExisting: false };
+        const message = { address: "", name: "", replaceExisting: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<ExtensionRegistrationRequest>(this, message, value);
@@ -293,10 +298,13 @@ class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistratio
                 case /* string address */ 1:
                     message.address = reader.string();
                     break;
-                case /* semio.extension.v1.Extending extending */ 2:
+                case /* string name */ 2:
+                    message.name = reader.string();
+                    break;
+                case /* semio.extension.v1.Extending extending */ 3:
                     message.extending = Extending.internalBinaryRead(reader, reader.uint32(), options, message.extending);
                     break;
-                case /* bool replace_existing */ 3:
+                case /* bool replace_existing */ 4:
                     message.replaceExisting = reader.bool();
                     break;
                 default:
@@ -314,12 +322,15 @@ class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistratio
         /* string address = 1; */
         if (message.address !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.address);
-        /* semio.extension.v1.Extending extending = 2; */
+        /* string name = 2; */
+        if (message.name !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.name);
+        /* semio.extension.v1.Extending extending = 3; */
         if (message.extending)
-            Extending.internalBinaryWrite(message.extending, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* bool replace_existing = 3; */
+            Extending.internalBinaryWrite(message.extending, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* bool replace_existing = 4; */
         if (message.replaceExisting !== false)
-            writer.tag(3, WireType.Varint).bool(message.replaceExisting);
+            writer.tag(4, WireType.Varint).bool(message.replaceExisting);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

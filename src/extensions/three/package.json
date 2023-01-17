@@ -24,6 +24,8 @@
   "homepage": "https://github.com/usalu/semio#readme",
   "devDependencies": {
     "@types/node": "^18.11.18",
+    "@types/three": "^0.148.0",
+    "@types/tmp": "^0.2.3",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1"
   },
@@ -32,6 +34,7 @@
     "@protobuf-ts/grpc-transport": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "semio": "../../packages/node",
-    "three": "^0.148.0"
+    "three": "^0.148.0",
+    "tmp": "^0.2.1"
   }
 }

@@ -34,39 +34,40 @@ namespace Semio.Manager.V1 {
             "cmdldFR5cGVVcmwikwEKEkF0dHJhY3Rpb25SZXNwb25zZRI7Cg5hdHRyYWN0",
             "ZWRfcG9zZRgBIAEoCzIULnNlbWlvLm1vZGVsLnYxLlBvc2VSDWF0dHJhY3Rl",
             "ZFBvc2USQAoQYXR0cmFjdGlvbl9wb2ludBgCIAEoCzIVLnNlbWlvLm1vZGVs",
-            "LnYxLlBvaW50Ug9hdHRyYWN0aW9uUG9pbnQioAEKHEV4dGVuc2lvblJlZ2lz",
-            "dHJhdGlvblJlcXVlc3QSGAoHYWRkcmVzcxgBIAEoCVIHYWRkcmVzcxI7Cgll",
-            "eHRlbmRpbmcYAiABKAsyHS5zZW1pby5leHRlbnNpb24udjEuRXh0ZW5kaW5n",
-            "UglleHRlbmRpbmcSKQoQcmVwbGFjZV9leGlzdGluZxgDIAEoCFIPcmVwbGFj",
-            "ZUV4aXN0aW5nIloKHUV4dGVuc2lvblJlZ2lzdHJhdGlvblJlc3BvbnNlEhgK",
-            "B3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSHwoLb2xkX2FkZHJlc3MYAiABKAlS",
-            "Cm9sZEFkZHJlc3MiIAoeR2V0UmVnaXN0ZXJlZEV4dGVuc2lvbnNSZXF1ZXN0",
-            "ItwBChxSZWdpc3RlcmVkRXh0ZW5zaW9uc1Jlc3BvbnNlEl4KCmV4dGVuc2lv",
-            "bnMYASADKAsyPi5zZW1pby5tYW5hZ2VyLnYxLlJlZ2lzdGVyZWRFeHRlbnNp",
-            "b25zUmVzcG9uc2UuRXh0ZW5zaW9uc0VudHJ5UgpleHRlbnNpb25zGlwKD0V4",
-            "dGVuc2lvbnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIzCgV2YWx1ZRgCIAEo",
-            "CzIdLnNlbWlvLmV4dGVuc2lvbi52MS5FeHRlbmRpbmdSBXZhbHVlOgI4ATKw",
-            "AwoOTWFuYWdlclNlcnZpY2USSwoOUmVxdWVzdEVsZW1lbnQSIC5zZW1pby5t",
-            "YW5hZ2VyLnYxLkVsZW1lbnRSZXF1ZXN0Ghcuc2VtaW8ubW9kZWwudjEuRWxl",
-            "bWVudBJeChFSZXF1ZXN0QXR0cmFjdGlvbhIjLnNlbWlvLm1hbmFnZXIudjEu",
-            "QXR0cmFjdGlvblJlcXVlc3QaJC5zZW1pby5tYW5hZ2VyLnYxLkF0dHJhY3Rp",
-            "b25SZXNwb25zZRJ0ChFSZWdpc3RlckV4dGVuc2lvbhIuLnNlbWlvLm1hbmFn",
-            "ZXIudjEuRXh0ZW5zaW9uUmVnaXN0cmF0aW9uUmVxdWVzdBovLnNlbWlvLm1h",
-            "bmFnZXIudjEuRXh0ZW5zaW9uUmVnaXN0cmF0aW9uUmVzcG9uc2USewoXR2V0",
-            "UmVnaXN0ZXJlZEV4dGVuc2lvbnMSMC5zZW1pby5tYW5hZ2VyLnYxLkdldFJl",
-            "Z2lzdGVyZWRFeHRlbnNpb25zUmVxdWVzdBouLnNlbWlvLm1hbmFnZXIudjEu",
-            "UmVnaXN0ZXJlZEV4dGVuc2lvbnNSZXNwb25zZUK6AQoUY29tLnNlbWlvLm1h",
-            "bmFnZXIudjFCDE1hbmFnZXJQcm90b1ABWjJnaXRodWIuY29tL3VzYWx1L3Nl",
-            "bWlvL3NyYy9zY2hlbWEvc2VtaW8vbWFuYWdlci92MaICA1NNWKoCEFNlbWlv",
-            "Lk1hbmFnZXIuVjHKAhBTZW1pb1xNYW5hZ2VyXFYx4gIcU2VtaW9cTWFuYWdl",
-            "clxWMVxHUEJNZXRhZGF0YeoCElNlbWlvOjpNYW5hZ2VyOjpWMWIGcHJvdG8z"));
+            "LnYxLlBvaW50Ug9hdHRyYWN0aW9uUG9pbnQitAEKHEV4dGVuc2lvblJlZ2lz",
+            "dHJhdGlvblJlcXVlc3QSGAoHYWRkcmVzcxgBIAEoCVIHYWRkcmVzcxISCgRu",
+            "YW1lGAIgASgJUgRuYW1lEjsKCWV4dGVuZGluZxgDIAEoCzIdLnNlbWlvLmV4",
+            "dGVuc2lvbi52MS5FeHRlbmRpbmdSCWV4dGVuZGluZxIpChByZXBsYWNlX2V4",
+            "aXN0aW5nGAQgASgIUg9yZXBsYWNlRXhpc3RpbmciWgodRXh0ZW5zaW9uUmVn",
+            "aXN0cmF0aW9uUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2VzcxIf",
+            "CgtvbGRfYWRkcmVzcxgCIAEoCVIKb2xkQWRkcmVzcyIgCh5HZXRSZWdpc3Rl",
+            "cmVkRXh0ZW5zaW9uc1JlcXVlc3Qi3AEKHFJlZ2lzdGVyZWRFeHRlbnNpb25z",
+            "UmVzcG9uc2USXgoKZXh0ZW5zaW9ucxgBIAMoCzI+LnNlbWlvLm1hbmFnZXIu",
+            "djEuUmVnaXN0ZXJlZEV4dGVuc2lvbnNSZXNwb25zZS5FeHRlbnNpb25zRW50",
+            "cnlSCmV4dGVuc2lvbnMaXAoPRXh0ZW5zaW9uc0VudHJ5EhAKA2tleRgBIAEo",
+            "CVIDa2V5EjMKBXZhbHVlGAIgASgLMh0uc2VtaW8uZXh0ZW5zaW9uLnYxLkV4",
+            "dGVuZGluZ1IFdmFsdWU6AjgBMrADCg5NYW5hZ2VyU2VydmljZRJLCg5SZXF1",
+            "ZXN0RWxlbWVudBIgLnNlbWlvLm1hbmFnZXIudjEuRWxlbWVudFJlcXVlc3Qa",
+            "Fy5zZW1pby5tb2RlbC52MS5FbGVtZW50El4KEVJlcXVlc3RBdHRyYWN0aW9u",
+            "EiMuc2VtaW8ubWFuYWdlci52MS5BdHRyYWN0aW9uUmVxdWVzdBokLnNlbWlv",
+            "Lm1hbmFnZXIudjEuQXR0cmFjdGlvblJlc3BvbnNlEnQKEVJlZ2lzdGVyRXh0",
+            "ZW5zaW9uEi4uc2VtaW8ubWFuYWdlci52MS5FeHRlbnNpb25SZWdpc3RyYXRp",
+            "b25SZXF1ZXN0Gi8uc2VtaW8ubWFuYWdlci52MS5FeHRlbnNpb25SZWdpc3Ry",
+            "YXRpb25SZXNwb25zZRJ7ChdHZXRSZWdpc3RlcmVkRXh0ZW5zaW9ucxIwLnNl",
+            "bWlvLm1hbmFnZXIudjEuR2V0UmVnaXN0ZXJlZEV4dGVuc2lvbnNSZXF1ZXN0",
+            "Gi4uc2VtaW8ubWFuYWdlci52MS5SZWdpc3RlcmVkRXh0ZW5zaW9uc1Jlc3Bv",
+            "bnNlQroBChRjb20uc2VtaW8ubWFuYWdlci52MUIMTWFuYWdlclByb3RvUAFa",
+            "MmdpdGh1Yi5jb20vdXNhbHUvc2VtaW8vc3JjL3NjaGVtYS9zZW1pby9tYW5h",
+            "Z2VyL3YxogIDU01YqgIQU2VtaW8uTWFuYWdlci5WMcoCEFNlbWlvXE1hbmFn",
+            "ZXJcVjHiAhxTZW1pb1xNYW5hZ2VyXFYxXEdQQk1ldGFkYXRh6gISU2VtaW86",
+            "Ok1hbmFnZXI6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Semio.Model.V1.ModelReflection.Descriptor, global::Semio.Extension.V1.ExtensionReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.ElementRequest), global::Semio.Manager.V1.ElementRequest.Parser, new[]{ "Sobject", "TargetTypeUrl" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.AttractionRequest), global::Semio.Manager.V1.AttractionRequest.Parser, new[]{ "Attraction", "TargetTypeUrl" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.AttractionResponse), global::Semio.Manager.V1.AttractionResponse.Parser, new[]{ "AttractedPose", "AttractionPoint" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.ExtensionRegistrationRequest), global::Semio.Manager.V1.ExtensionRegistrationRequest.Parser, new[]{ "Address", "Extending", "ReplaceExisting" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.ExtensionRegistrationRequest), global::Semio.Manager.V1.ExtensionRegistrationRequest.Parser, new[]{ "Address", "Name", "Extending", "ReplaceExisting" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.ExtensionRegistrationResponse), global::Semio.Manager.V1.ExtensionRegistrationResponse.Parser, new[]{ "Success", "OldAddress" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.GetRegisteredExtensionsRequest), global::Semio.Manager.V1.GetRegisteredExtensionsRequest.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Manager.V1.RegisteredExtensionsResponse), global::Semio.Manager.V1.RegisteredExtensionsResponse.Parser, new[]{ "Extensions" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
@@ -825,6 +826,7 @@ namespace Semio.Manager.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public ExtensionRegistrationRequest(ExtensionRegistrationRequest other) : this() {
       address_ = other.address_;
+      name_ = other.name_;
       extending_ = other.extending_ != null ? other.extending_.Clone() : null;
       replaceExisting_ = other.replaceExisting_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
@@ -848,8 +850,20 @@ namespace Semio.Manager.V1 {
       }
     }
 
+    /// <summary>Field number for the "name" field.</summary>
+    public const int NameFieldNumber = 2;
+    private string name_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     /// <summary>Field number for the "extending" field.</summary>
-    public const int ExtendingFieldNumber = 2;
+    public const int ExtendingFieldNumber = 3;
     private global::Semio.Extension.V1.Extending extending_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -861,7 +875,7 @@ namespace Semio.Manager.V1 {
     }
 
     /// <summary>Field number for the "replace_existing" field.</summary>
-    public const int ReplaceExistingFieldNumber = 3;
+    public const int ReplaceExistingFieldNumber = 4;
     private bool replaceExisting_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -888,6 +902,7 @@ namespace Semio.Manager.V1 {
         return true;
       }
       if (Address != other.Address) return false;
+      if (Name != other.Name) return false;
       if (!object.Equals(Extending, other.Extending)) return false;
       if (ReplaceExisting != other.ReplaceExisting) return false;
       return Equals(_unknownFields, other._unknownFields);
@@ -898,6 +913,7 @@ namespace Semio.Manager.V1 {
     public override int GetHashCode() {
       int hash = 1;
       if (Address.Length != 0) hash ^= Address.GetHashCode();
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
       if (extending_ != null) hash ^= Extending.GetHashCode();
       if (ReplaceExisting != false) hash ^= ReplaceExisting.GetHashCode();
       if (_unknownFields != null) {
@@ -922,12 +938,16 @@ namespace Semio.Manager.V1 {
         output.WriteRawTag(10);
         output.WriteString(Address);
       }
-      if (extending_ != null) {
+      if (Name.Length != 0) {
         output.WriteRawTag(18);
+        output.WriteString(Name);
+      }
+      if (extending_ != null) {
+        output.WriteRawTag(26);
         output.WriteMessage(Extending);
       }
       if (ReplaceExisting != false) {
-        output.WriteRawTag(24);
+        output.WriteRawTag(32);
         output.WriteBool(ReplaceExisting);
       }
       if (_unknownFields != null) {
@@ -944,12 +964,16 @@ namespace Semio.Manager.V1 {
         output.WriteRawTag(10);
         output.WriteString(Address);
       }
-      if (extending_ != null) {
+      if (Name.Length != 0) {
         output.WriteRawTag(18);
+        output.WriteString(Name);
+      }
+      if (extending_ != null) {
+        output.WriteRawTag(26);
         output.WriteMessage(Extending);
       }
       if (ReplaceExisting != false) {
-        output.WriteRawTag(24);
+        output.WriteRawTag(32);
         output.WriteBool(ReplaceExisting);
       }
       if (_unknownFields != null) {
@@ -964,6 +988,9 @@ namespace Semio.Manager.V1 {
       int size = 0;
       if (Address.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Address);
+      }
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
       }
       if (extending_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Extending);
@@ -985,6 +1012,9 @@ namespace Semio.Manager.V1 {
       }
       if (other.Address.Length != 0) {
         Address = other.Address;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
       }
       if (other.extending_ != null) {
         if (extending_ == null) {
@@ -1015,13 +1045,17 @@ namespace Semio.Manager.V1 {
             break;
           }
           case 18: {
+            Name = input.ReadString();
+            break;
+          }
+          case 26: {
             if (extending_ == null) {
               Extending = new global::Semio.Extension.V1.Extending();
             }
             input.ReadMessage(Extending);
             break;
           }
-          case 24: {
+          case 32: {
             ReplaceExisting = input.ReadBool();
             break;
           }
@@ -1045,13 +1079,17 @@ namespace Semio.Manager.V1 {
             break;
           }
           case 18: {
+            Name = input.ReadString();
+            break;
+          }
+          case 26: {
             if (extending_ == null) {
               Extending = new global::Semio.Extension.V1.Extending();
             }
             input.ReadMessage(Extending);
             break;
           }
-          case 24: {
+          case 32: {
             ReplaceExisting = input.ReadBool();
             break;
           }
