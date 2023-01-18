@@ -13,6 +13,8 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Any } from "../../google/protobuf/any";
 /**
+ * A 3d point with x,y,z coordinates.
+ *
  * @generated from protobuf message semio.model.v1.Point
  */
 export interface Point {
@@ -30,6 +32,7 @@ export interface Point {
     z: number;
 }
 /**
+ * Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.
  * Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
  *
  * @generated from protobuf message semio.model.v1.Quaternion
@@ -53,7 +56,7 @@ export interface Quaternion {
     z: number;
 }
 /**
- * A pose is a reference frame with an point of view (origin) and orientation (view).
+ * A pose is a reference frame with a point of view (origin) and orientation (view).
  *
  * @generated from protobuf message semio.model.v1.Pose
  */
@@ -198,7 +201,7 @@ export interface Attraction {
     attracted?: AttractionParticipant;
 }
 /**
- * A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
+ * A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other.
  *
  * @generated from protobuf message semio.model.v1.Layout
  */

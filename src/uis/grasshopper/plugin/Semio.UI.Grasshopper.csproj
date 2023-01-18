@@ -8,8 +8,8 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\schema\semio" />
-	<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="Protos\gateway\v1\gateway.proto" ProtoRoot="..\..\schema\semio" />
+	<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\..\schema\semio" />
+	<Protobuf Include="..\..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="Protos\gateway\v1\gateway.proto" ProtoRoot="..\..\..\schema\semio" />
 	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema\semio/>
 	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" />
@@ -19,13 +19,27 @@
 
 	<PackageReference Include="Google.Protobuf" Version="3.21.12" />
 	<PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
-	<PackageReference Include="Grpc.Net.Client" Version="2.51.0" />
+	<PackageReference Include="Grpc.Core" Version="2.46.6" />
 	<PackageReference Include="Grpc.Tools" Version="2.51.0">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
+	<PackageReference Include="NetMQ" Version="4.0.1.10" />
 	<PackageReference Include="RhinoCommon" Version="7.26.23009.7001" />
-	<PackageReference Include="System.Net.Http.WinHttpHandler" Version="7.0.0" />
+	<PackageReference Include="System.Text.Json" Version="7.0.1" />
+  </ItemGroup>
+	<ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup Condition="$(Configuration) == 'Debug' AND $([MSBuild]::IsOSPlatform(Windows))">
     <StartProgram>C:\Program Files\Rhino 7\System\Rhino.exe</StartProgram>

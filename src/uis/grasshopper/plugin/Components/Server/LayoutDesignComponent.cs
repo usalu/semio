@@ -4,16 +4,15 @@ using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
 using Google.Protobuf.Collections;
-using Semio;
-using Grpc.Net.Client;
+using NetMQ;
 using Semio.Gateway.V1;
 using Semio.Model.V1;
-using System.Net.Http;
-using Grpc.Core;
+using NetMQ.Sockets;
+using Grasshopper.Kernel.Types;
 
-namespace Semio.UI.Grasshopper
+namespace Semio.UI.Grasshopper.Components.Server
 {
-    public class LayoutDesign : GH_Component
+    public class LayoutDesignComponent : GH_Component
     {
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
@@ -22,25 +21,27 @@ namespace Semio.UI.Grasshopper
         /// Subcategory the panel. If you use non-existing tab or panel names, 
         /// new tabs/panels will automatically be created.
         /// </summary>
-        public LayoutDesign()
+        public LayoutDesignComponent()
           : base("LayoutDesign", "LayoutDesign",
             "Description",
-            "Semio", "Design")
+            "Semio", "Server")
         {
         }
 
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Run", "R", "", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Layout", "L", "Layout of design", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Run", "R", "", GH_ParamAccess.item, false);
         }
 
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Design", "Design", "", GH_ParamAccess.item);
         }
@@ -52,31 +53,31 @@ namespace Semio.UI.Grasshopper
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            // Http handler works on .Net Framework only with TLS
-            // https://learn.microsoft.com/en-us/aspnet/core/grpc/netstandard?view=aspnetcore-7.0
-            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress("http://localhost:50001", new GrpcChannelOptions
-            {
-                HttpHandler = new WinHttpHandler(),
-                Credentials = ChannelCredentials.Insecure
-            });
+            string url = "";
+            if (!DA.GetData(0, ref url)) return;
+            if (url.StartsWith("https://")) url = url.Substring(8);
+            else if (url.StartsWith("http://")) url = url.Substring(7);
 
-            var client = new Gateway.V1.GatewayService.GatewayServiceClient(channel);
-            var request = new LayoutDesignRequest()
+            var obj = new GH_ObjectWrapper();
+            if (!DA.GetData(1, ref obj)) return;
+            if (obj == null) return;
+            var layout = (Layout)obj.Value;
+
+            bool run = false;
+            if (!DA.GetData(2, ref run)) return;
+
+            string response = "";
+            using (var client = new RequestSocket("inproc://" + url))
             {
-                Layout = new Layout()
+                var layoutDesignRequest = new LayoutDesignRequest()
                 {
-                    Sobjects =
-                    {
-                        new Sobject()
-                        {
-                            Id = "1"
-                        }
-                    }
-                }
-            };
+                    Layout = layout
+                };
 
-            var response = client.LayoutDesign(request);
+                var layoutDesignRequestString = layoutDesignRequest.ToString();
+                client.SendFrame(layoutDesignRequestString);
+                response = client.ReceiveFrameString();
+            }
 
             DA.SetData(0, response);
         }

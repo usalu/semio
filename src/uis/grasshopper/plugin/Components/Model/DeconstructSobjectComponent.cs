@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace Semio.UI.Grasshopper
+namespace Semio.UI.Grasshopper.Model
 {
-    public class Client : GH_Component
+    public class DeconstructSobjectComponent : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the Client class.
+        /// Initializes a new instance of the DeconstructSobject class.
         /// </summary>
-        public Client()
-          : base("Client", "Nickname",
-              "Description",
-              "Category", "Subcategory")
+        public DeconstructSobjectComponent()
+          : base("Deconstruct Sobject", "DeSobject",
+              "Deconstruct a sobject.",
+              "Semio", "Model")
         {
         }
 
@@ -58,7 +58,7 @@ namespace Semio.UI.Grasshopper
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("DCA579DA-1837-4484-8FF2-90E205026999"); }
+            get { return new Guid("464CD7FB-6994-4C81-B510-3EA5508CB650"); }
         }
     }
 }

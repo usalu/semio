@@ -115,6 +115,9 @@ namespace Semio.Model.V1 {
   #endregion
 
   #region Messages
+  /// <summary>
+  /// A 3d point with x,y,z coordinates.
+  /// </summary>
   public sealed partial class Point : pb::IMessage<Point>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -379,6 +382,7 @@ namespace Semio.Model.V1 {
   }
 
   /// <summary>
+  /// Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.  
   /// Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
   /// </summary>
   public sealed partial class Quaternion : pb::IMessage<Quaternion>
@@ -682,7 +686,7 @@ namespace Semio.Model.V1 {
   }
 
   /// <summary>
-  /// A pose is a reference frame with an point of view (origin) and orientation (view).
+  /// A pose is a reference frame with a point of view (origin) and orientation (view).
   /// </summary>
   public sealed partial class Pose : pb::IMessage<Pose>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
@@ -2562,7 +2566,7 @@ namespace Semio.Model.V1 {
   }
 
   /// <summary>
-  /// A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
+  /// A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other.
   /// </summary>
   public sealed partial class Layout : pb::IMessage<Layout>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "semio-ui-grasshopper-proxy"
+version = "0.0.1"
+description = "A proxy client fot the semio gateway for the grasshopper ui. Reason is that .Net Framework has no client for gRPC (without major limitations)."
+authors = ["Ueli Saluz <semio@posteo.org>"]
+repository = "https://github.com/usalu/semio"
+keywords = ["semio", "api", "development"]
+license = "AGPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+grpcio = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

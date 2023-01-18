@@ -7,12 +7,14 @@ option csharp_namespace = "Semio.Model.V1";
 
 import "google/protobuf/any.proto";
 
+// A 3d point with x,y,z coordinates.
 message Point {
   double x = 1;
   double y = 2;
   double z = 3;
 }
 
+// Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.  
 // Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
 message Quaternion {
   double w = 1;
@@ -21,7 +23,7 @@ message Quaternion {
   double z = 4;
 }
 
-// A pose is a reference frame with an point of view (origin) and orientation (view).
+// A pose is a reference frame with a point of view (origin) and orientation (view).
 message Pose {
   Point point_of_view = 1;
   Quaternion view = 2;
@@ -63,7 +65,6 @@ message AttractionParticipant {
   // Id of participating sobject.
   string patricipant_id = 1;
   AttractionParameters parameters = 2;
-  
 }
 
 // An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
@@ -80,7 +81,7 @@ enum LayoutStragey {
   LAYOUTSTRATEGY_DEPTHFIRST = 1;
 }
 
-// A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other.
+// A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other.
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
