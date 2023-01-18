@@ -22,6 +22,9 @@ namespace Semio.UI.Grasshopper.Goos
 
         public string Value { get;}
 
+        public Parameter()
+        {
+        }
         public Parameter(string name, string value)
         {
             Name = name;
@@ -36,6 +39,10 @@ namespace Semio.UI.Grasshopper.Goos
 
     public class ParameterGoo : GH_Goo<Parameter>
     {
+        public ParameterGoo()
+        {
+            Value = new Parameter();
+        }
         public ParameterGoo(Parameter parameter)
         {
             Value = parameter;

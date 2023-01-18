@@ -12,7 +12,7 @@ namespace Semio.UI.Grasshopper.Params
     public class DesignParam : GH_PersistentParam<DesignGoo>
     {
         public DesignParam() :
-            base(Design.Descriptor.Name, Design.Descriptor.Name, Design.Descriptor.Declaration.LeadingComments, "Semio", Design.Descriptor.File.Name.ToUpper())
+            base("Design", "D", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("BBDA367A-2A30-4B6D-B36E-54DC01A78037");
         protected override GH_GetterResult Prompt_Singular(ref DesignGoo value)

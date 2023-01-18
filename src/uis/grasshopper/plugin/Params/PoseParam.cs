@@ -16,7 +16,7 @@ namespace Semio.UI.Grasshopper.Params
     public class PoseParam : GH_PersistentParam<PoseGoo>
     {
         public PoseParam() :
-            base("Pose", "P", "", "Semio", "Model")
+            base("Pose", "Po", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("FCADBFCE-C1C4-465B-BA12-B03132C0F258");
 

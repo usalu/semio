@@ -12,7 +12,7 @@ namespace Semio.UI.Grasshopper.Params
     public class SobjectParam : GH_PersistentParam<SobjectGoo>
     {
         public SobjectParam() :
-            base(Sobject.Descriptor.Name, Sobject.Descriptor.Name, Sobject.Descriptor.Declaration.LeadingComments, "Semio", Sobject.Descriptor.File.Name.ToUpper())
+            base("Sobject", "S", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("A6B3D7AF-5B3D-445E-8F33-9B2A28DA1D22");
         protected override GH_GetterResult Prompt_Singular(ref SobjectGoo value)

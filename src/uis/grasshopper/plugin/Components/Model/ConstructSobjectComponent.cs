@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Google.Protobuf.Collections;
+using Google.Protobuf.Reflection;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using NetMQ.Sockets;
 using Rhino.Geometry;
 using Semio.Gateway.V1;
 using Semio.Model.V1;
+using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 
@@ -15,39 +17,34 @@ namespace Semio.UI.Grasshopper.Model
 {
     public class ConstructSobjectComponent : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the ConstructSobject class.
-        /// </summary>
         public ConstructSobjectComponent()
           : base("Construct Sobject", "Sobject",
               "Construct a sobject",
               "Semio", "Model")
         {
         }
-
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Id", "Id", "Identifier of sobject", GH_ParamAccess.item);
-            pManager.AddTextParameter("Url", "U", "Url of the element definition.", GH_ParamAccess.item);
-            pManager.AddParameter(new PoseParam());
-            pManager.AddParameter(new ParameterParam());
+            var fields = Sobject.Descriptor.Fields.InFieldNumberOrder();
+            FieldDescriptor field;
+            field =fields[0];
+            pManager.AddTextParameter(field.Name.ToUpper(), field.Name.Length>2 ? field.Name.Remove(2): field.Name, field.Declaration.LeadingComments, GH_ParamAccess.item);
+            field = fields[1];
+            pManager.AddTextParameter(field.Name.ToUpper(), field.Name.Length > 2 ? field.Name.Remove(2) : field.Name, field.Declaration.LeadingComments, GH_ParamAccess.item);
+            field = fields[2];
+            pManager.AddParameter(new PoseParam(), field.Name.ToUpper(), field.Name.Length > 2 ? field.Name.Remove(2) : field.Name, field.Declaration.LeadingComments, GH_ParamAccess.item);
+            field = fields[3];
+            pManager.AddParameter(new ParameterParam(), field.Name.ToUpper(), field.Name.Length > 2 ? field.Name.Remove(2) : field.Name, field.Declaration.LeadingComments,GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddParameter(new SobjectParam());
+            var descriptor = Sobject.Descriptor;
+            pManager.AddParameter(new SobjectParam(), descriptor.Name, descriptor.Name.Length > 2 ? descriptor.Name.Remove(2) : descriptor.Name,
+                descriptor.Declaration.LeadingComments, GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
+
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             string id = "";
