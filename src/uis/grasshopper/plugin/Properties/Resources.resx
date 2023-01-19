@@ -119,45 +119,105 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="icon_attraction" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\attraction\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\attraction\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_attractionparticipant" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\attractionparticipant\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\attractionparticipant\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_attractiontree" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\attractiontree\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\attractiontree\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_attraction" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\attraction\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_attractionparticipant" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\attractionparticipant\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_attractiontree" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\attractiontree\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_design" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\design\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_element" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\element\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_layout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\layout\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_modification" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\modification\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_parameter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\parameter\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_pose" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\pose\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_construct_sobject" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\construct\sobject\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_attraction" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\attraction\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_attractionparticipant" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\attractionparticipant\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_attractiontree" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\attractiontree\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_design" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\design\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_element" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\element\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_layout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\layout\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_modification" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\modification\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_parameter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\parameter\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_pose" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\pose\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deconstruct_sobject" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\icons\components\deconstruct\sobject\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_design" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\design\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\design\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_element" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\element\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\element\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_layout" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\layout\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\layout\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_layoutdesign" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\layoutdesign\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\services\layoutdesign\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_layoutstrategy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\layoutstrategy\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\layoutstrategy\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_modification" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\modification\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\modification\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_parameter" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\parameter\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\parameter\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_pose" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\pose\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\pose\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_representationprotocol" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\representationprotocol\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\representationprotocol\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_semio" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\icons\semio\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="icon_sobject" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\sobject\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\resources\icons\model\sobject\favicon-32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

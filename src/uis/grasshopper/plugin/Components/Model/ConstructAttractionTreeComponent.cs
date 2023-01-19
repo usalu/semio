@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using GH_IO.Serialization;
 using System.Security.Policy;
@@ -14,6 +15,7 @@ using Semio.Model.V1;
 using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
+using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Model
 {
@@ -52,5 +54,6 @@ namespace Semio.UI.Grasshopper.Model
             DA.SetData(0, new AttractionTreeGoo(attractionTree));
         }
         public override Guid ComponentGuid => new("712F6DA6-F74D-449F-83CE-956255450413");
+        protected override Bitmap Icon => Resources.icon_construct_attractiontree;
     }
 }

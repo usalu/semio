@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Google.Protobuf.Collections;
 using Google.Protobuf.Reflection;
@@ -12,6 +13,7 @@ using Semio.Model.V1;
 using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
+using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Model
 {
@@ -63,5 +65,6 @@ namespace Semio.UI.Grasshopper.Model
                 DA.SetData(0, new SobjectGoo(sobject));
             }
         public override Guid ComponentGuid=> new("6A1FE23A-C11F-43E3-B609-5A50BE7F2EE3");
+        protected override Bitmap Icon => Resources.icon_construct_sobject;
     }
 }

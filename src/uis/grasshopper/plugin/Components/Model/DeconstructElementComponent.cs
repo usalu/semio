@@ -1,64 +1,31 @@
-﻿//using System;
-//using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-//using Grasshopper.Kernel;
-//using Rhino.Geometry;
+using Grasshopper.Kernel;
+using Rhino.Geometry;
+using Semio.UI.Grasshopper.Components.Model;
+using Semio.UI.Grasshopper.Properties;
 
-//namespace Semio.UI.Grasshopper.Model
-//{
-//    public class DeconstructElementComponent : GH_Component
-//    {
-//        /// <summary>
-//        /// Initializes a new instance of the DeconstructElement class.
-//        /// </summary>
-//        public DeconstructElementComponent()
-//          : base("Deconstruct Element", "DeElement",
-//              "Deconstruct an element",
-//              "Semio", "Model")
-//        {
-//        }
+namespace Semio.UI.Grasshopper.Model
+{
+    public class DeconstructElementComponent : DeconstructComponent
+    {
+        public DeconstructElementComponent()
+          : base("Deconstruct Element", "DeElement", "Deconstruct an element", "Semio", "Model")
+        {
+        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+        }
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+        }
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+        }
+        protected override System.Drawing.Bitmap Icon => Resources.icon_deconstruct_element;
 
-//        /// <summary>
-//        /// Registers all the input parameters for this component.
-//        /// </summary>
-//        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-//        {
-//        }
+        public override Guid ComponentGuid => new ("F7D844B8-495D-4A85-A748-4F400DC85183");
 
-//        /// <summary>
-//        /// Registers all the output parameters for this component.
-//        /// </summary>
-//        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-//        {
-//        }
-
-//        /// <summary>
-//        /// This is the method that actually does the work.
-//        /// </summary>
-//        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
-//        protected override void SolveInstance(IGH_DataAccess DA)
-//        {
-//        }
-
-//        /// <summary>
-//        /// Provides an Icon for the component.
-//        /// </summary>
-//        protected override System.Drawing.Bitmap Icon
-//        {
-//            get
-//            {
-//                //You can add image files to your project resources and access them like this:
-//                // return Resources.IconForThisComponent;
-//                return null;
-//            }
-//        }
-
-//        /// <summary>
-//        /// Gets the unique ID for this component. Do not change this ID after release.
-//        /// </summary>
-//        public override Guid ComponentGuid
-//        {
-//            get { return new Guid("F7D844B8-495D-4A85-A748-4F400DC85183"); }
-//        }
-//    }
-//}
+    }
+}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.Remoting.Messaging;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
@@ -21,7 +22,6 @@ namespace Semio.UI.Grasshopper.Model
             pManager.AddTextParameter("Name", "N", "Name of the parameter", GH_ParamAccess.item);
             pManager.AddTextParameter("Value", "V", "Value of the parameter", GH_ParamAccess.item);
         }
-
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddParameter(new ParameterParam());
@@ -37,5 +37,6 @@ namespace Semio.UI.Grasshopper.Model
             DA.SetData(0, new ParameterGoo(new Parameter(name, value)));
         }
         public override Guid ComponentGuid=>new ("94696A8F-8FF0-4CD0-919B-029252B68BCF");
+        protected override Bitmap Icon => Resources.icon_construct_parameter;
     }
 }

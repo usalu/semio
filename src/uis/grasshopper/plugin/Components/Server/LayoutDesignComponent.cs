@@ -10,6 +10,7 @@ using Semio.Model.V1;
 using NetMQ.Sockets;
 using Grasshopper.Kernel.Types;
 using Semio.UI.Grasshopper.Params;
+using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Components.Server
 {
@@ -59,5 +60,6 @@ namespace Semio.UI.Grasshopper.Components.Server
             DA.SetData(0, response);
         }
         public override Guid ComponentGuid => new ("15ad0008-1e40-41ff-8e38-116102d7488a");
+        protected override System.Drawing.Bitmap Icon => Resources.icon_layoutdesign;
     }
 }
