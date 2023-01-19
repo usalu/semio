@@ -48,7 +48,16 @@ namespace Semio.UI.Grasshopper.Model
         }
 
         public override string ToString() => _pose.ToString();
-
+        public override bool CastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
+            {
+                object ptr = new GH_Plane(Value);
+                target = (Q)ptr;
+                return true;
+            }
+            return false;
+        }
         public override bool CastFrom(object source)
         {
             if (source == null) return false;

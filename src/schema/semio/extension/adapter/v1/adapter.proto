@@ -24,10 +24,15 @@ message Adapting{
 message AttractionPointRequest {
   // Url of attractor.
   string url = 1;
-  // Parameters of attractor
+  // Parameters of attractor.
   map<string,string> parameters = 2;
-  // Attraction parameters of the attracted.
-  semio.model.v1.AttractionParameters attraction_parameters = 3;
+  // Optional bias parameters of attracted.
+  map<string,string> bias = 3;
+  // Optional representation depending on protocol.
+  oneof representation{
+    semio.model.v1.Point simple_representation = 4;
+    semio.model.v1.Representation full_representation = 5;
+  };
 }
 
 message RepresentationRequest {

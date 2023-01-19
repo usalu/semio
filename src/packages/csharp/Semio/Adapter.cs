@@ -27,40 +27,45 @@ namespace Semio.Extension.Adapter.V1 {
             "CiJleHRlbnNpb24vYWRhcHRlci92MS9hZGFwdGVyLnByb3RvEhpzZW1pby5l",
             "eHRlbnNpb24uYWRhcHRlci52MRoUbW9kZWwvdjEvbW9kZWwucHJvdG8iLwoI",
             "QWRhcHRpbmcSIwoNcGxhdGZvcm1fbmFtZRgBIAEoCVIMcGxhdGZvcm1OYW1l",
-            "IqgCChZBdHRyYWN0aW9uUG9pbnRSZXF1ZXN0EhAKA3VybBgBIAEoCVIDdXJs",
+            "IosEChZBdHRyYWN0aW9uUG9pbnRSZXF1ZXN0EhAKA3VybBgBIAEoCVIDdXJs",
             "EmIKCnBhcmFtZXRlcnMYAiADKAsyQi5zZW1pby5leHRlbnNpb24uYWRhcHRl",
             "ci52MS5BdHRyYWN0aW9uUG9pbnRSZXF1ZXN0LlBhcmFtZXRlcnNFbnRyeVIK",
-            "cGFyYW1ldGVycxJZChVhdHRyYWN0aW9uX3BhcmFtZXRlcnMYAyABKAsyJC5z",
-            "ZW1pby5tb2RlbC52MS5BdHRyYWN0aW9uUGFyYW1ldGVyc1IUYXR0cmFjdGlv",
-            "blBhcmFtZXRlcnMaPQoPUGFyYW1ldGVyc0VudHJ5EhAKA2tleRgBIAEoCVID",
-            "a2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAEihAEKFVJlcHJlc2VudGF0",
-            "aW9uUmVxdWVzdBIxCgdzb2JqZWN0GAEgASgLMhcuc2VtaW8ubW9kZWwudjEu",
-            "U29iamVjdFIHc29iamVjdBISCgR0eXBlGAIgASgJUgR0eXBlEhIKBG5hbWUY",
-            "AyABKAlSBG5hbWUSEAoDbG9kGAQgASgDUgNsb2QiiwEKFlJlcHJlc2VudGF0",
-            "aW9uc1JlcXVlc3QSMQoHc29iamVjdBgBIAEoCzIXLnNlbWlvLm1vZGVsLnYx",
-            "LlNvYmplY3RSB3NvYmplY3QSFAoFdHlwZXMYAiADKAlSBXR5cGVzEhQKBW5h",
-            "bWVzGAMgAygJUgVuYW1lcxISCgRsb2RzGAQgAygDUgRsb2RzImMKF1JlcHJl",
-            "c2VudGF0aW9uc1Jlc3BvbnNlEkgKD3JlcHJlc2VudGF0aW9ucxgBIAMoCzIe",
-            "LnNlbWlvLm1vZGVsLnYxLlJlcHJlc2VudGF0aW9uUg9yZXByZXNlbnRhdGlv",
-            "bnMy6wIKDkFkYXB0ZXJTZXJ2aWNlEmUKFlJlcXVlc3RBdHRyYWN0aW9uUG9p",
-            "bnQSMi5zZW1pby5leHRlbnNpb24uYWRhcHRlci52MS5BdHRyYWN0aW9uUG9p",
-            "bnRSZXF1ZXN0GhUuc2VtaW8ubW9kZWwudjEuUG9pbnQiABJsChVSZXF1ZXN0",
-            "UmVwcmVzZW50YXRpb24SMS5zZW1pby5leHRlbnNpb24uYWRhcHRlci52MS5S",
-            "ZXByZXNlbnRhdGlvblJlcXVlc3QaHi5zZW1pby5tb2RlbC52MS5SZXByZXNl",
-            "bnRhdGlvbiIAEoMBChZSZXF1ZXN0UmVwcmVzZW50YXRpb25zEjIuc2VtaW8u",
-            "ZXh0ZW5zaW9uLmFkYXB0ZXIudjEuUmVwcmVzZW50YXRpb25zUmVxdWVzdBoz",
-            "LnNlbWlvLmV4dGVuc2lvbi5hZGFwdGVyLnYxLlJlcHJlc2VudGF0aW9uc1Jl",
-            "c3BvbnNlIgBC9wEKHmNvbS5zZW1pby5leHRlbnNpb24uYWRhcHRlci52MUIM",
-            "QWRhcHRlclByb3RvUAFaPGdpdGh1Yi5jb20vdXNhbHUvc2VtaW8vc3JjL3Nj",
-            "aGVtYS9zZW1pby9leHRlbnNpb24vYWRhcHRlci92MaICA1NFQaoCGlNlbWlv",
-            "LkV4dGVuc2lvbi5BZGFwdGVyLlYxygIaU2VtaW9cRXh0ZW5zaW9uXEFkYXB0",
-            "ZXJcVjHiAiZTZW1pb1xFeHRlbnNpb25cQWRhcHRlclxWMVxHUEJNZXRhZGF0",
-            "YeoCHVNlbWlvOjpFeHRlbnNpb246OkFkYXB0ZXI6OlYxYgZwcm90bzM="));
+            "cGFyYW1ldGVycxJQCgRiaWFzGAMgAygLMjwuc2VtaW8uZXh0ZW5zaW9uLmFk",
+            "YXB0ZXIudjEuQXR0cmFjdGlvblBvaW50UmVxdWVzdC5CaWFzRW50cnlSBGJp",
+            "YXMSTAoVc2ltcGxlX3JlcHJlc2VudGF0aW9uGAQgASgLMhUuc2VtaW8ubW9k",
+            "ZWwudjEuUG9pbnRIAFIUc2ltcGxlUmVwcmVzZW50YXRpb24SUQoTZnVsbF9y",
+            "ZXByZXNlbnRhdGlvbhgFIAEoCzIeLnNlbWlvLm1vZGVsLnYxLlJlcHJlc2Vu",
+            "dGF0aW9uSABSEmZ1bGxSZXByZXNlbnRhdGlvbho9Cg9QYXJhbWV0ZXJzRW50",
+            "cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4",
+            "ARo3CglCaWFzRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiAB",
+            "KAlSBXZhbHVlOgI4AUIQCg5yZXByZXNlbnRhdGlvbiKEAQoVUmVwcmVzZW50",
+            "YXRpb25SZXF1ZXN0EjEKB3NvYmplY3QYASABKAsyFy5zZW1pby5tb2RlbC52",
+            "MS5Tb2JqZWN0Ugdzb2JqZWN0EhIKBHR5cGUYAiABKAlSBHR5cGUSEgoEbmFt",
+            "ZRgDIAEoCVIEbmFtZRIQCgNsb2QYBCABKANSA2xvZCKLAQoWUmVwcmVzZW50",
+            "YXRpb25zUmVxdWVzdBIxCgdzb2JqZWN0GAEgASgLMhcuc2VtaW8ubW9kZWwu",
+            "djEuU29iamVjdFIHc29iamVjdBIUCgV0eXBlcxgCIAMoCVIFdHlwZXMSFAoF",
+            "bmFtZXMYAyADKAlSBW5hbWVzEhIKBGxvZHMYBCADKANSBGxvZHMiYwoXUmVw",
+            "cmVzZW50YXRpb25zUmVzcG9uc2USSAoPcmVwcmVzZW50YXRpb25zGAEgAygL",
+            "Mh4uc2VtaW8ubW9kZWwudjEuUmVwcmVzZW50YXRpb25SD3JlcHJlc2VudGF0",
+            "aW9uczLrAgoOQWRhcHRlclNlcnZpY2USZQoWUmVxdWVzdEF0dHJhY3Rpb25Q",
+            "b2ludBIyLnNlbWlvLmV4dGVuc2lvbi5hZGFwdGVyLnYxLkF0dHJhY3Rpb25Q",
+            "b2ludFJlcXVlc3QaFS5zZW1pby5tb2RlbC52MS5Qb2ludCIAEmwKFVJlcXVl",
+            "c3RSZXByZXNlbnRhdGlvbhIxLnNlbWlvLmV4dGVuc2lvbi5hZGFwdGVyLnYx",
+            "LlJlcHJlc2VudGF0aW9uUmVxdWVzdBoeLnNlbWlvLm1vZGVsLnYxLlJlcHJl",
+            "c2VudGF0aW9uIgASgwEKFlJlcXVlc3RSZXByZXNlbnRhdGlvbnMSMi5zZW1p",
+            "by5leHRlbnNpb24uYWRhcHRlci52MS5SZXByZXNlbnRhdGlvbnNSZXF1ZXN0",
+            "GjMuc2VtaW8uZXh0ZW5zaW9uLmFkYXB0ZXIudjEuUmVwcmVzZW50YXRpb25z",
+            "UmVzcG9uc2UiAEL3AQoeY29tLnNlbWlvLmV4dGVuc2lvbi5hZGFwdGVyLnYx",
+            "QgxBZGFwdGVyUHJvdG9QAVo8Z2l0aHViLmNvbS91c2FsdS9zZW1pby9zcmMv",
+            "c2NoZW1hL3NlbWlvL2V4dGVuc2lvbi9hZGFwdGVyL3YxogIDU0VBqgIaU2Vt",
+            "aW8uRXh0ZW5zaW9uLkFkYXB0ZXIuVjHKAhpTZW1pb1xFeHRlbnNpb25cQWRh",
+            "cHRlclxWMeICJlNlbWlvXEV4dGVuc2lvblxBZGFwdGVyXFYxXEdQQk1ldGFk",
+            "YXRh6gIdU2VtaW86OkV4dGVuc2lvbjo6QWRhcHRlcjo6VjFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Semio.Model.V1.ModelReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.Adapting), global::Semio.Extension.Adapter.V1.Adapting.Parser, new[]{ "PlatformName" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.AttractionPointRequest), global::Semio.Extension.Adapter.V1.AttractionPointRequest.Parser, new[]{ "Url", "Parameters", "AttractionParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.AttractionPointRequest), global::Semio.Extension.Adapter.V1.AttractionPointRequest.Parser, new[]{ "Url", "Parameters", "Bias", "SimpleRepresentation", "FullRepresentation" }, new[]{ "Representation" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.RepresentationRequest), global::Semio.Extension.Adapter.V1.RepresentationRequest.Parser, new[]{ "Sobject", "Type", "Name", "Lod" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.RepresentationsRequest), global::Semio.Extension.Adapter.V1.RepresentationsRequest.Parser, new[]{ "Sobject", "Types_", "Names", "Lods" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Adapter.V1.RepresentationsResponse), global::Semio.Extension.Adapter.V1.RepresentationsResponse.Parser, new[]{ "Representations" }, null, null, null, null)
@@ -295,7 +300,16 @@ namespace Semio.Extension.Adapter.V1 {
     public AttractionPointRequest(AttractionPointRequest other) : this() {
       url_ = other.url_;
       parameters_ = other.parameters_.Clone();
-      attractionParameters_ = other.attractionParameters_ != null ? other.attractionParameters_.Clone() : null;
+      bias_ = other.bias_.Clone();
+      switch (other.RepresentationCase) {
+        case RepresentationOneofCase.SimpleRepresentation:
+          SimpleRepresentation = other.SimpleRepresentation.Clone();
+          break;
+        case RepresentationOneofCase.FullRepresentation:
+          FullRepresentation = other.FullRepresentation.Clone();
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -326,7 +340,7 @@ namespace Semio.Extension.Adapter.V1 {
         = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 18);
     private readonly pbc::MapField<string, string> parameters_ = new pbc::MapField<string, string>();
     /// <summary>
-    /// Parameters of attractor
+    /// Parameters of attractor.
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -334,19 +348,63 @@ namespace Semio.Extension.Adapter.V1 {
       get { return parameters_; }
     }
 
-    /// <summary>Field number for the "attraction_parameters" field.</summary>
-    public const int AttractionParametersFieldNumber = 3;
-    private global::Semio.Model.V1.AttractionParameters attractionParameters_;
+    /// <summary>Field number for the "bias" field.</summary>
+    public const int BiasFieldNumber = 3;
+    private static readonly pbc::MapField<string, string>.Codec _map_bias_codec
+        = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 26);
+    private readonly pbc::MapField<string, string> bias_ = new pbc::MapField<string, string>();
     /// <summary>
-    /// Attraction parameters of the attracted.
+    /// Optional bias parameters of attracted.
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Semio.Model.V1.AttractionParameters AttractionParameters {
-      get { return attractionParameters_; }
+    public pbc::MapField<string, string> Bias {
+      get { return bias_; }
+    }
+
+    /// <summary>Field number for the "simple_representation" field.</summary>
+    public const int SimpleRepresentationFieldNumber = 4;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Semio.Model.V1.Point SimpleRepresentation {
+      get { return representationCase_ == RepresentationOneofCase.SimpleRepresentation ? (global::Semio.Model.V1.Point) representation_ : null; }
       set {
-        attractionParameters_ = value;
+        representation_ = value;
+        representationCase_ = value == null ? RepresentationOneofCase.None : RepresentationOneofCase.SimpleRepresentation;
       }
+    }
+
+    /// <summary>Field number for the "full_representation" field.</summary>
+    public const int FullRepresentationFieldNumber = 5;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Semio.Model.V1.Representation FullRepresentation {
+      get { return representationCase_ == RepresentationOneofCase.FullRepresentation ? (global::Semio.Model.V1.Representation) representation_ : null; }
+      set {
+        representation_ = value;
+        representationCase_ = value == null ? RepresentationOneofCase.None : RepresentationOneofCase.FullRepresentation;
+      }
+    }
+
+    private object representation_;
+    /// <summary>Enum of possible cases for the "representation" oneof.</summary>
+    public enum RepresentationOneofCase {
+      None = 0,
+      SimpleRepresentation = 4,
+      FullRepresentation = 5,
+    }
+    private RepresentationOneofCase representationCase_ = RepresentationOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RepresentationOneofCase RepresentationCase {
+      get { return representationCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearRepresentation() {
+      representationCase_ = RepresentationOneofCase.None;
+      representation_ = null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -366,7 +424,10 @@ namespace Semio.Extension.Adapter.V1 {
       }
       if (Url != other.Url) return false;
       if (!Parameters.Equals(other.Parameters)) return false;
-      if (!object.Equals(AttractionParameters, other.AttractionParameters)) return false;
+      if (!Bias.Equals(other.Bias)) return false;
+      if (!object.Equals(SimpleRepresentation, other.SimpleRepresentation)) return false;
+      if (!object.Equals(FullRepresentation, other.FullRepresentation)) return false;
+      if (RepresentationCase != other.RepresentationCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -376,7 +437,10 @@ namespace Semio.Extension.Adapter.V1 {
       int hash = 1;
       if (Url.Length != 0) hash ^= Url.GetHashCode();
       hash ^= Parameters.GetHashCode();
-      if (attractionParameters_ != null) hash ^= AttractionParameters.GetHashCode();
+      hash ^= Bias.GetHashCode();
+      if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) hash ^= SimpleRepresentation.GetHashCode();
+      if (representationCase_ == RepresentationOneofCase.FullRepresentation) hash ^= FullRepresentation.GetHashCode();
+      hash ^= (int) representationCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -400,9 +464,14 @@ namespace Semio.Extension.Adapter.V1 {
         output.WriteString(Url);
       }
       parameters_.WriteTo(output, _map_parameters_codec);
-      if (attractionParameters_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(AttractionParameters);
+      bias_.WriteTo(output, _map_bias_codec);
+      if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) {
+        output.WriteRawTag(34);
+        output.WriteMessage(SimpleRepresentation);
+      }
+      if (representationCase_ == RepresentationOneofCase.FullRepresentation) {
+        output.WriteRawTag(42);
+        output.WriteMessage(FullRepresentation);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -419,9 +488,14 @@ namespace Semio.Extension.Adapter.V1 {
         output.WriteString(Url);
       }
       parameters_.WriteTo(ref output, _map_parameters_codec);
-      if (attractionParameters_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(AttractionParameters);
+      bias_.WriteTo(ref output, _map_bias_codec);
+      if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) {
+        output.WriteRawTag(34);
+        output.WriteMessage(SimpleRepresentation);
+      }
+      if (representationCase_ == RepresentationOneofCase.FullRepresentation) {
+        output.WriteRawTag(42);
+        output.WriteMessage(FullRepresentation);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -437,8 +511,12 @@ namespace Semio.Extension.Adapter.V1 {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Url);
       }
       size += parameters_.CalculateSize(_map_parameters_codec);
-      if (attractionParameters_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(AttractionParameters);
+      size += bias_.CalculateSize(_map_bias_codec);
+      if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(SimpleRepresentation);
+      }
+      if (representationCase_ == RepresentationOneofCase.FullRepresentation) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(FullRepresentation);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -456,12 +534,22 @@ namespace Semio.Extension.Adapter.V1 {
         Url = other.Url;
       }
       parameters_.Add(other.parameters_);
-      if (other.attractionParameters_ != null) {
-        if (attractionParameters_ == null) {
-          AttractionParameters = new global::Semio.Model.V1.AttractionParameters();
-        }
-        AttractionParameters.MergeFrom(other.AttractionParameters);
+      bias_.Add(other.bias_);
+      switch (other.RepresentationCase) {
+        case RepresentationOneofCase.SimpleRepresentation:
+          if (SimpleRepresentation == null) {
+            SimpleRepresentation = new global::Semio.Model.V1.Point();
+          }
+          SimpleRepresentation.MergeFrom(other.SimpleRepresentation);
+          break;
+        case RepresentationOneofCase.FullRepresentation:
+          if (FullRepresentation == null) {
+            FullRepresentation = new global::Semio.Model.V1.Representation();
+          }
+          FullRepresentation.MergeFrom(other.FullRepresentation);
+          break;
       }
+
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -486,10 +574,25 @@ namespace Semio.Extension.Adapter.V1 {
             break;
           }
           case 26: {
-            if (attractionParameters_ == null) {
-              AttractionParameters = new global::Semio.Model.V1.AttractionParameters();
+            bias_.AddEntriesFrom(input, _map_bias_codec);
+            break;
+          }
+          case 34: {
+            global::Semio.Model.V1.Point subBuilder = new global::Semio.Model.V1.Point();
+            if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) {
+              subBuilder.MergeFrom(SimpleRepresentation);
             }
-            input.ReadMessage(AttractionParameters);
+            input.ReadMessage(subBuilder);
+            SimpleRepresentation = subBuilder;
+            break;
+          }
+          case 42: {
+            global::Semio.Model.V1.Representation subBuilder = new global::Semio.Model.V1.Representation();
+            if (representationCase_ == RepresentationOneofCase.FullRepresentation) {
+              subBuilder.MergeFrom(FullRepresentation);
+            }
+            input.ReadMessage(subBuilder);
+            FullRepresentation = subBuilder;
             break;
           }
         }
@@ -516,10 +619,25 @@ namespace Semio.Extension.Adapter.V1 {
             break;
           }
           case 26: {
-            if (attractionParameters_ == null) {
-              AttractionParameters = new global::Semio.Model.V1.AttractionParameters();
+            bias_.AddEntriesFrom(ref input, _map_bias_codec);
+            break;
+          }
+          case 34: {
+            global::Semio.Model.V1.Point subBuilder = new global::Semio.Model.V1.Point();
+            if (representationCase_ == RepresentationOneofCase.SimpleRepresentation) {
+              subBuilder.MergeFrom(SimpleRepresentation);
             }
-            input.ReadMessage(AttractionParameters);
+            input.ReadMessage(subBuilder);
+            SimpleRepresentation = subBuilder;
+            break;
+          }
+          case 42: {
+            global::Semio.Model.V1.Representation subBuilder = new global::Semio.Model.V1.Representation();
+            if (representationCase_ == RepresentationOneofCase.FullRepresentation) {
+              subBuilder.MergeFrom(FullRepresentation);
+            }
+            input.ReadMessage(subBuilder);
+            FullRepresentation = subBuilder;
             break;
           }
         }

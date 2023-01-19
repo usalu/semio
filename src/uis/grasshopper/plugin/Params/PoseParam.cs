@@ -31,5 +31,6 @@ namespace Semio.UI.Grasshopper.Params
             throw new NotImplementedException();
         }
         public override GH_Exposure Exposure => GH_Exposure.primary;
+        protected override Bitmap Icon => Resources.icon_pose;
     }
 }

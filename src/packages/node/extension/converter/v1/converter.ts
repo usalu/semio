@@ -12,7 +12,6 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Any } from "../../../google/protobuf/any";
 import { Representation } from "../../../model/v1/model";
 /**
  * @generated from protobuf message semio.extension.converter.v1.Converting
@@ -42,9 +41,11 @@ export interface RepresentationConversionRequest {
      */
     targetType: string;
     /**
-     * @generated from protobuf field: google.protobuf.Any options = 3;
+     * @generated from protobuf field: map<string, string> options = 3;
      */
-    options?: Any;
+    options: {
+        [key: string]: string;
+    };
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Converting$Type extends MessageType<Converting> {
@@ -106,11 +107,11 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         super("semio.extension.converter.v1.RepresentationConversionRequest", [
             { no: 1, name: "representation", kind: "message", T: () => Representation },
             { no: 2, name: "target_type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "options", kind: "message", T: () => Any }
+            { no: 3, name: "options", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<RepresentationConversionRequest>): RepresentationConversionRequest {
-        const message = { targetType: "" };
+        const message = { targetType: "", options: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<RepresentationConversionRequest>(this, message, value);
@@ -127,8 +128,8 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
                 case /* string target_type */ 2:
                     message.targetType = reader.string();
                     break;
-                case /* google.protobuf.Any options */ 3:
-                    message.options = Any.internalBinaryRead(reader, reader.uint32(), options, message.options);
+                case /* map<string, string> options */ 3:
+                    this.binaryReadMap3(message.options, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -141,6 +142,22 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         }
         return message;
     }
+    private binaryReadMap3(map: RepresentationConversionRequest["options"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof RepresentationConversionRequest["options"] | undefined, val: RepresentationConversionRequest["options"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = reader.string();
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for field semio.extension.converter.v1.RepresentationConversionRequest.options");
+            }
+        }
+        map[key ?? ""] = val ?? "";
+    }
     internalBinaryWrite(message: RepresentationConversionRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* semio.model.v1.Representation representation = 1; */
         if (message.representation)
@@ -148,9 +165,9 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         /* string target_type = 2; */
         if (message.targetType !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.targetType);
-        /* google.protobuf.Any options = 3; */
-        if (message.options)
-            Any.internalBinaryWrite(message.options, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* map<string, string> options = 3; */
+        for (let k of Object.keys(message.options))
+            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.options[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

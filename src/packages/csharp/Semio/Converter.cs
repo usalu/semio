@@ -28,26 +28,28 @@ namespace Semio.Extension.Converter.V1 {
             "aW8uZXh0ZW5zaW9uLmNvbnZlcnRlci52MRoZZ29vZ2xlL3Byb3RvYnVmL2Fu",
             "eS5wcm90bxoUbW9kZWwvdjEvbW9kZWwucHJvdG8iXAoKQ29udmVydGluZxIm",
             "Cg9zb3VyY2VfdHlwZV91cmwYASABKAlSDXNvdXJjZVR5cGVVcmwSJgoPdGFy",
-            "Z2V0X3R5cGVfdXJsGAIgASgJUg10YXJnZXRUeXBlVXJsIroBCh9SZXByZXNl",
+            "Z2V0X3R5cGVfdXJsGAIgASgJUg10YXJnZXRUeXBlVXJsIqwCCh9SZXByZXNl",
             "bnRhdGlvbkNvbnZlcnNpb25SZXF1ZXN0EkYKDnJlcHJlc2VudGF0aW9uGAEg",
             "ASgLMh4uc2VtaW8ubW9kZWwudjEuUmVwcmVzZW50YXRpb25SDnJlcHJlc2Vu",
-            "dGF0aW9uEh8KC3RhcmdldF90eXBlGAIgASgJUgp0YXJnZXRUeXBlEi4KB29w",
-            "dGlvbnMYAyABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgdvcHRpb25zMooB",
-            "ChBDb252ZXJ0ZXJTZXJ2aWNlEnYKFUNvbnZlcnRSZXByZXNlbnRhdGlvbhI9",
-            "LnNlbWlvLmV4dGVuc2lvbi5jb252ZXJ0ZXIudjEuUmVwcmVzZW50YXRpb25D",
-            "b252ZXJzaW9uUmVxdWVzdBoeLnNlbWlvLm1vZGVsLnYxLlJlcHJlc2VudGF0",
-            "aW9uQoUCCiBjb20uc2VtaW8uZXh0ZW5zaW9uLmNvbnZlcnRlci52MUIOQ29u",
-            "dmVydGVyUHJvdG9QAVo+Z2l0aHViLmNvbS91c2FsdS9zZW1pby9zcmMvc2No",
-            "ZW1hL3NlbWlvL2V4dGVuc2lvbi9jb252ZXJ0ZXIvdjGiAgNTRUOqAhxTZW1p",
-            "by5FeHRlbnNpb24uQ29udmVydGVyLlYxygIcU2VtaW9cRXh0ZW5zaW9uXENv",
-            "bnZlcnRlclxWMeICKFNlbWlvXEV4dGVuc2lvblxDb252ZXJ0ZXJcVjFcR1BC",
-            "TWV0YWRhdGHqAh9TZW1pbzo6RXh0ZW5zaW9uOjpDb252ZXJ0ZXI6OlYxYgZw",
-            "cm90bzM="));
+            "dGF0aW9uEh8KC3RhcmdldF90eXBlGAIgASgJUgp0YXJnZXRUeXBlEmQKB29w",
+            "dGlvbnMYAyADKAsySi5zZW1pby5leHRlbnNpb24uY29udmVydGVyLnYxLlJl",
+            "cHJlc2VudGF0aW9uQ29udmVyc2lvblJlcXVlc3QuT3B0aW9uc0VudHJ5Ugdv",
+            "cHRpb25zGjoKDE9wdGlvbnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2",
+            "YWx1ZRgCIAEoCVIFdmFsdWU6AjgBMooBChBDb252ZXJ0ZXJTZXJ2aWNlEnYK",
+            "FUNvbnZlcnRSZXByZXNlbnRhdGlvbhI9LnNlbWlvLmV4dGVuc2lvbi5jb252",
+            "ZXJ0ZXIudjEuUmVwcmVzZW50YXRpb25Db252ZXJzaW9uUmVxdWVzdBoeLnNl",
+            "bWlvLm1vZGVsLnYxLlJlcHJlc2VudGF0aW9uQoUCCiBjb20uc2VtaW8uZXh0",
+            "ZW5zaW9uLmNvbnZlcnRlci52MUIOQ29udmVydGVyUHJvdG9QAVo+Z2l0aHVi",
+            "LmNvbS91c2FsdS9zZW1pby9zcmMvc2NoZW1hL3NlbWlvL2V4dGVuc2lvbi9j",
+            "b252ZXJ0ZXIvdjGiAgNTRUOqAhxTZW1pby5FeHRlbnNpb24uQ29udmVydGVy",
+            "LlYxygIcU2VtaW9cRXh0ZW5zaW9uXENvbnZlcnRlclxWMeICKFNlbWlvXEV4",
+            "dGVuc2lvblxDb252ZXJ0ZXJcVjFcR1BCTWV0YWRhdGHqAh9TZW1pbzo6RXh0",
+            "ZW5zaW9uOjpDb252ZXJ0ZXI6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.AnyReflection.Descriptor, global::Semio.Model.V1.ModelReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Converter.V1.Converting), global::Semio.Extension.Converter.V1.Converting.Parser, new[]{ "SourceTypeUrl", "TargetTypeUrl" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Converter.V1.RepresentationConversionRequest), global::Semio.Extension.Converter.V1.RepresentationConversionRequest.Parser, new[]{ "Representation", "TargetType", "Options" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Semio.Extension.Converter.V1.RepresentationConversionRequest), global::Semio.Extension.Converter.V1.RepresentationConversionRequest.Parser, new[]{ "Representation", "TargetType", "Options" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
     #endregion
@@ -319,7 +321,7 @@ namespace Semio.Extension.Converter.V1 {
     public RepresentationConversionRequest(RepresentationConversionRequest other) : this() {
       representation_ = other.representation_ != null ? other.representation_.Clone() : null;
       targetType_ = other.targetType_;
-      options_ = other.options_ != null ? other.options_.Clone() : null;
+      options_ = other.options_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -355,14 +357,13 @@ namespace Semio.Extension.Converter.V1 {
 
     /// <summary>Field number for the "options" field.</summary>
     public const int OptionsFieldNumber = 3;
-    private global::Google.Protobuf.WellKnownTypes.Any options_;
+    private static readonly pbc::MapField<string, string>.Codec _map_options_codec
+        = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 26);
+    private readonly pbc::MapField<string, string> options_ = new pbc::MapField<string, string>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Google.Protobuf.WellKnownTypes.Any Options {
+    public pbc::MapField<string, string> Options {
       get { return options_; }
-      set {
-        options_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -382,7 +383,7 @@ namespace Semio.Extension.Converter.V1 {
       }
       if (!object.Equals(Representation, other.Representation)) return false;
       if (TargetType != other.TargetType) return false;
-      if (!object.Equals(Options, other.Options)) return false;
+      if (!Options.Equals(other.Options)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -392,7 +393,7 @@ namespace Semio.Extension.Converter.V1 {
       int hash = 1;
       if (representation_ != null) hash ^= Representation.GetHashCode();
       if (TargetType.Length != 0) hash ^= TargetType.GetHashCode();
-      if (options_ != null) hash ^= Options.GetHashCode();
+      hash ^= Options.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -419,10 +420,7 @@ namespace Semio.Extension.Converter.V1 {
         output.WriteRawTag(18);
         output.WriteString(TargetType);
       }
-      if (options_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(Options);
-      }
+      options_.WriteTo(output, _map_options_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -441,10 +439,7 @@ namespace Semio.Extension.Converter.V1 {
         output.WriteRawTag(18);
         output.WriteString(TargetType);
       }
-      if (options_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(Options);
-      }
+      options_.WriteTo(ref output, _map_options_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -461,9 +456,7 @@ namespace Semio.Extension.Converter.V1 {
       if (TargetType.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(TargetType);
       }
-      if (options_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Options);
-      }
+      size += options_.CalculateSize(_map_options_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -485,12 +478,7 @@ namespace Semio.Extension.Converter.V1 {
       if (other.TargetType.Length != 0) {
         TargetType = other.TargetType;
       }
-      if (other.options_ != null) {
-        if (options_ == null) {
-          Options = new global::Google.Protobuf.WellKnownTypes.Any();
-        }
-        Options.MergeFrom(other.Options);
-      }
+      options_.Add(other.options_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -518,10 +506,7 @@ namespace Semio.Extension.Converter.V1 {
             break;
           }
           case 26: {
-            if (options_ == null) {
-              Options = new global::Google.Protobuf.WellKnownTypes.Any();
-            }
-            input.ReadMessage(Options);
+            options_.AddEntriesFrom(input, _map_options_codec);
             break;
           }
         }
@@ -551,10 +536,7 @@ namespace Semio.Extension.Converter.V1 {
             break;
           }
           case 26: {
-            if (options_ == null) {
-              Options = new global::Google.Protobuf.WellKnownTypes.Any();
-            }
-            input.ReadMessage(Options);
+            options_.AddEntriesFrom(ref input, _map_options_codec);
             break;
           }
         }

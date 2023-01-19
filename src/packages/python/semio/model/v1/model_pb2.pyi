@@ -6,8 +6,11 @@ from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
-LAYOUTSTRATEGY_BREADTHFIRST: LayoutStragey
-LAYOUTSTRATEGY_DEPTHFIRST: LayoutStragey
+LAYOUTSTRATEGY_BREADTHFIRST: LayoutStrategy
+LAYOUTSTRATEGY_DEPTHFIRST: LayoutStrategy
+REPRESENTATIONPROTOCOL_FULL: RepresentationProtocol
+REPRESENTATIONPROTOCOL_NONE: RepresentationProtocol
+REPRESENTATIONPROTOCOL_SIMPLE: RepresentationProtocol
 
 class Attraction(_message.Message):
     __slots__ = ["attracted", "attractor", "id"]
@@ -19,8 +22,8 @@ class Attraction(_message.Message):
     id: str
     def __init__(self, id: _Optional[str] = ..., attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
 
-class AttractionParameters(_message.Message):
-    __slots__ = ["bias", "port", "representation"]
+class AttractionParticipant(_message.Message):
+    __slots__ = ["bias", "patricipant_id", "ports", "representationProtocol"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -29,28 +32,22 @@ class AttractionParameters(_message.Message):
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     BIAS_FIELD_NUMBER: _ClassVar[int]
-    PORT_FIELD_NUMBER: _ClassVar[int]
-    REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
-    bias: _containers.ScalarMap[str, str]
-    port: str
-    representation: _any_pb2.Any
-    def __init__(self, representation: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., port: _Optional[str] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
-
-class AttractionParticipant(_message.Message):
-    __slots__ = ["parameters", "patricipant_id"]
-    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     PATRICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
-    parameters: AttractionParameters
+    PORTS_FIELD_NUMBER: _ClassVar[int]
+    REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
+    bias: _containers.ScalarMap[str, str]
     patricipant_id: str
-    def __init__(self, patricipant_id: _Optional[str] = ..., parameters: _Optional[_Union[AttractionParameters, _Mapping]] = ...) -> None: ...
+    ports: _containers.RepeatedScalarFieldContainer[str]
+    representationProtocol: RepresentationProtocol
+    def __init__(self, patricipant_id: _Optional[str] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class AttractionTree(_message.Message):
-    __slots__ = ["attraction_id", "childrean"]
+    __slots__ = ["attraction_id", "children"]
     ATTRACTION_ID_FIELD_NUMBER: _ClassVar[int]
-    CHILDREAN_FIELD_NUMBER: _ClassVar[int]
+    CHILDREN_FIELD_NUMBER: _ClassVar[int]
     attraction_id: str
-    childrean: _containers.RepeatedCompositeFieldContainer[AttractionTree]
-    def __init__(self, attraction_id: _Optional[str] = ..., childrean: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    children: _containers.RepeatedCompositeFieldContainer[AttractionTree]
+    def __init__(self, attraction_id: _Optional[str] = ..., children: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class Decision(_message.Message):
     __slots__ = ["modification", "strategy"]
@@ -85,8 +82,8 @@ class Layout(_message.Message):
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
     root_sobject_id: str
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
-    stragegy: LayoutStragey
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., root_sobject_id: _Optional[str] = ..., stragegy: _Optional[_Union[LayoutStragey, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    stragegy: LayoutStrategy
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., root_sobject_id: _Optional[str] = ..., stragegy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]
@@ -132,23 +129,19 @@ class Quaternion(_message.Message):
     z: float
     def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
-class RawValue(_message.Message):
-    __slots__ = ["binaryArray", "text"]
-    BINARYARRAY_FIELD_NUMBER: _ClassVar[int]
-    TEXT_FIELD_NUMBER: _ClassVar[int]
-    binaryArray: bytes
-    text: str
-    def __init__(self, binaryArray: _Optional[bytes] = ..., text: _Optional[str] = ...) -> None: ...
-
 class Representation(_message.Message):
-    __slots__ = ["body", "lod", "name"]
-    BODY_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["byteArray", "lod", "name", "text", "type"]
+    BYTEARRAY_FIELD_NUMBER: _ClassVar[int]
     LOD_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    body: _any_pb2.Any
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    byteArray: bytes
     lod: int
     name: str
-    def __init__(self, name: _Optional[str] = ..., lod: _Optional[int] = ..., body: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...) -> None: ...
+    text: str
+    type: str
+    def __init__(self, type: _Optional[str] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ..., byteArray: _Optional[bytes] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Sobject(_message.Message):
     __slots__ = ["id", "parameters", "pose", "url"]
@@ -169,5 +162,8 @@ class Sobject(_message.Message):
     url: str
     def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
-class LayoutStragey(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+class RepresentationProtocol(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+
+class LayoutStrategy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

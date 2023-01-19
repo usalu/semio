@@ -23,5 +23,5 @@ message Converting{
 message RepresentationConversionRequest {
   semio.model.v1.Representation representation = 1;
   string target_type = 2;
-  google.protobuf.Any options = 3;
+  map<string,string> options = 3;
 }

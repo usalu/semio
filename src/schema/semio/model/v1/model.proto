@@ -9,13 +9,15 @@ import "google/protobuf/any.proto";
 
 // A 3d point with x,y,z coordinates.
 message Point {
+  // x coordinate.
   double x = 1;
+  // y coordinate
   double y = 2;
+  // z coordinate
   double z = 3;
 }
 
 // Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.  
-// Could reference the google.type.Quaternion with the difference that w is not at the beginning but end.
 message Quaternion {
   double w = 1;
   double x = 2;
@@ -29,55 +31,78 @@ message Pose {
   Quaternion view = 2;
 }
 
-message RawValue{
-  oneof value {
-    bytes binaryArray = 1;
-    string text = 2;
+// A representation for an element.
+message Representation {
+  // Use the abbrebivatation of the platform. You can find that in the constants part of the package.
+  string type = 1;
+  // Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
+  string name = 2;
+  // Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+  int64 lod = 3;
+  // The body depends on the serilization format of the representation.
+  oneof body {
+    // A byte array is an encoded and optimized body that needs a dedicated package to read the content.
+    bytes byteArray = 4;
+    // A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages.
+    string text = 5;
   }
 }
 
-// A representation for an element.
-message Representation {
-  string name = 1;
-  int64 lod = 2;
-  google.protobuf.Any body = 3;
-}
-
-// Instance information of an element.
+// Instance information for an element.
 message Sobject {
+  // Id that allows to distinguish it from other sobjects.
   string id = 1;
+  // The url of the element definition.
   string url = 2;
+  // The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted.
   Pose pose = 3;
+  // Parameters for the element.
   map<string,string> parameters = 4;
 }
 
-message AttractionParameters {
-   // An optional representation of the participant.
-   google.protobuf.Any representation = 1;
-   // An optional port name to connect to.
-   string port = 2;
-   // Optional parameters to bias the attraction.
-   map<string,string> bias = 3;
+// The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.
+enum RepresentationProtocol{
+  // The attractor sees no representation of the attracted.
+  REPRESENTATIONPROTOCOL_NONE = 0;
+  // In the simple representation protocol everything is representatedby a point.
+  REPRESENTATIONPROTOCOL_SIMPLE = 1;
+  // In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary.
+  REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
 // An attraction participant participates in an attraction process.
 message AttractionParticipant {
   // Id of participating sobject.
   string patricipant_id = 1;
-  AttractionParameters parameters = 2;
+  // An optional representation of the participant.
+  RepresentationProtocol representationProtocol = 2;
+  // Optional port names to connect to. The hierarchy should matter
+  repeated string ports = 3;
+  // Optional parameters to bias the attraction.
+  map<string,string> bias = 4;
 }
 
 // An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
 message Attraction {
-  // Id of attraction.
+  // Id that allows to distinguish it from other attractions.
   string id = 1;
+  // The attractor is expected to be the fixed sobject.
   AttractionParticipant attractor = 2;
+  // The attracted is expected to be the flexible sobject that adjusts its point of view.
   AttractionParticipant attracted = 3;
 }
 
+// An attraction tree contains exact information in which order attractions should be triggered.
+message AttractionTree{
+  string attraction_id = 1;
+  repeated AttractionTree children = 2;
+}
+
 // A layout strategy affects in which orders attractions are triggered.
-enum LayoutStragey {
+enum LayoutStrategy {
+  // A breadth first layout strategy will attract all neighbours first before these start to the same with their neighbours.
   LAYOUTSTRATEGY_BREADTHFIRST = 0;
+  // A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root.
   LAYOUTSTRATEGY_DEPTHFIRST = 1;
 }
 
@@ -85,15 +110,11 @@ enum LayoutStragey {
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
+  // This sobject acts as an anker in the layout.
   string root_sobject_id = 3;
-  LayoutStragey stragegy = 4;
+  LayoutStrategy stragegy = 4;
   // Optional attraction trees with root sobject id as key and attraction tree as value.
   repeated AttractionTree attractionTrees = 5;
-}
-
-message AttractionTree{
-  string attraction_id = 1;
-  repeated AttractionTree childrean = 2;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
