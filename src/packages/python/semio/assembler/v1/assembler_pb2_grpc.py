@@ -2,12 +2,12 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from gateway.v1 import gateway_pb2 as gateway_dot_v1_dot_gateway__pb2
+from assembler.v1 import assembler_pb2 as assembler_dot_v1_dot_assembler__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-class GatewayServiceStub(object):
-    """The gateway service is the gateway for all other apis of semio.
+class AssemblerServiceStub(object):
+    """The assembler service is the assembler for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -18,14 +18,14 @@ class GatewayServiceStub(object):
             channel: A grpc.Channel.
         """
         self.LayoutDesign = channel.unary_unary(
-                '/semio.gateway.v1.GatewayService/LayoutDesign',
-                request_serializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
+                '/semio.assembler.v1.AssemblerService/LayoutDesign',
+                request_serializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
                 )
 
 
-class GatewayServiceServicer(object):
-    """The gateway service is the gateway for all other apis of semio.
+class AssemblerServiceServicer(object):
+    """The assembler service is the assembler for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -41,22 +41,22 @@ class GatewayServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_GatewayServiceServicer_to_server(servicer, server):
+def add_AssemblerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LayoutDesign': grpc.unary_unary_rpc_method_handler(
                     servicer.LayoutDesign,
-                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.FromString,
+                    request_deserializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Design.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'semio.gateway.v1.GatewayService', rpc_method_handlers)
+            'semio.assembler.v1.AssemblerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class GatewayService(object):
-    """The gateway service is the gateway for all other apis of semio.
+class AssemblerService(object):
+    """The assembler service is the assembler for all other apis of semio.
     option (google.api.default_host) = "localhost:50000";
     """
 
@@ -71,8 +71,8 @@ class GatewayService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/LayoutDesign',
-            gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/semio.assembler.v1.AssemblerService/LayoutDesign',
+            assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Design.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

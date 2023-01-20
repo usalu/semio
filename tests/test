@@ -1,27 +1,74 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Google.Protobuf.Collections;
+using Google.Protobuf.Reflection;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
+using NetMQ.Sockets;
+using Rhino.Geometry;
+using Semio.Assembler.V1;
 using Semio.Model.V1;
+using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
-namespace Semio.UI.Grasshopper.Params
+using Semio.UI.Grasshopper.Params;
+
+namespace Semio.UI.Grasshopper.Model
 {
-    public class DesignParam : GH_PersistentParam<DesignGoo>
+    public class ConstructSobjectComponent : ConstructComponent
     {
-        public DesignParam() :
-            base(Design.Descriptor.Name, Design.Descriptor.Name, Design.Descriptor.Declaration.LeadingComments, "Semio", Design.Descriptor.File.Name.ToUpper())
-        { }
-        public override Guid ComponentGuid => new("BBDA367A-2A30-4B6D-B36E-54DC01A78037");
-        protected override GH_GetterResult Prompt_Singular(ref DesignGoo value)
+        public ConstructSobjectComponent() : base("Construct Sobject", "Sobject", "", "Semio", "Model")
         {
-            throw new NotImplementedException();
         }
-        protected override GH_GetterResult Prompt_Plural(ref List<DesignGoo> values)
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            throw new NotImplementedException();
+            var fields = Sobject.Descriptor.Fields.InFieldNumberOrder();
+            FieldDescriptor field;
+            //Sadly field.Declaration.LeadingComments is null at runtime :(
+            field = fields[0];
+            pManager.AddTextParameter(field.Name, field.Name.Length > 2 ? field.Name.Remove(2): field.Name, "", GH_ParamAccess.item);
+            field = fields[1];
+            pManager.AddTextParameter(field.Name, field.Name.Length > 2 ? field.Name.Remove(2) : field.Name, "", GH_ParamAccess.item);
+            field = fields[2];
+            pManager.AddParameter(new PoseParam());
+            field = fields[3];
+            pManager.AddParameter(new ParameterParam(), field.Name, field.Name.Length > 2 ? field.Name.Remove(2) : field.Name, "",GH_ParamAccess.list);
         }
-        public override GH_Exposure Exposure => GH_Exposure.primary;
+
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        {
+            pManager.AddParameter(new SobjectParam());
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            string id = "";
+            if (!DA.GetData(0, ref id)) return;
+
+            string url = "";
+            if (!DA.GetData(1, ref url)) return;
+
+            PoseGoo pose = new();
+            if (!DA.GetData(2, ref pose)) return;
+
+            var parameters = new List<ParameterGoo>();
+            if (!DA.GetDataList(3, parameters)) return;
+
+            Sobject sobject = new Sobject()
+            {
+                Id = id,
+                Url = url,
+                Pose = pose.GetPose()
+            };
+
+            var p = parameters.Select(x=>new{x.Value.Name,x.Value.Value}).ToDictionary(x=>x.Name,x=>x.Value);
+            sobject.Parameters.Add(new MapField<string, string>
+            {
+                p
+            });
+
+            DA.SetData(0, new SobjectGoo(sobject));
+        }
+        public override Guid ComponentGuid=> new("6A1FE23A-C11F-43E3-B609-5A50BE7F2EE3");
     }
 }

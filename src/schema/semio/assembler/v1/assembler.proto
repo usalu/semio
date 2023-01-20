@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package semio.gateway.v1;
+package semio.assembler.v1;
 
-option go_package = "github.com/usalu/semio/src/schema/semio/gateway/v1";
-option csharp_namespace = "Semio.Gateway.V1";
+option go_package = "github.com/usalu/semio/src/schema/semio/assembler/v1";
+option csharp_namespace = "Semio.Assembler.V1";
 
 import "model/v1/model.proto";
 // import "google/api/annotations.proto";
@@ -11,8 +11,8 @@ import "model/v1/model.proto";
 // import "google/api/resource.proto";
 // import "google/protobuf/empty.proto";
 
-// The gateway service is the gateway for all other apis of semio.
-service GatewayService {
+// The assembler service is the assembler for all other apis of semio.
+service AssemblerService {
   //   option (google.api.default_host) = "localhost:50000";
 
   // Lay out a design from a layout and return a design.

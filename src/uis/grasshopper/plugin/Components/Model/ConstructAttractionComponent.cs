@@ -8,7 +8,7 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using NetMQ.Sockets;
 using Rhino.Geometry;
-using Semio.Gateway.V1;
+using Semio.Assembler.V1;
 using Semio.Model.V1;
 using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;

@@ -1,7 +1,7 @@
 from pytest import mark,fixture
 
 from semio.model import Point,Pose,Quaternion,Sobject,Attraction,AttractionParticipant,LayoutStragey,LAYOUTSTRATEGY_BREADTHFIRST,Layout,Any
-from semio.gateway import LayoutDesignRequest, GatewayProxy
+from semio.assembler import LayoutDesignRequest, AssemblerProxy
 
 @fixture
 def sampleLayoutDesignRequest():
@@ -19,6 +19,6 @@ def sampleLayoutDesignRequest():
 
 
 def test_layoutDesign(sampleLayoutDesignRequest):
-    gatewayProxy = GatewayProxy()
-    response = gatewayProxy.LayoutDesign(request=sampleLayoutDesignRequest)
+    assemblerProxy = AssemblerProxy()
+    response = assemblerProxy.LayoutDesign(request=sampleLayoutDesignRequest)
     design = response.design

@@ -24,17 +24,17 @@ namespace Semio.Assembler.V1 {
     static AssemblerReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChhnYXRld2F5L3YxL2dhdGV3YXkucHJvdG8SEHNlbWlvLmdhdGV3YXkudjEa",
-            "FG1vZGVsL3YxL21vZGVsLnByb3RvImYKE0xheW91dERlc2lnblJlcXVlc3QS",
-            "LgoGbGF5b3V0GAEgASgLMhYuc2VtaW8ubW9kZWwudjEuTGF5b3V0UgZsYXlv",
-            "dXQSHwoLdGFyZ2V0X3R5cGUYAiABKAlSCnRhcmdldFR5cGUyYQoOR2F0ZXdh",
-            "eVNlcnZpY2USTwoMTGF5b3V0RGVzaWduEiUuc2VtaW8uZ2F0ZXdheS52MS5M",
-            "YXlvdXREZXNpZ25SZXF1ZXN0GhYuc2VtaW8ubW9kZWwudjEuRGVzaWduIgBC",
-            "ugEKFGNvbS5zZW1pby5nYXRld2F5LnYxQgxHYXRld2F5UHJvdG9QAVoyZ2l0",
-            "aHViLmNvbS91c2FsdS9zZW1pby9zcmMvc2NoZW1hL3NlbWlvL2dhdGV3YXkv",
-            "djGiAgNTR1iqAhBTZW1pby5HYXRld2F5LlYxygIQU2VtaW9cR2F0ZXdheVxW",
-            "MeICHFNlbWlvXEdhdGV3YXlcVjFcR1BCTWV0YWRhdGHqAhJTZW1pbzo6R2F0",
-            "ZXdheTo6VjFiBnByb3RvMw=="));
+            "Chxhc3NlbWJsZXIvdjEvYXNzZW1ibGVyLnByb3RvEhJzZW1pby5hc3NlbWJs",
+            "ZXIudjEaFG1vZGVsL3YxL21vZGVsLnByb3RvImYKE0xheW91dERlc2lnblJl",
+            "cXVlc3QSLgoGbGF5b3V0GAEgASgLMhYuc2VtaW8ubW9kZWwudjEuTGF5b3V0",
+            "UgZsYXlvdXQSHwoLdGFyZ2V0X3R5cGUYAiABKAlSCnRhcmdldFR5cGUyZQoQ",
+            "QXNzZW1ibGVyU2VydmljZRJRCgxMYXlvdXREZXNpZ24SJy5zZW1pby5hc3Nl",
+            "bWJsZXIudjEuTGF5b3V0RGVzaWduUmVxdWVzdBoWLnNlbWlvLm1vZGVsLnYx",
+            "LkRlc2lnbiIAQsgBChZjb20uc2VtaW8uYXNzZW1ibGVyLnYxQg5Bc3NlbWJs",
+            "ZXJQcm90b1ABWjRnaXRodWIuY29tL3VzYWx1L3NlbWlvL3NyYy9zY2hlbWEv",
+            "c2VtaW8vYXNzZW1ibGVyL3YxogIDU0FYqgISU2VtaW8uQXNzZW1ibGVyLlYx",
+            "ygISU2VtaW9cQXNzZW1ibGVyXFYx4gIeU2VtaW9cQXNzZW1ibGVyXFYxXEdQ",
+            "Qk1ldGFkYXRh6gIUU2VtaW86OkFzc2VtYmxlcjo6VjFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Semio.Model.V1.ModelReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {

@@ -24,7 +24,7 @@ plugins:
     
   # - plugin: buf.build/community/chrusty-jsonschema
   #   out: ../jsonschema
-  # # Go gateway server https://github.com/grpc-ecosystem/grpc-gateway
+  # # Go assembler server https://github.com/grpc-ecosystem/grpc-assembler
   # - name: go
   #   out: ../packages/go
   #   opt:
@@ -33,7 +33,7 @@ plugins:
   #   out: ../packages/go
   #   opt:
   #     - paths=source_relative
-  # - name: grpc-gateway
+  # - name: grpc-assembler
   #   out: ../packages/go
   #   opt:
   #     - paths=source_relative

@@ -9,7 +9,7 @@ from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerSe
 from extension import Extending
 
 class ManagerServer(SemioServer,SemioService):
-    gatewayAddress: str = "localhost:"+str(DEFAULT_GATEWAY_PORT)
+    assemblerAddress: str = "localhost:"+str(DEFAULT_GATEWAY_PORT)
     extensions: dict[str,Extending]= Field(default_factory=dict, description="Extensions with address as key and extension description as value.")
     
     def __init__(self,port = DEFAULT_MANAGER_PORT, name = "Python Semio Manager Server", **kw):
@@ -18,12 +18,12 @@ class ManagerServer(SemioServer,SemioService):
     def getServicesDescriptions(self):
         return [SemioServiceDescription(service=self,servicer=ManagerServiceServicer,add_Service_to_server=add_ManagerServiceServicer_to_server,descriptor=DESCRIPTOR)]
 
-    def getGatewayProxy(self):#->GatewayProxy:
-        """Get the gateway proxy. The proxy needs to be created at runtime to avoid cyclic imports between proxies and servers."""
-        if not hasattr(self,'gatewayProxy'):
-            from gateway import GatewayProxy
-            self.gatewayProxy = GatewayProxy(self.gatewayAddress)
-        return self.gatewayProxy
+    def getAssemblerProxy(self):#->AssemblerProxy:
+        """Get the assembler proxy. The proxy needs to be created at runtime to avoid cyclic imports between proxies and servers."""
+        if not hasattr(self,'assemblerProxy'):
+            from assembler import AssemblerProxy
+            self.assemblerProxy = AssemblerProxy(self.assemblerAddress)
+        return self.assemblerProxy
 
     def getExtensionProxy(self,extensionAddress: str):#->ExtensionProxy
         """Get the extension proxy for an address. The proxy needs to be created at runtime to avoid cyclic imports between proxies and servers."""

@@ -1,10 +1,10 @@
 from zmq import Context, REP
 
-from semio.gateway import GatewayProxy, LayoutDesignRequest
+from semio.assembler import AssemblerProxy, LayoutDesignRequest
 
 
 
-gatewayProxy = GatewayProxy()
+assemblerProxy = AssemblerProxy()
 
 context = Context()
 socket = context.socket(REP)
@@ -15,7 +15,7 @@ while True:
     message = socket.recv()
     print("Received request: %s" % message)
     try:
-        response = gatewayProxy.LayoutDesign(request=LayoutDesignRequest.FromString(bytes.decode(message)))
+        response = assemblerProxy.LayoutDesign(request=LayoutDesignRequest.FromString(bytes.decode(message)))
     except Exception as e:
         response = str(e)
     socket.send(response)

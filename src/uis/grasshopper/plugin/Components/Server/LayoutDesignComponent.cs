@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Google.Protobuf.Collections;
 using NetMQ;
-using Semio.Gateway.V1;
+using Semio.Assembler.V1;
 using Semio.Model.V1;
 using NetMQ.Sockets;
 using Grasshopper.Kernel.Types;

@@ -3,7 +3,7 @@ import logging
 from os.path import splitext
 
 from semio.model import Point,Sobject,Attraction,Layout,Element,Design, Representation
-from semio.gateway import GatewayProxy,LayoutDesignRequest
+from semio.assembler import AssemblerProxy,LayoutDesignRequest
 from semio.manager import ManagerServer,AttractionRequest,AttractionResponse,ElementRequest,ExtensionRegistrationRequest, ExtensionRegistrationResponse
 from semio.extension import ExtensionProxy
 from semio.constants import ELEMENT_TYPE_PLATFORM_DICTIONARY, GENERAL_EXTENSIONS
