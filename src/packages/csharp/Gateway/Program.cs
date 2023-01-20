@@ -1,4 +1,4 @@
-using Semio.Backend.Gateway.Services;
+using Semio.Gateway.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

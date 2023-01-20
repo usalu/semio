@@ -4,7 +4,7 @@ using GatewayServiceBase = Semio.Gateway.V1.GatewayService.GatewayServiceBase;
 using Semio.Model.V1;
 
 
-namespace Semio.Backend.Gateway.Services
+namespace Semio.Gateway.Services
 {
     public class GatewayService : GatewayServiceBase
     {

@@ -5,11 +5,11 @@ package semio.extension.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/v1";
 option csharp_namespace = "Semio.Extension.V1";
 
-import "model/v1/model.proto";
-import "extension/adapter/v1/adapter.proto";
-import "extension/converter/v1/converter.proto";
-import "extension/transformer/v1/transformer.proto";
-import "extension/translator/v1/translator.proto";
+import "semio/model/v1/model.proto";
+import "semio/extension/adapter/v1/adapter.proto";
+import "semio/extension/converter/v1/converter.proto";
+import "semio/extension/transformer/v1/transformer.proto";
+import "semio/extension/translator/v1/translator.proto";
 
 message Extending{
   repeated semio.extension.adapter.v1.Adapting adaptings = 3;

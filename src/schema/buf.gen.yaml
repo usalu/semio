@@ -3,11 +3,11 @@ managed:
   enabled: true
 plugins:
   - plugin: buf.build/grpc/python
-    out: ../packages/python/semio
+    out: ../packages/python
   - plugin: buf.build/protocolbuffers/pyi
-    out: ../packages/python/semio
+    out: ../packages/python
   - plugin: buf.build/protocolbuffers/python
-    out: ../packages/python/Semio
+    out: ../packages/python
   - plugin: buf.build/community/timostamm-protobuf-ts
     out: ../packages/node
     opt:
@@ -18,9 +18,9 @@ plugins:
   # - plugin: buf.build/protocolbuffers/js
   #   out: ../packages/node/src
   - plugin: buf.build/grpc/csharp
-    out: ../packages/csharp/Semio
+    out: ../packages/csharp
   - plugin: buf.build/protocolbuffers/csharp
-    out: ../packages/csharp/semio
+    out: ../packages/csharp
     
   # - plugin: buf.build/community/chrusty-jsonschema
   #   out: ../jsonschema
