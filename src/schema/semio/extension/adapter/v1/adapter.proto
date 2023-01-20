@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package semio.extension.adapter.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/extension/adapter/v1";
+option csharp_namespace = "Semio.Extension.Adapter.V1";
+
+import "model/v1/model.proto";
+
+// An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
+service AdapterService {
+  // Request an attraction point for the attracted.
+  rpc RequestAttractionPoint(AttractionPointRequest) returns (semio.model.v1.Point) {}
+  // Request a specific representation
+  rpc RequestRepresentation(RepresentationRequest) returns (semio.model.v1.Representation) {}
+  // Request potentially all representations
+  rpc RequestRepresentations(RepresentationsRequest) returns (RepresentationsResponse) {}
+}
+
+message Adapting{
+  string platform_name = 1;
+}
+
+message AttractionPointRequest {
+  // Url of attractor.
+  string url = 1;
+  // Parameters of attractor.
+  map<string,string> parameters = 2;
+  // Optional bias parameters of attracted.
+  map<string,string> bias = 3;
+  // Optional representation depending on protocol.
+  oneof representation{
+    semio.model.v1.Point simple_representation = 4;
+    semio.model.v1.Representation full_representation = 5;
+  };
+}
+
+message RepresentationRequest {
+  semio.model.v1.Sobject sobject = 1;
+  string type = 2;
+  string name = 3;
+  int64 lod = 4;
+}
+
+message RepresentationsRequest {
+  semio.model.v1.Sobject sobject = 1;
+  repeated string types = 2;
+  repeated string names = 3;
+  repeated int64 lods = 4;
+}
+
+message RepresentationsResponse{
+  repeated semio.model.v1.Representation representations = 1;
+}

@@ -20,11 +20,6 @@ export interface IGatewayServiceClient {
     /**
      * Lay out a design from a layout and return a design.
      *
-     * option (google.api.http) = {
-     *   post: "v1/layout-design"
-     *   body: "*"
-     * };
-     *
      * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
     layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design>;
@@ -44,11 +39,6 @@ export class GatewayServiceClient implements IGatewayServiceClient, ServiceInfo 
     }
     /**
      * Lay out a design from a layout and return a design.
-     *
-     * option (google.api.http) = {
-     *   post: "v1/layout-design"
-     *   body: "*"
-     * };
      *
      * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */

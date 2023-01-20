@@ -1,0 +1,167 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "extension/adapter/v1/adapter.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AdapterService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double",
+          "description": "x coordinate."
+        },
+        "y": {
+          "type": "number",
+          "format": "double",
+          "title": "y coordinate"
+        },
+        "z": {
+          "type": "number",
+          "format": "double",
+          "title": "z coordinate"
+        }
+      },
+      "description": "A 3d point with x,y,z coordinates."
+    },
+    "v1Pose": {
+      "type": "object",
+      "properties": {
+        "pointOfView": {
+          "$ref": "#/definitions/v1Point"
+        },
+        "view": {
+          "$ref": "#/definitions/v1Quaternion"
+        }
+      },
+      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+    },
+    "v1Quaternion": {
+      "type": "object",
+      "properties": {
+        "w": {
+          "type": "number",
+          "format": "double"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "z": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+    },
+    "v1Representation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
+        },
+        "lod": {
+          "type": "string",
+          "format": "int64",
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+        },
+        "byteArray": {
+          "type": "string",
+          "format": "byte",
+          "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content."
+        },
+        "text": {
+          "type": "string",
+          "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
+        }
+      },
+      "description": "A representation for an element."
+    },
+    "v1RepresentationsResponse": {
+      "type": "object",
+      "properties": {
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Representation"
+          }
+        }
+      }
+    },
+    "v1Sobject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id that allows to distinguish it from other sobjects."
+        },
+        "url": {
+          "type": "string",
+          "description": "The url of the element definition."
+        },
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Parameters for the element."
+        }
+      },
+      "description": "Instance information for an element."
+    }
+  }
+}

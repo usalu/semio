@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package semio.manager.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/manager/v1";
+option csharp_namespace = "Semio.Manager.V1";
+
+import "model/v1/model.proto";
+import "extension/v1/extension.proto";
+
+// A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
+service ManagerService {
+  
+  // Request an element from instance information and a traget type.
+  // The target type tries to be provided by one of the following strategies (lowest number wins).
+  // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+  // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+  // 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+  rpc RequestElement(ElementRequest) returns (semio.model.v1.Element);
+
+  // Request the attracted element for an attraction.
+  // The target type tries to be provided by one of the following strategies (lowest number wins).
+  // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
+  // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+  // 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+  rpc RequestAttraction(AttractionRequest) returns (AttractionResponse);
+
+  // Register a service to the server.
+  rpc RegisterExtension(ExtensionRegistrationRequest) returns (ExtensionRegistrationResponse);
+
+  // Get all registered extensions.
+  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
+}
+
+message ElementRequest{
+  semio.model.v1.Sobject sobject = 1;
+  string target_type_url = 2;
+}
+
+message AttractionRequest{
+  semio.model.v1.Attraction attraction = 1;
+  string target_type_url = 2;
+}
+
+message AttractionResponse{
+  semio.model.v1.Pose attracted_pose = 1;
+  semio.model.v1.Point attraction_point = 2;
+}
+
+message ExtensionRegistrationRequest{
+  string address = 1;
+  string name = 2;
+  semio.extension.v1.Extending extending = 3;
+  bool replace_existing = 4;
+}
+
+message ExtensionRegistrationResponse{
+  bool success = 1;
+  // The old address of the same service type if there was one.
+  string old_address = 2;
+}
+
+message GetRegisteredExtensionsRequest{
+}
+
+message RegisteredExtensionsResponse{
+  // A map with extensions where the address is the key and the extension description is the value.
+  map <string,semio.extension.v1.Extending> extensions = 1;
+}

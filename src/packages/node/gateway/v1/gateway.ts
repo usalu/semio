@@ -8,5 +8,5 @@ import { ServiceType } from "@protobuf-ts/runtime-rpc";
  * @generated ServiceType for protobuf service semio.gateway.v1.GatewayService
  */
 export const GatewayService = new ServiceType("semio.gateway.v1.GatewayService", [
-    { name: "LayoutDesign", options: {}, I: LayoutDesignRequest, O: Design }
+    { name: "LayoutDesign", options: { "google.api.http": { post: "/v1/layoutdesign", body: "*" } }, I: LayoutDesignRequest, O: Design }
 ]);

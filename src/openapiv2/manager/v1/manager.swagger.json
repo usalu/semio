@@ -1,0 +1,321 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "manager/v1/manager.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ManagerService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Adapting": {
+      "type": "object",
+      "properties": {
+        "platformName": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Attraction": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id that allows to distinguish it from other attractions."
+        },
+        "attractor": {
+          "$ref": "#/definitions/v1AttractionParticipant",
+          "description": "The attractor is expected to be the fixed sobject."
+        },
+        "attracted": {
+          "$ref": "#/definitions/v1AttractionParticipant",
+          "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
+        }
+      },
+      "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
+    },
+    "v1AttractionParticipant": {
+      "type": "object",
+      "properties": {
+        "patricipantId": {
+          "type": "string",
+          "description": "Id of participating sobject."
+        },
+        "representationProtocol": {
+          "$ref": "#/definitions/v1RepresentationProtocol",
+          "description": "An optional representation of the participant."
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Optional port names to connect to. The hierarchy should matter"
+        },
+        "bias": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters to bias the attraction."
+        }
+      },
+      "description": "An attraction participant participates in an attraction process."
+    },
+    "v1AttractionResponse": {
+      "type": "object",
+      "properties": {
+        "attractedPose": {
+          "$ref": "#/definitions/v1Pose"
+        },
+        "attractionPoint": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
+    },
+    "v1Converting": {
+      "type": "object",
+      "properties": {
+        "sourceTypeUrl": {
+          "type": "string"
+        },
+        "targetTypeUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Element": {
+      "type": "object",
+      "properties": {
+        "pose": {
+          "$ref": "#/definitions/v1Pose"
+        },
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Representation"
+          }
+        }
+      },
+      "description": "An element is the atom of a design. It has several representations and a pose."
+    },
+    "v1Extending": {
+      "type": "object",
+      "properties": {
+        "adaptings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Adapting"
+          }
+        },
+        "convertings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Converting"
+          }
+        },
+        "transformings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Transforming"
+          }
+        },
+        "translatings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Translating"
+          }
+        }
+      }
+    },
+    "v1ExtensionRegistrationResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "oldAddress": {
+          "type": "string",
+          "description": "The old address of the same service type if there was one."
+        }
+      }
+    },
+    "v1Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double",
+          "description": "x coordinate."
+        },
+        "y": {
+          "type": "number",
+          "format": "double",
+          "title": "y coordinate"
+        },
+        "z": {
+          "type": "number",
+          "format": "double",
+          "title": "z coordinate"
+        }
+      },
+      "description": "A 3d point with x,y,z coordinates."
+    },
+    "v1Pose": {
+      "type": "object",
+      "properties": {
+        "pointOfView": {
+          "$ref": "#/definitions/v1Point"
+        },
+        "view": {
+          "$ref": "#/definitions/v1Quaternion"
+        }
+      },
+      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+    },
+    "v1Quaternion": {
+      "type": "object",
+      "properties": {
+        "w": {
+          "type": "number",
+          "format": "double"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "z": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+    },
+    "v1RegisteredExtensionsResponse": {
+      "type": "object",
+      "properties": {
+        "extensions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1Extending"
+          },
+          "description": "A map with extensions where the address is the key and the extension description is the value."
+        }
+      }
+    },
+    "v1Representation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
+        },
+        "lod": {
+          "type": "string",
+          "format": "int64",
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+        },
+        "byteArray": {
+          "type": "string",
+          "format": "byte",
+          "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content."
+        },
+        "text": {
+          "type": "string",
+          "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
+        }
+      },
+      "description": "A representation for an element."
+    },
+    "v1RepresentationProtocol": {
+      "type": "string",
+      "enum": [
+        "REPRESENTATIONPROTOCOL_NONE",
+        "REPRESENTATIONPROTOCOL_SIMPLE",
+        "REPRESENTATIONPROTOCOL_FULL"
+      ],
+      "default": "REPRESENTATIONPROTOCOL_NONE",
+      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is representatedby a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary."
+    },
+    "v1Sobject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id that allows to distinguish it from other sobjects."
+        },
+        "url": {
+          "type": "string",
+          "description": "The url of the element definition."
+        },
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Parameters for the element."
+        }
+      },
+      "description": "Instance information for an element."
+    },
+    "v1Transforming": {
+      "type": "object"
+    },
+    "v1Translating": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -31,10 +31,6 @@ class GatewayServiceServicer(object):
 
     def LayoutDesign(self, request, context):
         """Lay out a design from a layout and return a design.
-        option (google.api.http) = {
-        post: "v1/layout-design"
-        body: "*"
-        };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

@@ -14,14 +14,14 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61ssembler/v1/assembler.proto\x12\x12semio.assembler.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2e\n\x10\x41ssemblerService\x12Q\n\x0cLayoutDesign\x12\'.semio.assembler.v1.LayoutDesignRequest\x1a\x16.semio.model.v1.Design\"\x00\x42\xc8\x01\n\x16\x63om.semio.assembler.v1B\x0e\x41ssemblerProtoP\x01Z4github.com/usalu/semio/src/schema/semio/assembler/v1\xa2\x02\x03SAX\xaa\x02\x12Semio.Assembler.V1\xca\x02\x12Semio\\Assembler\\V1\xe2\x02\x1eSemio\\Assembler\\V1\\GPBMetadata\xea\x02\x14Semio::Assembler::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61ssembler/v1/assembler.proto\x12\x12semio.assembler.v1\x1a\x14model/v1/model.proto\"f\n\x13LayoutDesignRequest\x12.\n\x06layout\x18\x01 \x01(\x0b\x32\x16.semio.model.v1.LayoutR\x06layout\x12\x1f\n\x0btarget_type\x18\x02 \x01(\tR\ntargetType2e\n\x10\x41ssemblerService\x12Q\n\x0cLayoutDesign\x12\'.semio.assembler.v1.LayoutDesignRequest\x1a\x16.semio.model.v1.Design\"\x00\x42\xc7\x01\n\x16\x63om.semio.assembler.v1B\x0e\x41ssemblerProtoP\x01Z3github.com/usalu/semio/src/packages/go/assembler/v1\xa2\x02\x03SAX\xaa\x02\x12Semio.Assembler.V1\xca\x02\x12Semio\\Assembler\\V1\xe2\x02\x1eSemio\\Assembler\\V1\\GPBMetadata\xea\x02\x14Semio::Assembler::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'assembler.v1.assembler_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\026com.semio.assembler.v1B\016AssemblerProtoP\001Z4github.com/usalu/semio/src/schema/semio/assembler/v1\242\002\003SAX\252\002\022Semio.Assembler.V1\312\002\022Semio\\Assembler\\V1\342\002\036Semio\\Assembler\\V1\\GPBMetadata\352\002\024Semio::Assembler::V1'
+  DESCRIPTOR._serialized_options = b'\n\026com.semio.assembler.v1B\016AssemblerProtoP\001Z3github.com/usalu/semio/src/packages/go/assembler/v1\242\002\003SAX\252\002\022Semio.Assembler.V1\312\002\022Semio\\Assembler\\V1\342\002\036Semio\\Assembler\\V1\\GPBMetadata\352\002\024Semio::Assembler::V1'
   _LAYOUTDESIGNREQUEST._serialized_start=74
   _LAYOUTDESIGNREQUEST._serialized_end=176
   _ASSEMBLERSERVICE._serialized_start=178

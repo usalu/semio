@@ -18,14 +18,14 @@ from extension.transformer.v1 import transformer_pb2 as extension_dot_transforme
 from extension.translator.v1 import translator_pb2 as extension_dot_translator_dot_v1_dot_translator__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x65xtension/v1/extension.proto\x12\x12semio.extension.v1\x1a\x14model/v1/model.proto\x1a\"extension/adapter/v1/adapter.proto\x1a&extension/converter/v1/converter.proto\x1a*extension/transformer/v1/transformer.proto\x1a(extension/translator/v1/translator.proto\"\xbf\x02\n\tExtending\x12\x42\n\tadaptings\x18\x03 \x03(\x0b\x32$.semio.extension.adapter.v1.AdaptingR\tadaptings\x12J\n\x0b\x63onvertings\x18\x04 \x03(\x0b\x32(.semio.extension.converter.v1.ConvertingR\x0b\x63onvertings\x12R\n\rtransformings\x18\x05 \x03(\x0b\x32,.semio.extension.transformer.v1.TransformingR\rtransformings\x12N\n\x0ctranslatings\x18\x06 \x03(\x0b\x32*.semio.extension.translator.v1.TranslatingR\x0ctranslatingsB\xc8\x01\n\x16\x63om.semio.extension.v1B\x0e\x45xtensionProtoP\x01Z4github.com/usalu/semio/src/schema/semio/extension/v1\xa2\x02\x03SEX\xaa\x02\x12Semio.Extension.V1\xca\x02\x12Semio\\Extension\\V1\xe2\x02\x1eSemio\\Extension\\V1\\GPBMetadata\xea\x02\x14Semio::Extension::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x65xtension/v1/extension.proto\x12\x12semio.extension.v1\x1a\x14model/v1/model.proto\x1a\"extension/adapter/v1/adapter.proto\x1a&extension/converter/v1/converter.proto\x1a*extension/transformer/v1/transformer.proto\x1a(extension/translator/v1/translator.proto\"\xbf\x02\n\tExtending\x12\x42\n\tadaptings\x18\x03 \x03(\x0b\x32$.semio.extension.adapter.v1.AdaptingR\tadaptings\x12J\n\x0b\x63onvertings\x18\x04 \x03(\x0b\x32(.semio.extension.converter.v1.ConvertingR\x0b\x63onvertings\x12R\n\rtransformings\x18\x05 \x03(\x0b\x32,.semio.extension.transformer.v1.TransformingR\rtransformings\x12N\n\x0ctranslatings\x18\x06 \x03(\x0b\x32*.semio.extension.translator.v1.TranslatingR\x0ctranslatingsB\xc7\x01\n\x16\x63om.semio.extension.v1B\x0e\x45xtensionProtoP\x01Z3github.com/usalu/semio/src/packages/go/extension/v1\xa2\x02\x03SEX\xaa\x02\x12Semio.Extension.V1\xca\x02\x12Semio\\Extension\\V1\xe2\x02\x1eSemio\\Extension\\V1\\GPBMetadata\xea\x02\x14Semio::Extension::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension.v1.extension_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\026com.semio.extension.v1B\016ExtensionProtoP\001Z4github.com/usalu/semio/src/schema/semio/extension/v1\242\002\003SEX\252\002\022Semio.Extension.V1\312\002\022Semio\\Extension\\V1\342\002\036Semio\\Extension\\V1\\GPBMetadata\352\002\024Semio::Extension::V1'
+  DESCRIPTOR._serialized_options = b'\n\026com.semio.extension.v1B\016ExtensionProtoP\001Z3github.com/usalu/semio/src/packages/go/extension/v1\242\002\003SEX\252\002\022Semio.Extension.V1\312\002\022Semio\\Extension\\V1\342\002\036Semio\\Extension\\V1\\GPBMetadata\352\002\024Semio::Extension::V1'
   _EXTENDING._serialized_start=237
   _EXTENDING._serialized_end=556
 # @@protoc_insertion_point(module_scope)
