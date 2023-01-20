@@ -1,3 +1,0 @@
-[submodule "src/schema/thirdparty/google"]
-	path = src/schema/thirdparty/google
-	url = https://github.com/googleapis/googleapis.git
