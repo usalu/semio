@@ -5,8 +5,8 @@ package semio.manager.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/manager/v1";
 option csharp_namespace = "Semio.Manager.V1";
 
-import "model/v1/model.proto";
-import "extension/v1/extension.proto";
+import "semio/model/v1/model.proto";
+import "semio/extension/v1/extension.proto";
 
 // A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
 service ManagerService {

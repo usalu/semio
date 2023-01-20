@@ -5,7 +5,7 @@ package semio.extension.translator.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/translator/v1";
 option csharp_namespace = "Semio.Extension.Translator.V1";
 
-import "model/v1/model.proto";
+import "semio/model/v1/model.proto";
 
 // A translator service can (mostly) translate representations of the specific extension platform.
 service TranslatorService {

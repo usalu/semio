@@ -2,11 +2,11 @@ version: v1
 name: buf.build/usalu/semio
 deps:
   - buf.build/googleapis/googleapis
+# build:
+#   excludes: [google]
 breaking:
   use:
     - FILE
 lint:
   use:
     - BASIC
-excludes:
-  - google

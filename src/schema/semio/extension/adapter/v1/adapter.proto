@@ -5,7 +5,7 @@ package semio.extension.adapter.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/extension/adapter/v1";
 option csharp_namespace = "Semio.Extension.Adapter.V1";
 
-import "model/v1/model.proto";
+import "semio/model/v1/model.proto";
 
 // An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
 service AdapterService {

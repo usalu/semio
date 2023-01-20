@@ -8,9 +8,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\..\schema\semio" />
-	<Protobuf Include="..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\assembler\v1\assembler.proto" ProtoRoot="..\..\..\schema\semio" />
-	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema\semio/>
+	<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\semio\model\v1\model.proto" ProtoRoot="..\..\..\schema" />
+	<Protobuf Include="..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\semio\assembler\v1\assembler.proto" ProtoRoot="..\..\..\schema" />
+	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema/>
 	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\converter\v1\converter.proto" GrpcServices="Client" Link="Protos\extension\converter\v1\converter.proto" />
