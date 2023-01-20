@@ -5,7 +5,7 @@ from pydantic import Field
 
 from grpc import insecure_channel
 
-from constants import DEFAULT_GATEWAY_PORT, DEFAULT_MANAGER_PORT
+from constants import DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
 from .v1.assembler_pb2 import DESCRIPTOR
 from .v1.assembler_pb2_grpc import add_AssemblerServiceServicer_to_server, AssemblerServiceServicer, AssemblerServiceStub
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class AssemblerServer(SemioServer, SemioService, ABC):
     managerAddress: str = "localhost:"+str(DEFAULT_MANAGER_PORT)
 
-    def __init__(self,port = DEFAULT_GATEWAY_PORT, name = "Python Semio Assembler Server", **kw):
+    def __init__(self,port = DEFAULT_ASSEMBLER_PORT, name = "Python Semio Assembler Server", **kw):
         super().__init__(port=port,name=name, **kw)
 
     def getServicesDescriptions(self):
@@ -29,7 +29,7 @@ class AssemblerServer(SemioServer, SemioService, ABC):
         return self.managerProxy
 
 class AssemblerProxy(SemioProxy):
-    def __init__(self,address ='localhost:'+str(DEFAULT_GATEWAY_PORT), **kw):
+    def __init__(self,address ='localhost:'+str(DEFAULT_ASSEMBLER_PORT), **kw):
         super().__init__(address=address,**kw)
         self._stub = AssemblerServiceStub(insecure_channel(self.address))
 

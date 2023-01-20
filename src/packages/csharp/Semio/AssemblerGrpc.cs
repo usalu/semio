@@ -9,7 +9,7 @@ using grpc = global::Grpc.Core;
 
 namespace Semio.Assembler.V1 {
   /// <summary>
-  /// The assembler service is the assembler for all other apis of semio.
+  /// The assembler service is responsible for assembling layouts into designs.
   /// </summary>
   public static partial class AssemblerService
   {

@@ -5,8 +5,6 @@ package semio.model.v1;
 option go_package = "github.com/usalu/semio/src/schema/semio/model/v1";
 option csharp_namespace = "Semio.Model.V1";
 
-import "google/protobuf/any.proto";
-
 // A 3d point with x,y,z coordinates.
 message Point {
   // x coordinate.

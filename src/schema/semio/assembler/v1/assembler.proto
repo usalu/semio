@@ -6,21 +6,13 @@ option go_package = "github.com/usalu/semio/src/schema/semio/assembler/v1";
 option csharp_namespace = "Semio.Assembler.V1";
 
 import "model/v1/model.proto";
-// import "google/api/annotations.proto";
-// import "google/api/client.proto";
-// import "google/api/resource.proto";
-// import "google/protobuf/empty.proto";
 
-// The assembler service is the assembler for all other apis of semio.
+// The assembler service is responsible for assembling layouts into designs.
 service AssemblerService {
   //   option (google.api.default_host) = "localhost:50000";
 
   // Lay out a design from a layout and return a design.
   rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
-    // option (google.api.http) = {
-    //   post: "v1/layout-design"
-    //   body: "*"
-    // };
   }
 }
 

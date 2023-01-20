@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+	<ItemGroup>
+		<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\schema\semio" />
+		<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Server" Link="Protos\gateway\v1\gateway.proto" ProtoRoot="..\..\schema\semio" />
+		<Protobuf Include="..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\assembler\v1\assembler.proto" ProtoRoot="..\..\schema\semio" />
+		<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema\semio" />
+		<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" ProtoRoot="..\..\schema\semio" />
+		<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" ProtoRoot="..\..\schema\semio"/>
+		<Protobuf Include="..\..\schema\semio\extension\converter\v1\converter.proto" GrpcServices="Client" Link="Protos\extension\converter\v1\converter.proto" ProtoRoot="..\..\schema\semio"/>
+		<Protobuf Include="..\..\schema\semio\extension\transformer\v1\transformer.proto" GrpcServices="Client" Link="Protos\extension\transformer\v1\transformer.proto" ProtoRoot="..\..\schema\semio"/>
+		<Protobuf Include="..\..\schema\semio\extension\translator\v1\translator.proto" GrpcServices="Client" Link="Protos\extension\translator\v1\translator.proto" ProtoRoot="..\..\schema\semio"/>-->
+		<Protobuf Include="..\..\schema\thirdparty\google\google\api\annotations.proto" GrpcServices="Server" Link="Protos\google\api\annotations.proto" ProtoRoot="..\..\schema\thirdparty\google\google" />
+		<Protobuf Include="..\..\schema\thirdparty\google\google\api\http.proto" GrpcServices="Server" Link="Protos\google\api\http.proto" ProtoRoot="..\..\schema\thirdparty\google\google" />
+	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.51.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.51.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="7.0.2" />
+  </ItemGroup>
+
+</Project>
