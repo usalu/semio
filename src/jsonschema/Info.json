@@ -1,0 +1,101 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Info",
+    "definitions": {
+        "Info": {
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "The title of the application."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "A short description of the application. GFM syntax can be used for rich text representation."
+                },
+                "terms_of_service": {
+                    "type": "string",
+                    "description": "The Terms of Service for the API."
+                },
+                "contact": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.Contact",
+                    "additionalProperties": true,
+                    "description": "The contact information for the exposed API."
+                },
+                "license": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.License",
+                    "additionalProperties": true,
+                    "description": "The license information for the exposed API."
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Provides the version of the application API (not to be confused with the specification version)."
+                },
+                "extensions": {
+                    "additionalProperties": {
+                        "oneOf": [
+                            {
+                                "type": "array"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "title": "Value",
+                        "description": "`Value` represents a dynamically typed value which can be either null, a number, a string, a boolean, a recursive struct value, or a list of values. A producer of value is expected to set one of these variants. Absence of any variant indicates an error. The JSON representation for `Value` is JSON value."
+                    },
+                    "type": "object",
+                    "description": "Custom properties that start with \"x-\" such as \"x-foo\" used to describe extra functionality that is not covered by the standard OpenAPI Specification. See: https://swagger.io/docs/specification/2-0/swagger-extensions/"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Info",
+            "description": "`Info` is a representation of OpenAPI v2 specification's Info object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#infoObject Example:  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {    info: {      title: \"Echo API\";      version: \"1.0\";      description: \"\";      contact: {        name: \"gRPC-Gateway project\";        url: \"https://github.com/grpc-ecosystem/grpc-gateway\";        email: \"none@example.com\";      };      license: {        name: \"BSD 3-Clause License\";        url: \"https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt\";      };    };    ...  };"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.Contact": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The identifying name of the contact person/organization."
+                },
+                "url": {
+                    "type": "string",
+                    "description": "The URL pointing to the contact information. MUST be in the format of a URL."
+                },
+                "email": {
+                    "type": "string",
+                    "description": "The email address of the contact person/organization. MUST be in the format of an email address."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contact",
+            "description": "`Contact` is a representation of OpenAPI v2 specification's Contact object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#contactObject Example:  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {    info: {      ...      contact: {        name: \"gRPC-Gateway project\";        url: \"https://github.com/grpc-ecosystem/grpc-gateway\";        email: \"none@example.com\";      };      ...    };    ...  };"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.License": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The license name used for the API."
+                },
+                "url": {
+                    "type": "string",
+                    "description": "A URL to the license used for the API. MUST be in the format of a URL."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "License",
+            "description": "`License` is a representation of OpenAPI v2 specification's License object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#licenseObject Example:  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {    info: {      ...      license: {        name: \"BSD 3-Clause License\";        url: \"https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt\";      };      ...    };    ...  };"
+        }
+    }
+}

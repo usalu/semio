@@ -5,55 +5,50 @@
         "Sobject": {
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Id that allows to distinguish it from other sobjects."
                 },
                 "url": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The url of the element definition."
                 },
                 "pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
                 },
                 "parameters": {
                     "additionalProperties": {
-                        "properties": {
-                            "type_url": {
-                                "type": "string",
-                                "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
-                            },
-                            "value": {
-                                "type": "string",
-                                "description": "Must be a valid serialized protocol buffer of the above specified type.",
-                                "format": "binary",
-                                "binaryEncoding": "base64"
-                            }
-                        },
-                        "additionalProperties": true,
-                        "type": "object"
+                        "type": "string"
                     },
-                    "type": "object"
+                    "type": "object",
+                    "description": "Parameters for the element."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Sobject",
-            "description": "Instance information of an element."
+            "description": "Instance information for an element."
         },
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "x coordinate."
                 },
                 "y": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "y coordinate"
                 },
                 "z": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "z coordinate"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Point"
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         },
         "semio.model.v1.Pose": {
             "properties": {
@@ -69,7 +64,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -89,7 +84,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         }
     }
 }

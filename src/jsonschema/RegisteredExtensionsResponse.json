@@ -1,0 +1,90 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/RegisteredExtensionsResponse",
+    "definitions": {
+        "RegisteredExtensionsResponse": {
+            "properties": {
+                "extensions": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/semio.extension.v1.Extending",
+                        "additionalProperties": true
+                    },
+                    "type": "object",
+                    "description": "A map with extensions where the address is the key and the extension description is the value."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Registered Extensions Response"
+        },
+        "semio.extension.adapter.v1.Adapting": {
+            "properties": {
+                "platform_name": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Adapting"
+        },
+        "semio.extension.converter.v1.Converting": {
+            "properties": {
+                "source_type_url": {
+                    "type": "string"
+                },
+                "target_type_url": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Converting"
+        },
+        "semio.extension.transformer.v1.Transforming": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Transforming"
+        },
+        "semio.extension.translator.v1.Translating": {
+            "properties": {
+                "type_url": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Translating"
+        },
+        "semio.extension.v1.Extending": {
+            "properties": {
+                "adaptings": {
+                    "items": {
+                        "$ref": "#/definitions/semio.extension.adapter.v1.Adapting"
+                    },
+                    "type": "array"
+                },
+                "convertings": {
+                    "items": {
+                        "$ref": "#/definitions/semio.extension.converter.v1.Converting"
+                    },
+                    "type": "array"
+                },
+                "transformings": {
+                    "items": {
+                        "$ref": "#/definitions/semio.extension.transformer.v1.Transforming"
+                    },
+                    "type": "array"
+                },
+                "translatings": {
+                    "items": {
+                        "$ref": "#/definitions/semio.extension.translator.v1.Translating"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Extending"
+        }
+    }
+}

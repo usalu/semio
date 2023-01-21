@@ -24,18 +24,22 @@
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "x coordinate."
                 },
                 "y": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "y coordinate"
                 },
                 "z": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "z coordinate"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Point"
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         },
         "semio.model.v1.Pose": {
             "properties": {
@@ -51,7 +55,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -71,37 +75,37 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         },
         "semio.model.v1.Representation": {
             "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+                },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
                 },
                 "lod": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
                 },
-                "body": {
-                    "properties": {
-                        "type_url": {
-                            "type": "string",
-                            "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
-                        },
-                        "value": {
-                            "type": "string",
-                            "description": "Must be a valid serialized protocol buffer of the above specified type.",
-                            "format": "binary",
-                            "binaryEncoding": "base64"
-                        }
-                    },
-                    "additionalProperties": true,
-                    "type": "object"
+                "byteArray": {
+                    "type": "string",
+                    "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content.",
+                    "format": "binary",
+                    "binaryEncoding": "base64"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Might just add verbosity and increase boilerplate code for clients\n message Parameter{\n     string name = 1;\n     google.protobuf.Any value = 2;\n     string type = 3;\n }",
-            "description": "Might just add verbosity and increase boilerplate code for clients message Parameter{     string name = 1;     google.protobuf.Any value = 2;     string type = 3; }  A representation for an element."
+            "title": "Representation",
+            "description": "A representation for an element."
         }
     }
 }

@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Parameters",
+    "definitions": {
+        "Parameters": {
+            "properties": {
+                "headers": {
+                    "items": {
+                        "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.HeaderParameter"
+                    },
+                    "type": "array",
+                    "description": "`Headers` is one or more HTTP header parameter. See: https://swagger.io/docs/specification/2-0/describing-parameters/#header-parameters"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters",
+            "description": "`Parameters` is a representation of OpenAPI v2 specification's parameters object. Note: This technically breaks compatibility with the OpenAPI 2 definition structure as we only allow header parameters to be set here since we do not want users specifying custom non-header parameters beyond those inferred from the Protobuf schema. See: https://swagger.io/specification/v2/#parameter-object"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.HeaderParameter": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "`Name` is the header name."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "`Description` is a short description of the header."
+                },
+                "type": {
+                    "enum": [
+                        "UNKNOWN",
+                        0,
+                        "STRING",
+                        1,
+                        "NUMBER",
+                        2,
+                        "INTEGER",
+                        3,
+                        "BOOLEAN",
+                        4
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Type",
+                    "description": "`Type` is a a supported HTTP header type. See https://swagger.io/specification/v2/#parameterType."
+                },
+                "format": {
+                    "type": "string",
+                    "description": "`Format` The extending format for the previously mentioned type."
+                },
+                "required": {
+                    "type": "boolean",
+                    "description": "`Required` indicates if the header is optional"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Header Parameter",
+            "description": "`HeaderParameter` a HTTP header parameter. See: https://swagger.io/specification/v2/#parameter-object"
+        }
+    }
+}

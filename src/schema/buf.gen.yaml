@@ -27,7 +27,8 @@ plugins:
       - paths=source_relative
   - remote: buf.build/grpc-ecosystem/plugins/openapiv2
     out: ../openapiv2
-
+  - plugin: buf.build/community/chrusty-jsonschema
+    out: ../jsonschema
 
 
   # - plugin: buf.build/grpc/node
@@ -39,8 +40,7 @@ plugins:
   # - plugin: buf.build/protocolbuffers/csharp
   #   out: ../packages/csharp
     
-  # - plugin: buf.build/community/chrusty-jsonschema
-  #   out: ../jsonschema
+ 
   # # Go gateway server https://github.com/grpc-ecosystem/grpc-gateway
   # - name: go
   #   out: ../packages/go

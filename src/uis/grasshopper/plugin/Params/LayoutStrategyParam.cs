@@ -12,10 +12,10 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params
 {
-    public class LayoutStrategyParam : GH_PersistentParam<LayoutStrategyGoo>
+    public class LayoutStrategyParam : SemioPersistentParam<LayoutStrategyGoo>
     {
         public LayoutStrategyParam() :
-            base("Layout Strategy", "RP", "", "Semio", "Model")
+            base("Layout Strategy", "LS", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("9F6C33F9-EAF5-40A5-9C27-B5B8110A87EC");
         protected override GH_GetterResult Prompt_Singular(ref LayoutStrategyGoo value)
@@ -26,7 +26,6 @@ namespace Semio.UI.Grasshopper.Params
         {
             throw new NotImplementedException();
         }
-        public override GH_Exposure Exposure => GH_Exposure.primary;
         protected override Bitmap Icon => Resources.icon_layoutstrategy;
     }
 }

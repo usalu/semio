@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Scopes",
+    "definitions": {
+        "Scopes": {
+            "properties": {
+                "scope": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Maps between a name of a scope to a short description of it (as the value of the property)."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scopes",
+            "description": "`Scopes` is a representation of OpenAPI v2 specification's Scopes object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#scopesObject Lists the available scopes for an OAuth2 security scheme."
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Converting",
+    "definitions": {
+        "Converting": {
+            "properties": {
+                "source_type_url": {
+                    "type": "string"
+                },
+                "target_type_url": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Converting"
+        }
+    }
+}

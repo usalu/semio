@@ -1,0 +1,212 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Schema",
+    "definitions": {
+        "Schema": {
+            "properties": {
+                "json_schema": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.JSONSchema",
+                    "additionalProperties": true
+                },
+                "discriminator": {
+                    "type": "string",
+                    "description": "Adds support for polymorphism. The discriminator is the schema property name that is used to differentiate between other schema that inherit this schema. The property name used MUST be defined at this schema and it MUST be in the required property list. When used, the value MUST be the name of this schema or any schema that inherits it."
+                },
+                "read_only": {
+                    "type": "boolean",
+                    "description": "Relevant only for Schema \"properties\" definitions. Declares the property as \"read only\". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false."
+                },
+                "external_docs": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.ExternalDocumentation",
+                    "additionalProperties": true,
+                    "description": "Additional external documentation for this schema."
+                },
+                "example": {
+                    "type": "string",
+                    "description": "A free-form property to include an example of an instance for this schema in JSON. This is copied verbatim to the output."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Schema",
+            "description": "`Schema` is a representation of OpenAPI v2 specification's Schema object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#schemaObject"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.ExternalDocumentation": {
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "A short description of the target documentation. GFM syntax can be used for rich text representation."
+                },
+                "url": {
+                    "type": "string",
+                    "description": "The URL for the target documentation. Value MUST be in the format of a URL."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "External Documentation",
+            "description": "`ExternalDocumentation` is a representation of OpenAPI v2 specification's ExternalDocumentation object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#externalDocumentationObject Example:  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {    ...    external_docs: {      description: \"More about gRPC-Gateway\";      url: \"https://github.com/grpc-ecosystem/grpc-gateway\";    }    ...  };"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.JSONSchema": {
+            "properties": {
+                "ref": {
+                    "type": "string",
+                    "description": "Ref is used to define an external reference to include in the message. This could be a fully qualified proto message reference, and that type must be imported into the protofile. If no message is identified, the Ref will be used verbatim in the output. For example:  `ref: \".google.protobuf.Timestamp\"`."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title of the schema."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "A short description of the schema."
+                },
+                "default": {
+                    "type": "string"
+                },
+                "read_only": {
+                    "type": "boolean"
+                },
+                "example": {
+                    "type": "string",
+                    "description": "A free-form property to include a JSON example of this field. This is copied verbatim to the output swagger.json. Quotes must be escaped. This property is the same for 2.0 and 3.0.0 https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/3.0.0.md#schemaObject  https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#schemaObject"
+                },
+                "multiple_of": {
+                    "type": "number"
+                },
+                "maximum": {
+                    "type": "number",
+                    "description": "Maximum represents an inclusive upper limit for a numeric instance. The value of MUST be a number,"
+                },
+                "exclusive_maximum": {
+                    "type": "boolean"
+                },
+                "minimum": {
+                    "type": "number",
+                    "description": "minimum represents an inclusive lower limit for a numeric instance. The value of MUST be a number,"
+                },
+                "exclusive_minimum": {
+                    "type": "boolean"
+                },
+                "max_length": {
+                    "type": "string"
+                },
+                "min_length": {
+                    "type": "string"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "max_items": {
+                    "type": "string"
+                },
+                "min_items": {
+                    "type": "string"
+                },
+                "unique_items": {
+                    "type": "boolean"
+                },
+                "max_properties": {
+                    "type": "string"
+                },
+                "min_properties": {
+                    "type": "string"
+                },
+                "required": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "array": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Items in 'array' must be unique."
+                },
+                "type": {
+                    "items": {
+                        "enum": [
+                            "UNKNOWN",
+                            0,
+                            "ARRAY",
+                            1,
+                            "BOOLEAN",
+                            2,
+                            "INTEGER",
+                            3,
+                            "NULL",
+                            4,
+                            "NUMBER",
+                            5,
+                            "OBJECT",
+                            6,
+                            "STRING",
+                            7
+                        ]
+                    },
+                    "type": "array",
+                    "title": "JSON Schema Simple Types"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "`Format`"
+                },
+                "enum": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Items in `enum` must be unique https://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.5.1"
+                },
+                "field_configuration": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.JSONSchema.FieldConfiguration",
+                    "additionalProperties": true,
+                    "description": "Additional field level properties used when generating the OpenAPI v2 file."
+                },
+                "extensions": {
+                    "additionalProperties": {
+                        "oneOf": [
+                            {
+                                "type": "array"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "title": "Value",
+                        "description": "`Value` represents a dynamically typed value which can be either null, a number, a string, a boolean, a recursive struct value, or a list of values. A producer of value is expected to set one of these variants. Absence of any variant indicates an error. The JSON representation for `Value` is JSON value."
+                    },
+                    "type": "object",
+                    "description": "Custom properties that start with \"x-\" such as \"x-foo\" used to describe extra functionality that is not covered by the standard OpenAPI Specification. See: https://swagger.io/docs/specification/2-0/swagger-extensions/"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "JSON Schema",
+            "description": "`JSONSchema` represents properties from JSON Schema taken, and as used, in the OpenAPI v2 spec. This includes changes made by OpenAPI v2. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#schemaObject See also: https://cswr.github.io/JsonSchema/spec/basic_types/, https://github.com/json-schema-org/json-schema-spec/blob/master/schema.json Example:  message SimpleMessage {    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {      json_schema: {        title: \"SimpleMessage\"        description: \"A simple message.\"        required: [\"id\"]      }    };    // Id represents the message identifier.    string id = 1; [        (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {          description: \"The unique identifier of the simple message.\"        }];  }"
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.JSONSchema.FieldConfiguration": {
+            "properties": {
+                "path_param_name": {
+                    "type": "string",
+                    "description": "Alternative parameter name when used as path parameter. If set, this will be used as the complete parameter name when this field is used as a path parameter. Use this to avoid having auto generated path parameter names for overlapping paths."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Field Configuration",
+            "description": "'FieldConfiguration' provides additional field level properties used when generating the OpenAPI v2 file. These properties are not defined by OpenAPIv2, but they are used to control the generation."
+        }
+    }
+}

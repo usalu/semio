@@ -15,22 +15,57 @@
                         "$ref": "#/definitions/semio.model.v1.Attraction"
                     },
                     "type": "array"
+                },
+                "root_sobject_id": {
+                    "type": "string",
+                    "description": "This sobject acts as an anker in the layout."
+                },
+                "stragegy": {
+                    "enum": [
+                        "LAYOUTSTRATEGY_BREADTHFIRST",
+                        0,
+                        "LAYOUTSTRATEGY_DEPTHFIRST",
+                        1
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Layout Strategy",
+                    "description": "A layout strategy affects in which orders attractions are triggered."
+                },
+                "attractionTrees": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.AttractionTree"
+                    },
+                    "type": "array",
+                    "description": "Optional attraction trees with root sobject id as key and attraction tree as value."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Layout",
-            "description": "A layout (graph) is an ambiguous and redudant assembly plan for a set of sobjects and their attractions between each other."
+            "description": "A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other."
         },
         "semio.model.v1.Attraction": {
             "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Id that allows to distinguish it from other attractions."
+                },
                 "attractor": {
                     "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "The attractor is expected to be the fixed sobject."
                 },
                 "attracted": {
                     "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
                 }
             },
             "additionalProperties": true,
@@ -40,60 +75,40 @@
         },
         "semio.model.v1.AttractionParticipant": {
             "properties": {
-                "sobject_id": {
+                "patricipant_id": {
                     "type": "string",
-                    "description": "Participating sobject"
+                    "description": "Id of participating sobject."
                 },
-                "strategy": {
-                    "$ref": "#/definitions/semio.model.v1.AttractionStragegy",
-                    "additionalProperties": true,
-                    "description": "Attraction strategy of participant"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Attraction Participant",
-            "description": "An attraction participant participates in an attraction process."
-        },
-        "semio.model.v1.AttractionStragegy": {
-            "properties": {
-                "representation": {
-                    "properties": {
-                        "type_url": {
-                            "type": "string",
-                            "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
+                "representationProtocol": {
+                    "enum": [
+                        "REPRESENTATIONPROTOCOL_NONE",
+                        0,
+                        "REPRESENTATIONPROTOCOL_SIMPLE",
+                        1,
+                        "REPRESENTATIONPROTOCOL_FULL",
+                        2
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
                         },
-                        "value": {
-                            "type": "string",
-                            "description": "Must be a valid serialized protocol buffer of the above specified type.",
-                            "format": "binary",
-                            "binaryEncoding": "base64"
+                        {
+                            "type": "integer"
                         }
+                    ],
+                    "title": "Representation Protocol",
+                    "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process."
+                },
+                "ports": {
+                    "items": {
+                        "type": "string"
                     },
-                    "additionalProperties": true,
-                    "type": "object",
-                    "description": "An optional representation of the participant."
+                    "type": "array",
+                    "description": "Optional port names to connect to. The hierarchy should matter"
                 },
-                "port": {
-                    "type": "string",
-                    "description": "An optional port name to connect to."
-                },
-                "parameters": {
+                "bias": {
                     "additionalProperties": {
-                        "properties": {
-                            "type_url": {
-                                "type": "string",
-                                "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
-                            },
-                            "value": {
-                                "type": "string",
-                                "description": "Must be a valid serialized protocol buffer of the above specified type.",
-                                "format": "binary",
-                                "binaryEncoding": "base64"
-                            }
-                        },
-                        "additionalProperties": true,
-                        "type": "object"
+                        "type": "string"
                     },
                     "type": "object",
                     "description": "Optional parameters to bias the attraction."
@@ -101,24 +116,45 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction Stragegy",
-            "description": "An attraction strategy of an attraction participant defines parameters that affect the attraction process."
+            "title": "Attraction Participant",
+            "description": "An attraction participant participates in an attraction process."
         },
-        "semio.model.v1.Point": {
+        "semio.model.v1.AttractionTree": {
             "properties": {
-                "x": {
-                    "type": "number"
+                "attraction_id": {
+                    "type": "string"
                 },
-                "y": {
-                    "type": "number"
-                },
-                "z": {
-                    "type": "number"
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.AttractionTree"
+                    },
+                    "type": "array"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Point"
+            "title": "Attraction Tree",
+            "description": "An attraction tree contains exact information in which order attractions should be triggered."
+        },
+        "semio.model.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "x coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         },
         "semio.model.v1.Pose": {
             "properties": {
@@ -134,7 +170,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -154,44 +190,35 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         },
         "semio.model.v1.Sobject": {
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Id that allows to distinguish it from other sobjects."
                 },
                 "url": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The url of the element definition."
                 },
                 "pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
                 },
                 "parameters": {
                     "additionalProperties": {
-                        "properties": {
-                            "type_url": {
-                                "type": "string",
-                                "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows: * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
-                            },
-                            "value": {
-                                "type": "string",
-                                "description": "Must be a valid serialized protocol buffer of the above specified type.",
-                                "format": "binary",
-                                "binaryEncoding": "base64"
-                            }
-                        },
-                        "additionalProperties": true,
-                        "type": "object"
+                        "type": "string"
                     },
-                    "type": "object"
+                    "type": "object",
+                    "description": "Parameters for the element."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Sobject",
-            "description": "Instance information of an element."
+            "description": "Instance information for an element."
         }
     }
 }

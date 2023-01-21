@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/RepresentationsResponse",
+    "definitions": {
+        "RepresentationsResponse": {
+            "properties": {
+                "representations": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Representation"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Representations Response"
+        },
+        "semio.model.v1.Representation": {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
+                },
+                "lod": {
+                    "type": "string",
+                    "description": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+                },
+                "byteArray": {
+                    "type": "string",
+                    "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content.",
+                    "format": "binary",
+                    "binaryEncoding": "base64"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Representation",
+            "description": "A representation for an element."
+        }
+    }
+}

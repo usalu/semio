@@ -12,7 +12,7 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params
 {
-    public class RepresentationProtocolParam : GH_PersistentParam<RepresentationProtocolGoo>
+    public class RepresentationProtocolParam : SemioPersistentParam<RepresentationProtocolGoo>
     {
         public RepresentationProtocolParam() :
             base("Representation Protocol", "RP", "", "Semio", "Model")
@@ -26,7 +26,6 @@ namespace Semio.UI.Grasshopper.Params
         {
             throw new NotImplementedException();
         }
-        public override GH_Exposure Exposure => GH_Exposure.primary;
         protected override Bitmap Icon => Resources.icon_representationprotocol;
     }
 }

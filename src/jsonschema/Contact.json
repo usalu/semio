@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Contact",
+    "definitions": {
+        "Contact": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The identifying name of the contact person/organization."
+                },
+                "url": {
+                    "type": "string",
+                    "description": "The URL pointing to the contact information. MUST be in the format of a URL."
+                },
+                "email": {
+                    "type": "string",
+                    "description": "The email address of the contact person/organization. MUST be in the format of an email address."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contact",
+            "description": "`Contact` is a representation of OpenAPI v2 specification's Contact object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#contactObject Example:  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {    info: {      ...      contact: {        name: \"gRPC-Gateway project\";        url: \"https://github.com/grpc-ecosystem/grpc-gateway\";        email: \"none@example.com\";      };      ...    };    ...  };"
+        }
+    }
+}

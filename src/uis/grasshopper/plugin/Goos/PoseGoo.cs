@@ -17,7 +17,6 @@ namespace Semio.UI.Grasshopper.Model
     {
         private Pose _pose = new();
         public Pose GetPose() => _pose;
-
         private void setValue(Plane plane)
         {
             _pose = Converter.Convert(plane);

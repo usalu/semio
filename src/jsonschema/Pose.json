@@ -16,23 +16,27 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with an point of view (origin) and orientation (view)."
+            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
         },
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "x coordinate."
                 },
                 "y": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "y coordinate"
                 },
                 "z": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "z coordinate"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Point"
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -52,7 +56,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         }
     }
 }

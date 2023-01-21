@@ -1,0 +1,157 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/SecurityDefinitions",
+    "definitions": {
+        "SecurityDefinitions": {
+            "properties": {
+                "security": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.SecurityScheme",
+                        "additionalProperties": true
+                    },
+                    "type": "object",
+                    "description": "A single security scheme definition, mapping a \"name\" to the scheme it defines."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Security Definitions",
+            "description": "`SecurityDefinitions` is a representation of OpenAPI v2 specification's Security Definitions object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#securityDefinitionsObject A declaration of the security schemes available to be used in the specification. This does not enforce the security schemes on the operations and only serves to provide the relevant details for each scheme."
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.Scopes": {
+            "properties": {
+                "scope": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Maps between a name of a scope to a short description of it (as the value of the property)."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scopes",
+            "description": "`Scopes` is a representation of OpenAPI v2 specification's Scopes object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#scopesObject Lists the available scopes for an OAuth2 security scheme."
+        },
+        "grpc.gateway.protoc_gen_openapiv2.options.SecurityScheme": {
+            "properties": {
+                "type": {
+                    "enum": [
+                        "TYPE_INVALID",
+                        0,
+                        "TYPE_BASIC",
+                        1,
+                        "TYPE_API_KEY",
+                        2,
+                        "TYPE_OAUTH2",
+                        3
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Type",
+                    "description": "The type of the security scheme. Valid values are \"basic\", \"apiKey\" or \"oauth2\"."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "A short description for security scheme."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the header or query parameter to be used. Valid for apiKey."
+                },
+                "in": {
+                    "enum": [
+                        "IN_INVALID",
+                        0,
+                        "IN_QUERY",
+                        1,
+                        "IN_HEADER",
+                        2
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "In",
+                    "description": "The location of the API key. Valid values are \"query\" or \"header\"."
+                },
+                "flow": {
+                    "enum": [
+                        "FLOW_INVALID",
+                        0,
+                        "FLOW_IMPLICIT",
+                        1,
+                        "FLOW_PASSWORD",
+                        2,
+                        "FLOW_APPLICATION",
+                        3,
+                        "FLOW_ACCESS_CODE",
+                        4
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Flow",
+                    "description": "The flow used by the OAuth2 security scheme. Valid values are \"implicit\", \"password\", \"application\" or \"accessCode\"."
+                },
+                "authorization_url": {
+                    "type": "string",
+                    "description": "The authorization URL to be used for this flow. This SHOULD be in the form of a URL. Valid for oauth2/implicit and oauth2/accessCode."
+                },
+                "token_url": {
+                    "type": "string",
+                    "description": "The token URL to be used for this flow. This SHOULD be in the form of a URL. Valid for oauth2/password, oauth2/application and oauth2/accessCode."
+                },
+                "scopes": {
+                    "$ref": "#/definitions/grpc.gateway.protoc_gen_openapiv2.options.Scopes",
+                    "additionalProperties": true,
+                    "description": "The available scopes for the OAuth2 security scheme. Valid for oauth2."
+                },
+                "extensions": {
+                    "additionalProperties": {
+                        "oneOf": [
+                            {
+                                "type": "array"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "title": "Value",
+                        "description": "`Value` represents a dynamically typed value which can be either null, a number, a string, a boolean, a recursive struct value, or a list of values. A producer of value is expected to set one of these variants. Absence of any variant indicates an error. The JSON representation for `Value` is JSON value."
+                    },
+                    "type": "object",
+                    "description": "Custom properties that start with \"x-\" such as \"x-foo\" used to describe extra functionality that is not covered by the standard OpenAPI Specification. See: https://swagger.io/docs/specification/2-0/swagger-extensions/"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Security Scheme",
+            "description": "`SecurityScheme` is a representation of OpenAPI v2 specification's Security Scheme object. See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#securitySchemeObject Allows the definition of a security scheme that can be used by the operations. Supported schemes are basic authentication, an API key (either as a header or as a query parameter) and OAuth2's common flows (implicit, password, application and access code)."
+        }
+    }
+}

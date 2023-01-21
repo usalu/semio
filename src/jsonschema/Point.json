@@ -5,18 +5,22 @@
         "Point": {
             "properties": {
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "x coordinate."
                 },
                 "y": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "y coordinate"
                 },
                 "z": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "z coordinate"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Point"
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         }
     }
 }

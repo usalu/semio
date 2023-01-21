@@ -183,6 +183,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_construct_representation {
+            get {
+                object obj = ResourceManager.GetObject("icon_construct_representation", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_construct_sobject {
             get {
                 object obj = ResourceManager.GetObject("icon_construct_sobject", resourceCulture);
@@ -276,6 +286,16 @@ namespace Semio.UI.Grasshopper.Properties {
         internal static System.Drawing.Bitmap icon_deconstruct_pose {
             get {
                 object obj = ResourceManager.GetObject("icon_deconstruct_pose", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_deconstruct_representation {
+            get {
+                object obj = ResourceManager.GetObject("icon_deconstruct_representation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

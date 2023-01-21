@@ -8,8 +8,8 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\semio\model\v1\model.proto" ProtoRoot="..\..\..\schema" />
-	<Protobuf Include="..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\semio\assembler\v1\assembler.proto" ProtoRoot="..\..\..\schema" />
+	<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\..\schema\semio" />
+	<Protobuf Include="..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\assembler\v1\assembler.proto" ProtoRoot="..\..\..\schema\semio" />
 	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema/>
 	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" />
@@ -24,8 +24,8 @@
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="NetMQ" Version="4.0.1.10" />
 	<PackageReference Include="RhinoCommon" Version="7.26.23009.7001" />
+	<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	<PackageReference Include="System.Text.Json" Version="7.0.1" />
   </ItemGroup>
 	<ItemGroup>

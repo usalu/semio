@@ -8,7 +8,6 @@ using Google.Protobuf.Collections;
 using Google.Protobuf.Reflection;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
-using NetMQ.Sockets;
 using Rhino.Geometry;
 using Semio.Assembler.V1;
 using Semio.Model.V1;

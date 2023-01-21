@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/ExtensionRegistrationResponse",
+    "definitions": {
+        "ExtensionRegistrationResponse": {
+            "properties": {
+                "success": {
+                    "type": "boolean"
+                },
+                "old_address": {
+                    "type": "string",
+                    "description": "The old address of the same service type if there was one."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Extension Registration Response"
+        }
+    }
+}

@@ -12,7 +12,7 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params
 {
-    public class AttractionParam : GH_PersistentParam<AttractionGoo>
+    public class AttractionParam : SemioPersistentParam<AttractionGoo>
     {
         public AttractionParam() :
             base("Attraction", "A", "", "Semio", "Model")
@@ -26,7 +26,6 @@ namespace Semio.UI.Grasshopper.Params
         {
             throw new NotImplementedException();
         }
-        public override GH_Exposure Exposure => GH_Exposure.primary;
         protected override Bitmap Icon => Resources.icon_attraction;
     }
 }

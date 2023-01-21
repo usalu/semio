@@ -13,7 +13,7 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params
 {
-    public class PoseParam : GH_PersistentParam<PoseGoo>
+    public class PoseParam : SemioPersistentParam<PoseGoo>
     {
         public PoseParam() :
             base("Pose", "Po", "", "Semio", "Model")
@@ -30,7 +30,6 @@ namespace Semio.UI.Grasshopper.Params
         {
             throw new NotImplementedException();
         }
-        public override GH_Exposure Exposure => GH_Exposure.primary;
         protected override Bitmap Icon => Resources.icon_pose;
     }
 }

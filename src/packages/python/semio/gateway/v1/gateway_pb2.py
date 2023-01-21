@@ -14,18 +14,19 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 from assembler.v1 import assembler_pb2 as assembler_dot_v1_dot_assembler__pb2
 from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
+from protoc_gen_openapiv2.options import annotations_pb2 as protoc__gen__openapiv2_dot_options_dot_annotations__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18gateway/v1/gateway.proto\x12\x10semio.gateway.v1\x1a\x14model/v1/model.proto\x1a\x1c\x61ssembler/v1/assembler.proto\x1a\x1cgoogle/api/annotations.proto2~\n\x0eGatewayService\x12l\n\x0cLayoutDesign\x12\'.semio.assembler.v1.LayoutDesignRequest\x1a\x16.semio.model.v1.Design\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/layoutdesignB\xb9\x01\n\x14\x63om.semio.gateway.v1B\x0cGatewayProtoP\x01Z1github.com/usalu/semio/src/packages/go/gateway/v1\xa2\x02\x03SGX\xaa\x02\x10Semio.Gateway.V1\xca\x02\x10Semio\\Gateway\\V1\xe2\x02\x1cSemio\\Gateway\\V1\\GPBMetadata\xea\x02\x12Semio::Gateway::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18gateway/v1/gateway.proto\x12\x10semio.gateway.v1\x1a\x14model/v1/model.proto\x1a\x1c\x61ssembler/v1/assembler.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2~\n\x0eGatewayService\x12l\n\x0cLayoutDesign\x12\'.semio.assembler.v1.LayoutDesignRequest\x1a\x16.semio.model.v1.Design\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/layoutdesignB\xc5\x02\n\x14\x63om.semio.gateway.v1B\x0cGatewayProtoP\x01Z1github.com/usalu/semio/src/packages/go/gateway/v1\xa2\x02\x03SGX\xaa\x02\x10Semio.Gateway.V1\xca\x02\x10Semio\\Gateway\\V1\xe2\x02\x1cSemio\\Gateway\\V1\\GPBMetadata\xea\x02\x12Semio::Gateway::V1\x92\x41\x88\x01\x12\x85\x01\n\x05Semio\">\n\nUeli Saluz\x12\x1ehttps://github.com/usalu/semio\x1a\x10semio@posteo.org*\x13\n\x11\x41GPL-3.0-or-later2\x05\x30.0.1: \n\x15x-something-something\x12\x07\x1a\x05yaddab\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'gateway.v1.gateway_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\024com.semio.gateway.v1B\014GatewayProtoP\001Z1github.com/usalu/semio/src/packages/go/gateway/v1\242\002\003SGX\252\002\020Semio.Gateway.V1\312\002\020Semio\\Gateway\\V1\342\002\034Semio\\Gateway\\V1\\GPBMetadata\352\002\022Semio::Gateway::V1'
+  DESCRIPTOR._serialized_options = b'\n\024com.semio.gateway.v1B\014GatewayProtoP\001Z1github.com/usalu/semio/src/packages/go/gateway/v1\242\002\003SGX\252\002\020Semio.Gateway.V1\312\002\020Semio\\Gateway\\V1\342\002\034Semio\\Gateway\\V1\\GPBMetadata\352\002\022Semio::Gateway::V1\222A\210\001\022\205\001\n\005Semio\">\n\nUeli Saluz\022\036https://github.com/usalu/semio\032\020semio@posteo.org*\023\n\021AGPL-3.0-or-later2\0050.0.1: \n\025x-something-something\022\007\032\005yadda'
   _GATEWAYSERVICE.methods_by_name['LayoutDesign']._options = None
   _GATEWAYSERVICE.methods_by_name['LayoutDesign']._serialized_options = b'\202\323\344\223\002\025:\001*\"\020/v1/layoutdesign'
-  _GATEWAYSERVICE._serialized_start=128
-  _GATEWAYSERVICE._serialized_end=254
+  _GATEWAYSERVICE._serialized_start=176
+  _GATEWAYSERVICE._serialized_end=302
 # @@protoc_insertion_point(module_scope)

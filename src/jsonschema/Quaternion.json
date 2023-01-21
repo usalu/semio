@@ -20,7 +20,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Could reference the google.type.Quaternion with the difference that w is not at the beginning but end."
+            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         }
     }
 }

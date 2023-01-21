@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/AttractionRequest",
+    "definitions": {
+        "AttractionRequest": {
+            "properties": {
+                "attraction": {
+                    "$ref": "#/definitions/semio.model.v1.Attraction",
+                    "additionalProperties": true
+                },
+                "target_type_url": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction Request"
+        },
+        "semio.model.v1.Attraction": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Id that allows to distinguish it from other attractions."
+                },
+                "attractor": {
+                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                    "additionalProperties": true,
+                    "description": "The attractor is expected to be the fixed sobject."
+                },
+                "attracted": {
+                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                    "additionalProperties": true,
+                    "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction",
+            "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
+        },
+        "semio.model.v1.AttractionParticipant": {
+            "properties": {
+                "patricipant_id": {
+                    "type": "string",
+                    "description": "Id of participating sobject."
+                },
+                "representationProtocol": {
+                    "enum": [
+                        "REPRESENTATIONPROTOCOL_NONE",
+                        0,
+                        "REPRESENTATIONPROTOCOL_SIMPLE",
+                        1,
+                        "REPRESENTATIONPROTOCOL_FULL",
+                        2
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Representation Protocol",
+                    "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process."
+                },
+                "ports": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Optional port names to connect to. The hierarchy should matter"
+                },
+                "bias": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Optional parameters to bias the attraction."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attraction Participant",
+            "description": "An attraction participant participates in an attraction process."
+        }
+    }
+}
