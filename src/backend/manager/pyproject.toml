@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "semio-backend"
+name = "semio-backend-manager"
 version = "0.0.1"
-description = "A backend for semio."
+description = "A manager for the backend of semio."
 authors = ["Ueli Saluz <semio@posteo.org>"]
 license = "AGPL"
 readme = "README.md"
@@ -12,7 +12,6 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 pydantic = "*"
-networkx = "*"
 mathutils = "*"
 semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 #semio = {path = "../packages/python/dist/semio-0.0.1-py3-none-any.whl"}

@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "semio-backend"
+name = "semio-backend-assembler"
 version = "0.0.1"
-description = "A backend for semio."
+description = "An assembler for the backend of semio."
 authors = ["Ueli Saluz <semio@posteo.org>"]
 license = "AGPL"
 readme = "README.md"
