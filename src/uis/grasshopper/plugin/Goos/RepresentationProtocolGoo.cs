@@ -13,7 +13,7 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class RepresentationProtocolGoo : GH_Goo<RepresentationProtocol>
+    public class RepresentationProtocolGoo : SemioGoo<RepresentationProtocol>
     {
         public RepresentationProtocolGoo()
         {
@@ -26,11 +26,8 @@ namespace Semio.UI.Grasshopper.Goos
         }
 
         public override IGH_Goo Duplicate() => new RepresentationProtocolGoo(Value);
-        public override string ToString() => Value.ToString();
-        public override bool IsValid => true;
         public override string TypeName => "RepresentationProtocol";
         public override string TypeDescription => "";
-
         public override bool CastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(RepresentationProtocol)))

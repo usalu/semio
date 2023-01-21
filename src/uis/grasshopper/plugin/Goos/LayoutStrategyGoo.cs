@@ -13,24 +13,19 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class LayoutStrategyGoo : GH_Goo<LayoutStrategy>
+    public class LayoutStrategyGoo : SemioGoo<LayoutStrategy>
     {
         public LayoutStrategyGoo()
         {
             Value = new LayoutStrategy();
         }
-
         public LayoutStrategyGoo(LayoutStrategy attraction)
         {
             Value = attraction;
         }
-
         public override IGH_Goo Duplicate() => new LayoutStrategyGoo(Value);
-        public override string ToString() => Value.ToString();
-        public override bool IsValid => true;
         public override string TypeName => "LayoutStrategy";
         public override string TypeDescription => "";
-
         public override bool CastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(LayoutStrategy)))

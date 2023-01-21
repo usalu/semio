@@ -8,12 +8,13 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using Semio.Model.V1;
+using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Utility;
 using Point = Rhino.Geometry.Point;
 
 namespace Semio.UI.Grasshopper.Model
 {
-    public class PoseGoo : GH_Goo<Plane>
+    public class PoseGoo : SemioGoo<Plane>
     {
         private Pose _pose = new();
         public Pose GetPose() => _pose;
@@ -41,10 +42,7 @@ namespace Semio.UI.Grasshopper.Model
             setValue(pose);
         }
 
-        public override IGH_Goo Duplicate()
-        {
-            return new PoseGoo(_pose);
-        }
+        public override IGH_Goo Duplicate()=> new PoseGoo(_pose.Clone());
 
         public override string ToString() => _pose.ToString();
         public override bool CastTo<Q>(ref Q target)
@@ -69,8 +67,6 @@ namespace Semio.UI.Grasshopper.Model
             }
             return false;
         }
-
-        public override bool IsValid => true;
         public override string TypeName => "Pose";
         public override string TypeDescription => "A pose is an orientation.";
 

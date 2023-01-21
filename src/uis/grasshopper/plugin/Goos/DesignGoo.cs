@@ -12,7 +12,7 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class DesignGoo : GH_Goo<Design>
+    public class DesignGoo : SemioGoo<Design>
     {
         public DesignGoo()
         {
@@ -25,10 +25,6 @@ namespace Semio.UI.Grasshopper.Goos
         }
 
         public override IGH_Goo Duplicate() => new DesignGoo(Value.Clone());
-
-        public override string ToString() => Value.ToString();
-
-        public override bool IsValid => true;
         public override string TypeName => Design.Descriptor.FullName;
         public override string TypeDescription => Design.Descriptor.Declaration.LeadingComments;
     }

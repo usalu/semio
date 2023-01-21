@@ -37,7 +37,7 @@ namespace Semio.UI.Grasshopper.Goos
         }
     }
 
-    public class ParameterGoo : GH_Goo<Parameter>
+    public class ParameterGoo : SemioGoo<Parameter>
     {
         public ParameterGoo()
         {
@@ -60,8 +60,6 @@ namespace Semio.UI.Grasshopper.Goos
             if (source == null) return false;
             return false;
         }
-
-        public override bool IsValid => true;
         public override string TypeName => "Parameters";
         public override string TypeDescription => "Semio Parameters.";
 

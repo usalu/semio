@@ -12,7 +12,7 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class RepresentationGoo : GH_Goo<Representation>
+    public class RepresentationGoo : SemioGoo<Representation>
     {
         public RepresentationGoo()
         {
@@ -25,10 +25,6 @@ namespace Semio.UI.Grasshopper.Goos
         }
 
         public override IGH_Goo Duplicate() => new RepresentationGoo(Value.Clone());
-
-        public override string ToString() => Value.ToString();
-
-        public override bool IsValid => true;
         public override string TypeName => Representation.Descriptor.FullName;
         public override string TypeDescription => Representation.Descriptor.Declaration.LeadingComments;
     }
