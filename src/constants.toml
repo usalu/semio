@@ -1,36 +1,58 @@
-DEFAULT_GATEWAY_PORT = 50001
-DEFAULT_ASSEMBLER_PORT = 50002
-DEFAULT_MANAGER_PORT = 50003
+# TODO Update port numbering
+# Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [2] + VERSIONID [1]
+# SEMIOMAJORVERSION (concatenate major version number and add 2)): 2:0.1.0
+# COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager
+# Default port number for extensions: # 6 + OWNERID[3] + PLATFORMID[1]
+# OWNERID: 0:usalu,1:mrdoob,2:nortikin,100:mcneel
+
+DEFAULT_GATEWAY_PORT = 2000
+DEFAULT_ASSEMBLER_PORT = 2010
+DEFAULT_MANAGER_PORT = 2020
 
 GENERAL_EXTENSIONS = ['txt','json','xml']
 
 # Open source ftw!
 
+# Licenses after https://spdx.org/licenses/
+
 [PLATFORMS]
 
-[PLATFORMS.three]
-URL = 'mrdoob/three'
-DEFAULT_PORT = 59001
+[PLATFORMS.SEMIO]
+URL = 'usalu/semio'
+DEFAULT_PORT = 60000
 FULL_NAME = 'Three.js'
 NAME = 'three'
+LICENSE = 'AGPL-3.0-or-later'
 ABBREVIATION = 'three'
 EXTENSION = '.three.json'
 NORMAL_EXTENSIONS = ['.json']
 LEARN = 'https://threejs.org/'
 
-[PLATFORMS.sk]
+[PLATFORMS.THREE]
+URL = 'mrdoob/three'
+DEFAULT_PORT = 60010
+FULL_NAME = 'Three.js'
+NAME = 'three'
+LICENSE = 'MIT'
+ABBREVIATION = 'three'
+EXTENSION = '.three.json'
+NORMAL_EXTENSIONS = ['.json']
+LEARN = 'https://threejs.org/'
+
+[PLATFORMS.SVERCHOK]
 URL = 'nortikin/sverchok'
-DEFAULT_PORT = 59002
+DEFAULT_PORT = 60020
 FULL_NAME = 'Sverchok'
-NAME = 'Sverchok'
+NAME = 'sverchok'
+LICENSE = 'GPL-3.0-only'
 ABBREVIATION = 'sk'
 EXTENSION = '.sk.json'
 NORMAL_EXTENSIONS = ['.json','.sk.json']
 LEARN = 'https://www.grasshopper3d.com/'
 
-[PLATFORMS.ifcos]
+[PLATFORMS.IFCOPENSHELL]
 URL = 'ifcopenshell/ifcopenshell'
-DEFAULT_PORT = 59003
+DEFAULT_PORT = 59004
 FULL_NAME = 'IfcOpenShell'
 NAME = 'ifcopenshell'
 ABBREVIATION = 'ifcos'
@@ -38,9 +60,9 @@ EXTENSION = '.ifcos'
 NORMAL_EXTENSIONS = ['.cpp','.py']
 LEARN = 'https://ifcopenshell.org/'
 
-[PLATFORMS.cq]
+[PLATFORMS.CADQUERY]
 URL = 'cadquery/cadquery'
-DEFAULT_PORT = 59004
+DEFAULT_PORT = 59005
 FULL_NAME = 'CadQuery'
 NAME = 'cadquery'
 ABBREVIATION = 'cq'
@@ -48,9 +70,9 @@ EXTENSION = '.cq'
 NORMAL_EXTENSIONS = ['.py','.cq.py']
 LEARN = 'https://github.com/CadQuery/cadquery/'
 
-[PLATFORMS.fc]
+[PLATFORMS.FREECAD]
 URL = 'freecad/freecad'
-DEFAULT_PORT = 59005
+DEFAULT_PORT = 59006
 FULL_NAME = 'FreeCAD'
 NAME = 'freecad'
 ABBREVIATION = 'fc'
@@ -58,39 +80,69 @@ EXTENSION = '.fc'
 NORMAL_EXTENSIONS = ['.FCMAcro','.py']
 LEARN = 'https://github.com/FreeCAD/FreeCAD'
 
-[PLATFORMS.os]
+[PLATFORMS.OPENSCAD]
 URL = 'openscad/openscad'
-DEFAULT_PORT = 59006
+DEFAULT_PORT = 59007
 FULL_NAME = 'OpenSCAD'
-NAME = 'freecad'
-ABBREVIATION = 'os'
+NAME = 'openscad'
+ABBREVIATION = 'oc'
 EXTENSION = '.scad'
 NORMAL_EXTENSIONS = ['.scad']
-LEARN = 'https://github.com/FreeCAD/FreeCAD'
+LEARN = 'https://openscad.org/'
+
+[PLATFORMS.JSCAD]
+URL = 'jscad/jscad'
+DEFAULT_PORT = 59008
+FULL_NAME = 'OpenJSCAD'
+NAME = 'jscad'
+ABBREVIATION = 'jc'
+EXTENSION = 'jc.js'
+NORMAL_EXTENSIONS = ['.js']
+LEARN = 'https://openscad.org/'
+
+[PLATFORMS.FORNJOT]
+URL = 'hannobraun/fornjot'
+DEFAULT_PORT = 59008
+FULL_NAME = 'Fornjot'
+NAME = 'fornjot'
+ABBREVIATION = 'fj'
+EXTENSION = '.fj.rs'
+NORMAL_EXTENSIONS = ['.rs']
+LEARN = 'https://fornjot.app/'
+
+[PLATFORMS.TRUCK]
+URL = ' ricosjp/truck'
+DEFAULT_PORT = 59009
+FULL_NAME = 'Truck'
+NAME = 'truck'
+ABBREVIATION = 'tc'
+EXTENSION = 'tc.rs'
+NORMAL_EXTENSIONS = ['.rs']
+LEARN = 'https://github.com/ricosjp/truck'
 
 # Commercial
 
-[PLATFORMS.rhino]
+[PLATFORMS.RHINO]
 URL = 'mcneel/rhino'
 DEFAULT_PORT = 59101
 FULL_NAME = 'Rhinoceros 3D'
-NAME = 'Rhino3D'
+NAME = 'rhino3D'
 ABBREVIATION = 'rhino'
 EXTENSION = '.3dm'
 NORMAL_EXTENSIONS = ['.3dm']
 LEARN = 'https://www.rhino3d.com/'
 
-[PLATFORMS.gh]
+[PLATFORMS.GRASSHOPPER]
 URL = 'mcneel/rhino/grasshopper'
 FULL_NAME = 'Grasshopper 3D'
 DEFAULT_PORT = 59102
-NAME = 'Grasshopper'
+NAME = 'grasshopper'
 ABBREVIATION = 'gh'
 EXTENSION = '.gh'
 NORMAL_EXTENSIONS = ['.gh','.ghx']
 LEARN = 'https://www.grasshopper3d.com/'
 
-[PLATFORMS.rvt]
+[PLATFORMS.REVIT]
 URL = 'autodesk/revit'
 DEFAULT_PORT = 59103
 FULL_NAME = 'Revit'
@@ -100,7 +152,7 @@ EXTENSION = '.rfa'
 NORMAL_EXTENSIONS = ['.rfa']
 LEARN = 'https://www.autodesk.com/autodesk-university/class/Revit-Family-Creation-Step-Step-Introduction-Just-Beginners-2017'
 
-[PLATFORMS.dyn]
+[PLATFORMS.DYNAMO]
 URL = 'autodesk/revit/dynamo'
 DEFAULT_PORT = 59104
 FULL_NAME = 'Dynamo'
@@ -110,7 +162,7 @@ EXTENSION = '.dyn'
 NORMAL_EXTENSIONS = ['.dyn']
 LEARN = 'https://primer2.dynamobim.org/'
 
-[PLATFORMS.ac]
+[PLATFORMS.ARCHICAD]
 URL = 'graphisoft/archicad'
 DEFAULT_PORT = 59105
 FULL_NAME = 'ArchiCAD'

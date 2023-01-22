@@ -10,10 +10,10 @@ from semio.gateway import GatewayServer
 class Gateway(GatewayServer):
 
     def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
-        # assemblerProxy = self.getAssemblerProxy()
-        # response = assemblerProxy.LayoutDesing(request)
-        # return response
-        return Design(elements=[Element(representations=[Representation(text="I am almost Ifc.")])])
+        assemblerProxy = self.getAssemblerProxy()
+        response = assemblerProxy.LayoutDesign(request)
+        return response
+        # return Design(elements=[Element(representations=[Representation(text="I am almost Ifc.")])])
 
 if __name__ == '__main__':
     logging.basicConfig()

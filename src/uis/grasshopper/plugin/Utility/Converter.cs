@@ -12,6 +12,8 @@ using SemioPoint = Semio.Model.V1.Point;
 using Quaternion = Rhino.Geometry.Quaternion;
 using SemioQuaternion = Semio.Model.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
+using Rhino.FileIO;
+using Semio.UI.Grasshopper.Goos;
 
 
 namespace Semio.UI.Grasshopper.Utility
@@ -63,6 +65,54 @@ namespace Semio.UI.Grasshopper.Utility
             var yAxis = Vector3d.YAxis;
             yAxis.Transform(transform);
             return new Plane(Convert(pose.PointOfView), xAxis, yAxis);
+        }
+
+
+        public static IEnumerable<GeometryBase> Convert (Representation representation)
+        {
+            File3dm file;
+            switch (representation.BodyCase)
+            {
+                case Representation.BodyOneofCase.ByteArray:
+                    file = File3dm.FromByteArray(representation.ByteArray.ToByteArray());
+                    break;
+                case Representation.BodyOneofCase.Text:
+                default:
+                    // Dummy
+                    file = new File3dm();
+                    break;
+            }
+            return file.Objects.Select(o => o.Geometry);
+        }
+
+        public static IEnumerable<GeometryBase> Convert(Element element)
+        {
+            List<GeometryBase> geometries = new List<GeometryBase>();
+            foreach (var representation in element.Representations)
+            {
+                try
+                {
+                    foreach (var geometry in Convert(representation))
+                    {
+                        var poseTransform = Transform.PlaneToPlane(Plane.WorldXY, Convert(element.Pose));
+                        geometry.Transform(poseTransform);
+                        geometries.Add(geometry);
+                    }
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine($"Representation {representation.Name} couldn't get converted to Rhino.\n" + e.ToString());
+                }
+            }
+            return geometries;
+        }
+
+        public static IEnumerable<GeometryBase> Convert(Design design)
+        {
+            List<GeometryBase> geometries = new List<GeometryBase>();
+            foreach (var element in design.Elements)
+                geometries.AddRange(Convert(element));
+            return geometries;
         }
 
 

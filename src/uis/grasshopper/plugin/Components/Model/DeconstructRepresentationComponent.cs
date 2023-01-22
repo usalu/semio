@@ -11,9 +11,9 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Model
 {
-    public class DeconstructRepresentationComponent : DeconstructComponent
+    public class ImportRepresentationComponent : DeconstructComponent
     {
-        public DeconstructRepresentationComponent()
+        public ImportRepresentationComponent()
           : base("Deconstruct Representation", "DeRepresentation", "Deconstruct an element", "Semio", "Model")
         {
         }
@@ -36,7 +36,7 @@ namespace Semio.UI.Grasshopper.Model
             switch (representation.Value.BodyCase)
             {
                 case Representation.BodyOneofCase.ByteArray:
-                    body = representation.Value.ByteArray.ToString();
+                    body = representation.Value.ByteArray.ToBase64();
                     break;
                 case Representation.BodyOneofCase.Text:
                     body = representation.Value.Text;

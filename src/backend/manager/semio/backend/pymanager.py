@@ -6,20 +6,20 @@ from semio.model import Point,Sobject,Attraction,Layout,Element,Design, Represen
 from semio.assembler import AssemblerProxy,LayoutDesignRequest
 from semio.manager import ManagerServer,AttractionRequest,AttractionResponse,ElementRequest,ExtensionRegistrationRequest, ExtensionRegistrationResponse
 from semio.extension import ExtensionProxy
-from semio.constants import ELEMENT_TYPE_PLATFORM_DICTIONARY, GENERAL_EXTENSIONS
+from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
 
 
-def getPlatformNameFromUrl(elementUrl):
+def getPlatformUrlFromElementUrl(elementUrl):
     splitElementUrl = splitext(elementUrl)
-    fileExtension = splitElementUrl[1].lstrip('.')
+    fileExtension = splitElementUrl[1]
     if fileExtension in GENERAL_EXTENSIONS:
-        fileExtension=splitext(splitElementUrl[0])[1].lstrip('.')
+        fileExtension=splitext(splitElementUrl[0])[1]+fileExtension
     if not fileExtension:
         raise ValueError(f'The element type with url {elementUrl} can\'t determine the type. Use another second level type extension to tell me what platform the element belongs to e.g. ELEMENT.cadquery.py for indicating that the file is a cadquery file.')
-    if not fileExtension in ELEMENT_TYPE_PLATFORM_DICTIONARY:
+    if not fileExtension in PLATFORMURL_BYEXTENSION:
         raise ValueError(f'The element type with ending .{fileExtension} is not supported by me (yet).')
-    platformName = ELEMENT_TYPE_PLATFORM_DICTIONARY[fileExtension]
-    return platformName
+    platformUrl = PLATFORMURL_BYEXTENSION[fileExtension]
+    return platformUrl
 
 class Manager(ManagerServer):
 
@@ -48,7 +48,7 @@ class Manager(ManagerServer):
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
     def RequestElement(self, request: ElementRequest, context):
-        extensionAddress = self.getAdapterAddress(getPlatformNameFromUrl(request.sobject.url))
+        extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
         extensionProxy = self.getExtensionProxy(extensionAddress)
         representation = extensionProxy.RequestRepresentation(request.sobject)
         return Element(representations=[representation])

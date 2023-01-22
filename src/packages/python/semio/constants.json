@@ -3,9 +3,9 @@
   "DEFAULT_ASSEMBLER_PORT": 50002,
   "DEFAULT_MANAGER_PORT": 50003,
   "GENERAL_EXTENSIONS": [
-    "txt",
-    "json",
-    "xml"
+    ".txt",
+    ".json",
+    ".xml"
   ],
   "PLATFORMS": {
     "three": {

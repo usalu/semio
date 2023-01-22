@@ -27,5 +27,6 @@ namespace Semio.UI.Grasshopper.Goos
         public override IGH_Goo Duplicate() => new DesignGoo(Value.Clone());
         public override string TypeName => Design.Descriptor.FullName;
         public override string TypeDescription => Design.Descriptor.Declaration.LeadingComments;
+
     }
 }

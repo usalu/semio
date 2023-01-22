@@ -17,8 +17,10 @@ service AdapterService {
   rpc RequestRepresentations(RepresentationsRequest) returns (RepresentationsResponse) {}
 }
 
+// Description what an adapter is adapting to.
 message Adapting{
-  string platform_name = 1;
+  // A url for the platform that is adapted.
+  string platform_url = 1;
 }
 
 message AttractionPointRequest {

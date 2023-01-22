@@ -18,4 +18,9 @@ with open(os.path.join(__location__, 'constants.json')) as constantsFile:
     THREE = PLATFORMS['three']
     RHINO = PLATFORMS['rhino']
     GRASSHOPPER = PLATFORMS['gh']
+
+    GENERAL_EXTENSIONS = CONSTANTS['GENERAL_EXTENSIONS']
+
+    EXTENSIONS_BYPLATFORMURL = {platform['URL']:platform['EXTENSION'] for platform in PLATFORMS.values()}
+    PLATFORMURL_BYEXTENSION = {platform['EXTENSION']:platform['URL'] for platform in PLATFORMS.values()}
     

@@ -31,19 +31,92 @@ message Pose {
 
 // A representation for an element.
 message Representation {
-  // Use the abbrebivatation of the platform. You can find that in the constants part of the package.
-  string type = 1;
-  // Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
-  string name = 2;
-  // Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
-  int64 lod = 3;
   // The body depends on the serilization format of the representation.
-  oneof body {
-    // A byte array is an encoded and optimized body that needs a dedicated package to read the content.
-    bytes byteArray = 4;
-    // A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages.
-    string text = 5;
-  }
+  bytes body = 1;
+  // Encoding of the body
+  Encoding encoding = 2;
+  // Use the abbrebivatation of the platform. You can find that in the constants part of the package.
+  FileType file_type = 3;
+  // Platform
+  Platform platform = 4;
+  // Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
+  string name = 5;
+  // Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+  int64 lod = 6;
+}
+
+// Encoding of a byte array.
+enum Encoding {
+  FILETYPE_TEXT_UFT8 = 0;
+  FILETYPE_TEXT_UFT16 = 1;
+  FILETYPE_TEXT_UFT32 = 2;
+  FILETYPE_TEXT_ASCII = 3;
+  // Also ASCII but with further base 64 encoding of the text.
+  FILETYPE_TEXT_BASE64 = 3;
+}
+
+enum FileType {
+  // Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.
+  FILETYPE_NATIVEBINARY = 0;
+  FILETYPE_JSON = 1;
+  FILETYPE_XML = 2;
+  FILETYPE_YAML = 3;
+  FILETYPE_TOML = 4;
+  // https://www.iso.org/standard/63141.html
+  FILETYPE_STEP = 5;
+  // Python
+  FILETYPE_PY = 6;
+  FILETYPE_C = 7;
+  // C++
+  FILETYPE_CPP = 8;
+  // C#
+  FILETYPE_CSHARP = 9;
+  // Golang
+  FILETYPE_GO = 10;
+  // Rust
+  FILETYPE_RUST = 11;
+}
+
+// Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]
+// LICENSE after https://spdx.org/licenses/: 
+// 0:AGPL-3.0-or-later,
+// 50:GPL-3.0+
+// 100:MIT,
+// 214:Closed
+// OWNER starting with OWNERTYPE:
+// 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin
+// 1:NONPROFIT: 0:buildingsmart
+// 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+enum Platform {
+  // https://github.com/usalu/semio
+  PLATFORM_SEMIO = 0;
+  // // https://github.com/mrdoob/three.js/
+  // PLATFORM_THREE = ;
+  // // https://github.com/nortikin/sverchok
+  // PLATFORM_SVERCHOK = ;
+  // // https://github.com/IfcOpenShell
+  // PLATFORM_IFCOPENSHELL = ;
+  // // https://github.com/CadQuery
+  // PLATFORM_CADQUERY = ;
+  // // https://github.com/FreeCAD
+  // PLATFORM_FREECAD = ;
+  // // https://github.com/openscad
+  // PLATFORM_OPENSCAD = ;
+  // // https://github.com/jscad
+  // PLATFORM_JCAD = ;
+  // // https://github.com/hannobraun/Fornjot
+  // PLATFORM_Fornjot = ;
+  // // https://github.com/ricosjp/truck
+  // PLATFORM_TRUCK = ;
+  // https://www.rhino3d.com/
+  PLATFORM_RHINO = 2142000000;
+  // https://www.grasshopper3d.com/
+  PLATFORM_GRASSHOPPER = 2142000001;
+  // https://www.autodesk.de/products/revit/
+  PLATFORM_REVIT = 2142001000;
+  // https://dynamobim.org/
+  PLATFORM_DYNAMO = 2142001001;
+
 }
 
 // Instance information for an element.

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grasshopper.Kernel;
+using Rhino.Geometry;
 using Semio.Model.V1;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Properties;

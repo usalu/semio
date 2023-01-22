@@ -12,7 +12,7 @@ service ConverterService {
   rpc ConvertRepresentation(RepresentationConversionRequest) returns (semio.model.v1.Representation);
 }
 
-
+// Description what a converter is converting.
 message Converting{
   string source_type_url = 1;
   string target_type_url = 2;

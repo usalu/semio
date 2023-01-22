@@ -12,7 +12,7 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class RepresentationGoo : SemioGoo<Representation>
+    public class RepresentationGoo : GeometricSemioGoo<Representation>
     {
         public RepresentationGoo()
         {

@@ -12,6 +12,7 @@ service TransformerService {
   rpc RewriteLayout(RewriteLayoutRequest) returns (semio.model.v1.Layout);
 }
 
+// Description what a transformer is transforming.
 message Transforming{
 }
 
