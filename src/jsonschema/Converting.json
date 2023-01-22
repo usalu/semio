@@ -13,7 +13,8 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Converting"
+            "title": "Converting",
+            "description": "Description what a converter is converting."
         }
     }
 }

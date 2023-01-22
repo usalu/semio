@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Description what a transformer is transforming.
 type Transforming struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -44,6 +44,50 @@
         }
       }
     },
+    "v1Encoding": {
+      "type": "string",
+      "enum": [
+        "FILETYPE_TEXT_UFT8",
+        "FILETYPE_TEXT_UFT16",
+        "FILETYPE_TEXT_UFT32",
+        "FILETYPE_TEXT_ASCII",
+        "FILETYPE_TEXT_BASE64"
+      ],
+      "default": "FILETYPE_TEXT_UFT8",
+      "description": "Encoding of a byte array.\n\n - FILETYPE_TEXT_BASE64: Also ASCII but with further base 64 encoding of the text."
+    },
+    "v1FileType": {
+      "type": "string",
+      "enum": [
+        "FILETYPE_NATIVEBINARY",
+        "FILETYPE_JSON",
+        "FILETYPE_XML",
+        "FILETYPE_YAML",
+        "FILETYPE_TOML",
+        "FILETYPE_STEP",
+        "FILETYPE_PY",
+        "FILETYPE_C",
+        "FILETYPE_CPP",
+        "FILETYPE_CSHARP",
+        "FILETYPE_GO",
+        "FILETYPE_RUST"
+      ],
+      "default": "FILETYPE_NATIVEBINARY",
+      "title": "- FILETYPE_NATIVEBINARY: Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang\n - FILETYPE_RUST: Rust"
+    },
+    "v1Platform": {
+      "type": "string",
+      "enum": [
+        "PLATFORM_SEMIO",
+        "PLATFORM_RHINO",
+        "PLATFORM_GRASSHOPPER",
+        "PLATFORM_REVIT",
+        "PLATFORM_DYNAMO"
+      ],
+      "default": "PLATFORM_SEMIO",
+      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_RHINO: // https://github.com/mrdoob/three.js/\r\nPLATFORM_THREE = ;\r\n// https://github.com/nortikin/sverchok\r\nPLATFORM_SVERCHOK = ;\r\n// https://github.com/IfcOpenShell\r\nPLATFORM_IFCOPENSHELL = ;\r\n// https://github.com/CadQuery\r\nPLATFORM_CADQUERY = ;\r\n// https://github.com/FreeCAD\r\nPLATFORM_FREECAD = ;\r\n// https://github.com/openscad\r\nPLATFORM_OPENSCAD = ;\r\n// https://github.com/jscad\r\nPLATFORM_JCAD = ;\r\n// https://github.com/hannobraun/Fornjot\r\nPLATFORM_Fornjot = ;\r\n// https://github.com/ricosjp/truck\r\nPLATFORM_TRUCK = ;\r\nhttps://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
+      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+\r\n100:MIT,\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin\r\n1:NONPROFIT: 0:buildingsmart\r\n2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+    },
     "v1Point": {
       "type": "object",
       "properties": {
@@ -102,9 +146,22 @@
     "v1Representation": {
       "type": "object",
       "properties": {
-        "type": {
+        "body": {
           "type": "string",
+          "format": "byte",
+          "description": "The body depends on the serilization format of the representation."
+        },
+        "encoding": {
+          "$ref": "#/definitions/v1Encoding",
+          "title": "Encoding of the body"
+        },
+        "fileType": {
+          "$ref": "#/definitions/v1FileType",
           "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+        },
+        "platform": {
+          "$ref": "#/definitions/v1Platform",
+          "title": "Platform"
         },
         "name": {
           "type": "string",
@@ -114,18 +171,9 @@
           "type": "string",
           "format": "int64",
           "title": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
-        },
-        "byteArray": {
-          "type": "string",
-          "format": "byte",
-          "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content."
-        },
-        "text": {
-          "type": "string",
-          "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
         }
       },
-      "description": "A representation for an element."
+      "description": "A representation for an element. Basically a file with some semio specific metadata."
     },
     "v1RepresentationsResponse": {
       "type": "object",

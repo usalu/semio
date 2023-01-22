@@ -7,8 +7,6 @@ import type * as grpc from "@grpc/grpc-js";
 /**
  * The assembler service is responsible for assembling layouts into designs.
  *
- *   option (google.api.default_host) = "localhost:50000";
- *
  * @generated from protobuf service semio.assembler.v1.AssemblerService
  */
 export interface IAssemblerService extends grpc.UntypedServiceImplementation {

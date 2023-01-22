@@ -12,8 +12,6 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
  * The assembler service is responsible for assembling layouts into designs.
  *
- *   option (google.api.default_host) = "localhost:50000";
- *
  * @generated from protobuf service semio.assembler.v1.AssemblerService
  */
 export interface IAssemblerServiceClient {
@@ -26,8 +24,6 @@ export interface IAssemblerServiceClient {
 }
 /**
  * The assembler service is responsible for assembling layouts into designs.
- *
- *   option (google.api.default_host) = "localhost:50000";
  *
  * @generated from protobuf service semio.assembler.v1.AssemblerService
  */

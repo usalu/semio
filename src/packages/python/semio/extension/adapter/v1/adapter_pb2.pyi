@@ -7,10 +7,10 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Adapting(_message.Message):
-    __slots__ = ["platform_name"]
-    PLATFORM_NAME_FIELD_NUMBER: _ClassVar[int]
-    platform_name: str
-    def __init__(self, platform_name: _Optional[str] = ...) -> None: ...
+    __slots__ = ["platform_url"]
+    PLATFORM_URL_FIELD_NUMBER: _ClassVar[int]
+    platform_url: str
+    def __init__(self, platform_url: _Optional[str] = ...) -> None: ...
 
 class AttractionPointRequest(_message.Message):
     __slots__ = ["bias", "full_representation", "parameters", "simple_representation", "url"]

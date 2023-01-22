@@ -7,7 +7,7 @@ from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
 class TranslatorServiceStub(object):
-    """A translator service can (mostly) translate representations of the specific extension platform.
+    """A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
     """
 
     def __init__(self, channel):
@@ -24,7 +24,7 @@ class TranslatorServiceStub(object):
 
 
 class TranslatorServiceServicer(object):
-    """A translator service can (mostly) translate representations of the specific extension platform.
+    """A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
     """
 
     def TranslateRepresentation(self, request, context):
@@ -50,7 +50,7 @@ def add_TranslatorServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class TranslatorService(object):
-    """A translator service can (mostly) translate representations of the specific extension platform.
+    """A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
     """
 
     @staticmethod

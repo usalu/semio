@@ -4,13 +4,15 @@
     "definitions": {
         "Adapting": {
             "properties": {
-                "platform_name": {
-                    "type": "string"
+                "platform_url": {
+                    "type": "string",
+                    "description": "A url for the platform that is adapted."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Adapting"
+            "title": "Adapting",
+            "description": "Description what an adapter is adapting to."
         }
     }
 }

@@ -10,7 +10,8 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Translating"
+            "title": "Translating",
+            "description": "Description what a translator is translating."
         }
     }
 }

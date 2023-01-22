@@ -10,7 +10,7 @@ import type { TranslateRepresentationRequest } from "./translator";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * A translator service can (mostly) translate representations of the specific extension platform.
+ * A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
  *
  * @generated from protobuf service semio.extension.translator.v1.TranslatorService
  */
@@ -23,7 +23,7 @@ export interface ITranslatorServiceClient {
     translateRepresentation(input: TranslateRepresentationRequest, options?: RpcOptions): UnaryCall<TranslateRepresentationRequest, Representation>;
 }
 /**
- * A translator service can (mostly) translate representations of the specific extension platform.
+ * A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
  *
  * @generated from protobuf service semio.extension.translator.v1.TranslatorService
  */

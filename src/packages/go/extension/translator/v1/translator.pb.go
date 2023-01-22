@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Description what a translator is translating.
 type Translating struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -73,9 +74,12 @@ type TranslateRepresentationRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Representation that should be translated.
 	Representation *v1.Representation `protobuf:"bytes,1,opt,name=representation,proto3" json:"representation,omitempty"`
-	TargetPose     *v1.Pose           `protobuf:"bytes,2,opt,name=target_pose,json=targetPose,proto3" json:"target_pose,omitempty"`
-	SourcePose     *v1.Pose           `protobuf:"bytes,3,opt,name=source_pose,json=sourcePose,proto3" json:"source_pose,omitempty"`
+	// Target pose of representation.
+	TargetPose *v1.Pose `protobuf:"bytes,2,opt,name=target_pose,json=targetPose,proto3" json:"target_pose,omitempty"`
+	// Optional source pose of representation.
+	SourcePose *v1.Pose `protobuf:"bytes,3,opt,name=source_pose,json=sourcePose,proto3" json:"source_pose,omitempty"`
 }
 
 func (x *TranslateRepresentationRequest) Reset() {

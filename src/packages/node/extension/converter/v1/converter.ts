@@ -14,6 +14,8 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Representation } from "../../../model/v1/model";
 /**
+ * Description what a converter is converting.
+ *
  * @generated from protobuf message semio.extension.converter.v1.Converting
  */
 export interface Converting {

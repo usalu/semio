@@ -5,8 +5,30 @@ from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+FILETYPE_C: FileType
+FILETYPE_CPP: FileType
+FILETYPE_CSHARP: FileType
+FILETYPE_GO: FileType
+FILETYPE_JSON: FileType
+FILETYPE_NATIVEBINARY: FileType
+FILETYPE_PY: FileType
+FILETYPE_RUST: FileType
+FILETYPE_STEP: FileType
+FILETYPE_TEXT_ASCII: Encoding
+FILETYPE_TEXT_BASE64: Encoding
+FILETYPE_TEXT_UFT16: Encoding
+FILETYPE_TEXT_UFT32: Encoding
+FILETYPE_TEXT_UFT8: Encoding
+FILETYPE_TOML: FileType
+FILETYPE_XML: FileType
+FILETYPE_YAML: FileType
 LAYOUTSTRATEGY_BREADTHFIRST: LayoutStrategy
 LAYOUTSTRATEGY_DEPTHFIRST: LayoutStrategy
+PLATFORM_DYNAMO: Platform
+PLATFORM_GRASSHOPPER: Platform
+PLATFORM_REVIT: Platform
+PLATFORM_RHINO: Platform
+PLATFORM_SEMIO: Platform
 REPRESENTATIONPROTOCOL_FULL: RepresentationProtocol
 REPRESENTATIONPROTOCOL_NONE: RepresentationProtocol
 REPRESENTATIONPROTOCOL_SIMPLE: RepresentationProtocol
@@ -129,18 +151,20 @@ class Quaternion(_message.Message):
     def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
 class Representation(_message.Message):
-    __slots__ = ["byteArray", "lod", "name", "text", "type"]
-    BYTEARRAY_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["body", "encoding", "file_type", "lod", "name", "platform"]
+    BODY_FIELD_NUMBER: _ClassVar[int]
+    ENCODING_FIELD_NUMBER: _ClassVar[int]
+    FILE_TYPE_FIELD_NUMBER: _ClassVar[int]
     LOD_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    TEXT_FIELD_NUMBER: _ClassVar[int]
-    TYPE_FIELD_NUMBER: _ClassVar[int]
-    byteArray: bytes
+    PLATFORM_FIELD_NUMBER: _ClassVar[int]
+    body: bytes
+    encoding: Encoding
+    file_type: FileType
     lod: int
     name: str
-    text: str
-    type: str
-    def __init__(self, type: _Optional[str] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ..., byteArray: _Optional[bytes] = ..., text: _Optional[str] = ...) -> None: ...
+    platform: Platform
+    def __init__(self, body: _Optional[bytes] = ..., encoding: _Optional[_Union[Encoding, str]] = ..., file_type: _Optional[_Union[FileType, str]] = ..., platform: _Optional[_Union[Platform, str]] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ...) -> None: ...
 
 class Sobject(_message.Message):
     __slots__ = ["id", "parameters", "pose", "url"]
@@ -160,6 +184,15 @@ class Sobject(_message.Message):
     pose: Pose
     url: str
     def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
+
+class Encoding(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+
+class FileType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+
+class Platform(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
 
 class RepresentationProtocol(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

@@ -25,15 +25,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// A description of what the extension is extending.
 type Extending struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Adaptings     []*v1.Adapting      `protobuf:"bytes,3,rep,name=adaptings,proto3" json:"adaptings,omitempty"`
-	Convertings   []*v11.Converting   `protobuf:"bytes,4,rep,name=convertings,proto3" json:"convertings,omitempty"`
+	// A summary of all descriptions about the translator.
+	Adaptings []*v1.Adapting `protobuf:"bytes,3,rep,name=adaptings,proto3" json:"adaptings,omitempty"`
+	// A summary of all descriptions about the converter.
+	Convertings []*v11.Converting `protobuf:"bytes,4,rep,name=convertings,proto3" json:"convertings,omitempty"`
+	// A summary of all descriptions about the transformer.
 	Transformings []*v12.Transforming `protobuf:"bytes,5,rep,name=transformings,proto3" json:"transformings,omitempty"`
-	Translatings  []*v13.Translating  `protobuf:"bytes,6,rep,name=translatings,proto3" json:"translatings,omitempty"`
+	// A summary of all descriptions about the translator.
+	Translatings []*v13.Translating `protobuf:"bytes,6,rep,name=translatings,proto3" json:"translatings,omitempty"`
 }
 
 func (x *Extending) Reset() {

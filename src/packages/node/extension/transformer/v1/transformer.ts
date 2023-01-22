@@ -15,6 +15,8 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Layout } from "../../../model/v1/model";
 import { Decision } from "../../../model/v1/model";
 /**
+ * Description what a transformer is transforming.
+ *
  * @generated from protobuf message semio.extension.transformer.v1.Transforming
  */
 export interface Transforming {

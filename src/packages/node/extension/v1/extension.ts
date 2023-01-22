@@ -16,22 +16,32 @@ import { Transforming } from "../transformer/v1/transformer";
 import { Converting } from "../converter/v1/converter";
 import { Adapting } from "../adapter/v1/adapter";
 /**
+ * A description of what the extension is extending.
+ *
  * @generated from protobuf message semio.extension.v1.Extending
  */
 export interface Extending {
     /**
+     * A summary of all descriptions about the translator.
+     *
      * @generated from protobuf field: repeated semio.extension.adapter.v1.Adapting adaptings = 3;
      */
     adaptings: Adapting[];
     /**
+     * A summary of all descriptions about the converter.
+     *
      * @generated from protobuf field: repeated semio.extension.converter.v1.Converting convertings = 4;
      */
     convertings: Converting[];
     /**
+     * A summary of all descriptions about the transformer.
+     *
      * @generated from protobuf field: repeated semio.extension.transformer.v1.Transforming transformings = 5;
      */
     transformings: Transforming[];
     /**
+     * A summary of all descriptions about the translator.
+     *
      * @generated from protobuf field: repeated semio.extension.translator.v1.Translating translatings = 6;
      */
     translatings: Translating[];

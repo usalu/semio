@@ -29,7 +29,7 @@ message Pose {
   Quaternion view = 2;
 }
 
-// A representation for an element.
+// A representation for an element. Basically a file with some semio specific metadata.
 message Representation {
   // The body depends on the serilization format of the representation.
   bytes body = 1;
@@ -52,7 +52,7 @@ enum Encoding {
   FILETYPE_TEXT_UFT32 = 2;
   FILETYPE_TEXT_ASCII = 3;
   // Also ASCII but with further base 64 encoding of the text.
-  FILETYPE_TEXT_BASE64 = 3;
+  FILETYPE_TEXT_BASE64 = 4;
 }
 
 enum FileType {

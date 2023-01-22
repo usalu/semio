@@ -6,15 +6,18 @@
             "properties": {
                 "representation": {
                     "$ref": "#/definitions/semio.model.v1.Representation",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Representation that should be translated."
                 },
                 "target_pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Target pose of representation."
                 },
                 "source_pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Optional source pose of representation."
                 }
             },
             "additionalProperties": true,
@@ -79,9 +82,96 @@
         },
         "semio.model.v1.Representation": {
             "properties": {
-                "type": {
+                "body": {
                     "type": "string",
-                    "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+                    "description": "The body depends on the serilization format of the representation.",
+                    "format": "binary",
+                    "binaryEncoding": "base64"
+                },
+                "encoding": {
+                    "enum": [
+                        "FILETYPE_TEXT_UFT8",
+                        0,
+                        "FILETYPE_TEXT_UFT16",
+                        1,
+                        "FILETYPE_TEXT_UFT32",
+                        2,
+                        "FILETYPE_TEXT_ASCII",
+                        3,
+                        "FILETYPE_TEXT_BASE64",
+                        4
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Encoding",
+                    "description": "Encoding of a byte array."
+                },
+                "file_type": {
+                    "enum": [
+                        "FILETYPE_NATIVEBINARY",
+                        0,
+                        "FILETYPE_JSON",
+                        1,
+                        "FILETYPE_XML",
+                        2,
+                        "FILETYPE_YAML",
+                        3,
+                        "FILETYPE_TOML",
+                        4,
+                        "FILETYPE_STEP",
+                        5,
+                        "FILETYPE_PY",
+                        6,
+                        "FILETYPE_C",
+                        7,
+                        "FILETYPE_CPP",
+                        8,
+                        "FILETYPE_CSHARP",
+                        9,
+                        "FILETYPE_GO",
+                        10,
+                        "FILETYPE_RUST",
+                        11
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "File Type"
+                },
+                "platform": {
+                    "enum": [
+                        "PLATFORM_SEMIO",
+                        0,
+                        "PLATFORM_RHINO",
+                        2142000000,
+                        "PLATFORM_GRASSHOPPER",
+                        2142000001,
+                        "PLATFORM_REVIT",
+                        2142001000,
+                        "PLATFORM_DYNAMO",
+                        2142001001
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Platform",
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]\r LICENSE after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+\r 100:MIT,\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin\r 1:NONPROFIT: 0:buildingsmart\r 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
                 },
                 "name": {
                     "type": "string",
@@ -90,22 +180,12 @@
                 "lod": {
                     "type": "string",
                     "description": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
-                },
-                "byteArray": {
-                    "type": "string",
-                    "description": "A byte array is an encoded and optimized body that needs a dedicated package to read the content.",
-                    "format": "binary",
-                    "binaryEncoding": "base64"
-                },
-                "text": {
-                    "type": "string",
-                    "description": "A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Representation",
-            "description": "A representation for an element."
+            "description": "A representation for an element. Basically a file with some semio specific metadata."
         }
     }
 }

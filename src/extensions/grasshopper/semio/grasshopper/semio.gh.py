@@ -33,8 +33,9 @@ class GrasshopperAdapter(AdapterService):
         representationName = 'REPRESENTATION'
         # if request.type != 'native':
         #     representationName+='.'+ request.type
-        model = parseModelFromOutput(callGrasshopper(request.sobject.url,parameters, self.computeUrl, self.computeUrl),representationName)
-        return Representation(byteArray=encodeModel(model),type=PLATFORMS['rhino']['URL'],name=request.name,lod=request.lod)
+        #model = parseModelFromOutput(callGrasshopper(request.sobject.url,parameters, self.computeUrl, self.computeUrl),representationName)
+        #return Representation(byteArray=encodeModel(model),type=PLATFORMS['rhino']['URL'],name=request.name,lod=request.lod)
+        return Representation()
 
     def RequestRepresentations(self, request : RepresentationsRequest, context):
         pass

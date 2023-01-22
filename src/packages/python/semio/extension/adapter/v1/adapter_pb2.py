@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"extension/adapter/v1/adapter.proto\x12\x1asemio.extension.adapter.v1\x1a\x14model/v1/model.proto\"/\n\x08\x41\x64\x61pting\x12#\n\rplatform_name\x18\x01 \x01(\tR\x0cplatformName\"\x8b\x04\n\x16\x41ttractionPointRequest\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x62\n\nparameters\x18\x02 \x03(\x0b\x32\x42.semio.extension.adapter.v1.AttractionPointRequest.ParametersEntryR\nparameters\x12P\n\x04\x62ias\x18\x03 \x03(\x0b\x32<.semio.extension.adapter.v1.AttractionPointRequest.BiasEntryR\x04\x62ias\x12L\n\x15simple_representation\x18\x04 \x01(\x0b\x32\x15.semio.model.v1.PointH\x00R\x14simpleRepresentation\x12Q\n\x13\x66ull_representation\x18\x05 \x01(\x0b\x32\x1e.semio.model.v1.RepresentationH\x00R\x12\x66ullRepresentation\x1a=\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a\x37\n\tBiasEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x42\x10\n\x0erepresentation\"\x84\x01\n\x15RepresentationRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12\x12\n\x04type\x18\x02 \x01(\tR\x04type\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x10\n\x03lod\x18\x04 \x01(\x03R\x03lod\"\x8b\x01\n\x16RepresentationsRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12\x14\n\x05types\x18\x02 \x03(\tR\x05types\x12\x14\n\x05names\x18\x03 \x03(\tR\x05names\x12\x12\n\x04lods\x18\x04 \x03(\x03R\x04lods\"c\n\x17RepresentationsResponse\x12H\n\x0frepresentations\x18\x01 \x03(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0frepresentations2\xeb\x02\n\x0e\x41\x64\x61pterService\x12\x65\n\x16RequestAttractionPoint\x12\x32.semio.extension.adapter.v1.AttractionPointRequest\x1a\x15.semio.model.v1.Point\"\x00\x12l\n\x15RequestRepresentation\x12\x31.semio.extension.adapter.v1.RepresentationRequest\x1a\x1e.semio.model.v1.Representation\"\x00\x12\x83\x01\n\x16RequestRepresentations\x12\x32.semio.extension.adapter.v1.RepresentationsRequest\x1a\x33.semio.extension.adapter.v1.RepresentationsResponse\"\x00\x42\xf6\x01\n\x1e\x63om.semio.extension.adapter.v1B\x0c\x41\x64\x61pterProtoP\x01Z;github.com/usalu/semio/src/packages/go/extension/adapter/v1\xa2\x02\x03SEA\xaa\x02\x1aSemio.Extension.Adapter.V1\xca\x02\x1aSemio\\Extension\\Adapter\\V1\xe2\x02&Semio\\Extension\\Adapter\\V1\\GPBMetadata\xea\x02\x1dSemio::Extension::Adapter::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"extension/adapter/v1/adapter.proto\x12\x1asemio.extension.adapter.v1\x1a\x14model/v1/model.proto\"-\n\x08\x41\x64\x61pting\x12!\n\x0cplatform_url\x18\x01 \x01(\tR\x0bplatformUrl\"\x8b\x04\n\x16\x41ttractionPointRequest\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x62\n\nparameters\x18\x02 \x03(\x0b\x32\x42.semio.extension.adapter.v1.AttractionPointRequest.ParametersEntryR\nparameters\x12P\n\x04\x62ias\x18\x03 \x03(\x0b\x32<.semio.extension.adapter.v1.AttractionPointRequest.BiasEntryR\x04\x62ias\x12L\n\x15simple_representation\x18\x04 \x01(\x0b\x32\x15.semio.model.v1.PointH\x00R\x14simpleRepresentation\x12Q\n\x13\x66ull_representation\x18\x05 \x01(\x0b\x32\x1e.semio.model.v1.RepresentationH\x00R\x12\x66ullRepresentation\x1a=\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a\x37\n\tBiasEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x42\x10\n\x0erepresentation\"\x84\x01\n\x15RepresentationRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12\x12\n\x04type\x18\x02 \x01(\tR\x04type\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x10\n\x03lod\x18\x04 \x01(\x03R\x03lod\"\x8b\x01\n\x16RepresentationsRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12\x14\n\x05types\x18\x02 \x03(\tR\x05types\x12\x14\n\x05names\x18\x03 \x03(\tR\x05names\x12\x12\n\x04lods\x18\x04 \x03(\x03R\x04lods\"c\n\x17RepresentationsResponse\x12H\n\x0frepresentations\x18\x01 \x03(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0frepresentations2\xeb\x02\n\x0e\x41\x64\x61pterService\x12\x65\n\x16RequestAttractionPoint\x12\x32.semio.extension.adapter.v1.AttractionPointRequest\x1a\x15.semio.model.v1.Point\"\x00\x12l\n\x15RequestRepresentation\x12\x31.semio.extension.adapter.v1.RepresentationRequest\x1a\x1e.semio.model.v1.Representation\"\x00\x12\x83\x01\n\x16RequestRepresentations\x12\x32.semio.extension.adapter.v1.RepresentationsRequest\x1a\x33.semio.extension.adapter.v1.RepresentationsResponse\"\x00\x42\xf6\x01\n\x1e\x63om.semio.extension.adapter.v1B\x0c\x41\x64\x61pterProtoP\x01Z;github.com/usalu/semio/src/packages/go/extension/adapter/v1\xa2\x02\x03SEA\xaa\x02\x1aSemio.Extension.Adapter.V1\xca\x02\x1aSemio\\Extension\\Adapter\\V1\xe2\x02&Semio\\Extension\\Adapter\\V1\\GPBMetadata\xea\x02\x1dSemio::Extension::Adapter::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension.adapter.v1.adapter_pb2', globals())
@@ -27,19 +27,19 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _ATTRACTIONPOINTREQUEST_BIASENTRY._options = None
   _ATTRACTIONPOINTREQUEST_BIASENTRY._serialized_options = b'8\001'
   _ADAPTING._serialized_start=88
-  _ADAPTING._serialized_end=135
-  _ATTRACTIONPOINTREQUEST._serialized_start=138
-  _ATTRACTIONPOINTREQUEST._serialized_end=661
-  _ATTRACTIONPOINTREQUEST_PARAMETERSENTRY._serialized_start=525
-  _ATTRACTIONPOINTREQUEST_PARAMETERSENTRY._serialized_end=586
-  _ATTRACTIONPOINTREQUEST_BIASENTRY._serialized_start=588
-  _ATTRACTIONPOINTREQUEST_BIASENTRY._serialized_end=643
-  _REPRESENTATIONREQUEST._serialized_start=664
-  _REPRESENTATIONREQUEST._serialized_end=796
-  _REPRESENTATIONSREQUEST._serialized_start=799
-  _REPRESENTATIONSREQUEST._serialized_end=938
-  _REPRESENTATIONSRESPONSE._serialized_start=940
-  _REPRESENTATIONSRESPONSE._serialized_end=1039
-  _ADAPTERSERVICE._serialized_start=1042
-  _ADAPTERSERVICE._serialized_end=1405
+  _ADAPTING._serialized_end=133
+  _ATTRACTIONPOINTREQUEST._serialized_start=136
+  _ATTRACTIONPOINTREQUEST._serialized_end=659
+  _ATTRACTIONPOINTREQUEST_PARAMETERSENTRY._serialized_start=523
+  _ATTRACTIONPOINTREQUEST_PARAMETERSENTRY._serialized_end=584
+  _ATTRACTIONPOINTREQUEST_BIASENTRY._serialized_start=586
+  _ATTRACTIONPOINTREQUEST_BIASENTRY._serialized_end=641
+  _REPRESENTATIONREQUEST._serialized_start=662
+  _REPRESENTATIONREQUEST._serialized_end=794
+  _REPRESENTATIONSREQUEST._serialized_start=797
+  _REPRESENTATIONSREQUEST._serialized_end=936
+  _REPRESENTATIONSRESPONSE._serialized_start=938
+  _REPRESENTATIONSRESPONSE._serialized_end=1037
+  _ADAPTERSERVICE._serialized_start=1040
+  _ADAPTERSERVICE._serialized_end=1403
 # @@protoc_insertion_point(module_scope)

@@ -5,7 +5,7 @@ import { Representation } from "../../../model/v1/model";
 import { TranslateRepresentationRequest } from "./translator";
 import type * as grpc from "@grpc/grpc-js";
 /**
- * A translator service can (mostly) translate representations of the specific extension platform.
+ * A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
  *
  * @generated from protobuf service semio.extension.translator.v1.TranslatorService
  */

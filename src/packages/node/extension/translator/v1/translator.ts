@@ -15,6 +15,8 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Pose } from "../../../model/v1/model";
 import { Representation } from "../../../model/v1/model";
 /**
+ * Description what a translator is translating.
+ *
  * @generated from protobuf message semio.extension.translator.v1.Translating
  */
 export interface Translating {
@@ -28,14 +30,20 @@ export interface Translating {
  */
 export interface TranslateRepresentationRequest {
     /**
+     * Representation that should be translated.
+     *
      * @generated from protobuf field: semio.model.v1.Representation representation = 1;
      */
     representation?: Representation;
     /**
+     * Target pose of representation.
+     *
      * @generated from protobuf field: semio.model.v1.Pose target_pose = 2;
      */
     targetPose?: Pose;
     /**
+     * Optional source pose of representation.
+     *
      * @generated from protobuf field: semio.model.v1.Pose source_pose = 3;
      */
     sourcePose?: Pose;

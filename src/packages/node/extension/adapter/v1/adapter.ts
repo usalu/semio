@@ -16,13 +16,17 @@ import { Sobject } from "../../../model/v1/model";
 import { Representation } from "../../../model/v1/model";
 import { Point } from "../../../model/v1/model";
 /**
+ * Description what an adapter is adapting to.
+ *
  * @generated from protobuf message semio.extension.adapter.v1.Adapting
  */
 export interface Adapting {
     /**
-     * @generated from protobuf field: string platform_name = 1;
+     * A url for the platform that is adapted.
+     *
+     * @generated from protobuf field: string platform_url = 1;
      */
-    platformName: string;
+    platformUrl: string;
 }
 /**
  * @generated from protobuf message semio.extension.adapter.v1.AttractionPointRequest
@@ -124,11 +128,11 @@ export interface RepresentationsResponse {
 class Adapting$Type extends MessageType<Adapting> {
     constructor() {
         super("semio.extension.adapter.v1.Adapting", [
-            { no: 1, name: "platform_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "platform_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Adapting>): Adapting {
-        const message = { platformName: "" };
+        const message = { platformUrl: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Adapting>(this, message, value);
@@ -139,8 +143,8 @@ class Adapting$Type extends MessageType<Adapting> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string platform_name */ 1:
-                    message.platformName = reader.string();
+                case /* string platform_url */ 1:
+                    message.platformUrl = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -154,9 +158,9 @@ class Adapting$Type extends MessageType<Adapting> {
         return message;
     }
     internalBinaryWrite(message: Adapting, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string platform_name = 1; */
-        if (message.platformName !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.platformName);
+        /* string platform_url = 1; */
+        if (message.platformUrl !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.platformUrl);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

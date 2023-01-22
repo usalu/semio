@@ -5,7 +5,8 @@
         "Transforming": {
             "additionalProperties": true,
             "type": "object",
-            "title": "Transforming"
+            "title": "Transforming",
+            "description": "Description what a transformer is transforming."
         }
     }
 }

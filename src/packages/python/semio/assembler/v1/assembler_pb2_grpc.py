@@ -8,7 +8,6 @@ from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 class AssemblerServiceStub(object):
     """The assembler service is responsible for assembling layouts into designs.
-    option (google.api.default_host) = "localhost:50000";
     """
 
     def __init__(self, channel):
@@ -26,7 +25,6 @@ class AssemblerServiceStub(object):
 
 class AssemblerServiceServicer(object):
     """The assembler service is responsible for assembling layouts into designs.
-    option (google.api.default_host) = "localhost:50000";
     """
 
     def LayoutDesign(self, request, context):
@@ -53,7 +51,6 @@ def add_AssemblerServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class AssemblerService(object):
     """The assembler service is responsible for assembling layouts into designs.
-    option (google.api.default_host) = "localhost:50000";
     """
 
     @staticmethod

@@ -19,13 +19,15 @@
         },
         "semio.extension.adapter.v1.Adapting": {
             "properties": {
-                "platform_name": {
-                    "type": "string"
+                "platform_url": {
+                    "type": "string",
+                    "description": "A url for the platform that is adapted."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Adapting"
+            "title": "Adapting",
+            "description": "Description what an adapter is adapting to."
         },
         "semio.extension.converter.v1.Converting": {
             "properties": {
@@ -38,12 +40,14 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Converting"
+            "title": "Converting",
+            "description": "Description what a converter is converting."
         },
         "semio.extension.transformer.v1.Transforming": {
             "additionalProperties": true,
             "type": "object",
-            "title": "Transforming"
+            "title": "Transforming",
+            "description": "Description what a transformer is transforming."
         },
         "semio.extension.translator.v1.Translating": {
             "properties": {
@@ -53,7 +57,8 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Translating"
+            "title": "Translating",
+            "description": "Description what a translator is translating."
         },
         "semio.extension.v1.Extending": {
             "properties": {
@@ -61,30 +66,35 @@
                     "items": {
                         "$ref": "#/definitions/semio.extension.adapter.v1.Adapting"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "description": "A summary of all descriptions about the translator."
                 },
                 "convertings": {
                     "items": {
                         "$ref": "#/definitions/semio.extension.converter.v1.Converting"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "description": "A summary of all descriptions about the converter."
                 },
                 "transformings": {
                     "items": {
                         "$ref": "#/definitions/semio.extension.transformer.v1.Transforming"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "description": "A summary of all descriptions about the transformer."
                 },
                 "translatings": {
                     "items": {
                         "$ref": "#/definitions/semio.extension.translator.v1.Translating"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "description": "A summary of all descriptions about the translator."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Extending"
+            "title": "Extending",
+            "description": "A description of what the extension is extending."
         }
     }
 }

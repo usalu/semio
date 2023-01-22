@@ -23,29 +23,20 @@ namespace Semio.UI.Grasshopper.Model
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddTextParameter("Body", "B", "", GH_ParamAccess.item);
+            pManager.AddParameter(new EncodingParam());
+
             pManager.AddTextParameter("Type", "T", "", GH_ParamAccess.item);
             pManager.AddTextParameter("Name", "N", "", GH_ParamAccess.item);
             pManager.AddNumberParameter("Level of Detail", "LD", "", GH_ParamAccess.item);
-            pManager.AddTextParameter("Body", "B", "", GH_ParamAccess.item);
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             RepresentationGoo representation = new();
             if (!DA.GetData(0, ref representation)) return;
-            string body;
-            switch (representation.Value.BodyCase)
-            {
-                case Representation.BodyOneofCase.ByteArray:
-                    body = representation.Value.ByteArray.ToBase64();
-                    break;
-                case Representation.BodyOneofCase.Text:
-                    body = representation.Value.Text;
-                    break;
-                default:
-                    body = "";
-                    break;
-            }
-            DA.SetData(0, representation.Value.Type);
+            byte[] body;
+            
+            DA.SetData(0, representation.Value);
             DA.SetData(1, representation.Value.Name);
             DA.SetData(2, representation.Value.Lod);
             DA.SetData(3, body);

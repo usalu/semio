@@ -9,8 +9,6 @@ import "model/v1/model.proto";
 
 // The assembler service is responsible for assembling layouts into designs.
 service AssemblerService {
-  //   option (google.api.default_host) = "localhost:50000";
-
   // Lay out a design from a layout and return a design.
   rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
   }

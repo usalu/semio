@@ -75,51 +75,47 @@ export interface Pose {
     view?: Quaternion;
 }
 /**
- * A representation for an element.
+ * A representation for an element. Basically a file with some semio specific metadata.
  *
  * @generated from protobuf message semio.model.v1.Representation
  */
 export interface Representation {
     /**
+     * The body depends on the serilization format of the representation.
+     *
+     * @generated from protobuf field: bytes body = 1;
+     */
+    body: Uint8Array;
+    /**
+     * Encoding of the body
+     *
+     * @generated from protobuf field: semio.model.v1.Encoding encoding = 2;
+     */
+    encoding: Encoding;
+    /**
      * Use the abbrebivatation of the platform. You can find that in the constants part of the package.
      *
-     * @generated from protobuf field: string type = 1;
+     * @generated from protobuf field: semio.model.v1.FileType file_type = 3;
      */
-    type: string;
+    fileType: FileType;
+    /**
+     * Platform
+     *
+     * @generated from protobuf field: semio.model.v1.Platform platform = 4;
+     */
+    platform: Platform;
     /**
      * Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
      *
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: string name = 5;
      */
     name: string;
     /**
      * Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
      *
-     * @generated from protobuf field: int64 lod = 3;
+     * @generated from protobuf field: int64 lod = 6;
      */
     lod: bigint;
-    /**
-     * @generated from protobuf oneof: body
-     */
-    body: {
-        oneofKind: "byteArray";
-        /**
-         * A byte array is an encoded and optimized body that needs a dedicated package to read the content.
-         *
-         * @generated from protobuf field: bytes byteArray = 4;
-         */
-        byteArray: Uint8Array;
-    } | {
-        oneofKind: "text";
-        /**
-         * A textual body is typical readable by humans and computers often allowing to be usefully read even outside the official packages.
-         *
-         * @generated from protobuf field: string text = 5;
-         */
-        text: string;
-    } | {
-        oneofKind: undefined;
-    };
 }
 /**
  * Instance information for an element.
@@ -326,6 +322,166 @@ export interface Decision {
      * @generated from protobuf field: semio.model.v1.LayoutModificationStrategy strategy = 2;
      */
     strategy?: LayoutModificationStrategy;
+}
+/**
+ * Encoding of a byte array.
+ *
+ * @generated from protobuf enum semio.model.v1.Encoding
+ */
+export enum Encoding {
+    /**
+     * @generated from protobuf enum value: FILETYPE_TEXT_UFT8 = 0;
+     */
+    FILETYPE_TEXT_UFT8 = 0,
+    /**
+     * @generated from protobuf enum value: FILETYPE_TEXT_UFT16 = 1;
+     */
+    FILETYPE_TEXT_UFT16 = 1,
+    /**
+     * @generated from protobuf enum value: FILETYPE_TEXT_UFT32 = 2;
+     */
+    FILETYPE_TEXT_UFT32 = 2,
+    /**
+     * @generated from protobuf enum value: FILETYPE_TEXT_ASCII = 3;
+     */
+    FILETYPE_TEXT_ASCII = 3,
+    /**
+     * Also ASCII but with further base 64 encoding of the text.
+     *
+     * @generated from protobuf enum value: FILETYPE_TEXT_BASE64 = 4;
+     */
+    FILETYPE_TEXT_BASE64 = 4
+}
+/**
+ * @generated from protobuf enum semio.model.v1.FileType
+ */
+export enum FileType {
+    /**
+     * Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.
+     *
+     * @generated from protobuf enum value: FILETYPE_NATIVEBINARY = 0;
+     */
+    FILETYPE_NATIVEBINARY = 0,
+    /**
+     * @generated from protobuf enum value: FILETYPE_JSON = 1;
+     */
+    FILETYPE_JSON = 1,
+    /**
+     * @generated from protobuf enum value: FILETYPE_XML = 2;
+     */
+    FILETYPE_XML = 2,
+    /**
+     * @generated from protobuf enum value: FILETYPE_YAML = 3;
+     */
+    FILETYPE_YAML = 3,
+    /**
+     * @generated from protobuf enum value: FILETYPE_TOML = 4;
+     */
+    FILETYPE_TOML = 4,
+    /**
+     * https://www.iso.org/standard/63141.html
+     *
+     * @generated from protobuf enum value: FILETYPE_STEP = 5;
+     */
+    FILETYPE_STEP = 5,
+    /**
+     * Python
+     *
+     * @generated from protobuf enum value: FILETYPE_PY = 6;
+     */
+    FILETYPE_PY = 6,
+    /**
+     * @generated from protobuf enum value: FILETYPE_C = 7;
+     */
+    FILETYPE_C = 7,
+    /**
+     * C++
+     *
+     * @generated from protobuf enum value: FILETYPE_CPP = 8;
+     */
+    FILETYPE_CPP = 8,
+    /**
+     * C#
+     *
+     * @generated from protobuf enum value: FILETYPE_CSHARP = 9;
+     */
+    FILETYPE_CSHARP = 9,
+    /**
+     * Golang
+     *
+     * @generated from protobuf enum value: FILETYPE_GO = 10;
+     */
+    FILETYPE_GO = 10,
+    /**
+     * Rust
+     *
+     * @generated from protobuf enum value: FILETYPE_RUST = 11;
+     */
+    FILETYPE_RUST = 11
+}
+/**
+ * Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]
+ * LICENSE after https://spdx.org/licenses/:
+ * 0:AGPL-3.0-or-later,
+ * 50:GPL-3.0+
+ * 100:MIT,
+ * 214:Closed
+ * OWNER starting with OWNERTYPE:
+ * 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin
+ * 1:NONPROFIT: 0:buildingsmart
+ * 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+ *
+ * @generated from protobuf enum semio.model.v1.Platform
+ */
+export enum Platform {
+    /**
+     * https://github.com/usalu/semio
+     *
+     * @generated from protobuf enum value: PLATFORM_SEMIO = 0;
+     */
+    SEMIO = 0,
+    /**
+     * // https://github.com/mrdoob/three.js/
+     * PLATFORM_THREE = ;
+     * // https://github.com/nortikin/sverchok
+     * PLATFORM_SVERCHOK = ;
+     * // https://github.com/IfcOpenShell
+     * PLATFORM_IFCOPENSHELL = ;
+     * // https://github.com/CadQuery
+     * PLATFORM_CADQUERY = ;
+     * // https://github.com/FreeCAD
+     * PLATFORM_FREECAD = ;
+     * // https://github.com/openscad
+     * PLATFORM_OPENSCAD = ;
+     * // https://github.com/jscad
+     * PLATFORM_JCAD = ;
+     * // https://github.com/hannobraun/Fornjot
+     * PLATFORM_Fornjot = ;
+     * // https://github.com/ricosjp/truck
+     * PLATFORM_TRUCK = ;
+     * https://www.rhino3d.com/
+     *
+     * @generated from protobuf enum value: PLATFORM_RHINO = 2142000000;
+     */
+    RHINO = 2142000000,
+    /**
+     * https://www.grasshopper3d.com/
+     *
+     * @generated from protobuf enum value: PLATFORM_GRASSHOPPER = 2142000001;
+     */
+    GRASSHOPPER = 2142000001,
+    /**
+     * https://www.autodesk.de/products/revit/
+     *
+     * @generated from protobuf enum value: PLATFORM_REVIT = 2142001000;
+     */
+    REVIT = 2142001000,
+    /**
+     * https://dynamobim.org/
+     *
+     * @generated from protobuf enum value: PLATFORM_DYNAMO = 2142001001;
+     */
+    DYNAMO = 2142001001
 }
 /**
  * The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.
@@ -558,15 +714,16 @@ export const Pose = new Pose$Type();
 class Representation$Type extends MessageType<Representation> {
     constructor() {
         super("semio.model.v1.Representation", [
-            { no: 1, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 4, name: "byteArray", kind: "scalar", oneof: "body", T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "text", kind: "scalar", oneof: "body", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "body", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "encoding", kind: "enum", T: () => ["semio.model.v1.Encoding", Encoding] },
+            { no: 3, name: "file_type", kind: "enum", T: () => ["semio.model.v1.FileType", FileType] },
+            { no: 4, name: "platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
+            { no: 5, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
     create(value?: PartialMessage<Representation>): Representation {
-        const message = { type: "", name: "", lod: 0n, body: { oneofKind: undefined } };
+        const message = { body: new Uint8Array(0), encoding: 0, fileType: 0, platform: 0, name: "", lod: 0n };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Representation>(this, message, value);
@@ -577,26 +734,23 @@ class Representation$Type extends MessageType<Representation> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string type */ 1:
-                    message.type = reader.string();
+                case /* bytes body */ 1:
+                    message.body = reader.bytes();
                     break;
-                case /* string name */ 2:
+                case /* semio.model.v1.Encoding encoding */ 2:
+                    message.encoding = reader.int32();
+                    break;
+                case /* semio.model.v1.FileType file_type */ 3:
+                    message.fileType = reader.int32();
+                    break;
+                case /* semio.model.v1.Platform platform */ 4:
+                    message.platform = reader.int32();
+                    break;
+                case /* string name */ 5:
                     message.name = reader.string();
                     break;
-                case /* int64 lod */ 3:
+                case /* int64 lod */ 6:
                     message.lod = reader.int64().toBigInt();
-                    break;
-                case /* bytes byteArray */ 4:
-                    message.body = {
-                        oneofKind: "byteArray",
-                        byteArray: reader.bytes()
-                    };
-                    break;
-                case /* string text */ 5:
-                    message.body = {
-                        oneofKind: "text",
-                        text: reader.string()
-                    };
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -610,21 +764,24 @@ class Representation$Type extends MessageType<Representation> {
         return message;
     }
     internalBinaryWrite(message: Representation, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string type = 1; */
-        if (message.type !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.type);
-        /* string name = 2; */
+        /* bytes body = 1; */
+        if (message.body.length)
+            writer.tag(1, WireType.LengthDelimited).bytes(message.body);
+        /* semio.model.v1.Encoding encoding = 2; */
+        if (message.encoding !== 0)
+            writer.tag(2, WireType.Varint).int32(message.encoding);
+        /* semio.model.v1.FileType file_type = 3; */
+        if (message.fileType !== 0)
+            writer.tag(3, WireType.Varint).int32(message.fileType);
+        /* semio.model.v1.Platform platform = 4; */
+        if (message.platform !== 0)
+            writer.tag(4, WireType.Varint).int32(message.platform);
+        /* string name = 5; */
         if (message.name !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* int64 lod = 3; */
+            writer.tag(5, WireType.LengthDelimited).string(message.name);
+        /* int64 lod = 6; */
         if (message.lod !== 0n)
-            writer.tag(3, WireType.Varint).int64(message.lod);
-        /* bytes byteArray = 4; */
-        if (message.body.oneofKind === "byteArray")
-            writer.tag(4, WireType.LengthDelimited).bytes(message.body.byteArray);
-        /* string text = 5; */
-        if (message.body.oneofKind === "text")
-            writer.tag(5, WireType.LengthDelimited).string(message.body.text);
+            writer.tag(6, WireType.Varint).int64(message.lod);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
