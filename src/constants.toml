@@ -1,9 +1,11 @@
 # TODO Update port numbering
 # Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [3]
 # SEMIOMAJORVERSION (concatenate major version number and add 2)) e.g. 2:0.6.80
-# COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager
+# COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager,999:GatewayProxy
 
 DEFAULT_GATEWAY_PORT = 2000
+# Port for the rest endpoint
+DEFAULT_GATEWAY_PROXY_PORT = 2999
 DEFAULT_ASSEMBLER_PORT = 2001
 DEFAULT_MANAGER_PORT = 2002
 
