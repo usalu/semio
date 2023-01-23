@@ -100,15 +100,15 @@
                 },
                 "encoding": {
                     "enum": [
-                        "FILETYPE_TEXT_UFT8",
+                        "ENCODING_TEXT_UFT8",
                         0,
-                        "FILETYPE_TEXT_UFT16",
+                        "ENCODING_TEXT_UFT16",
                         1,
-                        "FILETYPE_TEXT_UFT32",
+                        "ENCODING_TEXT_UFT32",
                         2,
-                        "FILETYPE_TEXT_ASCII",
+                        "ENCODING_TEXT_ASCII",
                         3,
-                        "FILETYPE_TEXT_BASE64",
+                        "ENCODING_TEXT_BASE64",
                         4
                     ],
                     "oneOf": [
@@ -163,14 +163,32 @@
                     "enum": [
                         "PLATFORM_SEMIO",
                         0,
+                        "PLATFORM_THREE",
+                        1000000100,
+                        "PLATFORM_SVERCHOK",
+                        500000200,
+                        "PLATFORM_IFCOPENSHELL",
+                        1010100000,
+                        "PLATFORM_CADQUERY",
+                        1600100100,
+                        "PLATFORM_FREECAD",
+                        530100200,
+                        "PLATFORM_OPENSCAD",
+                        530100300,
+                        "PLATFORM_JCAD",
+                        1500100400,
+                        "PLATFORM_Fornjot",
+                        1700000300,
+                        "PLATFORM_TRUCK",
+                        1500000400,
                         "PLATFORM_RHINO",
-                        2142000000,
+                        2140300000,
                         "PLATFORM_GRASSHOPPER",
-                        2142000001,
+                        2140300001,
                         "PLATFORM_REVIT",
-                        2142001000,
+                        2140300100,
                         "PLATFORM_DYNAMO",
-                        2142001001
+                        2140300101
                     ],
                     "oneOf": [
                         {
@@ -181,7 +199,7 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]\r LICENSE after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+\r 100:MIT,\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin\r 1:NONPROFIT: 0:buildingsmart\r 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,170:0BSD\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
                 },
                 "name": {
                     "type": "string",

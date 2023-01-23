@@ -47,12 +47,12 @@ message Representation {
 
 // Encoding of a byte array.
 enum Encoding {
-  FILETYPE_TEXT_UFT8 = 0;
-  FILETYPE_TEXT_UFT16 = 1;
-  FILETYPE_TEXT_UFT32 = 2;
-  FILETYPE_TEXT_ASCII = 3;
+  ENCODING_TEXT_UFT8 = 0;
+  ENCODING_TEXT_UFT16 = 1;
+  ENCODING_TEXT_UFT32 = 2;
+  ENCODING_TEXT_ASCII = 3;
   // Also ASCII but with further base 64 encoding of the text.
-  FILETYPE_TEXT_BASE64 = 4;
+  ENCODING_TEXT_BASE64 = 4;
 }
 
 enum FileType {
@@ -77,46 +77,47 @@ enum FileType {
   FILETYPE_RUST = 11;
 }
 
-// Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]
+// Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]
 // LICENSE after https://spdx.org/licenses/: 
 // 0:AGPL-3.0-or-later,
-// 50:GPL-3.0+
-// 100:MIT,
+// 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
+// 100:LGPL-3.0-or-later,101:LGPL-3.0-only
+// 150:MIT,160:Apache-2.0,170:0BSD
 // 214:Closed
 // OWNER starting with OWNERTYPE:
-// 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin
-// 1:NONPROFIT: 0:buildingsmart
-// 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+// 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
+// 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
+// 2:NONPROFIT: 0:buildingsmart
+// 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
 enum Platform {
   // https://github.com/usalu/semio
   PLATFORM_SEMIO = 0;
-  // // https://github.com/mrdoob/three.js/
-  // PLATFORM_THREE = ;
-  // // https://github.com/nortikin/sverchok
-  // PLATFORM_SVERCHOK = ;
-  // // https://github.com/IfcOpenShell
-  // PLATFORM_IFCOPENSHELL = ;
-  // // https://github.com/CadQuery
-  // PLATFORM_CADQUERY = ;
-  // // https://github.com/FreeCAD
-  // PLATFORM_FREECAD = ;
-  // // https://github.com/openscad
-  // PLATFORM_OPENSCAD = ;
-  // // https://github.com/jscad
-  // PLATFORM_JCAD = ;
-  // // https://github.com/hannobraun/Fornjot
-  // PLATFORM_Fornjot = ;
-  // // https://github.com/ricosjp/truck
-  // PLATFORM_TRUCK = ;
+  // https://github.com/mrdoob/three.js/
+  PLATFORM_THREE = 1000000100;
+  // https://github.com/nortikin/sverchok
+  PLATFORM_SVERCHOK = 500000200;
+  // https://github.com/IfcOpenShell
+  PLATFORM_IFCOPENSHELL = 1010100000;
+  // https://github.com/CadQuery
+  PLATFORM_CADQUERY = 1600100100;
+  // https://github.com/FreeCAD
+  PLATFORM_FREECAD = 530100200;
+  // https://github.com/openscad
+  PLATFORM_OPENSCAD = 530100300;
+  // https://github.com/jscad
+  PLATFORM_JCAD = 1500100400;
+  // https://github.com/hannobraun/Fornjot
+  PLATFORM_Fornjot = 1700000300;
+  // https://github.com/ricosjp/truck
+  PLATFORM_TRUCK = 1500000400;
   // https://www.rhino3d.com/
-  PLATFORM_RHINO = 2142000000;
+  PLATFORM_RHINO = 2140300000;
   // https://www.grasshopper3d.com/
-  PLATFORM_GRASSHOPPER = 2142000001;
+  PLATFORM_GRASSHOPPER = 2140300001;
   // https://www.autodesk.de/products/revit/
-  PLATFORM_REVIT = 2142001000;
+  PLATFORM_REVIT = 2140300100;
   // https://dynamobim.org/
-  PLATFORM_DYNAMO = 2142001001;
-
+  PLATFORM_DYNAMO = 2140300101;
 }
 
 // Instance information for an element.

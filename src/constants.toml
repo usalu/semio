@@ -1,36 +1,40 @@
 # TODO Update port numbering
-# Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [2] + VERSIONID [1]
-# SEMIOMAJORVERSION (concatenate major version number and add 2)): 2:0.1.0
+# Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [3]
+# SEMIOMAJORVERSION (concatenate major version number and add 2)) e.g. 2:0.6.80
 # COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager
-# Default port number for extensions: # 6 + OWNERID[3] + PLATFORMID[1]
-# OWNERID: 0:usalu,1:mrdoob,2:nortikin,100:mcneel
 
 DEFAULT_GATEWAY_PORT = 2000
-DEFAULT_ASSEMBLER_PORT = 2010
-DEFAULT_MANAGER_PORT = 2020
+DEFAULT_ASSEMBLER_PORT = 2001
+DEFAULT_MANAGER_PORT = 2002
 
 GENERAL_EXTENSIONS = ['txt','json','xml']
 
-# Open source ftw!
-
+# Default port number for extensions: 650 - OWNERID[3] + PLATFORMID[2]
+# OWNERID:
+# 0:usalu,1:mrdoob,2:nortikin,
+# 150:ifcopenshell,251:cadquery,252:freecad,253:openscad
+# 450:mcneel,451:autodesk,452:nemetschek,453:esri,454:microsoft
+# 550: hypar
 # Licenses after https://spdx.org/licenses/
 
 [PLATFORMS]
 
+# Open-source
+
 [PLATFORMS.SEMIO]
 URL = 'usalu/semio'
-DEFAULT_PORT = 60000
-FULL_NAME = 'Three.js'
-NAME = 'three'
+DEFAULT_PORT = 65000
+FULL_NAME = 'semio'
+NAME = 'semio'
 LICENSE = 'AGPL-3.0-or-later'
-ABBREVIATION = 'three'
-EXTENSION = '.three.json'
-NORMAL_EXTENSIONS = ['.json']
-LEARN = 'https://threejs.org/'
+ABBREVIATION = 'semio'
+EXTENSION = '.semio'
+NORMAL_EXTENSIONS = ['.semio','.semio.json']
+LEARN = 'https://github.com/usalu/semio'
 
 [PLATFORMS.THREE]
 URL = 'mrdoob/three'
-DEFAULT_PORT = 60010
+DEFAULT_PORT = 64900
 FULL_NAME = 'Three.js'
 NAME = 'three'
 LICENSE = 'MIT'
@@ -41,7 +45,7 @@ LEARN = 'https://threejs.org/'
 
 [PLATFORMS.SVERCHOK]
 URL = 'nortikin/sverchok'
-DEFAULT_PORT = 60020
+DEFAULT_PORT = 64800
 FULL_NAME = 'Sverchok'
 NAME = 'sverchok'
 LICENSE = 'GPL-3.0-only'
@@ -52,9 +56,10 @@ LEARN = 'https://www.grasshopper3d.com/'
 
 [PLATFORMS.IFCOPENSHELL]
 URL = 'ifcopenshell/ifcopenshell'
-DEFAULT_PORT = 59004
+DEFAULT_PORT = 50000
 FULL_NAME = 'IfcOpenShell'
 NAME = 'ifcopenshell'
+LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'ifcos'
 EXTENSION = '.ifcos'
 NORMAL_EXTENSIONS = ['.cpp','.py']
@@ -62,9 +67,10 @@ LEARN = 'https://ifcopenshell.org/'
 
 [PLATFORMS.CADQUERY]
 URL = 'cadquery/cadquery'
-DEFAULT_PORT = 59005
+DEFAULT_PORT = 49900
 FULL_NAME = 'CadQuery'
 NAME = 'cadquery'
+LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'cq'
 EXTENSION = '.cq'
 NORMAL_EXTENSIONS = ['.py','.cq.py']
@@ -72,9 +78,10 @@ LEARN = 'https://github.com/CadQuery/cadquery/'
 
 [PLATFORMS.FREECAD]
 URL = 'freecad/freecad'
-DEFAULT_PORT = 59006
+DEFAULT_PORT = 49800
 FULL_NAME = 'FreeCAD'
 NAME = 'freecad'
+LICENSE = 'GPL-2.0'
 ABBREVIATION = 'fc'
 EXTENSION = '.fc'
 NORMAL_EXTENSIONS = ['.FCMAcro','.py']
@@ -82,9 +89,10 @@ LEARN = 'https://github.com/FreeCAD/FreeCAD'
 
 [PLATFORMS.OPENSCAD]
 URL = 'openscad/openscad'
-DEFAULT_PORT = 59007
+DEFAULT_PORT = 49700
 FULL_NAME = 'OpenSCAD'
 NAME = 'openscad'
+LICENSE = 'GPL-2.0'
 ABBREVIATION = 'oc'
 EXTENSION = '.scad'
 NORMAL_EXTENSIONS = ['.scad']
@@ -92,19 +100,21 @@ LEARN = 'https://openscad.org/'
 
 [PLATFORMS.JSCAD]
 URL = 'jscad/jscad'
-DEFAULT_PORT = 59008
+DEFAULT_PORT = 49600
 FULL_NAME = 'OpenJSCAD'
 NAME = 'jscad'
+LICENSE = 'Apache-2.0'
 ABBREVIATION = 'jc'
 EXTENSION = 'jc.js'
 NORMAL_EXTENSIONS = ['.js']
-LEARN = 'https://openscad.org/'
+LEARN = 'https://github.com/jscad'
 
 [PLATFORMS.FORNJOT]
 URL = 'hannobraun/fornjot'
-DEFAULT_PORT = 59008
+DEFAULT_PORT = 49500
 FULL_NAME = 'Fornjot'
 NAME = 'fornjot'
+LICENSE = '0BSD'
 ABBREVIATION = 'fj'
 EXTENSION = '.fj.rs'
 NORMAL_EXTENSIONS = ['.rs']
@@ -112,11 +122,12 @@ LEARN = 'https://fornjot.app/'
 
 [PLATFORMS.TRUCK]
 URL = ' ricosjp/truck'
-DEFAULT_PORT = 59009
+DEFAULT_PORT = 49400
 FULL_NAME = 'Truck'
 NAME = 'truck'
-ABBREVIATION = 'tc'
-EXTENSION = 'tc.rs'
+LICENSE = 'Apache-2.0'
+ABBREVIATION = 'tk'
+EXTENSION = 'tk.rs'
 NORMAL_EXTENSIONS = ['.rs']
 LEARN = 'https://github.com/ricosjp/truck'
 
@@ -124,7 +135,7 @@ LEARN = 'https://github.com/ricosjp/truck'
 
 [PLATFORMS.RHINO]
 URL = 'mcneel/rhino'
-DEFAULT_PORT = 59101
+DEFAULT_PORT = 20000
 FULL_NAME = 'Rhinoceros 3D'
 NAME = 'rhino3D'
 ABBREVIATION = 'rhino'
@@ -135,7 +146,7 @@ LEARN = 'https://www.rhino3d.com/'
 [PLATFORMS.GRASSHOPPER]
 URL = 'mcneel/rhino/grasshopper'
 FULL_NAME = 'Grasshopper 3D'
-DEFAULT_PORT = 59102
+DEFAULT_PORT = 20001
 NAME = 'grasshopper'
 ABBREVIATION = 'gh'
 EXTENSION = '.gh'
@@ -144,7 +155,7 @@ LEARN = 'https://www.grasshopper3d.com/'
 
 [PLATFORMS.REVIT]
 URL = 'autodesk/revit'
-DEFAULT_PORT = 59103
+DEFAULT_PORT = 19900
 FULL_NAME = 'Revit'
 NAME = 'revit'
 ABBREVIATION = 'rvt'
@@ -154,7 +165,7 @@ LEARN = 'https://www.autodesk.com/autodesk-university/class/Revit-Family-Creatio
 
 [PLATFORMS.DYNAMO]
 URL = 'autodesk/revit/dynamo'
-DEFAULT_PORT = 59104
+DEFAULT_PORT = 19901
 FULL_NAME = 'Dynamo'
 NAME = 'dynamo'
 ABBREVIATION = 'dyn'
@@ -164,7 +175,7 @@ LEARN = 'https://primer2.dynamobim.org/'
 
 [PLATFORMS.ARCHICAD]
 URL = 'graphisoft/archicad'
-DEFAULT_PORT = 59105
+DEFAULT_PORT = 19800
 FULL_NAME = 'ArchiCAD'
 NAME = 'archicad'
 ABBREVIATION = 'ac'
@@ -172,19 +183,9 @@ EXTENSION = '.gsl'
 NORMAL_EXTENSIONS = ['.gdl','.gsl']
 LEARN = 'https://gdl.graphisoft.com/'
 
-[PLATFORMS.xl]
-URL = 'microsoft/excel'
-DEFAULT_PORT = 59106
-FULL_NAME = 'Microsoft Excel'
-NAME = 'excel'
-ABBREVIATION = 'xl'
-EXTENSION = '.xlsm'
-NORMAL_EXTENSIONS = ['.xls','.xlsm']
-LEARN = 'https://support.microsoft.com/en-us/office/use-the-name-manager-in-excel-4d8c4c2b-9f7d-44e3-a3b4-9f61bd5c64e4'
-
-[PLATFORMS.ce]
+[PLATFORMS.CITYENGINE]
 URL = 'esri/arcgis/cityengine'
-DEFAULT_PORT = 59107
+DEFAULT_PORT = 19600
 FULL_NAME = 'ArcGIS CityEngine'
 NAME = 'cityengine'
 ABBREVIATION = 'ce'
@@ -192,9 +193,20 @@ EXTENSION = '.rpk'
 NORMAL_EXTENSIONS = ['.rpk','.cga']
 LEARN = 'https://esri.github.io/cityengine/'
 
-[PLATFORMS.hpr]
+[PLATFORMS.EXCEL]
+URL = 'microsoft/excel'
+DEFAULT_PORT = 19500
+FULL_NAME = 'Microsoft Excel'
+NAME = 'excel'
+ABBREVIATION = 'xl'
+EXTENSION = '.xlsm'
+NORMAL_EXTENSIONS = ['.xls','.xlsm']
+LEARN = 'https://support.microsoft.com/en-us/office/use-the-name-manager-in-excel-4d8c4c2b-9f7d-44e3-a3b4-9f61bd5c64e4'
+
+
+[PLATFORMS.HYPAR]
 URL = 'hypar/hypar'
-DEFAULT_PORT = 59108
+DEFAULT_PORT = 10000
 FULL_NAME = 'Hypar'
 NAME = 'hypar'
 ABBREVIATION = 'hpr'

@@ -330,27 +330,27 @@ export interface Decision {
  */
 export enum Encoding {
     /**
-     * @generated from protobuf enum value: FILETYPE_TEXT_UFT8 = 0;
+     * @generated from protobuf enum value: ENCODING_TEXT_UFT8 = 0;
      */
-    FILETYPE_TEXT_UFT8 = 0,
+    TEXT_UFT8 = 0,
     /**
-     * @generated from protobuf enum value: FILETYPE_TEXT_UFT16 = 1;
+     * @generated from protobuf enum value: ENCODING_TEXT_UFT16 = 1;
      */
-    FILETYPE_TEXT_UFT16 = 1,
+    TEXT_UFT16 = 1,
     /**
-     * @generated from protobuf enum value: FILETYPE_TEXT_UFT32 = 2;
+     * @generated from protobuf enum value: ENCODING_TEXT_UFT32 = 2;
      */
-    FILETYPE_TEXT_UFT32 = 2,
+    TEXT_UFT32 = 2,
     /**
-     * @generated from protobuf enum value: FILETYPE_TEXT_ASCII = 3;
+     * @generated from protobuf enum value: ENCODING_TEXT_ASCII = 3;
      */
-    FILETYPE_TEXT_ASCII = 3,
+    TEXT_ASCII = 3,
     /**
      * Also ASCII but with further base 64 encoding of the text.
      *
-     * @generated from protobuf enum value: FILETYPE_TEXT_BASE64 = 4;
+     * @generated from protobuf enum value: ENCODING_TEXT_BASE64 = 4;
      */
-    FILETYPE_TEXT_BASE64 = 4
+    TEXT_BASE64 = 4
 }
 /**
  * @generated from protobuf enum semio.model.v1.FileType
@@ -420,16 +420,18 @@ export enum FileType {
     FILETYPE_RUST = 11
 }
 /**
- * Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [1] + OWNERID [3] + SOFTWAREID [3]
+ * Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]
  * LICENSE after https://spdx.org/licenses/:
  * 0:AGPL-3.0-or-later,
- * 50:GPL-3.0+
- * 100:MIT,
+ * 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
+ * 100:LGPL-3.0-or-later,101:LGPL-3.0-only
+ * 150:MIT,160:Apache-2.0,170:0BSD
  * 214:Closed
  * OWNER starting with OWNERTYPE:
- * 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin
- * 1:NONPROFIT: 0:buildingsmart
- * 2:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+ * 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
+ * 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
+ * 2:NONPROFIT: 0:buildingsmart
+ * 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
  *
  * @generated from protobuf enum semio.model.v1.Platform
  */
@@ -441,47 +443,83 @@ export enum Platform {
      */
     SEMIO = 0,
     /**
-     * // https://github.com/mrdoob/three.js/
-     * PLATFORM_THREE = ;
-     * // https://github.com/nortikin/sverchok
-     * PLATFORM_SVERCHOK = ;
-     * // https://github.com/IfcOpenShell
-     * PLATFORM_IFCOPENSHELL = ;
-     * // https://github.com/CadQuery
-     * PLATFORM_CADQUERY = ;
-     * // https://github.com/FreeCAD
-     * PLATFORM_FREECAD = ;
-     * // https://github.com/openscad
-     * PLATFORM_OPENSCAD = ;
-     * // https://github.com/jscad
-     * PLATFORM_JCAD = ;
-     * // https://github.com/hannobraun/Fornjot
-     * PLATFORM_Fornjot = ;
-     * // https://github.com/ricosjp/truck
-     * PLATFORM_TRUCK = ;
+     * https://github.com/mrdoob/three.js/
+     *
+     * @generated from protobuf enum value: PLATFORM_THREE = 1000000100;
+     */
+    THREE = 1000000100,
+    /**
+     * https://github.com/nortikin/sverchok
+     *
+     * @generated from protobuf enum value: PLATFORM_SVERCHOK = 500000200;
+     */
+    SVERCHOK = 500000200,
+    /**
+     * https://github.com/IfcOpenShell
+     *
+     * @generated from protobuf enum value: PLATFORM_IFCOPENSHELL = 1010100000;
+     */
+    IFCOPENSHELL = 1010100000,
+    /**
+     * https://github.com/CadQuery
+     *
+     * @generated from protobuf enum value: PLATFORM_CADQUERY = 1600100100;
+     */
+    CADQUERY = 1600100100,
+    /**
+     * https://github.com/FreeCAD
+     *
+     * @generated from protobuf enum value: PLATFORM_FREECAD = 530100200;
+     */
+    FREECAD = 530100200,
+    /**
+     * https://github.com/openscad
+     *
+     * @generated from protobuf enum value: PLATFORM_OPENSCAD = 530100300;
+     */
+    OPENSCAD = 530100300,
+    /**
+     * https://github.com/jscad
+     *
+     * @generated from protobuf enum value: PLATFORM_JCAD = 1500100400;
+     */
+    JCAD = 1500100400,
+    /**
+     * https://github.com/hannobraun/Fornjot
+     *
+     * @generated from protobuf enum value: PLATFORM_Fornjot = 1700000300;
+     */
+    Fornjot = 1700000300,
+    /**
+     * https://github.com/ricosjp/truck
+     *
+     * @generated from protobuf enum value: PLATFORM_TRUCK = 1500000400;
+     */
+    TRUCK = 1500000400,
+    /**
      * https://www.rhino3d.com/
      *
-     * @generated from protobuf enum value: PLATFORM_RHINO = 2142000000;
+     * @generated from protobuf enum value: PLATFORM_RHINO = 2140300000;
      */
-    RHINO = 2142000000,
+    RHINO = 2140300000,
     /**
      * https://www.grasshopper3d.com/
      *
-     * @generated from protobuf enum value: PLATFORM_GRASSHOPPER = 2142000001;
+     * @generated from protobuf enum value: PLATFORM_GRASSHOPPER = 2140300001;
      */
-    GRASSHOPPER = 2142000001,
+    GRASSHOPPER = 2140300001,
     /**
      * https://www.autodesk.de/products/revit/
      *
-     * @generated from protobuf enum value: PLATFORM_REVIT = 2142001000;
+     * @generated from protobuf enum value: PLATFORM_REVIT = 2140300100;
      */
-    REVIT = 2142001000,
+    REVIT = 2140300100,
     /**
      * https://dynamobim.org/
      *
-     * @generated from protobuf enum value: PLATFORM_DYNAMO = 2142001001;
+     * @generated from protobuf enum value: PLATFORM_DYNAMO = 2140300101;
      */
-    DYNAMO = 2142001001
+    DYNAMO = 2140300101
 }
 /**
  * The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.
@@ -715,7 +753,7 @@ class Representation$Type extends MessageType<Representation> {
     constructor() {
         super("semio.model.v1.Representation", [
             { no: 1, name: "body", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "encoding", kind: "enum", T: () => ["semio.model.v1.Encoding", Encoding] },
+            { no: 2, name: "encoding", kind: "enum", T: () => ["semio.model.v1.Encoding", Encoding, "ENCODING_"] },
             { no: 3, name: "file_type", kind: "enum", T: () => ["semio.model.v1.FileType", FileType] },
             { no: 4, name: "platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
             { no: 5, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },

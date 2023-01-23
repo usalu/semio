@@ -5,6 +5,11 @@ from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+ENCODING_TEXT_ASCII: Encoding
+ENCODING_TEXT_BASE64: Encoding
+ENCODING_TEXT_UFT16: Encoding
+ENCODING_TEXT_UFT32: Encoding
+ENCODING_TEXT_UFT8: Encoding
 FILETYPE_C: FileType
 FILETYPE_CPP: FileType
 FILETYPE_CSHARP: FileType
@@ -14,21 +19,25 @@ FILETYPE_NATIVEBINARY: FileType
 FILETYPE_PY: FileType
 FILETYPE_RUST: FileType
 FILETYPE_STEP: FileType
-FILETYPE_TEXT_ASCII: Encoding
-FILETYPE_TEXT_BASE64: Encoding
-FILETYPE_TEXT_UFT16: Encoding
-FILETYPE_TEXT_UFT32: Encoding
-FILETYPE_TEXT_UFT8: Encoding
 FILETYPE_TOML: FileType
 FILETYPE_XML: FileType
 FILETYPE_YAML: FileType
 LAYOUTSTRATEGY_BREADTHFIRST: LayoutStrategy
 LAYOUTSTRATEGY_DEPTHFIRST: LayoutStrategy
+PLATFORM_CADQUERY: Platform
 PLATFORM_DYNAMO: Platform
+PLATFORM_FREECAD: Platform
+PLATFORM_Fornjot: Platform
 PLATFORM_GRASSHOPPER: Platform
+PLATFORM_IFCOPENSHELL: Platform
+PLATFORM_JCAD: Platform
+PLATFORM_OPENSCAD: Platform
 PLATFORM_REVIT: Platform
 PLATFORM_RHINO: Platform
 PLATFORM_SEMIO: Platform
+PLATFORM_SVERCHOK: Platform
+PLATFORM_THREE: Platform
+PLATFORM_TRUCK: Platform
 REPRESENTATIONPROTOCOL_FULL: RepresentationProtocol
 REPRESENTATIONPROTOCOL_NONE: RepresentationProtocol
 REPRESENTATIONPROTOCOL_SIMPLE: RepresentationProtocol
