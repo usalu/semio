@@ -31,17 +31,17 @@ message Pose {
 
 // A representation for an element. Basically a file with some semio specific metadata.
 message Representation {
-  // The body depends on the serilization format of the representation.
+  // The body depends on the serialization format of the representation.
   bytes body = 1;
   // Encoding of the body
   Encoding encoding = 2;
-  // Use the abbrebivatation of the platform. You can find that in the constants part of the package.
+  // Use the abbreviation of the platform. You can find that in the constants part of the package.
   FileType file_type = 3;
   // Platform
   Platform platform = 4;
   // Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
   string name = 5;
-  // Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+  // Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
   int64 lod = 6;
 }
 
@@ -136,9 +136,9 @@ message Sobject {
 enum RepresentationProtocol{
   // The attractor sees no representation of the attracted.
   REPRESENTATIONPROTOCOL_NONE = 0;
-  // In the simple representation protocol everything is representatedby a point.
+  // In the simple representation protocol everything is represented by a point.
   REPRESENTATIONPROTOCOL_SIMPLE = 1;
-  // In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary.
+  // In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary.
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
@@ -172,7 +172,7 @@ message AttractionTree{
 
 // A layout strategy affects in which orders attractions are triggered.
 enum LayoutStrategy {
-  // A breadth first layout strategy will attract all neighbours first before these start to the same with their neighbours.
+  // A breadth first layout strategy will attract all neighbours first before these start to do the same with their neighbours.
   LAYOUTSTRATEGY_BREADTHFIRST = 0;
   // A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root.
   LAYOUTSTRATEGY_DEPTHFIRST = 1;
@@ -182,7 +182,7 @@ enum LayoutStrategy {
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
-  // Sobject that anker the layout.
+  // Sobject that anchor the layout.
   repeated string roots_sobjects_ids = 3;
   LayoutStrategy strategy = 4;
   // Optional attraction trees.
@@ -200,7 +200,7 @@ message Design {
   repeated Element elements = 1;
 }
 
-// A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system.
+// A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
 message LayoutModification {
   Layout context = 1;
   Layout modified_context = 2;
