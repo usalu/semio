@@ -30,7 +30,7 @@ PLATFORM_FREECAD: Platform
 PLATFORM_Fornjot: Platform
 PLATFORM_GRASSHOPPER: Platform
 PLATFORM_IFCOPENSHELL: Platform
-PLATFORM_JCAD: Platform
+PLATFORM_JSCAD: Platform
 PLATFORM_OPENSCAD: Platform
 PLATFORM_REVIT: Platform
 PLATFORM_RHINO: Platform
@@ -53,7 +53,7 @@ class Attraction(_message.Message):
     def __init__(self, id: _Optional[str] = ..., attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
 
 class AttractionParticipant(_message.Message):
-    __slots__ = ["bias", "patricipant_id", "ports", "representationProtocol"]
+    __slots__ = ["bias", "participant_id", "ports", "representationProtocol"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -62,14 +62,14 @@ class AttractionParticipant(_message.Message):
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     BIAS_FIELD_NUMBER: _ClassVar[int]
-    PATRICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
+    PARTICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
     PORTS_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
     bias: _containers.ScalarMap[str, str]
-    patricipant_id: str
+    participant_id: str
     ports: _containers.RepeatedScalarFieldContainer[str]
     representationProtocol: RepresentationProtocol
-    def __init__(self, patricipant_id: _Optional[str] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, participant_id: _Optional[str] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class AttractionTree(_message.Message):
     __slots__ = ["attraction_id", "children"]
@@ -102,18 +102,18 @@ class Element(_message.Message):
     def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attractionTrees", "attractions", "roots_sobjects_ids", "sobjects", "stragegy"]
+    __slots__ = ["attractionTrees", "attractions", "roots_sobjects_ids", "sobjects", "strategy"]
     ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
     ATTRACTIONTREES_FIELD_NUMBER: _ClassVar[int]
     ROOTS_SOBJECTS_IDS_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
-    STRAGEGY_FIELD_NUMBER: _ClassVar[int]
+    STRATEGY_FIELD_NUMBER: _ClassVar[int]
     attractionTrees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
     roots_sobjects_ids: _containers.RepeatedScalarFieldContainer[str]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
-    stragegy: LayoutStrategy
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., roots_sobjects_ids: _Optional[_Iterable[str]] = ..., stragegy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    strategy: LayoutStrategy
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., roots_sobjects_ids: _Optional[_Iterable[str]] = ..., strategy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]

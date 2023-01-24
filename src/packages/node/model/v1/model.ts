@@ -81,7 +81,7 @@ export interface Pose {
  */
 export interface Representation {
     /**
-     * The body depends on the serilization format of the representation.
+     * The body depends on the serialization format of the representation.
      *
      * @generated from protobuf field: bytes body = 1;
      */
@@ -93,7 +93,7 @@ export interface Representation {
      */
     encoding: Encoding;
     /**
-     * Use the abbrebivatation of the platform. You can find that in the constants part of the package.
+     * Use the abbreviation of the platform. You can find that in the constants part of the package.
      *
      * @generated from protobuf field: semio.model.v1.FileType file_type = 3;
      */
@@ -111,7 +111,7 @@ export interface Representation {
      */
     name: string;
     /**
-     * Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+     * Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
      *
      * @generated from protobuf field: int64 lod = 6;
      */
@@ -159,9 +159,9 @@ export interface AttractionParticipant {
     /**
      * Id of participating sobject.
      *
-     * @generated from protobuf field: string patricipant_id = 1;
+     * @generated from protobuf field: string participant_id = 1;
      */
-    patricipantId: string;
+    participantId: string;
     /**
      * An optional representation of the participant.
      *
@@ -238,15 +238,15 @@ export interface Layout {
      */
     attractions: Attraction[];
     /**
-     * Sobject that anker the layout.
+     * Sobject that anchor the layout.
      *
      * @generated from protobuf field: repeated string roots_sobjects_ids = 3;
      */
     rootsSobjectsIds: string[];
     /**
-     * @generated from protobuf field: semio.model.v1.LayoutStrategy stragegy = 4;
+     * @generated from protobuf field: semio.model.v1.LayoutStrategy strategy = 4;
      */
-    stragegy: LayoutStrategy;
+    strategy: LayoutStrategy;
     /**
      * Optional attraction trees.
      *
@@ -281,7 +281,7 @@ export interface Design {
     elements: Element[];
 }
 /**
- * A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system.
+ * A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
  *
  * @generated from protobuf message semio.model.v1.LayoutModification
  */
@@ -481,9 +481,9 @@ export enum Platform {
     /**
      * https://github.com/jscad
      *
-     * @generated from protobuf enum value: PLATFORM_JCAD = 1500100400;
+     * @generated from protobuf enum value: PLATFORM_JSCAD = 1500100400;
      */
-    JCAD = 1500100400,
+    JSCAD = 1500100400,
     /**
      * https://github.com/hannobraun/Fornjot
      *
@@ -534,13 +534,13 @@ export enum RepresentationProtocol {
      */
     REPRESENTATIONPROTOCOL_NONE = 0,
     /**
-     * In the simple representation protocol everything is representatedby a point.
+     * In the simple representation protocol everything is represented by a point.
      *
      * @generated from protobuf enum value: REPRESENTATIONPROTOCOL_SIMPLE = 1;
      */
     REPRESENTATIONPROTOCOL_SIMPLE = 1,
     /**
-     * In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary.
+     * In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary.
      *
      * @generated from protobuf enum value: REPRESENTATIONPROTOCOL_FULL = 2;
      */
@@ -553,7 +553,7 @@ export enum RepresentationProtocol {
  */
 export enum LayoutStrategy {
     /**
-     * A breadth first layout strategy will attract all neighbours first before these start to the same with their neighbours.
+     * A breadth first layout strategy will attract all neighbours first before these start to do the same with their neighbours.
      *
      * @generated from protobuf enum value: LAYOUTSTRATEGY_BREADTHFIRST = 0;
      */
@@ -918,14 +918,14 @@ export const Sobject = new Sobject$Type();
 class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
     constructor() {
         super("semio.model.v1.AttractionParticipant", [
-            { no: 1, name: "patricipant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "participant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
             { no: 3, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<AttractionParticipant>): AttractionParticipant {
-        const message = { patricipantId: "", representationProtocol: 0, ports: [], bias: {} };
+        const message = { participantId: "", representationProtocol: 0, ports: [], bias: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AttractionParticipant>(this, message, value);
@@ -936,8 +936,8 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string patricipant_id */ 1:
-                    message.patricipantId = reader.string();
+                case /* string participant_id */ 1:
+                    message.participantId = reader.string();
                     break;
                 case /* semio.model.v1.RepresentationProtocol representationProtocol */ 2:
                     message.representationProtocol = reader.int32();
@@ -976,9 +976,9 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message: AttractionParticipant, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string patricipant_id = 1; */
-        if (message.patricipantId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.patricipantId);
+        /* string participant_id = 1; */
+        if (message.participantId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.participantId);
         /* semio.model.v1.RepresentationProtocol representationProtocol = 2; */
         if (message.representationProtocol !== 0)
             writer.tag(2, WireType.Varint).int32(message.representationProtocol);
@@ -1120,12 +1120,12 @@ class Layout$Type extends MessageType<Layout> {
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
             { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction },
             { no: 3, name: "roots_sobjects_ids", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "stragegy", kind: "enum", T: () => ["semio.model.v1.LayoutStrategy", LayoutStrategy] },
+            { no: 4, name: "strategy", kind: "enum", T: () => ["semio.model.v1.LayoutStrategy", LayoutStrategy] },
             { no: 5, name: "attractionTrees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
     create(value?: PartialMessage<Layout>): Layout {
-        const message = { sobjects: [], attractions: [], rootsSobjectsIds: [], stragegy: 0, attractionTrees: [] };
+        const message = { sobjects: [], attractions: [], rootsSobjectsIds: [], strategy: 0, attractionTrees: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Layout>(this, message, value);
@@ -1145,8 +1145,8 @@ class Layout$Type extends MessageType<Layout> {
                 case /* repeated string roots_sobjects_ids */ 3:
                     message.rootsSobjectsIds.push(reader.string());
                     break;
-                case /* semio.model.v1.LayoutStrategy stragegy */ 4:
-                    message.stragegy = reader.int32();
+                case /* semio.model.v1.LayoutStrategy strategy */ 4:
+                    message.strategy = reader.int32();
                     break;
                 case /* repeated semio.model.v1.AttractionTree attractionTrees */ 5:
                     message.attractionTrees.push(AttractionTree.internalBinaryRead(reader, reader.uint32(), options));
@@ -1172,9 +1172,9 @@ class Layout$Type extends MessageType<Layout> {
         /* repeated string roots_sobjects_ids = 3; */
         for (let i = 0; i < message.rootsSobjectsIds.length; i++)
             writer.tag(3, WireType.LengthDelimited).string(message.rootsSobjectsIds[i]);
-        /* semio.model.v1.LayoutStrategy stragegy = 4; */
-        if (message.stragegy !== 0)
-            writer.tag(4, WireType.Varint).int32(message.stragegy);
+        /* semio.model.v1.LayoutStrategy strategy = 4; */
+        if (message.strategy !== 0)
+            writer.tag(4, WireType.Varint).int32(message.strategy);
         /* repeated semio.model.v1.AttractionTree attractionTrees = 5; */
         for (let i = 0; i < message.attractionTrees.length; i++)
             AttractionTree.internalBinaryWrite(message.attractionTrees[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();

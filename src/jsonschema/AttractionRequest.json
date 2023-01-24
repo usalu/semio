@@ -40,7 +40,7 @@
         },
         "semio.model.v1.AttractionParticipant": {
             "properties": {
-                "patricipant_id": {
+                "participant_id": {
                     "type": "string",
                     "description": "Id of participating sobject."
                 },

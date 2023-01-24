@@ -65,7 +65,7 @@
     "v1AttractionParticipant": {
       "type": "object",
       "properties": {
-        "patricipantId": {
+        "participantId": {
           "type": "string",
           "description": "Id of participating sobject."
         },
@@ -137,9 +137,9 @@
           "items": {
             "type": "string"
           },
-          "description": "Sobject that anker the layout."
+          "description": "Sobject that anchor the layout."
         },
-        "stragegy": {
+        "strategy": {
           "$ref": "#/definitions/v1LayoutStrategy"
         },
         "attractionTrees": {
@@ -162,7 +162,7 @@
           "$ref": "#/definitions/v1Layout"
         }
       },
-      "description": "A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system."
+      "description": "A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system."
     },
     "v1LayoutModificationStrategy": {
       "type": "object",
@@ -182,7 +182,7 @@
         "LAYOUTSTRATEGY_DEPTHFIRST"
       ],
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
-      "description": "A layout strategy affects in which orders attractions are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will attract all neighbours first before these start to the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
+      "description": "A layout strategy affects in which orders attractions are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will attract all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
     },
     "v1Point": {
       "type": "object",
@@ -247,7 +247,7 @@
         "REPRESENTATIONPROTOCOL_FULL"
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
-      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is representatedby a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary."
+      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
     "v1Sobject": {
       "type": "object",

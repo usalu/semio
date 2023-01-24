@@ -45,7 +45,7 @@
         },
         "semio.model.v1.AttractionParticipant": {
             "properties": {
-                "patricipant_id": {
+                "participant_id": {
                     "type": "string",
                     "description": "Id of participating sobject."
                 },
@@ -141,9 +141,9 @@
                         "type": "string"
                     },
                     "type": "array",
-                    "description": "Sobject that anker the layout."
+                    "description": "Sobject that anchor the layout."
                 },
-                "stragegy": {
+                "strategy": {
                     "enum": [
                         "LAYOUTSTRATEGY_BREADTHFIRST",
                         0,
@@ -188,7 +188,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Layout Modification",
-            "description": "A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to found by the transformation system."
+            "description": "A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system."
         },
         "semio.model.v1.LayoutModificationStrategy": {
             "properties": {

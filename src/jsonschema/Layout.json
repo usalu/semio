@@ -21,9 +21,9 @@
                         "type": "string"
                     },
                     "type": "array",
-                    "description": "Sobject that anker the layout."
+                    "description": "Sobject that anchor the layout."
                 },
-                "stragegy": {
+                "strategy": {
                     "enum": [
                         "LAYOUTSTRATEGY_BREADTHFIRST",
                         0,
@@ -78,7 +78,7 @@
         },
         "semio.model.v1.AttractionParticipant": {
             "properties": {
-                "patricipant_id": {
+                "participant_id": {
                     "type": "string",
                     "description": "Id of participating sobject."
                 },

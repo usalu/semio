@@ -65,7 +65,7 @@
     "v1AttractionParticipant": {
       "type": "object",
       "properties": {
-        "patricipantId": {
+        "participantId": {
           "type": "string",
           "description": "Id of participating sobject."
         },
@@ -183,9 +183,9 @@
           "items": {
             "type": "string"
           },
-          "description": "Sobject that anker the layout."
+          "description": "Sobject that anchor the layout."
         },
-        "stragegy": {
+        "strategy": {
           "$ref": "#/definitions/v1LayoutStrategy"
         },
         "attractionTrees": {
@@ -205,7 +205,7 @@
         "LAYOUTSTRATEGY_DEPTHFIRST"
       ],
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
-      "description": "A layout strategy affects in which orders attractions are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will attract all neighbours first before these start to the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
+      "description": "A layout strategy affects in which orders attractions are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will attract all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
     },
     "v1Platform": {
       "type": "string",
@@ -217,7 +217,7 @@
         "PLATFORM_CADQUERY",
         "PLATFORM_FREECAD",
         "PLATFORM_OPENSCAD",
-        "PLATFORM_JCAD",
+        "PLATFORM_JSCAD",
         "PLATFORM_Fornjot",
         "PLATFORM_TRUCK",
         "PLATFORM_RHINO",
@@ -226,7 +226,7 @@
         "PLATFORM_DYNAMO"
       ],
       "default": "PLATFORM_SEMIO",
-      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
+      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
       "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,170:0BSD\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
     },
     "v1Point": {
@@ -290,7 +290,7 @@
         "body": {
           "type": "string",
           "format": "byte",
-          "description": "The body depends on the serilization format of the representation."
+          "description": "The body depends on the serialization format of the representation."
         },
         "encoding": {
           "$ref": "#/definitions/v1Encoding",
@@ -298,7 +298,7 @@
         },
         "fileType": {
           "$ref": "#/definitions/v1FileType",
-          "description": "Use the abbrebivatation of the platform. You can find that in the constants part of the package."
+          "description": "Use the abbreviation of the platform. You can find that in the constants part of the package."
         },
         "platform": {
           "$ref": "#/definitions/v1Platform",
@@ -311,7 +311,7 @@
         "lod": {
           "type": "string",
           "format": "int64",
-          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
         }
       },
       "description": "A representation for an element. Basically a file with some semio specific metadata."
@@ -324,7 +324,7 @@
         "REPRESENTATIONPROTOCOL_FULL"
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
-      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is representatedby a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is representatedby it's native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutletly necissary."
+      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
     "v1Sobject": {
       "type": "object",

@@ -80,7 +80,7 @@
             "properties": {
                 "body": {
                     "type": "string",
-                    "description": "The body depends on the serilization format of the representation.",
+                    "description": "The body depends on the serialization format of the representation.",
                     "format": "binary",
                     "binaryEncoding": "base64"
                 },
@@ -161,7 +161,7 @@
                         530100200,
                         "PLATFORM_OPENSCAD",
                         530100300,
-                        "PLATFORM_JCAD",
+                        "PLATFORM_JSCAD",
                         1500100400,
                         "PLATFORM_Fornjot",
                         1700000300,
@@ -193,7 +193,7 @@
                 },
                 "lod": {
                     "type": "string",
-                    "description": "Level of detail allows to further define representation details. Like name this can be used either for visualizaztion purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+                    "description": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
                 }
             },
             "additionalProperties": true,
