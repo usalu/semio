@@ -238,17 +238,17 @@ export interface Layout {
      */
     attractions: Attraction[];
     /**
-     * This sobject acts as an anker in the layout.
+     * Sobject that anker the layout.
      *
-     * @generated from protobuf field: string root_sobject_id = 3;
+     * @generated from protobuf field: repeated string roots_sobjects_ids = 3;
      */
-    rootSobjectId: string;
+    rootsSobjectsIds: string[];
     /**
      * @generated from protobuf field: semio.model.v1.LayoutStrategy stragegy = 4;
      */
     stragegy: LayoutStrategy;
     /**
-     * Optional attraction trees with root sobject id as key and attraction tree as value.
+     * Optional attraction trees.
      *
      * @generated from protobuf field: repeated semio.model.v1.AttractionTree attractionTrees = 5;
      */
@@ -1119,13 +1119,13 @@ class Layout$Type extends MessageType<Layout> {
         super("semio.model.v1.Layout", [
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
             { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction },
-            { no: 3, name: "root_sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "roots_sobjects_ids", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "stragegy", kind: "enum", T: () => ["semio.model.v1.LayoutStrategy", LayoutStrategy] },
             { no: 5, name: "attractionTrees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
     create(value?: PartialMessage<Layout>): Layout {
-        const message = { sobjects: [], attractions: [], rootSobjectId: "", stragegy: 0, attractionTrees: [] };
+        const message = { sobjects: [], attractions: [], rootsSobjectsIds: [], stragegy: 0, attractionTrees: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Layout>(this, message, value);
@@ -1142,8 +1142,8 @@ class Layout$Type extends MessageType<Layout> {
                 case /* repeated semio.model.v1.Attraction attractions */ 2:
                     message.attractions.push(Attraction.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* string root_sobject_id */ 3:
-                    message.rootSobjectId = reader.string();
+                case /* repeated string roots_sobjects_ids */ 3:
+                    message.rootsSobjectsIds.push(reader.string());
                     break;
                 case /* semio.model.v1.LayoutStrategy stragegy */ 4:
                     message.stragegy = reader.int32();
@@ -1169,9 +1169,9 @@ class Layout$Type extends MessageType<Layout> {
         /* repeated semio.model.v1.Attraction attractions = 2; */
         for (let i = 0; i < message.attractions.length; i++)
             Attraction.internalBinaryWrite(message.attractions[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* string root_sobject_id = 3; */
-        if (message.rootSobjectId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.rootSobjectId);
+        /* repeated string roots_sobjects_ids = 3; */
+        for (let i = 0; i < message.rootsSobjectsIds.length; i++)
+            writer.tag(3, WireType.LengthDelimited).string(message.rootsSobjectsIds[i]);
         /* semio.model.v1.LayoutStrategy stragegy = 4; */
         if (message.stragegy !== 0)
             writer.tag(4, WireType.Varint).int32(message.stragegy);

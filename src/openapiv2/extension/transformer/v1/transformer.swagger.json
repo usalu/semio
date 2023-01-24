@@ -132,9 +132,12 @@
             "$ref": "#/definitions/v1Attraction"
           }
         },
-        "rootSobjectId": {
-          "type": "string",
-          "description": "This sobject acts as an anker in the layout."
+        "rootsSobjectsIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Sobject that anker the layout."
         },
         "stragegy": {
           "$ref": "#/definitions/v1LayoutStrategy"
@@ -144,7 +147,7 @@
           "items": {
             "$ref": "#/definitions/v1AttractionTree"
           },
-          "description": "Optional attraction trees with root sobject id as key and attraction tree as value."
+          "description": "Optional attraction trees."
         }
       },
       "description": "A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other."

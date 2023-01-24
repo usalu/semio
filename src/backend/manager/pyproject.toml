@@ -12,7 +12,6 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 pydantic = "*"
-mathutils = "*"
 semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 #semio = {path = "../packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 

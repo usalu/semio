@@ -182,10 +182,10 @@ enum LayoutStrategy {
 message Layout {
   repeated Sobject sobjects = 1;
   repeated Attraction attractions = 2;
-  // This sobject acts as an anker in the layout.
-  string root_sobject_id = 3;
+  // Sobject that anker the layout.
+  repeated string roots_sobjects_ids = 3;
   LayoutStrategy stragegy = 4;
-  // Optional attraction trees with root sobject id as key and attraction tree as value.
+  // Optional attraction trees.
   repeated AttractionTree attractionTrees = 5;
 }
 

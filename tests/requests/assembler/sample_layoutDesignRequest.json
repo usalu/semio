@@ -55,10 +55,10 @@
     ],
     "attractionTrees": [
       {
-        "childrean": [],
+        "children": [],
         "attractionId": "1"
       }
     ],
     "stragegy": "LAYOUTSTRATEGY_BREADTHFIRST"
-}
+  }
 }

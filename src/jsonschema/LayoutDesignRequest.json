@@ -115,9 +115,12 @@
                     },
                     "type": "array"
                 },
-                "root_sobject_id": {
-                    "type": "string",
-                    "description": "This sobject acts as an anker in the layout."
+                "roots_sobjects_ids": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Sobject that anker the layout."
                 },
                 "stragegy": {
                     "enum": [
@@ -142,7 +145,7 @@
                         "$ref": "#/definitions/semio.model.v1.AttractionTree"
                     },
                     "type": "array",
-                    "description": "Optional attraction trees with root sobject id as key and attraction tree as value."
+                    "description": "Optional attraction trees."
                 }
             },
             "additionalProperties": true,

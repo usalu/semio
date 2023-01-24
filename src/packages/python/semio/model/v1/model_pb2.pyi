@@ -102,18 +102,18 @@ class Element(_message.Message):
     def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attractionTrees", "attractions", "root_sobject_id", "sobjects", "stragegy"]
+    __slots__ = ["attractionTrees", "attractions", "roots_sobjects_ids", "sobjects", "stragegy"]
     ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
     ATTRACTIONTREES_FIELD_NUMBER: _ClassVar[int]
-    ROOT_SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
+    ROOTS_SOBJECTS_IDS_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
     STRAGEGY_FIELD_NUMBER: _ClassVar[int]
     attractionTrees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
-    root_sobject_id: str
+    roots_sobjects_ids: _containers.RepeatedScalarFieldContainer[str]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     stragegy: LayoutStrategy
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., root_sobject_id: _Optional[str] = ..., stragegy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., roots_sobjects_ids: _Optional[_Iterable[str]] = ..., stragegy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]
