@@ -1,28 +1,28 @@
-services:
+# services:
 
-  server:
-    image: semio/server
-    build: server
-    container_name: semio_server
-    ports:
-      - 80:80
-    restart: always
-    networks:
-      - public
-      - private
-    command: python3 server.py
+#   server:
+#     image: semio/server
+#     build: server
+#     container_name: semio_server
+#     ports:
+#       - 80:80
+#     restart: always
+#     networks:
+#       - public
+#       - private
+#     command: python3 server.py
   
-  grasshopper-extension:
-    image: semio/grasshopper
-    build: extensions/grasshopper
-    container_name: semio_server
-    restart: always
-    networks:
-      - private
+#   grasshopper-extension:
+#     image: semio/grasshopper
+#     build: extensions/grasshopper
+#     container_name: semio_server
+#     restart: always
+#     networks:
+#       - private
 
-  vscode-ui:
-    image: semio/grasshopper
-    build: extensions/grasshopper
-    restart: always
-    networks:
-      - public
+#   vscode-ui:
+#     image: semio/grasshopper
+#     build: extensions/grasshopper
+#     restart: always
+#     networks:
+#       - public

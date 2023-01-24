@@ -26,6 +26,7 @@ namespace Semio.UI.Grasshopper.Goos
         public override IGH_Goo Duplicate() => new LayoutStrategyGoo(Value);
         public override string TypeName => "LayoutStrategy";
         public override string TypeDescription => "";
+        public override string TypeDescription => "";
         public override bool CastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(LayoutStrategy)))

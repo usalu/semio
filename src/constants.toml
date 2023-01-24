@@ -16,7 +16,7 @@ GENERAL_EXTENSIONS = ['txt','json','xml']
 # 0:usalu,1:mrdoob,2:nortikin,
 # 150:ifcopenshell,251:cadquery,252:freecad,253:openscad
 # 450:mcneel,451:autodesk,452:nemetschek,453:esri,454:microsoft
-# 550: hypar
+# 550:hypar
 # Licenses after https://spdx.org/licenses/
 
 [PLATFORMS]

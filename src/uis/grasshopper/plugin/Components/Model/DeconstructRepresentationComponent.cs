@@ -26,7 +26,7 @@ namespace Semio.UI.Grasshopper.Model
             pManager.AddTextParameter("Body", "B", "", GH_ParamAccess.item);
             pManager.AddParameter(new EncodingParam());
 
-            pManager.AddTextParameter("Type", "T", "", GH_ParamAccess.item);
+           
             pManager.AddTextParameter("Name", "N", "", GH_ParamAccess.item);
             pManager.AddNumberParameter("Level of Detail", "LD", "", GH_ParamAccess.item);
         }
