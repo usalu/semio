@@ -1,0 +1,20 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_buf//buf:defs.bzl", "buf_lint_test")
+
+proto_library(
+    name = "v1_proto",
+    srcs = ["gateway.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@buf_deps_src_schema_semio//assembler/v1:v1_proto",
+        "@buf_deps_src_schema_semio//model/v1:v1_proto",
+        "@buf_deps_src_schema_semio//protoc-gen-openapiv2/options:options_proto",
+        "@go_googleapis//google/api:annotations_proto",
+    ],
+)
+
+buf_lint_test(
+    name = "v1_proto_lint",
+    config = "//src/schema/semio:buf.yaml",
+    targets = [":v1_proto"],
+)
