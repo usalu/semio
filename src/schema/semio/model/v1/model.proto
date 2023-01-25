@@ -213,22 +213,18 @@ message Element {
   string description = 3;
 }
 
-// An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole).
-message ElementTree {
-  // An optional element id 
+// An element occurance describes where an element occurs in the design.
+message ElementOccurance{
+  // Id of the element (occurance).
   string element_id = 1;
-  // An optional pose of the element tree.
-  Pose pose = 2;
-  // An optional url of a type for the concept tree.
-  string type = 3;
-  // All parts (element trees) with the main concepts as keys and the subconcepts trees as values.
-  map<string,ElementTree> parts = 4;
+  // Pose of the element (occurance).
+  Pose element_pose = 2;
 }
 
 // A design is an aggregation of elements.
 message Design {
   repeated Element elements = 1;
-  repeated ElementTree elementTrees = 2;
+  repeated ElementOccurance elementOccurances = 2;
 }
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.

@@ -92,12 +92,12 @@ class Decision(_message.Message):
     def __init__(self, modification: _Optional[_Union[LayoutModification, _Mapping]] = ..., strategy: _Optional[_Union[LayoutModificationStrategy, _Mapping]] = ...) -> None: ...
 
 class Design(_message.Message):
-    __slots__ = ["elementTrees", "elements"]
+    __slots__ = ["elementOccurances", "elements"]
+    ELEMENTOCCURANCES_FIELD_NUMBER: _ClassVar[int]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
-    ELEMENTTREES_FIELD_NUMBER: _ClassVar[int]
-    elementTrees: _containers.RepeatedCompositeFieldContainer[ElementTree]
+    elementOccurances: _containers.RepeatedCompositeFieldContainer[ElementOccurance]
     elements: _containers.RepeatedCompositeFieldContainer[Element]
-    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementTrees: _Optional[_Iterable[_Union[ElementTree, _Mapping]]] = ...) -> None: ...
+    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementOccurances: _Optional[_Iterable[_Union[ElementOccurance, _Mapping]]] = ...) -> None: ...
 
 class Element(_message.Message):
     __slots__ = ["description", "id", "representations"]
@@ -109,24 +109,13 @@ class Element(_message.Message):
     representations: _containers.RepeatedCompositeFieldContainer[Representation]
     def __init__(self, id: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
 
-class ElementTree(_message.Message):
-    __slots__ = ["element_id", "parts", "pose", "type"]
-    class PartsEntry(_message.Message):
-        __slots__ = ["key", "value"]
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: ElementTree
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[ElementTree, _Mapping]] = ...) -> None: ...
+class ElementOccurance(_message.Message):
+    __slots__ = ["element_id", "element_pose"]
     ELEMENT_ID_FIELD_NUMBER: _ClassVar[int]
-    PARTS_FIELD_NUMBER: _ClassVar[int]
-    POSE_FIELD_NUMBER: _ClassVar[int]
-    TYPE_FIELD_NUMBER: _ClassVar[int]
+    ELEMENT_POSE_FIELD_NUMBER: _ClassVar[int]
     element_id: str
-    parts: _containers.MessageMap[str, ElementTree]
-    pose: Pose
-    type: str
-    def __init__(self, element_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., type: _Optional[str] = ..., parts: _Optional[_Mapping[str, ElementTree]] = ...) -> None: ...
+    element_pose: Pose
+    def __init__(self, element_id: _Optional[str] = ..., element_pose: _Optional[_Union[Pose, _Mapping]] = ...) -> None: ...
 
 class Layout(_message.Message):
     __slots__ = ["attraction_trees", "attractions", "sobjects", "strategy"]

@@ -123,10 +123,10 @@
             "$ref": "#/definitions/v1Element"
           }
         },
-        "elementTrees": {
+        "elementOccurances": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1ElementTree"
+            "$ref": "#/definitions/v1ElementOccurance"
           }
         }
       },
@@ -152,30 +152,19 @@
       },
       "description": "An element is the atom of a design. It has several representations and a pose."
     },
-    "v1ElementTree": {
+    "v1ElementOccurance": {
       "type": "object",
       "properties": {
         "elementId": {
           "type": "string",
-          "title": "An optional element id"
+          "description": "Id of the element (occurance)."
         },
-        "pose": {
+        "elementPose": {
           "$ref": "#/definitions/v1Pose",
-          "description": "An optional pose of the element tree."
-        },
-        "type": {
-          "type": "string",
-          "description": "An optional url of a type for the concept tree."
-        },
-        "parts": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/v1ElementTree"
-          },
-          "description": "All parts (element trees) with the main concepts as keys and the subconcepts trees as values."
+          "description": "Pose of the element (occurance)."
         }
       },
-      "description": "An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole)."
+      "description": "An element occurance describes where an element occurs in the design."
     },
     "v1Encoding": {
       "type": "string",

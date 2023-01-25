@@ -10,9 +10,9 @@
                     },
                     "type": "array"
                 },
-                "elementTrees": {
+                "elementOccurances": {
                     "items": {
-                        "$ref": "#/definitions/semio.model.v1.ElementTree"
+                        "$ref": "#/definitions/semio.model.v1.ElementOccurance"
                     },
                     "type": "array"
                 }
@@ -44,34 +44,22 @@
             "title": "Element",
             "description": "An element is the atom of a design. It has several representations and a pose."
         },
-        "semio.model.v1.ElementTree": {
+        "semio.model.v1.ElementOccurance": {
             "properties": {
                 "element_id": {
                     "type": "string",
-                    "description": "An optional element id"
+                    "description": "Id of the element (occurance)."
                 },
-                "pose": {
+                "element_pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
                     "additionalProperties": true,
-                    "description": "An optional pose of the element tree."
-                },
-                "type": {
-                    "type": "string",
-                    "description": "An optional url of a type for the concept tree."
-                },
-                "parts": {
-                    "additionalProperties": {
-                        "$ref": "#/definitions/semio.model.v1.ElementTree",
-                        "additionalProperties": true
-                    },
-                    "type": "object",
-                    "description": "All parts (element trees) with the main concepts as keys and the subconcepts trees as values."
+                    "description": "Pose of the element (occurance)."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Element Tree",
-            "description": "An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole)."
+            "title": "Element Occurance",
+            "description": "An element occurance describes where an element occurs in the design."
         },
         "semio.model.v1.Point": {
             "properties": {
