@@ -46,6 +46,11 @@
                     "type": "string",
                     "description": "Id of participating sobject."
                 },
+                "pose": {
+                    "$ref": "#/definitions/semio.model.v1.Pose",
+                    "additionalProperties": true,
+                    "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+                },
                 "representationProtocol": {
                     "enum": [
                         "REPRESENTATIONPROTOCOL_NONE",
@@ -88,8 +93,13 @@
         },
         "semio.model.v1.AttractionTree": {
             "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "The id of the sobject to place."
+                },
                 "attraction_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.\r Roots can't have that field as they have no parent."
                 },
                 "children": {
                     "items": {
@@ -101,7 +111,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Attraction Tree",
-            "description": "An attraction tree contains exact information in which order attractions should be triggered."
+            "description": "An attraction tree defines a possibly unambiguous subset of a layout."
         },
         "semio.model.v1.Layout": {
             "properties": {
@@ -109,20 +119,15 @@
                     "items": {
                         "$ref": "#/definitions/semio.model.v1.Sobject"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "description": "Sobjects (nodes) that are part of the layout (graph)."
                 },
                 "attractions": {
                     "items": {
                         "$ref": "#/definitions/semio.model.v1.Attraction"
                     },
-                    "type": "array"
-                },
-                "roots_sobjects_ids": {
-                    "items": {
-                        "type": "string"
-                    },
                     "type": "array",
-                    "description": "Sobject that anchor the layout."
+                    "description": "Attractions (edges) that are part of the layout (graph)."
                 },
                 "strategy": {
                     "enum": [
@@ -142,12 +147,12 @@
                     "title": "Layout Strategy",
                     "description": "A layout strategy affects in which orders attractions are triggered."
                 },
-                "attractionTrees": {
+                "attraction_trees": {
                     "items": {
                         "$ref": "#/definitions/semio.model.v1.AttractionTree"
                     },
                     "type": "array",
-                    "description": "Optional attraction trees."
+                    "description": "Optional attraction trees that can possibly unambiguously describe the layout order of sobjects.\r Most of the time this field is only necissary due to elements that don't work well together in a general way.\r Therefore if you can update the element definitions to be more robust, rather use your time for that."
                 }
             },
             "additionalProperties": true,
@@ -220,11 +225,6 @@
                 "url": {
                     "type": "string",
                     "description": "The url of the element definition."
-                },
-                "pose": {
-                    "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true,
-                    "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
                 },
                 "parameters": {
                     "additionalProperties": {

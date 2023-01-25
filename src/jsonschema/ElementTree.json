@@ -1,57 +1,35 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/AttractionParticipant",
+    "$ref": "#/definitions/ElementTree",
     "definitions": {
-        "AttractionParticipant": {
+        "ElementTree": {
             "properties": {
-                "participant_id": {
+                "element_id": {
                     "type": "string",
-                    "description": "Id of participating sobject."
+                    "description": "An optional element id"
                 },
                 "pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
                     "additionalProperties": true,
-                    "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+                    "description": "An optional pose of the element tree."
                 },
-                "representationProtocol": {
-                    "enum": [
-                        "REPRESENTATIONPROTOCOL_NONE",
-                        0,
-                        "REPRESENTATIONPROTOCOL_SIMPLE",
-                        1,
-                        "REPRESENTATIONPROTOCOL_FULL",
-                        2
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ],
-                    "title": "Representation Protocol",
-                    "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process."
+                "type": {
+                    "type": "string",
+                    "description": "An optional url of a type for the concept tree."
                 },
-                "ports": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array",
-                    "description": "Optional port names to connect to. The hierarchy should matter"
-                },
-                "bias": {
+                "parts": {
                     "additionalProperties": {
-                        "type": "string"
+                        "$ref": "#/definitions/ElementTree",
+                        "additionalProperties": true
                     },
                     "type": "object",
-                    "description": "Optional parameters to bias the attraction."
+                    "description": "All parts (element trees) with the main concepts as keys and the subconcepts trees as values."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction Participant",
-            "description": "An attraction participant participates in an attraction process."
+            "title": "Element Tree",
+            "description": "An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole)."
         },
         "semio.model.v1.Point": {
             "properties": {

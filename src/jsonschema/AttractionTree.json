@@ -4,8 +4,13 @@
     "definitions": {
         "AttractionTree": {
             "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "The id of the sobject to place."
+                },
                 "attraction_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.\r Roots can't have that field as they have no parent."
                 },
                 "children": {
                     "items": {
@@ -17,7 +22,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Attraction Tree",
-            "description": "An attraction tree contains exact information in which order attractions should be triggered."
+            "description": "An attraction tree defines a possibly unambiguous subset of a layout."
         }
     }
 }

@@ -69,6 +69,10 @@
           "type": "string",
           "description": "Id of participating sobject."
         },
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+        },
         "representationProtocol": {
           "$ref": "#/definitions/v1RepresentationProtocol",
           "description": "An optional representation of the participant."
@@ -93,8 +97,13 @@
     "v1AttractionTree": {
       "type": "object",
       "properties": {
+        "sobjectId": {
+          "type": "string",
+          "description": "The id of the sobject to place."
+        },
         "attractionId": {
-          "type": "string"
+          "type": "string",
+          "description": "An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.\r\nRoots can't have that field as they have no parent."
         },
         "children": {
           "type": "array",
@@ -103,7 +112,7 @@
           }
         }
       },
-      "description": "An attraction tree contains exact information in which order attractions should be triggered."
+      "description": "An attraction tree defines a possibly unambiguous subset of a layout."
     },
     "v1Design": {
       "type": "object",
@@ -113,6 +122,12 @@
           "items": {
             "$ref": "#/definitions/v1Element"
           }
+        },
+        "elementTrees": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ElementTree"
+          }
         }
       },
       "description": "A design is an aggregation of elements."
@@ -120,17 +135,47 @@
     "v1Element": {
       "type": "object",
       "properties": {
-        "pose": {
-          "$ref": "#/definitions/v1Pose"
+        "id": {
+          "type": "string",
+          "description": "The id of the sobject that was used to create the element is also the element id."
         },
         "representations": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Representation"
           }
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional human readable description of the element."
         }
       },
       "description": "An element is the atom of a design. It has several representations and a pose."
+    },
+    "v1ElementTree": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "string",
+          "title": "An optional element id"
+        },
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "An optional pose of the element tree."
+        },
+        "type": {
+          "type": "string",
+          "description": "An optional url of a type for the concept tree."
+        },
+        "parts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1ElementTree"
+          },
+          "description": "All parts (element trees) with the main concepts as keys and the subconcepts trees as values."
+        }
+      },
+      "description": "An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole)."
     },
     "v1Encoding": {
       "type": "string",
@@ -147,7 +192,7 @@
     "v1FileType": {
       "type": "string",
       "enum": [
-        "FILETYPE_NATIVEBINARY",
+        "FILETYPE_NATIVE",
         "FILETYPE_JSON",
         "FILETYPE_XML",
         "FILETYPE_YAML",
@@ -160,8 +205,8 @@
         "FILETYPE_GO",
         "FILETYPE_RUST"
       ],
-      "default": "FILETYPE_NATIVEBINARY",
-      "title": "- FILETYPE_NATIVEBINARY: Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang\n - FILETYPE_RUST: Rust"
+      "default": "FILETYPE_NATIVE",
+      "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
     },
     "v1Layout": {
       "type": "object",
@@ -170,20 +215,15 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Sobject"
-          }
+          },
+          "description": "Sobjects (nodes) that are part of the layout (graph)."
         },
         "attractions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Attraction"
-          }
-        },
-        "rootsSobjectsIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
           },
-          "description": "Sobject that anchor the layout."
+          "description": "Attractions (edges) that are part of the layout (graph)."
         },
         "strategy": {
           "$ref": "#/definitions/v1LayoutStrategy"
@@ -193,7 +233,7 @@
           "items": {
             "$ref": "#/definitions/v1AttractionTree"
           },
-          "description": "Optional attraction trees."
+          "description": "Optional attraction trees that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary due to elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
         }
       },
       "description": "A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other."
@@ -302,16 +342,23 @@
         },
         "platform": {
           "$ref": "#/definitions/v1Platform",
-          "title": "Platform"
+          "title": "Native platform of representation"
         },
-        "name": {
+        "description": {
           "type": "string",
-          "title": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
+          "description": "A description of the representation for humans to understand what the purpose of this representation is."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
         },
         "lod": {
           "type": "string",
           "format": "int64",
-          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
         }
       },
       "description": "A representation for an element. Basically a file with some semio specific metadata."
@@ -336,10 +383,6 @@
         "url": {
           "type": "string",
           "description": "The url of the element definition."
-        },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
         },
         "parameters": {
           "type": "object",

@@ -59,7 +59,7 @@
     "v1FileType": {
       "type": "string",
       "enum": [
-        "FILETYPE_NATIVEBINARY",
+        "FILETYPE_NATIVE",
         "FILETYPE_JSON",
         "FILETYPE_XML",
         "FILETYPE_YAML",
@@ -72,8 +72,8 @@
         "FILETYPE_GO",
         "FILETYPE_RUST"
       ],
-      "default": "FILETYPE_NATIVEBINARY",
-      "title": "- FILETYPE_NATIVEBINARY: Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang\n - FILETYPE_RUST: Rust"
+      "default": "FILETYPE_NATIVE",
+      "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
     },
     "v1Platform": {
       "type": "string",
@@ -118,40 +118,6 @@
       },
       "description": "A 3d point with x,y,z coordinates."
     },
-    "v1Pose": {
-      "type": "object",
-      "properties": {
-        "pointOfView": {
-          "$ref": "#/definitions/v1Point"
-        },
-        "view": {
-          "$ref": "#/definitions/v1Quaternion"
-        }
-      },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
-    },
-    "v1Quaternion": {
-      "type": "object",
-      "properties": {
-        "w": {
-          "type": "number",
-          "format": "double"
-        },
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "z": {
-          "type": "number",
-          "format": "double"
-        }
-      },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
-    },
     "v1Representation": {
       "type": "object",
       "properties": {
@@ -170,16 +136,23 @@
         },
         "platform": {
           "$ref": "#/definitions/v1Platform",
-          "title": "Platform"
+          "title": "Native platform of representation"
         },
-        "name": {
+        "description": {
           "type": "string",
-          "title": "Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)"
+          "description": "A description of the representation for humans to understand what the purpose of this representation is."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
         },
         "lod": {
           "type": "string",
           "format": "int64",
-          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)"
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
         }
       },
       "description": "A representation for an element. Basically a file with some semio specific metadata."
@@ -205,10 +178,6 @@
         "url": {
           "type": "string",
           "description": "The url of the element definition."
-        },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted."
         },
         "parameters": {
           "type": "object",

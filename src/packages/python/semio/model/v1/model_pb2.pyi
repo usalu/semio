@@ -15,7 +15,7 @@ FILETYPE_CPP: FileType
 FILETYPE_CSHARP: FileType
 FILETYPE_GO: FileType
 FILETYPE_JSON: FileType
-FILETYPE_NATIVEBINARY: FileType
+FILETYPE_NATIVE: FileType
 FILETYPE_PY: FileType
 FILETYPE_RUST: FileType
 FILETYPE_STEP: FileType
@@ -53,7 +53,7 @@ class Attraction(_message.Message):
     def __init__(self, id: _Optional[str] = ..., attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
 
 class AttractionParticipant(_message.Message):
-    __slots__ = ["bias", "participant_id", "ports", "representationProtocol"]
+    __slots__ = ["bias", "participant_id", "ports", "pose", "representationProtocol"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -64,20 +64,24 @@ class AttractionParticipant(_message.Message):
     BIAS_FIELD_NUMBER: _ClassVar[int]
     PARTICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
     PORTS_FIELD_NUMBER: _ClassVar[int]
+    POSE_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
     bias: _containers.ScalarMap[str, str]
     participant_id: str
     ports: _containers.RepeatedScalarFieldContainer[str]
+    pose: Pose
     representationProtocol: RepresentationProtocol
-    def __init__(self, participant_id: _Optional[str] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, participant_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class AttractionTree(_message.Message):
-    __slots__ = ["attraction_id", "children"]
+    __slots__ = ["attraction_id", "children", "sobject_id"]
     ATTRACTION_ID_FIELD_NUMBER: _ClassVar[int]
     CHILDREN_FIELD_NUMBER: _ClassVar[int]
+    SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
     attraction_id: str
     children: _containers.RepeatedCompositeFieldContainer[AttractionTree]
-    def __init__(self, attraction_id: _Optional[str] = ..., children: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    sobject_id: str
+    def __init__(self, sobject_id: _Optional[str] = ..., attraction_id: _Optional[str] = ..., children: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class Decision(_message.Message):
     __slots__ = ["modification", "strategy"]
@@ -88,32 +92,53 @@ class Decision(_message.Message):
     def __init__(self, modification: _Optional[_Union[LayoutModification, _Mapping]] = ..., strategy: _Optional[_Union[LayoutModificationStrategy, _Mapping]] = ...) -> None: ...
 
 class Design(_message.Message):
-    __slots__ = ["elements"]
+    __slots__ = ["elementTrees", "elements"]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
+    ELEMENTTREES_FIELD_NUMBER: _ClassVar[int]
+    elementTrees: _containers.RepeatedCompositeFieldContainer[ElementTree]
     elements: _containers.RepeatedCompositeFieldContainer[Element]
-    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ...) -> None: ...
+    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementTrees: _Optional[_Iterable[_Union[ElementTree, _Mapping]]] = ...) -> None: ...
 
 class Element(_message.Message):
-    __slots__ = ["pose", "representations"]
-    POSE_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["description", "id", "representations"]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    ID_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
-    pose: Pose
+    description: str
+    id: str
     representations: _containers.RepeatedCompositeFieldContainer[Representation]
-    def __init__(self, pose: _Optional[_Union[Pose, _Mapping]] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
+
+class ElementTree(_message.Message):
+    __slots__ = ["element_id", "parts", "pose", "type"]
+    class PartsEntry(_message.Message):
+        __slots__ = ["key", "value"]
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: ElementTree
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[ElementTree, _Mapping]] = ...) -> None: ...
+    ELEMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    PARTS_FIELD_NUMBER: _ClassVar[int]
+    POSE_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    element_id: str
+    parts: _containers.MessageMap[str, ElementTree]
+    pose: Pose
+    type: str
+    def __init__(self, element_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., type: _Optional[str] = ..., parts: _Optional[_Mapping[str, ElementTree]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attractionTrees", "attractions", "roots_sobjects_ids", "sobjects", "strategy"]
+    __slots__ = ["attraction_trees", "attractions", "sobjects", "strategy"]
     ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTIONTREES_FIELD_NUMBER: _ClassVar[int]
-    ROOTS_SOBJECTS_IDS_FIELD_NUMBER: _ClassVar[int]
+    ATTRACTION_TREES_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
     STRATEGY_FIELD_NUMBER: _ClassVar[int]
-    attractionTrees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
+    attraction_trees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
     attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
-    roots_sobjects_ids: _containers.RepeatedScalarFieldContainer[str]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     strategy: LayoutStrategy
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., roots_sobjects_ids: _Optional[_Iterable[str]] = ..., strategy: _Optional[_Union[LayoutStrategy, str]] = ..., attractionTrees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., strategy: _Optional[_Union[LayoutStrategy, str]] = ..., attraction_trees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]
@@ -160,23 +185,25 @@ class Quaternion(_message.Message):
     def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
 class Representation(_message.Message):
-    __slots__ = ["body", "encoding", "file_type", "lod", "name", "platform"]
+    __slots__ = ["body", "concepts", "description", "encoding", "file_type", "lod", "platform"]
     BODY_FIELD_NUMBER: _ClassVar[int]
+    CONCEPTS_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     ENCODING_FIELD_NUMBER: _ClassVar[int]
     FILE_TYPE_FIELD_NUMBER: _ClassVar[int]
     LOD_FIELD_NUMBER: _ClassVar[int]
-    NAME_FIELD_NUMBER: _ClassVar[int]
     PLATFORM_FIELD_NUMBER: _ClassVar[int]
     body: bytes
+    concepts: _containers.RepeatedScalarFieldContainer[str]
+    description: str
     encoding: Encoding
     file_type: FileType
     lod: int
-    name: str
     platform: Platform
-    def __init__(self, body: _Optional[bytes] = ..., encoding: _Optional[_Union[Encoding, str]] = ..., file_type: _Optional[_Union[FileType, str]] = ..., platform: _Optional[_Union[Platform, str]] = ..., name: _Optional[str] = ..., lod: _Optional[int] = ...) -> None: ...
+    def __init__(self, body: _Optional[bytes] = ..., encoding: _Optional[_Union[Encoding, str]] = ..., file_type: _Optional[_Union[FileType, str]] = ..., platform: _Optional[_Union[Platform, str]] = ..., description: _Optional[str] = ..., concepts: _Optional[_Iterable[str]] = ..., lod: _Optional[int] = ...) -> None: ...
 
 class Sobject(_message.Message):
-    __slots__ = ["id", "parameters", "pose", "url"]
+    __slots__ = ["id", "parameters", "url"]
     class ParametersEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -186,13 +213,11 @@ class Sobject(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     ID_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
-    POSE_FIELD_NUMBER: _ClassVar[int]
     URL_FIELD_NUMBER: _ClassVar[int]
     id: str
     parameters: _containers.ScalarMap[str, str]
-    pose: Pose
     url: str
-    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class Encoding(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

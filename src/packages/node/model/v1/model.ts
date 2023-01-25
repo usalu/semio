@@ -99,21 +99,34 @@ export interface Representation {
      */
     fileType: FileType;
     /**
-     * Platform
+     * Native platform of representation
      *
      * @generated from protobuf field: semio.model.v1.Platform platform = 4;
      */
     platform: Platform;
     /**
-     * Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
+     * A description of the representation for humans to understand what the purpose of this representation is.
      *
-     * @generated from protobuf field: string name = 5;
+     * @generated from protobuf field: string description = 5;
      */
-    name: string;
+    description: string;
+    /**
+     * Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...).
+     *
+     * @generated from protobuf field: repeated string concepts = 6;
+     */
+    concepts: string[];
     /**
      * Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+     * For architectural design it is recommended to choose the scale multiplier.
+     * For BIM you might want to choose:
+     * 100:Conceptual
+     * 200:Approximate
+     * 300:Precise
+     * 400:Fabriaction
+     * 500:Real
      *
-     * @generated from protobuf field: int64 lod = 6;
+     * @generated from protobuf field: int64 lod = 7;
      */
     lod: bigint;
 }
@@ -136,15 +149,9 @@ export interface Sobject {
      */
     url: string;
     /**
-     * The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted.
-     *
-     * @generated from protobuf field: semio.model.v1.Pose pose = 3;
-     */
-    pose?: Pose;
-    /**
      * Parameters for the element.
      *
-     * @generated from protobuf field: map<string, string> parameters = 4;
+     * @generated from protobuf field: map<string, string> parameters = 3;
      */
     parameters: {
         [key: string]: string;
@@ -163,21 +170,27 @@ export interface AttractionParticipant {
      */
     participantId: string;
     /**
+     * The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted.
+     *
+     * @generated from protobuf field: semio.model.v1.Pose pose = 2;
+     */
+    pose?: Pose;
+    /**
      * An optional representation of the participant.
      *
-     * @generated from protobuf field: semio.model.v1.RepresentationProtocol representationProtocol = 2;
+     * @generated from protobuf field: semio.model.v1.RepresentationProtocol representationProtocol = 3;
      */
     representationProtocol: RepresentationProtocol;
     /**
      * Optional port names to connect to. The hierarchy should matter
      *
-     * @generated from protobuf field: repeated string ports = 3;
+     * @generated from protobuf field: repeated string ports = 4;
      */
     ports: string[];
     /**
      * Optional parameters to bias the attraction.
      *
-     * @generated from protobuf field: map<string, string> bias = 4;
+     * @generated from protobuf field: map<string, string> bias = 5;
      */
     bias: {
         [key: string]: string;
@@ -209,17 +222,26 @@ export interface Attraction {
     attracted?: AttractionParticipant;
 }
 /**
- * An attraction tree contains exact information in which order attractions should be triggered.
+ * An attraction tree defines a possibly unambiguous subset of a layout.
  *
  * @generated from protobuf message semio.model.v1.AttractionTree
  */
 export interface AttractionTree {
     /**
-     * @generated from protobuf field: string attraction_id = 1;
+     * The id of the sobject to place.
+     *
+     * @generated from protobuf field: string sobject_id = 1;
+     */
+    sobjectId: string;
+    /**
+     * An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.
+     * Roots can't have that field as they have no parent.
+     *
+     * @generated from protobuf field: string attraction_id = 2;
      */
     attractionId: string;
     /**
-     * @generated from protobuf field: repeated semio.model.v1.AttractionTree children = 2;
+     * @generated from protobuf field: repeated semio.model.v1.AttractionTree children = 3;
      */
     children: AttractionTree[];
 }
@@ -230,27 +252,27 @@ export interface AttractionTree {
  */
 export interface Layout {
     /**
+     * Sobjects (nodes) that are part of the layout (graph).
+     *
      * @generated from protobuf field: repeated semio.model.v1.Sobject sobjects = 1;
      */
     sobjects: Sobject[];
     /**
+     * Attractions (edges) that are part of the layout (graph).
+     *
      * @generated from protobuf field: repeated semio.model.v1.Attraction attractions = 2;
      */
     attractions: Attraction[];
     /**
-     * Sobject that anchor the layout.
-     *
-     * @generated from protobuf field: repeated string roots_sobjects_ids = 3;
-     */
-    rootsSobjectsIds: string[];
-    /**
-     * @generated from protobuf field: semio.model.v1.LayoutStrategy strategy = 4;
+     * @generated from protobuf field: semio.model.v1.LayoutStrategy strategy = 3;
      */
     strategy: LayoutStrategy;
     /**
-     * Optional attraction trees.
+     * Optional attraction trees that can possibly unambiguously describe the layout order of sobjects.
+     * Most of the time this field is only necissary due to elements that don't work well together in a general way.
+     * Therefore if you can update the element definitions to be more robust, rather use your time for that.
      *
-     * @generated from protobuf field: repeated semio.model.v1.AttractionTree attractionTrees = 5;
+     * @generated from protobuf field: repeated semio.model.v1.AttractionTree attraction_trees = 4;
      */
     attractionTrees: AttractionTree[];
 }
@@ -261,13 +283,54 @@ export interface Layout {
  */
 export interface Element {
     /**
-     * @generated from protobuf field: semio.model.v1.Pose pose = 1;
+     * The id of the sobject that was used to create the element is also the element id.
+     *
+     * @generated from protobuf field: string id = 1;
      */
-    pose?: Pose;
+    id: string;
     /**
      * @generated from protobuf field: repeated semio.model.v1.Representation representations = 2;
      */
     representations: Representation[];
+    /**
+     * An optional human readable description of the element.
+     *
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
+}
+/**
+ * An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole).
+ *
+ * @generated from protobuf message semio.model.v1.ElementTree
+ */
+export interface ElementTree {
+    /**
+     * An optional element id
+     *
+     * @generated from protobuf field: string element_id = 1;
+     */
+    elementId: string;
+    /**
+     * An optional pose of the element tree.
+     *
+     * @generated from protobuf field: semio.model.v1.Pose pose = 2;
+     */
+    pose?: Pose;
+    /**
+     * An optional url of a type for the concept tree.
+     *
+     * @generated from protobuf field: string type = 3;
+     */
+    type: string;
+    /**
+     * All parts (element trees) with the main concepts as keys and the subconcepts trees as values.
+     *
+     * @generated from protobuf field: map<string, semio.model.v1.ElementTree> parts = 4;
+     */
+    parts: {
+        [key: string]: ElementTree;
+    };
 }
 /**
  * A design is an aggregation of elements.
@@ -279,6 +342,10 @@ export interface Design {
      * @generated from protobuf field: repeated semio.model.v1.Element elements = 1;
      */
     elements: Element[];
+    /**
+     * @generated from protobuf field: repeated semio.model.v1.ElementTree elementTrees = 2;
+     */
+    elementTrees: ElementTree[];
 }
 /**
  * A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
@@ -357,11 +424,12 @@ export enum Encoding {
  */
 export enum FileType {
     /**
-     * Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.
+     * Native serialization according platform. Use this only when it is none of the others.
+     * Often files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.
      *
-     * @generated from protobuf enum value: FILETYPE_NATIVEBINARY = 0;
+     * @generated from protobuf enum value: FILETYPE_NATIVE = 0;
      */
-    FILETYPE_NATIVEBINARY = 0,
+    FILETYPE_NATIVE = 0,
     /**
      * @generated from protobuf enum value: FILETYPE_JSON = 1;
      */
@@ -413,8 +481,6 @@ export enum FileType {
      */
     FILETYPE_GO = 10,
     /**
-     * Rust
-     *
      * @generated from protobuf enum value: FILETYPE_RUST = 11;
      */
     FILETYPE_RUST = 11
@@ -756,12 +822,13 @@ class Representation$Type extends MessageType<Representation> {
             { no: 2, name: "encoding", kind: "enum", T: () => ["semio.model.v1.Encoding", Encoding, "ENCODING_"] },
             { no: 3, name: "file_type", kind: "enum", T: () => ["semio.model.v1.FileType", FileType] },
             { no: 4, name: "platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
-            { no: 5, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 5, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "concepts", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
     create(value?: PartialMessage<Representation>): Representation {
-        const message = { body: new Uint8Array(0), encoding: 0, fileType: 0, platform: 0, name: "", lod: 0n };
+        const message = { body: new Uint8Array(0), encoding: 0, fileType: 0, platform: 0, description: "", concepts: [], lod: 0n };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Representation>(this, message, value);
@@ -784,10 +851,13 @@ class Representation$Type extends MessageType<Representation> {
                 case /* semio.model.v1.Platform platform */ 4:
                     message.platform = reader.int32();
                     break;
-                case /* string name */ 5:
-                    message.name = reader.string();
+                case /* string description */ 5:
+                    message.description = reader.string();
                     break;
-                case /* int64 lod */ 6:
+                case /* repeated string concepts */ 6:
+                    message.concepts.push(reader.string());
+                    break;
+                case /* int64 lod */ 7:
                     message.lod = reader.int64().toBigInt();
                     break;
                 default:
@@ -814,12 +884,15 @@ class Representation$Type extends MessageType<Representation> {
         /* semio.model.v1.Platform platform = 4; */
         if (message.platform !== 0)
             writer.tag(4, WireType.Varint).int32(message.platform);
-        /* string name = 5; */
-        if (message.name !== "")
-            writer.tag(5, WireType.LengthDelimited).string(message.name);
-        /* int64 lod = 6; */
+        /* string description = 5; */
+        if (message.description !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.description);
+        /* repeated string concepts = 6; */
+        for (let i = 0; i < message.concepts.length; i++)
+            writer.tag(6, WireType.LengthDelimited).string(message.concepts[i]);
+        /* int64 lod = 7; */
         if (message.lod !== 0n)
-            writer.tag(6, WireType.Varint).int64(message.lod);
+            writer.tag(7, WireType.Varint).int64(message.lod);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -836,8 +909,7 @@ class Sobject$Type extends MessageType<Sobject> {
         super("semio.model.v1.Sobject", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "pose", kind: "message", T: () => Pose },
-            { no: 4, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 3, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<Sobject>): Sobject {
@@ -858,11 +930,8 @@ class Sobject$Type extends MessageType<Sobject> {
                 case /* string url */ 2:
                     message.url = reader.string();
                     break;
-                case /* semio.model.v1.Pose pose */ 3:
-                    message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
-                    break;
-                case /* map<string, string> parameters */ 4:
-                    this.binaryReadMap4(message.parameters, reader, options);
+                case /* map<string, string> parameters */ 3:
+                    this.binaryReadMap3(message.parameters, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -875,7 +944,7 @@ class Sobject$Type extends MessageType<Sobject> {
         }
         return message;
     }
-    private binaryReadMap4(map: Sobject["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
+    private binaryReadMap3(map: Sobject["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
         let len = reader.uint32(), end = reader.pos + len, key: keyof Sobject["parameters"] | undefined, val: Sobject["parameters"][any] | undefined;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -898,12 +967,9 @@ class Sobject$Type extends MessageType<Sobject> {
         /* string url = 2; */
         if (message.url !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.url);
-        /* semio.model.v1.Pose pose = 3; */
-        if (message.pose)
-            Pose.internalBinaryWrite(message.pose, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* map<string, string> parameters = 4; */
+        /* map<string, string> parameters = 3; */
         for (let k of Object.keys(message.parameters))
-            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.parameters[k]).join();
+            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.parameters[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -919,9 +985,10 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
     constructor() {
         super("semio.model.v1.AttractionParticipant", [
             { no: 1, name: "participant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
-            { no: 3, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 2, name: "pose", kind: "message", T: () => Pose },
+            { no: 3, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
+            { no: 4, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<AttractionParticipant>): AttractionParticipant {
@@ -939,14 +1006,17 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
                 case /* string participant_id */ 1:
                     message.participantId = reader.string();
                     break;
-                case /* semio.model.v1.RepresentationProtocol representationProtocol */ 2:
+                case /* semio.model.v1.Pose pose */ 2:
+                    message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
+                    break;
+                case /* semio.model.v1.RepresentationProtocol representationProtocol */ 3:
                     message.representationProtocol = reader.int32();
                     break;
-                case /* repeated string ports */ 3:
+                case /* repeated string ports */ 4:
                     message.ports.push(reader.string());
                     break;
-                case /* map<string, string> bias */ 4:
-                    this.binaryReadMap4(message.bias, reader, options);
+                case /* map<string, string> bias */ 5:
+                    this.binaryReadMap5(message.bias, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -959,7 +1029,7 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         }
         return message;
     }
-    private binaryReadMap4(map: AttractionParticipant["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
+    private binaryReadMap5(map: AttractionParticipant["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
         let len = reader.uint32(), end = reader.pos + len, key: keyof AttractionParticipant["bias"] | undefined, val: AttractionParticipant["bias"][any] | undefined;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -979,15 +1049,18 @@ class AttractionParticipant$Type extends MessageType<AttractionParticipant> {
         /* string participant_id = 1; */
         if (message.participantId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.participantId);
-        /* semio.model.v1.RepresentationProtocol representationProtocol = 2; */
+        /* semio.model.v1.Pose pose = 2; */
+        if (message.pose)
+            Pose.internalBinaryWrite(message.pose, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.RepresentationProtocol representationProtocol = 3; */
         if (message.representationProtocol !== 0)
-            writer.tag(2, WireType.Varint).int32(message.representationProtocol);
-        /* repeated string ports = 3; */
+            writer.tag(3, WireType.Varint).int32(message.representationProtocol);
+        /* repeated string ports = 4; */
         for (let i = 0; i < message.ports.length; i++)
-            writer.tag(3, WireType.LengthDelimited).string(message.ports[i]);
-        /* map<string, string> bias = 4; */
+            writer.tag(4, WireType.LengthDelimited).string(message.ports[i]);
+        /* map<string, string> bias = 5; */
         for (let k of Object.keys(message.bias))
-            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
+            writer.tag(5, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1063,12 +1136,13 @@ export const Attraction = new Attraction$Type();
 class AttractionTree$Type extends MessageType<AttractionTree> {
     constructor() {
         super("semio.model.v1.AttractionTree", [
-            { no: 1, name: "attraction_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "children", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
+            { no: 1, name: "sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "attraction_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "children", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
     create(value?: PartialMessage<AttractionTree>): AttractionTree {
-        const message = { attractionId: "", children: [] };
+        const message = { sobjectId: "", attractionId: "", children: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AttractionTree>(this, message, value);
@@ -1079,10 +1153,13 @@ class AttractionTree$Type extends MessageType<AttractionTree> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string attraction_id */ 1:
+                case /* string sobject_id */ 1:
+                    message.sobjectId = reader.string();
+                    break;
+                case /* string attraction_id */ 2:
                     message.attractionId = reader.string();
                     break;
-                case /* repeated semio.model.v1.AttractionTree children */ 2:
+                case /* repeated semio.model.v1.AttractionTree children */ 3:
                     message.children.push(AttractionTree.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -1097,12 +1174,15 @@ class AttractionTree$Type extends MessageType<AttractionTree> {
         return message;
     }
     internalBinaryWrite(message: AttractionTree, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string attraction_id = 1; */
+        /* string sobject_id = 1; */
+        if (message.sobjectId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.sobjectId);
+        /* string attraction_id = 2; */
         if (message.attractionId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.attractionId);
-        /* repeated semio.model.v1.AttractionTree children = 2; */
+            writer.tag(2, WireType.LengthDelimited).string(message.attractionId);
+        /* repeated semio.model.v1.AttractionTree children = 3; */
         for (let i = 0; i < message.children.length; i++)
-            AttractionTree.internalBinaryWrite(message.children[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            AttractionTree.internalBinaryWrite(message.children[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1119,13 +1199,12 @@ class Layout$Type extends MessageType<Layout> {
         super("semio.model.v1.Layout", [
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
             { no: 2, name: "attractions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Attraction },
-            { no: 3, name: "roots_sobjects_ids", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "strategy", kind: "enum", T: () => ["semio.model.v1.LayoutStrategy", LayoutStrategy] },
-            { no: 5, name: "attractionTrees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
+            { no: 3, name: "strategy", kind: "enum", T: () => ["semio.model.v1.LayoutStrategy", LayoutStrategy] },
+            { no: 4, name: "attraction_trees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AttractionTree }
         ]);
     }
     create(value?: PartialMessage<Layout>): Layout {
-        const message = { sobjects: [], attractions: [], rootsSobjectsIds: [], strategy: 0, attractionTrees: [] };
+        const message = { sobjects: [], attractions: [], strategy: 0, attractionTrees: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Layout>(this, message, value);
@@ -1142,13 +1221,10 @@ class Layout$Type extends MessageType<Layout> {
                 case /* repeated semio.model.v1.Attraction attractions */ 2:
                     message.attractions.push(Attraction.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated string roots_sobjects_ids */ 3:
-                    message.rootsSobjectsIds.push(reader.string());
-                    break;
-                case /* semio.model.v1.LayoutStrategy strategy */ 4:
+                case /* semio.model.v1.LayoutStrategy strategy */ 3:
                     message.strategy = reader.int32();
                     break;
-                case /* repeated semio.model.v1.AttractionTree attractionTrees */ 5:
+                case /* repeated semio.model.v1.AttractionTree attraction_trees */ 4:
                     message.attractionTrees.push(AttractionTree.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -1169,15 +1245,12 @@ class Layout$Type extends MessageType<Layout> {
         /* repeated semio.model.v1.Attraction attractions = 2; */
         for (let i = 0; i < message.attractions.length; i++)
             Attraction.internalBinaryWrite(message.attractions[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* repeated string roots_sobjects_ids = 3; */
-        for (let i = 0; i < message.rootsSobjectsIds.length; i++)
-            writer.tag(3, WireType.LengthDelimited).string(message.rootsSobjectsIds[i]);
-        /* semio.model.v1.LayoutStrategy strategy = 4; */
+        /* semio.model.v1.LayoutStrategy strategy = 3; */
         if (message.strategy !== 0)
-            writer.tag(4, WireType.Varint).int32(message.strategy);
-        /* repeated semio.model.v1.AttractionTree attractionTrees = 5; */
+            writer.tag(3, WireType.Varint).int32(message.strategy);
+        /* repeated semio.model.v1.AttractionTree attraction_trees = 4; */
         for (let i = 0; i < message.attractionTrees.length; i++)
-            AttractionTree.internalBinaryWrite(message.attractionTrees[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+            AttractionTree.internalBinaryWrite(message.attractionTrees[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1192,12 +1265,13 @@ export const Layout = new Layout$Type();
 class Element$Type extends MessageType<Element> {
     constructor() {
         super("semio.model.v1.Element", [
-            { no: 1, name: "pose", kind: "message", T: () => Pose },
-            { no: 2, name: "representations", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Representation }
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "representations", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Representation },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Element>): Element {
-        const message = { representations: [] };
+        const message = { id: "", representations: [], description: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Element>(this, message, value);
@@ -1208,11 +1282,14 @@ class Element$Type extends MessageType<Element> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.Pose pose */ 1:
-                    message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
+                case /* string id */ 1:
+                    message.id = reader.string();
                     break;
                 case /* repeated semio.model.v1.Representation representations */ 2:
                     message.representations.push(Representation.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* string description */ 3:
+                    message.description = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1226,12 +1303,15 @@ class Element$Type extends MessageType<Element> {
         return message;
     }
     internalBinaryWrite(message: Element, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.Pose pose = 1; */
-        if (message.pose)
-            Pose.internalBinaryWrite(message.pose, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
         /* repeated semio.model.v1.Representation representations = 2; */
         for (let i = 0; i < message.representations.length; i++)
             Representation.internalBinaryWrite(message.representations[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string description = 3; */
+        if (message.description !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.description);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1243,14 +1323,103 @@ class Element$Type extends MessageType<Element> {
  */
 export const Element = new Element$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ElementTree$Type extends MessageType<ElementTree> {
+    constructor() {
+        super("semio.model.v1.ElementTree", [
+            { no: 1, name: "element_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pose", kind: "message", T: () => Pose },
+            { no: 3, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "parts", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => ElementTree } }
+        ]);
+    }
+    create(value?: PartialMessage<ElementTree>): ElementTree {
+        const message = { elementId: "", type: "", parts: {} };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ElementTree>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ElementTree): ElementTree {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string element_id */ 1:
+                    message.elementId = reader.string();
+                    break;
+                case /* semio.model.v1.Pose pose */ 2:
+                    message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
+                    break;
+                case /* string type */ 3:
+                    message.type = reader.string();
+                    break;
+                case /* map<string, semio.model.v1.ElementTree> parts */ 4:
+                    this.binaryReadMap4(message.parts, reader, options);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    private binaryReadMap4(map: ElementTree["parts"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof ElementTree["parts"] | undefined, val: ElementTree["parts"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = ElementTree.internalBinaryRead(reader, reader.uint32(), options);
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.ElementTree.parts");
+            }
+        }
+        map[key ?? ""] = val ?? ElementTree.create();
+    }
+    internalBinaryWrite(message: ElementTree, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string element_id = 1; */
+        if (message.elementId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.elementId);
+        /* semio.model.v1.Pose pose = 2; */
+        if (message.pose)
+            Pose.internalBinaryWrite(message.pose, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string type = 3; */
+        if (message.type !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.type);
+        /* map<string, semio.model.v1.ElementTree> parts = 4; */
+        for (let k of Object.keys(message.parts)) {
+            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
+            writer.tag(2, WireType.LengthDelimited).fork();
+            ElementTree.internalBinaryWrite(message.parts[k], writer, options);
+            writer.join().join();
+        }
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.model.v1.ElementTree
+ */
+export const ElementTree = new ElementTree$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Design$Type extends MessageType<Design> {
     constructor() {
         super("semio.model.v1.Design", [
-            { no: 1, name: "elements", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Element }
+            { no: 1, name: "elements", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Element },
+            { no: 2, name: "elementTrees", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ElementTree }
         ]);
     }
     create(value?: PartialMessage<Design>): Design {
-        const message = { elements: [] };
+        const message = { elements: [], elementTrees: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Design>(this, message, value);
@@ -1263,6 +1432,9 @@ class Design$Type extends MessageType<Design> {
             switch (fieldNo) {
                 case /* repeated semio.model.v1.Element elements */ 1:
                     message.elements.push(Element.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated semio.model.v1.ElementTree elementTrees */ 2:
+                    message.elementTrees.push(ElementTree.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1279,6 +1451,9 @@ class Design$Type extends MessageType<Design> {
         /* repeated semio.model.v1.Element elements = 1; */
         for (let i = 0; i < message.elements.length; i++)
             Element.internalBinaryWrite(message.elements[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.model.v1.ElementTree elementTrees = 2; */
+        for (let i = 0; i < message.elementTrees.length; i++)
+            ElementTree.internalBinaryWrite(message.elementTrees[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

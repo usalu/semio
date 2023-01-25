@@ -29,15 +29,6 @@ message Pose {
   Quaternion view = 2;
 }
 
-// enum LevelOfDetail{
-//   LEVELOFDETAIL_UNKNOWN = 0;
-//   LEVELOFDETAIL_CONCEPTUAL = 100;
-//   LEVELOFDETAIL_APPROXIMATE = 200;
-//   LEVELOFDETAIL_PRECISE = 300;
-//   LEVELOFDETAIL_FABRICATION = 400;
-//   LEVELOFDETAIL_REAL = 500;
-// }
-
 // A representation for an element. Basically a file with some semio specific metadata.
 message Representation {
   // The body depends on the serialization format of the representation.
@@ -50,7 +41,7 @@ message Representation {
   Platform platform = 4;
   // A description of the representation for humans to understand what the purpose of this representation is.
   string description = 5;
-  // Add a list of concepts that help filtering representations. This can be used for visualization purpose (e.g. volumetric,comic, , ...) or for functional purpose (e.g. statical, energetical, ...)
+  // Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...). 
   repeated string concepts = 6;
   // Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
   // For architectural design it is recommended to choose the scale multiplier.
@@ -144,12 +135,8 @@ message Sobject {
   string id = 1;
   // The url of the element definition.
   string url = 2;
-  // The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted.
-  Pose pose = 3;
-  // Concepts that describe the sobject ordered from most to least important. Bascially like parameter but without schema (parameter name).
-  repeated string concepts = 4;
   // Parameters for the element.
-  map<string,string> parameters = 5;
+  map<string,string> parameters = 3;
 }
 
 // The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.
@@ -166,12 +153,14 @@ enum RepresentationProtocol{
 message AttractionParticipant {
   // Id of participating sobject.
   string participant_id = 1;
+  // The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted.
+  Pose pose = 2;
   // An optional representation of the participant.
-  RepresentationProtocol representationProtocol = 2;
+  RepresentationProtocol representationProtocol = 3;
   // Optional port names to connect to. The hierarchy should matter
-  repeated string ports = 3;
+  repeated string ports = 4;
   // Optional parameters to bias the attraction.
-  map<string,string> bias = 4;
+  map<string,string> bias = 5;
 }
 
 // An attraction can be used to attract an attracted attraction participant to an attractor attraction participant.
@@ -184,11 +173,14 @@ message Attraction {
   AttractionParticipant attracted = 3;
 }
 
-// A tree where each node has 0 or more children.
-message Tree{
-  // The id of the node.
-  string node_id = 1;
-  repeated Tree children = 2;
+// An attraction tree defines a possibly unambiguous subset of a layout.
+message AttractionTree{
+  // The id of the sobject to place.
+  string sobject_id = 1;
+  // An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.
+  // Roots can't have that field as they have no parent.
+  string attraction_id = 2;
+  repeated AttractionTree children = 3;
 }
 
 // A layout strategy affects in which orders attractions are triggered.
@@ -205,24 +197,38 @@ message Layout {
   repeated Sobject sobjects = 1;
   // Attractions (edges) that are part of the layout (graph).
   repeated Attraction attractions = 2;
-  // Sobject that anchor the layout.
-  repeated string roots_sobjects_ids = 3;
-  // A concept tree captures (hierarchical) relations between concepts. From this tree relations between sobjects can be deduced (e.g. parent child relations).
-  repeated Tree concept_trees = 4;
-  LayoutStrategy strategy = 5;
-  // Optional attraction trees where the attraction ids are the node ids. An attraction tree contains exact information in which order attractions should be triggered.
-  repeated Tree attraction_trees = 6;
+  LayoutStrategy strategy = 3;
+  // Optional attraction trees that can possibly unambiguously describe the layout order of sobjects.
+  // Most of the time this field is only necissary due to elements that don't work well together in a general way.
+  // Therefore if you can update the element definitions to be more robust, rather use your time for that.
+  repeated AttractionTree attraction_trees = 4;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
 message Element {
-  Pose pose = 1;
+  // The id of the sobject that was used to create the element is also the element id.
+  string id = 1;
   repeated Representation representations = 2;
+  // An optional human readable description of the element.
+  string description = 3;
+}
+
+// An element tree maps elements to poseses (one element can occur in several places) and their relationship between each other (part-whole).
+message ElementTree {
+  // An optional element id 
+  string element_id = 1;
+  // An optional pose of the element tree.
+  Pose pose = 2;
+  // An optional url of a type for the concept tree.
+  string type = 3;
+  // All parts (element trees) with the main concepts as keys and the subconcepts trees as values.
+  map<string,ElementTree> parts = 4;
 }
 
 // A design is an aggregation of elements.
 message Design {
   repeated Element elements = 1;
+  repeated ElementTree elementTrees = 2;
 }
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
