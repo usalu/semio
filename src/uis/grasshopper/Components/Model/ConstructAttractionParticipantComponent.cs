@@ -57,7 +57,7 @@ namespace Semio.UI.Grasshopper.Model
 
             var attractionParticipant = new AttractionParticipant()
             {
-                PatricipantId = participant.Value.Id,
+                ParticipantId = participant.Value.Id,
                 RepresentationProtocol = representationProtocol,
             };
             attractionParticipant.Ports.AddRange(ports);

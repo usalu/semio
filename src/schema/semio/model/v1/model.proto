@@ -29,6 +29,15 @@ message Pose {
   Quaternion view = 2;
 }
 
+// enum LevelOfDetail{
+//   LEVELOFDETAIL_UNKNOWN = 0;
+//   LEVELOFDETAIL_CONCEPTUAL = 100;
+//   LEVELOFDETAIL_APPROXIMATE = 200;
+//   LEVELOFDETAIL_PRECISE = 300;
+//   LEVELOFDETAIL_FABRICATION = 400;
+//   LEVELOFDETAIL_REAL = 500;
+// }
+
 // A representation for an element. Basically a file with some semio specific metadata.
 message Representation {
   // The body depends on the serialization format of the representation.
@@ -37,12 +46,21 @@ message Representation {
   Encoding encoding = 2;
   // Use the abbreviation of the platform. You can find that in the constants part of the package.
   FileType file_type = 3;
-  // Platform
+  // Native platform of representation
   Platform platform = 4;
-  // Name of representation. This can be used for visualization purpose (e.g. conceptual, detailed, ...) or for functional purpose (e.g. statical, energetical, ...)
-  string name = 5;
+  // A description of the representation for humans to understand what the purpose of this representation is.
+  string description = 5;
+  // Add a list of concepts that help filtering representations. This can be used for visualization purpose (e.g. volumetric,comic, , ...) or for functional purpose (e.g. statical, energetical, ...)
+  repeated string concepts = 6;
   // Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
-  int64 lod = 6;
+  // For architectural design it is recommended to choose the scale multiplier.
+  // For BIM you might want to choose:
+  // 100:Conceptual
+  // 200:Approximate
+  // 300:Precise
+  // 400:Fabriaction
+  // 500:Real 
+  int64 lod = 7;
 }
 
 // Encoding of a byte array.
@@ -56,8 +74,9 @@ enum Encoding {
 }
 
 enum FileType {
-  // Native binary according platform. Use this only when it really is binary otherwise try to figure out what the file type is.
-  FILETYPE_NATIVEBINARY = 0;
+  // Native serialization according platform. Use this only when it is none of the others.
+  // Often files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.
+  FILETYPE_NATIVE = 0;
   FILETYPE_JSON = 1;
   FILETYPE_XML = 2;
   FILETYPE_YAML = 3;
@@ -73,7 +92,6 @@ enum FileType {
   FILETYPE_CSHARP = 9;
   // Golang
   FILETYPE_GO = 10;
-  // Rust
   FILETYPE_RUST = 11;
 }
 
@@ -128,8 +146,10 @@ message Sobject {
   string url = 2;
   // The (rough) pose of the sobject. Note that in the attraction process it will most likely be displaced and adjusted.
   Pose pose = 3;
+  // Concepts that describe the sobject ordered from most to least important. Bascially like parameter but without schema (parameter name).
+  repeated string concepts = 4;
   // Parameters for the element.
-  map<string,string> parameters = 4;
+  map<string,string> parameters = 5;
 }
 
 // The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.
@@ -164,10 +184,11 @@ message Attraction {
   AttractionParticipant attracted = 3;
 }
 
-// An attraction tree contains exact information in which order attractions should be triggered.
-message AttractionTree{
-  string attraction_id = 1;
-  repeated AttractionTree children = 2;
+// A tree where each node has 0 or more children.
+message Tree{
+  // The id of the node.
+  string node_id = 1;
+  repeated Tree children = 2;
 }
 
 // A layout strategy affects in which orders attractions are triggered.
@@ -180,13 +201,17 @@ enum LayoutStrategy {
 
 // A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other.
 message Layout {
+  // Sobjects (nodes) that are part of the layout (graph).
   repeated Sobject sobjects = 1;
+  // Attractions (edges) that are part of the layout (graph).
   repeated Attraction attractions = 2;
   // Sobject that anchor the layout.
   repeated string roots_sobjects_ids = 3;
-  LayoutStrategy strategy = 4;
-  // Optional attraction trees.
-  repeated AttractionTree attractionTrees = 5;
+  // A concept tree captures (hierarchical) relations between concepts. From this tree relations between sobjects can be deduced (e.g. parent child relations).
+  repeated Tree concept_trees = 4;
+  LayoutStrategy strategy = 5;
+  // Optional attraction trees where the attraction ids are the node ids. An attraction tree contains exact information in which order attractions should be triggered.
+  repeated Tree attraction_trees = 6;
 }
 
 // An element is the atom of a design. It has several representations and a pose.

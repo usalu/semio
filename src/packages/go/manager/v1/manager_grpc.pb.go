@@ -19,17 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ManagerServiceClient interface {
-	// Request an element from instance information and a traget type.
-	// The target type tries to be provided by one of the following strategies (lowest number wins).
-	// 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-	// 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-	// 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(ctx context.Context, in *ElementRequest, opts ...grpc.CallOption) (*v1.Element, error)
 	// Request the attracted element for an attraction.
-	// The target type tries to be provided by one of the following strategies (lowest number wins).
-	// 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-	// 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-	// 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
 	RequestAttraction(ctx context.Context, in *AttractionRequest, opts ...grpc.CallOption) (*AttractionResponse, error)
 	// Register a service to the server.
 	RegisterExtension(ctx context.Context, in *ExtensionRegistrationRequest, opts ...grpc.CallOption) (*ExtensionRegistrationResponse, error)
@@ -85,17 +77,9 @@ func (c *managerServiceClient) GetRegisteredExtensions(ctx context.Context, in *
 // All implementations must embed UnimplementedManagerServiceServer
 // for forward compatibility
 type ManagerServiceServer interface {
-	// Request an element from instance information and a traget type.
-	// The target type tries to be provided by one of the following strategies (lowest number wins).
-	// 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-	// 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-	// 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(context.Context, *ElementRequest) (*v1.Element, error)
 	// Request the attracted element for an attraction.
-	// The target type tries to be provided by one of the following strategies (lowest number wins).
-	// 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-	// 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-	// 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
 	RequestAttraction(context.Context, *AttractionRequest) (*AttractionResponse, error)
 	// Register a service to the server.
 	RegisterExtension(context.Context, *ExtensionRegistrationRequest) (*ExtensionRegistrationResponse, error)

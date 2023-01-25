@@ -15,7 +15,7 @@ from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 from extension.v1 import extension_pb2 as extension_dot_v1_dot_extension__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18manager/v1/manager.proto\x12\x10semio.manager.v1\x1a\x14model/v1/model.proto\x1a\x1c\x65xtension/v1/extension.proto\"k\n\x0e\x45lementRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"w\n\x11\x41ttractionRequest\x12:\n\nattraction\x18\x01 \x01(\x0b\x32\x1a.semio.model.v1.AttractionR\nattraction\x12&\n\x0ftarget_type_url\x18\x02 \x01(\tR\rtargetTypeUrl\"\x93\x01\n\x12\x41ttractionResponse\x12;\n\x0e\x61ttracted_pose\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PoseR\rattractedPose\x12@\n\x10\x61ttraction_point\x18\x02 \x01(\x0b\x32\x15.semio.model.v1.PointR\x0f\x61ttractionPoint\"\xb4\x01\n\x1c\x45xtensionRegistrationRequest\x12\x18\n\x07\x61\x64\x64ress\x18\x01 \x01(\tR\x07\x61\x64\x64ress\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12;\n\textending\x18\x03 \x01(\x0b\x32\x1d.semio.extension.v1.ExtendingR\textending\x12)\n\x10replace_existing\x18\x04 \x01(\x08R\x0freplaceExisting\"Z\n\x1d\x45xtensionRegistrationResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x1f\n\x0bold_address\x18\x02 \x01(\tR\noldAddress\" \n\x1eGetRegisteredExtensionsRequest\"\xdc\x01\n\x1cRegisteredExtensionsResponse\x12^\n\nextensions\x18\x01 \x03(\x0b\x32>.semio.manager.v1.RegisteredExtensionsResponse.ExtensionsEntryR\nextensions\x1a\\\n\x0f\x45xtensionsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32\x1d.semio.extension.v1.ExtendingR\x05value:\x02\x38\x01\x32\xb0\x03\n\x0eManagerService\x12K\n\x0eRequestElement\x12 .semio.manager.v1.ElementRequest\x1a\x17.semio.model.v1.Element\x12^\n\x11RequestAttraction\x12#.semio.manager.v1.AttractionRequest\x1a$.semio.manager.v1.AttractionResponse\x12t\n\x11RegisterExtension\x12..semio.manager.v1.ExtensionRegistrationRequest\x1a/.semio.manager.v1.ExtensionRegistrationResponse\x12{\n\x17GetRegisteredExtensions\x12\x30.semio.manager.v1.GetRegisteredExtensionsRequest\x1a..semio.manager.v1.RegisteredExtensionsResponseB\xb9\x01\n\x14\x63om.semio.manager.v1B\x0cManagerProtoP\x01Z1github.com/usalu/semio/src/packages/go/manager/v1\xa2\x02\x03SMX\xaa\x02\x10Semio.Manager.V1\xca\x02\x10Semio\\Manager\\V1\xe2\x02\x1cSemio\\Manager\\V1\\GPBMetadata\xea\x02\x12Semio::Manager::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18manager/v1/manager.proto\x12\x10semio.manager.v1\x1a\x14model/v1/model.proto\x1a\x1c\x65xtension/v1/extension.proto\"\xc8\x02\n\x0e\x45lementRequest\x12\x31\n\x07sobject\x18\x01 \x01(\x0b\x32\x17.semio.model.v1.SobjectR\x07sobject\x12^\n\x1etarget_representation_platform\x18\x02 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x1ctargetRepresentationPlatform\x12<\n\x1atarget_representation_name\x18\x03 \x01(\tR\x18targetRepresentationName\x12:\n\x19target_representation_lod\x18\x04 \x01(\x03R\x17targetRepresentationLod\x12)\n\x10targets_required\x18\x05 \x01(\x08R\x0ftargetsRequired\"O\n\x11\x41ttractionRequest\x12:\n\nattraction\x18\x01 \x01(\x0b\x32\x1a.semio.model.v1.AttractionR\nattraction\"\x93\x01\n\x12\x41ttractionResponse\x12;\n\x0e\x61ttracted_pose\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PoseR\rattractedPose\x12@\n\x10\x61ttraction_point\x18\x02 \x01(\x0b\x32\x15.semio.model.v1.PointR\x0f\x61ttractionPoint\"\xb4\x01\n\x1c\x45xtensionRegistrationRequest\x12\x18\n\x07\x61\x64\x64ress\x18\x01 \x01(\tR\x07\x61\x64\x64ress\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12;\n\textending\x18\x03 \x01(\x0b\x32\x1d.semio.extension.v1.ExtendingR\textending\x12)\n\x10replace_existing\x18\x04 \x01(\x08R\x0freplaceExisting\"Z\n\x1d\x45xtensionRegistrationResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x1f\n\x0bold_address\x18\x02 \x01(\tR\noldAddress\" \n\x1eGetRegisteredExtensionsRequest\"\xdc\x01\n\x1cRegisteredExtensionsResponse\x12^\n\nextensions\x18\x01 \x03(\x0b\x32>.semio.manager.v1.RegisteredExtensionsResponse.ExtensionsEntryR\nextensions\x1a\\\n\x0f\x45xtensionsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32\x1d.semio.extension.v1.ExtendingR\x05value:\x02\x38\x01\x32\xb0\x03\n\x0eManagerService\x12K\n\x0eRequestElement\x12 .semio.manager.v1.ElementRequest\x1a\x17.semio.model.v1.Element\x12^\n\x11RequestAttraction\x12#.semio.manager.v1.AttractionRequest\x1a$.semio.manager.v1.AttractionResponse\x12t\n\x11RegisterExtension\x12..semio.manager.v1.ExtensionRegistrationRequest\x1a/.semio.manager.v1.ExtensionRegistrationResponse\x12{\n\x17GetRegisteredExtensions\x12\x30.semio.manager.v1.GetRegisteredExtensionsRequest\x1a..semio.manager.v1.RegisteredExtensionsResponseB\xb9\x01\n\x14\x63om.semio.manager.v1B\x0cManagerProtoP\x01Z1github.com/usalu/semio/src/packages/go/manager/v1\xa2\x02\x03SMX\xaa\x02\x10Semio.Manager.V1\xca\x02\x10Semio\\Manager\\V1\xe2\x02\x1cSemio\\Manager\\V1\\GPBMetadata\xea\x02\x12Semio::Manager::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'manager.v1.manager_pb2', globals())
@@ -25,22 +25,22 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._serialized_options = b'\n\024com.semio.manager.v1B\014ManagerProtoP\001Z1github.com/usalu/semio/src/packages/go/manager/v1\242\002\003SMX\252\002\020Semio.Manager.V1\312\002\020Semio\\Manager\\V1\342\002\034Semio\\Manager\\V1\\GPBMetadata\352\002\022Semio::Manager::V1'
   _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._options = None
   _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._serialized_options = b'8\001'
-  _ELEMENTREQUEST._serialized_start=98
-  _ELEMENTREQUEST._serialized_end=205
-  _ATTRACTIONREQUEST._serialized_start=207
-  _ATTRACTIONREQUEST._serialized_end=326
-  _ATTRACTIONRESPONSE._serialized_start=329
-  _ATTRACTIONRESPONSE._serialized_end=476
-  _EXTENSIONREGISTRATIONREQUEST._serialized_start=479
-  _EXTENSIONREGISTRATIONREQUEST._serialized_end=659
-  _EXTENSIONREGISTRATIONRESPONSE._serialized_start=661
-  _EXTENSIONREGISTRATIONRESPONSE._serialized_end=751
-  _GETREGISTEREDEXTENSIONSREQUEST._serialized_start=753
-  _GETREGISTEREDEXTENSIONSREQUEST._serialized_end=785
-  _REGISTEREDEXTENSIONSRESPONSE._serialized_start=788
-  _REGISTEREDEXTENSIONSRESPONSE._serialized_end=1008
-  _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._serialized_start=916
-  _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._serialized_end=1008
-  _MANAGERSERVICE._serialized_start=1011
-  _MANAGERSERVICE._serialized_end=1443
+  _ELEMENTREQUEST._serialized_start=99
+  _ELEMENTREQUEST._serialized_end=427
+  _ATTRACTIONREQUEST._serialized_start=429
+  _ATTRACTIONREQUEST._serialized_end=508
+  _ATTRACTIONRESPONSE._serialized_start=511
+  _ATTRACTIONRESPONSE._serialized_end=658
+  _EXTENSIONREGISTRATIONREQUEST._serialized_start=661
+  _EXTENSIONREGISTRATIONREQUEST._serialized_end=841
+  _EXTENSIONREGISTRATIONRESPONSE._serialized_start=843
+  _EXTENSIONREGISTRATIONRESPONSE._serialized_end=933
+  _GETREGISTEREDEXTENSIONSREQUEST._serialized_start=935
+  _GETREGISTEREDEXTENSIONSREQUEST._serialized_end=967
+  _REGISTEREDEXTENSIONSRESPONSE._serialized_start=970
+  _REGISTEREDEXTENSIONSRESPONSE._serialized_end=1190
+  _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._serialized_start=1098
+  _REGISTEREDEXTENSIONSRESPONSE_EXTENSIONSENTRY._serialized_end=1190
+  _MANAGERSERVICE._serialized_start=1193
+  _MANAGERSERVICE._serialized_end=1625
 # @@protoc_insertion_point(module_scope)

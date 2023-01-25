@@ -7,9 +7,6 @@
                 "attraction": {
                     "$ref": "#/definitions/semio.model.v1.Attraction",
                     "additionalProperties": true
-                },
-                "target_type_url": {
-                    "type": "string"
                 }
             },
             "additionalProperties": true,

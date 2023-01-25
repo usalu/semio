@@ -22,21 +22,13 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IManagerServiceClient {
     /**
-     * Request an element from instance information and a traget type.
-     * The target type tries to be provided by one of the following strategies (lowest number wins).
-     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+     * Request an element from instance information and an optional traget representation parameters.
      *
      * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
      */
     requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
     /**
      * Request the attracted element for an attraction.
-     * The target type tries to be provided by one of the following strategies (lowest number wins).
-     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
      */
@@ -66,11 +58,7 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * Request an element from instance information and a traget type.
-     * The target type tries to be provided by one of the following strategies (lowest number wins).
-     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+     * Request an element from instance information and an optional traget representation parameters.
      *
      * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
      */
@@ -80,10 +68,6 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     }
     /**
      * Request the attracted element for an attraction.
-     * The target type tries to be provided by one of the following strategies (lowest number wins).
-     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
      *
      * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
      */

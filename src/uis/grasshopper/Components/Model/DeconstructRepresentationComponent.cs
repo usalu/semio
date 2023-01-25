@@ -8,6 +8,7 @@ using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
+using Semio.UI.Grasshopper.Utility;
 
 namespace Semio.UI.Grasshopper.Model
 {
@@ -24,9 +25,6 @@ namespace Semio.UI.Grasshopper.Model
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Body", "B", "", GH_ParamAccess.item);
-            pManager.AddParameter(new EncodingParam());
-
-           
             pManager.AddTextParameter("Name", "N", "", GH_ParamAccess.item);
             pManager.AddNumberParameter("Level of Detail", "LD", "", GH_ParamAccess.item);
         }
@@ -34,12 +32,10 @@ namespace Semio.UI.Grasshopper.Model
         {
             RepresentationGoo representation = new();
             if (!DA.GetData(0, ref representation)) return;
-            byte[] body;
-            
-            DA.SetData(0, representation.Value);
+
+            DA.SetData(0, Converter.ToString(representation.Value));
             DA.SetData(1, representation.Value.Name);
             DA.SetData(2, representation.Value.Lod);
-            DA.SetData(3, body);
         }
         protected override System.Drawing.Bitmap Icon => Resources.icon_deconstruct_representation;
 

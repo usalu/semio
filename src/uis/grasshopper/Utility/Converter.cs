@@ -14,6 +14,7 @@ using SemioQuaternion = Semio.Model.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
 using Rhino.FileIO;
 using Semio.UI.Grasshopper.Goos;
+using Encoding = Semio.Model.V1.Encoding;
 
 
 namespace Semio.UI.Grasshopper.Utility
@@ -23,7 +24,29 @@ namespace Semio.UI.Grasshopper.Utility
         public static Quaternion ToQuaternion(SemioQuaternion quaternion) => new((float)quaternion.X, (float)quaternion.Y, (float)quaternion.Z, (float)quaternion.W);
         public static Vector3 ToVector(SemioPoint point) => new ((float)point.X, (float)point.Y, (float)point.Z);
         public static Vector3 ToVector(Point3d point) => new((float)point.X, (float)point.Y, (float)point.Z);
-       
+        public static string ToString(Representation representation)
+        {
+            string body = "";
+            switch (representation.Encoding)
+            {
+                case Encoding.TextUft8:
+                    body = representation.Body.ToStringUtf8();
+                    break;
+                case Encoding.TextUft16:
+                    body = System.Text.Encoding.Unicode.GetString(representation.Body.ToByteArray());
+                    break;
+                case Encoding.TextUft32:
+                    body = System.Text.Encoding.UTF32.GetString(representation.Body.ToByteArray());
+                    break;
+                case Encoding.TextAscii:
+                    body = System.Text.Encoding.ASCII.GetString(representation.Body.ToByteArray());
+                    break;
+                case Encoding.TextBase64:
+                    body = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(representation.Body.ToBase64()));
+                    break;
+            }
+            return body;
+        }
         public static Quaternion Convert(SemioQuaternion quaternion) => new(quaternion.W, quaternion.X, quaternion.Y, quaternion.Z);
 
         public static SemioQuaternion Convert(Quaternion quaternion) => new()
@@ -67,20 +90,16 @@ namespace Semio.UI.Grasshopper.Utility
             return new Plane(Convert(pose.PointOfView), xAxis, yAxis);
         }
 
-
         public static IEnumerable<GeometryBase> Convert (Representation representation)
         {
             File3dm file;
-            switch (representation.BodyCase)
+            switch (representation.Platform)
             {
-                case Representation.BodyOneofCase.ByteArray:
-                    file = File3dm.FromByteArray(representation.ByteArray.ToByteArray());
+                case Platform.Rhino:
+                    file = File3dm.FromByteArray(representation.Body.ToByteArray());
                     break;
-                case Representation.BodyOneofCase.Text:
                 default:
-                    // Dummy
-                    file = new File3dm();
-                    break;
+                    throw new ArgumentException($"The platform {representation.Platform} can't be converted (yet).");
             }
             return file.Objects.Select(o => o.Geometry);
         }

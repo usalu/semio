@@ -12,10 +12,10 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Utils
 {
-    public class ImportRepresentationComponent : GH_Component
+    public class ShowDesignComponent : GH_Component
     {
-        public ImportRepresentationComponent()
-          : base("Import Representation", "ImRepresentation", "", "Semio", "Utils")
+        public ShowDesignComponent()
+          : base("Show Design", ":Design", "", "Semio", "Utils")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

@@ -17,6 +17,7 @@ import { Extending } from "../../extension/v1/extension";
 import { Point } from "../../model/v1/model";
 import { Pose } from "../../model/v1/model";
 import { Attraction } from "../../model/v1/model";
+import { Platform } from "../../model/v1/model";
 import { Sobject } from "../../model/v1/model";
 /**
  * @generated from protobuf message semio.manager.v1.ElementRequest
@@ -27,9 +28,32 @@ export interface ElementRequest {
      */
     sobject?: Sobject;
     /**
-     * @generated from protobuf field: string target_type_url = 2;
+     * The target platform tries to be provided by one of the following strategies (lowest number wins).
+     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
+     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
+     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
+     *
+     * @generated from protobuf field: semio.model.v1.Platform target_representation_platform = 2;
      */
-    targetTypeUrl: string;
+    targetRepresentationPlatform: Platform;
+    /**
+     * An optional name for the target representation. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true.
+     *
+     * @generated from protobuf field: string target_representation_name = 3;
+     */
+    targetRepresentationName: string;
+    /**
+     * An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true.
+     *
+     * @generated from protobuf field: int64 target_representation_lod = 4;
+     */
+    targetRepresentationLod: bigint;
+    /**
+     * Set this to true if all of the targets must be achived.
+     *
+     * @generated from protobuf field: bool targets_required = 5;
+     */
+    targetsRequired: boolean;
 }
 /**
  * @generated from protobuf message semio.manager.v1.AttractionRequest
@@ -39,10 +63,6 @@ export interface AttractionRequest {
      * @generated from protobuf field: semio.model.v1.Attraction attraction = 1;
      */
     attraction?: Attraction;
-    /**
-     * @generated from protobuf field: string target_type_url = 2;
-     */
-    targetTypeUrl: string;
 }
 /**
  * @generated from protobuf message semio.manager.v1.AttractionResponse
@@ -116,11 +136,14 @@ class ElementRequest$Type extends MessageType<ElementRequest> {
     constructor() {
         super("semio.manager.v1.ElementRequest", [
             { no: 1, name: "sobject", kind: "message", T: () => Sobject },
-            { no: 2, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "target_representation_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
+            { no: 3, name: "target_representation_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "target_representation_lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 5, name: "targets_required", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<ElementRequest>): ElementRequest {
-        const message = { targetTypeUrl: "" };
+        const message = { targetRepresentationPlatform: 0, targetRepresentationName: "", targetRepresentationLod: 0n, targetsRequired: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<ElementRequest>(this, message, value);
@@ -134,8 +157,17 @@ class ElementRequest$Type extends MessageType<ElementRequest> {
                 case /* semio.model.v1.Sobject sobject */ 1:
                     message.sobject = Sobject.internalBinaryRead(reader, reader.uint32(), options, message.sobject);
                     break;
-                case /* string target_type_url */ 2:
-                    message.targetTypeUrl = reader.string();
+                case /* semio.model.v1.Platform target_representation_platform */ 2:
+                    message.targetRepresentationPlatform = reader.int32();
+                    break;
+                case /* string target_representation_name */ 3:
+                    message.targetRepresentationName = reader.string();
+                    break;
+                case /* int64 target_representation_lod */ 4:
+                    message.targetRepresentationLod = reader.int64().toBigInt();
+                    break;
+                case /* bool targets_required */ 5:
+                    message.targetsRequired = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -152,9 +184,18 @@ class ElementRequest$Type extends MessageType<ElementRequest> {
         /* semio.model.v1.Sobject sobject = 1; */
         if (message.sobject)
             Sobject.internalBinaryWrite(message.sobject, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* string target_type_url = 2; */
-        if (message.targetTypeUrl !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.targetTypeUrl);
+        /* semio.model.v1.Platform target_representation_platform = 2; */
+        if (message.targetRepresentationPlatform !== 0)
+            writer.tag(2, WireType.Varint).int32(message.targetRepresentationPlatform);
+        /* string target_representation_name = 3; */
+        if (message.targetRepresentationName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.targetRepresentationName);
+        /* int64 target_representation_lod = 4; */
+        if (message.targetRepresentationLod !== 0n)
+            writer.tag(4, WireType.Varint).int64(message.targetRepresentationLod);
+        /* bool targets_required = 5; */
+        if (message.targetsRequired !== false)
+            writer.tag(5, WireType.Varint).bool(message.targetsRequired);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -169,12 +210,11 @@ export const ElementRequest = new ElementRequest$Type();
 class AttractionRequest$Type extends MessageType<AttractionRequest> {
     constructor() {
         super("semio.manager.v1.AttractionRequest", [
-            { no: 1, name: "attraction", kind: "message", T: () => Attraction },
-            { no: 2, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "attraction", kind: "message", T: () => Attraction }
         ]);
     }
     create(value?: PartialMessage<AttractionRequest>): AttractionRequest {
-        const message = { targetTypeUrl: "" };
+        const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AttractionRequest>(this, message, value);
@@ -187,9 +227,6 @@ class AttractionRequest$Type extends MessageType<AttractionRequest> {
             switch (fieldNo) {
                 case /* semio.model.v1.Attraction attraction */ 1:
                     message.attraction = Attraction.internalBinaryRead(reader, reader.uint32(), options, message.attraction);
-                    break;
-                case /* string target_type_url */ 2:
-                    message.targetTypeUrl = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -206,9 +243,6 @@ class AttractionRequest$Type extends MessageType<AttractionRequest> {
         /* semio.model.v1.Attraction attraction = 1; */
         if (message.attraction)
             Attraction.internalBinaryWrite(message.attraction, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* string target_type_url = 2; */
-        if (message.targetTypeUrl !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.targetTypeUrl);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

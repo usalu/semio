@@ -8,12 +8,10 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class AttractionRequest(_message.Message):
-    __slots__ = ["attraction", "target_type_url"]
+    __slots__ = ["attraction"]
     ATTRACTION_FIELD_NUMBER: _ClassVar[int]
-    TARGET_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
     attraction: _model_pb2.Attraction
-    target_type_url: str
-    def __init__(self, attraction: _Optional[_Union[_model_pb2.Attraction, _Mapping]] = ..., target_type_url: _Optional[str] = ...) -> None: ...
+    def __init__(self, attraction: _Optional[_Union[_model_pb2.Attraction, _Mapping]] = ...) -> None: ...
 
 class AttractionResponse(_message.Message):
     __slots__ = ["attracted_pose", "attraction_point"]
@@ -24,12 +22,18 @@ class AttractionResponse(_message.Message):
     def __init__(self, attracted_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., attraction_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
 
 class ElementRequest(_message.Message):
-    __slots__ = ["sobject", "target_type_url"]
+    __slots__ = ["sobject", "target_representation_lod", "target_representation_name", "target_representation_platform", "targets_required"]
     SOBJECT_FIELD_NUMBER: _ClassVar[int]
-    TARGET_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
+    TARGETS_REQUIRED_FIELD_NUMBER: _ClassVar[int]
+    TARGET_REPRESENTATION_LOD_FIELD_NUMBER: _ClassVar[int]
+    TARGET_REPRESENTATION_NAME_FIELD_NUMBER: _ClassVar[int]
+    TARGET_REPRESENTATION_PLATFORM_FIELD_NUMBER: _ClassVar[int]
     sobject: _model_pb2.Sobject
-    target_type_url: str
-    def __init__(self, sobject: _Optional[_Union[_model_pb2.Sobject, _Mapping]] = ..., target_type_url: _Optional[str] = ...) -> None: ...
+    target_representation_lod: int
+    target_representation_name: str
+    target_representation_platform: _model_pb2.Platform
+    targets_required: bool
+    def __init__(self, sobject: _Optional[_Union[_model_pb2.Sobject, _Mapping]] = ..., target_representation_platform: _Optional[_Union[_model_pb2.Platform, str]] = ..., target_representation_name: _Optional[str] = ..., target_representation_lod: _Optional[int] = ..., targets_required: bool = ...) -> None: ...
 
 class ExtensionRegistrationRequest(_message.Message):
     __slots__ = ["address", "extending", "name", "replace_existing"]

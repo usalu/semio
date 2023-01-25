@@ -8,8 +8,59 @@
                     "$ref": "#/definitions/semio.model.v1.Sobject",
                     "additionalProperties": true
                 },
-                "target_type_url": {
-                    "type": "string"
+                "target_representation_platform": {
+                    "enum": [
+                        "PLATFORM_SEMIO",
+                        0,
+                        "PLATFORM_THREE",
+                        1000000100,
+                        "PLATFORM_SVERCHOK",
+                        500000200,
+                        "PLATFORM_IFCOPENSHELL",
+                        1010100000,
+                        "PLATFORM_CADQUERY",
+                        1600100100,
+                        "PLATFORM_FREECAD",
+                        530100200,
+                        "PLATFORM_OPENSCAD",
+                        530100300,
+                        "PLATFORM_JSCAD",
+                        1500100400,
+                        "PLATFORM_Fornjot",
+                        1700000300,
+                        "PLATFORM_TRUCK",
+                        1500000400,
+                        "PLATFORM_RHINO",
+                        2140300000,
+                        "PLATFORM_GRASSHOPPER",
+                        2140300001,
+                        "PLATFORM_REVIT",
+                        2140300100,
+                        "PLATFORM_DYNAMO",
+                        2140300101
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Platform",
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,170:0BSD\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                },
+                "target_representation_name": {
+                    "type": "string",
+                    "description": "An optional name for the target representation. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true."
+                },
+                "target_representation_lod": {
+                    "type": "string",
+                    "description": "An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true."
+                },
+                "targets_required": {
+                    "type": "boolean",
+                    "description": "Set this to true if all of the targets must be achived."
                 }
             },
             "additionalProperties": true,
