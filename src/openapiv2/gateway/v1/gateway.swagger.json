@@ -87,34 +87,33 @@
         }
       }
     },
-    "v1Attraction": {
+    "v1Assembly": {
       "type": "object",
       "properties": {
-        "id": {
+        "sobjectId": {
           "type": "string",
-          "description": "Id that allows to distinguish it from other attractions."
+          "description": "The id of the sobject to place."
         },
-        "attractor": {
-          "$ref": "#/definitions/v1AttractionParticipant",
-          "description": "The attractor is expected to be the fixed sobject."
-        },
-        "attracted": {
-          "$ref": "#/definitions/v1AttractionParticipant",
-          "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Assembly"
+          },
+          "description": "The parts of an assembly (tree) are again assemblies."
         }
       },
-      "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
+      "description": "An assembly (tree) defines a subset of a layout that can be assembled unambiguously."
     },
-    "v1AttractionParticipant": {
+    "v1Connectable": {
       "type": "object",
       "properties": {
-        "participantId": {
+        "sobjectId": {
           "type": "string",
-          "description": "Id of participating sobject."
+          "description": "Id of connecting sobject."
         },
         "pose": {
           "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+          "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
         },
         "representationProtocol": {
           "$ref": "#/definitions/v1RepresentationProtocol",
@@ -132,30 +131,28 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Optional parameters to bias the attraction."
+          "description": "Optional parameters to bias the connection."
         }
       },
-      "description": "An attraction participant participates in an attraction process."
+      "description": "A connectable connects in an connection process."
     },
-    "v1AttractionTree": {
+    "v1Connection": {
       "type": "object",
       "properties": {
-        "sobjectId": {
+        "id": {
           "type": "string",
-          "description": "The id of the sobject to place."
+          "description": "Id that allows to distinguish it from other connections."
         },
-        "attractionId": {
-          "type": "string",
-          "description": "An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.\r\nRoots can't have that field as they have no parent."
+        "connecting": {
+          "$ref": "#/definitions/v1Connectable",
+          "description": "The connecting sobject. It is interchangable with the connected."
         },
-        "children": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1AttractionTree"
-          }
+        "connected": {
+          "$ref": "#/definitions/v1Connectable",
+          "description": "The connected sobject. It is interchangable with the connecting."
         }
       },
-      "description": "An attraction tree defines a possibly unambiguous subset of a layout."
+      "description": "An connection can be used to connect two connectables."
     },
     "v1Design": {
       "type": "object",
@@ -250,25 +247,25 @@
           },
           "description": "Sobjects (nodes) that are part of the layout (graph)."
         },
-        "attractions": {
+        "connections": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Attraction"
+            "$ref": "#/definitions/v1Connection"
           },
-          "description": "Attractions (edges) that are part of the layout (graph)."
+          "description": "Connections (edges) that are part of the layout (graph)."
         },
         "strategy": {
           "$ref": "#/definitions/v1LayoutStrategy"
         },
-        "attractionTrees": {
+        "assemblies": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1AttractionTree"
+            "$ref": "#/definitions/v1Assembly"
           },
-          "description": "Optional attraction trees that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary due to elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
+          "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary due to elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
         }
       },
-      "description": "A layout (graph) is an assembly plan for a set of sobjects and their attractions between each other."
+      "description": "A layout (graph) is an assembly plan for a set of sobjects and their connections between each other."
     },
     "v1LayoutDesignRequest": {
       "type": "object",
@@ -288,7 +285,7 @@
         "LAYOUTSTRATEGY_DEPTHFIRST"
       ],
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
-      "description": "A layout strategy affects in which orders attractions are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will attract all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
+      "description": "A layout strategy affects in which orders connections are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
     },
     "v1Platform": {
       "type": "string",
@@ -414,7 +411,7 @@
         "REPRESENTATIONPROTOCOL_FULL"
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
-      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
+      "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
     "v1Sobject": {
       "type": "object",

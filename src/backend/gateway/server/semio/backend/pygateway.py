@@ -4,7 +4,7 @@ from typing import Iterable
 
 from semio.assembler import LayoutDesignRequest
 
-from semio.model import Point,Sobject,Attraction,AttractionTree,Layout,Representation,Element,Design
+from semio.model import Point,Sobject,Connection,Assembly,Layout,Representation,Element,Design
 from semio.gateway import GatewayServer
 
 class Gateway(GatewayServer):

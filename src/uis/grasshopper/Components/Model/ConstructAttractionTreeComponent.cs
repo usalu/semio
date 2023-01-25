@@ -18,41 +18,41 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Model
 {
-    public class ConstructAttractionTreeComponent : ConstructComponent
+    public class ConstructAssemblyComponent : ConstructComponent
     {
-        public ConstructAttractionTreeComponent() : base("Construct Attraction Tree", "Attraction Tree", "", "Semio", "Model")
+        public ConstructAssemblyComponent() : base("Construct Assembly", "Assembly", "", "Semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddParameter(new AttractionParam(),"Attraction", "A", "", GH_ParamAccess.item);
-            pManager.AddParameter(new AttractionTreeParam(), "Childrean", "C", "", GH_ParamAccess.list);
+            pManager.AddParameter(new ConnectionParam(),"Connection", "A", "", GH_ParamAccess.item);
+            pManager.AddParameter(new AssemblyParam(), "Childrean", "C", "", GH_ParamAccess.list);
             pManager[1].Optional=true;
         }
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddParameter(new AttractionTreeParam());
+            pManager.AddParameter(new AssemblyParam());
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //string attractionId = "";
-            //if (!DA.GetData(0, ref attractionId)) return;
+            //string connectionId = "";
+            //if (!DA.GetData(0, ref connectionId)) return;
 
-            AttractionGoo attraction = new();
-            if (!DA.GetData(0, ref attraction)) return;
+            ConnectionGoo connection = new();
+            if (!DA.GetData(0, ref connection)) return;
 
-            var children = new List<AttractionTreeGoo>();
+            var children = new List<AssemblyGoo>();
             DA.GetDataList(1, children);
 
-            AttractionTree attractionTree = new AttractionTree()
+            Assembly assembly = new Assembly()
             {
-                AttractionId = attraction.Value.Id,
+                ConnectionId = connection.Value.Id,
             };
-            attractionTree.Children.AddRange(children.Select(x=>x.Value));
-            DA.SetData(0, new AttractionTreeGoo(attractionTree));
+            assembly.Children.AddRange(children.Select(x=>x.Value));
+            DA.SetData(0, new AssemblyGoo(assembly));
         }
         public override Guid ComponentGuid => new("712F6DA6-F74D-449F-83CE-956255450413");
-        protected override Bitmap Icon => Resources.icon_construct_attractiontree;
+        protected override Bitmap Icon => Resources.icon_construct_connectiontree;
     }
 }

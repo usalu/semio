@@ -12,20 +12,20 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params
 {
-    public class AttractionParam : SemioPersistentParam<AttractionGoo>
+    public class ConnectionParam : SemioPersistentParam<ConnectionGoo>
     {
-        public AttractionParam() :
-            base("Attraction", "A", "", "Semio", "Model")
+        public ConnectionParam() :
+            base("Connection", "A", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("745B3720-2333-44F1-9B81-A41DAA7A894F");
-        protected override GH_GetterResult Prompt_Singular(ref AttractionGoo value)
+        protected override GH_GetterResult Prompt_Singular(ref ConnectionGoo value)
         {
             throw new NotImplementedException();
         }
-        protected override GH_GetterResult Prompt_Plural(ref List<AttractionGoo> values)
+        protected override GH_GetterResult Prompt_Plural(ref List<ConnectionGoo> values)
         {
             throw new NotImplementedException();
         }
-        protected override Bitmap Icon => Resources.icon_attraction;
+        protected override Bitmap Icon => Resources.icon_connection;
     }
 }

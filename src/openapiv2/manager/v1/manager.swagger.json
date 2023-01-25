@@ -54,34 +54,16 @@
       },
       "description": "Description what an adapter is adapting to."
     },
-    "v1Attraction": {
+    "v1Connectable": {
       "type": "object",
       "properties": {
-        "id": {
+        "sobjectId": {
           "type": "string",
-          "description": "Id that allows to distinguish it from other attractions."
-        },
-        "attractor": {
-          "$ref": "#/definitions/v1AttractionParticipant",
-          "description": "The attractor is expected to be the fixed sobject."
-        },
-        "attracted": {
-          "$ref": "#/definitions/v1AttractionParticipant",
-          "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
-        }
-      },
-      "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
-    },
-    "v1AttractionParticipant": {
-      "type": "object",
-      "properties": {
-        "participantId": {
-          "type": "string",
-          "description": "Id of participating sobject."
+          "description": "Id of connecting sobject."
         },
         "pose": {
           "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+          "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
         },
         "representationProtocol": {
           "$ref": "#/definitions/v1RepresentationProtocol",
@@ -99,18 +81,36 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Optional parameters to bias the attraction."
+          "description": "Optional parameters to bias the connection."
         }
       },
-      "description": "An attraction participant participates in an attraction process."
+      "description": "A connectable connects in an connection process."
     },
-    "v1AttractionResponse": {
+    "v1Connection": {
       "type": "object",
       "properties": {
-        "attractedPose": {
+        "id": {
+          "type": "string",
+          "description": "Id that allows to distinguish it from other connections."
+        },
+        "connecting": {
+          "$ref": "#/definitions/v1Connectable",
+          "description": "The connecting sobject. It is interchangable with the connected."
+        },
+        "connected": {
+          "$ref": "#/definitions/v1Connectable",
+          "description": "The connected sobject. It is interchangable with the connecting."
+        }
+      },
+      "description": "An connection can be used to connect two connectables."
+    },
+    "v1ConnectionResponse": {
+      "type": "object",
+      "properties": {
+        "connectedPose": {
           "$ref": "#/definitions/v1Pose"
         },
-        "attractionPoint": {
+        "connectionPoint": {
           "$ref": "#/definitions/v1Point"
         }
       }
@@ -360,7 +360,7 @@
         "REPRESENTATIONPROTOCOL_FULL"
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
-      "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process.\n\n - REPRESENTATIONPROTOCOL_NONE: The attractor sees no representation of the attracted.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
+      "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
     "v1Sobject": {
       "type": "object",

@@ -42,18 +42,16 @@ REPRESENTATIONPROTOCOL_FULL: RepresentationProtocol
 REPRESENTATIONPROTOCOL_NONE: RepresentationProtocol
 REPRESENTATIONPROTOCOL_SIMPLE: RepresentationProtocol
 
-class Attraction(_message.Message):
-    __slots__ = ["attracted", "attractor", "id"]
-    ATTRACTED_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTOR_FIELD_NUMBER: _ClassVar[int]
-    ID_FIELD_NUMBER: _ClassVar[int]
-    attracted: AttractionParticipant
-    attractor: AttractionParticipant
-    id: str
-    def __init__(self, id: _Optional[str] = ..., attractor: _Optional[_Union[AttractionParticipant, _Mapping]] = ..., attracted: _Optional[_Union[AttractionParticipant, _Mapping]] = ...) -> None: ...
+class Assembly(_message.Message):
+    __slots__ = ["parts", "sobject_id"]
+    PARTS_FIELD_NUMBER: _ClassVar[int]
+    SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
+    parts: _containers.RepeatedCompositeFieldContainer[Assembly]
+    sobject_id: str
+    def __init__(self, sobject_id: _Optional[str] = ..., parts: _Optional[_Iterable[_Union[Assembly, _Mapping]]] = ...) -> None: ...
 
-class AttractionParticipant(_message.Message):
-    __slots__ = ["bias", "participant_id", "ports", "pose", "representationProtocol"]
+class Connectable(_message.Message):
+    __slots__ = ["bias", "ports", "pose", "representationProtocol", "sobject_id"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -62,26 +60,26 @@ class AttractionParticipant(_message.Message):
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     BIAS_FIELD_NUMBER: _ClassVar[int]
-    PARTICIPANT_ID_FIELD_NUMBER: _ClassVar[int]
     PORTS_FIELD_NUMBER: _ClassVar[int]
     POSE_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
+    SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
     bias: _containers.ScalarMap[str, str]
-    participant_id: str
     ports: _containers.RepeatedScalarFieldContainer[str]
     pose: Pose
     representationProtocol: RepresentationProtocol
-    def __init__(self, participant_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
-
-class AttractionTree(_message.Message):
-    __slots__ = ["attraction_id", "children", "sobject_id"]
-    ATTRACTION_ID_FIELD_NUMBER: _ClassVar[int]
-    CHILDREN_FIELD_NUMBER: _ClassVar[int]
-    SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
-    attraction_id: str
-    children: _containers.RepeatedCompositeFieldContainer[AttractionTree]
     sobject_id: str
-    def __init__(self, sobject_id: _Optional[str] = ..., attraction_id: _Optional[str] = ..., children: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    def __init__(self, sobject_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
+
+class Connection(_message.Message):
+    __slots__ = ["connected", "connecting", "id"]
+    CONNECTED_FIELD_NUMBER: _ClassVar[int]
+    CONNECTING_FIELD_NUMBER: _ClassVar[int]
+    ID_FIELD_NUMBER: _ClassVar[int]
+    connected: Connectable
+    connecting: Connectable
+    id: str
+    def __init__(self, id: _Optional[str] = ..., connecting: _Optional[_Union[Connectable, _Mapping]] = ..., connected: _Optional[_Union[Connectable, _Mapping]] = ...) -> None: ...
 
 class Decision(_message.Message):
     __slots__ = ["modification", "strategy"]
@@ -118,16 +116,16 @@ class ElementOccurance(_message.Message):
     def __init__(self, element_id: _Optional[str] = ..., element_pose: _Optional[_Union[Pose, _Mapping]] = ...) -> None: ...
 
 class Layout(_message.Message):
-    __slots__ = ["attraction_trees", "attractions", "sobjects", "strategy"]
-    ATTRACTIONS_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTION_TREES_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["assemblies", "connections", "sobjects", "strategy"]
+    ASSEMBLIES_FIELD_NUMBER: _ClassVar[int]
+    CONNECTIONS_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
     STRATEGY_FIELD_NUMBER: _ClassVar[int]
-    attraction_trees: _containers.RepeatedCompositeFieldContainer[AttractionTree]
-    attractions: _containers.RepeatedCompositeFieldContainer[Attraction]
+    assemblies: _containers.RepeatedCompositeFieldContainer[Assembly]
+    connections: _containers.RepeatedCompositeFieldContainer[Connection]
     sobjects: _containers.RepeatedCompositeFieldContainer[Sobject]
     strategy: LayoutStrategy
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., attractions: _Optional[_Iterable[_Union[Attraction, _Mapping]]] = ..., strategy: _Optional[_Union[LayoutStrategy, str]] = ..., attraction_trees: _Optional[_Iterable[_Union[AttractionTree, _Mapping]]] = ...) -> None: ...
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[Sobject, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[Connection, _Mapping]]] = ..., strategy: _Optional[_Union[LayoutStrategy, str]] = ..., assemblies: _Optional[_Iterable[_Union[Assembly, _Mapping]]] = ...) -> None: ...
 
 class LayoutModification(_message.Message):
     __slots__ = ["context", "modified_context"]

@@ -1,28 +1,28 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/AttractionTree",
+    "$ref": "#/definitions/Assembly",
     "definitions": {
-        "AttractionTree": {
+        "Assembly": {
             "properties": {
                 "sobject_id": {
                     "type": "string",
                     "description": "The id of the sobject to place."
                 },
-                "attraction_id": {
+                "connection_id": {
                     "type": "string",
-                    "description": "An optional id of the attraction that is used to place this sobject. Only relevent when multiple attractions are defined from the same type.\r Roots can't have that field as they have no parent."
+                    "description": "An optional id of the connection that is used to place this sobject. Only relevent when multiple connections are defined from the same type.\r Roots can't have that field as they have no parent."
                 },
                 "children": {
                     "items": {
-                        "$ref": "#/definitions/AttractionTree"
+                        "$ref": "#/definitions/Assembly"
                     },
                     "type": "array"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction Tree",
-            "description": "An attraction tree defines a possibly unambiguous subset of a layout."
+            "title": "Assembly",
+            "description": "An assembly defines a possibly unambiguous subset of a layout."
         }
     }
 }

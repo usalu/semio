@@ -2,7 +2,7 @@ from tempfile import TemporaryFile
 
 from semio.model import Point,Representation,Any, ENCODING_TEXT_UFT32, FILETYPE_JSON, PLATFORM_SEMIO
 from semio.extension import ExtensionServer
-from semio.extension.adapter import AdapterService, AttractionPointRequest, RepresentationRequest, RepresentationsRequest, Adapting
+from semio.extension.adapter import AdapterService, ConnectionPointRequest, RepresentationRequest, RepresentationsRequest, Adapting
 from semio.constants import PLATFORMS
 
 class DummyAdapter(AdapterService):
@@ -16,7 +16,7 @@ class DummyAdapter(AdapterService):
             Adapting(platform_url='dummy/anothercomplexplatform')
             ]
     
-    def RequestAttractionPoint(self, request : AttractionPointRequest, context):
+    def RequestConnectionPoint(self, request : ConnectionPointRequest, context):
         return Point(x=20,y=-6,z=78)
 
     def RequestRepresentation(self, request : RepresentationRequest, context):

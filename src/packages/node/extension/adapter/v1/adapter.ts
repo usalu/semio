@@ -29,17 +29,17 @@ export interface Adapting {
     platformUrl: string;
 }
 /**
- * @generated from protobuf message semio.extension.adapter.v1.AttractionPointRequest
+ * @generated from protobuf message semio.extension.adapter.v1.ConnectionPointRequest
  */
-export interface AttractionPointRequest {
+export interface ConnectionPointRequest {
     /**
-     * Url of attractor.
+     * Url of connecting.
      *
      * @generated from protobuf field: string url = 1;
      */
     url: string;
     /**
-     * Parameters of attractor.
+     * Parameters of connecting.
      *
      * @generated from protobuf field: map<string, string> parameters = 2;
      */
@@ -47,7 +47,7 @@ export interface AttractionPointRequest {
         [key: string]: string;
     };
     /**
-     * Optional bias parameters of attracted.
+     * Optional bias parameters of connected.
      *
      * @generated from protobuf field: map<string, string> bias = 3;
      */
@@ -172,9 +172,9 @@ class Adapting$Type extends MessageType<Adapting> {
  */
 export const Adapting = new Adapting$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
+class ConnectionPointRequest$Type extends MessageType<ConnectionPointRequest> {
     constructor() {
-        super("semio.extension.adapter.v1.AttractionPointRequest", [
+        super("semio.extension.adapter.v1.ConnectionPointRequest", [
             { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } },
             { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } },
@@ -182,14 +182,14 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
             { no: 5, name: "full_representation", kind: "message", oneof: "representation", T: () => Representation }
         ]);
     }
-    create(value?: PartialMessage<AttractionPointRequest>): AttractionPointRequest {
+    create(value?: PartialMessage<ConnectionPointRequest>): ConnectionPointRequest {
         const message = { url: "", parameters: {}, bias: {}, representation: { oneofKind: undefined } };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<AttractionPointRequest>(this, message, value);
+            reflectionMergePartial<ConnectionPointRequest>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionPointRequest): AttractionPointRequest {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ConnectionPointRequest): ConnectionPointRequest {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -226,8 +226,8 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
         }
         return message;
     }
-    private binaryReadMap2(map: AttractionPointRequest["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof AttractionPointRequest["parameters"] | undefined, val: AttractionPointRequest["parameters"][any] | undefined;
+    private binaryReadMap2(map: ConnectionPointRequest["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof ConnectionPointRequest["parameters"] | undefined, val: ConnectionPointRequest["parameters"][any] | undefined;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
@@ -237,13 +237,13 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
                 case 2:
                     val = reader.string();
                     break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.extension.adapter.v1.AttractionPointRequest.parameters");
+                default: throw new globalThis.Error("unknown map entry field for field semio.extension.adapter.v1.ConnectionPointRequest.parameters");
             }
         }
         map[key ?? ""] = val ?? "";
     }
-    private binaryReadMap3(map: AttractionPointRequest["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof AttractionPointRequest["bias"] | undefined, val: AttractionPointRequest["bias"][any] | undefined;
+    private binaryReadMap3(map: ConnectionPointRequest["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof ConnectionPointRequest["bias"] | undefined, val: ConnectionPointRequest["bias"][any] | undefined;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
@@ -253,12 +253,12 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
                 case 2:
                     val = reader.string();
                     break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.extension.adapter.v1.AttractionPointRequest.bias");
+                default: throw new globalThis.Error("unknown map entry field for field semio.extension.adapter.v1.ConnectionPointRequest.bias");
             }
         }
         map[key ?? ""] = val ?? "";
     }
-    internalBinaryWrite(message: AttractionPointRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: ConnectionPointRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string url = 1; */
         if (message.url !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.url);
@@ -281,9 +281,9 @@ class AttractionPointRequest$Type extends MessageType<AttractionPointRequest> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.extension.adapter.v1.AttractionPointRequest
+ * @generated MessageType for protobuf message semio.extension.adapter.v1.ConnectionPointRequest
  */
-export const AttractionPointRequest = new AttractionPointRequest$Type();
+export const ConnectionPointRequest = new ConnectionPointRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RepresentationRequest$Type extends MessageType<RepresentationRequest> {
     constructor() {
@@ -479,7 +479,7 @@ export const RepresentationsResponse = new RepresentationsResponse$Type();
  * @generated ServiceType for protobuf service semio.extension.adapter.v1.AdapterService
  */
 export const AdapterService = new ServiceType("semio.extension.adapter.v1.AdapterService", [
-    { name: "RequestAttractionPoint", options: {}, I: AttractionPointRequest, O: Point },
+    { name: "RequestConnectionPoint", options: {}, I: ConnectionPointRequest, O: Point },
     { name: "RequestRepresentation", options: {}, I: RepresentationRequest, O: Representation },
     { name: "RequestRepresentations", options: {}, I: RepresentationsRequest, O: RepresentationsResponse }
 ]);

@@ -6,7 +6,7 @@ import { RepresentationsRequest } from "./adapter";
 import { Representation } from "../../../model/v1/model";
 import { RepresentationRequest } from "./adapter";
 import { Point } from "../../../model/v1/model";
-import { AttractionPointRequest } from "./adapter";
+import { ConnectionPointRequest } from "./adapter";
 import type * as grpc from "@grpc/grpc-js";
 /**
  * An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
@@ -15,11 +15,11 @@ import type * as grpc from "@grpc/grpc-js";
  */
 export interface IAdapterService extends grpc.UntypedServiceImplementation {
     /**
-     * Request an attraction point for the attracted.
+     * Request an connection point for the connected.
      *
-     * @generated from protobuf rpc: RequestAttractionPoint(semio.extension.adapter.v1.AttractionPointRequest) returns (semio.model.v1.Point);
+     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
      */
-    requestAttractionPoint: grpc.handleUnaryCall<AttractionPointRequest, Point>;
+    requestConnectionPoint: grpc.handleUnaryCall<ConnectionPointRequest, Point>;
     /**
      * Request a specific representation
      *
@@ -45,15 +45,15 @@ export interface IAdapterService extends grpc.UntypedServiceImplementation {
  * ```
  */
 export const adapterServiceDefinition: grpc.ServiceDefinition<IAdapterService> = {
-    requestAttractionPoint: {
-        path: "/semio.extension.adapter.v1.AdapterService/RequestAttractionPoint",
-        originalName: "RequestAttractionPoint",
+    requestConnectionPoint: {
+        path: "/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint",
+        originalName: "RequestConnectionPoint",
         requestStream: false,
         responseStream: false,
         responseDeserialize: bytes => Point.fromBinary(bytes),
-        requestDeserialize: bytes => AttractionPointRequest.fromBinary(bytes),
+        requestDeserialize: bytes => ConnectionPointRequest.fromBinary(bytes),
         responseSerialize: value => Buffer.from(Point.toBinary(value)),
-        requestSerialize: value => Buffer.from(AttractionPointRequest.toBinary(value))
+        requestSerialize: value => Buffer.from(ConnectionPointRequest.toBinary(value))
     },
     requestRepresentation: {
         path: "/semio.extension.adapter.v1.AdapterService/RequestRepresentation",

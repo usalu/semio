@@ -2,9 +2,9 @@ import logging
 
 from os.path import splitext
 
-from semio.model import Point,Sobject,Attraction,Layout,Element,Design, Representation
+from semio.model import Point,Sobject,Connection,Layout,Element,Design, Representation
 from semio.assembler import AssemblerProxy,LayoutDesignRequest
-from semio.manager import ManagerServer,AttractionRequest,AttractionResponse,ElementRequest,ExtensionRegistrationRequest, ExtensionRegistrationResponse
+from semio.manager import ManagerServer,ConnectionRequest,ConnectionResponse,ElementRequest,ExtensionRegistrationRequest, ExtensionRegistrationResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
 
@@ -53,7 +53,7 @@ class Manager(ManagerServer):
         representation = extensionProxy.RequestRepresentation(request.sobject)
         return Element(representations=[representation])
 
-    def RequestAttraction(self, request, context):
+    def RequestConnection(self, request, context):
         raise NotImplementedError('Method not implemented!')
 
     def RegisterExtension(self, request: ExtensionRegistrationRequest, context):

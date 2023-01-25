@@ -19,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdapterServiceClient interface {
-	// Request an attraction point for the attracted.
-	RequestAttractionPoint(ctx context.Context, in *AttractionPointRequest, opts ...grpc.CallOption) (*v1.Point, error)
+	// Request an connection point for the connected.
+	RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error)
 	// Request a specific representation
 	RequestRepresentation(ctx context.Context, in *RepresentationRequest, opts ...grpc.CallOption) (*v1.Representation, error)
 	// Request potentially all representations
@@ -35,9 +35,9 @@ func NewAdapterServiceClient(cc grpc.ClientConnInterface) AdapterServiceClient {
 	return &adapterServiceClient{cc}
 }
 
-func (c *adapterServiceClient) RequestAttractionPoint(ctx context.Context, in *AttractionPointRequest, opts ...grpc.CallOption) (*v1.Point, error) {
+func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error) {
 	out := new(v1.Point)
-	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestAttractionPoint", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func (c *adapterServiceClient) RequestRepresentations(ctx context.Context, in *R
 // All implementations must embed UnimplementedAdapterServiceServer
 // for forward compatibility
 type AdapterServiceServer interface {
-	// Request an attraction point for the attracted.
-	RequestAttractionPoint(context.Context, *AttractionPointRequest) (*v1.Point, error)
+	// Request an connection point for the connected.
+	RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error)
 	// Request a specific representation
 	RequestRepresentation(context.Context, *RepresentationRequest) (*v1.Representation, error)
 	// Request potentially all representations
@@ -79,8 +79,8 @@ type AdapterServiceServer interface {
 type UnimplementedAdapterServiceServer struct {
 }
 
-func (UnimplementedAdapterServiceServer) RequestAttractionPoint(context.Context, *AttractionPointRequest) (*v1.Point, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestAttractionPoint not implemented")
+func (UnimplementedAdapterServiceServer) RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestConnectionPoint not implemented")
 }
 func (UnimplementedAdapterServiceServer) RequestRepresentation(context.Context, *RepresentationRequest) (*v1.Representation, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestRepresentation not implemented")
@@ -101,20 +101,20 @@ func RegisterAdapterServiceServer(s grpc.ServiceRegistrar, srv AdapterServiceSer
 	s.RegisterService(&AdapterService_ServiceDesc, srv)
 }
 
-func _AdapterService_RequestAttractionPoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AttractionPointRequest)
+func _AdapterService_RequestConnectionPoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConnectionPointRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdapterServiceServer).RequestAttractionPoint(ctx, in)
+		return srv.(AdapterServiceServer).RequestConnectionPoint(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestAttractionPoint",
+		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdapterServiceServer).RequestAttractionPoint(ctx, req.(*AttractionPointRequest))
+		return srv.(AdapterServiceServer).RequestConnectionPoint(ctx, req.(*ConnectionPointRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -163,8 +163,8 @@ var AdapterService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AdapterServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RequestAttractionPoint",
-			Handler:    _AdapterService_RequestAttractionPoint_Handler,
+			MethodName: "RequestConnectionPoint",
+			Handler:    _AdapterService_RequestConnectionPoint_Handler,
 		},
 		{
 			MethodName: "RequestRepresentation",

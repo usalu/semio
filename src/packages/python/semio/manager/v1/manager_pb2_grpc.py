@@ -21,10 +21,10 @@ class ManagerServiceStub(object):
                 request_serializer=manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Element.FromString,
                 )
-        self.RequestAttraction = channel.unary_unary(
-                '/semio.manager.v1.ManagerService/RequestAttraction',
-                request_serializer=manager_dot_v1_dot_manager__pb2.AttractionRequest.SerializeToString,
-                response_deserializer=manager_dot_v1_dot_manager__pb2.AttractionResponse.FromString,
+        self.RequestConnection = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/RequestConnection',
+                request_serializer=manager_dot_v1_dot_manager__pb2.ConnectionRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.ConnectionResponse.FromString,
                 )
         self.RegisterExtension = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/RegisterExtension',
@@ -49,8 +49,8 @@ class ManagerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RequestAttraction(self, request, context):
-        """Request the attracted element for an attraction.
+    def RequestConnection(self, request, context):
+        """Request the connected element for an connection.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -78,10 +78,10 @@ def add_ManagerServiceServicer_to_server(servicer, server):
                     request_deserializer=manager_dot_v1_dot_manager__pb2.ElementRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Element.SerializeToString,
             ),
-            'RequestAttraction': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestAttraction,
-                    request_deserializer=manager_dot_v1_dot_manager__pb2.AttractionRequest.FromString,
-                    response_serializer=manager_dot_v1_dot_manager__pb2.AttractionResponse.SerializeToString,
+            'RequestConnection': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestConnection,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.ConnectionRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.ConnectionResponse.SerializeToString,
             ),
             'RegisterExtension': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterExtension,
@@ -122,7 +122,7 @@ class ManagerService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RequestAttraction(request,
+    def RequestConnection(request,
             target,
             options=(),
             channel_credentials=None,
@@ -132,9 +132,9 @@ class ManagerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestAttraction',
-            manager_dot_v1_dot_manager__pb2.AttractionRequest.SerializeToString,
-            manager_dot_v1_dot_manager__pb2.AttractionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestConnection',
+            manager_dot_v1_dot_manager__pb2.ConnectionRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.ConnectionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

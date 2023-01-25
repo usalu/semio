@@ -12,7 +12,7 @@ class Adapting(_message.Message):
     platform_url: str
     def __init__(self, platform_url: _Optional[str] = ...) -> None: ...
 
-class AttractionPointRequest(_message.Message):
+class ConnectionPointRequest(_message.Message):
     __slots__ = ["bias", "full_representation", "parameters", "simple_representation", "url"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]

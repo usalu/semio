@@ -16,9 +16,9 @@ class AdapterServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.RequestAttractionPoint = channel.unary_unary(
-                '/semio.extension.adapter.v1.AdapterService/RequestAttractionPoint',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.SerializeToString,
+        self.RequestConnectionPoint = channel.unary_unary(
+                '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
+                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Point.FromString,
                 )
         self.RequestRepresentation = channel.unary_unary(
@@ -37,8 +37,8 @@ class AdapterServiceServicer(object):
     """An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
     """
 
-    def RequestAttractionPoint(self, request, context):
-        """Request an attraction point for the attracted.
+    def RequestConnectionPoint(self, request, context):
+        """Request an connection point for the connected.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -61,9 +61,9 @@ class AdapterServiceServicer(object):
 
 def add_AdapterServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'RequestAttractionPoint': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestAttractionPoint,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.FromString,
+            'RequestConnectionPoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestConnectionPoint,
+                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Point.SerializeToString,
             ),
             'RequestRepresentation': grpc.unary_unary_rpc_method_handler(
@@ -88,7 +88,7 @@ class AdapterService(object):
     """
 
     @staticmethod
-    def RequestAttractionPoint(request,
+    def RequestConnectionPoint(request,
             target,
             options=(),
             channel_credentials=None,
@@ -98,8 +98,8 @@ class AdapterService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestAttractionPoint',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.AttractionPointRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
+            extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Point.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

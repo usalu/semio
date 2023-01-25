@@ -10,7 +10,7 @@ import type { Representation } from "../../../model/v1/model";
 import type { RepresentationRequest } from "./adapter";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Point } from "../../../model/v1/model";
-import type { AttractionPointRequest } from "./adapter";
+import type { ConnectionPointRequest } from "./adapter";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -20,11 +20,11 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IAdapterServiceClient {
     /**
-     * Request an attraction point for the attracted.
+     * Request an connection point for the connected.
      *
-     * @generated from protobuf rpc: RequestAttractionPoint(semio.extension.adapter.v1.AttractionPointRequest) returns (semio.model.v1.Point);
+     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
      */
-    requestAttractionPoint(input: AttractionPointRequest, options?: RpcOptions): UnaryCall<AttractionPointRequest, Point>;
+    requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point>;
     /**
      * Request a specific representation
      *
@@ -50,13 +50,13 @@ export class AdapterServiceClient implements IAdapterServiceClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * Request an attraction point for the attracted.
+     * Request an connection point for the connected.
      *
-     * @generated from protobuf rpc: RequestAttractionPoint(semio.extension.adapter.v1.AttractionPointRequest) returns (semio.model.v1.Point);
+     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
      */
-    requestAttractionPoint(input: AttractionPointRequest, options?: RpcOptions): UnaryCall<AttractionPointRequest, Point> {
+    requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<AttractionPointRequest, Point>("unary", this._transport, method, opt, input);
+        return stackIntercept<ConnectionPointRequest, Point>("unary", this._transport, method, opt, input);
     }
     /**
      * Request a specific representation

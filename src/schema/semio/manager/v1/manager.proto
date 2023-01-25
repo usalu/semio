@@ -14,8 +14,8 @@ service ManagerService {
   // Request an element from instance information and an optional traget representation parameters.
   rpc RequestElement(ElementRequest) returns (semio.model.v1.Element);
 
-  // Request the attracted element for an attraction.
-  rpc RequestAttraction(AttractionRequest) returns (AttractionResponse);
+  // Request the connected element for an connection.
+  rpc RequestConnection(ConnectionRequest) returns (ConnectionResponse);
 
   // Register a service to the server.
   rpc RegisterExtension(ExtensionRegistrationRequest) returns (ExtensionRegistrationResponse);
@@ -39,13 +39,13 @@ message ElementRequest{
   bool targets_required = 5;
 }
 
-message AttractionRequest{
-  semio.model.v1.Attraction attraction = 1;
+message ConnectionRequest{
+  semio.model.v1.Connection connection = 1;
 }
 
-message AttractionResponse{
-  semio.model.v1.Pose attracted_pose = 1;
-  semio.model.v1.Point attraction_point = 2;
+message ConnectionResponse{
+  semio.model.v1.Pose connected_pose = 1;
+  semio.model.v1.Point connection_point = 2;
 }
 
 message ExtensionRegistrationRequest{

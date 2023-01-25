@@ -70,27 +70,27 @@ func (x *Adapting) GetPlatformUrl() string {
 	return ""
 }
 
-type AttractionPointRequest struct {
+type ConnectionPointRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Url of attractor.
+	// Url of connecting.
 	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	// Parameters of attractor.
+	// Parameters of connecting.
 	Parameters map[string]string `protobuf:"bytes,2,rep,name=parameters,proto3" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Optional bias parameters of attracted.
+	// Optional bias parameters of connected.
 	Bias map[string]string `protobuf:"bytes,3,rep,name=bias,proto3" json:"bias,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// Optional representation depending on protocol.
 	//
 	// Types that are assignable to Representation:
-	//	*AttractionPointRequest_SimpleRepresentation
-	//	*AttractionPointRequest_FullRepresentation
-	Representation isAttractionPointRequest_Representation `protobuf_oneof:"representation"`
+	//	*ConnectionPointRequest_SimpleRepresentation
+	//	*ConnectionPointRequest_FullRepresentation
+	Representation isConnectionPointRequest_Representation `protobuf_oneof:"representation"`
 }
 
-func (x *AttractionPointRequest) Reset() {
-	*x = AttractionPointRequest{}
+func (x *ConnectionPointRequest) Reset() {
+	*x = ConnectionPointRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_extension_adapter_v1_adapter_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -98,13 +98,13 @@ func (x *AttractionPointRequest) Reset() {
 	}
 }
 
-func (x *AttractionPointRequest) String() string {
+func (x *ConnectionPointRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AttractionPointRequest) ProtoMessage() {}
+func (*ConnectionPointRequest) ProtoMessage() {}
 
-func (x *AttractionPointRequest) ProtoReflect() protoreflect.Message {
+func (x *ConnectionPointRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_extension_adapter_v1_adapter_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -116,68 +116,68 @@ func (x *AttractionPointRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AttractionPointRequest.ProtoReflect.Descriptor instead.
-func (*AttractionPointRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ConnectionPointRequest.ProtoReflect.Descriptor instead.
+func (*ConnectionPointRequest) Descriptor() ([]byte, []int) {
 	return file_extension_adapter_v1_adapter_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *AttractionPointRequest) GetUrl() string {
+func (x *ConnectionPointRequest) GetUrl() string {
 	if x != nil {
 		return x.Url
 	}
 	return ""
 }
 
-func (x *AttractionPointRequest) GetParameters() map[string]string {
+func (x *ConnectionPointRequest) GetParameters() map[string]string {
 	if x != nil {
 		return x.Parameters
 	}
 	return nil
 }
 
-func (x *AttractionPointRequest) GetBias() map[string]string {
+func (x *ConnectionPointRequest) GetBias() map[string]string {
 	if x != nil {
 		return x.Bias
 	}
 	return nil
 }
 
-func (m *AttractionPointRequest) GetRepresentation() isAttractionPointRequest_Representation {
+func (m *ConnectionPointRequest) GetRepresentation() isConnectionPointRequest_Representation {
 	if m != nil {
 		return m.Representation
 	}
 	return nil
 }
 
-func (x *AttractionPointRequest) GetSimpleRepresentation() *v1.Point {
-	if x, ok := x.GetRepresentation().(*AttractionPointRequest_SimpleRepresentation); ok {
+func (x *ConnectionPointRequest) GetSimpleRepresentation() *v1.Point {
+	if x, ok := x.GetRepresentation().(*ConnectionPointRequest_SimpleRepresentation); ok {
 		return x.SimpleRepresentation
 	}
 	return nil
 }
 
-func (x *AttractionPointRequest) GetFullRepresentation() *v1.Representation {
-	if x, ok := x.GetRepresentation().(*AttractionPointRequest_FullRepresentation); ok {
+func (x *ConnectionPointRequest) GetFullRepresentation() *v1.Representation {
+	if x, ok := x.GetRepresentation().(*ConnectionPointRequest_FullRepresentation); ok {
 		return x.FullRepresentation
 	}
 	return nil
 }
 
-type isAttractionPointRequest_Representation interface {
-	isAttractionPointRequest_Representation()
+type isConnectionPointRequest_Representation interface {
+	isConnectionPointRequest_Representation()
 }
 
-type AttractionPointRequest_SimpleRepresentation struct {
+type ConnectionPointRequest_SimpleRepresentation struct {
 	SimpleRepresentation *v1.Point `protobuf:"bytes,4,opt,name=simple_representation,json=simpleRepresentation,proto3,oneof"`
 }
 
-type AttractionPointRequest_FullRepresentation struct {
+type ConnectionPointRequest_FullRepresentation struct {
 	FullRepresentation *v1.Representation `protobuf:"bytes,5,opt,name=full_representation,json=fullRepresentation,proto3,oneof"`
 }
 
-func (*AttractionPointRequest_SimpleRepresentation) isAttractionPointRequest_Representation() {}
+func (*ConnectionPointRequest_SimpleRepresentation) isConnectionPointRequest_Representation() {}
 
-func (*AttractionPointRequest_FullRepresentation) isAttractionPointRequest_Representation() {}
+func (*ConnectionPointRequest_FullRepresentation) isConnectionPointRequest_Representation() {}
 
 type RepresentationRequest struct {
 	state         protoimpl.MessageState
@@ -379,19 +379,19 @@ var file_extension_adapter_v1_adapter_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x2d, 0x0a, 0x08, 0x41, 0x64, 0x61, 0x70, 0x74, 0x69,
 	0x6e, 0x67, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x5f, 0x75,
 	0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f,
-	0x72, 0x6d, 0x55, 0x72, 0x6c, 0x22, 0x8b, 0x04, 0x0a, 0x16, 0x41, 0x74, 0x74, 0x72, 0x61, 0x63,
+	0x72, 0x6d, 0x55, 0x72, 0x6c, 0x22, 0x8b, 0x04, 0x0a, 0x16, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
 	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75,
 	0x72, 0x6c, 0x12, 0x62, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73,
 	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x42, 0x2e, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2e, 0x65,
 	0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x61, 0x64, 0x61, 0x70, 0x74, 0x65, 0x72,
-	0x2e, 0x76, 0x31, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
 	0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
 	0x65, 0x74, 0x65, 0x72, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61,
 	0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x12, 0x50, 0x0a, 0x04, 0x62, 0x69, 0x61, 0x73, 0x18, 0x03,
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x3c, 0x2e, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2e, 0x65, 0x78, 0x74,
 	0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x61, 0x64, 0x61, 0x70, 0x74, 0x65, 0x72, 0x2e, 0x76,
-	0x31, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x69, 0x6e,
+	0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x69, 0x6e,
 	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x42, 0x69, 0x61, 0x73, 0x45, 0x6e, 0x74,
 	0x72, 0x79, 0x52, 0x04, 0x62, 0x69, 0x61, 0x73, 0x12, 0x4c, 0x0a, 0x15, 0x73, 0x69, 0x6d, 0x70,
 	0x6c, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f,
@@ -437,10 +437,10 @@ var file_extension_adapter_v1_adapter_proto_rawDesc = []byte{
 	0x70, 0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0f, 0x72, 0x65,
 	0x70, 0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x32, 0xeb, 0x02,
 	0x0a, 0x0e, 0x41, 0x64, 0x61, 0x70, 0x74, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
-	0x12, 0x65, 0x0a, 0x16, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x72, 0x61,
+	0x12, 0x65, 0x0a, 0x16, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x6e, 0x65,
 	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x32, 0x2e, 0x73, 0x65, 0x6d,
 	0x69, 0x6f, 0x2e, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x61, 0x64, 0x61,
-	0x70, 0x74, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69,
+	0x70, 0x74, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69,
 	0x6f, 0x6e, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15,
 	0x2e, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
 	0x50, 0x6f, 0x69, 0x6e, 0x74, 0x22, 0x00, 0x12, 0x6c, 0x0a, 0x15, 0x52, 0x65, 0x71, 0x75, 0x65,
@@ -492,28 +492,28 @@ func file_extension_adapter_v1_adapter_proto_rawDescGZIP() []byte {
 var file_extension_adapter_v1_adapter_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_extension_adapter_v1_adapter_proto_goTypes = []interface{}{
 	(*Adapting)(nil),                // 0: semio.extension.adapter.v1.Adapting
-	(*AttractionPointRequest)(nil),  // 1: semio.extension.adapter.v1.AttractionPointRequest
+	(*ConnectionPointRequest)(nil),  // 1: semio.extension.adapter.v1.ConnectionPointRequest
 	(*RepresentationRequest)(nil),   // 2: semio.extension.adapter.v1.RepresentationRequest
 	(*RepresentationsRequest)(nil),  // 3: semio.extension.adapter.v1.RepresentationsRequest
 	(*RepresentationsResponse)(nil), // 4: semio.extension.adapter.v1.RepresentationsResponse
-	nil,                             // 5: semio.extension.adapter.v1.AttractionPointRequest.ParametersEntry
-	nil,                             // 6: semio.extension.adapter.v1.AttractionPointRequest.BiasEntry
+	nil,                             // 5: semio.extension.adapter.v1.ConnectionPointRequest.ParametersEntry
+	nil,                             // 6: semio.extension.adapter.v1.ConnectionPointRequest.BiasEntry
 	(*v1.Point)(nil),                // 7: semio.model.v1.Point
 	(*v1.Representation)(nil),       // 8: semio.model.v1.Representation
 	(*v1.Sobject)(nil),              // 9: semio.model.v1.Sobject
 }
 var file_extension_adapter_v1_adapter_proto_depIdxs = []int32{
-	5,  // 0: semio.extension.adapter.v1.AttractionPointRequest.parameters:type_name -> semio.extension.adapter.v1.AttractionPointRequest.ParametersEntry
-	6,  // 1: semio.extension.adapter.v1.AttractionPointRequest.bias:type_name -> semio.extension.adapter.v1.AttractionPointRequest.BiasEntry
-	7,  // 2: semio.extension.adapter.v1.AttractionPointRequest.simple_representation:type_name -> semio.model.v1.Point
-	8,  // 3: semio.extension.adapter.v1.AttractionPointRequest.full_representation:type_name -> semio.model.v1.Representation
+	5,  // 0: semio.extension.adapter.v1.ConnectionPointRequest.parameters:type_name -> semio.extension.adapter.v1.ConnectionPointRequest.ParametersEntry
+	6,  // 1: semio.extension.adapter.v1.ConnectionPointRequest.bias:type_name -> semio.extension.adapter.v1.ConnectionPointRequest.BiasEntry
+	7,  // 2: semio.extension.adapter.v1.ConnectionPointRequest.simple_representation:type_name -> semio.model.v1.Point
+	8,  // 3: semio.extension.adapter.v1.ConnectionPointRequest.full_representation:type_name -> semio.model.v1.Representation
 	9,  // 4: semio.extension.adapter.v1.RepresentationRequest.sobject:type_name -> semio.model.v1.Sobject
 	9,  // 5: semio.extension.adapter.v1.RepresentationsRequest.sobject:type_name -> semio.model.v1.Sobject
 	8,  // 6: semio.extension.adapter.v1.RepresentationsResponse.representations:type_name -> semio.model.v1.Representation
-	1,  // 7: semio.extension.adapter.v1.AdapterService.RequestAttractionPoint:input_type -> semio.extension.adapter.v1.AttractionPointRequest
+	1,  // 7: semio.extension.adapter.v1.AdapterService.RequestConnectionPoint:input_type -> semio.extension.adapter.v1.ConnectionPointRequest
 	2,  // 8: semio.extension.adapter.v1.AdapterService.RequestRepresentation:input_type -> semio.extension.adapter.v1.RepresentationRequest
 	3,  // 9: semio.extension.adapter.v1.AdapterService.RequestRepresentations:input_type -> semio.extension.adapter.v1.RepresentationsRequest
-	7,  // 10: semio.extension.adapter.v1.AdapterService.RequestAttractionPoint:output_type -> semio.model.v1.Point
+	7,  // 10: semio.extension.adapter.v1.AdapterService.RequestConnectionPoint:output_type -> semio.model.v1.Point
 	8,  // 11: semio.extension.adapter.v1.AdapterService.RequestRepresentation:output_type -> semio.model.v1.Representation
 	4,  // 12: semio.extension.adapter.v1.AdapterService.RequestRepresentations:output_type -> semio.extension.adapter.v1.RepresentationsResponse
 	10, // [10:13] is the sub-list for method output_type
@@ -542,7 +542,7 @@ func file_extension_adapter_v1_adapter_proto_init() {
 			}
 		}
 		file_extension_adapter_v1_adapter_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AttractionPointRequest); i {
+			switch v := v.(*ConnectionPointRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -591,8 +591,8 @@ func file_extension_adapter_v1_adapter_proto_init() {
 		}
 	}
 	file_extension_adapter_v1_adapter_proto_msgTypes[1].OneofWrappers = []interface{}{
-		(*AttractionPointRequest_SimpleRepresentation)(nil),
-		(*AttractionPointRequest_FullRepresentation)(nil),
+		(*ConnectionPointRequest_SimpleRepresentation)(nil),
+		(*ConnectionPointRequest_FullRepresentation)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

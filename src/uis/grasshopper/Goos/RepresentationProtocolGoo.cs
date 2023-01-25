@@ -20,9 +20,9 @@ namespace Semio.UI.Grasshopper.Goos
             Value = new RepresentationProtocol();
         }
 
-        public RepresentationProtocolGoo(RepresentationProtocol attraction)
+        public RepresentationProtocolGoo(RepresentationProtocol connection)
         {
-            Value = attraction;
+            Value = connection;
         }
 
         public override IGH_Goo Duplicate() => new RepresentationProtocolGoo(Value);

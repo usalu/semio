@@ -63,9 +63,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_attraction {
+        internal static System.Drawing.Bitmap icon_connection {
             get {
-                object obj = ResourceManager.GetObject("icon_attraction", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_connection", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_attractionparticipant {
+        internal static System.Drawing.Bitmap icon_connectionparticipant {
             get {
-                object obj = ResourceManager.GetObject("icon_attractionparticipant", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_connectionparticipant", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_attractiontree {
+        internal static System.Drawing.Bitmap icon_connectiontree {
             get {
-                object obj = ResourceManager.GetObject("icon_attractiontree", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_connectiontree", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_attraction {
+        internal static System.Drawing.Bitmap icon_construct_connection {
             get {
-                object obj = ResourceManager.GetObject("icon_construct_attraction", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_construct_connection", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,9 +103,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_attractionparticipant {
+        internal static System.Drawing.Bitmap icon_construct_connectionparticipant {
             get {
-                object obj = ResourceManager.GetObject("icon_construct_attractionparticipant", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_construct_connectionparticipant", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,9 +113,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_attractiontree {
+        internal static System.Drawing.Bitmap icon_construct_connectiontree {
             get {
-                object obj = ResourceManager.GetObject("icon_construct_attractiontree", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_construct_connectiontree", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -203,9 +203,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_attraction {
+        internal static System.Drawing.Bitmap icon_deconstruct_connection {
             get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_attraction", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_deconstruct_connection", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -213,9 +213,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_attractionparticipant {
+        internal static System.Drawing.Bitmap icon_deconstruct_connectionparticipant {
             get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_attractionparticipant", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_deconstruct_connectionparticipant", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -223,9 +223,9 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_attractiontree {
+        internal static System.Drawing.Bitmap icon_deconstruct_connectiontree {
             get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_attractiontree", resourceCulture);
+                object obj = ResourceManager.GetObject("icon_deconstruct_connectiontree", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

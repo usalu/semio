@@ -46,8 +46,8 @@ class ManagerProxy(SemioProxy):
     def RequestElement(self, request, context = None):
         return self._stub.RequestElement(request,context)
 
-    def RequestAttraction(self, request, context = None):
-        return self._stub.RequestAttraction(request,context)
+    def RequestConnection(self, request, context = None):
+        return self._stub.RequestConnection(request,context)
 
     def RegisterExtension(self, request, context = None):
         return self._stub.RegisterExtension(request,context)

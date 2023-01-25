@@ -16,7 +16,7 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Extending } from "../../extension/v1/extension";
 import { Point } from "../../model/v1/model";
 import { Pose } from "../../model/v1/model";
-import { Attraction } from "../../model/v1/model";
+import { Connection } from "../../model/v1/model";
 import { Platform } from "../../model/v1/model";
 import { Sobject } from "../../model/v1/model";
 /**
@@ -56,26 +56,26 @@ export interface ElementRequest {
     targetsRequired: boolean;
 }
 /**
- * @generated from protobuf message semio.manager.v1.AttractionRequest
+ * @generated from protobuf message semio.manager.v1.ConnectionRequest
  */
-export interface AttractionRequest {
+export interface ConnectionRequest {
     /**
-     * @generated from protobuf field: semio.model.v1.Attraction attraction = 1;
+     * @generated from protobuf field: semio.model.v1.Connection connection = 1;
      */
-    attraction?: Attraction;
+    connection?: Connection;
 }
 /**
- * @generated from protobuf message semio.manager.v1.AttractionResponse
+ * @generated from protobuf message semio.manager.v1.ConnectionResponse
  */
-export interface AttractionResponse {
+export interface ConnectionResponse {
     /**
-     * @generated from protobuf field: semio.model.v1.Pose attracted_pose = 1;
+     * @generated from protobuf field: semio.model.v1.Pose connected_pose = 1;
      */
-    attractedPose?: Pose;
+    connectedPose?: Pose;
     /**
-     * @generated from protobuf field: semio.model.v1.Point attraction_point = 2;
+     * @generated from protobuf field: semio.model.v1.Point connection_point = 2;
      */
-    attractionPoint?: Point;
+    connectionPoint?: Point;
 }
 /**
  * @generated from protobuf message semio.manager.v1.ExtensionRegistrationRequest
@@ -207,26 +207,26 @@ class ElementRequest$Type extends MessageType<ElementRequest> {
  */
 export const ElementRequest = new ElementRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AttractionRequest$Type extends MessageType<AttractionRequest> {
+class ConnectionRequest$Type extends MessageType<ConnectionRequest> {
     constructor() {
-        super("semio.manager.v1.AttractionRequest", [
-            { no: 1, name: "attraction", kind: "message", T: () => Attraction }
+        super("semio.manager.v1.ConnectionRequest", [
+            { no: 1, name: "connection", kind: "message", T: () => Connection }
         ]);
     }
-    create(value?: PartialMessage<AttractionRequest>): AttractionRequest {
+    create(value?: PartialMessage<ConnectionRequest>): ConnectionRequest {
         const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<AttractionRequest>(this, message, value);
+            reflectionMergePartial<ConnectionRequest>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionRequest): AttractionRequest {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ConnectionRequest): ConnectionRequest {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.Attraction attraction */ 1:
-                    message.attraction = Attraction.internalBinaryRead(reader, reader.uint32(), options, message.attraction);
+                case /* semio.model.v1.Connection connection */ 1:
+                    message.connection = Connection.internalBinaryRead(reader, reader.uint32(), options, message.connection);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -239,10 +239,10 @@ class AttractionRequest$Type extends MessageType<AttractionRequest> {
         }
         return message;
     }
-    internalBinaryWrite(message: AttractionRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.Attraction attraction = 1; */
-        if (message.attraction)
-            Attraction.internalBinaryWrite(message.attraction, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+    internalBinaryWrite(message: ConnectionRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* semio.model.v1.Connection connection = 1; */
+        if (message.connection)
+            Connection.internalBinaryWrite(message.connection, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -250,34 +250,34 @@ class AttractionRequest$Type extends MessageType<AttractionRequest> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.manager.v1.AttractionRequest
+ * @generated MessageType for protobuf message semio.manager.v1.ConnectionRequest
  */
-export const AttractionRequest = new AttractionRequest$Type();
+export const ConnectionRequest = new ConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AttractionResponse$Type extends MessageType<AttractionResponse> {
+class ConnectionResponse$Type extends MessageType<ConnectionResponse> {
     constructor() {
-        super("semio.manager.v1.AttractionResponse", [
-            { no: 1, name: "attracted_pose", kind: "message", T: () => Pose },
-            { no: 2, name: "attraction_point", kind: "message", T: () => Point }
+        super("semio.manager.v1.ConnectionResponse", [
+            { no: 1, name: "connected_pose", kind: "message", T: () => Pose },
+            { no: 2, name: "connection_point", kind: "message", T: () => Point }
         ]);
     }
-    create(value?: PartialMessage<AttractionResponse>): AttractionResponse {
+    create(value?: PartialMessage<ConnectionResponse>): ConnectionResponse {
         const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<AttractionResponse>(this, message, value);
+            reflectionMergePartial<ConnectionResponse>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AttractionResponse): AttractionResponse {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ConnectionResponse): ConnectionResponse {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.Pose attracted_pose */ 1:
-                    message.attractedPose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.attractedPose);
+                case /* semio.model.v1.Pose connected_pose */ 1:
+                    message.connectedPose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.connectedPose);
                     break;
-                case /* semio.model.v1.Point attraction_point */ 2:
-                    message.attractionPoint = Point.internalBinaryRead(reader, reader.uint32(), options, message.attractionPoint);
+                case /* semio.model.v1.Point connection_point */ 2:
+                    message.connectionPoint = Point.internalBinaryRead(reader, reader.uint32(), options, message.connectionPoint);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -290,13 +290,13 @@ class AttractionResponse$Type extends MessageType<AttractionResponse> {
         }
         return message;
     }
-    internalBinaryWrite(message: AttractionResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.Pose attracted_pose = 1; */
-        if (message.attractedPose)
-            Pose.internalBinaryWrite(message.attractedPose, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Point attraction_point = 2; */
-        if (message.attractionPoint)
-            Point.internalBinaryWrite(message.attractionPoint, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+    internalBinaryWrite(message: ConnectionResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* semio.model.v1.Pose connected_pose = 1; */
+        if (message.connectedPose)
+            Pose.internalBinaryWrite(message.connectedPose, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Point connection_point = 2; */
+        if (message.connectionPoint)
+            Point.internalBinaryWrite(message.connectionPoint, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -304,9 +304,9 @@ class AttractionResponse$Type extends MessageType<AttractionResponse> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.manager.v1.AttractionResponse
+ * @generated MessageType for protobuf message semio.manager.v1.ConnectionResponse
  */
-export const AttractionResponse = new AttractionResponse$Type();
+export const ConnectionResponse = new ConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ExtensionRegistrationRequest$Type extends MessageType<ExtensionRegistrationRequest> {
     constructor() {
@@ -527,7 +527,7 @@ export const RegisteredExtensionsResponse = new RegisteredExtensionsResponse$Typ
  */
 export const ManagerService = new ServiceType("semio.manager.v1.ManagerService", [
     { name: "RequestElement", options: {}, I: ElementRequest, O: Element },
-    { name: "RequestAttraction", options: {}, I: AttractionRequest, O: AttractionResponse },
+    { name: "RequestConnection", options: {}, I: ConnectionRequest, O: ConnectionResponse },
     { name: "RegisterExtension", options: {}, I: ExtensionRegistrationRequest, O: ExtensionRegistrationResponse },
     { name: "GetRegisteredExtensions", options: {}, I: GetRegisteredExtensionsRequest, O: RegisteredExtensionsResponse }
 ]);

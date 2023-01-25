@@ -20,9 +20,9 @@
 //        {
 //            Value = new Encoding();
 //        }
-//        public EncodingGoo(Encoding attraction)
+//        public EncodingGoo(Encoding connection)
 //        {
-//            Value = attraction;
+//            Value = connection;
 //        }
 //        public override IGH_Goo Duplicate() => new EncodingGoo(Value);
 //        public override string TypeName => "Encoding";

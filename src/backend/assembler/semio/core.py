@@ -167,7 +167,7 @@ class ElementProxy(ABC):
         pass
     
     @abstractmethod
-    def requestAttractionPoint(self,parameters = {}, attractionParameters = {})->Vector:
+    def requestConnectionPoint(self,parameters = {}, connectionParameters = {})->Vector:
         """Send a request for a meeting point."""
         pass
 
@@ -188,94 +188,94 @@ class Sobject():
     parameters:ParameterDict = field(default_factory=dict)
     id:UUID = field(default_factory=uuid4)
     
-    def getAttractionPoint(self, attractionParameters = {}):
-        return self.elementProxy.requestAttractionPoint(self.parameters, attractionParameters)
+    def getConnectionPoint(self, connectionParameters = {}):
+        return self.elementProxy.requestConnectionPoint(self.parameters, connectionParameters)
        
     def getEntity(self):
         return self.elementProxy.requestEntity(self.parameters)
 
 @dataclass
-class AttractionProtocol(ABC):
+class ConnectionProtocol(ABC):
     bias:ParameterDict# = field(default_factory=dict)
     
-    def getAttractionParameters(self):
+    def getConnectionParameters(self):
         return toJson(self)
   
 @dataclass
-class RepresentationBasedAttractionProtocol(AttractionProtocol,ABC):
-    attracted: object = field(init=False)
-    attractorPose: InitVar[Pose]
-    attractedSobject: InitVar[Sobject]
+class RepresentationBasedConnectionProtocol(ConnectionProtocol,ABC):
+    connected: object = field(init=False)
+    connectingPose: InitVar[Pose]
+    connectedSobject: InitVar[Sobject]
 
-    def __post_init__(self,attractorPose,attractedSobject):
-        self.attracted = self.getRepresentationFromAttractor(attractorPose,self.getRepresentation(attractedSobject))
+    def __post_init__(self,connectingPose,connectedSobject):
+        self.connected = self.getRepresentationFromAttractor(connectingPose,self.getRepresentation(connectedSobject))
 
     @abstractmethod
     def getRepresentation(self,sobject:Sobject):
         pass
     
-    def getRepresentationFromAttractor(self,attractorPose:Pose,representation):
-        return attractorPose.getLocalRepresentation(representation)
+    def getRepresentationFromAttractor(self,connectingPose:Pose,representation):
+        return connectingPose.getLocalRepresentation(representation)
 
 @dataclass
-class SimpleAttractionProtocol(RepresentationBasedAttractionProtocol):
+class SimpleConnectionProtocol(RepresentationBasedConnectionProtocol):
 
     def getRepresentation(self,sobject:Sobject):
         return sobject.pose.pointOfView
     
 
 @dataclass
-class PortAttractionProtocol(AttractionProtocol):
+class PortConnectionProtocol(ConnectionProtocol):
     type: str
     parameters : ParameterDict
 
 @dataclass
-class Attraction():
-    """An attraction defines a relationship between an attracting sobject (attractor) and an attracted sobject (attracted)."""
-    attractor: Sobject
-    attracted: Sobject
-    attractorAttractionProtocol:AttractionProtocol = field(default_factory=SimpleAttractionProtocol)
-    attractedAttractionProtocol:AttractionProtocol = field(default_factory=SimpleAttractionProtocol)
+class Connection():
+    """An connection defines a relationship between an connecting sobject (connecting) and an connected sobject (connected)."""
+    connecting: Sobject
+    connected: Sobject
+    connectingConnectionProtocol:ConnectionProtocol = field(default_factory=SimpleConnectionProtocol)
+    connectedConnectionProtocol:ConnectionProtocol = field(default_factory=SimpleConnectionProtocol)
     
-    def attract(self):
-        """Returns the pose of the attracted sobject after getting attracted to the attractor.
-        attractedMeetingInRegardsToAttractorMeetingPoint (bool) : If true attracted will choose meeting point in regards to meeting point from attracted.
-        Otherwise the attracted will choose the meeting point in regards to the point of view from the attractor. """
+    def connect(self):
+        """Returns the pose of the connected sobject after getting connected to the connecting.
+        connectedMeetingInRegardsToAttractorMeetingPoint (bool) : If true connected will choose meeting point in regards to meeting point from connected.
+        Otherwise the connected will choose the meeting point in regards to the point of view from the connecting. """
 
-        attractedAttractionParameters = self.attractedAttractionProtocol.getAttractionParameters()
-        attractorPointFromAttractor = self.attractor.getAttractionPoint(attractedAttractionParameters)
-        attractorPoint =  self.attractor.pose.getWorldPointOfView(attractorPointFromAttractor)
+        connectedConnectionParameters = self.connectedConnectionProtocol.getConnectionParameters()
+        connectingPointFromAttractor = self.connecting.getConnectionPoint(connectedConnectionParameters)
+        connectingPoint =  self.connecting.pose.getWorldPointOfView(connectingPointFromAttractor)
 
-        attractorAttractionParameters = self.attractorAttractionProtocol.getAttractionParameters()
-        attractedPointFromAttracted = self.attracted.getAttractionPoint(attractorAttractionParameters,self.biasAttracted)
-        #This is the point that will be attracted from the attracted but only relative from the attracted point of view.
-        #The point of view of the attracted is irrelevant after the attraction points have been received.
-        relativeAttractedPoint = self.attracted.pose.getWorldPointOfView(attractedPointFromAttracted,considerPointOfView=False)
+        connectingConnectionParameters = self.connectingConnectionProtocol.getConnectionParameters()
+        connectedPointFromAttracted = self.connected.getConnectionPoint(connectingConnectionParameters,self.biasAttracted)
+        #This is the point that will be connected from the connected but only relative from the connected point of view.
+        #The point of view of the connected is irrelevant after the connection points have been received.
+        relativeAttractedPoint = self.connected.pose.getWorldPointOfView(connectedPointFromAttracted,considerPointOfView=False)
 
-        attractedTargetPointOfViewFromWorld = attractorPoint-relativeAttractedPoint
+        connectedTargetPointOfViewFromWorld = connectingPoint-relativeAttractedPoint
 
-        return AttractionResult(Pose(attractedTargetPointOfViewFromWorld,self.attracted.pose.view),
-            attractorPoint,attractorPointFromAttractor,relativeAttractedPoint,attractedPointFromAttracted)
+        return ConnectionResult(Pose(connectedTargetPointOfViewFromWorld,self.connected.pose.view),
+            connectingPoint,connectingPointFromAttractor,relativeAttractedPoint,connectedPointFromAttracted)
     
 @dataclass
-class AttractionResult:
-    attractedTargetPose:Pose
-    attractorPoint:Vector
-    attractorPointFromAttractor:Vector
-    attractedPointFromAttracted:Vector
+class ConnectionResult:
+    connectedTargetPose:Pose
+    connectingPoint:Vector
+    connectingPointFromAttractor:Vector
+    connectedPointFromAttracted:Vector
     relativeAttractedPoint:Vector
-    attractedPointFromAttracted:Vector
+    connectedPointFromAttracted:Vector
 
 @dataclass
 class LayoutGraph():
     """A layout graph is an imprecise set of involved sobjects and atrratctions."""
     sobjects : list[Sobject]
-    attractions : list[Attraction]
+    connections : list[Connection]
 
     def toNXGraph(self):
         G = Graph()
         nodes = [(sobject.id,{'instance':sobject}) for sobject in self.sobjects ]
-        edges = [(attraction.attractor.id,attraction.attracted.id,{'instance':attraction}) for attraction in self.attractions ]
+        edges = [(connection.connecting.id,connection.connected.id,{'instance':connection}) for connection in self.connections ]
         G.add_nodes_from(nodes)
         G.add_edges_from(edges)
         return G
@@ -291,26 +291,26 @@ class LayoutGraph():
                     rootNode = rootSobject.id
                     continue
             for chain in chain_decomposition(subGraph,rootNode):
-                attraction = chain
+                connection = chain
                 
             
 @dataclass
 class Choreography():
     individualSobjects: list[Sobject]
-    attractionChains: list[list[Attraction]]
-    """A choreography is a precisely instructed order of attractions between sobjects."""
+    connectionChains: list[list[Connection]]
+    """A choreography is a precisely instructed order of connections between sobjects."""
     def getPoses(self,updatePointOfViews=True)->Dict[Sobject,Pose]:
         #All individual sobjects stay where they are
         poses = {individualSobject:individualSobject.pose for individualSobject in self.individualSobjects}
         #Can be parallelized
-        for attractionChain in self.attractionChains:
+        for connectionChain in self.connectionChains:
             displacement = Vector()
-            for attraction in attractionChain:
-                attractionResult = attraction.attract()
-                poses[attraction.attracted] = Pose(attractionResult.attractedTargetPose.pointOfView+displacement,
-                    attractionResult.attractedTargetPose.view)
+            for connection in connectionChain:
+                connectionResult = connection.connect()
+                poses[connection.connected] = Pose(connectionResult.connectedTargetPose.pointOfView+displacement,
+                    connectionResult.connectedTargetPose.view)
                 if updatePointOfViews:
-                    displacement += attraction.attracted.pose.pointOfView-attractionResult.attractedTargetPose.pointOfView
+                    displacement += connection.connected.pose.pointOfView-connectionResult.connectedTargetPose.pointOfView
         return poses
     
 

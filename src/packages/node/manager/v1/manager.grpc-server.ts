@@ -5,8 +5,8 @@ import { RegisteredExtensionsResponse } from "./manager";
 import { GetRegisteredExtensionsRequest } from "./manager";
 import { ExtensionRegistrationResponse } from "./manager";
 import { ExtensionRegistrationRequest } from "./manager";
-import { AttractionResponse } from "./manager";
-import { AttractionRequest } from "./manager";
+import { ConnectionResponse } from "./manager";
+import { ConnectionRequest } from "./manager";
 import { Element } from "../../model/v1/model";
 import { ElementRequest } from "./manager";
 import type * as grpc from "@grpc/grpc-js";
@@ -23,11 +23,11 @@ export interface IManagerService extends grpc.UntypedServiceImplementation {
      */
     requestElement: grpc.handleUnaryCall<ElementRequest, Element>;
     /**
-     * Request the attracted element for an attraction.
+     * Request the connected element for an connection.
      *
-     * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
+     * @generated from protobuf rpc: RequestConnection(semio.manager.v1.ConnectionRequest) returns (semio.manager.v1.ConnectionResponse);
      */
-    requestAttraction: grpc.handleUnaryCall<AttractionRequest, AttractionResponse>;
+    requestConnection: grpc.handleUnaryCall<ConnectionRequest, ConnectionResponse>;
     /**
      * Register a service to the server.
      *
@@ -63,15 +63,15 @@ export const managerServiceDefinition: grpc.ServiceDefinition<IManagerService> =
         responseSerialize: value => Buffer.from(Element.toBinary(value)),
         requestSerialize: value => Buffer.from(ElementRequest.toBinary(value))
     },
-    requestAttraction: {
-        path: "/semio.manager.v1.ManagerService/RequestAttraction",
-        originalName: "RequestAttraction",
+    requestConnection: {
+        path: "/semio.manager.v1.ManagerService/RequestConnection",
+        originalName: "RequestConnection",
         requestStream: false,
         responseStream: false,
-        responseDeserialize: bytes => AttractionResponse.fromBinary(bytes),
-        requestDeserialize: bytes => AttractionRequest.fromBinary(bytes),
-        responseSerialize: value => Buffer.from(AttractionResponse.toBinary(value)),
-        requestSerialize: value => Buffer.from(AttractionRequest.toBinary(value))
+        responseDeserialize: bytes => ConnectionResponse.fromBinary(bytes),
+        requestDeserialize: bytes => ConnectionRequest.fromBinary(bytes),
+        responseSerialize: value => Buffer.from(ConnectionResponse.toBinary(value)),
+        requestSerialize: value => Buffer.from(ConnectionRequest.toBinary(value))
     },
     registerExtension: {
         path: "/semio.manager.v1.ManagerService/RegisterExtension",

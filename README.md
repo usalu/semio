@@ -1,6 +1,6 @@
 # semio
 
-You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ with others takes your all your time? Then try to capture the 🧬 and 💉 it into a new design. 🖇️ your elements and describe your drawing, simulation and other computations and let semio 🖧,🖩,✏️.
+You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ takes all your time? Then try to capture the 🧬 and 💉 it into a new design. 🖇️ your elements and describe your drawing, simulation and other computations and let semio 🖧,🖩,✏️.
 
 # Contribution
 

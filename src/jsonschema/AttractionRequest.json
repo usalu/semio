@@ -1,50 +1,50 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/AttractionRequest",
+    "$ref": "#/definitions/ConnectionRequest",
     "definitions": {
-        "AttractionRequest": {
+        "ConnectionRequest": {
             "properties": {
-                "attraction": {
-                    "$ref": "#/definitions/semio.model.v1.Attraction",
+                "connection": {
+                    "$ref": "#/definitions/semio.model.v1.Connection",
                     "additionalProperties": true
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction Request"
+            "title": "Connection Request"
         },
-        "semio.model.v1.Attraction": {
+        "semio.model.v1.Connection": {
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "Id that allows to distinguish it from other attractions."
+                    "description": "Id that allows to distinguish it from other connections."
                 },
-                "attractor": {
-                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                "connecting": {
+                    "$ref": "#/definitions/semio.model.v1.Connectable",
                     "additionalProperties": true,
-                    "description": "The attractor is expected to be the fixed sobject."
+                    "description": "The connecting is expected to be the fixed sobject."
                 },
-                "attracted": {
-                    "$ref": "#/definitions/semio.model.v1.AttractionParticipant",
+                "connected": {
+                    "$ref": "#/definitions/semio.model.v1.Connectable",
                     "additionalProperties": true,
-                    "description": "The attracted is expected to be the flexible sobject that adjusts its point of view."
+                    "description": "The connected is expected to be the flexible sobject that adjusts its point of view."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction",
-            "description": "An attraction can be used to attract an attracted attraction participant to an attractor attraction participant."
+            "title": "Connection",
+            "description": "An connection can be used to connect an connected connectable to an connecting connectable."
         },
-        "semio.model.v1.AttractionParticipant": {
+        "semio.model.v1.Connectable": {
             "properties": {
-                "participant_id": {
+                "sobject_id": {
                     "type": "string",
-                    "description": "Id of participating sobject."
+                    "description": "Id of connecting sobject."
                 },
                 "pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
                     "additionalProperties": true,
-                    "description": "The (rough) pose of the participating sobject. Note that in the attraction process it will most likely be displaced and adjusted."
+                    "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
                 },
                 "representationProtocol": {
                     "enum": [
@@ -64,7 +64,7 @@
                         }
                     ],
                     "title": "Representation Protocol",
-                    "description": "The representation protocol determines what type of representation the attractor will see of the attracted in the attraction process."
+                    "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process."
                 },
                 "ports": {
                     "items": {
@@ -78,13 +78,13 @@
                         "type": "string"
                     },
                     "type": "object",
-                    "description": "Optional parameters to bias the attraction."
+                    "description": "Optional parameters to bias the connection."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Attraction Participant",
-            "description": "An attraction participant participates in an attraction process."
+            "title": "Connection Participant",
+            "description": "A connectable connects in an connection process."
         },
         "semio.model.v1.Point": {
             "properties": {

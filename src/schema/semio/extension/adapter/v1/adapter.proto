@@ -9,8 +9,8 @@ import "model/v1/model.proto";
 
 // An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
 service AdapterService {
-  // Request an attraction point for the attracted.
-  rpc RequestAttractionPoint(AttractionPointRequest) returns (semio.model.v1.Point) {}
+  // Request an connection point for the connected.
+  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.model.v1.Point) {}
   // Request a specific representation
   rpc RequestRepresentation(RepresentationRequest) returns (semio.model.v1.Representation) {}
   // Request potentially all representations
@@ -23,12 +23,12 @@ message Adapting{
   string platform_url = 1;
 }
 
-message AttractionPointRequest {
-  // Url of attractor.
+message ConnectionPointRequest {
+  // Url of connecting.
   string url = 1;
-  // Parameters of attractor.
+  // Parameters of connecting.
   map<string,string> parameters = 2;
-  // Optional bias parameters of attracted.
+  // Optional bias parameters of connected.
   map<string,string> bias = 3;
   // Optional representation depending on protocol.
   oneof representation{

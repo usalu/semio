@@ -5,9 +5,9 @@ ui:
             Pose : FCADBFCE-C1C4-465B-BA12-B03132C0F258
             Sobject : A6B3D7AF-5B3D-445E-8F33-9B2A28DA1D22
             RepresentationProtocol: AE160EAD-1FBD-45C6-B1F0-9EE73636D9AB
-            AttractionParticipant: 61BEC70C-3BDB-4824-92FB-03E053253166
-            Attraction: 745B3720-2333-44F1-9B81-A41DAA7A894F
-            AttractionTree: 02C84754-4800-4EB1-BF27-12FB84C5585E
+            Connectable: 61BEC70C-3BDB-4824-92FB-03E053253166
+            Connection: 745B3720-2333-44F1-9B81-A41DAA7A894F
+            Assembly: 02C84754-4800-4EB1-BF27-12FB84C5585E
             LayoutStrategy: 9F6C33F9-EAF5-40A5-9C27-B5B8110A87EC
             Layout : 4D8B21C7-8F20-4BC2-B6FB-6DDC058B27F1
             Representation: 9B039F8F-AC2D-4079-8D5A-675350861B9C
@@ -18,9 +18,9 @@ ui:
                 construct:
                     Parameter : 94696A8F-8FF0-4CD0-919B-029252B68BCF
                     Sobject : 6A1FE23A-C11F-43E3-B609-5A50BE7F2EE3
-                    Attraction: 2761156E-6A70-4CAC-B50B-42F410C406D2
-                    AttractionParticipant: C20F4D78-1178-4700-973F-6AB81DAC35F1
-                    AttractionTree: 712F6DA6-F74D-449F-83CE-956255450413
+                    Connection: 2761156E-6A70-4CAC-B50B-42F410C406D2
+                    Connectable: C20F4D78-1178-4700-973F-6AB81DAC35F1
+                    Assembly: 712F6DA6-F74D-449F-83CE-956255450413
                     Layout : E866DD2D-3A02-4540-8A05-F9C0387F7503
                     Element : 
                     Design :

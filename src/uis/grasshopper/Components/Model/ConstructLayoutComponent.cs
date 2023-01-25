@@ -22,13 +22,13 @@ namespace Semio.UI.Grasshopper
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddParameter(new SobjectParam(),"Sobjects", "S", "", GH_ParamAccess.list);
-            pManager.AddParameter(new AttractionParam(), "Attractions", "A", "", GH_ParamAccess.list);
+            pManager.AddParameter(new ConnectionParam(), "Connections", "A", "", GH_ParamAccess.list);
             pManager[1].Optional = true;
             pManager.AddParameter(new SobjectParam(),"Root Sobjects", "R", "", GH_ParamAccess.list);
             pManager[2].Optional = true;
             pManager.AddParameter(new LayoutStrategyParam(), "Layout Strategy", "LS","",GH_ParamAccess.item);
             pManager[3].Optional = true;
-            pManager.AddParameter(new AttractionTreeParam(),"Attraction Tree", "AT", "", GH_ParamAccess.list);
+            pManager.AddParameter(new AssemblyParam(),"Assembly", "AT", "", GH_ParamAccess.list);
             pManager[4].Optional = true;
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -40,8 +40,8 @@ namespace Semio.UI.Grasshopper
             var sobjects = new List<SobjectGoo>();
             if (!DA.GetDataList(0, sobjects)) return;
 
-            var attractions = new List<AttractionGoo>();
-            DA.GetDataList(1, attractions);
+            var connections = new List<ConnectionGoo>();
+            DA.GetDataList(1, connections);
 
             var rootSobjects = new List<SobjectGoo>();
             DA.GetData(2, ref rootSobjects);
@@ -49,8 +49,8 @@ namespace Semio.UI.Grasshopper
             LayoutStrategyGoo strategy = new();
             DA.GetData(3, ref strategy);
 
-            var attractionTrees = new List<AttractionTreeGoo>();
-            DA.GetDataList(4, attractionTrees);
+            var assemblies = new List<AssemblyGoo>();
+            DA.GetDataList(4, assemblies);
 
             Layout layout = new Layout()
             {
@@ -58,9 +58,9 @@ namespace Semio.UI.Grasshopper
             };
 
             layout.Sobjects.AddRange(sobjects.Select(x => x.Value));
-            layout.Attractions.AddRange(attractions.Select(x => x.Value));
+            layout.Connections.AddRange(connections.Select(x => x.Value));
             layout.RootsSobjectsIds.AddRange(rootSobjects.Select(x=>x.Value.Id));
-            layout.AttractionTrees.AddRange(attractionTrees.Select(x => x.Value));
+            layout.Assemblies.AddRange(assemblies.Select(x => x.Value));
 
             DA.SetData(0, new LayoutGoo(layout));
         }

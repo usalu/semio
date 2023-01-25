@@ -1,6 +1,6 @@
 # # Behaviour that can be dynamically added at runtime (aka monkey patching) to classes
  
-# from semio.model import Point as _Point, Pose, Attraction as _Attraction
+# from semio.model import Point as _Point, Pose, Connection as _Connection
 # from mathutils import Vector
 
 # class Point(_Point):
@@ -77,25 +77,25 @@
 #     return self.getWorldPointOfView(worldRepresentationLike)
 
 
-# # Attraction behaviour
+# # Connection behaviour
 
-# def attract(self: Attraction):
-#         """Returns the pose of the attracted sobject after getting attracted to the attractor.
-#         attractedMeetingInRegardsToAttractorMeetingPoint (bool) : If true attracted will choose meeting point in regards to meeting point from attracted.
-#         Otherwise the attracted will choose the meeting point in regards to the point of view from the attractor. """
+# def connect(self: Connection):
+#         """Returns the pose of the connected sobject after getting connected to the connecting.
+#         connectedMeetingInRegardsToAttractorMeetingPoint (bool) : If true connected will choose meeting point in regards to meeting point from connected.
+#         Otherwise the connected will choose the meeting point in regards to the point of view from the connecting. """
 
-#         attractedAttractionParameters = self.attracted.strategy.
+#         connectedConnectionParameters = self.connected.strategy.
 
-#         attractorPointFromAttractor = self.attractor.getAttractionPoint(attractedAttractionParameters)
-#         attractorPoint =  self.attractor.pose.getWorldPointOfView(attractorPointFromAttractor)
+#         connectingPointFromAttractor = self.connecting.getConnectionPoint(connectedConnectionParameters)
+#         connectingPoint =  self.connecting.pose.getWorldPointOfView(connectingPointFromAttractor)
 
-#         attractorAttractionParameters = self.attractorAttractionProtocol.getAttractionParameters()
-#         attractedPointFromAttracted = self.attracted.getAttractionPoint(attractorAttractionParameters,self.biasAttracted)
-#         #This is the point that will be attracted from the attracted but only relative from the attracted point of view.
-#         #The point of view of the attracted is irrelevant after the attraction points have been received.
-#         relativeAttractedPoint = self.attracted.pose.getWorldPointOfView(attractedPointFromAttracted,considerPointOfView=False)
+#         connectingConnectionParameters = self.connectingConnectionProtocol.getConnectionParameters()
+#         connectedPointFromAttracted = self.connected.getConnectionPoint(connectingConnectionParameters,self.biasAttracted)
+#         #This is the point that will be connected from the connected but only relative from the connected point of view.
+#         #The point of view of the connected is irrelevant after the connection points have been received.
+#         relativeAttractedPoint = self.connected.pose.getWorldPointOfView(connectedPointFromAttracted,considerPointOfView=False)
 
-#         attractedTargetPointOfViewFromWorld = attractorPoint-relativeAttractedPoint
+#         connectedTargetPointOfViewFromWorld = connectingPoint-relativeAttractedPoint
 
-#         return AttractionResult(Pose(attractedTargetPointOfViewFromWorld,self.attracted.pose.view),
-#             attractorPoint,attractorPointFromAttractor,relativeAttractedPoint,attractedPointFromAttracted)
+#         return ConnectionResult(Pose(connectedTargetPointOfViewFromWorld,self.connected.pose.view),
+#             connectingPoint,connectingPointFromAttractor,relativeAttractedPoint,connectedPointFromAttracted)

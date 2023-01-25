@@ -19,9 +19,9 @@ namespace Semio.UI.Grasshopper.Goos
         {
             Value = new LayoutStrategy();
         }
-        public LayoutStrategyGoo(LayoutStrategy attraction)
+        public LayoutStrategyGoo(LayoutStrategy connection)
         {
-            Value = attraction;
+            Value = connection;
         }
         public override IGH_Goo Duplicate() => new LayoutStrategyGoo(Value);
         public override string TypeName => "LayoutStrategy";

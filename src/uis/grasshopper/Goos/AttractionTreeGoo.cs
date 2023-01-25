@@ -12,19 +12,19 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class AttractionTreeGoo : SemioGoo<AttractionTree>
+    public class AssemblyGoo : SemioGoo<Assembly>
     {
-        public AttractionTreeGoo()
+        public AssemblyGoo()
         {
-            Value = new AttractionTree();
+            Value = new Assembly();
         }
 
-        public AttractionTreeGoo(AttractionTree attraction)
+        public AssemblyGoo(Assembly connection)
         {
-            Value = attraction;
+            Value = connection;
         }
-        public override IGH_Goo Duplicate() => new AttractionTreeGoo(Value.Clone());
-        public override string TypeName => AttractionTree.Descriptor.FullName;
-        public override string TypeDescription => AttractionTree.Descriptor.Declaration.LeadingComments;
+        public override IGH_Goo Duplicate() => new AssemblyGoo(Value.Clone());
+        public override string TypeName => Assembly.Descriptor.FullName;
+        public override string TypeDescription => Assembly.Descriptor.Declaration.LeadingComments;
     }
 }

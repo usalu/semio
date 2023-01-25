@@ -7,19 +7,19 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class AttractionRequest(_message.Message):
-    __slots__ = ["attraction"]
-    ATTRACTION_FIELD_NUMBER: _ClassVar[int]
-    attraction: _model_pb2.Attraction
-    def __init__(self, attraction: _Optional[_Union[_model_pb2.Attraction, _Mapping]] = ...) -> None: ...
+class ConnectionRequest(_message.Message):
+    __slots__ = ["connection"]
+    CONNECTION_FIELD_NUMBER: _ClassVar[int]
+    connection: _model_pb2.Connection
+    def __init__(self, connection: _Optional[_Union[_model_pb2.Connection, _Mapping]] = ...) -> None: ...
 
-class AttractionResponse(_message.Message):
-    __slots__ = ["attracted_pose", "attraction_point"]
-    ATTRACTED_POSE_FIELD_NUMBER: _ClassVar[int]
-    ATTRACTION_POINT_FIELD_NUMBER: _ClassVar[int]
-    attracted_pose: _model_pb2.Pose
-    attraction_point: _model_pb2.Point
-    def __init__(self, attracted_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., attraction_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
+class ConnectionResponse(_message.Message):
+    __slots__ = ["connected_pose", "connection_point"]
+    CONNECTED_POSE_FIELD_NUMBER: _ClassVar[int]
+    CONNECTION_POINT_FIELD_NUMBER: _ClassVar[int]
+    connected_pose: _model_pb2.Pose
+    connection_point: _model_pb2.Point
+    def __init__(self, connected_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., connection_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
 
 class ElementRequest(_message.Message):
     __slots__ = ["sobject", "target_representation_lod", "target_representation_name", "target_representation_platform", "targets_required"]

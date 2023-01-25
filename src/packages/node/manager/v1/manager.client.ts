@@ -8,8 +8,8 @@ import type { RegisteredExtensionsResponse } from "./manager";
 import type { GetRegisteredExtensionsRequest } from "./manager";
 import type { ExtensionRegistrationResponse } from "./manager";
 import type { ExtensionRegistrationRequest } from "./manager";
-import type { AttractionResponse } from "./manager";
-import type { AttractionRequest } from "./manager";
+import type { ConnectionResponse } from "./manager";
+import type { ConnectionRequest } from "./manager";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Element } from "../../model/v1/model";
 import type { ElementRequest } from "./manager";
@@ -28,11 +28,11 @@ export interface IManagerServiceClient {
      */
     requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
     /**
-     * Request the attracted element for an attraction.
+     * Request the connected element for an connection.
      *
-     * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
+     * @generated from protobuf rpc: RequestConnection(semio.manager.v1.ConnectionRequest) returns (semio.manager.v1.ConnectionResponse);
      */
-    requestAttraction(input: AttractionRequest, options?: RpcOptions): UnaryCall<AttractionRequest, AttractionResponse>;
+    requestConnection(input: ConnectionRequest, options?: RpcOptions): UnaryCall<ConnectionRequest, ConnectionResponse>;
     /**
      * Register a service to the server.
      *
@@ -67,13 +67,13 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
         return stackIntercept<ElementRequest, Element>("unary", this._transport, method, opt, input);
     }
     /**
-     * Request the attracted element for an attraction.
+     * Request the connected element for an connection.
      *
-     * @generated from protobuf rpc: RequestAttraction(semio.manager.v1.AttractionRequest) returns (semio.manager.v1.AttractionResponse);
+     * @generated from protobuf rpc: RequestConnection(semio.manager.v1.ConnectionRequest) returns (semio.manager.v1.ConnectionResponse);
      */
-    requestAttraction(input: AttractionRequest, options?: RpcOptions): UnaryCall<AttractionRequest, AttractionResponse> {
+    requestConnection(input: ConnectionRequest, options?: RpcOptions): UnaryCall<ConnectionRequest, ConnectionResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<AttractionRequest, AttractionResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<ConnectionRequest, ConnectionResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * Register a service to the server.

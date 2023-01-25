@@ -78,8 +78,8 @@ class ExtensionProxy(SemioProxy):
         self._transformerStub = TransformerServiceStub(insecure_channel(self.address))
         self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
-    def RequestAttractionPoint(self, request, context = None):
-        return self._adapterStub.RequestAttractionPoint(request,context)
+    def RequestConnectionPoint(self, request, context = None):
+        return self._adapterStub.RequestConnectionPoint(request,context)
 
     def RequestRepresentation(self, sobject:Sobject,  type: str = 'native', name: str = 'normal', lod: int = 0):
         return self._adapterStub.RequestRepresentation(request=RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))

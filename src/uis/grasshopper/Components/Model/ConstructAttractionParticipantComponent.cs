@@ -16,9 +16,9 @@ using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Model
 {
-    public class ConstructAttractionParticipantComponent : ConstructComponent
+    public class ConstructConnectableComponent : ConstructComponent
     {
-        public ConstructAttractionParticipantComponent() : base("Construct Attraction Participant", "Attraction Participant", "", "Semio", "Model")
+        public ConstructConnectableComponent() : base("Construct Connection Participant", "Connection Participant", "", "Semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -35,7 +35,7 @@ namespace Semio.UI.Grasshopper.Model
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddParameter(new AttractionParticipantParam());
+            pManager.AddParameter(new ConnectableParam());
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -55,20 +55,20 @@ namespace Semio.UI.Grasshopper.Model
             var bias = new List<ParameterGoo>();
             DA.GetDataList(3, bias);
 
-            var attractionParticipant = new AttractionParticipant()
+            var connectable = new Connectable()
             {
                 ParticipantId = participant.Value.Id,
                 RepresentationProtocol = representationProtocol,
             };
-            attractionParticipant.Ports.AddRange(ports);
-            attractionParticipant.Bias.Add(new MapField<string, string>
+            connectable.Ports.AddRange(ports);
+            connectable.Bias.Add(new MapField<string, string>
             {
                 bias.Select(x => new { x.Value.Name, x.Value.Value }).ToDictionary(x => x.Name, x => x.Value)
             });
 
-            DA.SetData(0, new AttractionParticipantGoo(attractionParticipant));
+            DA.SetData(0, new ConnectableGoo(connectable));
         }
         public override Guid ComponentGuid => new("C20F4D78-1178-4700-973F-6AB81DAC35F1");
-        protected override Bitmap Icon => Resources.icon_construct_attractionparticipant;
+        protected override Bitmap Icon => Resources.icon_construct_connectionparticipant;
     }
 }

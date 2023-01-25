@@ -12,20 +12,20 @@ using Semio.Model.V1;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class AttractionParticipantGoo : SemioGoo<AttractionParticipant>
+    public class ConnectableGoo : SemioGoo<Connectable>
     {
-        public AttractionParticipantGoo()
+        public ConnectableGoo()
         {
-            Value = new AttractionParticipant();
+            Value = new Connectable();
         }
 
-        public AttractionParticipantGoo(AttractionParticipant attraction)
+        public ConnectableGoo(Connectable connection)
         {
-            Value = attraction;
+            Value = connection;
         }
 
-        public override IGH_Goo Duplicate() => new AttractionParticipantGoo(Value.Clone());
-        public override string TypeName => AttractionParticipant.Descriptor.FullName;
-        public override string TypeDescription => AttractionParticipant.Descriptor.Declaration.LeadingComments;
+        public override IGH_Goo Duplicate() => new ConnectableGoo(Value.Clone());
+        public override string TypeName => Connectable.Descriptor.FullName;
+        public override string TypeDescription => Connectable.Descriptor.Declaration.LeadingComments;
     }
 }

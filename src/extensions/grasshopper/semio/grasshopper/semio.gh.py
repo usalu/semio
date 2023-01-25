@@ -2,7 +2,7 @@ from tempfile import TemporaryFile
 
 from semio.model import Point,Representation,Any
 from semio.extension import ExtensionServer
-from semio.extension.adapter import AdapterService, AttractionPointRequest, RepresentationRequest, RepresentationsRequest, Adapting
+from semio.extension.adapter import AdapterService, ConnectionPointRequest, RepresentationRequest, RepresentationsRequest, Adapting
 from semio.constants import PLATFORMS
 
 from grasshopper import parseModelFromOutput, callGrasshopper, encodeModel
@@ -15,14 +15,14 @@ class GrasshopperAdapter(AdapterService):
     def getDescriptions(self):
         return [Adapting(platform_name="mcneel/rhino/grasshopper")]
     
-    def RequestAttractionPoint(self, request : AttractionPointRequest, context):
+    def RequestConnectionPoint(self, request : ConnectionPointRequest, context):
         # parameters = {}
-        # attractedRepresentation = request.attracted_attractionStrategy.representation.body
-        # if attractedRepresentation.body:
-        #     parameters['ATTRACTED']= attractedRepresentation.body.ToJsonString()
-        # if request.attracted_attractionStrategy.port:
-        #     parameters['PORT']= request.attracted_attractionStrategy.port.ToJsonString()
-        # meetingPoint = parseSingleResults(callGrasshopper(request.attractor_url,parameters, self.computeUrl, self.computeUrl))[0]['ATTRACTIONPOINT']
+        # connectedRepresentation = request.connected_connectionStrategy.representation.body
+        # if connectedRepresentation.body:
+        #     parameters['ATTRACTED']= connectedRepresentation.body.ToJsonString()
+        # if request.connected_connectionStrategy.port:
+        #     parameters['PORT']= request.connected_connectionStrategy.port.ToJsonString()
+        # meetingPoint = parseSingleResults(callGrasshopper(request.connecting_url,parameters, self.computeUrl, self.computeUrl))[0]['ATTRACTIONPOINT']
         # return Point(meetingPoint.X,meetingPoint.Y,meetingPoint.Z)
         return Point()
 

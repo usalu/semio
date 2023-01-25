@@ -42,21 +42,21 @@
         }
       }
     ],
-    "attractions": [
+    "connections": [
       {
         "id": "1",
-        "attractor": {
+        "connecting": {
           "patricipantId": "1"
         },
-        "attracted": {
+        "connected": {
           "patricipantId": "2"
         }
       }
     ],
-    "attractionTrees": [
+    "assemblies": [
       {
         "children": [],
-        "attractionId": "1"
+        "connectionId": "1"
       }
     ],
     "stragegy": "LAYOUTSTRATEGY_BREADTHFIRST"
