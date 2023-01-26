@@ -295,19 +295,19 @@ export interface Element {
     description: string;
 }
 /**
- * An element occurance describes where an element occurs in the design.
+ * An element instance describes where an element is instantiated in the design.
  *
- * @generated from protobuf message semio.model.v1.ElementOccurance
+ * @generated from protobuf message semio.model.v1.ElementInstance
  */
-export interface ElementOccurance {
+export interface ElementInstance {
     /**
-     * Id of the element (occurance).
+     * Id of the element (instance).
      *
      * @generated from protobuf field: string element_id = 1;
      */
     elementId: string;
     /**
-     * Pose of the element (occurance).
+     * Pose of the element (instance).
      *
      * @generated from protobuf field: semio.model.v1.Pose element_pose = 2;
      */
@@ -324,9 +324,9 @@ export interface Design {
      */
     elements: Element[];
     /**
-     * @generated from protobuf field: repeated semio.model.v1.ElementOccurance elementOccurances = 2;
+     * @generated from protobuf field: repeated semio.model.v1.ElementInstance elementInstances = 2;
      */
-    elementOccurances: ElementOccurance[];
+    elementInstances: ElementInstance[];
 }
 /**
  * A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
@@ -1297,21 +1297,21 @@ class Element$Type extends MessageType<Element> {
  */
 export const Element = new Element$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ElementOccurance$Type extends MessageType<ElementOccurance> {
+class ElementInstance$Type extends MessageType<ElementInstance> {
     constructor() {
-        super("semio.model.v1.ElementOccurance", [
+        super("semio.model.v1.ElementInstance", [
             { no: 1, name: "element_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "element_pose", kind: "message", T: () => Pose }
         ]);
     }
-    create(value?: PartialMessage<ElementOccurance>): ElementOccurance {
+    create(value?: PartialMessage<ElementInstance>): ElementInstance {
         const message = { elementId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<ElementOccurance>(this, message, value);
+            reflectionMergePartial<ElementInstance>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ElementOccurance): ElementOccurance {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ElementInstance): ElementInstance {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -1333,7 +1333,7 @@ class ElementOccurance$Type extends MessageType<ElementOccurance> {
         }
         return message;
     }
-    internalBinaryWrite(message: ElementOccurance, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: ElementInstance, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string element_id = 1; */
         if (message.elementId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.elementId);
@@ -1347,19 +1347,19 @@ class ElementOccurance$Type extends MessageType<ElementOccurance> {
     }
 }
 /**
- * @generated MessageType for protobuf message semio.model.v1.ElementOccurance
+ * @generated MessageType for protobuf message semio.model.v1.ElementInstance
  */
-export const ElementOccurance = new ElementOccurance$Type();
+export const ElementInstance = new ElementInstance$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Design$Type extends MessageType<Design> {
     constructor() {
         super("semio.model.v1.Design", [
             { no: 1, name: "elements", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Element },
-            { no: 2, name: "elementOccurances", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ElementOccurance }
+            { no: 2, name: "elementInstances", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ElementInstance }
         ]);
     }
     create(value?: PartialMessage<Design>): Design {
-        const message = { elements: [], elementOccurances: [] };
+        const message = { elements: [], elementInstances: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Design>(this, message, value);
@@ -1373,8 +1373,8 @@ class Design$Type extends MessageType<Design> {
                 case /* repeated semio.model.v1.Element elements */ 1:
                     message.elements.push(Element.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated semio.model.v1.ElementOccurance elementOccurances */ 2:
-                    message.elementOccurances.push(ElementOccurance.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated semio.model.v1.ElementInstance elementInstances */ 2:
+                    message.elementInstances.push(ElementInstance.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1391,9 +1391,9 @@ class Design$Type extends MessageType<Design> {
         /* repeated semio.model.v1.Element elements = 1; */
         for (let i = 0; i < message.elements.length; i++)
             Element.internalBinaryWrite(message.elements[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.model.v1.ElementOccurance elementOccurances = 2; */
-        for (let i = 0; i < message.elementOccurances.length; i++)
-            ElementOccurance.internalBinaryWrite(message.elementOccurances[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* repeated semio.model.v1.ElementInstance elementInstances = 2; */
+        for (let i = 0; i < message.elementInstances.length; i++)
+            ElementInstance.internalBinaryWrite(message.elementInstances[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

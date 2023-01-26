@@ -1,23 +1,23 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/ElementOccurance",
+    "$ref": "#/definitions/ElementInstance",
     "definitions": {
-        "ElementOccurance": {
+        "ElementInstance": {
             "properties": {
                 "element_id": {
                     "type": "string",
-                    "description": "Id of the element (occurance)."
+                    "description": "Id of the element (instance)."
                 },
                 "element_pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
                     "additionalProperties": true,
-                    "description": "Pose of the element (occurance)."
+                    "description": "Pose of the element (instance)."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Element Occurance",
-            "description": "An element occurance describes where an element occurs in the design."
+            "title": "Element Instance",
+            "description": "An element instance describes where an element is instantiated in the design."
         },
         "semio.model.v1.Point": {
             "properties": {

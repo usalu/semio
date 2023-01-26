@@ -10,9 +10,9 @@
                     },
                     "type": "array"
                 },
-                "elementOccurances": {
+                "elementInstances": {
                     "items": {
-                        "$ref": "#/definitions/semio.model.v1.ElementOccurance"
+                        "$ref": "#/definitions/semio.model.v1.ElementInstance"
                     },
                     "type": "array"
                 }
@@ -44,22 +44,22 @@
             "title": "Element",
             "description": "An element is the atom of a design. It has several representations and a pose."
         },
-        "semio.model.v1.ElementOccurance": {
+        "semio.model.v1.ElementInstance": {
             "properties": {
                 "element_id": {
                     "type": "string",
-                    "description": "Id of the element (occurance)."
+                    "description": "Id of the element (instance)."
                 },
                 "element_pose": {
                     "$ref": "#/definitions/semio.model.v1.Pose",
                     "additionalProperties": true,
-                    "description": "Pose of the element (occurance)."
+                    "description": "Pose of the element (instance)."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Element Occurance",
-            "description": "An element occurance describes where an element occurs in the design."
+            "title": "Element Instance",
+            "description": "An element instance describes where an element is instantiated in the design."
         },
         "semio.model.v1.Point": {
             "properties": {

@@ -1095,20 +1095,20 @@ func (x *Element) GetDescription() string {
 	return ""
 }
 
-// An element occurance describes where an element occurs in the design.
-type ElementOccurance struct {
+// An element instance describes where an element is instantiated in the design.
+type ElementInstance struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Id of the element (occurance).
+	// Id of the element (instance).
 	ElementId string `protobuf:"bytes,1,opt,name=element_id,json=elementId,proto3" json:"element_id,omitempty"`
-	// Pose of the element (occurance).
+	// Pose of the element (instance).
 	ElementPose *Pose `protobuf:"bytes,2,opt,name=element_pose,json=elementPose,proto3" json:"element_pose,omitempty"`
 }
 
-func (x *ElementOccurance) Reset() {
-	*x = ElementOccurance{}
+func (x *ElementInstance) Reset() {
+	*x = ElementInstance{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_model_v1_model_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1116,13 +1116,13 @@ func (x *ElementOccurance) Reset() {
 	}
 }
 
-func (x *ElementOccurance) String() string {
+func (x *ElementInstance) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ElementOccurance) ProtoMessage() {}
+func (*ElementInstance) ProtoMessage() {}
 
-func (x *ElementOccurance) ProtoReflect() protoreflect.Message {
+func (x *ElementInstance) ProtoReflect() protoreflect.Message {
 	mi := &file_model_v1_model_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1134,19 +1134,19 @@ func (x *ElementOccurance) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ElementOccurance.ProtoReflect.Descriptor instead.
-func (*ElementOccurance) Descriptor() ([]byte, []int) {
+// Deprecated: Use ElementInstance.ProtoReflect.Descriptor instead.
+func (*ElementInstance) Descriptor() ([]byte, []int) {
 	return file_model_v1_model_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *ElementOccurance) GetElementId() string {
+func (x *ElementInstance) GetElementId() string {
 	if x != nil {
 		return x.ElementId
 	}
 	return ""
 }
 
-func (x *ElementOccurance) GetElementPose() *Pose {
+func (x *ElementInstance) GetElementPose() *Pose {
 	if x != nil {
 		return x.ElementPose
 	}
@@ -1160,7 +1160,7 @@ type Design struct {
 	unknownFields protoimpl.UnknownFields
 
 	Elements          []*Element          `protobuf:"bytes,1,rep,name=elements,proto3" json:"elements,omitempty"`
-	ElementOccurances []*ElementOccurance `protobuf:"bytes,2,rep,name=elementOccurances,proto3" json:"elementOccurances,omitempty"`
+	ElementInstances []*ElementInstance `protobuf:"bytes,2,rep,name=elementInstances,proto3" json:"elementInstances,omitempty"`
 }
 
 func (x *Design) Reset() {
@@ -1202,9 +1202,9 @@ func (x *Design) GetElements() []*Element {
 	return nil
 }
 
-func (x *Design) GetElementOccurances() []*ElementOccurance {
+func (x *Design) GetElementInstances() []*ElementInstance {
 	if x != nil {
-		return x.ElementOccurances
+		return x.ElementInstances
 	}
 	return nil
 }
@@ -1620,7 +1620,7 @@ var file_model_v1_model_proto_goTypes = []interface{}{
 	(*Assembly)(nil),                   // 12: semio.model.v1.Assembly
 	(*Layout)(nil),                     // 13: semio.model.v1.Layout
 	(*Element)(nil),                    // 14: semio.model.v1.Element
-	(*ElementOccurance)(nil),           // 15: semio.model.v1.ElementOccurance
+	(*ElementInstance)(nil),           // 15: semio.model.v1.ElementInstance
 	(*Design)(nil),                     // 16: semio.model.v1.Design
 	(*LayoutModification)(nil),         // 17: semio.model.v1.LayoutModification
 	(*LayoutModificationStrategy)(nil), // 18: semio.model.v1.LayoutModificationStrategy
@@ -1646,9 +1646,9 @@ var file_model_v1_model_proto_depIdxs = []int32{
 	4,  // 14: semio.model.v1.Layout.strategy:type_name -> semio.model.v1.LayoutStrategy
 	12, // 15: semio.model.v1.Layout.assemblies:type_name -> semio.model.v1.Assembly
 	8,  // 16: semio.model.v1.Element.representations:type_name -> semio.model.v1.Representation
-	7,  // 17: semio.model.v1.ElementOccurance.element_pose:type_name -> semio.model.v1.Pose
+	7,  // 17: semio.model.v1.ElementInstance.element_pose:type_name -> semio.model.v1.Pose
 	14, // 18: semio.model.v1.Design.elements:type_name -> semio.model.v1.Element
-	15, // 19: semio.model.v1.Design.elementOccurances:type_name -> semio.model.v1.ElementOccurance
+	15, // 19: semio.model.v1.Design.elementInstances:type_name -> semio.model.v1.ElementInstance
 	13, // 20: semio.model.v1.LayoutModification.context:type_name -> semio.model.v1.Layout
 	13, // 21: semio.model.v1.LayoutModification.modified_context:type_name -> semio.model.v1.Layout
 	17, // 22: semio.model.v1.Decision.modification:type_name -> semio.model.v1.LayoutModification
@@ -1787,7 +1787,7 @@ func file_model_v1_model_proto_init() {
 			}
 		}
 		file_model_v1_model_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ElementOccurance); i {
+			switch v := v.(*ElementInstance); i {
 			case 0:
 				return &v.state
 			case 1:

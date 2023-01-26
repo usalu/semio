@@ -139,6 +139,14 @@ message Sobject {
   map<string,string> parameters = 3;
 }
 
+// An instance describes when something is instantiated in the design.
+message Instance{
+  // Id of the instance.
+  string id = 1;
+  // Id of the type
+  string type_id = 2;
+}
+
 // The representation protocol determines what type of representation the connecting will see of the connected in the connection process.
 enum RepresentationProtocol{
   // The connecting sees no representation of the connected.
@@ -149,28 +157,34 @@ enum RepresentationProtocol{
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
+message ConnectionParameters {
+   // An optional representation of the participant.
+   RepresentationProtocol representationProtocol = 2;
+   // Optional port names to connect to. The hierarchy should matter
+   repeated string ports = 3;
+   // Optional parameters to bias the connection.
+   map<string,string> bias = 4;
+}
+
 // A connectable connects in an connection process.
 message Connectable {
   // Id of connecting sobject.
   string sobject_id = 1;
-  // The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted.
-  Pose pose = 2;
-  // An optional representation of the participant.
-  RepresentationProtocol representationProtocol = 3;
-  // Optional port names to connect to. The hierarchy should matter
-  repeated string ports = 4;
-  // Optional parameters to bias the connection.
-  map<string,string> bias = 5;
+  ConnectionParameters connectionParameters = 2;
 }
 
 // An connection can be used to connect two connectables.
 message Connection {
-  // Id that allows to distinguish it from other connections.
-  string id = 1;
   // The connecting sobject. It is interchangable with the connected.
-  Connectable connecting = 2;
+  Connectable connecting = 1;
   // The connected sobject. It is interchangable with the connecting.
-  Connectable connected = 3;
+  Connectable connected = 2;
+}
+
+message Connection {
+  string connecting_sobject_id = 1;
+  sting connected_sobject_id = 2;
+
 }
 
 // An assembly (tree) defines a subset of a layout that can be assembled unambiguously.
@@ -193,13 +207,18 @@ enum LayoutStrategy {
 message Layout {
   // Sobjects (nodes) that are part of the layout (graph).
   repeated Sobject sobjects = 1;
+  // All instances of sobjects.
+  repeated Instance sobjects_instances = 2;
+  // A dictionary with the instance id as key and the pose as value.
+  map<string,Pose> sobjects_instances_poses = 3;
   // Connections (edges) that are part of the layout (graph).
-  repeated Connection connections = 2;
-  LayoutStrategy strategy = 3;
+  repeated Connection connections = 3;
+
+  LayoutStrategy strategy = 5;
   // Optional assemblies that can possibly unambiguously describe the layout order of sobjects.
-  // Most of the time this field is only necissary due to elements that don't work well together in a general way.
+  // Most of the time this field is only necissary when elements that don't work well together in a general way.
   // Therefore if you can update the element definitions to be more robust, rather use your time for that.
-  repeated Assembly assemblies = 4;
+  repeated Assembly assemblies = 6;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
@@ -211,18 +230,10 @@ message Element {
   string description = 3;
 }
 
-// An element occurance describes where an element occurs in the design.
-message ElementOccurance{
-  // Id of the element (occurance).
-  string element_id = 1;
-  // Pose of the element (occurance).
-  Pose element_pose = 2;
-}
-
 // A design is an aggregation of elements.
 message Design {
   repeated Element elements = 1;
-  repeated ElementOccurance elementOccurances = 2;
+  repeated Instance element_instances = 2;
 }
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.

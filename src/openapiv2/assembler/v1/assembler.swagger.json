@@ -120,10 +120,10 @@
             "$ref": "#/definitions/v1Element"
           }
         },
-        "elementOccurances": {
+        "elementInstances": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1ElementOccurance"
+            "$ref": "#/definitions/v1ElementInstance"
           }
         }
       },
@@ -149,19 +149,19 @@
       },
       "description": "An element is the atom of a design. It has several representations and a pose."
     },
-    "v1ElementOccurance": {
+    "v1ElementInstance": {
       "type": "object",
       "properties": {
         "elementId": {
           "type": "string",
-          "description": "Id of the element (occurance)."
+          "description": "Id of the element (instance)."
         },
         "elementPose": {
           "$ref": "#/definitions/v1Pose",
-          "description": "Pose of the element (occurance)."
+          "description": "Pose of the element (instance)."
         }
       },
-      "description": "An element occurance describes where an element occurs in the design."
+      "description": "An element instance describes where an element is instantiated in the design."
     },
     "v1Encoding": {
       "type": "string",

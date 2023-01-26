@@ -90,12 +90,12 @@ class Decision(_message.Message):
     def __init__(self, modification: _Optional[_Union[LayoutModification, _Mapping]] = ..., strategy: _Optional[_Union[LayoutModificationStrategy, _Mapping]] = ...) -> None: ...
 
 class Design(_message.Message):
-    __slots__ = ["elementOccurances", "elements"]
+    __slots__ = ["elementInstances", "elements"]
     ELEMENTOCCURANCES_FIELD_NUMBER: _ClassVar[int]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
-    elementOccurances: _containers.RepeatedCompositeFieldContainer[ElementOccurance]
+    elementInstances: _containers.RepeatedCompositeFieldContainer[ElementInstance]
     elements: _containers.RepeatedCompositeFieldContainer[Element]
-    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementOccurances: _Optional[_Iterable[_Union[ElementOccurance, _Mapping]]] = ...) -> None: ...
+    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementInstances: _Optional[_Iterable[_Union[ElementInstance, _Mapping]]] = ...) -> None: ...
 
 class Element(_message.Message):
     __slots__ = ["description", "id", "representations"]
@@ -107,7 +107,7 @@ class Element(_message.Message):
     representations: _containers.RepeatedCompositeFieldContainer[Representation]
     def __init__(self, id: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
 
-class ElementOccurance(_message.Message):
+class ElementInstance(_message.Message):
     __slots__ = ["element_id", "element_pose"]
     ELEMENT_ID_FIELD_NUMBER: _ClassVar[int]
     ELEMENT_POSE_FIELD_NUMBER: _ClassVar[int]
