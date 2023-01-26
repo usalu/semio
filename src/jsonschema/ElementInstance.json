@@ -1,45 +1,23 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/RepresentationRequest",
+    "$ref": "#/definitions/ElementInstance",
     "definitions": {
-        "RepresentationRequest": {
+        "ElementInstance": {
             "properties": {
-                "sobject": {
-                    "$ref": "#/definitions/semio.model.v1.Sobject",
-                    "additionalProperties": true
-                },
-                "type": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "lod": {
-                    "type": "string"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Representation Request"
-        },
-        "semio.model.v1.Plan": {
-            "properties": {
-                "url": {
+                "element_id": {
                     "type": "string",
-                    "description": "The url of the element definition."
+                    "description": "The id of the element."
                 },
-                "parameters": {
-                    "additionalProperties": {
-                        "type": "string"
-                    },
-                    "type": "object",
-                    "description": "Optional parameters for the element."
+                "pose": {
+                    "$ref": "#/definitions/semio.model.v1.Pose",
+                    "additionalProperties": true,
+                    "description": "The pose of the element instance."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Plan",
-            "description": "A plan for an element."
+            "title": "Element Instance",
+            "description": "An element is the atom of a design. It has several representations and a pose."
         },
         "semio.model.v1.Point": {
             "properties": {
@@ -96,28 +74,6 @@
             "type": "object",
             "title": "Quaternion",
             "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
-        },
-        "semio.model.v1.Sobject": {
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "description": "Id that allows to distinguish it from other sobjects."
-                },
-                "pose": {
-                    "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true,
-                    "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
-                },
-                "plan": {
-                    "$ref": "#/definitions/semio.model.v1.Plan",
-                    "additionalProperties": true,
-                    "description": "The plan for the element."
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Sobject",
-            "description": "Instance information for an element."
         }
     }
 }

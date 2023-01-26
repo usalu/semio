@@ -68,10 +68,6 @@
           "type": "string",
           "description": "Id of connecting sobject."
         },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
-        },
         "representationProtocol": {
           "$ref": "#/definitions/v1RepresentationProtocol",
           "description": "An optional representation of the participant."
@@ -96,10 +92,6 @@
     "v1Connection": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Id that allows to distinguish it from other connections."
-        },
         "connecting": {
           "$ref": "#/definitions/v1Connectable",
           "description": "The connecting sobject. It is interchangable with the connected."
@@ -148,7 +140,7 @@
           "items": {
             "$ref": "#/definitions/v1Assembly"
           },
-          "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary due to elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
+          "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary when elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
         }
       },
       "description": "A layout (graph) is an assembly plan for a set of sobjects and their connections between each other."
@@ -170,7 +162,7 @@
       "properties": {
         "matchCount": {
           "type": "string",
-          "format": "int64",
+          "format": "uint64",
           "description": "The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough."
         }
       },
@@ -184,6 +176,23 @@
       ],
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
       "description": "A layout strategy affects in which orders connections are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
+    },
+    "v1Plan": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The url of the element definition."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters for the element."
+        }
+      },
+      "description": "A plan for an element."
     },
     "v1Point": {
       "type": "object",
@@ -257,16 +266,13 @@
           "type": "string",
           "description": "Id that allows to distinguish it from other sobjects."
         },
-        "url": {
-          "type": "string",
-          "description": "The url of the element definition."
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
         },
-        "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Parameters for the element."
+        "plan": {
+          "$ref": "#/definitions/v1Plan",
+          "description": "The plan for the element."
         }
       },
       "description": "Instance information for an element."

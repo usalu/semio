@@ -8,11 +8,6 @@
                     "type": "string",
                     "description": "Id of connecting sobject."
                 },
-                "pose": {
-                    "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true,
-                    "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
-                },
                 "representationProtocol": {
                     "enum": [
                         "REPRESENTATIONPROTOCOL_NONE",
@@ -52,62 +47,6 @@
             "type": "object",
             "title": "Connectable",
             "description": "A connectable connects in an connection process."
-        },
-        "semio.model.v1.Point": {
-            "properties": {
-                "x": {
-                    "type": "number",
-                    "description": "x coordinate."
-                },
-                "y": {
-                    "type": "number",
-                    "description": "y coordinate"
-                },
-                "z": {
-                    "type": "number",
-                    "description": "z coordinate"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Point",
-            "description": "A 3d point with x,y,z coordinates."
-        },
-        "semio.model.v1.Pose": {
-            "properties": {
-                "point_of_view": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
-                },
-                "view": {
-                    "$ref": "#/definitions/semio.model.v1.Quaternion",
-                    "additionalProperties": true
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pose",
-            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
-        },
-        "semio.model.v1.Quaternion": {
-            "properties": {
-                "w": {
-                    "type": "number"
-                },
-                "x": {
-                    "type": "number"
-                },
-                "y": {
-                    "type": "number"
-                },
-                "z": {
-                    "type": "number"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Quaternion",
-            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
         }
     }
 }

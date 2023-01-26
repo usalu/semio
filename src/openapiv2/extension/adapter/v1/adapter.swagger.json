@@ -75,6 +75,23 @@
       "default": "FILETYPE_NATIVE",
       "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
     },
+    "v1Plan": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The url of the element definition."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters for the element."
+        }
+      },
+      "description": "A plan for an element."
+    },
     "v1Platform": {
       "type": "string",
       "enum": [
@@ -117,6 +134,40 @@
         }
       },
       "description": "A 3d point with x,y,z coordinates."
+    },
+    "v1Pose": {
+      "type": "object",
+      "properties": {
+        "pointOfView": {
+          "$ref": "#/definitions/v1Point"
+        },
+        "view": {
+          "$ref": "#/definitions/v1Quaternion"
+        }
+      },
+      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+    },
+    "v1Quaternion": {
+      "type": "object",
+      "properties": {
+        "w": {
+          "type": "number",
+          "format": "double"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "z": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
     },
     "v1Representation": {
       "type": "object",
@@ -175,16 +226,13 @@
           "type": "string",
           "description": "Id that allows to distinguish it from other sobjects."
         },
-        "url": {
-          "type": "string",
-          "description": "The url of the element definition."
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
         },
-        "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Parameters for the element."
+        "plan": {
+          "$ref": "#/definitions/v1Plan",
+          "description": "The plan for the element."
         }
       },
       "description": "Instance information for an element."

@@ -43,11 +43,6 @@
                     "type": "string",
                     "description": "Id of connecting sobject."
                 },
-                "pose": {
-                    "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true,
-                    "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
-                },
                 "representationProtocol": {
                     "enum": [
                         "REPRESENTATIONPROTOCOL_NONE",
@@ -90,10 +85,6 @@
         },
         "semio.model.v1.Connection": {
             "properties": {
-                "id": {
-                    "type": "string",
-                    "description": "Id that allows to distinguish it from other connections."
-                },
                 "connecting": {
                     "$ref": "#/definitions/semio.model.v1.Connectable",
                     "additionalProperties": true,
@@ -149,7 +140,7 @@
                         "$ref": "#/definitions/semio.model.v1.Assembly"
                     },
                     "type": "array",
-                    "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r Most of the time this field is only necissary due to elements that don't work well together in a general way.\r Therefore if you can update the element definitions to be more robust, rather use your time for that."
+                    "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r Most of the time this field is only necissary when elements that don't work well together in a general way.\r Therefore if you can update the element definitions to be more robust, rather use your time for that."
                 }
             },
             "additionalProperties": true,
@@ -184,6 +175,25 @@
             "type": "object",
             "title": "Layout Modification Strategy",
             "description": "A decision strategy holds information on how modifications are applied."
+        },
+        "semio.model.v1.Plan": {
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The url of the element definition."
+                },
+                "parameters": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Optional parameters for the element."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Plan",
+            "description": "A plan for an element."
         },
         "semio.model.v1.Point": {
             "properties": {
@@ -247,16 +257,15 @@
                     "type": "string",
                     "description": "Id that allows to distinguish it from other sobjects."
                 },
-                "url": {
-                    "type": "string",
-                    "description": "The url of the element definition."
+                "pose": {
+                    "$ref": "#/definitions/semio.model.v1.Pose",
+                    "additionalProperties": true,
+                    "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
                 },
-                "parameters": {
-                    "additionalProperties": {
-                        "type": "string"
-                    },
-                    "type": "object",
-                    "description": "Parameters for the element."
+                "plan": {
+                    "$ref": "#/definitions/semio.model.v1.Plan",
+                    "additionalProperties": true,
+                    "description": "The plan for the element."
                 }
             },
             "additionalProperties": true,

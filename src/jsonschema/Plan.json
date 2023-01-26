@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/Plan",
+    "definitions": {
+        "Plan": {
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The url of the element definition."
+                },
+                "parameters": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Optional parameters for the element."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Plan",
+            "description": "A plan for an element."
+        }
+    }
+}

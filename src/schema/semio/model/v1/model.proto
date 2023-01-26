@@ -129,22 +129,22 @@ enum Platform {
   PLATFORM_DYNAMO = 2140300101;
 }
 
+// A plan for an element.
+message Plan {
+  // The url of the element definition.
+  string url = 1;
+  // Optional parameters for the element.
+  map<string,string> parameters = 2;
+}
+
 // Instance information for an element.
 message Sobject {
   // Id that allows to distinguish it from other sobjects.
   string id = 1;
-  // The url of the element definition.
-  string url = 2;
-  // Parameters for the element.
-  map<string,string> parameters = 3;
-}
-
-// An instance describes when something is instantiated in the design.
-message Instance{
-  // Id of the instance.
-  string id = 1;
-  // Id of the type
-  string type_id = 2;
+  // The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly.
+  Pose pose = 2;
+  // The plan for the element.
+  Plan plan = 3;
 }
 
 // The representation protocol determines what type of representation the connecting will see of the connected in the connection process.
@@ -157,20 +157,16 @@ enum RepresentationProtocol{
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
-message ConnectionParameters {
-   // An optional representation of the participant.
-   RepresentationProtocol representationProtocol = 2;
-   // Optional port names to connect to. The hierarchy should matter
-   repeated string ports = 3;
-   // Optional parameters to bias the connection.
-   map<string,string> bias = 4;
-}
-
 // A connectable connects in an connection process.
 message Connectable {
   // Id of connecting sobject.
   string sobject_id = 1;
-  ConnectionParameters connectionParameters = 2;
+  // An optional representation of the participant.
+  RepresentationProtocol representationProtocol = 2;
+  // Optional port names to connect to. The hierarchy should matter
+  repeated string ports = 3;
+  // Optional parameters to bias the connection.
+  map<string,string> bias = 4;
 }
 
 // An connection can be used to connect two connectables.
@@ -179,12 +175,6 @@ message Connection {
   Connectable connecting = 1;
   // The connected sobject. It is interchangable with the connecting.
   Connectable connected = 2;
-}
-
-message Connection {
-  string connecting_sobject_id = 1;
-  sting connected_sobject_id = 2;
-
 }
 
 // An assembly (tree) defines a subset of a layout that can be assembled unambiguously.
@@ -207,33 +197,39 @@ enum LayoutStrategy {
 message Layout {
   // Sobjects (nodes) that are part of the layout (graph).
   repeated Sobject sobjects = 1;
-  // All instances of sobjects.
-  repeated Instance sobjects_instances = 2;
-  // A dictionary with the instance id as key and the pose as value.
-  map<string,Pose> sobjects_instances_poses = 3;
   // Connections (edges) that are part of the layout (graph).
-  repeated Connection connections = 3;
-
-  LayoutStrategy strategy = 5;
+  repeated Connection connections = 2;
+  LayoutStrategy strategy = 3;
   // Optional assemblies that can possibly unambiguously describe the layout order of sobjects.
   // Most of the time this field is only necissary when elements that don't work well together in a general way.
   // Therefore if you can update the element definitions to be more robust, rather use your time for that.
-  repeated Assembly assemblies = 6;
+  repeated Assembly assemblies = 4;
+}
+
+// A prototype acts as a template from which an element can be cloned.
+message Prototype {
+  // The hash of the plan used for the construction of the prototype.
+  string plan_hash = 1;
+  // Representations of the prototype.
+  repeated Representation representations = 2;
+  // An optional human readable description of the prototype.
+  string description = 3;
 }
 
 // An element is the atom of a design. It has several representations and a pose.
 message Element {
-  // The id of the sobject that was used to create the element is also the element id.
-  string id = 1;
-  repeated Representation representations = 2;
-  // An optional human readable description of the element.
-  string description = 3;
+  // The hash of the plan for the prototype of the element.
+  string prototype_plan_hash = 1;
+  // The pose of the element instance.
+  Pose pose = 2;
+  // TODO: Think of a formalization for modifiers.
+  // repeated Modifier modifiers = 3;
 }
 
-// A design is an aggregation of elements.
+// A design is an aggregation of elements (actually element instances).
 message Design {
-  repeated Element elements = 1;
-  repeated Instance element_instances = 2;
+  repeated Prototype prototypes = 1;
+  repeated Element elements = 2;
 }
 
 // A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
@@ -245,7 +241,7 @@ message LayoutModification {
 // A decision strategy holds information on how modifications are applied.
 message LayoutModificationStrategy {
   // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
-  int64 match_count = 1;
+  uint64 match_count = 1;
 }
 
 // A decision is a layout modification with a strategy on how to apply it to a new layout.

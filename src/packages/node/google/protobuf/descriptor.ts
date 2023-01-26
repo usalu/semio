@@ -1326,7 +1326,7 @@ export interface SourceCodeInfo_Location {
      * location.
      *
      * Each element is a field number or an index.  They form a path from
-     * the root FileDescriptorProto to the place where the definition is instantiated.
+     * the root FileDescriptorProto to the place where the definition occurs.
      * For example, this path:
      *   [ 4, 3, 2, 7, 1 ]
      * refers to:

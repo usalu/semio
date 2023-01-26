@@ -61,10 +61,6 @@
           "type": "string",
           "description": "Id of connecting sobject."
         },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the connecting sobject. Note that in the connection process it will most likely be displaced and adjusted."
-        },
         "representationProtocol": {
           "$ref": "#/definitions/v1RepresentationProtocol",
           "description": "An optional representation of the participant."
@@ -89,10 +85,6 @@
     "v1Connection": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Id that allows to distinguish it from other connections."
-        },
         "connecting": {
           "$ref": "#/definitions/v1Connectable",
           "description": "The connecting sobject. It is interchangable with the connected."
@@ -130,34 +122,16 @@
     "v1Element": {
       "type": "object",
       "properties": {
-        "id": {
+        "prototypePlanHash": {
           "type": "string",
-          "description": "The id of the sobject that was used to create the element is also the element id."
+          "description": "The hash of the plan for the prototype of the element."
         },
-        "representations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Representation"
-          }
-        },
-        "description": {
-          "type": "string",
-          "description": "An optional human readable description of the element."
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The pose of the element instance.\n\nTODO: Think of a formalization for modifiers.\r\n repeated Modifier modifiers = 3;"
         }
       },
       "description": "An element is the atom of a design. It has several representations and a pose."
-    },
-    "v1Encoding": {
-      "type": "string",
-      "enum": [
-        "ENCODING_TEXT_UFT8",
-        "ENCODING_TEXT_UFT16",
-        "ENCODING_TEXT_UFT32",
-        "ENCODING_TEXT_ASCII",
-        "ENCODING_TEXT_BASE64"
-      ],
-      "default": "ENCODING_TEXT_UFT8",
-      "description": "Encoding of a byte array.\n\n - ENCODING_TEXT_BASE64: Also ASCII but with further base 64 encoding of the text."
     },
     "v1Extending": {
       "type": "object",
@@ -205,24 +179,22 @@
         }
       }
     },
-    "v1FileType": {
-      "type": "string",
-      "enum": [
-        "FILETYPE_NATIVE",
-        "FILETYPE_JSON",
-        "FILETYPE_XML",
-        "FILETYPE_YAML",
-        "FILETYPE_TOML",
-        "FILETYPE_STEP",
-        "FILETYPE_PY",
-        "FILETYPE_C",
-        "FILETYPE_CPP",
-        "FILETYPE_CSHARP",
-        "FILETYPE_GO",
-        "FILETYPE_RUST"
-      ],
-      "default": "FILETYPE_NATIVE",
-      "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
+    "v1Plan": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The url of the element definition."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters for the element."
+        }
+      },
+      "description": "A plan for an element."
     },
     "v1Platform": {
       "type": "string",
@@ -313,45 +285,6 @@
         }
       }
     },
-    "v1Representation": {
-      "type": "object",
-      "properties": {
-        "body": {
-          "type": "string",
-          "format": "byte",
-          "description": "The body depends on the serialization format of the representation."
-        },
-        "encoding": {
-          "$ref": "#/definitions/v1Encoding",
-          "title": "Encoding of the body"
-        },
-        "fileType": {
-          "$ref": "#/definitions/v1FileType",
-          "description": "Use the abbreviation of the platform. You can find that in the constants part of the package."
-        },
-        "platform": {
-          "$ref": "#/definitions/v1Platform",
-          "title": "Native platform of representation"
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the representation for humans to understand what the purpose of this representation is."
-        },
-        "concepts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
-        },
-        "lod": {
-          "type": "string",
-          "format": "int64",
-          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
-        }
-      },
-      "description": "A representation for an element. Basically a file with some semio specific metadata."
-    },
     "v1RepresentationProtocol": {
       "type": "string",
       "enum": [
@@ -369,16 +302,13 @@
           "type": "string",
           "description": "Id that allows to distinguish it from other sobjects."
         },
-        "url": {
-          "type": "string",
-          "description": "The url of the element definition."
+        "pose": {
+          "$ref": "#/definitions/v1Pose",
+          "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
         },
-        "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Parameters for the element."
+        "plan": {
+          "$ref": "#/definitions/v1Plan",
+          "description": "The plan for the element."
         }
       },
       "description": "Instance information for an element."

@@ -51,7 +51,7 @@ class Assembly(_message.Message):
     def __init__(self, sobject_id: _Optional[str] = ..., parts: _Optional[_Iterable[_Union[Assembly, _Mapping]]] = ...) -> None: ...
 
 class Connectable(_message.Message):
-    __slots__ = ["bias", "ports", "pose", "representationProtocol", "sobject_id"]
+    __slots__ = ["bias", "ports", "representationProtocol", "sobject_id"]
     class BiasEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -61,25 +61,21 @@ class Connectable(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     BIAS_FIELD_NUMBER: _ClassVar[int]
     PORTS_FIELD_NUMBER: _ClassVar[int]
-    POSE_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
     SOBJECT_ID_FIELD_NUMBER: _ClassVar[int]
     bias: _containers.ScalarMap[str, str]
     ports: _containers.RepeatedScalarFieldContainer[str]
-    pose: Pose
     representationProtocol: RepresentationProtocol
     sobject_id: str
-    def __init__(self, sobject_id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, sobject_id: _Optional[str] = ..., representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class Connection(_message.Message):
-    __slots__ = ["connected", "connecting", "id"]
+    __slots__ = ["connected", "connecting"]
     CONNECTED_FIELD_NUMBER: _ClassVar[int]
     CONNECTING_FIELD_NUMBER: _ClassVar[int]
-    ID_FIELD_NUMBER: _ClassVar[int]
     connected: Connectable
     connecting: Connectable
-    id: str
-    def __init__(self, id: _Optional[str] = ..., connecting: _Optional[_Union[Connectable, _Mapping]] = ..., connected: _Optional[_Union[Connectable, _Mapping]] = ...) -> None: ...
+    def __init__(self, connecting: _Optional[_Union[Connectable, _Mapping]] = ..., connected: _Optional[_Union[Connectable, _Mapping]] = ...) -> None: ...
 
 class Decision(_message.Message):
     __slots__ = ["modification", "strategy"]
@@ -90,30 +86,20 @@ class Decision(_message.Message):
     def __init__(self, modification: _Optional[_Union[LayoutModification, _Mapping]] = ..., strategy: _Optional[_Union[LayoutModificationStrategy, _Mapping]] = ...) -> None: ...
 
 class Design(_message.Message):
-    __slots__ = ["elementInstances", "elements"]
-    ELEMENTOCCURANCES_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["elements", "prototypes"]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
-    elementInstances: _containers.RepeatedCompositeFieldContainer[ElementInstance]
+    PROTOTYPES_FIELD_NUMBER: _ClassVar[int]
     elements: _containers.RepeatedCompositeFieldContainer[Element]
-    def __init__(self, elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ..., elementInstances: _Optional[_Iterable[_Union[ElementInstance, _Mapping]]] = ...) -> None: ...
+    prototypes: _containers.RepeatedCompositeFieldContainer[Prototype]
+    def __init__(self, prototypes: _Optional[_Iterable[_Union[Prototype, _Mapping]]] = ..., elements: _Optional[_Iterable[_Union[Element, _Mapping]]] = ...) -> None: ...
 
 class Element(_message.Message):
-    __slots__ = ["description", "id", "representations"]
-    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    ID_FIELD_NUMBER: _ClassVar[int]
-    REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
-    description: str
-    id: str
-    representations: _containers.RepeatedCompositeFieldContainer[Representation]
-    def __init__(self, id: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
-
-class ElementInstance(_message.Message):
-    __slots__ = ["element_id", "element_pose"]
-    ELEMENT_ID_FIELD_NUMBER: _ClassVar[int]
-    ELEMENT_POSE_FIELD_NUMBER: _ClassVar[int]
-    element_id: str
-    element_pose: Pose
-    def __init__(self, element_id: _Optional[str] = ..., element_pose: _Optional[_Union[Pose, _Mapping]] = ...) -> None: ...
+    __slots__ = ["pose", "prototype_plan_hash"]
+    POSE_FIELD_NUMBER: _ClassVar[int]
+    PROTOTYPE_PLAN_HASH_FIELD_NUMBER: _ClassVar[int]
+    pose: Pose
+    prototype_plan_hash: str
+    def __init__(self, prototype_plan_hash: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ...) -> None: ...
 
 class Layout(_message.Message):
     __slots__ = ["assemblies", "connections", "sobjects", "strategy"]
@@ -141,6 +127,21 @@ class LayoutModificationStrategy(_message.Message):
     match_count: int
     def __init__(self, match_count: _Optional[int] = ...) -> None: ...
 
+class Plan(_message.Message):
+    __slots__ = ["parameters", "url"]
+    class ParametersEntry(_message.Message):
+        __slots__ = ["key", "value"]
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    URL_FIELD_NUMBER: _ClassVar[int]
+    parameters: _containers.ScalarMap[str, str]
+    url: str
+    def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
+
 class Point(_message.Message):
     __slots__ = ["x", "y", "z"]
     X_FIELD_NUMBER: _ClassVar[int]
@@ -158,6 +159,16 @@ class Pose(_message.Message):
     point_of_view: Point
     view: Quaternion
     def __init__(self, point_of_view: _Optional[_Union[Point, _Mapping]] = ..., view: _Optional[_Union[Quaternion, _Mapping]] = ...) -> None: ...
+
+class Prototype(_message.Message):
+    __slots__ = ["description", "plan_hash", "representations"]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    PLAN_HASH_FIELD_NUMBER: _ClassVar[int]
+    REPRESENTATIONS_FIELD_NUMBER: _ClassVar[int]
+    description: str
+    plan_hash: str
+    representations: _containers.RepeatedCompositeFieldContainer[Representation]
+    def __init__(self, plan_hash: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
 
 class Quaternion(_message.Message):
     __slots__ = ["w", "x", "y", "z"]
@@ -190,21 +201,14 @@ class Representation(_message.Message):
     def __init__(self, body: _Optional[bytes] = ..., encoding: _Optional[_Union[Encoding, str]] = ..., file_type: _Optional[_Union[FileType, str]] = ..., platform: _Optional[_Union[Platform, str]] = ..., description: _Optional[str] = ..., concepts: _Optional[_Iterable[str]] = ..., lod: _Optional[int] = ...) -> None: ...
 
 class Sobject(_message.Message):
-    __slots__ = ["id", "parameters", "url"]
-    class ParametersEntry(_message.Message):
-        __slots__ = ["key", "value"]
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: str
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    __slots__ = ["id", "plan", "pose"]
     ID_FIELD_NUMBER: _ClassVar[int]
-    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
-    URL_FIELD_NUMBER: _ClassVar[int]
+    PLAN_FIELD_NUMBER: _ClassVar[int]
+    POSE_FIELD_NUMBER: _ClassVar[int]
     id: str
-    parameters: _containers.ScalarMap[str, str]
-    url: str
-    def __init__(self, id: _Optional[str] = ..., url: _Optional[str] = ..., parameters: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    plan: Plan
+    pose: Pose
+    def __init__(self, id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., plan: _Optional[_Union[Plan, _Mapping]] = ...) -> None: ...
 
 class Encoding(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []
