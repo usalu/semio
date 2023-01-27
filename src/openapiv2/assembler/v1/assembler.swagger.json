@@ -44,6 +44,17 @@
         }
       }
     },
+    "v1AssembleLayoutResponse": {
+      "type": "object",
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Element"
+          }
+        }
+      }
+    },
     "v1Assembly": {
       "type": "object",
       "properties": {
@@ -66,28 +77,14 @@
       "properties": {
         "sobjectId": {
           "type": "string",
-          "description": "Id of connecting sobject."
+          "description": "Id of connectable (sobject)."
         },
-        "representationProtocol": {
-          "$ref": "#/definitions/v1RepresentationProtocol",
-          "description": "An optional representation of the participant."
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Optional port names to connect to. The hierarchy should matter"
-        },
-        "bias": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Optional parameters to bias the connection."
+        "link": {
+          "$ref": "#/definitions/v1Link",
+          "description": "A link for the connectable (sobject)."
         }
       },
-      "description": "A connectable connects in an connection process."
+      "description": "A connectable (sobject) connects in an connection process."
     },
     "v1Connection": {
       "type": "object",
@@ -103,27 +100,13 @@
       },
       "description": "An connection can be used to connect two connectables."
     },
-    "v1Design": {
-      "type": "object",
-      "properties": {
-        "prototypes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Prototype"
-          }
-        },
-        "elements": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Element"
-          }
-        }
-      },
-      "description": "A design is an aggregation of elements (actually element instances)."
-    },
     "v1Element": {
       "type": "object",
       "properties": {
+        "sobjectId": {
+          "type": "string",
+          "description": "The sobject id that was used to construct the element."
+        },
         "prototypePlanHash": {
           "type": "string",
           "description": "The hash of the plan for the prototype of the element."
@@ -135,67 +118,6 @@
       },
       "description": "An element is the atom of a design. It has several representations and a pose."
     },
-    "v1Encoding": {
-      "type": "string",
-      "enum": [
-        "ENCODING_TEXT_UFT8",
-        "ENCODING_TEXT_UFT16",
-        "ENCODING_TEXT_UFT32",
-        "ENCODING_TEXT_ASCII",
-        "ENCODING_TEXT_BASE64"
-      ],
-      "default": "ENCODING_TEXT_UFT8",
-      "description": "Encoding of a byte array.\n\n - ENCODING_TEXT_BASE64: Also ASCII but with further base 64 encoding of the text."
-    },
-    "v1FileType": {
-      "type": "string",
-      "enum": [
-        "FILETYPE_NATIVE",
-        "FILETYPE_JSON",
-        "FILETYPE_XML",
-        "FILETYPE_YAML",
-        "FILETYPE_TOML",
-        "FILETYPE_STEP",
-        "FILETYPE_PY",
-        "FILETYPE_C",
-        "FILETYPE_CPP",
-        "FILETYPE_CSHARP",
-        "FILETYPE_GO",
-        "FILETYPE_RUST"
-      ],
-      "default": "FILETYPE_NATIVE",
-      "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
-    },
-    "v1Layout": {
-      "type": "object",
-      "properties": {
-        "sobjects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Sobject"
-          },
-          "description": "Sobjects (nodes) that are part of the layout (graph)."
-        },
-        "connections": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Connection"
-          },
-          "description": "Connections (edges) that are part of the layout (graph)."
-        },
-        "strategy": {
-          "$ref": "#/definitions/v1LayoutStrategy"
-        },
-        "assemblies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Assembly"
-          },
-          "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary when elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
-        }
-      },
-      "description": "A layout (graph) is an assembly plan for a set of sobjects and their connections between each other."
-    },
     "v1LayoutStrategy": {
       "type": "string",
       "enum": [
@@ -205,44 +127,87 @@
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
       "description": "A layout strategy affects in which orders connections are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
     },
+    "v1LayoutToAssembliesResponse": {
+      "type": "object",
+      "properties": {
+        "assemblies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Assembly"
+          }
+        }
+      }
+    },
+    "v1Link": {
+      "type": "object",
+      "properties": {
+        "representationProtocol": {
+          "$ref": "#/definitions/v1RepresentationProtocol",
+          "description": "An optional representation protocol for the link."
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional port names to connect to. The hierarchy should matter."
+        },
+        "bias": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters to bias the connection."
+        }
+      },
+      "description": "A link defines the parameters for a connectable."
+    },
+    "v1Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the parameter"
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Scope"
+          },
+          "description": "Optional context field to describe the context of the parameter."
+        },
+        "text": {
+          "type": "string"
+        },
+        "integerNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "number": {
+          "type": "number",
+          "format": "double"
+        },
+        "point": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
+    },
     "v1Plan": {
       "type": "object",
       "properties": {
         "url": {
           "type": "string",
-          "description": "The url of the element definition."
+          "description": "The url of the prototype definition."
         },
         "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Parameter"
           },
-          "description": "Optional parameters for the element."
+          "description": "Optional parameters for the prototype."
         }
       },
-      "description": "A plan for an element."
-    },
-    "v1Platform": {
-      "type": "string",
-      "enum": [
-        "PLATFORM_SEMIO",
-        "PLATFORM_THREE",
-        "PLATFORM_SVERCHOK",
-        "PLATFORM_IFCOPENSHELL",
-        "PLATFORM_CADQUERY",
-        "PLATFORM_FREECAD",
-        "PLATFORM_OPENSCAD",
-        "PLATFORM_JSCAD",
-        "PLATFORM_Fornjot",
-        "PLATFORM_TRUCK",
-        "PLATFORM_RHINO",
-        "PLATFORM_GRASSHOPPER",
-        "PLATFORM_REVIT",
-        "PLATFORM_DYNAMO"
-      ],
-      "default": "PLATFORM_SEMIO",
-      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
-      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,170:0BSD\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+      "description": "A plan for a prototype."
     },
     "v1Point": {
       "type": "object",
@@ -250,17 +215,17 @@
         "x": {
           "type": "number",
           "format": "double",
-          "description": "x coordinate."
+          "description": "X coordinate."
         },
         "y": {
           "type": "number",
           "format": "double",
-          "title": "y coordinate"
+          "title": "Y coordinate"
         },
         "z": {
           "type": "number",
           "format": "double",
-          "title": "z coordinate"
+          "title": "Z coordinate"
         }
       },
       "description": "A 3d point with x,y,z coordinates."
@@ -269,34 +234,15 @@
       "type": "object",
       "properties": {
         "pointOfView": {
-          "$ref": "#/definitions/v1Point"
+          "$ref": "#/definitions/v1Point",
+          "title": "Point of view (origin) from the pose (reference frame/coordinate system)"
         },
         "view": {
-          "$ref": "#/definitions/v1Quaternion"
+          "$ref": "#/definitions/v1Quaternion",
+          "title": "View (orientation) from the pose (reference frame/coordinate system)"
         }
       },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
-    },
-    "v1Prototype": {
-      "type": "object",
-      "properties": {
-        "planHash": {
-          "type": "string",
-          "description": "The hash of the plan used for the construction of the prototype."
-        },
-        "representations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Representation"
-          },
-          "description": "Representations of the prototype."
-        },
-        "description": {
-          "type": "string",
-          "description": "An optional human readable description of the prototype."
-        }
-      },
-      "description": "A prototype acts as a template from which an element can be cloned."
+      "description": "A pose is a static reference frame/coordinate system."
     },
     "v1Quaternion": {
       "type": "object",
@@ -318,46 +264,7 @@
           "format": "double"
         }
       },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
-    },
-    "v1Representation": {
-      "type": "object",
-      "properties": {
-        "body": {
-          "type": "string",
-          "format": "byte",
-          "description": "The body depends on the serialization format of the representation."
-        },
-        "encoding": {
-          "$ref": "#/definitions/v1Encoding",
-          "title": "Encoding of the body"
-        },
-        "fileType": {
-          "$ref": "#/definitions/v1FileType",
-          "description": "Use the abbreviation of the platform. You can find that in the constants part of the package."
-        },
-        "platform": {
-          "$ref": "#/definitions/v1Platform",
-          "title": "Native platform of representation"
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the representation for humans to understand what the purpose of this representation is."
-        },
-        "concepts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
-        },
-        "lod": {
-          "type": "string",
-          "format": "int64",
-          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
-        }
-      },
-      "description": "A representation for an element. Basically a file with some semio specific metadata."
+      "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
     },
     "v1RepresentationProtocol": {
       "type": "string",
@@ -368,6 +275,21 @@
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
       "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
+    },
+    "v1Scope": {
+      "type": "object",
+      "properties": {
+        "concept": {
+          "type": "string",
+          "title": "Concept for the scope e.g Fassade, Floor"
+        },
+        "order": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+        }
+      },
+      "description": "Describes the scope of a parameter."
     },
     "v1Sobject": {
       "type": "object",
@@ -382,7 +304,14 @@
         },
         "plan": {
           "$ref": "#/definitions/v1Plan",
-          "description": "The plan for the element."
+          "description": "The plan for the prototype."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Concept that are relevent for the sobject."
         }
       },
       "description": "Instance information for an element."

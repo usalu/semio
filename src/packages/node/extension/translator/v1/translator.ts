@@ -14,6 +14,7 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Pose } from "../../../model/v1/model";
 import { Representation } from "../../../model/v1/model";
+import { Platform } from "../../../model/v1/model";
 /**
  * Description what a translator is translating.
  *
@@ -21,9 +22,11 @@ import { Representation } from "../../../model/v1/model";
  */
 export interface Translating {
     /**
-     * @generated from protobuf field: string type_url = 1;
+     * Platform in which the translator can translate.
+     *
+     * @generated from protobuf field: semio.model.v1.Platform platform = 1;
      */
-    typeUrl: string;
+    platform: Platform;
 }
 /**
  * @generated from protobuf message semio.extension.translator.v1.TranslateRepresentationRequest
@@ -52,11 +55,11 @@ export interface TranslateRepresentationRequest {
 class Translating$Type extends MessageType<Translating> {
     constructor() {
         super("semio.extension.translator.v1.Translating", [
-            { no: 1, name: "type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
         ]);
     }
     create(value?: PartialMessage<Translating>): Translating {
-        const message = { typeUrl: "" };
+        const message = { platform: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Translating>(this, message, value);
@@ -67,8 +70,8 @@ class Translating$Type extends MessageType<Translating> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string type_url */ 1:
-                    message.typeUrl = reader.string();
+                case /* semio.model.v1.Platform platform */ 1:
+                    message.platform = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -82,9 +85,9 @@ class Translating$Type extends MessageType<Translating> {
         return message;
     }
     internalBinaryWrite(message: Translating, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string type_url = 1; */
-        if (message.typeUrl !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.typeUrl);
+        /* semio.model.v1.Platform platform = 1; */
+        if (message.platform !== 0)
+            writer.tag(1, WireType.Varint).int32(message.platform);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

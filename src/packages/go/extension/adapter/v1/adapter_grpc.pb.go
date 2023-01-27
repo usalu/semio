@@ -21,10 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AdapterServiceClient interface {
 	// Request an connection point for the connected.
 	RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error)
-	// Request a specific representation
-	RequestRepresentation(ctx context.Context, in *RepresentationRequest, opts ...grpc.CallOption) (*v1.Representation, error)
-	// Request potentially all representations
-	RequestRepresentations(ctx context.Context, in *RepresentationsRequest, opts ...grpc.CallOption) (*RepresentationsResponse, error)
+	// Request a prototype.
+	RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error)
 }
 
 type adapterServiceClient struct {
@@ -44,18 +42,9 @@ func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *C
 	return out, nil
 }
 
-func (c *adapterServiceClient) RequestRepresentation(ctx context.Context, in *RepresentationRequest, opts ...grpc.CallOption) (*v1.Representation, error) {
-	out := new(v1.Representation)
-	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestRepresentation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adapterServiceClient) RequestRepresentations(ctx context.Context, in *RepresentationsRequest, opts ...grpc.CallOption) (*RepresentationsResponse, error) {
-	out := new(RepresentationsResponse)
-	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestRepresentations", in, out, opts...)
+func (c *adapterServiceClient) RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error) {
+	out := new(v1.Prototype)
+	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestPrototype", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +57,8 @@ func (c *adapterServiceClient) RequestRepresentations(ctx context.Context, in *R
 type AdapterServiceServer interface {
 	// Request an connection point for the connected.
 	RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error)
-	// Request a specific representation
-	RequestRepresentation(context.Context, *RepresentationRequest) (*v1.Representation, error)
-	// Request potentially all representations
-	RequestRepresentations(context.Context, *RepresentationsRequest) (*RepresentationsResponse, error)
+	// Request a prototype.
+	RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error)
 	mustEmbedUnimplementedAdapterServiceServer()
 }
 
@@ -82,11 +69,8 @@ type UnimplementedAdapterServiceServer struct {
 func (UnimplementedAdapterServiceServer) RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestConnectionPoint not implemented")
 }
-func (UnimplementedAdapterServiceServer) RequestRepresentation(context.Context, *RepresentationRequest) (*v1.Representation, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestRepresentation not implemented")
-}
-func (UnimplementedAdapterServiceServer) RequestRepresentations(context.Context, *RepresentationsRequest) (*RepresentationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestRepresentations not implemented")
+func (UnimplementedAdapterServiceServer) RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestPrototype not implemented")
 }
 func (UnimplementedAdapterServiceServer) mustEmbedUnimplementedAdapterServiceServer() {}
 
@@ -119,38 +103,20 @@ func _AdapterService_RequestConnectionPoint_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdapterService_RequestRepresentation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RepresentationRequest)
+func _AdapterService_RequestPrototype_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrototypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdapterServiceServer).RequestRepresentation(ctx, in)
+		return srv.(AdapterServiceServer).RequestPrototype(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestRepresentation",
+		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestPrototype",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdapterServiceServer).RequestRepresentation(ctx, req.(*RepresentationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdapterService_RequestRepresentations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RepresentationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdapterServiceServer).RequestRepresentations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestRepresentations",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdapterServiceServer).RequestRepresentations(ctx, req.(*RepresentationsRequest))
+		return srv.(AdapterServiceServer).RequestPrototype(ctx, req.(*PrototypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -167,12 +133,8 @@ var AdapterService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AdapterService_RequestConnectionPoint_Handler,
 		},
 		{
-			MethodName: "RequestRepresentation",
-			Handler:    _AdapterService_RequestRepresentation_Handler,
-		},
-		{
-			MethodName: "RequestRepresentations",
-			Handler:    _AdapterService_RequestRepresentations_Handler,
+			MethodName: "RequestPrototype",
+			Handler:    _AdapterService_RequestPrototype_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

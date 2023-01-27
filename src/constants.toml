@@ -14,7 +14,8 @@ GENERAL_EXTENSIONS = ['txt','json','xml']
 # Default port number for extensions: 650 - OWNERID[3] + PLATFORMID[2]
 # OWNERID:
 # 0:usalu,1:mrdoob,2:nortikin,
-# 150:ifcopenshell,251:cadquery,252:freecad,253:openscad
+# 150:ifcopenshell,151:cadquery,252:freecad,253:openscad
+# 350:nrel
 # 450:mcneel,451:autodesk,452:nemetschek,453:esri,454:microsoft
 # 550:hypar
 # Licenses after https://spdx.org/licenses/
@@ -32,6 +33,8 @@ LICENSE = 'AGPL-3.0-or-later'
 ABBREVIATION = 'semio'
 EXTENSION = '.semio'
 NORMAL_EXTENSIONS = ['.semio','.semio.json']
+SOURCE = 'https://github.com/usalu/semio'
+#LEARN = 'https://usalu.github.io/semio/'
 LEARN = 'https://github.com/usalu/semio'
 
 [PLATFORMS.THREE]
@@ -43,6 +46,7 @@ LICENSE = 'MIT'
 ABBREVIATION = 'three'
 EXTENSION = '.three.json'
 NORMAL_EXTENSIONS = ['.json']
+SOURCE = 'https://github.com/mrdoob/three.js/'
 LEARN = 'https://threejs.org/'
 
 [PLATFORMS.SVERCHOK]
@@ -54,7 +58,8 @@ LICENSE = 'GPL-3.0-only'
 ABBREVIATION = 'sk'
 EXTENSION = '.sk.json'
 NORMAL_EXTENSIONS = ['.json','.sk.json']
-LEARN = 'https://www.grasshopper3d.com/'
+SOURCE = 'https://github.com/nortikin/sverchok'
+LEARN = 'https://nortikin.github.io/sverchok/'
 
 [PLATFORMS.IFCOPENSHELL]
 URL = 'ifcopenshell/ifcopenshell'
@@ -65,6 +70,7 @@ LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'ifcos'
 EXTENSION = '.ifcos'
 NORMAL_EXTENSIONS = ['.cpp','.py']
+SOURCE = 'https://github.com/IfcOpenShell/IfcOpenShell'
 LEARN = 'https://ifcopenshell.org/'
 
 [PLATFORMS.CADQUERY]
@@ -76,7 +82,8 @@ LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'cq'
 EXTENSION = '.cq'
 NORMAL_EXTENSIONS = ['.py','.cq.py']
-LEARN = 'https://github.com/CadQuery/cadquery/'
+SOURCE = 'https://github.com/CadQuery/cadquery/'
+LEARN = 'https://cadquery.readthedocs.io/en/latest/'
 
 [PLATFORMS.FREECAD]
 URL = 'freecad/freecad'
@@ -87,7 +94,8 @@ LICENSE = 'GPL-2.0'
 ABBREVIATION = 'fc'
 EXTENSION = '.fc'
 NORMAL_EXTENSIONS = ['.FCMAcro','.py']
-LEARN = 'https://github.com/FreeCAD/FreeCAD'
+SOURCE = 'https://github.com/FreeCAD/FreeCAD'
+LEARN = 'https://wiki.freecadweb.org/Main_Page'
 
 [PLATFORMS.OPENSCAD]
 URL = 'openscad/openscad'
@@ -98,6 +106,7 @@ LICENSE = 'GPL-2.0'
 ABBREVIATION = 'oc'
 EXTENSION = '.scad'
 NORMAL_EXTENSIONS = ['.scad']
+SOURCE = 'https://github.com/openscad'
 LEARN = 'https://openscad.org/'
 
 [PLATFORMS.JSCAD]
@@ -109,7 +118,8 @@ LICENSE = 'Apache-2.0'
 ABBREVIATION = 'jc'
 EXTENSION = 'jc.js'
 NORMAL_EXTENSIONS = ['.js']
-LEARN = 'https://github.com/jscad'
+SOURCE = 'https://github.com/jscad'
+LEARN = 'https://openjscad.xyz/'
 
 [PLATFORMS.FORNJOT]
 URL = 'hannobraun/fornjot'
@@ -120,6 +130,7 @@ LICENSE = '0BSD'
 ABBREVIATION = 'fj'
 EXTENSION = '.fj.rs'
 NORMAL_EXTENSIONS = ['.rs']
+SOURCE = 'https://github.com/hannobraun/Fornjot'
 LEARN = 'https://fornjot.app/'
 
 [PLATFORMS.TRUCK]
@@ -131,7 +142,34 @@ LICENSE = 'Apache-2.0'
 ABBREVIATION = 'tk'
 EXTENSION = 'tk.rs'
 NORMAL_EXTENSIONS = ['.rs']
+SOURCE = 'https://github.com/ricosjp/truck'
 LEARN = 'https://github.com/ricosjp/truck'
+
+[PLATFORMS.ENERGYPLUS]
+URL = ' nrel/energyplus'
+DEFAULT_PORT = 40000
+FULL_NAME = 'EnergyPlus'
+NAME = 'energyplus'
+# Non-standard license
+LICENSE = 'EnergyPlus'
+ABBREVIATION = 'ep'
+EXTENSION = '.ep'
+NORMAL_EXTENSIONS = ['.idf','.epJSON']
+SOURCE = 'https://github.com/NREL/EnergyPlus'
+LEARN = 'https://energyplus.net/'
+
+[PLATFORMS.OPENSTUDIO]
+URL = ' nrel/openstudio'
+DEFAULT_PORT = 40001
+FULL_NAME = 'OpenStudio'
+NAME = 'openstudio'
+# Non-standard license
+LICENSE = 'OpenStudio'
+ABBREVIATION = 'os'
+EXTENSION = '.osm'
+NORMAL_EXTENSIONS = ['.osm']
+SOURCE =  'https://github.com/NREL/OpenStudio'
+LEARN = 'https://openstudio.net/'
 
 # Commercial
 

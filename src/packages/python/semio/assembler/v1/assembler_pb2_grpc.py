@@ -16,10 +16,15 @@ class AssemblerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.LayoutDesign = channel.unary_unary(
-                '/semio.assembler.v1.AssemblerService/LayoutDesign',
-                request_serializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
+        self.LayoutToAssemblies = channel.unary_unary(
+                '/semio.assembler.v1.AssemblerService/LayoutToAssemblies',
+                request_serializer=model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+                response_deserializer=assembler_dot_v1_dot_assembler__pb2.LayoutToAssembliesResponse.FromString,
+                )
+        self.AssemblyToElements = channel.unary_unary(
+                '/semio.assembler.v1.AssemblerService/AssemblyToElements',
+                request_serializer=model_dot_v1_dot_model__pb2.Assembly.SerializeToString,
+                response_deserializer=assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.FromString,
                 )
 
 
@@ -27,8 +32,15 @@ class AssemblerServiceServicer(object):
     """The assembler service is responsible for assembling layouts into designs.
     """
 
-    def LayoutDesign(self, request, context):
-        """Lay out a design from a layout and return a design.
+    def LayoutToAssemblies(self, request, context):
+        """Turn a layout into assemblies.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AssemblyToElements(self, request, context):
+        """Assemble elements from an assembly.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -37,10 +49,15 @@ class AssemblerServiceServicer(object):
 
 def add_AssemblerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'LayoutDesign': grpc.unary_unary_rpc_method_handler(
-                    servicer.LayoutDesign,
-                    request_deserializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Design.SerializeToString,
+            'LayoutToAssemblies': grpc.unary_unary_rpc_method_handler(
+                    servicer.LayoutToAssemblies,
+                    request_deserializer=model_dot_v1_dot_model__pb2.Layout.FromString,
+                    response_serializer=assembler_dot_v1_dot_assembler__pb2.LayoutToAssembliesResponse.SerializeToString,
+            ),
+            'AssemblyToElements': grpc.unary_unary_rpc_method_handler(
+                    servicer.AssemblyToElements,
+                    request_deserializer=model_dot_v1_dot_model__pb2.Assembly.FromString,
+                    response_serializer=assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -54,7 +71,7 @@ class AssemblerService(object):
     """
 
     @staticmethod
-    def LayoutDesign(request,
+    def LayoutToAssemblies(request,
             target,
             options=(),
             channel_credentials=None,
@@ -64,8 +81,25 @@ class AssemblerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.assembler.v1.AssemblerService/LayoutDesign',
-            assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Design.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.assembler.v1.AssemblerService/LayoutToAssemblies',
+            model_dot_v1_dot_model__pb2.Layout.SerializeToString,
+            assembler_dot_v1_dot_assembler__pb2.LayoutToAssembliesResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def AssemblyToElements(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.assembler.v1.AssemblerService/AssemblyToElements',
+            model_dot_v1_dot_model__pb2.Assembly.SerializeToString,
+            assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

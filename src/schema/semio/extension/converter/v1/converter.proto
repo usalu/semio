@@ -14,13 +14,13 @@ service ConverterService {
 
 // Description what a converter is converting.
 message Converting{
-  string source_type_url = 1;
-  string target_type_url = 2;
+  semio.model.v1.Platform source_platform = 1;
+  semio.model.v1.Platform target_platform = 2;
 }
 
-// A request for converting a represenation
+// A request for converting a represenation.
 message RepresentationConversionRequest {
   semio.model.v1.Representation representation = 1;
-  string target_type = 2;
+  semio.model.v1.Platform target_platform = 2;
   map<string,string> options = 3;
 }

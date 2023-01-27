@@ -4,8 +4,7 @@ package v1
 
 import (
 	context "context"
-	v1 "github.com/usalu/semio/src/packages/go/assembler/v1"
-	v11 "github.com/usalu/semio/src/packages/go/model/v1"
+	v1 "github.com/usalu/semio/src/packages/go/model/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayServiceClient interface {
 	// Lay out a design from a layout and return a design.
-	LayoutDesign(ctx context.Context, in *v1.LayoutDesignRequest, opts ...grpc.CallOption) (*v11.Design, error)
+	LayoutDesign(ctx context.Context, in *LayoutDesignRequest, opts ...grpc.CallOption) (*v1.Design, error)
 }
 
 type gatewayServiceClient struct {
@@ -32,8 +31,8 @@ func NewGatewayServiceClient(cc grpc.ClientConnInterface) GatewayServiceClient {
 	return &gatewayServiceClient{cc}
 }
 
-func (c *gatewayServiceClient) LayoutDesign(ctx context.Context, in *v1.LayoutDesignRequest, opts ...grpc.CallOption) (*v11.Design, error) {
-	out := new(v11.Design)
+func (c *gatewayServiceClient) LayoutDesign(ctx context.Context, in *LayoutDesignRequest, opts ...grpc.CallOption) (*v1.Design, error) {
+	out := new(v1.Design)
 	err := c.cc.Invoke(ctx, "/semio.gateway.v1.GatewayService/LayoutDesign", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +45,7 @@ func (c *gatewayServiceClient) LayoutDesign(ctx context.Context, in *v1.LayoutDe
 // for forward compatibility
 type GatewayServiceServer interface {
 	// Lay out a design from a layout and return a design.
-	LayoutDesign(context.Context, *v1.LayoutDesignRequest) (*v11.Design, error)
+	LayoutDesign(context.Context, *LayoutDesignRequest) (*v1.Design, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -54,7 +53,7 @@ type GatewayServiceServer interface {
 type UnimplementedGatewayServiceServer struct {
 }
 
-func (UnimplementedGatewayServiceServer) LayoutDesign(context.Context, *v1.LayoutDesignRequest) (*v11.Design, error) {
+func (UnimplementedGatewayServiceServer) LayoutDesign(context.Context, *LayoutDesignRequest) (*v1.Design, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LayoutDesign not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
@@ -71,7 +70,7 @@ func RegisterGatewayServiceServer(s grpc.ServiceRegistrar, srv GatewayServiceSer
 }
 
 func _GatewayService_LayoutDesign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.LayoutDesignRequest)
+	in := new(LayoutDesignRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func _GatewayService_LayoutDesign_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/semio.gateway.v1.GatewayService/LayoutDesign",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).LayoutDesign(ctx, req.(*v1.LayoutDesignRequest))
+		return srv.(GatewayServiceServer).LayoutDesign(ctx, req.(*LayoutDesignRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

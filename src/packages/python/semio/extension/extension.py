@@ -59,7 +59,7 @@ class ExtensionServer(SemioServer):
     
     def initialize(self):
         address = 'localhost:' +str(self.port)
-        response = self.getManagerProxy().RegisterExtension(manager.ExtensionRegistrationRequest(
+        response = self.getManagerProxy().RegisterExtension(manager.RegisterExtensionRequest(
             address=address,
             extending=Extending(
                 adaptings=self.adapter.getDescriptions(), convertings=self.converter.getDescriptions(), 

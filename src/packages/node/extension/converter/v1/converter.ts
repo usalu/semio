@@ -13,6 +13,7 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Representation } from "../../../model/v1/model";
+import { Platform } from "../../../model/v1/model";
 /**
  * Description what a converter is converting.
  *
@@ -20,16 +21,16 @@ import { Representation } from "../../../model/v1/model";
  */
 export interface Converting {
     /**
-     * @generated from protobuf field: string source_type_url = 1;
+     * @generated from protobuf field: semio.model.v1.Platform source_platform = 1;
      */
-    sourceTypeUrl: string;
+    sourcePlatform: Platform;
     /**
-     * @generated from protobuf field: string target_type_url = 2;
+     * @generated from protobuf field: semio.model.v1.Platform target_platform = 2;
      */
-    targetTypeUrl: string;
+    targetPlatform: Platform;
 }
 /**
- * A request for converting a represenation
+ * A request for converting a represenation.
  *
  * @generated from protobuf message semio.extension.converter.v1.RepresentationConversionRequest
  */
@@ -39,9 +40,9 @@ export interface RepresentationConversionRequest {
      */
     representation?: Representation;
     /**
-     * @generated from protobuf field: string target_type = 2;
+     * @generated from protobuf field: semio.model.v1.Platform target_platform = 2;
      */
-    targetType: string;
+    targetPlatform: Platform;
     /**
      * @generated from protobuf field: map<string, string> options = 3;
      */
@@ -53,12 +54,12 @@ export interface RepresentationConversionRequest {
 class Converting$Type extends MessageType<Converting> {
     constructor() {
         super("semio.extension.converter.v1.Converting", [
-            { no: 1, name: "source_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "target_type_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "source_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
+            { no: 2, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
         ]);
     }
     create(value?: PartialMessage<Converting>): Converting {
-        const message = { sourceTypeUrl: "", targetTypeUrl: "" };
+        const message = { sourcePlatform: 0, targetPlatform: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Converting>(this, message, value);
@@ -69,11 +70,11 @@ class Converting$Type extends MessageType<Converting> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string source_type_url */ 1:
-                    message.sourceTypeUrl = reader.string();
+                case /* semio.model.v1.Platform source_platform */ 1:
+                    message.sourcePlatform = reader.int32();
                     break;
-                case /* string target_type_url */ 2:
-                    message.targetTypeUrl = reader.string();
+                case /* semio.model.v1.Platform target_platform */ 2:
+                    message.targetPlatform = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -87,12 +88,12 @@ class Converting$Type extends MessageType<Converting> {
         return message;
     }
     internalBinaryWrite(message: Converting, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string source_type_url = 1; */
-        if (message.sourceTypeUrl !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.sourceTypeUrl);
-        /* string target_type_url = 2; */
-        if (message.targetTypeUrl !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.targetTypeUrl);
+        /* semio.model.v1.Platform source_platform = 1; */
+        if (message.sourcePlatform !== 0)
+            writer.tag(1, WireType.Varint).int32(message.sourcePlatform);
+        /* semio.model.v1.Platform target_platform = 2; */
+        if (message.targetPlatform !== 0)
+            writer.tag(2, WireType.Varint).int32(message.targetPlatform);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -108,12 +109,12 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
     constructor() {
         super("semio.extension.converter.v1.RepresentationConversionRequest", [
             { no: 1, name: "representation", kind: "message", T: () => Representation },
-            { no: 2, name: "target_type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
             { no: 3, name: "options", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
         ]);
     }
     create(value?: PartialMessage<RepresentationConversionRequest>): RepresentationConversionRequest {
-        const message = { targetType: "", options: {} };
+        const message = { targetPlatform: 0, options: {} };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<RepresentationConversionRequest>(this, message, value);
@@ -127,8 +128,8 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
                 case /* semio.model.v1.Representation representation */ 1:
                     message.representation = Representation.internalBinaryRead(reader, reader.uint32(), options, message.representation);
                     break;
-                case /* string target_type */ 2:
-                    message.targetType = reader.string();
+                case /* semio.model.v1.Platform target_platform */ 2:
+                    message.targetPlatform = reader.int32();
                     break;
                 case /* map<string, string> options */ 3:
                     this.binaryReadMap3(message.options, reader, options);
@@ -164,9 +165,9 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         /* semio.model.v1.Representation representation = 1; */
         if (message.representation)
             Representation.internalBinaryWrite(message.representation, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* string target_type = 2; */
-        if (message.targetType !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.targetType);
+        /* semio.model.v1.Platform target_platform = 2; */
+        if (message.targetPlatform !== 0)
+            writer.tag(2, WireType.Varint).int32(message.targetPlatform);
         /* map<string, string> options = 3; */
         for (let k of Object.keys(message.options))
             writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.options[k]).join();

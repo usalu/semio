@@ -1,8 +1,23 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/Element",
+    "$ref": "#/definitions/ConnectElementResponse",
     "definitions": {
-        "Element": {
+        "ConnectElementResponse": {
+            "properties": {
+                "connected_element": {
+                    "$ref": "#/definitions/semio.model.v1.Element",
+                    "additionalProperties": true
+                },
+                "connection_point": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Connect Element Response"
+        },
+        "semio.model.v1.Element": {
             "properties": {
                 "sobject_id": {
                     "type": "string",

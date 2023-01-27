@@ -47,40 +47,37 @@
     "v1Adapting": {
       "type": "object",
       "properties": {
-        "platformUrl": {
-          "type": "string",
-          "description": "A url for the platform that is adapted."
+        "platform": {
+          "$ref": "#/definitions/v1Platform",
+          "description": "The platform that is adapted."
         }
       },
       "description": "Description what an adapter is adapting to."
+    },
+    "v1ConnectElementResponse": {
+      "type": "object",
+      "properties": {
+        "connectedElement": {
+          "$ref": "#/definitions/v1Element"
+        },
+        "connectionPoint": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
     },
     "v1Connectable": {
       "type": "object",
       "properties": {
         "sobjectId": {
           "type": "string",
-          "description": "Id of connecting sobject."
+          "description": "Id of connectable (sobject)."
         },
-        "representationProtocol": {
-          "$ref": "#/definitions/v1RepresentationProtocol",
-          "description": "An optional representation of the participant."
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Optional port names to connect to. The hierarchy should matter"
-        },
-        "bias": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Optional parameters to bias the connection."
+        "link": {
+          "$ref": "#/definitions/v1Link",
+          "description": "A link for the connectable (sobject)."
         }
       },
-      "description": "A connectable connects in an connection process."
+      "description": "A connectable (sobject) connects in an connection process."
     },
     "v1Connection": {
       "type": "object",
@@ -96,25 +93,14 @@
       },
       "description": "An connection can be used to connect two connectables."
     },
-    "v1ConnectionResponse": {
-      "type": "object",
-      "properties": {
-        "connectedPose": {
-          "$ref": "#/definitions/v1Pose"
-        },
-        "connectionPoint": {
-          "$ref": "#/definitions/v1Point"
-        }
-      }
-    },
     "v1Converting": {
       "type": "object",
       "properties": {
-        "sourceTypeUrl": {
-          "type": "string"
+        "sourcePlatform": {
+          "$ref": "#/definitions/v1Platform"
         },
-        "targetTypeUrl": {
-          "type": "string"
+        "targetPlatform": {
+          "$ref": "#/definitions/v1Platform"
         }
       },
       "description": "Description what a converter is converting."
@@ -122,6 +108,10 @@
     "v1Element": {
       "type": "object",
       "properties": {
+        "sobjectId": {
+          "type": "string",
+          "description": "The sobject id that was used to construct the element."
+        },
         "prototypePlanHash": {
           "type": "string",
           "description": "The hash of the plan for the prototype of the element."
@@ -167,15 +157,57 @@
       },
       "description": "A description of what the extension is extending."
     },
-    "v1ExtensionRegistrationResponse": {
+    "v1Link": {
       "type": "object",
       "properties": {
-        "success": {
-          "type": "boolean"
+        "representationProtocol": {
+          "$ref": "#/definitions/v1RepresentationProtocol",
+          "description": "An optional representation protocol for the link."
         },
-        "oldAddress": {
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional port names to connect to. The hierarchy should matter."
+        },
+        "bias": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters to bias the connection."
+        }
+      },
+      "description": "A link defines the parameters for a connectable."
+    },
+    "v1Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
           "type": "string",
-          "description": "The old address of the same service type if there was one."
+          "title": "Name of the parameter"
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Scope"
+          },
+          "description": "Optional context field to describe the context of the parameter."
+        },
+        "text": {
+          "type": "string"
+        },
+        "integerNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "number": {
+          "type": "number",
+          "format": "double"
+        },
+        "point": {
+          "$ref": "#/definitions/v1Point"
         }
       }
     },
@@ -184,17 +216,17 @@
       "properties": {
         "url": {
           "type": "string",
-          "description": "The url of the element definition."
+          "description": "The url of the prototype definition."
         },
         "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Parameter"
           },
-          "description": "Optional parameters for the element."
+          "description": "Optional parameters for the prototype."
         }
       },
-      "description": "A plan for an element."
+      "description": "A plan for a prototype."
     },
     "v1Platform": {
       "type": "string",
@@ -209,14 +241,16 @@
         "PLATFORM_JSCAD",
         "PLATFORM_Fornjot",
         "PLATFORM_TRUCK",
+        "PLATFORM_ENERGYPLUS",
+        "PLATFORM_OPENSTUDIO",
         "PLATFORM_RHINO",
         "PLATFORM_GRASSHOPPER",
         "PLATFORM_REVIT",
         "PLATFORM_DYNAMO"
       ],
       "default": "PLATFORM_SEMIO",
-      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
-      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,170:0BSD\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_ENERGYPLUS: https://github.com/NREL/EnergyPlus\n - PLATFORM_OPENSTUDIO: https://github.com/NREL/OpenStudio\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
+      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE (if possible) after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,\r\n170:0BSD\r\n190:EnergyPlus\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart,1:nrel\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
     },
     "v1Point": {
       "type": "object",
@@ -224,17 +258,17 @@
         "x": {
           "type": "number",
           "format": "double",
-          "description": "x coordinate."
+          "description": "X coordinate."
         },
         "y": {
           "type": "number",
           "format": "double",
-          "title": "y coordinate"
+          "title": "Y coordinate"
         },
         "z": {
           "type": "number",
           "format": "double",
-          "title": "z coordinate"
+          "title": "Z coordinate"
         }
       },
       "description": "A 3d point with x,y,z coordinates."
@@ -243,13 +277,15 @@
       "type": "object",
       "properties": {
         "pointOfView": {
-          "$ref": "#/definitions/v1Point"
+          "$ref": "#/definitions/v1Point",
+          "title": "Point of view (origin) from the pose (reference frame/coordinate system)"
         },
         "view": {
-          "$ref": "#/definitions/v1Quaternion"
+          "$ref": "#/definitions/v1Quaternion",
+          "title": "View (orientation) from the pose (reference frame/coordinate system)"
         }
       },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+      "description": "A pose is a static reference frame/coordinate system."
     },
     "v1Quaternion": {
       "type": "object",
@@ -271,7 +307,19 @@
           "format": "double"
         }
       },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+      "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
+    },
+    "v1RegisterExtensionResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "oldAddress": {
+          "type": "string",
+          "description": "The old address of the same service type if there was one."
+        }
+      }
     },
     "v1RegisteredExtensionsResponse": {
       "type": "object",
@@ -295,6 +343,21 @@
       "default": "REPRESENTATIONPROTOCOL_NONE",
       "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
+    "v1Scope": {
+      "type": "object",
+      "properties": {
+        "concept": {
+          "type": "string",
+          "title": "Concept for the scope e.g Fassade, Floor"
+        },
+        "order": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+        }
+      },
+      "description": "Describes the scope of a parameter."
+    },
     "v1Sobject": {
       "type": "object",
       "properties": {
@@ -308,7 +371,14 @@
         },
         "plan": {
           "$ref": "#/definitions/v1Plan",
-          "description": "The plan for the element."
+          "description": "The plan for the prototype."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Concept that are relevent for the sobject."
         }
       },
       "description": "Instance information for an element."
@@ -320,8 +390,9 @@
     "v1Translating": {
       "type": "object",
       "properties": {
-        "typeUrl": {
-          "type": "string"
+        "platform": {
+          "$ref": "#/definitions/v1Platform",
+          "description": "Platform in which the translator can translate."
         }
       },
       "description": "Description what a translator is translating."

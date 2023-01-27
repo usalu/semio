@@ -9,12 +9,16 @@ import "model/v1/model.proto";
 
 // The assembler service is responsible for assembling layouts into designs.
 service AssemblerService {
-  // Lay out a design from a layout and return a design.
-  rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
-  }
+  // Turn a layout into assemblies.
+  rpc LayoutToAssemblies(semio.model.v1.Layout) returns (LayoutToAssembliesResponse);
+  // Assemble elements from an assembly.
+  rpc AssemblyToElements(semio.model.v1.Assembly) returns (AssembleLayoutResponse);
 }
 
-message LayoutDesignRequest {
-  semio.model.v1.Layout layout = 1;
-  string target_type = 2;
+message LayoutToAssembliesResponse{
+  repeated semio.model.v1.Assembly assemblies = 1;
+}
+
+message AssembleLayoutResponse {
+  repeated semio.model.v1.Element elements = 1;
 }

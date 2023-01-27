@@ -1,21 +1,26 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/RegisteredExtensionsResponse",
+    "$ref": "#/definitions/RegisterExtensionRequest",
     "definitions": {
-        "RegisteredExtensionsResponse": {
+        "RegisterExtensionRequest": {
             "properties": {
-                "extensions": {
-                    "additionalProperties": {
-                        "$ref": "#/definitions/semio.extension.v1.Extending",
-                        "additionalProperties": true
-                    },
-                    "type": "object",
-                    "description": "A map with extensions where the address is the key and the extension description is the value."
+                "address": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "extending": {
+                    "$ref": "#/definitions/semio.extension.v1.Extending",
+                    "additionalProperties": true
+                },
+                "replace_existing": {
+                    "type": "boolean"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Registered Extensions Response"
+            "title": "Register Extension Request"
         },
         "semio.extension.adapter.v1.Adapting": {
             "properties": {

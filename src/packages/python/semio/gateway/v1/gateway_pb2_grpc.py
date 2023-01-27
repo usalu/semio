@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from assembler.v1 import assembler_pb2 as assembler_dot_v1_dot_assembler__pb2
+from gateway.v1 import gateway_pb2 as gateway_dot_v1_dot_gateway__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
@@ -19,7 +19,7 @@ class GatewayServiceStub(object):
         """
         self.LayoutDesign = channel.unary_unary(
                 '/semio.gateway.v1.GatewayService/LayoutDesign',
-                request_serializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
+                request_serializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Design.FromString,
                 )
 
@@ -41,7 +41,7 @@ def add_GatewayServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LayoutDesign': grpc.unary_unary_rpc_method_handler(
                     servicer.LayoutDesign,
-                    request_deserializer=assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.FromString,
+                    request_deserializer=gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Design.SerializeToString,
             ),
     }
@@ -68,7 +68,7 @@ class GatewayService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.gateway.v1.GatewayService/LayoutDesign',
-            assembler_dot_v1_dot_assembler__pb2.LayoutDesignRequest.SerializeToString,
+            gateway_dot_v1_dot_gateway__pb2.LayoutDesignRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Design.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

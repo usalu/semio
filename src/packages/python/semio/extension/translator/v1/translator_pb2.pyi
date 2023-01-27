@@ -16,7 +16,7 @@ class TranslateRepresentationRequest(_message.Message):
     def __init__(self, representation: _Optional[_Union[_model_pb2.Representation, _Mapping]] = ..., target_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., source_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ...) -> None: ...
 
 class Translating(_message.Message):
-    __slots__ = ["type_url"]
-    TYPE_URL_FIELD_NUMBER: _ClassVar[int]
-    type_url: str
-    def __init__(self, type_url: _Optional[str] = ...) -> None: ...
+    __slots__ = ["platform"]
+    PLATFORM_FIELD_NUMBER: _ClassVar[int]
+    platform: _model_pb2.Platform
+    def __init__(self, platform: _Optional[_Union[_model_pb2.Platform, str]] = ...) -> None: ...

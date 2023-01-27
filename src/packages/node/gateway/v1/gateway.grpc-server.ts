@@ -2,7 +2,7 @@
 // @generated from protobuf file "gateway/v1/gateway.proto" (package "semio.gateway.v1", syntax proto3)
 // tslint:disable
 import { Design } from "../../model/v1/model";
-import { LayoutDesignRequest } from "../../assembler/v1/assembler";
+import { LayoutDesignRequest } from "./gateway";
 import type * as grpc from "@grpc/grpc-js";
 /**
  * The gateway service is the gateway for all other apis of semio.
@@ -15,7 +15,7 @@ export interface IGatewayService extends grpc.UntypedServiceImplementation {
     /**
      * Lay out a design from a layout and return a design.
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutDesign(semio.gateway.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
     layoutDesign: grpc.handleUnaryCall<LayoutDesignRequest, Design>;
 }

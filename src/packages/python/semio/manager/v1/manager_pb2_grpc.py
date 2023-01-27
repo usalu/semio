@@ -21,15 +21,15 @@ class ManagerServiceStub(object):
                 request_serializer=manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Element.FromString,
                 )
-        self.RequestConnection = channel.unary_unary(
-                '/semio.manager.v1.ManagerService/RequestConnection',
-                request_serializer=manager_dot_v1_dot_manager__pb2.ConnectionRequest.SerializeToString,
-                response_deserializer=manager_dot_v1_dot_manager__pb2.ConnectionResponse.FromString,
+        self.ConnectElement = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/ConnectElement',
+                request_serializer=manager_dot_v1_dot_manager__pb2.ConnectElementRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.ConnectElementResponse.FromString,
                 )
         self.RegisterExtension = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/RegisterExtension',
-                request_serializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.SerializeToString,
-                response_deserializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.FromString,
+                request_serializer=manager_dot_v1_dot_manager__pb2.RegisterExtensionRequest.SerializeToString,
+                response_deserializer=manager_dot_v1_dot_manager__pb2.RegisterExtensionResponse.FromString,
                 )
         self.GetRegisteredExtensions = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/GetRegisteredExtensions',
@@ -49,8 +49,8 @@ class ManagerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RequestConnection(self, request, context):
-        """Request the connected element for an connection.
+    def ConnectElement(self, request, context):
+        """Connected element for an connection.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -78,15 +78,15 @@ def add_ManagerServiceServicer_to_server(servicer, server):
                     request_deserializer=manager_dot_v1_dot_manager__pb2.ElementRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Element.SerializeToString,
             ),
-            'RequestConnection': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestConnection,
-                    request_deserializer=manager_dot_v1_dot_manager__pb2.ConnectionRequest.FromString,
-                    response_serializer=manager_dot_v1_dot_manager__pb2.ConnectionResponse.SerializeToString,
+            'ConnectElement': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConnectElement,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.ConnectElementRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.ConnectElementResponse.SerializeToString,
             ),
             'RegisterExtension': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterExtension,
-                    request_deserializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.FromString,
-                    response_serializer=manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.SerializeToString,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.RegisterExtensionRequest.FromString,
+                    response_serializer=manager_dot_v1_dot_manager__pb2.RegisterExtensionResponse.SerializeToString,
             ),
             'GetRegisteredExtensions': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisteredExtensions,
@@ -122,7 +122,7 @@ class ManagerService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RequestConnection(request,
+    def ConnectElement(request,
             target,
             options=(),
             channel_credentials=None,
@@ -132,9 +132,9 @@ class ManagerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestConnection',
-            manager_dot_v1_dot_manager__pb2.ConnectionRequest.SerializeToString,
-            manager_dot_v1_dot_manager__pb2.ConnectionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/ConnectElement',
+            manager_dot_v1_dot_manager__pb2.ConnectElementRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.ConnectElementResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -150,8 +150,8 @@ class ManagerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RegisterExtension',
-            manager_dot_v1_dot_manager__pb2.ExtensionRegistrationRequest.SerializeToString,
-            manager_dot_v1_dot_manager__pb2.ExtensionRegistrationResponse.FromString,
+            manager_dot_v1_dot_manager__pb2.RegisterExtensionRequest.SerializeToString,
+            manager_dot_v1_dot_manager__pb2.RegisterExtensionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

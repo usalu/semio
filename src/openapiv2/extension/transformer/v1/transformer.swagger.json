@@ -66,28 +66,14 @@
       "properties": {
         "sobjectId": {
           "type": "string",
-          "description": "Id of connecting sobject."
+          "description": "Id of connectable (sobject)."
         },
-        "representationProtocol": {
-          "$ref": "#/definitions/v1RepresentationProtocol",
-          "description": "An optional representation of the participant."
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Optional port names to connect to. The hierarchy should matter"
-        },
-        "bias": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Optional parameters to bias the connection."
+        "link": {
+          "$ref": "#/definitions/v1Link",
+          "description": "A link for the connectable (sobject)."
         }
       },
-      "description": "A connectable connects in an connection process."
+      "description": "A connectable (sobject) connects in an connection process."
     },
     "v1Connection": {
       "type": "object",
@@ -143,7 +129,7 @@
           "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r\nMost of the time this field is only necissary when elements that don't work well together in a general way.\r\nTherefore if you can update the element definitions to be more robust, rather use your time for that."
         }
       },
-      "description": "A layout (graph) is an assembly plan for a set of sobjects and their connections between each other."
+      "description": "A layout (graph) is a plan for a set of sobjects and their connections between each other."
     },
     "v1LayoutModification": {
       "type": "object",
@@ -161,8 +147,8 @@
       "type": "object",
       "properties": {
         "matchCount": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough."
         }
       },
@@ -177,22 +163,76 @@
       "default": "LAYOUTSTRATEGY_BREADTHFIRST",
       "description": "A layout strategy affects in which orders connections are triggered.\n\n - LAYOUTSTRATEGY_BREADTHFIRST: A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.\n - LAYOUTSTRATEGY_DEPTHFIRST: A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root."
     },
+    "v1Link": {
+      "type": "object",
+      "properties": {
+        "representationProtocol": {
+          "$ref": "#/definitions/v1RepresentationProtocol",
+          "description": "An optional representation protocol for the link."
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional port names to connect to. The hierarchy should matter."
+        },
+        "bias": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters to bias the connection."
+        }
+      },
+      "description": "A link defines the parameters for a connectable."
+    },
+    "v1Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the parameter"
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Scope"
+          },
+          "description": "Optional context field to describe the context of the parameter."
+        },
+        "text": {
+          "type": "string"
+        },
+        "integerNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "number": {
+          "type": "number",
+          "format": "double"
+        },
+        "point": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
+    },
     "v1Plan": {
       "type": "object",
       "properties": {
         "url": {
           "type": "string",
-          "description": "The url of the element definition."
+          "description": "The url of the prototype definition."
         },
         "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Parameter"
           },
-          "description": "Optional parameters for the element."
+          "description": "Optional parameters for the prototype."
         }
       },
-      "description": "A plan for an element."
+      "description": "A plan for a prototype."
     },
     "v1Point": {
       "type": "object",
@@ -200,17 +240,17 @@
         "x": {
           "type": "number",
           "format": "double",
-          "description": "x coordinate."
+          "description": "X coordinate."
         },
         "y": {
           "type": "number",
           "format": "double",
-          "title": "y coordinate"
+          "title": "Y coordinate"
         },
         "z": {
           "type": "number",
           "format": "double",
-          "title": "z coordinate"
+          "title": "Z coordinate"
         }
       },
       "description": "A 3d point with x,y,z coordinates."
@@ -219,13 +259,15 @@
       "type": "object",
       "properties": {
         "pointOfView": {
-          "$ref": "#/definitions/v1Point"
+          "$ref": "#/definitions/v1Point",
+          "title": "Point of view (origin) from the pose (reference frame/coordinate system)"
         },
         "view": {
-          "$ref": "#/definitions/v1Quaternion"
+          "$ref": "#/definitions/v1Quaternion",
+          "title": "View (orientation) from the pose (reference frame/coordinate system)"
         }
       },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+      "description": "A pose is a static reference frame/coordinate system."
     },
     "v1Quaternion": {
       "type": "object",
@@ -247,7 +289,7 @@
           "format": "double"
         }
       },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+      "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
     },
     "v1RepresentationProtocol": {
       "type": "string",
@@ -258,6 +300,21 @@
       ],
       "default": "REPRESENTATIONPROTOCOL_NONE",
       "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
+    },
+    "v1Scope": {
+      "type": "object",
+      "properties": {
+        "concept": {
+          "type": "string",
+          "title": "Concept for the scope e.g Fassade, Floor"
+        },
+        "order": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+        }
+      },
+      "description": "Describes the scope of a parameter."
     },
     "v1Sobject": {
       "type": "object",
@@ -272,7 +329,14 @@
         },
         "plan": {
           "$ref": "#/definitions/v1Plan",
-          "description": "The plan for the element."
+          "description": "The plan for the prototype."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Concept that are relevent for the sobject."
         }
       },
       "description": "Instance information for an element."

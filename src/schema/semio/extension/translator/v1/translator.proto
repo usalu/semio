@@ -16,7 +16,8 @@ service TranslatorService {
 
 // Description what a translator is translating.
 message Translating{
-  string type_url = 1;
+  // Platform in which the translator can translate.
+  semio.model.v1.Platform platform = 1;
 }
 
 message TranslateRepresentationRequest {

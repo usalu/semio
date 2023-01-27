@@ -30,6 +30,10 @@
                         1700000300,
                         "PLATFORM_TRUCK",
                         1500000400,
+                        "PLATFORM_ENERGYPLUS",
+                        1900200100,
+                        "PLATFORM_OPENSTUDIO",
+                        1910200101,
                         "PLATFORM_RHINO",
                         2140300000,
                         "PLATFORM_GRASSHOPPER",
@@ -48,11 +52,11 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,170:0BSD\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
                 },
-                "target_representation_name": {
+                "target_representation_concepts": {
                     "type": "string",
-                    "description": "An optional name for the target representation. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true."
+                    "description": "Optional concepts for the representations. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true."
                 },
                 "target_representation_lod": {
                     "type": "string",
@@ -67,38 +71,69 @@
             "type": "object",
             "title": "Element Request"
         },
+        "semio.model.v1.Parameter": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the parameter"
+                },
+                "context": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Scope"
+                    },
+                    "type": "array",
+                    "description": "Optional context field to describe the context of the parameter."
+                },
+                "text": {
+                    "type": "string"
+                },
+                "integer_number": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "number"
+                },
+                "point": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameter"
+        },
         "semio.model.v1.Plan": {
             "properties": {
                 "url": {
                     "type": "string",
-                    "description": "The url of the element definition."
+                    "description": "The url of the prototype definition."
                 },
                 "parameters": {
-                    "additionalProperties": {
-                        "type": "string"
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Parameter"
                     },
-                    "type": "object",
-                    "description": "Optional parameters for the element."
+                    "type": "array",
+                    "description": "Optional parameters for the prototype."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Plan",
-            "description": "A plan for an element."
+            "description": "A plan for a prototype."
         },
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",
-                    "description": "x coordinate."
+                    "description": "X coordinate."
                 },
                 "y": {
                     "type": "number",
-                    "description": "y coordinate"
+                    "description": "Y coordinate"
                 },
                 "z": {
                     "type": "number",
-                    "description": "z coordinate"
+                    "description": "Z coordinate"
                 }
             },
             "additionalProperties": true,
@@ -110,17 +145,19 @@
             "properties": {
                 "point_of_view": {
                     "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
                 },
                 "view": {
                     "$ref": "#/definitions/semio.model.v1.Quaternion",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "View (orientation) from the pose (reference frame/coordinate system)"
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+            "description": "A pose is a static reference frame/coordinate system."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -140,7 +177,23 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
+        },
+        "semio.model.v1.Scope": {
+            "properties": {
+                "concept": {
+                    "type": "string",
+                    "description": "Concept for the scope e.g Fassade, Floor"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scope",
+            "description": "Describes the scope of a parameter."
         },
         "semio.model.v1.Sobject": {
             "properties": {
@@ -156,7 +209,14 @@
                 "plan": {
                     "$ref": "#/definitions/semio.model.v1.Plan",
                     "additionalProperties": true,
-                    "description": "The plan for the element."
+                    "description": "The plan for the prototype."
+                },
+                "concepts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Concept that are relevent for the sobject."
                 }
             },
             "additionalProperties": true,

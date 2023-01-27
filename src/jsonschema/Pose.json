@@ -6,31 +6,33 @@
             "properties": {
                 "point_of_view": {
                     "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
                 },
                 "view": {
                     "$ref": "#/definitions/semio.model.v1.Quaternion",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "View (orientation) from the pose (reference frame/coordinate system)"
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+            "description": "A pose is a static reference frame/coordinate system."
         },
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",
-                    "description": "x coordinate."
+                    "description": "X coordinate."
                 },
                 "y": {
                     "type": "number",
-                    "description": "y coordinate"
+                    "description": "Y coordinate"
                 },
                 "z": {
                     "type": "number",
-                    "description": "z coordinate"
+                    "description": "Z coordinate"
                 }
             },
             "additionalProperties": true,
@@ -56,7 +58,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
         }
     }
 }

@@ -4,9 +4,11 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AssemblerService } from "./assembler";
+import type { AssembleLayoutResponse } from "./assembler";
+import type { Assembly } from "../../model/v1/model";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { Design } from "../../model/v1/model";
-import type { LayoutDesignRequest } from "./assembler";
+import type { LayoutToAssembliesResponse } from "./assembler";
+import type { Layout } from "../../model/v1/model";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -16,11 +18,17 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IAssemblerServiceClient {
     /**
-     * Lay out a design from a layout and return a design.
+     * Turn a layout into assemblies.
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutToAssemblies(semio.model.v1.Layout) returns (semio.assembler.v1.LayoutToAssembliesResponse);
      */
-    layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design>;
+    layoutToAssemblies(input: Layout, options?: RpcOptions): UnaryCall<Layout, LayoutToAssembliesResponse>;
+    /**
+     * Assemble elements from an assembly.
+     *
+     * @generated from protobuf rpc: AssemblyToElements(semio.model.v1.Assembly) returns (semio.assembler.v1.AssembleLayoutResponse);
+     */
+    assemblyToElements(input: Assembly, options?: RpcOptions): UnaryCall<Assembly, AssembleLayoutResponse>;
 }
 /**
  * The assembler service is responsible for assembling layouts into designs.
@@ -34,12 +42,21 @@ export class AssemblerServiceClient implements IAssemblerServiceClient, ServiceI
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * Lay out a design from a layout and return a design.
+     * Turn a layout into assemblies.
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutToAssemblies(semio.model.v1.Layout) returns (semio.assembler.v1.LayoutToAssembliesResponse);
      */
-    layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design> {
+    layoutToAssemblies(input: Layout, options?: RpcOptions): UnaryCall<Layout, LayoutToAssembliesResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<LayoutDesignRequest, Design>("unary", this._transport, method, opt, input);
+        return stackIntercept<Layout, LayoutToAssembliesResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Assemble elements from an assembly.
+     *
+     * @generated from protobuf rpc: AssemblyToElements(semio.model.v1.Assembly) returns (semio.assembler.v1.AssembleLayoutResponse);
+     */
+    assemblyToElements(input: Assembly, options?: RpcOptions): UnaryCall<Assembly, AssembleLayoutResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Assembly, AssembleLayoutResponse>("unary", this._transport, method, opt, input);
     }
 }

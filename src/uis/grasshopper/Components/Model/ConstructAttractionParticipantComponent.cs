@@ -40,11 +40,11 @@ namespace Semio.UI.Grasshopper.Model
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //string participantId = "";
-            //if (!DA.GetData(0, ref participantId)) return;
+            //string connectableId = "";
+            //if (!DA.GetData(0, ref connectableId)) return;
 
-            SobjectGoo participant = new();
-            if (!DA.GetData(0, ref participant)) return;
+            SobjectGoo connectable = new();
+            if (!DA.GetData(0, ref connectable)) return;
 
             RepresentationProtocol representationProtocol = RepresentationProtocol.None;
             DA.GetData(1, ref representationProtocol);
@@ -57,7 +57,7 @@ namespace Semio.UI.Grasshopper.Model
 
             var connectable = new Connectable()
             {
-                ParticipantId = participant.Value.Id,
+                ParticipantId = connectable.Value.Id,
                 RepresentationProtocol = representationProtocol,
             };
             connectable.Ports.AddRange(ports);
@@ -69,6 +69,6 @@ namespace Semio.UI.Grasshopper.Model
             DA.SetData(0, new ConnectableGoo(connectable));
         }
         public override Guid ComponentGuid => new("C20F4D78-1178-4700-973F-6AB81DAC35F1");
-        protected override Bitmap Icon => Resources.icon_construct_connectionparticipant;
+        protected override Bitmap Icon => Resources.icon_construct_connectionconnectable;
     }
 }

@@ -1,8 +1,21 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/Element",
+    "$ref": "#/definitions/AssembleLayoutResponse",
     "definitions": {
-        "Element": {
+        "AssembleLayoutResponse": {
+            "properties": {
+                "elements": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Element"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Assemble Layout Response"
+        },
+        "semio.model.v1.Element": {
             "properties": {
                 "sobject_id": {
                     "type": "string",

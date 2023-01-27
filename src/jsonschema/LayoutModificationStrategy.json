@@ -5,7 +5,7 @@
         "LayoutModificationStrategy": {
             "properties": {
                 "match_count": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough."
                 }
             },

@@ -19,8 +19,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AssemblerServiceClient interface {
-	// Lay out a design from a layout and return a design.
-	LayoutDesign(ctx context.Context, in *LayoutDesignRequest, opts ...grpc.CallOption) (*v1.Design, error)
+	// Turn a layout into assemblies.
+	LayoutToAssemblies(ctx context.Context, in *v1.Layout, opts ...grpc.CallOption) (*LayoutToAssembliesResponse, error)
+	// Assemble elements from an assembly.
+	AssemblyToElements(ctx context.Context, in *v1.Assembly, opts ...grpc.CallOption) (*AssembleLayoutResponse, error)
 }
 
 type assemblerServiceClient struct {
@@ -31,9 +33,18 @@ func NewAssemblerServiceClient(cc grpc.ClientConnInterface) AssemblerServiceClie
 	return &assemblerServiceClient{cc}
 }
 
-func (c *assemblerServiceClient) LayoutDesign(ctx context.Context, in *LayoutDesignRequest, opts ...grpc.CallOption) (*v1.Design, error) {
-	out := new(v1.Design)
-	err := c.cc.Invoke(ctx, "/semio.assembler.v1.AssemblerService/LayoutDesign", in, out, opts...)
+func (c *assemblerServiceClient) LayoutToAssemblies(ctx context.Context, in *v1.Layout, opts ...grpc.CallOption) (*LayoutToAssembliesResponse, error) {
+	out := new(LayoutToAssembliesResponse)
+	err := c.cc.Invoke(ctx, "/semio.assembler.v1.AssemblerService/LayoutToAssemblies", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assemblerServiceClient) AssemblyToElements(ctx context.Context, in *v1.Assembly, opts ...grpc.CallOption) (*AssembleLayoutResponse, error) {
+	out := new(AssembleLayoutResponse)
+	err := c.cc.Invoke(ctx, "/semio.assembler.v1.AssemblerService/AssemblyToElements", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +55,10 @@ func (c *assemblerServiceClient) LayoutDesign(ctx context.Context, in *LayoutDes
 // All implementations must embed UnimplementedAssemblerServiceServer
 // for forward compatibility
 type AssemblerServiceServer interface {
-	// Lay out a design from a layout and return a design.
-	LayoutDesign(context.Context, *LayoutDesignRequest) (*v1.Design, error)
+	// Turn a layout into assemblies.
+	LayoutToAssemblies(context.Context, *v1.Layout) (*LayoutToAssembliesResponse, error)
+	// Assemble elements from an assembly.
+	AssemblyToElements(context.Context, *v1.Assembly) (*AssembleLayoutResponse, error)
 	mustEmbedUnimplementedAssemblerServiceServer()
 }
 
@@ -53,8 +66,11 @@ type AssemblerServiceServer interface {
 type UnimplementedAssemblerServiceServer struct {
 }
 
-func (UnimplementedAssemblerServiceServer) LayoutDesign(context.Context, *LayoutDesignRequest) (*v1.Design, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LayoutDesign not implemented")
+func (UnimplementedAssemblerServiceServer) LayoutToAssemblies(context.Context, *v1.Layout) (*LayoutToAssembliesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LayoutToAssemblies not implemented")
+}
+func (UnimplementedAssemblerServiceServer) AssemblyToElements(context.Context, *v1.Assembly) (*AssembleLayoutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssemblyToElements not implemented")
 }
 func (UnimplementedAssemblerServiceServer) mustEmbedUnimplementedAssemblerServiceServer() {}
 
@@ -69,20 +85,38 @@ func RegisterAssemblerServiceServer(s grpc.ServiceRegistrar, srv AssemblerServic
 	s.RegisterService(&AssemblerService_ServiceDesc, srv)
 }
 
-func _AssemblerService_LayoutDesign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LayoutDesignRequest)
+func _AssemblerService_LayoutToAssemblies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.Layout)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AssemblerServiceServer).LayoutDesign(ctx, in)
+		return srv.(AssemblerServiceServer).LayoutToAssemblies(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/semio.assembler.v1.AssemblerService/LayoutDesign",
+		FullMethod: "/semio.assembler.v1.AssemblerService/LayoutToAssemblies",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AssemblerServiceServer).LayoutDesign(ctx, req.(*LayoutDesignRequest))
+		return srv.(AssemblerServiceServer).LayoutToAssemblies(ctx, req.(*v1.Layout))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssemblerService_AssemblyToElements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.Assembly)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssemblerServiceServer).AssemblyToElements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/semio.assembler.v1.AssemblerService/AssemblyToElements",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssemblerServiceServer).AssemblyToElements(ctx, req.(*v1.Assembly))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -95,8 +129,12 @@ var AssemblerService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AssemblerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "LayoutDesign",
-			Handler:    _AssemblerService_LayoutDesign_Handler,
+			MethodName: "LayoutToAssemblies",
+			Handler:    _AssemblerService_LayoutToAssemblies_Handler,
+		},
+		{
+			MethodName: "AssemblyToElements",
+			Handler:    _AssemblerService_AssemblyToElements_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

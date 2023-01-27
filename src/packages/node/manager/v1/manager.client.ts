@@ -6,10 +6,10 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { ManagerService } from "./manager";
 import type { RegisteredExtensionsResponse } from "./manager";
 import type { GetRegisteredExtensionsRequest } from "./manager";
-import type { ExtensionRegistrationResponse } from "./manager";
-import type { ExtensionRegistrationRequest } from "./manager";
-import type { ConnectionResponse } from "./manager";
-import type { ConnectionRequest } from "./manager";
+import type { RegisterExtensionResponse } from "./manager";
+import type { RegisterExtensionRequest } from "./manager";
+import type { ConnectElementResponse } from "./manager";
+import type { ConnectElementRequest } from "./manager";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Element } from "../../model/v1/model";
 import type { ElementRequest } from "./manager";
@@ -28,17 +28,17 @@ export interface IManagerServiceClient {
      */
     requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
     /**
-     * Request the connected element for an connection.
+     * Connected element for an connection.
      *
-     * @generated from protobuf rpc: RequestConnection(semio.manager.v1.ConnectionRequest) returns (semio.manager.v1.ConnectionResponse);
+     * @generated from protobuf rpc: ConnectElement(semio.manager.v1.ConnectElementRequest) returns (semio.manager.v1.ConnectElementResponse);
      */
-    requestConnection(input: ConnectionRequest, options?: RpcOptions): UnaryCall<ConnectionRequest, ConnectionResponse>;
+    connectElement(input: ConnectElementRequest, options?: RpcOptions): UnaryCall<ConnectElementRequest, ConnectElementResponse>;
     /**
      * Register a service to the server.
      *
-     * @generated from protobuf rpc: RegisterExtension(semio.manager.v1.ExtensionRegistrationRequest) returns (semio.manager.v1.ExtensionRegistrationResponse);
+     * @generated from protobuf rpc: RegisterExtension(semio.manager.v1.RegisterExtensionRequest) returns (semio.manager.v1.RegisterExtensionResponse);
      */
-    registerExtension(input: ExtensionRegistrationRequest, options?: RpcOptions): UnaryCall<ExtensionRegistrationRequest, ExtensionRegistrationResponse>;
+    registerExtension(input: RegisterExtensionRequest, options?: RpcOptions): UnaryCall<RegisterExtensionRequest, RegisterExtensionResponse>;
     /**
      * Get all registered extensions.
      *
@@ -67,22 +67,22 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
         return stackIntercept<ElementRequest, Element>("unary", this._transport, method, opt, input);
     }
     /**
-     * Request the connected element for an connection.
+     * Connected element for an connection.
      *
-     * @generated from protobuf rpc: RequestConnection(semio.manager.v1.ConnectionRequest) returns (semio.manager.v1.ConnectionResponse);
+     * @generated from protobuf rpc: ConnectElement(semio.manager.v1.ConnectElementRequest) returns (semio.manager.v1.ConnectElementResponse);
      */
-    requestConnection(input: ConnectionRequest, options?: RpcOptions): UnaryCall<ConnectionRequest, ConnectionResponse> {
+    connectElement(input: ConnectElementRequest, options?: RpcOptions): UnaryCall<ConnectElementRequest, ConnectElementResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ConnectionRequest, ConnectionResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<ConnectElementRequest, ConnectElementResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * Register a service to the server.
      *
-     * @generated from protobuf rpc: RegisterExtension(semio.manager.v1.ExtensionRegistrationRequest) returns (semio.manager.v1.ExtensionRegistrationResponse);
+     * @generated from protobuf rpc: RegisterExtension(semio.manager.v1.RegisterExtensionRequest) returns (semio.manager.v1.RegisterExtensionResponse);
      */
-    registerExtension(input: ExtensionRegistrationRequest, options?: RpcOptions): UnaryCall<ExtensionRegistrationRequest, ExtensionRegistrationResponse> {
+    registerExtension(input: RegisterExtensionRequest, options?: RpcOptions): UnaryCall<RegisterExtensionRequest, RegisterExtensionResponse> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ExtensionRegistrationRequest, ExtensionRegistrationResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<RegisterExtensionRequest, RegisterExtensionResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * Get all registered extensions.

@@ -1,72 +1,25 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/Layout",
+    "$ref": "#/definitions/ConnectElementRequest",
     "definitions": {
-        "Layout": {
+        "ConnectElementRequest": {
             "properties": {
-                "sobjects": {
-                    "items": {
-                        "$ref": "#/definitions/semio.model.v1.Sobject"
-                    },
-                    "type": "array",
-                    "description": "Sobjects (nodes) that are part of the layout (graph)."
+                "connected_sobject": {
+                    "$ref": "#/definitions/semio.model.v1.Sobject",
+                    "additionalProperties": true
                 },
-                "connections": {
-                    "items": {
-                        "$ref": "#/definitions/semio.model.v1.Connection"
-                    },
-                    "type": "array",
-                    "description": "Connections (edges) that are part of the layout (graph)."
+                "connecting_sobject": {
+                    "$ref": "#/definitions/semio.model.v1.Sobject",
+                    "additionalProperties": true
                 },
-                "strategy": {
-                    "enum": [
-                        "LAYOUTSTRATEGY_BREADTHFIRST",
-                        0,
-                        "LAYOUTSTRATEGY_DEPTHFIRST",
-                        1
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ],
-                    "title": "Layout Strategy",
-                    "description": "A layout strategy affects in which orders connections are triggered."
-                },
-                "assemblies": {
-                    "items": {
-                        "$ref": "#/definitions/semio.model.v1.Assembly"
-                    },
-                    "type": "array",
-                    "description": "Optional assemblies that can possibly unambiguously describe the layout order of sobjects.\r Most of the time this field is only necissary when elements that don't work well together in a general way.\r Therefore if you can update the element definitions to be more robust, rather use your time for that."
+                "connection": {
+                    "$ref": "#/definitions/semio.model.v1.Connection",
+                    "additionalProperties": true
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Layout",
-            "description": "A layout (graph) is a plan for a set of sobjects and their connections between each other."
-        },
-        "semio.model.v1.Assembly": {
-            "properties": {
-                "sobject_id": {
-                    "type": "string",
-                    "description": "The id of the sobject to place."
-                },
-                "parts": {
-                    "items": {
-                        "$ref": "#/definitions/semio.model.v1.Assembly"
-                    },
-                    "type": "array",
-                    "description": "The parts of an assembly (tree) are again assemblies."
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Assembly",
-            "description": "An assembly (tree) defines a subset of a layout that can be assembled unambiguously."
+            "title": "Connect Element Request"
         },
         "semio.model.v1.Connectable": {
             "properties": {

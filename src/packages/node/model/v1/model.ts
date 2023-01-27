@@ -18,26 +18,26 @@ import { MessageType } from "@protobuf-ts/runtime";
  */
 export interface Point {
     /**
-     * x coordinate.
+     * X coordinate.
      *
      * @generated from protobuf field: double x = 1;
      */
     x: number;
     /**
-     * y coordinate
+     * Y coordinate
      *
      * @generated from protobuf field: double y = 2;
      */
     y: number;
     /**
-     * z coordinate
+     * Z coordinate
      *
      * @generated from protobuf field: double z = 3;
      */
     z: number;
 }
 /**
- * Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.
+ * (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.
  *
  * @generated from protobuf message semio.model.v1.Quaternion
  */
@@ -60,16 +60,20 @@ export interface Quaternion {
     z: number;
 }
 /**
- * A pose is a reference frame with a point of view (origin) and orientation (view).
+ * A pose is a static reference frame/coordinate system.
  *
  * @generated from protobuf message semio.model.v1.Pose
  */
 export interface Pose {
     /**
+     * Point of view (origin) from the pose (reference frame/coordinate system)
+     *
      * @generated from protobuf field: semio.model.v1.Point point_of_view = 1;
      */
     pointOfView?: Point;
     /**
+     * View (orientation) from the pose (reference frame/coordinate system)
+     *
      * @generated from protobuf field: semio.model.v1.Quaternion view = 2;
      */
     view?: Quaternion;
@@ -126,30 +130,94 @@ export interface Representation {
      * 400:Fabriaction
      * 500:Real
      *
-     * @generated from protobuf field: int64 lod = 7;
+     * @generated from protobuf field: int32 lod = 7;
      */
-    lod: bigint;
+    lod: number;
 }
 /**
- * A plan for an element.
+ * Describes the scope of a parameter.
+ *
+ * @generated from protobuf message semio.model.v1.Scope
+ */
+export interface Scope {
+    /**
+     * Concept for the scope e.g Fassade, Floor
+     *
+     * @generated from protobuf field: string concept = 1;
+     */
+    concept: string;
+    /**
+     * Optionally define the order. Othwerwise it will be implicitly ordered by declaration.
+     *
+     * @generated from protobuf field: int32 order = 2;
+     */
+    order: number;
+}
+/**
+ * @generated from protobuf message semio.model.v1.Parameter
+ */
+export interface Parameter {
+    /**
+     * Name of the parameter
+     *
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * Optional context field to describe the context of the parameter.
+     *
+     * @generated from protobuf field: repeated semio.model.v1.Scope context = 2;
+     */
+    context: Scope[];
+    /**
+     * @generated from protobuf oneof: value
+     */
+    value: {
+        oneofKind: "text";
+        /**
+         * @generated from protobuf field: string text = 3;
+         */
+        text: string;
+    } | {
+        oneofKind: "integerNumber";
+        /**
+         * @generated from protobuf field: int32 integer_number = 4;
+         */
+        integerNumber: number;
+    } | {
+        oneofKind: "number";
+        /**
+         * @generated from protobuf field: double number = 5;
+         */
+        number: number;
+    } | {
+        oneofKind: "point";
+        /**
+         * @generated from protobuf field: semio.model.v1.Point point = 6;
+         */
+        point: Point;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * A plan for a prototype.
  *
  * @generated from protobuf message semio.model.v1.Plan
  */
 export interface Plan {
     /**
-     * The url of the element definition.
+     * The url of the prototype definition.
      *
      * @generated from protobuf field: string url = 1;
      */
     url: string;
     /**
-     * Optional parameters for the element.
+     * Optional parameters for the prototype.
      *
-     * @generated from protobuf field: map<string, string> parameters = 2;
+     * @generated from protobuf field: repeated semio.model.v1.Parameter parameters = 2;
      */
-    parameters: {
-        [key: string]: string;
-    };
+    parameters: Parameter[];
 }
 /**
  * Instance information for an element.
@@ -170,44 +238,63 @@ export interface Sobject {
      */
     pose?: Pose;
     /**
-     * The plan for the element.
+     * The plan for the prototype.
      *
      * @generated from protobuf field: semio.model.v1.Plan plan = 3;
      */
     plan?: Plan;
+    /**
+     * Concept that are relevent for the sobject.
+     *
+     * @generated from protobuf field: repeated string concepts = 4;
+     */
+    concepts: string[];
 }
 /**
- * A connectable connects in an connection process.
+ * A link defines the parameters for a connectable.
  *
- * @generated from protobuf message semio.model.v1.Connectable
+ * @generated from protobuf message semio.model.v1.Link
  */
-export interface Connectable {
+export interface Link {
     /**
-     * Id of connecting sobject.
+     * An optional representation protocol for the link.
      *
-     * @generated from protobuf field: string sobject_id = 1;
-     */
-    sobjectId: string;
-    /**
-     * An optional representation of the participant.
-     *
-     * @generated from protobuf field: semio.model.v1.RepresentationProtocol representationProtocol = 2;
+     * @generated from protobuf field: semio.model.v1.RepresentationProtocol representationProtocol = 1;
      */
     representationProtocol: RepresentationProtocol;
     /**
-     * Optional port names to connect to. The hierarchy should matter
+     * Optional port names to connect to. The hierarchy should matter.
      *
-     * @generated from protobuf field: repeated string ports = 3;
+     * @generated from protobuf field: repeated string ports = 2;
      */
     ports: string[];
     /**
      * Optional parameters to bias the connection.
      *
-     * @generated from protobuf field: map<string, string> bias = 4;
+     * @generated from protobuf field: map<string, string> bias = 3;
      */
     bias: {
         [key: string]: string;
     };
+}
+/**
+ * A connectable (sobject) connects in an connection process.
+ *
+ * @generated from protobuf message semio.model.v1.Connectable
+ */
+export interface Connectable {
+    /**
+     * Id of connectable (sobject).
+     *
+     * @generated from protobuf field: string sobject_id = 1;
+     */
+    sobjectId: string;
+    /**
+     * A link for the connectable (sobject).
+     *
+     * @generated from protobuf field: semio.model.v1.Link link = 2;
+     */
+    link?: Link;
 }
 /**
  * An connection can be used to connect two connectables.
@@ -248,7 +335,7 @@ export interface Assembly {
     parts: Assembly[];
 }
 /**
- * A layout (graph) is an assembly plan for a set of sobjects and their connections between each other.
+ * A layout (graph) is a plan for a set of sobjects and their connections between each other.
  *
  * @generated from protobuf message semio.model.v1.Layout
  */
@@ -310,15 +397,21 @@ export interface Prototype {
  */
 export interface Element {
     /**
+     * The sobject id that was used to construct the element.
+     *
+     * @generated from protobuf field: string sobject_id = 1;
+     */
+    sobjectId: string;
+    /**
      * The hash of the plan for the prototype of the element.
      *
-     * @generated from protobuf field: string prototype_plan_hash = 1;
+     * @generated from protobuf field: string prototype_plan_hash = 2;
      */
     prototypePlanHash: string;
     /**
      * The pose of the element instance.
      *
-     * @generated from protobuf field: semio.model.v1.Pose pose = 2;
+     * @generated from protobuf field: semio.model.v1.Pose pose = 3;
      */
     pose?: Pose; // TODO: Think of a formalization for modifiers.    // repeated Modifier modifiers = 3;}
 /**
@@ -360,9 +453,9 @@ export interface LayoutModificationStrategy {
     /**
      * The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
      *
-     * @generated from protobuf field: uint64 match_count = 1;
+     * @generated from protobuf field: uint32 match_count = 1;
      */
-    matchCount: bigint;
+    matchCount: number;
 }
 /**
  * A decision is a layout modification with a strategy on how to apply it to a new layout.
@@ -476,16 +569,18 @@ export enum FileType {
 }
 /**
  * Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]
- * LICENSE after https://spdx.org/licenses/:
+ * LICENSE (if possible) after https://spdx.org/licenses/:
  * 0:AGPL-3.0-or-later,
  * 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
  * 100:LGPL-3.0-or-later,101:LGPL-3.0-only
- * 150:MIT,160:Apache-2.0,170:0BSD
+ * 150:MIT,160:Apache-2.0,
+ * 170:0BSD
+ * 190:EnergyPlus
  * 214:Closed
  * OWNER starting with OWNERTYPE:
  * 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
  * 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
- * 2:NONPROFIT: 0:buildingsmart
+ * 2:NONPROFIT: 0:buildingsmart,1:nrel
  * 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
  *
  * @generated from protobuf enum semio.model.v1.Platform
@@ -551,6 +646,18 @@ export enum Platform {
      * @generated from protobuf enum value: PLATFORM_TRUCK = 1500000400;
      */
     TRUCK = 1500000400,
+    /**
+     * https://github.com/NREL/EnergyPlus
+     *
+     * @generated from protobuf enum value: PLATFORM_ENERGYPLUS = 1900200100;
+     */
+    ENERGYPLUS = 1900200100,
+    /**
+     * https://github.com/NREL/OpenStudio
+     *
+     * @generated from protobuf enum value: PLATFORM_OPENSTUDIO = 1910200101;
+     */
+    OPENSTUDIO = 1910200101,
     /**
      * https://www.rhino3d.com/
      *
@@ -813,11 +920,11 @@ class Representation$Type extends MessageType<Representation> {
             { no: 4, name: "platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
             { no: 5, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "concepts", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "lod", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 7, name: "lod", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
     create(value?: PartialMessage<Representation>): Representation {
-        const message = { body: new Uint8Array(0), encoding: 0, fileType: 0, platform: 0, description: "", concepts: [], lod: 0n };
+        const message = { body: new Uint8Array(0), encoding: 0, fileType: 0, platform: 0, description: "", concepts: [], lod: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Representation>(this, message, value);
@@ -846,8 +953,8 @@ class Representation$Type extends MessageType<Representation> {
                 case /* repeated string concepts */ 6:
                     message.concepts.push(reader.string());
                     break;
-                case /* int64 lod */ 7:
-                    message.lod = reader.int64().toBigInt();
+                case /* int32 lod */ 7:
+                    message.lod = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -879,9 +986,9 @@ class Representation$Type extends MessageType<Representation> {
         /* repeated string concepts = 6; */
         for (let i = 0; i < message.concepts.length; i++)
             writer.tag(6, WireType.LengthDelimited).string(message.concepts[i]);
-        /* int64 lod = 7; */
-        if (message.lod !== 0n)
-            writer.tag(7, WireType.Varint).int64(message.lod);
+        /* int32 lod = 7; */
+        if (message.lod !== 0)
+            writer.tag(7, WireType.Varint).int32(message.lod);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -893,15 +1000,163 @@ class Representation$Type extends MessageType<Representation> {
  */
 export const Representation = new Representation$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Scope$Type extends MessageType<Scope> {
+    constructor() {
+        super("semio.model.v1.Scope", [
+            { no: 1, name: "concept", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "order", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Scope>): Scope {
+        const message = { concept: "", order: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Scope>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Scope): Scope {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string concept */ 1:
+                    message.concept = reader.string();
+                    break;
+                case /* int32 order */ 2:
+                    message.order = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Scope, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string concept = 1; */
+        if (message.concept !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.concept);
+        /* int32 order = 2; */
+        if (message.order !== 0)
+            writer.tag(2, WireType.Varint).int32(message.order);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.model.v1.Scope
+ */
+export const Scope = new Scope$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Parameter$Type extends MessageType<Parameter> {
+    constructor() {
+        super("semio.model.v1.Parameter", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "context", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Scope },
+            { no: 3, name: "text", kind: "scalar", oneof: "value", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "integer_number", kind: "scalar", oneof: "value", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "number", kind: "scalar", oneof: "value", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 6, name: "point", kind: "message", oneof: "value", T: () => Point }
+        ]);
+    }
+    create(value?: PartialMessage<Parameter>): Parameter {
+        const message = { name: "", context: [], value: { oneofKind: undefined } };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Parameter>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Parameter): Parameter {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* repeated semio.model.v1.Scope context */ 2:
+                    message.context.push(Scope.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* string text */ 3:
+                    message.value = {
+                        oneofKind: "text",
+                        text: reader.string()
+                    };
+                    break;
+                case /* int32 integer_number */ 4:
+                    message.value = {
+                        oneofKind: "integerNumber",
+                        integerNumber: reader.int32()
+                    };
+                    break;
+                case /* double number */ 5:
+                    message.value = {
+                        oneofKind: "number",
+                        number: reader.double()
+                    };
+                    break;
+                case /* semio.model.v1.Point point */ 6:
+                    message.value = {
+                        oneofKind: "point",
+                        point: Point.internalBinaryRead(reader, reader.uint32(), options, (message.value as any).point)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Parameter, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* repeated semio.model.v1.Scope context = 2; */
+        for (let i = 0; i < message.context.length; i++)
+            Scope.internalBinaryWrite(message.context[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string text = 3; */
+        if (message.value.oneofKind === "text")
+            writer.tag(3, WireType.LengthDelimited).string(message.value.text);
+        /* int32 integer_number = 4; */
+        if (message.value.oneofKind === "integerNumber")
+            writer.tag(4, WireType.Varint).int32(message.value.integerNumber);
+        /* double number = 5; */
+        if (message.value.oneofKind === "number")
+            writer.tag(5, WireType.Bit64).double(message.value.number);
+        /* semio.model.v1.Point point = 6; */
+        if (message.value.oneofKind === "point")
+            Point.internalBinaryWrite(message.value.point, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.model.v1.Parameter
+ */
+export const Parameter = new Parameter$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Plan$Type extends MessageType<Plan> {
     constructor() {
         super("semio.model.v1.Plan", [
             { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "parameters", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 2, name: "parameters", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Parameter }
         ]);
     }
     create(value?: PartialMessage<Plan>): Plan {
-        const message = { url: "", parameters: {} };
+        const message = { url: "", parameters: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Plan>(this, message, value);
@@ -915,8 +1170,8 @@ class Plan$Type extends MessageType<Plan> {
                 case /* string url */ 1:
                     message.url = reader.string();
                     break;
-                case /* map<string, string> parameters */ 2:
-                    this.binaryReadMap2(message.parameters, reader, options);
+                case /* repeated semio.model.v1.Parameter parameters */ 2:
+                    message.parameters.push(Parameter.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -929,29 +1184,13 @@ class Plan$Type extends MessageType<Plan> {
         }
         return message;
     }
-    private binaryReadMap2(map: Plan["parameters"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Plan["parameters"] | undefined, val: Plan["parameters"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Plan.parameters");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: Plan, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string url = 1; */
         if (message.url !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.url);
-        /* map<string, string> parameters = 2; */
-        for (let k of Object.keys(message.parameters))
-            writer.tag(2, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.parameters[k]).join();
+        /* repeated semio.model.v1.Parameter parameters = 2; */
+        for (let i = 0; i < message.parameters.length; i++)
+            Parameter.internalBinaryWrite(message.parameters[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -968,11 +1207,12 @@ class Sobject$Type extends MessageType<Sobject> {
         super("semio.model.v1.Sobject", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "pose", kind: "message", T: () => Pose },
-            { no: 3, name: "plan", kind: "message", T: () => Plan }
+            { no: 3, name: "plan", kind: "message", T: () => Plan },
+            { no: 4, name: "concepts", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Sobject>): Sobject {
-        const message = { id: "" };
+        const message = { id: "", concepts: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Sobject>(this, message, value);
@@ -991,6 +1231,9 @@ class Sobject$Type extends MessageType<Sobject> {
                     break;
                 case /* semio.model.v1.Plan plan */ 3:
                     message.plan = Plan.internalBinaryRead(reader, reader.uint32(), options, message.plan);
+                    break;
+                case /* repeated string concepts */ 4:
+                    message.concepts.push(reader.string());
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1013,6 +1256,9 @@ class Sobject$Type extends MessageType<Sobject> {
         /* semio.model.v1.Plan plan = 3; */
         if (message.plan)
             Plan.internalBinaryWrite(message.plan, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* repeated string concepts = 4; */
+        for (let i = 0; i < message.concepts.length; i++)
+            writer.tag(4, WireType.LengthDelimited).string(message.concepts[i]);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1024,17 +1270,92 @@ class Sobject$Type extends MessageType<Sobject> {
  */
 export const Sobject = new Sobject$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Link$Type extends MessageType<Link> {
+    constructor() {
+        super("semio.model.v1.Link", [
+            { no: 1, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
+            { no: 2, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+        ]);
+    }
+    create(value?: PartialMessage<Link>): Link {
+        const message = { representationProtocol: 0, ports: [], bias: {} };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Link>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Link): Link {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* semio.model.v1.RepresentationProtocol representationProtocol */ 1:
+                    message.representationProtocol = reader.int32();
+                    break;
+                case /* repeated string ports */ 2:
+                    message.ports.push(reader.string());
+                    break;
+                case /* map<string, string> bias */ 3:
+                    this.binaryReadMap3(message.bias, reader, options);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    private binaryReadMap3(map: Link["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof Link["bias"] | undefined, val: Link["bias"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = reader.string();
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Link.bias");
+            }
+        }
+        map[key ?? ""] = val ?? "";
+    }
+    internalBinaryWrite(message: Link, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* semio.model.v1.RepresentationProtocol representationProtocol = 1; */
+        if (message.representationProtocol !== 0)
+            writer.tag(1, WireType.Varint).int32(message.representationProtocol);
+        /* repeated string ports = 2; */
+        for (let i = 0; i < message.ports.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.ports[i]);
+        /* map<string, string> bias = 3; */
+        for (let k of Object.keys(message.bias))
+            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.model.v1.Link
+ */
+export const Link = new Link$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Connectable$Type extends MessageType<Connectable> {
     constructor() {
         super("semio.model.v1.Connectable", [
             { no: 1, name: "sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
-            { no: 3, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 2, name: "link", kind: "message", T: () => Link }
         ]);
     }
     create(value?: PartialMessage<Connectable>): Connectable {
-        const message = { sobjectId: "", representationProtocol: 0, ports: [], bias: {} };
+        const message = { sobjectId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Connectable>(this, message, value);
@@ -1048,14 +1369,8 @@ class Connectable$Type extends MessageType<Connectable> {
                 case /* string sobject_id */ 1:
                     message.sobjectId = reader.string();
                     break;
-                case /* semio.model.v1.RepresentationProtocol representationProtocol */ 2:
-                    message.representationProtocol = reader.int32();
-                    break;
-                case /* repeated string ports */ 3:
-                    message.ports.push(reader.string());
-                    break;
-                case /* map<string, string> bias */ 4:
-                    this.binaryReadMap4(message.bias, reader, options);
+                case /* semio.model.v1.Link link */ 2:
+                    message.link = Link.internalBinaryRead(reader, reader.uint32(), options, message.link);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1068,35 +1383,13 @@ class Connectable$Type extends MessageType<Connectable> {
         }
         return message;
     }
-    private binaryReadMap4(map: Connectable["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Connectable["bias"] | undefined, val: Connectable["bias"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Connectable.bias");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: Connectable, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string sobject_id = 1; */
         if (message.sobjectId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.sobjectId);
-        /* semio.model.v1.RepresentationProtocol representationProtocol = 2; */
-        if (message.representationProtocol !== 0)
-            writer.tag(2, WireType.Varint).int32(message.representationProtocol);
-        /* repeated string ports = 3; */
-        for (let i = 0; i < message.ports.length; i++)
-            writer.tag(3, WireType.LengthDelimited).string(message.ports[i]);
-        /* map<string, string> bias = 4; */
-        for (let k of Object.keys(message.bias))
-            writer.tag(4, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
+        /* semio.model.v1.Link link = 2; */
+        if (message.link)
+            Link.internalBinaryWrite(message.link, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1348,12 +1641,13 @@ export const Prototype = new Prototype$Type();
 class Element$Type extends MessageType<Element> {
     constructor() {
         super("semio.model.v1.Element", [
-            { no: 1, name: "prototype_plan_hash", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "pose", kind: "message", T: () => Pose }
+            { no: 1, name: "sobject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "prototype_plan_hash", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "pose", kind: "message", T: () => Pose }
         ]);
     }
     create(value?: PartialMessage<Element>): Element {
-        const message = { prototypePlanHash: "" };
+        const message = { sobjectId: "", prototypePlanHash: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Element>(this, message, value);
@@ -1364,10 +1658,13 @@ class Element$Type extends MessageType<Element> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string prototype_plan_hash */ 1:
+                case /* string sobject_id */ 1:
+                    message.sobjectId = reader.string();
+                    break;
+                case /* string prototype_plan_hash */ 2:
                     message.prototypePlanHash = reader.string();
                     break;
-                case /* semio.model.v1.Pose pose */ 2:
+                case /* semio.model.v1.Pose pose */ 3:
                     message.pose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.pose);
                     break;
                 default:
@@ -1382,12 +1679,15 @@ class Element$Type extends MessageType<Element> {
         return message;
     }
     internalBinaryWrite(message: Element, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string prototype_plan_hash = 1; */
+        /* string sobject_id = 1; */
+        if (message.sobjectId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.sobjectId);
+        /* string prototype_plan_hash = 2; */
         if (message.prototypePlanHash !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.prototypePlanHash);
-        /* semio.model.v1.Pose pose = 2; */
+            writer.tag(2, WireType.LengthDelimited).string(message.prototypePlanHash);
+        /* semio.model.v1.Pose pose = 3; */
         if (message.pose)
-            Pose.internalBinaryWrite(message.pose, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            Pose.internalBinaryWrite(message.pose, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1510,11 +1810,11 @@ export const LayoutModification = new LayoutModification$Type();
 class LayoutModificationStrategy$Type extends MessageType<LayoutModificationStrategy> {
     constructor() {
         super("semio.model.v1.LayoutModificationStrategy", [
-            { no: 1, name: "match_count", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 1, name: "match_count", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<LayoutModificationStrategy>): LayoutModificationStrategy {
-        const message = { matchCount: 0n };
+        const message = { matchCount: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<LayoutModificationStrategy>(this, message, value);
@@ -1525,8 +1825,8 @@ class LayoutModificationStrategy$Type extends MessageType<LayoutModificationStra
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* uint64 match_count */ 1:
-                    message.matchCount = reader.uint64().toBigInt();
+                case /* uint32 match_count */ 1:
+                    message.matchCount = reader.uint32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1540,9 +1840,9 @@ class LayoutModificationStrategy$Type extends MessageType<LayoutModificationStra
         return message;
     }
     internalBinaryWrite(message: LayoutModificationStrategy, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* uint64 match_count = 1; */
-        if (message.matchCount !== 0n)
-            writer.tag(1, WireType.Varint).uint64(message.matchCount);
+        /* uint32 match_count = 1; */
+        if (message.matchCount !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.matchCount);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

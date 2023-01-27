@@ -14,7 +14,7 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Extension Registration Response"
+            "title": "Register Extension Response"
         }
     }
 }

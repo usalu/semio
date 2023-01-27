@@ -21,15 +21,10 @@ class AdapterServiceStub(object):
                 request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Point.FromString,
                 )
-        self.RequestRepresentation = channel.unary_unary(
-                '/semio.extension.adapter.v1.AdapterService/RequestRepresentation',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Representation.FromString,
-                )
-        self.RequestRepresentations = channel.unary_unary(
-                '/semio.extension.adapter.v1.AdapterService/RequestRepresentations',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.SerializeToString,
-                response_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.FromString,
+        self.RequestPrototype = channel.unary_unary(
+                '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
+                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.SerializeToString,
+                response_deserializer=model_dot_v1_dot_model__pb2.Prototype.FromString,
                 )
 
 
@@ -44,15 +39,8 @@ class AdapterServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RequestRepresentation(self, request, context):
-        """Request a specific representation
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def RequestRepresentations(self, request, context):
-        """Request potentially all representations
+    def RequestPrototype(self, request, context):
+        """Request a prototype.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -66,15 +54,10 @@ def add_AdapterServiceServicer_to_server(servicer, server):
                     request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Point.SerializeToString,
             ),
-            'RequestRepresentation': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestRepresentation,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Representation.SerializeToString,
-            ),
-            'RequestRepresentations': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestRepresentations,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.FromString,
-                    response_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.SerializeToString,
+            'RequestPrototype': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestPrototype,
+                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.FromString,
+                    response_serializer=model_dot_v1_dot_model__pb2.Prototype.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -105,7 +88,7 @@ class AdapterService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RequestRepresentation(request,
+    def RequestPrototype(request,
             target,
             options=(),
             channel_credentials=None,
@@ -115,25 +98,8 @@ class AdapterService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestRepresentation',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Representation.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def RequestRepresentations(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestRepresentations',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsRequest.SerializeToString,
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.RepresentationsResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
+            extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.SerializeToString,
+            model_dot_v1_dot_model__pb2.Prototype.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -24,8 +24,21 @@
             "properties": {
                 "sobject_id": {
                     "type": "string",
-                    "description": "Id of connecting sobject."
+                    "description": "Id of connectable (sobject)."
                 },
+                "link": {
+                    "$ref": "#/definitions/semio.model.v1.Link",
+                    "additionalProperties": true,
+                    "description": "A link for the connectable (sobject)."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Connectable",
+            "description": "A connectable (sobject) connects in an connection process."
+        },
+        "semio.model.v1.Link": {
+            "properties": {
                 "representationProtocol": {
                     "enum": [
                         "REPRESENTATIONPROTOCOL_NONE",
@@ -51,7 +64,7 @@
                         "type": "string"
                     },
                     "type": "array",
-                    "description": "Optional port names to connect to. The hierarchy should matter"
+                    "description": "Optional port names to connect to. The hierarchy should matter."
                 },
                 "bias": {
                     "additionalProperties": {
@@ -63,8 +76,8 @@
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Connectable",
-            "description": "A connectable connects in an connection process."
+            "title": "Link",
+            "description": "A link defines the parameters for a connectable."
         }
     }
 }

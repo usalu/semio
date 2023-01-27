@@ -75,22 +75,76 @@
       "default": "FILETYPE_NATIVE",
       "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
     },
+    "v1Link": {
+      "type": "object",
+      "properties": {
+        "representationProtocol": {
+          "$ref": "#/definitions/v1RepresentationProtocol",
+          "description": "An optional representation protocol for the link."
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional port names to connect to. The hierarchy should matter."
+        },
+        "bias": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional parameters to bias the connection."
+        }
+      },
+      "description": "A link defines the parameters for a connectable."
+    },
+    "v1Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the parameter"
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Scope"
+          },
+          "description": "Optional context field to describe the context of the parameter."
+        },
+        "text": {
+          "type": "string"
+        },
+        "integerNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "number": {
+          "type": "number",
+          "format": "double"
+        },
+        "point": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
+    },
     "v1Plan": {
       "type": "object",
       "properties": {
         "url": {
           "type": "string",
-          "description": "The url of the element definition."
+          "description": "The url of the prototype definition."
         },
         "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Parameter"
           },
-          "description": "Optional parameters for the element."
+          "description": "Optional parameters for the prototype."
         }
       },
-      "description": "A plan for an element."
+      "description": "A plan for a prototype."
     },
     "v1Platform": {
       "type": "string",
@@ -105,14 +159,16 @@
         "PLATFORM_JSCAD",
         "PLATFORM_Fornjot",
         "PLATFORM_TRUCK",
+        "PLATFORM_ENERGYPLUS",
+        "PLATFORM_OPENSTUDIO",
         "PLATFORM_RHINO",
         "PLATFORM_GRASSHOPPER",
         "PLATFORM_REVIT",
         "PLATFORM_DYNAMO"
       ],
       "default": "PLATFORM_SEMIO",
-      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
-      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,170:0BSD\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_ENERGYPLUS: https://github.com/NREL/EnergyPlus\n - PLATFORM_OPENSTUDIO: https://github.com/NREL/OpenStudio\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
+      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE (if possible) after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,\r\n170:0BSD\r\n190:EnergyPlus\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart,1:nrel\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
     },
     "v1Point": {
       "type": "object",
@@ -120,54 +176,41 @@
         "x": {
           "type": "number",
           "format": "double",
-          "description": "x coordinate."
+          "description": "X coordinate."
         },
         "y": {
           "type": "number",
           "format": "double",
-          "title": "y coordinate"
+          "title": "Y coordinate"
         },
         "z": {
           "type": "number",
           "format": "double",
-          "title": "z coordinate"
+          "title": "Z coordinate"
         }
       },
       "description": "A 3d point with x,y,z coordinates."
     },
-    "v1Pose": {
+    "v1Prototype": {
       "type": "object",
       "properties": {
-        "pointOfView": {
-          "$ref": "#/definitions/v1Point"
+        "planHash": {
+          "type": "string",
+          "description": "The hash of the plan used for the construction of the prototype."
         },
-        "view": {
-          "$ref": "#/definitions/v1Quaternion"
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Representation"
+          },
+          "description": "Representations of the prototype."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional human readable description of the prototype."
         }
       },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
-    },
-    "v1Quaternion": {
-      "type": "object",
-      "properties": {
-        "w": {
-          "type": "number",
-          "format": "double"
-        },
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "z": {
-          "type": "number",
-          "format": "double"
-        }
-      },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+      "description": "A prototype acts as a template from which an element can be cloned."
     },
     "v1Representation": {
       "type": "object",
@@ -201,41 +244,37 @@
           "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
         },
         "lod": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
         }
       },
       "description": "A representation for an element. Basically a file with some semio specific metadata."
     },
-    "v1RepresentationsResponse": {
-      "type": "object",
-      "properties": {
-        "representations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Representation"
-          }
-        }
-      }
+    "v1RepresentationProtocol": {
+      "type": "string",
+      "enum": [
+        "REPRESENTATIONPROTOCOL_NONE",
+        "REPRESENTATIONPROTOCOL_SIMPLE",
+        "REPRESENTATIONPROTOCOL_FULL"
+      ],
+      "default": "REPRESENTATIONPROTOCOL_NONE",
+      "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process.\n\n - REPRESENTATIONPROTOCOL_NONE: The connecting sees no representation of the connected.\n - REPRESENTATIONPROTOCOL_SIMPLE: In the simple representation protocol everything is represented by a point.\n - REPRESENTATIONPROTOCOL_FULL: In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary."
     },
-    "v1Sobject": {
+    "v1Scope": {
       "type": "object",
       "properties": {
-        "id": {
+        "concept": {
           "type": "string",
-          "description": "Id that allows to distinguish it from other sobjects."
+          "title": "Concept for the scope e.g Fassade, Floor"
         },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly."
-        },
-        "plan": {
-          "$ref": "#/definitions/v1Plan",
-          "description": "The plan for the element."
+        "order": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
         }
       },
-      "description": "Instance information for an element."
+      "description": "Describes the scope of a parameter."
     }
   }
 }

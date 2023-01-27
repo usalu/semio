@@ -7,15 +7,15 @@ option csharp_namespace = "Semio.Model.V1";
 
 // A 3d point with x,y,z coordinates.
 message Point {
-  // x coordinate.
+  // X coordinate.
   double x = 1;
-  // y coordinate
+  // Y coordinate
   double y = 2;
-  // z coordinate
+  // Z coordinate
   double z = 3;
 }
 
-// Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element.  
+// (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
 message Quaternion {
   double w = 1;
   double x = 2;
@@ -23,9 +23,11 @@ message Quaternion {
   double z = 4;
 }
 
-// A pose is a reference frame with a point of view (origin) and orientation (view).
+// A pose is a static reference frame/coordinate system.
 message Pose {
+  // Point of view (origin) from the pose (reference frame/coordinate system)
   Point point_of_view = 1;
+  // View (orientation) from the pose (reference frame/coordinate system)
   Quaternion view = 2;
 }
 
@@ -51,7 +53,7 @@ message Representation {
   // 300:Precise
   // 400:Fabriaction
   // 500:Real 
-  int64 lod = 7;
+  int32 lod = 7;
 }
 
 // Encoding of a byte array.
@@ -87,16 +89,18 @@ enum FileType {
 }
 
 // Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]
-// LICENSE after https://spdx.org/licenses/: 
+// LICENSE (if possible) after https://spdx.org/licenses/: 
 // 0:AGPL-3.0-or-later,
 // 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
 // 100:LGPL-3.0-or-later,101:LGPL-3.0-only
-// 150:MIT,160:Apache-2.0,170:0BSD
+// 150:MIT,160:Apache-2.0,
+// 170:0BSD
+// 190:EnergyPlus
 // 214:Closed
 // OWNER starting with OWNERTYPE:
 // 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
 // 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
-// 2:NONPROFIT: 0:buildingsmart
+// 2:NONPROFIT: 0:buildingsmart,1:nrel
 // 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
 enum Platform {
   // https://github.com/usalu/semio
@@ -119,6 +123,10 @@ enum Platform {
   PLATFORM_Fornjot = 1700000300;
   // https://github.com/ricosjp/truck
   PLATFORM_TRUCK = 1500000400;
+  // https://github.com/NREL/EnergyPlus
+  PLATFORM_ENERGYPLUS = 1900200100;
+  // https://github.com/NREL/OpenStudio
+  PLATFORM_OPENSTUDIO = 1910200101;
   // https://www.rhino3d.com/
   PLATFORM_RHINO = 2140300000;
   // https://www.grasshopper3d.com/
@@ -129,12 +137,33 @@ enum Platform {
   PLATFORM_DYNAMO = 2140300101;
 }
 
-// A plan for an element.
+// Describes the scope of a parameter.
+message Scope {
+  // Concept for the scope e.g Fassade, Floor
+  string concept = 1;
+  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration.
+  int32 order = 2; 
+}
+
+message Parameter {
+  // Name of the parameter
+  string name = 1;
+  // Optional context field to describe the context of the parameter.
+  repeated Scope context = 2;
+  oneof value {
+    string text = 3;
+    int32 integer_number = 4;
+    double number = 5;
+    Point point = 6;
+  }
+}
+
+// A plan for a prototype.
 message Plan {
-  // The url of the element definition.
+  // The url of the prototype definition.
   string url = 1;
-  // Optional parameters for the element.
-  map<string,string> parameters = 2;
+  // Optional parameters for the prototype.
+  repeated Parameter parameters = 2;
 }
 
 // Instance information for an element.
@@ -143,8 +172,10 @@ message Sobject {
   string id = 1;
   // The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly.
   Pose pose = 2;
-  // The plan for the element.
+  // The plan for the prototype.
   Plan plan = 3;
+  // Concept that are relevent for the sobject.
+  repeated string concepts = 4;
 }
 
 // The representation protocol determines what type of representation the connecting will see of the connected in the connection process.
@@ -157,16 +188,22 @@ enum RepresentationProtocol{
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
-// A connectable connects in an connection process.
+// A link defines the parameters for a connectable.
+message Link{
+    // An optional representation protocol for the link.
+    RepresentationProtocol representationProtocol = 1;
+    // Optional port names to connect to. The hierarchy should matter.
+    repeated string ports = 2;
+    // Optional parameters to bias the connection.
+    map<string,string> bias = 3;
+}
+
+// A connectable (sobject) connects in an connection process.
 message Connectable {
-  // Id of connecting sobject.
+  // Id of connectable (sobject).
   string sobject_id = 1;
-  // An optional representation of the participant.
-  RepresentationProtocol representationProtocol = 2;
-  // Optional port names to connect to. The hierarchy should matter
-  repeated string ports = 3;
-  // Optional parameters to bias the connection.
-  map<string,string> bias = 4;
+  // A link for the connectable (sobject).
+  Link link = 2;
 }
 
 // An connection can be used to connect two connectables.
@@ -193,7 +230,7 @@ enum LayoutStrategy {
   LAYOUTSTRATEGY_DEPTHFIRST = 1;
 }
 
-// A layout (graph) is an assembly plan for a set of sobjects and their connections between each other.
+// A layout (graph) is a plan for a set of sobjects and their connections between each other.
 message Layout {
   // Sobjects (nodes) that are part of the layout (graph).
   repeated Sobject sobjects = 1;
@@ -218,10 +255,12 @@ message Prototype {
 
 // An element is the atom of a design. It has several representations and a pose.
 message Element {
+  // The sobject id that was used to construct the element.
+  string sobject_id = 1;
   // The hash of the plan for the prototype of the element.
-  string prototype_plan_hash = 1;
+  string prototype_plan_hash = 2;
   // The pose of the element instance.
-  Pose pose = 2;
+  Pose pose = 3;
   // TODO: Think of a formalization for modifiers.
   // repeated Modifier modifiers = 3;
 }
@@ -241,7 +280,7 @@ message LayoutModification {
 // A decision strategy holds information on how modifications are applied.
 message LayoutModificationStrategy {
   // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
-  uint64 match_count = 1;
+  uint32 match_count = 1;
 }
 
 // A decision is a layout modification with a strategy on how to apply it to a new layout.

@@ -6,9 +6,9 @@ option go_package = "github.com/usalu/semio/src/packages/go/gateway/v1";
 option csharp_namespace = "Semio.Gateway.V1";
 
 import "model/v1/model.proto";
-import "assembler/v1/assembler.proto";
+// import "assembler/v1/assembler.proto";
 import "google/api/annotations.proto";
-//import "google/api/client.proto";
+// import "google/api/client.proto";
 // import "google/api/resource.proto";
 // import "google/protobuf/empty.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
@@ -40,10 +40,17 @@ service GatewayService {
   //   option (google.api.default_host) = "localhost:50000";
 
   // Lay out a design from a layout and return a design.
-  rpc LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design) {
+  rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
     option (google.api.http) = {
        post: "/v1/layoutdesign"
        body: "*"
      };
   }
+}
+
+message LayoutDesignRequest {
+  // The layout that 
+  semio.model.v1.Layout layout = 1;
+  // An optional target platform which will try to convert all elements into it.
+  semio.model.v1.Platform target_platform = 2;
 }

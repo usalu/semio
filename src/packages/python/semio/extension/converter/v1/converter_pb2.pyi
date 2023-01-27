@@ -7,15 +7,15 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Converting(_message.Message):
-    __slots__ = ["source_type_url", "target_type_url"]
-    SOURCE_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
-    TARGET_TYPE_URL_FIELD_NUMBER: _ClassVar[int]
-    source_type_url: str
-    target_type_url: str
-    def __init__(self, source_type_url: _Optional[str] = ..., target_type_url: _Optional[str] = ...) -> None: ...
+    __slots__ = ["source_platform", "target_platform"]
+    SOURCE_PLATFORM_FIELD_NUMBER: _ClassVar[int]
+    TARGET_PLATFORM_FIELD_NUMBER: _ClassVar[int]
+    source_platform: _model_pb2.Platform
+    target_platform: _model_pb2.Platform
+    def __init__(self, source_platform: _Optional[_Union[_model_pb2.Platform, str]] = ..., target_platform: _Optional[_Union[_model_pb2.Platform, str]] = ...) -> None: ...
 
 class RepresentationConversionRequest(_message.Message):
-    __slots__ = ["options", "representation", "target_type"]
+    __slots__ = ["options", "representation", "target_platform"]
     class OptionsEntry(_message.Message):
         __slots__ = ["key", "value"]
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -25,8 +25,8 @@ class RepresentationConversionRequest(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     OPTIONS_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
-    TARGET_TYPE_FIELD_NUMBER: _ClassVar[int]
+    TARGET_PLATFORM_FIELD_NUMBER: _ClassVar[int]
     options: _containers.ScalarMap[str, str]
     representation: _model_pb2.Representation
-    target_type: str
-    def __init__(self, representation: _Optional[_Union[_model_pb2.Representation, _Mapping]] = ..., target_type: _Optional[str] = ..., options: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    target_platform: _model_pb2.Platform
+    def __init__(self, representation: _Optional[_Union[_model_pb2.Representation, _Mapping]] = ..., target_platform: _Optional[_Union[_model_pb2.Platform, str]] = ..., options: _Optional[_Mapping[str, str]] = ...) -> None: ...

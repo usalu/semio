@@ -3,7 +3,7 @@ import {GrpcTransport} from "@protobuf-ts/grpc-transport";
 import {Representation} from 'semio/model/v1/model'
 import {RepresentationConversionRequest} from 'semio/extension/converter/v1/converter'
 import {IConverterService,converterServiceDefinition} from 'semio/extension/converter/v1/converter.grpc-server'
-import {ExtensionRegistrationRequest} from 'semio/manager/v1/manager'
+import {RegisterExtensionRequest} from 'semio/manager/v1/manager'
 import {ManagerServiceClient} from 'semio/manager/v1/manager.client'
 import {THREE as SEMIO_THREE,RHINO} from 'semio/constants'
 import * as THREE from 'three'

@@ -88,14 +88,16 @@
         "PLATFORM_JSCAD",
         "PLATFORM_Fornjot",
         "PLATFORM_TRUCK",
+        "PLATFORM_ENERGYPLUS",
+        "PLATFORM_OPENSTUDIO",
         "PLATFORM_RHINO",
         "PLATFORM_GRASSHOPPER",
         "PLATFORM_REVIT",
         "PLATFORM_DYNAMO"
       ],
       "default": "PLATFORM_SEMIO",
-      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
-      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,170:0BSD\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+      "description": "- PLATFORM_SEMIO: https://github.com/usalu/semio\n - PLATFORM_THREE: https://github.com/mrdoob/three.js/\n - PLATFORM_SVERCHOK: https://github.com/nortikin/sverchok\n - PLATFORM_IFCOPENSHELL: https://github.com/IfcOpenShell\n - PLATFORM_CADQUERY: https://github.com/CadQuery\n - PLATFORM_FREECAD: https://github.com/FreeCAD\n - PLATFORM_OPENSCAD: https://github.com/openscad\n - PLATFORM_JSCAD: https://github.com/jscad\n - PLATFORM_Fornjot: https://github.com/hannobraun/Fornjot\n - PLATFORM_TRUCK: https://github.com/ricosjp/truck\n - PLATFORM_ENERGYPLUS: https://github.com/NREL/EnergyPlus\n - PLATFORM_OPENSTUDIO: https://github.com/NREL/OpenStudio\n - PLATFORM_RHINO: https://www.rhino3d.com/\n - PLATFORM_GRASSHOPPER: https://www.grasshopper3d.com/\n - PLATFORM_REVIT: https://www.autodesk.de/products/revit/\n - PLATFORM_DYNAMO: https://dynamobim.org/",
+      "title": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r\nLICENSE (if possible) after https://spdx.org/licenses/: \r\n0:AGPL-3.0-or-later,\r\n50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r\n100:LGPL-3.0-or-later,101:LGPL-3.0-only\r\n150:MIT,160:Apache-2.0,\r\n170:0BSD\r\n190:EnergyPlus\r\n214:Closed\r\nOWNER starting with OWNERTYPE:\r\n0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r\n1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r\n2:NONPROFIT: 0:buildingsmart,1:nrel\r\n3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
     },
     "v1Point": {
       "type": "object",
@@ -103,17 +105,17 @@
         "x": {
           "type": "number",
           "format": "double",
-          "description": "x coordinate."
+          "description": "X coordinate."
         },
         "y": {
           "type": "number",
           "format": "double",
-          "title": "y coordinate"
+          "title": "Y coordinate"
         },
         "z": {
           "type": "number",
           "format": "double",
-          "title": "z coordinate"
+          "title": "Z coordinate"
         }
       },
       "description": "A 3d point with x,y,z coordinates."
@@ -122,13 +124,15 @@
       "type": "object",
       "properties": {
         "pointOfView": {
-          "$ref": "#/definitions/v1Point"
+          "$ref": "#/definitions/v1Point",
+          "title": "Point of view (origin) from the pose (reference frame/coordinate system)"
         },
         "view": {
-          "$ref": "#/definitions/v1Quaternion"
+          "$ref": "#/definitions/v1Quaternion",
+          "title": "View (orientation) from the pose (reference frame/coordinate system)"
         }
       },
-      "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+      "description": "A pose is a static reference frame/coordinate system."
     },
     "v1Quaternion": {
       "type": "object",
@@ -150,7 +154,7 @@
           "format": "double"
         }
       },
-      "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+      "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
     },
     "v1Representation": {
       "type": "object",
@@ -184,8 +188,8 @@
           "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
         },
         "lod": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
         }
       },

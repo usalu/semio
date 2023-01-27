@@ -4,10 +4,8 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AdapterService } from "./adapter";
-import type { RepresentationsResponse } from "./adapter";
-import type { RepresentationsRequest } from "./adapter";
-import type { Representation } from "../../../model/v1/model";
-import type { RepresentationRequest } from "./adapter";
+import type { Prototype } from "../../../model/v1/model";
+import type { PrototypeRequest } from "./adapter";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Point } from "../../../model/v1/model";
 import type { ConnectionPointRequest } from "./adapter";
@@ -26,17 +24,11 @@ export interface IAdapterServiceClient {
      */
     requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point>;
     /**
-     * Request a specific representation
+     * Request a prototype.
      *
-     * @generated from protobuf rpc: RequestRepresentation(semio.extension.adapter.v1.RepresentationRequest) returns (semio.model.v1.Representation);
+     * @generated from protobuf rpc: RequestPrototype(semio.extension.adapter.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
      */
-    requestRepresentation(input: RepresentationRequest, options?: RpcOptions): UnaryCall<RepresentationRequest, Representation>;
-    /**
-     * Request potentially all representations
-     *
-     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.extension.adapter.v1.RepresentationsResponse);
-     */
-    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, RepresentationsResponse>;
+    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype>;
 }
 /**
  * An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
@@ -59,21 +51,12 @@ export class AdapterServiceClient implements IAdapterServiceClient, ServiceInfo 
         return stackIntercept<ConnectionPointRequest, Point>("unary", this._transport, method, opt, input);
     }
     /**
-     * Request a specific representation
+     * Request a prototype.
      *
-     * @generated from protobuf rpc: RequestRepresentation(semio.extension.adapter.v1.RepresentationRequest) returns (semio.model.v1.Representation);
+     * @generated from protobuf rpc: RequestPrototype(semio.extension.adapter.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
      */
-    requestRepresentation(input: RepresentationRequest, options?: RpcOptions): UnaryCall<RepresentationRequest, Representation> {
+    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RepresentationRequest, Representation>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * Request potentially all representations
-     *
-     * @generated from protobuf rpc: RequestRepresentations(semio.extension.adapter.v1.RepresentationsRequest) returns (semio.extension.adapter.v1.RepresentationsResponse);
-     */
-    requestRepresentations(input: RepresentationsRequest, options?: RpcOptions): UnaryCall<RepresentationsRequest, RepresentationsResponse> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RepresentationsRequest, RepresentationsResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<PrototypeRequest, Prototype>("unary", this._transport, method, opt, input);
     }
 }

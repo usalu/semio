@@ -6,15 +6,15 @@
             "properties": {
                 "x": {
                     "type": "number",
-                    "description": "x coordinate."
+                    "description": "X coordinate."
                 },
                 "y": {
                     "type": "number",
-                    "description": "y coordinate"
+                    "description": "Y coordinate"
                 },
                 "z": {
                     "type": "number",
-                    "description": "z coordinate"
+                    "description": "Z coordinate"
                 }
             },
             "additionalProperties": true,

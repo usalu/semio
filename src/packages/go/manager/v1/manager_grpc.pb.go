@@ -21,10 +21,10 @@ const _ = grpc.SupportPackageIsVersion7
 type ManagerServiceClient interface {
 	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(ctx context.Context, in *ElementRequest, opts ...grpc.CallOption) (*v1.Element, error)
-	// Request the connected element for an connection.
-	RequestConnection(ctx context.Context, in *ConnectionRequest, opts ...grpc.CallOption) (*ConnectionResponse, error)
+	// Connected element for an connection.
+	ConnectElement(ctx context.Context, in *ConnectElementRequest, opts ...grpc.CallOption) (*ConnectElementResponse, error)
 	// Register a service to the server.
-	RegisterExtension(ctx context.Context, in *ExtensionRegistrationRequest, opts ...grpc.CallOption) (*ExtensionRegistrationResponse, error)
+	RegisterExtension(ctx context.Context, in *RegisterExtensionRequest, opts ...grpc.CallOption) (*RegisterExtensionResponse, error)
 	// Get all registered extensions.
 	GetRegisteredExtensions(ctx context.Context, in *GetRegisteredExtensionsRequest, opts ...grpc.CallOption) (*RegisteredExtensionsResponse, error)
 }
@@ -46,17 +46,17 @@ func (c *managerServiceClient) RequestElement(ctx context.Context, in *ElementRe
 	return out, nil
 }
 
-func (c *managerServiceClient) RequestConnection(ctx context.Context, in *ConnectionRequest, opts ...grpc.CallOption) (*ConnectionResponse, error) {
-	out := new(ConnectionResponse)
-	err := c.cc.Invoke(ctx, "/semio.manager.v1.ManagerService/RequestConnection", in, out, opts...)
+func (c *managerServiceClient) ConnectElement(ctx context.Context, in *ConnectElementRequest, opts ...grpc.CallOption) (*ConnectElementResponse, error) {
+	out := new(ConnectElementResponse)
+	err := c.cc.Invoke(ctx, "/semio.manager.v1.ManagerService/ConnectElement", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *managerServiceClient) RegisterExtension(ctx context.Context, in *ExtensionRegistrationRequest, opts ...grpc.CallOption) (*ExtensionRegistrationResponse, error) {
-	out := new(ExtensionRegistrationResponse)
+func (c *managerServiceClient) RegisterExtension(ctx context.Context, in *RegisterExtensionRequest, opts ...grpc.CallOption) (*RegisterExtensionResponse, error) {
+	out := new(RegisterExtensionResponse)
 	err := c.cc.Invoke(ctx, "/semio.manager.v1.ManagerService/RegisterExtension", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -79,10 +79,10 @@ func (c *managerServiceClient) GetRegisteredExtensions(ctx context.Context, in *
 type ManagerServiceServer interface {
 	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(context.Context, *ElementRequest) (*v1.Element, error)
-	// Request the connected element for an connection.
-	RequestConnection(context.Context, *ConnectionRequest) (*ConnectionResponse, error)
+	// Connected element for an connection.
+	ConnectElement(context.Context, *ConnectElementRequest) (*ConnectElementResponse, error)
 	// Register a service to the server.
-	RegisterExtension(context.Context, *ExtensionRegistrationRequest) (*ExtensionRegistrationResponse, error)
+	RegisterExtension(context.Context, *RegisterExtensionRequest) (*RegisterExtensionResponse, error)
 	// Get all registered extensions.
 	GetRegisteredExtensions(context.Context, *GetRegisteredExtensionsRequest) (*RegisteredExtensionsResponse, error)
 	mustEmbedUnimplementedManagerServiceServer()
@@ -95,10 +95,10 @@ type UnimplementedManagerServiceServer struct {
 func (UnimplementedManagerServiceServer) RequestElement(context.Context, *ElementRequest) (*v1.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestElement not implemented")
 }
-func (UnimplementedManagerServiceServer) RequestConnection(context.Context, *ConnectionRequest) (*ConnectionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestConnection not implemented")
+func (UnimplementedManagerServiceServer) ConnectElement(context.Context, *ConnectElementRequest) (*ConnectElementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConnectElement not implemented")
 }
-func (UnimplementedManagerServiceServer) RegisterExtension(context.Context, *ExtensionRegistrationRequest) (*ExtensionRegistrationResponse, error) {
+func (UnimplementedManagerServiceServer) RegisterExtension(context.Context, *RegisterExtensionRequest) (*RegisterExtensionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterExtension not implemented")
 }
 func (UnimplementedManagerServiceServer) GetRegisteredExtensions(context.Context, *GetRegisteredExtensionsRequest) (*RegisteredExtensionsResponse, error) {
@@ -135,26 +135,26 @@ func _ManagerService_RequestElement_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ManagerService_RequestConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnectionRequest)
+func _ManagerService_ConnectElement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConnectElementRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ManagerServiceServer).RequestConnection(ctx, in)
+		return srv.(ManagerServiceServer).ConnectElement(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/semio.manager.v1.ManagerService/RequestConnection",
+		FullMethod: "/semio.manager.v1.ManagerService/ConnectElement",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ManagerServiceServer).RequestConnection(ctx, req.(*ConnectionRequest))
+		return srv.(ManagerServiceServer).ConnectElement(ctx, req.(*ConnectElementRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ManagerService_RegisterExtension_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExtensionRegistrationRequest)
+	in := new(RegisterExtensionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func _ManagerService_RegisterExtension_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/semio.manager.v1.ManagerService/RegisterExtension",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ManagerServiceServer).RegisterExtension(ctx, req.(*ExtensionRegistrationRequest))
+		return srv.(ManagerServiceServer).RegisterExtension(ctx, req.(*RegisterExtensionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -201,8 +201,8 @@ var ManagerService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ManagerService_RequestElement_Handler,
 		},
 		{
-			MethodName: "RequestConnection",
-			Handler:    _ManagerService_RequestConnection_Handler,
+			MethodName: "ConnectElement",
+			Handler:    _ManagerService_ConnectElement_Handler,
 		},
 		{
 			MethodName: "RegisterExtension",

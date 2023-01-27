@@ -16,7 +16,14 @@
                 "plan": {
                     "$ref": "#/definitions/semio.model.v1.Plan",
                     "additionalProperties": true,
-                    "description": "The plan for the element."
+                    "description": "The plan for the prototype."
+                },
+                "concepts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Concept that are relevent for the sobject."
                 }
             },
             "additionalProperties": true,
@@ -24,38 +31,69 @@
             "title": "Sobject",
             "description": "Instance information for an element."
         },
+        "semio.model.v1.Parameter": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the parameter"
+                },
+                "context": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Scope"
+                    },
+                    "type": "array",
+                    "description": "Optional context field to describe the context of the parameter."
+                },
+                "text": {
+                    "type": "string"
+                },
+                "integer_number": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "number"
+                },
+                "point": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameter"
+        },
         "semio.model.v1.Plan": {
             "properties": {
                 "url": {
                     "type": "string",
-                    "description": "The url of the element definition."
+                    "description": "The url of the prototype definition."
                 },
                 "parameters": {
-                    "additionalProperties": {
-                        "type": "string"
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Parameter"
                     },
-                    "type": "object",
-                    "description": "Optional parameters for the element."
+                    "type": "array",
+                    "description": "Optional parameters for the prototype."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Plan",
-            "description": "A plan for an element."
+            "description": "A plan for a prototype."
         },
         "semio.model.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",
-                    "description": "x coordinate."
+                    "description": "X coordinate."
                 },
                 "y": {
                     "type": "number",
-                    "description": "y coordinate"
+                    "description": "Y coordinate"
                 },
                 "z": {
                     "type": "number",
-                    "description": "z coordinate"
+                    "description": "Z coordinate"
                 }
             },
             "additionalProperties": true,
@@ -67,17 +105,19 @@
             "properties": {
                 "point_of_view": {
                     "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
                 },
                 "view": {
                     "$ref": "#/definitions/semio.model.v1.Quaternion",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "description": "View (orientation) from the pose (reference frame/coordinate system)"
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Pose",
-            "description": "A pose is a reference frame with a point of view (origin) and orientation (view)."
+            "description": "A pose is a static reference frame/coordinate system."
         },
         "semio.model.v1.Quaternion": {
             "properties": {
@@ -97,7 +137,23 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
+        },
+        "semio.model.v1.Scope": {
+            "properties": {
+                "concept": {
+                    "type": "string",
+                    "description": "Concept for the scope e.g Fassade, Floor"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scope",
+            "description": "Describes the scope of a parameter."
         }
     }
 }

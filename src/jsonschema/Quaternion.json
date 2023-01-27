@@ -20,7 +20,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Quaternion",
-            "description": "Quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an element."
+            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
         }
     }
 }

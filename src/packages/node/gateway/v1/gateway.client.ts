@@ -6,7 +6,7 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { GatewayService } from "./gateway";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Design } from "../../model/v1/model";
-import type { LayoutDesignRequest } from "../../assembler/v1/assembler";
+import type { LayoutDesignRequest } from "./gateway";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -20,7 +20,7 @@ export interface IGatewayServiceClient {
     /**
      * Lay out a design from a layout and return a design.
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutDesign(semio.gateway.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
     layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design>;
 }
@@ -40,7 +40,7 @@ export class GatewayServiceClient implements IGatewayServiceClient, ServiceInfo 
     /**
      * Lay out a design from a layout and return a design.
      *
-     * @generated from protobuf rpc: LayoutDesign(semio.assembler.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
+     * @generated from protobuf rpc: LayoutDesign(semio.gateway.v1.LayoutDesignRequest) returns (semio.model.v1.Design);
      */
     layoutDesign(input: LayoutDesignRequest, options?: RpcOptions): UnaryCall<LayoutDesignRequest, Design> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);

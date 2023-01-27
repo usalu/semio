@@ -4,7 +4,7 @@ from os.path import splitext
 
 from semio.model import Point,Sobject,Connection,Layout,Element,Design, Representation
 from semio.assembler import AssemblerProxy,LayoutDesignRequest
-from semio.manager import ManagerServer,ConnectionRequest,ConnectionResponse,ElementRequest,ExtensionRegistrationRequest, ExtensionRegistrationResponse
+from semio.manager import ManagerServer,ConnectionRequest,ConnectionResponse,ElementRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
 
@@ -56,7 +56,7 @@ class Manager(ManagerServer):
     def RequestConnection(self, request, context):
         raise NotImplementedError('Method not implemented!')
 
-    def RegisterExtension(self, request: ExtensionRegistrationRequest, context):
+    def RegisterExtension(self, request: RegisterExtensionRequest, context):
         oldAddress= ""
         for extensionAddress, extension in self.extensions.items():
             if extension.name == request.extending.name:
@@ -65,7 +65,7 @@ class Manager(ManagerServer):
                 else:
                     raise ValueError(f'There is already an extension with the name {extension.name}. If you wish to replace it set replace existing to true.')
         self.extensions[request.address]=request.extending
-        return ExtensionRegistrationResponse(success=True,old_address=oldAddress)
+        return RegisterExtensionResponse(success=True,old_address=oldAddress)
 
     def GetRegisteredExtensions(self, request, context):
         raise NotImplementedError('Method not implemented!')
