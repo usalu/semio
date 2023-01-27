@@ -28,7 +28,7 @@ export interface IManagerServiceClient {
      */
     requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
     /**
-     * Connected element for an connection.
+     * Get the connected pose and the connection point for a connection.
      *
      * @generated from protobuf rpc: ConnectElement(semio.manager.v1.ConnectElementRequest) returns (semio.manager.v1.ConnectElementResponse);
      */
@@ -67,7 +67,7 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
         return stackIntercept<ElementRequest, Element>("unary", this._transport, method, opt, input);
     }
     /**
-     * Connected element for an connection.
+     * Get the connected pose and the connection point for a connection.
      *
      * @generated from protobuf rpc: ConnectElement(semio.manager.v1.ConnectElementRequest) returns (semio.manager.v1.ConnectElementResponse);
      */

@@ -23,7 +23,7 @@ export interface IManagerService extends grpc.UntypedServiceImplementation {
      */
     requestElement: grpc.handleUnaryCall<ElementRequest, Element>;
     /**
-     * Connected element for an connection.
+     * Get the connected pose and the connection point for a connection.
      *
      * @generated from protobuf rpc: ConnectElement(semio.manager.v1.ConnectElementRequest) returns (semio.manager.v1.ConnectElementResponse);
      */

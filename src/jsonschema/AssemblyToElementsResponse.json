@@ -1,21 +1,40 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/ConnectElementResponse",
+    "$ref": "#/definitions/AssemblyToElementsResponse",
     "definitions": {
-        "ConnectElementResponse": {
+        "AssemblyToElementsResponse": {
             "properties": {
-                "connected_element_pose": {
-                    "$ref": "#/definitions/semio.model.v1.Pose",
-                    "additionalProperties": true
-                },
-                "connection_point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
+                "elements": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Element"
+                    },
+                    "type": "array"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Connect Element Response"
+            "title": "Assembly To Elements Response"
+        },
+        "semio.model.v1.Element": {
+            "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "The sobject id that was used to construct the element."
+                },
+                "prototype_plan_hash": {
+                    "type": "string",
+                    "description": "The hash of the plan for the prototype of the element."
+                },
+                "pose": {
+                    "$ref": "#/definitions/semio.model.v1.Pose",
+                    "additionalProperties": true,
+                    "description": "The pose of the element instance.  TODO: Think of a formalization for modifiers.\r repeated Modifier modifiers = 3;"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Element",
+            "description": "An element is the atom of a design. It has several representations and a pose."
         },
         "semio.model.v1.Point": {
             "properties": {

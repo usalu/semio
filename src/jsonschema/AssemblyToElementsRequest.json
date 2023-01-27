@@ -1,76 +1,127 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "#/definitions/ElementRequest",
+    "$ref": "#/definitions/AssemblyToElementsRequest",
     "definitions": {
-        "ElementRequest": {
+        "AssemblyToElementsRequest": {
             "properties": {
-                "sobject": {
-                    "$ref": "#/definitions/semio.model.v1.Sobject",
-                    "additionalProperties": true
-                },
-                "target_representation_platforms": {
+                "sobjects": {
                     "items": {
-                        "enum": [
-                            "PLATFORM_SEMIO",
-                            0,
-                            "PLATFORM_THREE",
-                            1000000100,
-                            "PLATFORM_SVERCHOK",
-                            500000200,
-                            "PLATFORM_IFCOPENSHELL",
-                            1010100000,
-                            "PLATFORM_CADQUERY",
-                            1600100100,
-                            "PLATFORM_FREECAD",
-                            530100200,
-                            "PLATFORM_OPENSCAD",
-                            530100300,
-                            "PLATFORM_JSCAD",
-                            1500100400,
-                            "PLATFORM_Fornjot",
-                            1700000300,
-                            "PLATFORM_TRUCK",
-                            1500000400,
-                            "PLATFORM_ENERGYPLUS",
-                            1900200100,
-                            "PLATFORM_OPENSTUDIO",
-                            1910200101,
-                            "PLATFORM_RHINO",
-                            2140300000,
-                            "PLATFORM_GRASSHOPPER",
-                            2140300001,
-                            "PLATFORM_REVIT",
-                            2140300100,
-                            "PLATFORM_DYNAMO",
-                            2140300101
-                        ]
+                        "$ref": "#/definitions/semio.model.v1.Sobject"
                     },
-                    "type": "array",
-                    "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "type": "array"
                 },
-                "target_representation_concepts": {
+                "connections": {
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/semio.model.v1.Connection"
                     },
-                    "type": "array",
-                    "description": "Optional concepts for the representations. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true."
+                    "type": "array"
                 },
-                "target_representation_lods": {
+                "assemblies": {
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/semio.model.v1.Assembly"
                     },
-                    "type": "array",
-                    "description": "An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true."
-                },
-                "targets_required": {
-                    "type": "boolean",
-                    "description": "Set this to true if all of the targets must be achived."
+                    "type": "array"
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Element Request"
+            "title": "Assembly To Elements Request"
+        },
+        "semio.model.v1.Assembly": {
+            "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "The id of the sobject to place."
+                },
+                "parts": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Assembly"
+                    },
+                    "type": "array",
+                    "description": "The parts of an assembly (tree) are again assemblies."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Assembly",
+            "description": "An assembly (tree) defines a subset of a layout that can be assembled unambiguously."
+        },
+        "semio.model.v1.Connectable": {
+            "properties": {
+                "sobject_id": {
+                    "type": "string",
+                    "description": "Id of connectable (sobject)."
+                },
+                "link": {
+                    "$ref": "#/definitions/semio.model.v1.Link",
+                    "additionalProperties": true,
+                    "description": "A link for the connectable (sobject)."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Connectable",
+            "description": "A connectable (sobject) connects in an connection process."
+        },
+        "semio.model.v1.Connection": {
+            "properties": {
+                "connecting": {
+                    "$ref": "#/definitions/semio.model.v1.Connectable",
+                    "additionalProperties": true,
+                    "description": "The connecting sobject. It is interchangable with the connected."
+                },
+                "connected": {
+                    "$ref": "#/definitions/semio.model.v1.Connectable",
+                    "additionalProperties": true,
+                    "description": "The connected sobject. It is interchangable with the connecting."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Connection",
+            "description": "An connection can be used to connect two connectables."
+        },
+        "semio.model.v1.Link": {
+            "properties": {
+                "representationProtocol": {
+                    "enum": [
+                        "REPRESENTATIONPROTOCOL_NONE",
+                        0,
+                        "REPRESENTATIONPROTOCOL_SIMPLE",
+                        1,
+                        "REPRESENTATIONPROTOCOL_FULL",
+                        2
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "title": "Representation Protocol",
+                    "description": "The representation protocol determines what type of representation the connecting will see of the connected in the connection process."
+                },
+                "ports": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Optional port names to connect to. The hierarchy should matter."
+                },
+                "bias": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Optional parameters to bias the connection."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Link",
+            "description": "A link defines the parameters for a connectable."
         },
         "semio.model.v1.Parameter": {
             "properties": {

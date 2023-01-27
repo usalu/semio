@@ -22,7 +22,7 @@ type AssemblerServiceClient interface {
 	// Turn a layout into assemblies.
 	LayoutToAssemblies(ctx context.Context, in *v1.Layout, opts ...grpc.CallOption) (*LayoutToAssembliesResponse, error)
 	// Assemble elements from an assembly.
-	AssemblyToElements(ctx context.Context, in *v1.Assembly, opts ...grpc.CallOption) (*AssembleLayoutResponse, error)
+	AssemblyToElements(ctx context.Context, in *AssemblyToElementsRequest, opts ...grpc.CallOption) (*AssemblyToElementsResponse, error)
 }
 
 type assemblerServiceClient struct {
@@ -42,8 +42,8 @@ func (c *assemblerServiceClient) LayoutToAssemblies(ctx context.Context, in *v1.
 	return out, nil
 }
 
-func (c *assemblerServiceClient) AssemblyToElements(ctx context.Context, in *v1.Assembly, opts ...grpc.CallOption) (*AssembleLayoutResponse, error) {
-	out := new(AssembleLayoutResponse)
+func (c *assemblerServiceClient) AssemblyToElements(ctx context.Context, in *AssemblyToElementsRequest, opts ...grpc.CallOption) (*AssemblyToElementsResponse, error) {
+	out := new(AssemblyToElementsResponse)
 	err := c.cc.Invoke(ctx, "/semio.assembler.v1.AssemblerService/AssemblyToElements", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ type AssemblerServiceServer interface {
 	// Turn a layout into assemblies.
 	LayoutToAssemblies(context.Context, *v1.Layout) (*LayoutToAssembliesResponse, error)
 	// Assemble elements from an assembly.
-	AssemblyToElements(context.Context, *v1.Assembly) (*AssembleLayoutResponse, error)
+	AssemblyToElements(context.Context, *AssemblyToElementsRequest) (*AssemblyToElementsResponse, error)
 	mustEmbedUnimplementedAssemblerServiceServer()
 }
 
@@ -69,7 +69,7 @@ type UnimplementedAssemblerServiceServer struct {
 func (UnimplementedAssemblerServiceServer) LayoutToAssemblies(context.Context, *v1.Layout) (*LayoutToAssembliesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LayoutToAssemblies not implemented")
 }
-func (UnimplementedAssemblerServiceServer) AssemblyToElements(context.Context, *v1.Assembly) (*AssembleLayoutResponse, error) {
+func (UnimplementedAssemblerServiceServer) AssemblyToElements(context.Context, *AssemblyToElementsRequest) (*AssemblyToElementsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AssemblyToElements not implemented")
 }
 func (UnimplementedAssemblerServiceServer) mustEmbedUnimplementedAssemblerServiceServer() {}
@@ -104,7 +104,7 @@ func _AssemblerService_LayoutToAssemblies_Handler(srv interface{}, ctx context.C
 }
 
 func _AssemblerService_AssemblyToElements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.Assembly)
+	in := new(AssemblyToElementsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func _AssemblerService_AssemblyToElements_Handler(srv interface{}, ctx context.C
 		FullMethod: "/semio.assembler.v1.AssemblerService/AssemblyToElements",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AssemblerServiceServer).AssemblyToElements(ctx, req.(*v1.Assembly))
+		return srv.(AssemblerServiceServer).AssemblyToElements(ctx, req.(*AssemblyToElementsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

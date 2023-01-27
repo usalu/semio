@@ -4,8 +4,8 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AssemblerService } from "./assembler";
-import type { AssembleLayoutResponse } from "./assembler";
-import type { Assembly } from "../../model/v1/model";
+import type { AssemblyToElementsResponse } from "./assembler";
+import type { AssemblyToElementsRequest } from "./assembler";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { LayoutToAssembliesResponse } from "./assembler";
 import type { Layout } from "../../model/v1/model";
@@ -26,9 +26,9 @@ export interface IAssemblerServiceClient {
     /**
      * Assemble elements from an assembly.
      *
-     * @generated from protobuf rpc: AssemblyToElements(semio.model.v1.Assembly) returns (semio.assembler.v1.AssembleLayoutResponse);
+     * @generated from protobuf rpc: AssemblyToElements(semio.assembler.v1.AssemblyToElementsRequest) returns (semio.assembler.v1.AssemblyToElementsResponse);
      */
-    assemblyToElements(input: Assembly, options?: RpcOptions): UnaryCall<Assembly, AssembleLayoutResponse>;
+    assemblyToElements(input: AssemblyToElementsRequest, options?: RpcOptions): UnaryCall<AssemblyToElementsRequest, AssemblyToElementsResponse>;
 }
 /**
  * The assembler service is responsible for assembling layouts into designs.
@@ -53,10 +53,10 @@ export class AssemblerServiceClient implements IAssemblerServiceClient, ServiceI
     /**
      * Assemble elements from an assembly.
      *
-     * @generated from protobuf rpc: AssemblyToElements(semio.model.v1.Assembly) returns (semio.assembler.v1.AssembleLayoutResponse);
+     * @generated from protobuf rpc: AssemblyToElements(semio.assembler.v1.AssemblyToElementsRequest) returns (semio.assembler.v1.AssemblyToElementsResponse);
      */
-    assemblyToElements(input: Assembly, options?: RpcOptions): UnaryCall<Assembly, AssembleLayoutResponse> {
+    assemblyToElements(input: AssemblyToElementsRequest, options?: RpcOptions): UnaryCall<AssemblyToElementsRequest, AssemblyToElementsResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<Assembly, AssembleLayoutResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<AssemblyToElementsRequest, AssemblyToElementsResponse>("unary", this._transport, method, opt, input);
     }
 }

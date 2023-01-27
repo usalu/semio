@@ -12,13 +12,19 @@ service AssemblerService {
   // Turn a layout into assemblies.
   rpc LayoutToAssemblies(semio.model.v1.Layout) returns (LayoutToAssembliesResponse);
   // Assemble elements from an assembly.
-  rpc AssemblyToElements(semio.model.v1.Assembly) returns (AssembleLayoutResponse);
+  rpc AssemblyToElements(AssemblyToElementsRequest) returns (AssemblyToElementsResponse);
 }
 
 message LayoutToAssembliesResponse{
   repeated semio.model.v1.Assembly assemblies = 1;
 }
 
-message AssembleLayoutResponse {
+message AssemblyToElementsRequest {
+  repeated semio.model.v1.Sobject sobjects = 1;
+  repeated semio.model.v1.Connection connections = 2;
+  repeated semio.model.v1.Assembly assemblies = 3;
+}
+
+message AssemblyToElementsResponse {
   repeated semio.model.v1.Element elements = 1;
 }

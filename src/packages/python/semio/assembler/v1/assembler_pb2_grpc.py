@@ -23,8 +23,8 @@ class AssemblerServiceStub(object):
                 )
         self.AssemblyToElements = channel.unary_unary(
                 '/semio.assembler.v1.AssemblerService/AssemblyToElements',
-                request_serializer=model_dot_v1_dot_model__pb2.Assembly.SerializeToString,
-                response_deserializer=assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.FromString,
+                request_serializer=assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsRequest.SerializeToString,
+                response_deserializer=assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsResponse.FromString,
                 )
 
 
@@ -56,8 +56,8 @@ def add_AssemblerServiceServicer_to_server(servicer, server):
             ),
             'AssemblyToElements': grpc.unary_unary_rpc_method_handler(
                     servicer.AssemblyToElements,
-                    request_deserializer=model_dot_v1_dot_model__pb2.Assembly.FromString,
-                    response_serializer=assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.SerializeToString,
+                    request_deserializer=assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsRequest.FromString,
+                    response_serializer=assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -99,7 +99,7 @@ class AssemblerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.assembler.v1.AssemblerService/AssemblyToElements',
-            model_dot_v1_dot_model__pb2.Assembly.SerializeToString,
-            assembler_dot_v1_dot_assembler__pb2.AssembleLayoutResponse.FromString,
+            assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsRequest.SerializeToString,
+            assembler_dot_v1_dot_assembler__pb2.AssemblyToElementsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

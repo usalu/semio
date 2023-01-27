@@ -14,14 +14,11 @@ def getElementsFromAssembly(sonjects: Iterable[Sobject], connections: Iterable[C
 
 class Assembler(AssemblerServer):
 
-    def connect(self, connection: Connection, targetTypeUrl: str):
-        self.managerProxy.RequestConnection(ConnectionRequest(connection=connection,target_type_url=targetTypeUrl))
-
     def LayoutDesign(self, request:LayoutDesignRequest, context) -> Design:
         managerProxy = self.getManagerProxy()
         elements = []
         for sobject in request.layout.sobjects:
-            elements.append(managerProxy.RequestElement(request=ElementRequest(sobject=sobject)))
+            elements.append(RequestElement(sobject))
         # assembly = request.layout.assemblies[0]
         #elements = getElementsFromAssembly(request.layout.sobjects,request.layout.connections,assembly)
         return Design(elements=elements)

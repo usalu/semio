@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ManagerServiceClient interface {
 	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(ctx context.Context, in *ElementRequest, opts ...grpc.CallOption) (*v1.Element, error)
-	// Connected element for an connection.
+	// Get the connected pose and the connection point for a connection.
 	ConnectElement(ctx context.Context, in *ConnectElementRequest, opts ...grpc.CallOption) (*ConnectElementResponse, error)
 	// Register a service to the server.
 	RegisterExtension(ctx context.Context, in *RegisterExtensionRequest, opts ...grpc.CallOption) (*RegisterExtensionResponse, error)
@@ -79,7 +79,7 @@ func (c *managerServiceClient) GetRegisteredExtensions(ctx context.Context, in *
 type ManagerServiceServer interface {
 	// Request an element from instance information and an optional traget representation parameters.
 	RequestElement(context.Context, *ElementRequest) (*v1.Element, error)
-	// Connected element for an connection.
+	// Get the connected pose and the connection point for a connection.
 	ConnectElement(context.Context, *ConnectElementRequest) (*ConnectElementResponse, error)
 	// Register a service to the server.
 	RegisterExtension(context.Context, *RegisterExtensionRequest) (*RegisterExtensionResponse, error)

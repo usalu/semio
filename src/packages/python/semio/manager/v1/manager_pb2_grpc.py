@@ -50,7 +50,7 @@ class ManagerServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def ConnectElement(self, request, context):
-        """Connected element for an connection.
+        """Get the connected pose and the connection point for a connection.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

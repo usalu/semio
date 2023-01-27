@@ -44,17 +44,6 @@
         }
       }
     },
-    "v1AssembleLayoutResponse": {
-      "type": "object",
-      "properties": {
-        "elements": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Element"
-          }
-        }
-      }
-    },
     "v1Assembly": {
       "type": "object",
       "properties": {
@@ -71,6 +60,17 @@
         }
       },
       "description": "An assembly (tree) defines a subset of a layout that can be assembled unambiguously."
+    },
+    "v1AssemblyToElementsResponse": {
+      "type": "object",
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Element"
+          }
+        }
+      }
     },
     "v1Connectable": {
       "type": "object",

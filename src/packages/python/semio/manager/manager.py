@@ -1,12 +1,14 @@
+from typing import Iterable,Tuple
 from pydantic import Field
 
 from grpc import insecure_channel
 
-from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
-from .v1.manager_pb2 import DESCRIPTOR
+from semio.constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
+from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from .v1.manager_pb2 import DESCRIPTOR, ElementRequest, ConnectElementRequest, ConnectElementResponse
 from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerServiceServicer, ManagerServiceStub
-from extension import Extending
+from semio.model import Point,Pose,Platform,Sobject,Connection,Element
+from semio.extension import Extending
 
 class ManagerServer(SemioServer,SemioService):
     assemblerAddress: str = "localhost:"+str(DEFAULT_ASSEMBLER_PORT)
@@ -37,17 +39,31 @@ class ManagerServer(SemioServer,SemioService):
             self.extensionsProxies[extensionAddress] = ExtensionProxy(extensionAddress)
         return self.extensionsProxies[extensionAddress]
 
-
 class ManagerProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_MANAGER_PORT), **kw):
         super().__init__(address=address,**kw)
         self._stub = ManagerServiceStub(insecure_channel(self.address))
 
-    def RequestElement(self, request, context = None):
-        return self._stub.RequestElement(request,context)
+    def RequestElement(
+        self, sobject: Sobject = Sobject(),
+        target_representation_platforms:Iterable[Platform] = [],
+        target_representation_concepts:Iterable[str] = [],
+        target_representation_lods:Iterable[int] = [],
+        targets_required:bool = False)-> Element:
+        return self._stub.RequestElement(ElementRequest(
+            sobject=sobject,
+            target_representation_platforms=target_representation_platforms,
+            target_representation_concepts=target_representation_concepts,
+            target_representation_lods=target_representation_lods,
+            targets_required=targets_required))
 
-    def RequestConnection(self, request, context = None):
-        return self._stub.RequestConnection(request,context)
+    def ConnectElement(self,
+        sobjects:Tuple[Sobject,Sobject],
+        connection:Connection)->ConnectElementResponse:
+        return self._stub.ConnectElement(request=ConnectElementRequest(
+            connected_sobject=sobjects[0],
+            connecting_sobject=sobjects[1],
+            connection=connection))
 
     def RegisterExtension(self, request, context = None):
         return self._stub.RegisterExtension(request,context)
