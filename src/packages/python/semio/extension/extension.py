@@ -18,7 +18,7 @@ from .converter import ConverterService
 from .transformer import TransformerService
 from .translator import TranslatorService
 
-from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR, RepresentationRequest, RepresentationsRequest
+from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR
 from .adapter.v1.adapter_pb2_grpc import add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
 from .converter.v1.converter_pb2 import DESCRIPTOR as CONVERTER_DESCRIPTOR
 from .converter.v1.converter_pb2_grpc import add_ConverterServiceServicer_to_server, ConverterServiceServicer, ConverterServiceStub
@@ -59,11 +59,14 @@ class ExtensionServer(SemioServer):
     
     def initialize(self):
         address = 'localhost:' +str(self.port)
-        response = self.getManagerProxy().RegisterExtension(manager.RegisterExtensionRequest(
-            address=address,
-            extending=Extending(
-                adaptings=self.adapter.getDescriptions(), convertings=self.converter.getDescriptions(), 
-                transformings=self.transformer.getDescriptions(), translatings=self.translator.getDescriptions())))
+        response = self.getManagerProxy().RegisterExtension(
+                extending=Extending(
+                    name = self.name,
+                    address = address,
+                    adaptings = self.adapter.getDescriptions(),
+                    convertings = self.converter.getDescriptions(), 
+                    transformings = self.transformer.getDescriptions(),
+                    translatings = self.translator.getDescriptions()))
         if response.success:
             logging.debug(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
         else:
@@ -78,14 +81,12 @@ class ExtensionProxy(SemioProxy):
         self._transformerStub = TransformerServiceStub(insecure_channel(self.address))
         self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
+    def RequestPrototype(self, sobject:Sobject,  type: str = 'native', name: str = 'normal', lod: int = 0):
+        return self._adapterStub.RequestRepresentation(request=RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))
+
     def RequestConnectionPoint(self, request, context = None):
         return self._adapterStub.RequestConnectionPoint(request,context)
 
-    def RequestRepresentation(self, sobject:Sobject,  type: str = 'native', name: str = 'normal', lod: int = 0):
-        return self._adapterStub.RequestRepresentation(request=RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))
-
-    def RequestRepresentations(self, request, context = None):
-        return self._adapterStub.RequestRepresentations(request,context)
 
     def ConvertRepresentation(self, request, context = None):
         return self._converterStub.ConvertRepresentation(request,context)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING,Iterable,Tuple
 from abc import ABC, abstractmethod
 
@@ -5,7 +6,7 @@ from pydantic import Field
 
 from grpc import insecure_channel
 
-from .v1.assembler_pb2 import DESCRIPTOR
+from .v1.assembler_pb2 import DESCRIPTOR,LayoutToAssembliesResponse,AssemblyToElementsResponse
 from .v1.assembler_pb2_grpc import add_AssemblerServiceServicer_to_server, AssemblerServiceServicer, AssemblerServiceStub
 from semio.model import Point,Pose,Platform,Sobject,Connection,Assembly,Layout, Element
 from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
@@ -36,14 +37,13 @@ class AssemblerServer(SemioServer, SemioService, ABC):
     def _connectElement(self,
         sobjects:Tuple[Sobject,Sobject],
         connection:Connection)->Tuple[Pose,Point]:
-        connectElementResponse = self.managerProxy.ConnectElement(sobjects=sobjects,connection=connection)
-        return (connectElementResponse.connected_element_pose,connectElementResponse.connection_point)
+        return self.managerProxy.ConnectElement(sobjects=sobjects,connection=connection)
 
     def _requestElement(
         self, sobject: Sobject = Sobject(),
-        target_representation_platforms:Iterable[Platform] = [],
-        target_representation_concepts:Iterable[str] = [],
-        target_representation_lods:Iterable[int] = [],
+        target_representation_platforms:Iterable[Platform] | None = None,
+        target_representation_concepts:Iterable[str] | None = None,
+        target_representation_lods:Iterable[int] | None = None,
         targets_required:bool = False)-> Element:
         return self.managerProxy.RequestElement(
             sobject=sobject,
@@ -51,6 +51,20 @@ class AssemblerServer(SemioServer, SemioService, ABC):
             target_representation_concepts=target_representation_concepts,
             target_representation_lods=target_representation_lods,
             targets_required=targets_required)
+
+    @abstractmethod
+    def layoutToAssemblies(layout: Layout)->Iterable[Assembly]:
+        pass
+
+    @abstractmethod
+    def assemblyToElements(sobjects: Iterable[Sobject],connections: Iterable[Connection], assembly:Assembly)->Iterable[Element]:
+        pass
+
+    def LayoutToAssemblies(self,request,context):
+        return LayoutToAssembliesResponse(assemblies = self.layoutToAssemblies(request))
+
+    def AssemblyToElements(self,request,context):
+        return AssemblyToElementsResponse(elements =self.assemblyToElements(request.sobject,request.connections,request.assembly))
 
 class AssemblerProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_ASSEMBLER_PORT), **kw):

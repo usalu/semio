@@ -18,9 +18,3 @@ class ConnectionPointRequest(_message.Message):
     connected_plan: _model_pb2.Plan
     connecting_link: _model_pb2.Link
     def __init__(self, connected_plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., connecting_link: _Optional[_Union[_model_pb2.Link, _Mapping]] = ...) -> None: ...
-
-class PrototypeRequest(_message.Message):
-    __slots__ = ["plan"]
-    PLAN_FIELD_NUMBER: _ClassVar[int]
-    plan: _model_pb2.Plan
-    def __init__(self, plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ...) -> None: ...

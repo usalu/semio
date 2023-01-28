@@ -5,10 +5,11 @@ from pydantic import Field
 
 from grpc import insecure_channel
 
-from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
-from .v1.gateway_pb2 import DESCRIPTOR
+from .v1.gateway_pb2 import DESCRIPTOR,LayoutDesignRequest
 from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewayServiceServicer, GatewayServiceStub
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from semio.model import Platform,Layout,Design
+from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from semio.constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
 
 if TYPE_CHECKING:
     from assembler import AssemblerProxy
@@ -28,11 +29,19 @@ class GatewayServer(SemioServer, SemioService, ABC):
             self.assemblerProxy = AssemblerProxy(self.assemblerAddress)
         return self.assemblerProxy
 
+    @abstractmethod
+    def layoutDesign(self, layout:Layout,target_platform:Platform)->Design:
+        pass
+    
+    def LayoutDesign(self, request, context):
+        return self.layoutDesign(request.layout,request.target_platform)
+    
+
 class GatewayProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_GATEWAY_PORT), **kw):
         super().__init__(address=address,**kw)
         self._stub = GatewayServiceStub(insecure_channel(self.address))
 
-    def LayoutDesign(self, request, context = None):
-        return self._stub.LayoutDesign(request,context)
+    def LayoutDesign(self, layout:Layout, target_platform:Platform):
+        return self._stub.LayoutDesign(LayoutDesignRequest(layout=layout,target_platform=target_platform))
     

@@ -44,16 +44,12 @@ class GetRegisteredExtensionsRequest(_message.Message):
     def __init__(self) -> None: ...
 
 class RegisterExtensionRequest(_message.Message):
-    __slots__ = ["address", "extending", "name", "replace_existing"]
-    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["extending", "replace_existing"]
     EXTENDING_FIELD_NUMBER: _ClassVar[int]
-    NAME_FIELD_NUMBER: _ClassVar[int]
     REPLACE_EXISTING_FIELD_NUMBER: _ClassVar[int]
-    address: str
     extending: _extension_pb2.Extending
-    name: str
     replace_existing: bool
-    def __init__(self, address: _Optional[str] = ..., name: _Optional[str] = ..., extending: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ..., replace_existing: bool = ...) -> None: ...
+    def __init__(self, extending: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ..., replace_existing: bool = ...) -> None: ...
 
 class RegisterExtensionResponse(_message.Message):
     __slots__ = ["old_address", "success"]

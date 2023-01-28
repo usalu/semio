@@ -39,9 +39,9 @@ export interface AssemblyToElementsRequest {
      */
     connections: Connection[];
     /**
-     * @generated from protobuf field: repeated semio.model.v1.Assembly assemblies = 3;
+     * @generated from protobuf field: semio.model.v1.Assembly assembly = 3;
      */
-    assemblies: Assembly[];
+    assembly?: Assembly;
 }
 /**
  * @generated from protobuf message semio.assembler.v1.AssemblyToElementsResponse
@@ -105,11 +105,11 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         super("semio.assembler.v1.AssemblyToElementsRequest", [
             { no: 1, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
             { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Connection },
-            { no: 3, name: "assemblies", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Assembly }
+            { no: 3, name: "assembly", kind: "message", T: () => Assembly }
         ]);
     }
     create(value?: PartialMessage<AssemblyToElementsRequest>): AssemblyToElementsRequest {
-        const message = { sobjects: [], connections: [], assemblies: [] };
+        const message = { sobjects: [], connections: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AssemblyToElementsRequest>(this, message, value);
@@ -126,8 +126,8 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
                 case /* repeated semio.model.v1.Connection connections */ 2:
                     message.connections.push(Connection.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated semio.model.v1.Assembly assemblies */ 3:
-                    message.assemblies.push(Assembly.internalBinaryRead(reader, reader.uint32(), options));
+                case /* semio.model.v1.Assembly assembly */ 3:
+                    message.assembly = Assembly.internalBinaryRead(reader, reader.uint32(), options, message.assembly);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -147,9 +147,9 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         /* repeated semio.model.v1.Connection connections = 2; */
         for (let i = 0; i < message.connections.length; i++)
             Connection.internalBinaryWrite(message.connections[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.model.v1.Assembly assemblies = 3; */
-        for (let i = 0; i < message.assemblies.length; i++)
-            Assembly.internalBinaryWrite(message.assemblies[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Assembly assembly = 3; */
+        if (message.assembly)
+            Assembly.internalBinaryWrite(message.assembly, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

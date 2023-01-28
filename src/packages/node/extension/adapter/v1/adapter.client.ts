@@ -4,11 +4,11 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AdapterService } from "./adapter";
-import type { Prototype } from "../../../model/v1/model";
-import type { PrototypeRequest } from "./adapter";
-import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Point } from "../../../model/v1/model";
 import type { ConnectionPointRequest } from "./adapter";
+import { stackIntercept } from "@protobuf-ts/runtime-rpc";
+import type { Prototype } from "../../../model/v1/model";
+import type { Plan } from "../../../model/v1/model";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -18,17 +18,17 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IAdapterServiceClient {
     /**
+     * Request a prototype.
+     *
+     * @generated from protobuf rpc: RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
+     */
+    requestPrototype(input: Plan, options?: RpcOptions): UnaryCall<Plan, Prototype>;
+    /**
      * Request an connection point for the connected.
      *
      * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
      */
     requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point>;
-    /**
-     * Request a prototype.
-     *
-     * @generated from protobuf rpc: RequestPrototype(semio.extension.adapter.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
-     */
-    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype>;
 }
 /**
  * An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
@@ -42,21 +42,21 @@ export class AdapterServiceClient implements IAdapterServiceClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * Request a prototype.
+     *
+     * @generated from protobuf rpc: RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
+     */
+    requestPrototype(input: Plan, options?: RpcOptions): UnaryCall<Plan, Prototype> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Plan, Prototype>("unary", this._transport, method, opt, input);
+    }
+    /**
      * Request an connection point for the connected.
      *
      * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
      */
     requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ConnectionPointRequest, Point>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * Request a prototype.
-     *
-     * @generated from protobuf rpc: RequestPrototype(semio.extension.adapter.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
-     */
-    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<PrototypeRequest, Prototype>("unary", this._transport, method, opt, input);
+        return stackIntercept<ConnectionPointRequest, Point>("unary", this._transport, method, opt, input);
     }
 }

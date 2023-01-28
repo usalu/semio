@@ -2,9 +2,9 @@ import logging
 
 from os.path import splitext
 
-from semio.model import Point,Sobject,Connection,Layout,Element,Design, Representation
-from semio.assembler import AssemblerProxy,LayoutDesignRequest
-from semio.manager import ManagerServer,ConnectionRequest,ConnectionResponse,ElementRequest,RegisterExtensionRequest, RegisterExtensionResponse
+from semio.model import Point,Sobject,Connection,Layout,Element,Design, Representation,Platform
+from semio.assembler import AssemblerProxy
+from semio.manager import ManagerServer,ElementRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
 
@@ -31,12 +31,12 @@ class Manager(ManagerServer):
                     return extensionAddress
         raise ValueError(f"No adapting service was found for the {platformName} platform. Register an appropriate extension which can adapt this element.")
 
-    def getConverterAddress(self, sourceTypeUrl:str,targetTypeUrl:str) -> str:
+    def getConverterAddress(self, source_platform:Platform,target_platform:Platform) -> str:
         for extensionAddress, extendingService in self.extensions.items():
-            for convertingService in extendingService.convertingServices:
-                if convertingService.source_type_url == sourceTypeUrl and convertingService.target_type_url == targetTypeUrl:
+            for convertingService in extendingService.convertings:
+                if convertingService.source_platform == source_platform and convertingService.target_type_url == target_platform:
                     return extensionAddress
-        raise ValueError(f"No converting service was found that can convert {sourceTypeUrl} into {targetTypeUrl}. Register an appropriate extension which can convert this type.")
+        raise ValueError(f"No converting service was found that can convert {source_platform} into {target_platform}. Register an appropriate extension which can convert this type.")
 
     #TODO Implement
     def getTransformerAddress(self,sourceTypeUrl:str,targetTypeUrl:str) -> str:
@@ -47,16 +47,18 @@ class Manager(ManagerServer):
         #             return extendingService.address
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
-    def RequestElement(self, request: ElementRequest, context):
+    # Services
+
+    def requestElement(self, request: ElementRequest, context):
         extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
         extensionProxy = self.getExtensionProxy(extensionAddress)
-        representation = extensionProxy.RequestRepresentation(request.sobject)
-        return Element(representations=[representation])
+        element = extensionProxy.RequestElement(request.sobject)
+        return element
 
-    def RequestConnection(self, request, context):
+    def connectElement(self, request, context):
         raise NotImplementedError('Method not implemented!')
 
-    def RegisterExtension(self, request: RegisterExtensionRequest, context):
+    def registerExtension(self, request: RegisterExtensionRequest, context):
         oldAddress= ""
         for extensionAddress, extension in self.extensions.items():
             if extension.name == request.extending.name:
@@ -64,7 +66,7 @@ class Manager(ManagerServer):
                     oldAddress = extensionAddress
                 else:
                     raise ValueError(f'There is already an extension with the name {extension.name}. If you wish to replace it set replace existing to true.')
-        self.extensions[request.address]=request.extending
+        self.extensions[request.extending.address]=request.extending
         return RegisterExtensionResponse(success=True,old_address=oldAddress)
 
     def GetRegisteredExtensions(self, request, context):

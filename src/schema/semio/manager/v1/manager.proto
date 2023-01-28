@@ -51,10 +51,8 @@ message ConnectElementResponse{
 }
 
 message RegisterExtensionRequest{
-  string address = 1;
-  string name = 2;
-  semio.extension.v1.Extending extending = 3;
-  bool replace_existing = 4;
+  semio.extension.v1.Extending extending = 1;
+  bool replace_existing = 2;
 }
 
 message RegisterExtensionResponse{

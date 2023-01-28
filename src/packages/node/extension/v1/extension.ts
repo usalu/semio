@@ -22,6 +22,18 @@ import { Adapting } from "../adapter/v1/adapter";
  */
 export interface Extending {
     /**
+     * Address of the extension server.
+     *
+     * @generated from protobuf field: string address = 1;
+     */
+    address: string;
+    /**
+     * Name of the extension server.
+     *
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
      * A summary of all descriptions about the translator.
      *
      * @generated from protobuf field: repeated semio.extension.adapter.v1.Adapting adaptings = 3;
@@ -50,6 +62,8 @@ export interface Extending {
 class Extending$Type extends MessageType<Extending> {
     constructor() {
         super("semio.extension.v1.Extending", [
+            { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "adaptings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Adapting },
             { no: 4, name: "convertings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Converting },
             { no: 5, name: "transformings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Transforming },
@@ -57,7 +71,7 @@ class Extending$Type extends MessageType<Extending> {
         ]);
     }
     create(value?: PartialMessage<Extending>): Extending {
-        const message = { adaptings: [], convertings: [], transformings: [], translatings: [] };
+        const message = { address: "", name: "", adaptings: [], convertings: [], transformings: [], translatings: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Extending>(this, message, value);
@@ -68,6 +82,12 @@ class Extending$Type extends MessageType<Extending> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
+                case /* string address */ 1:
+                    message.address = reader.string();
+                    break;
+                case /* string name */ 2:
+                    message.name = reader.string();
+                    break;
                 case /* repeated semio.extension.adapter.v1.Adapting adaptings */ 3:
                     message.adaptings.push(Adapting.internalBinaryRead(reader, reader.uint32(), options));
                     break;
@@ -92,6 +112,12 @@ class Extending$Type extends MessageType<Extending> {
         return message;
     }
     internalBinaryWrite(message: Extending, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string address = 1; */
+        if (message.address !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.address);
+        /* string name = 2; */
+        if (message.name !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.name);
         /* repeated semio.extension.adapter.v1.Adapting adaptings = 3; */
         for (let i = 0; i < message.adaptings.length; i++)
             Adapting.internalBinaryWrite(message.adaptings[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();

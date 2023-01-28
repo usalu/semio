@@ -19,10 +19,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdapterServiceClient interface {
+	// Request a prototype.
+	RequestPrototype(ctx context.Context, in *v1.Plan, opts ...grpc.CallOption) (*v1.Prototype, error)
 	// Request an connection point for the connected.
 	RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error)
-	// Request a prototype.
-	RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error)
 }
 
 type adapterServiceClient struct {
@@ -31,6 +31,15 @@ type adapterServiceClient struct {
 
 func NewAdapterServiceClient(cc grpc.ClientConnInterface) AdapterServiceClient {
 	return &adapterServiceClient{cc}
+}
+
+func (c *adapterServiceClient) RequestPrototype(ctx context.Context, in *v1.Plan, opts ...grpc.CallOption) (*v1.Prototype, error) {
+	out := new(v1.Prototype)
+	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestPrototype", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error) {
@@ -42,23 +51,14 @@ func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *C
 	return out, nil
 }
 
-func (c *adapterServiceClient) RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error) {
-	out := new(v1.Prototype)
-	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestPrototype", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AdapterServiceServer is the server API for AdapterService service.
 // All implementations must embed UnimplementedAdapterServiceServer
 // for forward compatibility
 type AdapterServiceServer interface {
+	// Request a prototype.
+	RequestPrototype(context.Context, *v1.Plan) (*v1.Prototype, error)
 	// Request an connection point for the connected.
 	RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error)
-	// Request a prototype.
-	RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error)
 	mustEmbedUnimplementedAdapterServiceServer()
 }
 
@@ -66,11 +66,11 @@ type AdapterServiceServer interface {
 type UnimplementedAdapterServiceServer struct {
 }
 
+func (UnimplementedAdapterServiceServer) RequestPrototype(context.Context, *v1.Plan) (*v1.Prototype, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestPrototype not implemented")
+}
 func (UnimplementedAdapterServiceServer) RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestConnectionPoint not implemented")
-}
-func (UnimplementedAdapterServiceServer) RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestPrototype not implemented")
 }
 func (UnimplementedAdapterServiceServer) mustEmbedUnimplementedAdapterServiceServer() {}
 
@@ -83,6 +83,24 @@ type UnsafeAdapterServiceServer interface {
 
 func RegisterAdapterServiceServer(s grpc.ServiceRegistrar, srv AdapterServiceServer) {
 	s.RegisterService(&AdapterService_ServiceDesc, srv)
+}
+
+func _AdapterService_RequestPrototype_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.Plan)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdapterServiceServer).RequestPrototype(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestPrototype",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdapterServiceServer).RequestPrototype(ctx, req.(*v1.Plan))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AdapterService_RequestConnectionPoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -103,24 +121,6 @@ func _AdapterService_RequestConnectionPoint_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdapterService_RequestPrototype_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PrototypeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdapterServiceServer).RequestPrototype(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/semio.extension.adapter.v1.AdapterService/RequestPrototype",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdapterServiceServer).RequestPrototype(ctx, req.(*PrototypeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AdapterService_ServiceDesc is the grpc.ServiceDesc for AdapterService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -129,12 +129,12 @@ var AdapterService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AdapterServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RequestConnectionPoint",
-			Handler:    _AdapterService_RequestConnectionPoint_Handler,
-		},
-		{
 			MethodName: "RequestPrototype",
 			Handler:    _AdapterService_RequestPrototype_Handler,
+		},
+		{
+			MethodName: "RequestConnectionPoint",
+			Handler:    _AdapterService_RequestConnectionPoint_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

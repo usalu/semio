@@ -9,7 +9,6 @@ import "model/v1/model.proto";
 
 // A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
 service TranslatorService {
-
   // Translate a representation from one pose (coordinate system) into another one.
   rpc TranslateRepresentation(TranslateRepresentationRequest) returns (semio.model.v1.Representation);
 }

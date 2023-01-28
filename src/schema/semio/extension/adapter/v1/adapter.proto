@@ -9,10 +9,10 @@ import "model/v1/model.proto";
 
 // An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
 service AdapterService {
-  // Request an connection point for the connected.
-  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.model.v1.Point) {}
   // Request a prototype.
-  rpc RequestPrototype(PrototypeRequest) returns (semio.model.v1.Prototype) {}
+  rpc RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
+  // Request an connection point for the connected.
+  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.model.v1.Point);
 }
 
 // Description what an adapter is adapting to.
@@ -27,10 +27,4 @@ message ConnectionPointRequest {
   semio.model.v1.Plan connected_plan = 1;
   // The link of the connecting (sobject).
   semio.model.v1.Link connecting_link = 2;
-}
-
-// A prototype request requests a prototype from a plan.
-message PrototypeRequest {
-  // The plan for the prototype.
-  semio.model.v1.Plan plan = 1;
 }

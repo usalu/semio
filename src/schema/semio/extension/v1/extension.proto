@@ -13,12 +13,16 @@ import "extension/translator/v1/translator.proto";
 
 // A description of what the extension is extending.
 message Extending{
+  // Address of the extension server.
+  string address = 1;
+  // Name of the extension server.
+  string name = 2;
   // A summary of all descriptions about the translator.
   repeated semio.extension.adapter.v1.Adapting adaptings = 3;
   // A summary of all descriptions about the converter.
   repeated semio.extension.converter.v1.Converting convertings = 4;
   // A summary of all descriptions about the transformer.
   repeated semio.extension.transformer.v1.Transforming transformings = 5;
-    // A summary of all descriptions about the translator.
+  // A summary of all descriptions about the translator.
   repeated semio.extension.translator.v1.Translating translatings = 6;
 }

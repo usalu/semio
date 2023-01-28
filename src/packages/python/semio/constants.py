@@ -15,9 +15,9 @@ with open(os.path.join(__location__, 'constants.json')) as constantsFile:
 
     PLATFORMS = CONSTANTS['PLATFORMS']
 
-    THREE = PLATFORMS['three']
-    RHINO = PLATFORMS['rhino']
-    GRASSHOPPER = PLATFORMS['gh']
+    THREE = PLATFORMS['THREE']
+    RHINO = PLATFORMS['RHINO']
+    GRASSHOPPER = PLATFORMS['GRASSHOPPER']
 
     GENERAL_EXTENSIONS = CONSTANTS['GENERAL_EXTENSIONS']
 

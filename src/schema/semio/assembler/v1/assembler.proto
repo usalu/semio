@@ -22,7 +22,7 @@ message LayoutToAssembliesResponse{
 message AssemblyToElementsRequest {
   repeated semio.model.v1.Sobject sobjects = 1;
   repeated semio.model.v1.Connection connections = 2;
-  repeated semio.model.v1.Assembly assemblies = 3;
+  semio.model.v1.Assembly assembly = 3;
 }
 
 message AssemblyToElementsResponse {

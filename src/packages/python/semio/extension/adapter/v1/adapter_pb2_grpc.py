@@ -16,28 +16,21 @@ class AdapterServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.RequestPrototype = channel.unary_unary(
+                '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
+                request_serializer=model_dot_v1_dot_model__pb2.Plan.SerializeToString,
+                response_deserializer=model_dot_v1_dot_model__pb2.Prototype.FromString,
+                )
         self.RequestConnectionPoint = channel.unary_unary(
                 '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
                 request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
                 response_deserializer=model_dot_v1_dot_model__pb2.Point.FromString,
-                )
-        self.RequestPrototype = channel.unary_unary(
-                '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
-                request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Prototype.FromString,
                 )
 
 
 class AdapterServiceServicer(object):
     """An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
     """
-
-    def RequestConnectionPoint(self, request, context):
-        """Request an connection point for the connected.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def RequestPrototype(self, request, context):
         """Request a prototype.
@@ -46,18 +39,25 @@ class AdapterServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RequestConnectionPoint(self, request, context):
+        """Request an connection point for the connected.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AdapterServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'RequestPrototype': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestPrototype,
+                    request_deserializer=model_dot_v1_dot_model__pb2.Plan.FromString,
+                    response_serializer=model_dot_v1_dot_model__pb2.Prototype.SerializeToString,
+            ),
             'RequestConnectionPoint': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestConnectionPoint,
                     request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.FromString,
                     response_serializer=model_dot_v1_dot_model__pb2.Point.SerializeToString,
-            ),
-            'RequestPrototype': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestPrototype,
-                    request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Prototype.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -69,6 +69,23 @@ def add_AdapterServiceServicer_to_server(servicer, server):
 class AdapterService(object):
     """An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
     """
+
+    @staticmethod
+    def RequestPrototype(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
+            model_dot_v1_dot_model__pb2.Plan.SerializeToString,
+            model_dot_v1_dot_model__pb2.Prototype.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def RequestConnectionPoint(request,
@@ -84,22 +101,5 @@ class AdapterService(object):
         return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
             extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
             model_dot_v1_dot_model__pb2.Point.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def RequestPrototype(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestPrototype',
-            extension_dot_adapter_dot_v1_dot_adapter__pb2.PrototypeRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Prototype.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

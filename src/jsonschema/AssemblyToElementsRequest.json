@@ -16,11 +16,9 @@
                     },
                     "type": "array"
                 },
-                "assemblies": {
-                    "items": {
-                        "$ref": "#/definitions/semio.model.v1.Assembly"
-                    },
-                    "type": "array"
+                "assembly": {
+                    "$ref": "#/definitions/semio.model.v1.Assembly",
+                    "additionalProperties": true
                 }
             },
             "additionalProperties": true,

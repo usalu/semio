@@ -90,19 +90,11 @@ export interface ConnectElementResponse {
  */
 export interface RegisterExtensionRequest {
     /**
-     * @generated from protobuf field: string address = 1;
-     */
-    address: string;
-    /**
-     * @generated from protobuf field: string name = 2;
-     */
-    name: string;
-    /**
-     * @generated from protobuf field: semio.extension.v1.Extending extending = 3;
+     * @generated from protobuf field: semio.extension.v1.Extending extending = 1;
      */
     extending?: Extending;
     /**
-     * @generated from protobuf field: bool replace_existing = 4;
+     * @generated from protobuf field: bool replace_existing = 2;
      */
     replaceExisting: boolean;
 }
@@ -349,14 +341,12 @@ export const ConnectElementResponse = new ConnectElementResponse$Type();
 class RegisterExtensionRequest$Type extends MessageType<RegisterExtensionRequest> {
     constructor() {
         super("semio.manager.v1.RegisterExtensionRequest", [
-            { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "extending", kind: "message", T: () => Extending },
-            { no: 4, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "extending", kind: "message", T: () => Extending },
+            { no: 2, name: "replace_existing", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<RegisterExtensionRequest>): RegisterExtensionRequest {
-        const message = { address: "", name: "", replaceExisting: false };
+        const message = { replaceExisting: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<RegisterExtensionRequest>(this, message, value);
@@ -367,16 +357,10 @@ class RegisterExtensionRequest$Type extends MessageType<RegisterExtensionRequest
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string address */ 1:
-                    message.address = reader.string();
-                    break;
-                case /* string name */ 2:
-                    message.name = reader.string();
-                    break;
-                case /* semio.extension.v1.Extending extending */ 3:
+                case /* semio.extension.v1.Extending extending */ 1:
                     message.extending = Extending.internalBinaryRead(reader, reader.uint32(), options, message.extending);
                     break;
-                case /* bool replace_existing */ 4:
+                case /* bool replace_existing */ 2:
                     message.replaceExisting = reader.bool();
                     break;
                 default:
@@ -391,18 +375,12 @@ class RegisterExtensionRequest$Type extends MessageType<RegisterExtensionRequest
         return message;
     }
     internalBinaryWrite(message: RegisterExtensionRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string address = 1; */
-        if (message.address !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.address);
-        /* string name = 2; */
-        if (message.name !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* semio.extension.v1.Extending extending = 3; */
+        /* semio.extension.v1.Extending extending = 1; */
         if (message.extending)
-            Extending.internalBinaryWrite(message.extending, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* bool replace_existing = 4; */
+            Extending.internalBinaryWrite(message.extending, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* bool replace_existing = 2; */
         if (message.replaceExisting !== false)
-            writer.tag(4, WireType.Varint).bool(message.replaceExisting);
+            writer.tag(2, WireType.Varint).bool(message.replaceExisting);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

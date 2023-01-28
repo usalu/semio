@@ -233,6 +233,14 @@
         },
         "semio.extension.v1.Extending": {
             "properties": {
+                "address": {
+                    "type": "string",
+                    "description": "Address of the extension server."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Name of the extension server."
+                },
                 "adaptings": {
                     "items": {
                         "$ref": "#/definitions/semio.extension.adapter.v1.Adapting"

@@ -7,14 +7,14 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class AssemblyToElementsRequest(_message.Message):
-    __slots__ = ["assemblies", "connections", "sobjects"]
-    ASSEMBLIES_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["assembly", "connections", "sobjects"]
+    ASSEMBLY_FIELD_NUMBER: _ClassVar[int]
     CONNECTIONS_FIELD_NUMBER: _ClassVar[int]
     SOBJECTS_FIELD_NUMBER: _ClassVar[int]
-    assemblies: _containers.RepeatedCompositeFieldContainer[_model_pb2.Assembly]
+    assembly: _model_pb2.Assembly
     connections: _containers.RepeatedCompositeFieldContainer[_model_pb2.Connection]
     sobjects: _containers.RepeatedCompositeFieldContainer[_model_pb2.Sobject]
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[_model_pb2.Sobject, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[_model_pb2.Connection, _Mapping]]] = ..., assemblies: _Optional[_Iterable[_Union[_model_pb2.Assembly, _Mapping]]] = ...) -> None: ...
+    def __init__(self, sobjects: _Optional[_Iterable[_Union[_model_pb2.Sobject, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[_model_pb2.Connection, _Mapping]]] = ..., assembly: _Optional[_Union[_model_pb2.Assembly, _Mapping]] = ...) -> None: ...
 
 class AssemblyToElementsResponse(_message.Message):
     __slots__ = ["elements"]
