@@ -17,7 +17,7 @@ class TransformerService(ExtensionService,TransformerServiceServicer):
     def rewriteLayout(self, decisions: Iterable[Decision], initial_layout:Layout | None = None)->Layout:
         pass
 
-    def RewriteLayout(request,context):
-        return self.rewriteLayout(request.decision,request.initial_layout)
+    def RewriteLayout(self, request,context):
+        return self.rewriteLayout(request.decisions,request.initial_layout)
 
     

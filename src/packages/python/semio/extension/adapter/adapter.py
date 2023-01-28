@@ -19,7 +19,7 @@ class AdapterService(ExtensionService,AdapterServiceServicer,ABC):
         return self.requestPrototype(request.plan)
 
     @abstractmethod
-    def requestConnectionPoint(connected_plan:Plan, connecting_link:Link)->Point:
+    def requestConnectionPoint(self, connected_plan:Plan, connecting_link:Link) -> Point:
         pass
 
     def RequestConnectionPoint(self, request, context):

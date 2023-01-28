@@ -12,7 +12,7 @@ class ConverterService(ExtensionService,ConverterServiceServicer,ABC):
         return []
 
     @abstractmethod
-    def convertRepresentation(representation:Representation, target_platform:Platform)->Representation:
+    def convertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:
         pass
 
     def ConvertRepresentation(self, request, context):

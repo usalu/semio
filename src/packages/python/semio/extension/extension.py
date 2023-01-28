@@ -1,22 +1,11 @@
-# This file should be automatically generated
+from __future__ import annotations
 import logging
 
 from pydantic import Field
 
 from grpc import insecure_channel
 
-from typing import TYPE_CHECKING
-
-from constants import DEFAULT_MANAGER_PORT
-
-from utils import SemioServer, SemioServiceDescription, SemioProxy
-
-from model import Sobject
-
-from .adapter import AdapterService
-from .converter import ConverterService
-from .transformer import TransformerService
-from .translator import TranslatorService
+from typing import TYPE_CHECKING, Iterable
 
 from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR
 from .adapter.v1.adapter_pb2_grpc import add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
@@ -27,10 +16,17 @@ from .transformer.v1.transformer_pb2_grpc import add_TransformerServiceServicer_
 from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR
 from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
-from .v1.extension_pb2 import Extending
+from semio.model import Point,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
+from semio.utils import SemioServer, SemioServiceDescription, SemioProxy
+from semio.constants import DEFAULT_MANAGER_PORT
+
 
 if TYPE_CHECKING:
     from manager import ManagerProxy
+    from adapter import AdapterService
+    from converter import ConverterService
+    from transformer import TransformerService
+    from translator import TranslatorService
 
 # This import style is necissary to not trigger cyclic imports.
 import manager
@@ -58,6 +54,7 @@ class ExtensionServer(SemioServer):
         return servicesDescriptions
     
     def initialize(self):
+        from .v1.extension_pb2 import Extending
         address = 'localhost:' +str(self.port)
         response = self.getManagerProxy().RegisterExtension(
                 extending=Extending(
@@ -81,19 +78,18 @@ class ExtensionProxy(SemioProxy):
         self._transformerStub = TransformerServiceStub(insecure_channel(self.address))
         self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
-    def RequestPrototype(self, sobject:Sobject,  type: str = 'native', name: str = 'normal', lod: int = 0):
-        return self._adapterStub.RequestRepresentation(request=RepresentationRequest(sobject=sobject,type=type,name=name,lod=lod))
+    def RequestPrototype(self, plan: Plan)->Prototype:
+        return self._adapterStub.RequestPrototype(plan=plan)
 
-    def RequestConnectionPoint(self, request, context = None):
-        return self._adapterStub.RequestConnectionPoint(request,context)
+    def RequestConnectionPoint(self, connected_plan:Plan, connecting_link:Link)-> Point:
+        return self._adapterStub.RequestConnectionPoint(connected_plan,connecting_link)
 
-
-    def ConvertRepresentation(self, request, context = None):
-        return self._converterStub.ConvertRepresentation(request,context)
+    def ConvertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:
+        return self._converterStub.ConvertRepresentation(representation,target_platform)
     
-    def RewriteLayout(self, request, context = None):
-        return self._transformerStub.RewriteLayout(request,context)
+    def RewriteLayout(self, decisions: Iterable[Decision], initial_layout:Layout | None = None)->Layout:
+        return self._transformerStub.RewriteLayout(decisions,initial_layout)
 
-    def TranslateRepresentation(self, request, context = None):
-        return self._translatorStub.TranslateRepresentation(request,context)
+    def TranslateRepresentation(self,representation:Representation, target_pose:Pose ,source_pose:Pose | None = None):
+        return self._translatorStub.TranslateRepresentation(representation,target_pose,source_pose)
 

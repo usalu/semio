@@ -59,14 +59,12 @@ namespace Semio.UI.Grasshopper.Utility
             Y = point.Y,
             Z = point.Z
         };
-
         public static Point3d Convert(SemioPoint point) => new()
         {
             X = point.X,
             Y = point.Y,
             Z = point.Z
         };
-
         public static Pose Convert(Plane plane)
         {
             Plane rotationPlane = plane.Clone();
@@ -78,7 +76,6 @@ namespace Semio.UI.Grasshopper.Utility
                 PointOfView = Convert(plane.Origin),View = Convert(quaternion)
             };
         }
-
         public static Plane Convert(Pose pose)
         {
             Quaternion quaternion = Convert(pose.View);
@@ -89,7 +86,6 @@ namespace Semio.UI.Grasshopper.Utility
             yAxis.Transform(transform);
             return new Plane(Convert(pose.PointOfView), xAxis, yAxis);
         }
-
         public static IEnumerable<GeometryBase> Convert (Representation representation)
         {
             File3dm file;
@@ -103,7 +99,6 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return file.Objects.Select(o => o.Geometry);
         }
-
         public static IEnumerable<GeometryBase> Convert(Element element)
         {
             List<GeometryBase> geometries = new List<GeometryBase>();
@@ -125,7 +120,6 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return geometries;
         }
-
         public static IEnumerable<GeometryBase> Convert(Design design)
         {
             List<GeometryBase> geometries = new List<GeometryBase>();
