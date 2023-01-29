@@ -29,7 +29,8 @@
 	<PackageReference Include="System.Text.Json" Version="7.0.1" />
   </ItemGroup>
 	<ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
+		<Content Include="..\..\..\resources\**" />
+		<Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
