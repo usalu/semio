@@ -33,10 +33,12 @@ import manager
 
 class ExtensionServer(SemioServer):
     managerProxyAddress: str = "localhost:" + str(DEFAULT_MANAGER_PORT)
-    adapter: AdapterService = Field(default=None)
-    converter: ConverterService = Field(default=None)
-    transformer: TransformerService = Field(default=None)
-    translator: TranslatorService = Field(default=None)
+    # These should be abstract classes but pydantic doesn't let you define this without using Union[ALL, SUB, CLASSES]
+    # https://stackoverflow.com/questions/58301364/pydantic-and-subclasses-of-abstract-class
+    adapter: AdapterService = Field(default_factory=AdapterService)
+    converter: ConverterService = Field(default_factory=ConverterService)
+    transformer: TransformerService = Field(default_factory=TransformerService)
+    translator: TranslatorService = Field(default_factory=TranslatorService)
 
     def getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
@@ -56,7 +58,7 @@ class ExtensionServer(SemioServer):
     def initialize(self):
         from .v1.extension_pb2 import Extending
         address = 'localhost:' +str(self.port)
-        response = self.getManagerProxy().RegisterExtension(
+        success, oldAddress = self.getManagerProxy().RegisterExtension(
                 extending=Extending(
                     name = self.name,
                     address = address,
@@ -64,7 +66,7 @@ class ExtensionServer(SemioServer):
                     convertings = self.converter.getDescriptions(), 
                     transformings = self.transformer.getDescriptions(),
                     translatings = self.translator.getDescriptions()))
-        if response.success:
+        if success:
             logging.debug(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
         else:
             logging.debug(f'The extension {self.name} ({address}) couldn\'t be registered at manager {self.managerProxyAddress}.'+

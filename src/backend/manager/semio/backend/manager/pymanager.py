@@ -1,8 +1,10 @@
+from __future__ import annotations
+from typing import Iterable,Tuple
+
 import logging
 
 from os.path import splitext
-
-from semio.model import Point,Sobject,Connection,Layout,Element,Design, Representation,Platform
+from semio.model import Point,Pose,Platform,Sobject,Connection,Layout,Element,Design, Representation,Platform
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,ElementRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
@@ -49,28 +51,20 @@ class Manager(ManagerServer):
 
     # Services
 
-    def requestElement(self, request: ElementRequest, context):
-        extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
-        extensionProxy = self.getExtensionProxy(extensionAddress)
-        element = extensionProxy.RequestElement(request.sobject)
-        return element
+    def requestElement(self, sobject: Sobject, target_representation_platforms: Iterable[Platform] | None = None, target_representation_concepts: Iterable[str] | None = None, target_representation_lods: Iterable[int] | None = None, targets_required: bool = False) -> Element:
+        raise NotImplementedError()
+    
+    def connectElement(self, connected_sobject: Sobject, connecting_sobject: Sobject, connection: Connection) -> Tuple[Pose, Point]:
+        raise NotImplementedError()
+    # def requestElement(self, request: ElementRequest, context):
+    #     extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
+    #     extensionProxy = self.getExtensionProxy(extensionAddress)
+    #     element = extensionProxy.RequestElement(request.sobject)
+    #     return element
 
-    def connectElement(self, request, context):
-        raise NotImplementedError('Method not implemented!')
+    # def connectElement(self, request, context):
+    #     raise NotImplementedError('Method not implemented!')
 
-    def registerExtension(self, request: RegisterExtensionRequest, context):
-        oldAddress= ""
-        for extensionAddress, extension in self.extensions.items():
-            if extension.name == request.extending.name:
-                if request.replace_existing:
-                    oldAddress = extensionAddress
-                else:
-                    raise ValueError(f'There is already an extension with the name {extension.name}. If you wish to replace it set replace existing to true.')
-        self.extensions[request.extending.address]=request.extending
-        return RegisterExtensionResponse(success=True,old_address=oldAddress)
-
-    def GetRegisteredExtensions(self, request, context):
-        raise NotImplementedError('Method not implemented!')
 
 if __name__ == '__main__':
     logging.basicConfig()

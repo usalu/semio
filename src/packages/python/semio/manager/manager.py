@@ -90,7 +90,7 @@ class ManagerServer(SemioServer,SemioService,ABC):
         return (True,oldAddress)
 
     def RegisterExtension(self,request, context):
-        success,oldAddress = self.registerExtension(**request)
+        success,oldAddress = self.registerExtension(request.extending,request.replace_existing)
         return RegisterExtensionResponse(success=success,old_address=oldAddress)
 
     def getRegisteredExtensions(self)->Iterable[Extending]:
@@ -118,11 +118,12 @@ class ManagerProxy(SemioProxy):
             targets_required=targets_required))
 
     def ConnectElement(self,
-        sobjects:Tuple[Sobject,Sobject],
+        connected_sobject: Sobject,
+        connecting_sobject: Sobject,
         connection:Connection)->Tuple[Pose,Point]:
         connectElementResponse = self._stub.ConnectElement(request=ConnectElementRequest(
-            connected_sobject=sobjects[0],
-            connecting_sobject=sobjects[1],
+            connected_sobject=connected_sobject,
+            connecting_sobject=connecting_sobject,
             connection=connection))
         return (connectElementResponse.connected_element_pose,connectElementResponse.connection_point)
 

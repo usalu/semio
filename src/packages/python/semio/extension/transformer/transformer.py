@@ -1,7 +1,5 @@
 from typing import Iterable
 
-from abc import ABC, abstractmethod
-
 from .v1.transformer_pb2 import Transforming,RewriteLayoutRequest
 from .v1.transformer_pb2_grpc import TransformerServiceServicer
 
@@ -13,9 +11,8 @@ class TransformerService(ExtensionService,TransformerServiceServicer):
     def getDescriptions(self) -> list[Transforming]:
         return []
 
-    @abstractmethod
     def rewriteLayout(self, decisions: Iterable[Decision], initial_layout:Layout | None = None)->Layout:
-        pass
+        raise NotImplementedError("This method needs to be overriden by the implementation if you want to use it.")
 
     def RewriteLayout(self, request,context):
         return self.rewriteLayout(request.decisions,request.initial_layout)

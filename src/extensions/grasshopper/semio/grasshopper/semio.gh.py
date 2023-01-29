@@ -3,7 +3,7 @@ from tempfile import TemporaryFile
 from semio.model import Point,PLATFORM_GRASSHOPPER,Representation,Plan,Link,Prototype
 from semio.extension import ExtensionServer
 from semio.extension.adapter import AdapterService, Adapting
-from semio.constants import PLATFORMS
+from semio.constants import PLATFORMS, GRASSHOPPER
 
 from grasshopper import parseModelFromOutput, callGrasshopper, encodeModel
 
@@ -30,5 +30,5 @@ class GrasshopperAdapter(AdapterService):
         return Prototype(representations=[Representation(body=b'Zzz')])
 
 if __name__=="__main__":
-    grasshopperServer = ExtensionServer(port=59002,name='semio.gh', adapter=GrasshopperAdapter())
+    grasshopperServer = ExtensionServer(port=GRASSHOPPER['DEFAULT_PORT'],name='semio.gh', adapter=GrasshopperAdapter())
     grasshopperServer.serve()
