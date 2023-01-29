@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from .v1.adapter_pb2 import Adapting
 from .v1.adapter_pb2_grpc import AdapterServiceServicer
 
-from semio.model import Point,Plan,Link,Prototype
-from semio.extension.service import ExtensionService
+from model import Point,Plan,Link,Prototype
+from extension.service import ExtensionService
 
 class AdapterService(ExtensionService,AdapterServiceServicer,ABC):
 

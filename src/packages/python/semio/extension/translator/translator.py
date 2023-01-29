@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from .v1.translator_pb2 import Translating
 from .v1.translator_pb2_grpc import TranslatorServiceServicer
 
-from semio.model import Pose,Representation
-from semio.extension.service import ExtensionService
+from model import Pose,Representation
+from extension.service import ExtensionService
 
 class TranslatorService(ExtensionService,TranslatorServiceServicer,ABC):
 

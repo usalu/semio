@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from .v1.transformer_pb2 import Transforming,RewriteLayoutRequest
 from .v1.transformer_pb2_grpc import TransformerServiceServicer
 
-from semio.model import Layout,Decision
-from semio.extension.service import ExtensionService
+from model import Layout,Decision
+from extension.service import ExtensionService
 
 class TransformerService(ExtensionService,TransformerServiceServicer):
 

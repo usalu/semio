@@ -7,9 +7,9 @@ from grpc import insecure_channel
 
 from .v1.gateway_pb2 import DESCRIPTOR,LayoutDesignRequest
 from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewayServiceServicer, GatewayServiceStub
-from semio.model import Platform,Layout,Design
-from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
-from semio.constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
+from model import Platform,Layout,Design
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
 
 if TYPE_CHECKING:
     from assembler import AssemblerProxy

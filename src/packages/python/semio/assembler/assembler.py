@@ -8,9 +8,9 @@ from grpc import insecure_channel
 
 from .v1.assembler_pb2 import DESCRIPTOR,LayoutToAssembliesResponse,AssemblyToElementsResponse
 from .v1.assembler_pb2_grpc import add_AssemblerServiceServicer_to_server, AssemblerServiceServicer, AssemblerServiceStub
-from semio.model import Point,Pose,Platform,Sobject,Connection,Assembly,Layout, Element
-from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
-from semio.constants import DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
+from model import Point,Pose,Platform,Sobject,Connection,Assembly,Layout, Element
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from constants import DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
 
 if TYPE_CHECKING:
     from manager import ManagerProxy

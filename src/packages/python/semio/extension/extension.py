@@ -16,27 +16,27 @@ from .transformer.v1.transformer_pb2_grpc import add_TransformerServiceServicer_
 from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR
 from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
-from semio.model import Point,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
-from semio.utils import SemioServer, SemioServiceDescription, SemioProxy
-from semio.constants import DEFAULT_MANAGER_PORT
+from model import Point,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
+from utils import SemioServer, SemioServiceDescription, SemioProxy
+from constants import DEFAULT_MANAGER_PORT
 
+from extension.adapter import AdapterService
+from extension.converter import ConverterService
+from extension.transformer import TransformerService
+from extension.translator import TranslatorService
 
 if TYPE_CHECKING:
     from manager import ManagerProxy
-    from adapter import AdapterService
-    from converter import ConverterService
-    from transformer import TransformerService
-    from translator import TranslatorService
 
 # This import style is necissary to not trigger cyclic imports.
 import manager
 
 class ExtensionServer(SemioServer):
     managerProxyAddress: str = "localhost:" + str(DEFAULT_MANAGER_PORT)
-    adapter: AdapterService = Field(default_factory=AdapterService)
-    converter: ConverterService = Field(default_factory=ConverterService)
-    transformer: TransformerService = Field(default_factory=TransformerService)
-    translator: TranslatorService = Field(default_factory=TranslatorService)
+    adapter: AdapterService = Field(default=None)
+    converter: ConverterService = Field(default=None)
+    transformer: TransformerService = Field(default=None)
+    translator: TranslatorService = Field(default=None)
 
     def getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):

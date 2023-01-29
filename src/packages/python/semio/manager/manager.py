@@ -1,20 +1,24 @@
 from __future__ import annotations
 from abc import ABC,abstractmethod
-from typing import Iterable,Tuple
+from typing import TYPE_CHECKING,Iterable,Tuple
 from pydantic import Field
 
 from grpc import insecure_channel
 
 from .v1.manager_pb2 import DESCRIPTOR, ElementRequest, ConnectElementRequest, ConnectElementResponse,RegisterExtensionRequest,RegisterExtensionResponse
 from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerServiceServicer, ManagerServiceStub
-from semio.model import Point,Pose,Platform,Sobject,Connection,Element
-from semio.extension import Extending
-from semio.utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
-from semio.constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
+from model import Point,Pose,Platform,Sobject,Connection,Element
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
+
+# Avoid import cycle
+if TYPE_CHECKING:
+    from semio.extension import Extending
 
 class ManagerServer(SemioServer,SemioService,ABC):
     assemblerAddress: str = "localhost:"+str(DEFAULT_ASSEMBLER_PORT)
-    extensions: dict[str,Extending]= Field(default_factory=dict, description="Extensions with address as key and extension description as value.")
+    # dict[str,Extending]
+    extensions: dict[str,object]= Field(default_factory=dict, description="Extensions with address as key and extension description as value.")
     
     def __init__(self,port = DEFAULT_MANAGER_PORT, name = "Python Semio Manager Server", **kw):
         super().__init__(port=port,name=name, **kw)
@@ -73,7 +77,7 @@ class ManagerServer(SemioServer,SemioService,ABC):
         return ConnectElementResponse(connected_element_pose=connected_element_pose,connection_point=connection_point)
 
     def registerExtension(self, 
-        extending: Extending,
+        extending,
         replace_existing: bool = True)->Tuple[bool,str]:
         oldAddress= ""
         for extensionAddress, extension in self.extensions.items():

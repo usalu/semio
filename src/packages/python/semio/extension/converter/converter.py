@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from .v1.converter_pb2 import Converting,RepresentationConversionRequest
 from .v1.converter_pb2_grpc import ConverterServiceServicer
 
-from semio.model import Platform,Representation
-from semio.extension.service  import ExtensionService
+from model import Platform,Representation
+from extension.service  import ExtensionService
 
 class ConverterService(ExtensionService,ConverterServiceServicer,ABC):
 
