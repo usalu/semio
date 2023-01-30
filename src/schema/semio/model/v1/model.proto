@@ -145,17 +145,22 @@ message Scope {
   int32 order = 2; 
 }
 
+message Value {
+  oneof value {
+    string text = 1;
+    double number = 2;
+    int32 integer_number = 3;
+    uint32 natural_number = 4;
+    Point point = 5;
+  }
+}
+
 message Parameter {
   // Name of the parameter
   string name = 1;
   // Optional context field to describe the context of the parameter.
   repeated Scope context = 2;
-  oneof value {
-    string text = 3;
-    int32 integer_number = 4;
-    double number = 5;
-    Point point = 6;
-  }
+  Value value = 3;
 }
 
 // A plan for a prototype.

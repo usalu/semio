@@ -17,7 +17,7 @@ namespace Semio.UI.Grasshopper.Params
         public ScopeParam() :
             base("Scope", "Sc", "", "Semio", "Model")
         { }
-        public override Guid ComponentGuid => new("02C84754-4800-4EB1-BF27-12FB84C5585E");
+        public override Guid ComponentGuid => new("1750584C-69E0-46E9-8194-F2D41B977E7B");
         protected override GH_GetterResult Prompt_Singular(ref ScopeGoo value)
         {
             throw new NotImplementedException();

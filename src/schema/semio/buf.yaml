@@ -3,8 +3,8 @@ name: buf.build/usalu/semio
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/grpc-ecosystem/grpc-gateway
-# build:
-#   excludes: [google]
+build:
+  excludes: [google,protoc-gen-openapiv2]
 breaking:
   use:
     - FILE

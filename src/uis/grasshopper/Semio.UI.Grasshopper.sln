@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.UI.Grasshopper", "Semio.UI.Grasshopper.csproj", "{EA5D9079-D42A-4DA0-8AFC-5A918106765F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio", "..\..\packages\csharp\net48\Semio\Semio.csproj", "{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{EA5D9079-D42A-4DA0-8AFC-5A918106765F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA5D9079-D42A-4DA0-8AFC-5A918106765F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA5D9079-D42A-4DA0-8AFC-5A918106765F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

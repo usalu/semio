@@ -8,33 +8,23 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="model\v1\model.proto" />
-	<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="gateway\v1\gateway.proto" />
-	<!--<Protobuf Include="google\protobuf\struct.proto" GrpcServices="Client" />
-	<Protobuf Include="google\protobuf\descriptor.proto" GrpcServices="Client" />-->
-	<Protobuf Include="google\api\annotations.proto" GrpcServices="Client" />
-	<Protobuf Include="google\api\http.proto" GrpcServices="Client" />
-	<Protobuf Include="protoc-gen-openapiv2\options\openapiv2.proto" GrpcServices="Client" />
-	<Protobuf Include="protoc-gen-openapiv2\options\annotations.proto" GrpcServices="Client" />
-	<!--<Protobuf Include="..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\assembler\v1\assembler.proto" ProtoRoot="..\..\schema\semio" />-->
-	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema/>
-	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
-	<Protobuf Include="..\..\schema\semio\extension\adapter\v1\adapter.proto" GrpcServices="Client" Link="Protos\extension\adapter\v1\adapter.proto" />
-	<Protobuf Include="..\..\schema\semio\extension\converter\v1\converter.proto" GrpcServices="Client" Link="Protos\extension\converter\v1\converter.proto" />
-	<Protobuf Include="..\..\schema\semio\extension\transformer\v1\transformer.proto" GrpcServices="Client" Link="Protos\extension\transformer\v1\transformer.proto" />
-	<Protobuf Include="..\..\schema\semio\extension\translator\v1\translator.proto" GrpcServices="Client" Link="Protos\extension\translator\v1\translator.proto" />-->
-	<PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
-	<PackageReference Include="Grpc.Core" Version="2.46.6" />
-	<PackageReference Include="Grpc.Tools" Version="2.51.0">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	</PackageReference>
+    <Compile Remove="google\**" />
+    <Compile Remove="protoc-gen-openapiv2\**" />
+    <EmbeddedResource Remove="google\**" />
+    <EmbeddedResource Remove="protoc-gen-openapiv2\**" />
+    <None Remove="google\**" />
+    <None Remove="protoc-gen-openapiv2\**" />
+  </ItemGroup>
+  <ItemGroup>
+	  <PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
 	<PackageReference Include="RhinoCommon" Version="7.26.23009.7001" />
 	<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	<PackageReference Include="System.Text.Json" Version="7.0.1" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\packages\csharp\net48\Semio\Semio.csproj" />
+  </ItemGroup>
 	<ItemGroup>
-		<!-- <Content Include="..\..\..\resources\**" /> -->
 		<Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

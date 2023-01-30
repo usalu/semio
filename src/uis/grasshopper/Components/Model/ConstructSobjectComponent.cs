@@ -24,9 +24,9 @@ namespace Semio.UI.Grasshopper.Model
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddParameter(new PoseParam());
+            pManager[0].Optional = true;
+            pManager.AddParameter(new PlanParam(), "Plan", "Pl", "",GH_ParamAccess.item);
             pManager[1].Optional = true;
-            pManager.AddParameter(new ParameterParam(), "Parameters", "Pr", "",GH_ParamAccess.list);
-            pManager[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -36,14 +36,12 @@ namespace Semio.UI.Grasshopper.Model
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            string url = "";
-            if (!DA.GetData(0, ref url)) return;
 
             PoseGoo pose = new();
-            DA.GetData(1, ref pose);
+            DA.GetData(0, ref pose);
 
             PlanGoo plan = new();
-            DA.GetData(21, ref plan);
+            DA.GetData(1, ref plan);
 
             Sobject sobject = new Sobject()
             {

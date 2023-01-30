@@ -17,7 +17,7 @@ namespace Semio.UI.Grasshopper.Params
         public AssemblyParam() :
             base("Assembly", "A", "", "Semio", "Model")
         { }
-        public override Guid ComponentGuid => new("F55CFEF8-4555-41B0-AA80-1697E955A3CD");
+        public override Guid ComponentGuid => new("02C84754-4800-4EB1-BF27-12FB84C5585E");
         protected override GH_GetterResult Prompt_Singular(ref AssemblyGoo value)
         {
             throw new NotImplementedException();

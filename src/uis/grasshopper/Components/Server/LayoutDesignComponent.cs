@@ -41,23 +41,28 @@ namespace Semio.UI.Grasshopper.Components.Server
             bool run = false;
             if (!DA.GetData(2, ref run)) return;
 
-            var layoutDesignRequest = new LayoutDesignRequest()
+            if (run)
             {
-                Layout = layout.Value
-            };
-
-            using (var client = new HttpClient())
-            {
-                HttpContent content = new StringContent(layoutDesignRequest.ToString());
-                var task = client.PostAsync(url + _route, content);
-                var response = task.Result;
-                if (response.IsSuccessStatusCode)
+                var layoutDesignRequest = new LayoutDesignRequest()
                 {
-                    var designContent = response.Content.ReadAsStringAsync();
-                    Design design = Design.Parser.ParseJson(designContent.Result);
-                    DA.SetData(0,new DesignGoo(design));
+                    Layout = layout.Value
+                };
+
+                using (var client = new HttpClient())
+                {
+                    HttpContent content = new StringContent(layoutDesignRequest.ToString());
+                    var task = client.PostAsync(url + _route, content);
+                    var response = task.Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var designContent = response.Content.ReadAsStringAsync();
+                        Design design = Design.Parser.ParseJson(designContent.Result);
+                        DA.SetData(0, new DesignGoo(design));
+                    }
                 }
             }
+
+          
         }
         public override Guid ComponentGuid => new ("15ad0008-1e40-41ff-8e38-116102d7488a");
         protected override System.Drawing.Bitmap Icon => Resources.icon_layoutdesign;
