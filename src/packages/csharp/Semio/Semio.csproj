@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+  </ItemGroup>
+	<ItemGroup>
+		<Protobuf Include="..\..\..\schema\semio\google\api\annotations.proto" GrpcServices="Both" Link="google\api\annotations.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\google\api\http.proto" GrpcServices="Both" Link="google\api\http.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\protoc-gen-openapiv2\options\annotations.proto" GrpcServices="Both" Link="protoc-gen-openapiv2\options\annotations.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\protoc-gen-openapiv2\options\openapiv2.proto" GrpcServices="Both" Link="protoc-gen-openapiv2\options\openapiv2.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Both" Link="model\v1\model.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Both" Link="gateway\v1\gateway.proto" ProtoRoot="..\..\..\schema\semio" />
+		<Protobuf Include="..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Both" Link="assembler\v1\assembler.proto" ProtoRoot="..\..\..\schema\semio" />
+	</ItemGroup>
+</Project>

@@ -8,8 +8,14 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="Protos\model\v1\model.proto" ProtoRoot="..\..\schema\semio" />
-	<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="Protos\gateway\v1\gateway.proto" ProtoRoot="..\..\schema\semio" />
+	<Protobuf Include="..\..\schema\semio\model\v1\model.proto" GrpcServices="Client" Link="model\v1\model.proto" />
+	<Protobuf Include="..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Client" Link="gateway\v1\gateway.proto" />
+	<!--<Protobuf Include="google\protobuf\struct.proto" GrpcServices="Client" />
+	<Protobuf Include="google\protobuf\descriptor.proto" GrpcServices="Client" />-->
+	<Protobuf Include="google\api\annotations.proto" GrpcServices="Client" />
+	<Protobuf Include="google\api\http.proto" GrpcServices="Client" />
+	<Protobuf Include="protoc-gen-openapiv2\options\openapiv2.proto" GrpcServices="Client" />
+	<Protobuf Include="protoc-gen-openapiv2\options\annotations.proto" GrpcServices="Client" />
 	<!--<Protobuf Include="..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Client" Link="Protos\assembler\v1\assembler.proto" ProtoRoot="..\..\schema\semio" />-->
 	<!--<Protobuf Include="..\..\schema\semio\manager\v1\manager.proto" GrpcServices="Client" Link="Protos\manager\v1\manager.proto" ProtoRoot="..\..\schema/>
 	<Protobuf Include="..\..\schema\semio\extension\v1\extension.proto" GrpcServices="Client" Link="Protos\extension\v1\extension.proto" />
@@ -17,8 +23,6 @@
 	<Protobuf Include="..\..\schema\semio\extension\converter\v1\converter.proto" GrpcServices="Client" Link="Protos\extension\converter\v1\converter.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\transformer\v1\transformer.proto" GrpcServices="Client" Link="Protos\extension\transformer\v1\transformer.proto" />
 	<Protobuf Include="..\..\schema\semio\extension\translator\v1\translator.proto" GrpcServices="Client" Link="Protos\extension\translator\v1\translator.proto" />-->
-
-	<PackageReference Include="Google.Protobuf" Version="3.21.12" />
 	<PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
 	<PackageReference Include="Grpc.Core" Version="2.46.6" />
 	<PackageReference Include="Grpc.Tools" Version="2.51.0">

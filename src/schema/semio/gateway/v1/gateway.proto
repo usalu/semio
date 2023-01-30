@@ -26,12 +26,6 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
       name: "AGPL-3.0-or-later";
       // url: "https://github.com/usalu/semio/LICENSE.md";
     };
-    extensions: {
-      key: "x-something-something";
-      value {
-        string_value: "yadda";
-      }
-    }
   };
 };
 
