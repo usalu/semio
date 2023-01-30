@@ -29,22 +29,22 @@ namespace Semio.UI.Grasshopper.Utils
         // TODO Update import logic to be in sync with constants and different file types.
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            RepresentationGoo representation = new();
-            if (!DA.GetData(0, ref representation)) return;
-            File3dm file;
-            switch (representation.Value.BodyCase)
-            {
-                case Representation.BodyOneofCase.ByteArray:
-                    file = File3dm.FromByteArray(representation.Value.ByteArray.ToByteArray());
-                    break;
-                case Representation.BodyOneofCase.Text:
-                default:
-                    // Dummy
-                    file = new File3dm();
-                    break;
-            }
+            //RepresentationGoo representation = new();
+            //if (!DA.GetData(0, ref representation)) return;
+            //File3dm file;
+            //switch (representation.Value.Encoding)
+            //{
+            //    case Representation.Encoding.ByteArray:
+            //        file = File3dm.FromByteArray(representation.Value.ByteArray.ToByteArray());
+            //        break;
+            //    case Representation.Encoding.Text:
+            //    default:
+            //        // Dummy
+            //        file = new File3dm();
+            //        break;
+            //}
             
-            DA.SetDataList(0, file.Objects.Select(o=>o.Geometry));
+            //DA.SetDataList(0, file.Objects.Select(o=>o.Geometry));
         }
         protected override System.Drawing.Bitmap Icon => Resources.icon_deconstruct_representation;
 

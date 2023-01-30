@@ -99,17 +99,17 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return file.Objects.Select(o => o.Geometry);
         }
-        public static IEnumerable<GeometryBase> Convert(Element element)
+        public static IEnumerable<GeometryBase> Convert(Prototype prototype)
         {
             List<GeometryBase> geometries = new List<GeometryBase>();
-            foreach (var representation in element.Representations)
+            foreach (var representation in prototype.Representations)
             {
                 try
                 {
                     foreach (var geometry in Convert(representation))
                     {
-                        var poseTransform = Transform.PlaneToPlane(Plane.WorldXY, Convert(element.Pose));
-                        geometry.Transform(poseTransform);
+                        //var poseTransform = Transform.PlaneToPlane(Plane.WorldXY, Convert(prototype.Pose));
+                        //geometry.Transform(poseTransform);
                         geometries.Add(geometry);
                     }
                 }
@@ -123,8 +123,8 @@ namespace Semio.UI.Grasshopper.Utility
         public static IEnumerable<GeometryBase> Convert(Design design)
         {
             List<GeometryBase> geometries = new List<GeometryBase>();
-            foreach (var element in design.Elements)
-                geometries.AddRange(Convert(element));
+            foreach (var prototype in design.Prototypes)
+                geometries.AddRange(Convert(prototype));
             return geometries;
         }
 

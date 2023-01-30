@@ -22,14 +22,12 @@ namespace Semio.UI.Grasshopper
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddParameter(new SobjectParam(),"Sobjects", "S", "", GH_ParamAccess.list);
-            pManager.AddParameter(new ConnectionParam(), "Connections", "A", "", GH_ParamAccess.list);
+            pManager.AddParameter(new ConnectionParam(), "Connections", "C", "", GH_ParamAccess.list);
             pManager[1].Optional = true;
-            pManager.AddParameter(new SobjectParam(),"Root Sobjects", "R", "", GH_ParamAccess.list);
-            pManager[2].Optional = true;
             pManager.AddParameter(new LayoutStrategyParam(), "Layout Strategy", "LS","",GH_ParamAccess.item);
+            pManager[2].Optional = true;
+            pManager.AddParameter(new AssemblyParam(),"Assembly", "A", "", GH_ParamAccess.list);
             pManager[3].Optional = true;
-            pManager.AddParameter(new AssemblyParam(),"Assembly", "AT", "", GH_ParamAccess.list);
-            pManager[4].Optional = true;
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -43,14 +41,11 @@ namespace Semio.UI.Grasshopper
             var connections = new List<ConnectionGoo>();
             DA.GetDataList(1, connections);
 
-            var rootSobjects = new List<SobjectGoo>();
-            DA.GetData(2, ref rootSobjects);
-
             LayoutStrategyGoo strategy = new();
-            DA.GetData(3, ref strategy);
+            DA.GetData(2, ref strategy);
 
             var assemblies = new List<AssemblyGoo>();
-            DA.GetDataList(4, assemblies);
+            DA.GetDataList(3, assemblies);
 
             Layout layout = new Layout()
             {
@@ -59,7 +54,6 @@ namespace Semio.UI.Grasshopper
 
             layout.Sobjects.AddRange(sobjects.Select(x => x.Value));
             layout.Connections.AddRange(connections.Select(x => x.Value));
-            layout.RootsSobjectsIds.AddRange(rootSobjects.Select(x=>x.Value.Id));
             layout.Assemblies.AddRange(assemblies.Select(x => x.Value));
 
             DA.SetData(0, new LayoutGoo(layout));

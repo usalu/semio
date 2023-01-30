@@ -195,7 +195,7 @@ message Link{
     // Optional port names to connect to. The hierarchy should matter.
     repeated string ports = 2;
     // Optional parameters to bias the connection.
-    map<string,string> bias = 3;
+    repeated Parameter bias_parameters = 3;
 }
 
 // A connectable (sobject) connects in an connection process.

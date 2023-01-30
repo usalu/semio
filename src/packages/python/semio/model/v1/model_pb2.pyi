@@ -121,21 +121,14 @@ class LayoutModificationStrategy(_message.Message):
     def __init__(self, match_count: _Optional[int] = ...) -> None: ...
 
 class Link(_message.Message):
-    __slots__ = ["bias", "ports", "representationProtocol"]
-    class BiasEntry(_message.Message):
-        __slots__ = ["key", "value"]
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: str
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
-    BIAS_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["bias_parameters", "ports", "representationProtocol"]
+    BIAS_PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     PORTS_FIELD_NUMBER: _ClassVar[int]
     REPRESENTATIONPROTOCOL_FIELD_NUMBER: _ClassVar[int]
-    bias: _containers.ScalarMap[str, str]
+    bias_parameters: _containers.RepeatedCompositeFieldContainer[Parameter]
     ports: _containers.RepeatedScalarFieldContainer[str]
     representationProtocol: RepresentationProtocol
-    def __init__(self, representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias_parameters: _Optional[_Iterable[_Union[Parameter, _Mapping]]] = ...) -> None: ...
 
 class Parameter(_message.Message):
     __slots__ = ["context", "integer_number", "name", "number", "point", "text"]

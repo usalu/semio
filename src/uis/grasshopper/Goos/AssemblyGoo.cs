@@ -19,9 +19,9 @@ namespace Semio.UI.Grasshopper.Goos
             Value = new Assembly();
         }
 
-        public AssemblyGoo(Assembly connection)
+        public AssemblyGoo(Assembly assembly)
         {
-            Value = connection;
+            Value = assembly;
         }
         public override IGH_Goo Duplicate() => new AssemblyGoo(Value.Clone());
         public override string TypeName => Assembly.Descriptor.FullName;

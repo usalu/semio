@@ -28,7 +28,8 @@ namespace Semio.UI.Grasshopper.Goos
         public override IGH_Goo Duplicate() => new RepresentationGoo(Value.Clone());
         public override IGH_GeometricGoo DuplicateGeometry()
         {
-            return Converter.Convert(Value);
+            //return Converter.Convert(Value);
+            throw new NotImplementedException();
         }
 
         public override BoundingBox GetBoundingBox(Transform xform)

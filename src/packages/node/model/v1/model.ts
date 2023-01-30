@@ -271,11 +271,9 @@ export interface Link {
     /**
      * Optional parameters to bias the connection.
      *
-     * @generated from protobuf field: map<string, string> bias = 3;
+     * @generated from protobuf field: repeated semio.model.v1.Parameter bias_parameters = 3;
      */
-    bias: {
-        [key: string]: string;
-    };
+    biasParameters: Parameter[];
 }
 /**
  * A connectable (sobject) connects in an connection process.
@@ -1275,11 +1273,11 @@ class Link$Type extends MessageType<Link> {
         super("semio.model.v1.Link", [
             { no: 1, name: "representationProtocol", kind: "enum", T: () => ["semio.model.v1.RepresentationProtocol", RepresentationProtocol] },
             { no: 2, name: "ports", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "bias", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 3, name: "bias_parameters", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Parameter }
         ]);
     }
     create(value?: PartialMessage<Link>): Link {
-        const message = { representationProtocol: 0, ports: [], bias: {} };
+        const message = { representationProtocol: 0, ports: [], biasParameters: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Link>(this, message, value);
@@ -1296,8 +1294,8 @@ class Link$Type extends MessageType<Link> {
                 case /* repeated string ports */ 2:
                     message.ports.push(reader.string());
                     break;
-                case /* map<string, string> bias */ 3:
-                    this.binaryReadMap3(message.bias, reader, options);
+                case /* repeated semio.model.v1.Parameter bias_parameters */ 3:
+                    message.biasParameters.push(Parameter.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1310,22 +1308,6 @@ class Link$Type extends MessageType<Link> {
         }
         return message;
     }
-    private binaryReadMap3(map: Link["bias"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Link["bias"] | undefined, val: Link["bias"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.model.v1.Link.bias");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: Link, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* semio.model.v1.RepresentationProtocol representationProtocol = 1; */
         if (message.representationProtocol !== 0)
@@ -1333,9 +1315,9 @@ class Link$Type extends MessageType<Link> {
         /* repeated string ports = 2; */
         for (let i = 0; i < message.ports.length; i++)
             writer.tag(2, WireType.LengthDelimited).string(message.ports[i]);
-        /* map<string, string> bias = 3; */
-        for (let k of Object.keys(message.bias))
-            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.bias[k]).join();
+        /* repeated semio.model.v1.Parameter bias_parameters = 3; */
+        for (let i = 0; i < message.biasParameters.length; i++)
+            Parameter.internalBinaryWrite(message.biasParameters[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -23,7 +23,6 @@ namespace Semio.UI.Grasshopper.Model
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Url", "U", "", GH_ParamAccess.item);
             pManager.AddParameter(new PoseParam());
             pManager[1].Optional = true;
             pManager.AddParameter(new ParameterParam(), "Parameters", "Pr", "",GH_ParamAccess.list);
@@ -37,31 +36,23 @@ namespace Semio.UI.Grasshopper.Model
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //string id = "";
-            //if (!DA.GetData(0, ref id)) return;
-
             string url = "";
             if (!DA.GetData(0, ref url)) return;
 
             PoseGoo pose = new();
             DA.GetData(1, ref pose);
 
-            var parameters = new List<ParameterGoo>();
-            DA.GetDataList(2, parameters);
+            PlanGoo plan = new();
+            DA.GetData(21, ref plan);
 
             Sobject sobject = new Sobject()
             {
                 Id = Guid.NewGuid().ToString(),
-                Url = url,
-                Pose = pose.GetPose()
+                Pose = pose.GetPose(),
+                Plan = plan.Value,
             };
 
-            sobject.Parameters.Add(new MapField<string, string>
-            {
-                parameters.Select(x=>new{x.Value.Name,x.Value.Value}).ToDictionary(x=>x.Name,x=>x.Value)
-            });
-
-                DA.SetData(0, new SobjectGoo(sobject));
+            DA.SetData(0, new SobjectGoo(sobject));
             }
         public override Guid ComponentGuid=> new("6A1FE23A-C11F-43E3-B609-5A50BE7F2EE3");
         protected override Bitmap Icon => Resources.icon_construct_sobject;

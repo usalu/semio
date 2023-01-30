@@ -20,9 +20,9 @@
 //        {
 //            Value = new Encoding();
 //        }
-//        public EncodingGoo(Encoding connection)
+//        public EncodingGoo(Encoding encoding)
 //        {
-//            Value = connection;
+//            Value = encoding;
 //        }
 //        public override IGH_Goo Duplicate() => new EncodingGoo(Value);
 //        public override string TypeName => "Encoding";
@@ -42,12 +42,12 @@
 //        {
 //            if (source == null) { return false; }
 
-//            if (GH_Convert.ToString(source, out var layoutStrategyValue, GH_Conversion.Both))
+//            if (GH_Convert.ToString(source, out var encodingValue, GH_Conversion.Both))
 //            {
-//                bool success = Enum.TryParse(layoutStrategyValue, true, out Encoding layoutStrategy);
+//                bool success = Enum.TryParse(encodingValue, true, out Encoding encoding);
 //                if (success)
 //                {
-//                    Value = layoutStrategy;
+//                    Value = encoding;
 //                    return true;
 //                }
 //            }

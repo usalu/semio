@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Xml.Linq;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using Semio.Model.V1;
 using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
@@ -20,7 +23,8 @@ namespace Semio.UI.Grasshopper.Model
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Name", "N", "Name of the parameter", GH_ParamAccess.item);
-            pManager.AddTextParameter("Value", "V", "Value of the parameter", GH_ParamAccess.item);
+            pManager.AddParameter(new ScopeParam(),"Context","Cx","",GH_ParamAccess.list);
+            pManager[1].Optional = true;
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -31,10 +35,17 @@ namespace Semio.UI.Grasshopper.Model
             string name = "";
             if (!DA.GetData(0, ref name)) return;
 
-            string value = "";
-            if (!DA.GetData(1, ref value)) return;
+            var context = new List<ScopeGoo>();
+            DA.GetDataList(1, context);
 
-            DA.SetData(0, new ParameterGoo(new Parameter(name, value)));
+            Parameter parameter = new Parameter()
+            {
+                Name = name,
+            };
+
+            parameter.Context.AddRange(context.Select(x => x.Value));
+          
+            DA.SetData(0, new ParameterGoo(parameter));
         }
         public override Guid ComponentGuid=>new ("94696A8F-8FF0-4CD0-919B-029252B68BCF");
         protected override Bitmap Icon => Resources.icon_construct_parameter;

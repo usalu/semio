@@ -89,10 +89,10 @@
           },
           "description": "Optional port names to connect to. The hierarchy should matter."
         },
-        "bias": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+        "biasParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Parameter"
           },
           "description": "Optional parameters to bias the connection."
         }

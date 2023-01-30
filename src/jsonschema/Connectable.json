@@ -48,11 +48,11 @@
                     "type": "array",
                     "description": "Optional port names to connect to. The hierarchy should matter."
                 },
-                "bias": {
-                    "additionalProperties": {
-                        "type": "string"
+                "bias_parameters": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Parameter"
                     },
-                    "type": "object",
+                    "type": "array",
                     "description": "Optional parameters to bias the connection."
                 }
             },
@@ -60,6 +60,73 @@
             "type": "object",
             "title": "Link",
             "description": "A link defines the parameters for a connectable."
+        },
+        "semio.model.v1.Parameter": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the parameter"
+                },
+                "context": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Scope"
+                    },
+                    "type": "array",
+                    "description": "Optional context field to describe the context of the parameter."
+                },
+                "text": {
+                    "type": "string"
+                },
+                "integer_number": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "number"
+                },
+                "point": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameter"
+        },
+        "semio.model.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "X coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "Y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "Z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
+        },
+        "semio.model.v1.Scope": {
+            "properties": {
+                "concept": {
+                    "type": "string",
+                    "description": "Concept for the scope e.g Fassade, Floor"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scope",
+            "description": "Describes the scope of a parameter."
         }
     }
 }

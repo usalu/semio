@@ -19,9 +19,9 @@ namespace Semio.UI.Grasshopper.Goos
             Value = new Connectable();
         }
 
-        public ConnectableGoo(Connectable connection)
+        public ConnectableGoo(Connectable connectable)
         {
-            Value = connection;
+            Value = connectable;
         }
 
         public override IGH_Goo Duplicate() => new ConnectableGoo(Value.Clone());

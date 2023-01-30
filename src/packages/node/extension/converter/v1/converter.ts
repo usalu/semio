@@ -43,12 +43,6 @@ export interface RepresentationConversionRequest {
      * @generated from protobuf field: semio.model.v1.Platform target_platform = 2;
      */
     targetPlatform: Platform;
-    /**
-     * @generated from protobuf field: map<string, string> options = 3;
-     */
-    options: {
-        [key: string]: string;
-    };
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Converting$Type extends MessageType<Converting> {
@@ -109,12 +103,11 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
     constructor() {
         super("semio.extension.converter.v1.RepresentationConversionRequest", [
             { no: 1, name: "representation", kind: "message", T: () => Representation },
-            { no: 2, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
-            { no: 3, name: "options", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 2, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
         ]);
     }
     create(value?: PartialMessage<RepresentationConversionRequest>): RepresentationConversionRequest {
-        const message = { targetPlatform: 0, options: {} };
+        const message = { targetPlatform: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<RepresentationConversionRequest>(this, message, value);
@@ -131,9 +124,6 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
                 case /* semio.model.v1.Platform target_platform */ 2:
                     message.targetPlatform = reader.int32();
                     break;
-                case /* map<string, string> options */ 3:
-                    this.binaryReadMap3(message.options, reader, options);
-                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -145,22 +135,6 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         }
         return message;
     }
-    private binaryReadMap3(map: RepresentationConversionRequest["options"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof RepresentationConversionRequest["options"] | undefined, val: RepresentationConversionRequest["options"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for field semio.extension.converter.v1.RepresentationConversionRequest.options");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: RepresentationConversionRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* semio.model.v1.Representation representation = 1; */
         if (message.representation)
@@ -168,9 +142,6 @@ class RepresentationConversionRequest$Type extends MessageType<RepresentationCon
         /* semio.model.v1.Platform target_platform = 2; */
         if (message.targetPlatform !== 0)
             writer.tag(2, WireType.Varint).int32(message.targetPlatform);
-        /* map<string, string> options = 3; */
-        for (let k of Object.keys(message.options))
-            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.options[k]).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

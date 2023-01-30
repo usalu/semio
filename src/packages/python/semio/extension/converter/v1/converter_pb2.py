@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&extension/converter/v1/converter.proto\x12\x1csemio.extension.converter.v1\x1a\x14model/v1/model.proto\"\x92\x01\n\nConverting\x12\x41\n\x0fsource_platform\x18\x01 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0esourcePlatform\x12\x41\n\x0ftarget_platform\x18\x02 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0etargetPlatform\"\xce\x02\n\x1fRepresentationConversionRequest\x12\x46\n\x0erepresentation\x18\x01 \x01(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0erepresentation\x12\x41\n\x0ftarget_platform\x18\x02 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0etargetPlatform\x12\x64\n\x07options\x18\x03 \x03(\x0b\x32J.semio.extension.converter.v1.RepresentationConversionRequest.OptionsEntryR\x07options\x1a:\n\x0cOptionsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x32\x8a\x01\n\x10\x43onverterService\x12v\n\x15\x43onvertRepresentation\x12=.semio.extension.converter.v1.RepresentationConversionRequest\x1a\x1e.semio.model.v1.RepresentationB\x84\x02\n com.semio.extension.converter.v1B\x0e\x43onverterProtoP\x01Z=github.com/usalu/semio/src/packages/go/extension/converter/v1\xa2\x02\x03SEC\xaa\x02\x1cSemio.Extension.Converter.V1\xca\x02\x1cSemio\\Extension\\Converter\\V1\xe2\x02(Semio\\Extension\\Converter\\V1\\GPBMetadata\xea\x02\x1fSemio::Extension::Converter::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&extension/converter/v1/converter.proto\x12\x1csemio.extension.converter.v1\x1a\x14model/v1/model.proto\"\x92\x01\n\nConverting\x12\x41\n\x0fsource_platform\x18\x01 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0esourcePlatform\x12\x41\n\x0ftarget_platform\x18\x02 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0etargetPlatform\"\xac\x01\n\x1fRepresentationConversionRequest\x12\x46\n\x0erepresentation\x18\x01 \x01(\x0b\x32\x1e.semio.model.v1.RepresentationR\x0erepresentation\x12\x41\n\x0ftarget_platform\x18\x02 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x0etargetPlatform2\x8a\x01\n\x10\x43onverterService\x12v\n\x15\x43onvertRepresentation\x12=.semio.extension.converter.v1.RepresentationConversionRequest\x1a\x1e.semio.model.v1.RepresentationB\x84\x02\n com.semio.extension.converter.v1B\x0e\x43onverterProtoP\x01Z=github.com/usalu/semio/src/packages/go/extension/converter/v1\xa2\x02\x03SEC\xaa\x02\x1cSemio.Extension.Converter.V1\xca\x02\x1cSemio\\Extension\\Converter\\V1\xe2\x02(Semio\\Extension\\Converter\\V1\\GPBMetadata\xea\x02\x1fSemio::Extension::Converter::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension.converter.v1.converter_pb2', globals())
@@ -22,14 +22,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'\n com.semio.extension.converter.v1B\016ConverterProtoP\001Z=github.com/usalu/semio/src/packages/go/extension/converter/v1\242\002\003SEC\252\002\034Semio.Extension.Converter.V1\312\002\034Semio\\Extension\\Converter\\V1\342\002(Semio\\Extension\\Converter\\V1\\GPBMetadata\352\002\037Semio::Extension::Converter::V1'
-  _REPRESENTATIONCONVERSIONREQUEST_OPTIONSENTRY._options = None
-  _REPRESENTATIONCONVERSIONREQUEST_OPTIONSENTRY._serialized_options = b'8\001'
   _CONVERTING._serialized_start=95
   _CONVERTING._serialized_end=241
   _REPRESENTATIONCONVERSIONREQUEST._serialized_start=244
-  _REPRESENTATIONCONVERSIONREQUEST._serialized_end=578
-  _REPRESENTATIONCONVERSIONREQUEST_OPTIONSENTRY._serialized_start=520
-  _REPRESENTATIONCONVERSIONREQUEST_OPTIONSENTRY._serialized_end=578
-  _CONVERTERSERVICE._serialized_start=581
-  _CONVERTERSERVICE._serialized_end=719
+  _REPRESENTATIONCONVERSIONREQUEST._serialized_end=416
+  _CONVERTERSERVICE._serialized_start=419
+  _CONVERTERSERVICE._serialized_end=557
 # @@protoc_insertion_point(module_scope)

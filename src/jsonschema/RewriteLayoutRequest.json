@@ -195,11 +195,11 @@
                     "type": "array",
                     "description": "Optional port names to connect to. The hierarchy should matter."
                 },
-                "bias": {
-                    "additionalProperties": {
-                        "type": "string"
+                "bias_parameters": {
+                    "items": {
+                        "$ref": "#/definitions/semio.model.v1.Parameter"
                     },
-                    "type": "object",
+                    "type": "array",
                     "description": "Optional parameters to bias the connection."
                 }
             },
