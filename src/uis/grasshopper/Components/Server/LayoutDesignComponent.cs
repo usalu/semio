@@ -24,6 +24,8 @@ namespace Semio.UI.Grasshopper.Components.Server
         {
             pManager.AddGenericParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item);
             pManager.AddParameter(new LayoutParam());
+            pManager.AddParameter(new PlatformParam());
+            pManager[2].Optional = true;
             pManager.AddBooleanParameter("Run", "R", "", GH_ParamAccess.item, false);
         }
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -38,14 +40,18 @@ namespace Semio.UI.Grasshopper.Components.Server
             LayoutGoo layout = new();
             if (!DA.GetData(1, ref layout)) return;
 
+            PlatformGoo platform = new();
+            DA.GetData(2, ref platform);
+
             bool run = false;
-            if (!DA.GetData(2, ref run)) return;
+            if (!DA.GetData(3, ref run)) return;
 
             if (run)
             {
                 var layoutDesignRequest = new LayoutDesignRequest()
                 {
-                    Layout = layout.Value
+                    Layout = layout.Value,
+                    TargetPlatform = platform.Value,
                 };
 
                 using (var client = new HttpClient())
@@ -61,8 +67,6 @@ namespace Semio.UI.Grasshopper.Components.Server
                     }
                 }
             }
-
-          
         }
         public override Guid ComponentGuid => new ("15ad0008-1e40-41ff-8e38-116102d7488a");
         protected override System.Drawing.Bitmap Icon => Resources.icon_layoutdesign;

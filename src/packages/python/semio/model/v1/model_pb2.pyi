@@ -131,20 +131,14 @@ class Link(_message.Message):
     def __init__(self, representationProtocol: _Optional[_Union[RepresentationProtocol, str]] = ..., ports: _Optional[_Iterable[str]] = ..., bias_parameters: _Optional[_Iterable[_Union[Parameter, _Mapping]]] = ...) -> None: ...
 
 class Parameter(_message.Message):
-    __slots__ = ["context", "integer_number", "name", "number", "point", "text"]
+    __slots__ = ["context", "name", "value"]
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
-    INTEGER_NUMBER_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    NUMBER_FIELD_NUMBER: _ClassVar[int]
-    POINT_FIELD_NUMBER: _ClassVar[int]
-    TEXT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
     context: _containers.RepeatedCompositeFieldContainer[Scope]
-    integer_number: int
     name: str
-    number: float
-    point: Point
-    text: str
-    def __init__(self, name: _Optional[str] = ..., context: _Optional[_Iterable[_Union[Scope, _Mapping]]] = ..., text: _Optional[str] = ..., integer_number: _Optional[int] = ..., number: _Optional[float] = ..., point: _Optional[_Union[Point, _Mapping]] = ...) -> None: ...
+    value: Value
+    def __init__(self, name: _Optional[str] = ..., context: _Optional[_Iterable[_Union[Scope, _Mapping]]] = ..., value: _Optional[_Union[Value, _Mapping]] = ...) -> None: ...
 
 class Plan(_message.Message):
     __slots__ = ["parameters", "url"]
@@ -231,6 +225,20 @@ class Sobject(_message.Message):
     plan: Plan
     pose: Pose
     def __init__(self, id: _Optional[str] = ..., pose: _Optional[_Union[Pose, _Mapping]] = ..., plan: _Optional[_Union[Plan, _Mapping]] = ..., concepts: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class Value(_message.Message):
+    __slots__ = ["integer_number", "natural_number", "number", "point", "text"]
+    INTEGER_NUMBER_FIELD_NUMBER: _ClassVar[int]
+    NATURAL_NUMBER_FIELD_NUMBER: _ClassVar[int]
+    NUMBER_FIELD_NUMBER: _ClassVar[int]
+    POINT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    integer_number: int
+    natural_number: int
+    number: float
+    point: Point
+    text: str
+    def __init__(self, text: _Optional[str] = ..., number: _Optional[float] = ..., integer_number: _Optional[int] = ..., natural_number: _Optional[int] = ..., point: _Optional[_Union[Point, _Mapping]] = ...) -> None: ...
 
 class Encoding(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

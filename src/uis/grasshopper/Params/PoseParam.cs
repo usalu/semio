@@ -20,8 +20,6 @@ namespace Semio.UI.Grasshopper.Params
         { }
         public override Guid ComponentGuid => new("FCADBFCE-C1C4-465B-BA12-B03132C0F258");
 
-        //protected override Bitmap Icon => Resources.icon_pose.ToBitmap();
-
         protected override GH_GetterResult Prompt_Singular(ref PoseGoo value)
         {
             throw new NotImplementedException();

@@ -25,6 +25,7 @@ namespace Semio.UI.Grasshopper.Model
             pManager.AddTextParameter("Name", "N", "Name of the parameter", GH_ParamAccess.item);
             pManager.AddParameter(new ScopeParam(),"Context","Cx","",GH_ParamAccess.list);
             pManager[1].Optional = true;
+            pManager.AddParameter(new ValueParam());
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -38,9 +39,13 @@ namespace Semio.UI.Grasshopper.Model
             var context = new List<ScopeGoo>();
             DA.GetDataList(1, context);
 
+            ValueGoo value = new();
+            if (!DA.GetData(2, ref value)) return;
+
             Parameter parameter = new Parameter()
             {
                 Name = name,
+                Value = value.Value,
             };
 
             parameter.Context.AddRange(context.Select(x => x.Value));

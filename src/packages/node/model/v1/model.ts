@@ -147,13 +147,56 @@ export interface Scope {
      */
     concept: string;
     /**
-     * Optionally define the order. Othwerwise it will be implicitly ordered by declaration.
+     * Optionally define the order. Othwerwise it will be implicitly ordered by declaration order.
      *
      * @generated from protobuf field: int32 order = 2;
      */
     order: number;
 }
 /**
+ * @generated from protobuf message semio.model.v1.Value
+ */
+export interface Value {
+    /**
+     * @generated from protobuf oneof: value
+     */
+    value: {
+        oneofKind: "text";
+        /**
+         * @generated from protobuf field: string text = 1;
+         */
+        text: string;
+    } | {
+        oneofKind: "number";
+        /**
+         * @generated from protobuf field: double number = 2;
+         */
+        number: number;
+    } | {
+        oneofKind: "integerNumber";
+        /**
+         * @generated from protobuf field: int32 integer_number = 3;
+         */
+        integerNumber: number;
+    } | {
+        oneofKind: "naturalNumber";
+        /**
+         * @generated from protobuf field: uint32 natural_number = 4;
+         */
+        naturalNumber: number;
+    } | {
+        oneofKind: "point";
+        /**
+         * @generated from protobuf field: semio.model.v1.Point point = 5;
+         */
+        point: Point;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * A parameter is a (common) object that can be used as a parameter in all platforms.
+ *
  * @generated from protobuf message semio.model.v1.Parameter
  */
 export interface Parameter {
@@ -170,35 +213,11 @@ export interface Parameter {
      */
     context: Scope[];
     /**
-     * @generated from protobuf oneof: value
+     * Value of the parameter.
+     *
+     * @generated from protobuf field: semio.model.v1.Value value = 3;
      */
-    value: {
-        oneofKind: "text";
-        /**
-         * @generated from protobuf field: string text = 3;
-         */
-        text: string;
-    } | {
-        oneofKind: "integerNumber";
-        /**
-         * @generated from protobuf field: int32 integer_number = 4;
-         */
-        integerNumber: number;
-    } | {
-        oneofKind: "number";
-        /**
-         * @generated from protobuf field: double number = 5;
-         */
-        number: number;
-    } | {
-        oneofKind: "point";
-        /**
-         * @generated from protobuf field: semio.model.v1.Point point = 6;
-         */
-        point: Point;
-    } | {
-        oneofKind: undefined;
-    };
+    value?: Value;
 }
 /**
  * A plan for a prototype.
@@ -1052,19 +1071,106 @@ class Scope$Type extends MessageType<Scope> {
  */
 export const Scope = new Scope$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Value$Type extends MessageType<Value> {
+    constructor() {
+        super("semio.model.v1.Value", [
+            { no: 1, name: "text", kind: "scalar", oneof: "value", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "number", kind: "scalar", oneof: "value", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 3, name: "integer_number", kind: "scalar", oneof: "value", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "natural_number", kind: "scalar", oneof: "value", T: 13 /*ScalarType.UINT32*/ },
+            { no: 5, name: "point", kind: "message", oneof: "value", T: () => Point }
+        ]);
+    }
+    create(value?: PartialMessage<Value>): Value {
+        const message = { value: { oneofKind: undefined } };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Value>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Value): Value {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string text */ 1:
+                    message.value = {
+                        oneofKind: "text",
+                        text: reader.string()
+                    };
+                    break;
+                case /* double number */ 2:
+                    message.value = {
+                        oneofKind: "number",
+                        number: reader.double()
+                    };
+                    break;
+                case /* int32 integer_number */ 3:
+                    message.value = {
+                        oneofKind: "integerNumber",
+                        integerNumber: reader.int32()
+                    };
+                    break;
+                case /* uint32 natural_number */ 4:
+                    message.value = {
+                        oneofKind: "naturalNumber",
+                        naturalNumber: reader.uint32()
+                    };
+                    break;
+                case /* semio.model.v1.Point point */ 5:
+                    message.value = {
+                        oneofKind: "point",
+                        point: Point.internalBinaryRead(reader, reader.uint32(), options, (message.value as any).point)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Value, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string text = 1; */
+        if (message.value.oneofKind === "text")
+            writer.tag(1, WireType.LengthDelimited).string(message.value.text);
+        /* double number = 2; */
+        if (message.value.oneofKind === "number")
+            writer.tag(2, WireType.Bit64).double(message.value.number);
+        /* int32 integer_number = 3; */
+        if (message.value.oneofKind === "integerNumber")
+            writer.tag(3, WireType.Varint).int32(message.value.integerNumber);
+        /* uint32 natural_number = 4; */
+        if (message.value.oneofKind === "naturalNumber")
+            writer.tag(4, WireType.Varint).uint32(message.value.naturalNumber);
+        /* semio.model.v1.Point point = 5; */
+        if (message.value.oneofKind === "point")
+            Point.internalBinaryWrite(message.value.point, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.model.v1.Value
+ */
+export const Value = new Value$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Parameter$Type extends MessageType<Parameter> {
     constructor() {
         super("semio.model.v1.Parameter", [
             { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "context", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Scope },
-            { no: 3, name: "text", kind: "scalar", oneof: "value", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "integer_number", kind: "scalar", oneof: "value", T: 5 /*ScalarType.INT32*/ },
-            { no: 5, name: "number", kind: "scalar", oneof: "value", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 6, name: "point", kind: "message", oneof: "value", T: () => Point }
+            { no: 3, name: "value", kind: "message", T: () => Value }
         ]);
     }
     create(value?: PartialMessage<Parameter>): Parameter {
-        const message = { name: "", context: [], value: { oneofKind: undefined } };
+        const message = { name: "", context: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Parameter>(this, message, value);
@@ -1081,29 +1187,8 @@ class Parameter$Type extends MessageType<Parameter> {
                 case /* repeated semio.model.v1.Scope context */ 2:
                     message.context.push(Scope.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* string text */ 3:
-                    message.value = {
-                        oneofKind: "text",
-                        text: reader.string()
-                    };
-                    break;
-                case /* int32 integer_number */ 4:
-                    message.value = {
-                        oneofKind: "integerNumber",
-                        integerNumber: reader.int32()
-                    };
-                    break;
-                case /* double number */ 5:
-                    message.value = {
-                        oneofKind: "number",
-                        number: reader.double()
-                    };
-                    break;
-                case /* semio.model.v1.Point point */ 6:
-                    message.value = {
-                        oneofKind: "point",
-                        point: Point.internalBinaryRead(reader, reader.uint32(), options, (message.value as any).point)
-                    };
+                case /* semio.model.v1.Value value */ 3:
+                    message.value = Value.internalBinaryRead(reader, reader.uint32(), options, message.value);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1123,18 +1208,9 @@ class Parameter$Type extends MessageType<Parameter> {
         /* repeated semio.model.v1.Scope context = 2; */
         for (let i = 0; i < message.context.length; i++)
             Scope.internalBinaryWrite(message.context[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* string text = 3; */
-        if (message.value.oneofKind === "text")
-            writer.tag(3, WireType.LengthDelimited).string(message.value.text);
-        /* int32 integer_number = 4; */
-        if (message.value.oneofKind === "integerNumber")
-            writer.tag(4, WireType.Varint).int32(message.value.integerNumber);
-        /* double number = 5; */
-        if (message.value.oneofKind === "number")
-            writer.tag(5, WireType.Bit64).double(message.value.number);
-        /* semio.model.v1.Point point = 6; */
-        if (message.value.oneofKind === "point")
-            Point.internalBinaryWrite(message.value.point, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Value value = 3; */
+        if (message.value)
+            Value.internalBinaryWrite(message.value, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

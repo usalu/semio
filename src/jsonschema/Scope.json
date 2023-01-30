@@ -10,7 +10,7 @@
                 },
                 "order": {
                     "type": "integer",
-                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration order."
                 }
             },
             "additionalProperties": true,

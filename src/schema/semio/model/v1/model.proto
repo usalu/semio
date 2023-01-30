@@ -141,7 +141,7 @@ enum Platform {
 message Scope {
   // Concept for the scope e.g Fassade, Floor
   string concept = 1;
-  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration.
+  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration order.
   int32 order = 2; 
 }
 
@@ -155,11 +155,13 @@ message Value {
   }
 }
 
+// A parameter is a (common) object that can be used as a parameter in all platforms.
 message Parameter {
   // Name of the parameter
   string name = 1;
   // Optional context field to describe the context of the parameter.
   repeated Scope context = 2;
+  // Value of the parameter.
   Value value = 3;
 }
 

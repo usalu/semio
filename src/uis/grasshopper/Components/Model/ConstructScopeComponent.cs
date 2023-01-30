@@ -22,7 +22,7 @@ namespace Semio.UI.Grasshopper
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Concept", "Cp", "", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Order", "O", "", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("Order", "O", "", GH_ParamAccess.item);
             pManager[1].Optional = true;
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -31,10 +31,10 @@ namespace Semio.UI.Grasshopper
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            var concept = "";
+            string concept = "";
             if (!DA.GetData(0, ref concept)) return;
 
-            var order = 0;
+            int order = 0;
             DA.GetData(1, ref order);
 
             Scope scope = new Scope()

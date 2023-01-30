@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class ConnectionParam : SemioPersistentParam<ConnectionGoo>
     {
         public ConnectionParam() :
-            base("Connection", "A", "", "Semio", "Model")
+            base("Connection", "C", "", "Semio", "Model")
         { }
         public override Guid ComponentGuid => new("745B3720-2333-44F1-9B81-A41DAA7A894F");
         protected override GH_GetterResult Prompt_Singular(ref ConnectionGoo value)

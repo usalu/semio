@@ -24,13 +24,15 @@ namespace Semio.UI.Grasshopper.Model
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddParameter(new PrototypeParam(), "Prototypes", "PT", "", GH_ParamAccess.list);
             pManager.AddParameter(new ElementParam(),"Elements","E","",GH_ParamAccess.list);
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             DesignGoo design = new();
             if (!DA.GetData(0, ref design)) return;
-            if (design.Value.Elements.Any()) DA.SetDataList(0, design.Value.Elements.Select(e=>new ElementGoo(e)));
+            if (design.Value.Prototypes.Any()) DA.SetDataList(0, design.Value.Prototypes.Select(p => new PrototypeGoo(p)));
+            if (design.Value.Elements.Any()) DA.SetDataList(1, design.Value.Elements.Select(e=>new ElementGoo(e)));
         }
         protected override Bitmap Icon => Resources.icon_deconstruct_design;
         public override Guid ComponentGuid=>new ("452510D6-9554-4106-B740-363341BEDD0C");

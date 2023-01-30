@@ -17,6 +17,29 @@
   ],
   "paths": {},
   "definitions": {
+    "modelv1Value": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "number": {
+          "type": "number",
+          "format": "double"
+        },
+        "integerNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "naturalNumber": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "point": {
+          "$ref": "#/definitions/v1Point"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -176,21 +199,12 @@
           },
           "description": "Optional context field to describe the context of the parameter."
         },
-        "text": {
-          "type": "string"
-        },
-        "integerNumber": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "number": {
-          "type": "number",
-          "format": "double"
-        },
-        "point": {
-          "$ref": "#/definitions/v1Point"
+        "value": {
+          "$ref": "#/definitions/modelv1Value",
+          "description": "Value of the parameter."
         }
-      }
+      },
+      "description": "A parameter is a (common) object that can be used as a parameter in all platforms."
     },
     "v1Plan": {
       "type": "object",
@@ -286,7 +300,7 @@
         "order": {
           "type": "integer",
           "format": "int32",
-          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+          "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration order."
         }
       },
       "description": "Describes the scope of a parameter."

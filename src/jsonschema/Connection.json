@@ -92,23 +92,16 @@
                     "type": "array",
                     "description": "Optional context field to describe the context of the parameter."
                 },
-                "text": {
-                    "type": "string"
-                },
-                "integer_number": {
-                    "type": "integer"
-                },
-                "number": {
-                    "type": "number"
-                },
-                "point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true
+                "value": {
+                    "$ref": "#/definitions/semio.model.v1.Value",
+                    "additionalProperties": true,
+                    "description": "Value of the parameter."
                 }
             },
             "additionalProperties": true,
             "type": "object",
-            "title": "Parameter"
+            "title": "Parameter",
+            "description": "A parameter is a (common) object that can be used as a parameter in all platforms."
         },
         "semio.model.v1.Point": {
             "properties": {
@@ -138,13 +131,36 @@
                 },
                 "order": {
                     "type": "integer",
-                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration."
+                    "description": "Optionally define the order. Othwerwise it will be implicitly ordered by declaration order."
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Scope",
             "description": "Describes the scope of a parameter."
+        },
+        "semio.model.v1.Value": {
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "number"
+                },
+                "integer_number": {
+                    "type": "integer"
+                },
+                "natural_number": {
+                    "type": "integer"
+                },
+                "point": {
+                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Value"
         }
     }
 }

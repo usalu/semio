@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Grasshopper.Documentation;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Semio.Model.V1;
@@ -12,7 +13,9 @@ using SemioPoint = Semio.Model.V1.Point;
 using Quaternion = Rhino.Geometry.Quaternion;
 using SemioQuaternion = Semio.Model.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
+using Grasshopper.Kernel.Types;
 using Rhino.FileIO;
+using Rhino.Runtime;
 using Semio.UI.Grasshopper.Goos;
 using Encoding = Semio.Model.V1.Encoding;
 
@@ -47,12 +50,81 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return body;
         }
+        public static string ToString(Value value)
+        {
+            string text;
+            switch (value.ValueCase)
+            {
+                case Value.ValueOneofCase.NaturalNumber:
+                    text = value.NaturalNumber.ToString();
+                    break;
+                case Value.ValueOneofCase.Number:
+                    text = Math.Round(value.Number).ToString();
+                    break;
+                case Value.ValueOneofCase.IntegerNumber:
+                    text = value.IntegerNumber.ToString();
+                    break;
+                case Value.ValueOneofCase.Text:
+                    text = value.Text;
+                    break;
+                default:
+                    throw new ArgumentException("This conversion is not possible or not (yet) implemented.");
+            }
+            return text;
+        }
+
+        public static int ToInteger(Value value)
+        {
+            int integer;
+            switch (value.ValueCase)
+            {
+                case Value.ValueOneofCase.NaturalNumber:
+                    integer = (int)value.NaturalNumber;
+                    break;
+                case Value.ValueOneofCase.Number:
+                    integer = (int)Math.Round(value.Number);
+                    break;
+                case Value.ValueOneofCase.IntegerNumber:
+                    integer = value.IntegerNumber;
+                    break;
+                case Value.ValueOneofCase.Text:
+                    integer = (int)Math.Round(System.Convert.ToDouble(value.Text));
+                    break;
+                default:
+                    throw new ArgumentException("This conversion is not possible or not (yet) implemented.");
+            }
+            return integer;
+        }
+
+        public static double ToDouble(Value value)
+        {
+            double number;
+            switch (value.ValueCase)
+            {
+                case Value.ValueOneofCase.NaturalNumber:
+                    number = value.NaturalNumber;
+                    break;
+                case Value.ValueOneofCase.Number:
+                    number = value.Number;
+                    break;
+                case Value.ValueOneofCase.IntegerNumber:
+                    number = value.IntegerNumber;
+                    break;
+                case Value.ValueOneofCase.Text:
+                    number = System.Convert.ToDouble(value.Text);
+                    break;
+                default:
+                    throw new ArgumentException("This conversion is not possible or not (yet) implemented.");
+            }
+            return number;
+        }
         public static Quaternion Convert(SemioQuaternion quaternion) => new(quaternion.W, quaternion.X, quaternion.Y, quaternion.Z);
 
         public static SemioQuaternion Convert(Quaternion quaternion) => new()
         {
             W = quaternion.A, X = quaternion.B, Y = quaternion.C, Z = quaternion.D
         };
+
         public static SemioPoint Convert(Point3d point) => new()
         {
             X = point.X,
