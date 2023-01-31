@@ -46,7 +46,7 @@ namespace Semio.UI.Grasshopper.Utils
             
             //DA.SetDataList(0, file.Objects.Select(o=>o.Geometry));
         }
-        protected override System.Drawing.Bitmap Icon => Resources.icon_deconstruct_representation;
+        protected override System.Drawing.Bitmap Icon => Resources.icon_show_design;
 
         public override Guid ComponentGuid => new ("464CD7FB-6994-4C81-B510-3EA5508CB650");
 

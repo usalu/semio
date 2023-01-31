@@ -26,6 +26,6 @@ namespace Semio.UI.Grasshopper.Params
         {
             throw new NotImplementedException();
         }
-        protected override Bitmap Icon => Resources.icon_assembly;
+        protected override Bitmap Icon => Resources.icon_plan;
     }
 }

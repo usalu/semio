@@ -15,4 +15,14 @@ namespace Semio.UI.Grasshopper
         public override string AuthorName => "Ueli Saluz";
         public override string AuthorContact => "semio@posteo.org";
     }
+
+    public class SemioCategoryIcon : GH_AssemblyPriority
+    {
+        public override GH_LoadingInstruction PriorityLoad()
+        {
+            Instances.ComponentServer.AddCategoryIcon("Semio", Resources.icon_semio);
+            Instances.ComponentServer.AddCategorySymbolName("Semio", 'P');
+            return GH_LoadingInstruction.Proceed;
+        }
+    }
 }
