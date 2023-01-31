@@ -14,13 +14,15 @@ class AssemblyToElementsRequest(_message.Message):
     assembly: _model_pb2.Assembly
     connections: _containers.RepeatedCompositeFieldContainer[_model_pb2.Connection]
     sobjects: _containers.RepeatedCompositeFieldContainer[_model_pb2.Sobject]
-    def __init__(self, sobjects: _Optional[_Iterable[_Union[_model_pb2.Sobject, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[_model_pb2.Connection, _Mapping]]] = ..., assembly: _Optional[_Union[_model_pb2.Assembly, _Mapping]] = ...) -> None: ...
+    def __init__(self, assembly: _Optional[_Union[_model_pb2.Assembly, _Mapping]] = ..., sobjects: _Optional[_Iterable[_Union[_model_pb2.Sobject, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[_model_pb2.Connection, _Mapping]]] = ...) -> None: ...
 
 class AssemblyToElementsResponse(_message.Message):
-    __slots__ = ["elements"]
+    __slots__ = ["elements", "prototypes"]
     ELEMENTS_FIELD_NUMBER: _ClassVar[int]
+    PROTOTYPES_FIELD_NUMBER: _ClassVar[int]
     elements: _containers.RepeatedCompositeFieldContainer[_model_pb2.Element]
-    def __init__(self, elements: _Optional[_Iterable[_Union[_model_pb2.Element, _Mapping]]] = ...) -> None: ...
+    prototypes: _containers.RepeatedCompositeFieldContainer[_model_pb2.Prototype]
+    def __init__(self, prototypes: _Optional[_Iterable[_Union[_model_pb2.Prototype, _Mapping]]] = ..., elements: _Optional[_Iterable[_Union[_model_pb2.Element, _Mapping]]] = ...) -> None: ...
 
 class LayoutToAssembliesResponse(_message.Message):
     __slots__ = ["assemblies"]

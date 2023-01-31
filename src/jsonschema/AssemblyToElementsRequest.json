@@ -4,6 +4,10 @@
     "definitions": {
         "AssemblyToElementsRequest": {
             "properties": {
+                "assembly": {
+                    "$ref": "#/definitions/semio.model.v1.Assembly",
+                    "additionalProperties": true
+                },
                 "sobjects": {
                     "items": {
                         "$ref": "#/definitions/semio.model.v1.Sobject"
@@ -15,10 +19,6 @@
                         "$ref": "#/definitions/semio.model.v1.Connection"
                     },
                     "type": "array"
-                },
-                "assembly": {
-                    "$ref": "#/definitions/semio.model.v1.Assembly",
-                    "additionalProperties": true
                 }
             },
             "additionalProperties": true,

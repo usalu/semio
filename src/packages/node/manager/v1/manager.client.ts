@@ -11,8 +11,8 @@ import type { RegisterExtensionRequest } from "./manager";
 import type { ConnectElementResponse } from "./manager";
 import type { ConnectElementRequest } from "./manager";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { Element } from "../../model/v1/model";
-import type { ElementRequest } from "./manager";
+import type { Prototype } from "../../model/v1/model";
+import type { PrototypeRequest } from "./manager";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -24,9 +24,9 @@ export interface IManagerServiceClient {
     /**
      * Request an element from instance information and an optional traget representation parameters.
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
+     * @generated from protobuf rpc: RequestPrototype(semio.manager.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
      */
-    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element>;
+    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype>;
     /**
      * Get the connected pose and the connection point for a connection.
      *
@@ -60,11 +60,11 @@ export class ManagerServiceClient implements IManagerServiceClient, ServiceInfo 
     /**
      * Request an element from instance information and an optional traget representation parameters.
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
+     * @generated from protobuf rpc: RequestPrototype(semio.manager.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
      */
-    requestElement(input: ElementRequest, options?: RpcOptions): UnaryCall<ElementRequest, Element> {
+    requestPrototype(input: PrototypeRequest, options?: RpcOptions): UnaryCall<PrototypeRequest, Prototype> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ElementRequest, Element>("unary", this._transport, method, opt, input);
+        return stackIntercept<PrototypeRequest, Prototype>("unary", this._transport, method, opt, input);
     }
     /**
      * Get the connected pose and the connection point for a connection.

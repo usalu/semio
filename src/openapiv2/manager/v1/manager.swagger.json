@@ -128,23 +128,17 @@
       },
       "description": "Description what a converter is converting."
     },
-    "v1Element": {
-      "type": "object",
-      "properties": {
-        "sobjectId": {
-          "type": "string",
-          "description": "The sobject id that was used to construct the element."
-        },
-        "prototypePlanHash": {
-          "type": "string",
-          "description": "The hash of the plan for the prototype of the element."
-        },
-        "pose": {
-          "$ref": "#/definitions/v1Pose",
-          "description": "The pose of the element instance.\n\nTODO: Think of a formalization for modifiers.\r\n repeated Modifier modifiers = 3;"
-        }
-      },
-      "description": "An element is the atom of a design. It has several representations and a pose."
+    "v1Encoding": {
+      "type": "string",
+      "enum": [
+        "ENCODING_TEXT_UFT8",
+        "ENCODING_TEXT_UFT16",
+        "ENCODING_TEXT_UFT32",
+        "ENCODING_TEXT_ASCII",
+        "ENCODING_TEXT_BASE64"
+      ],
+      "default": "ENCODING_TEXT_UFT8",
+      "description": "Encoding of a byte array.\n\n - ENCODING_TEXT_BASE64: Also ASCII but with further base 64 encoding of the text."
     },
     "v1Extending": {
       "type": "object",
@@ -187,6 +181,25 @@
         }
       },
       "description": "A description of what the extension is extending."
+    },
+    "v1FileType": {
+      "type": "string",
+      "enum": [
+        "FILETYPE_NATIVE",
+        "FILETYPE_JSON",
+        "FILETYPE_XML",
+        "FILETYPE_YAML",
+        "FILETYPE_TOML",
+        "FILETYPE_STEP",
+        "FILETYPE_PY",
+        "FILETYPE_C",
+        "FILETYPE_CPP",
+        "FILETYPE_CSHARP",
+        "FILETYPE_GO",
+        "FILETYPE_RUST"
+      ],
+      "default": "FILETYPE_NATIVE",
+      "title": "- FILETYPE_NATIVE: Native serialization according platform. Use this only when it is none of the others.\r\nOften files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.\n - FILETYPE_STEP: https://www.iso.org/standard/63141.html\n - FILETYPE_PY: Python\n - FILETYPE_CPP: C++\n - FILETYPE_CSHARP: C#\n - FILETYPE_GO: Golang"
     },
     "v1Link": {
       "type": "object",
@@ -309,6 +322,27 @@
       },
       "description": "A pose is a static reference frame/coordinate system."
     },
+    "v1Prototype": {
+      "type": "object",
+      "properties": {
+        "planHash": {
+          "type": "string",
+          "description": "The hash of the plan used for the construction of the prototype."
+        },
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Representation"
+          },
+          "description": "Representations of the prototype."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional human readable description of the prototype."
+        }
+      },
+      "description": "A prototype acts as a template from which an element can be cloned."
+    },
     "v1Quaternion": {
       "type": "object",
       "properties": {
@@ -354,6 +388,45 @@
           "description": "A map with extensions where the address is the key and the extension description is the value."
         }
       }
+    },
+    "v1Representation": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string",
+          "format": "byte",
+          "description": "The body depends on the serialization format of the representation."
+        },
+        "encoding": {
+          "$ref": "#/definitions/v1Encoding",
+          "title": "Encoding of the body"
+        },
+        "fileType": {
+          "$ref": "#/definitions/v1FileType",
+          "description": "Use the abbreviation of the platform. You can find that in the constants part of the package."
+        },
+        "platform": {
+          "$ref": "#/definitions/v1Platform",
+          "title": "Native platform of representation"
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the representation for humans to understand what the purpose of this representation is."
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...)."
+        },
+        "lod": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)\r\nFor architectural design it is recommended to choose the scale multiplier.\r\nFor BIM you might want to choose:\r\n100:Conceptual\r\n200:Approximate\r\n300:Precise\r\n400:Fabriaction\r\n500:Real"
+        }
+      },
+      "description": "A representation for an element. Basically a file with some semio specific metadata."
     },
     "v1RepresentationProtocol": {
       "type": "string",

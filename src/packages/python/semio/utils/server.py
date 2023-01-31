@@ -26,7 +26,7 @@ class SemioServer(BaseModel,ABC):
     
     # TODO replace with abstractclassmethod
     @abstractmethod
-    def getServicesDescriptions(self) -> Iterable[SemioServiceDescription]:
+    def _getServicesDescriptions(self) -> Iterable[SemioServiceDescription]:
         pass
 
     def serve(self) -> None:
@@ -34,7 +34,7 @@ class SemioServer(BaseModel,ABC):
         self.initialize()
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port('[::]:' + str(self.port))
-        for serviceDescription in self.getServicesDescriptions():
+        for serviceDescription in self._getServicesDescriptions():
             serviceDescription.add_Service_to_server(serviceDescription.service,server)
             serviceName = serviceDescription.servicer.__name__.replace('Servicer','')
             SERVICE_NAMES = (

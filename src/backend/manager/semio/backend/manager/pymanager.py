@@ -6,7 +6,7 @@ import logging
 from os.path import splitext
 from semio.model import Point,Pose,Platform,Sobject,Connection,Layout,Element,Design, Representation,Platform
 from semio.assembler import AssemblerProxy
-from semio.manager import ManagerServer,ElementRequest,RegisterExtensionRequest, RegisterExtensionResponse
+from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
 
@@ -51,15 +51,15 @@ class Manager(ManagerServer):
 
     # Services
 
-    def requestElement(self, sobject: Sobject, target_representation_platforms: Iterable[Platform] | None = None, target_representation_concepts: Iterable[str] | None = None, target_representation_lods: Iterable[int] | None = None, targets_required: bool = False) -> Element:
+    def requestPrototype(self, sobject: Sobject, target_representation_platforms: Iterable[Platform] | None = None, target_representation_concepts: Iterable[str] | None = None, target_representation_lods: Iterable[int] | None = None, targets_required: bool = False) -> Element:
         raise NotImplementedError()
     
     def connectElement(self, connected_sobject: Sobject, connecting_sobject: Sobject, connection: Connection) -> Tuple[Pose, Point]:
         raise NotImplementedError()
-    # def requestElement(self, request: ElementRequest, context):
+    # def requestElement(self, request: PrototypeRequest, context):
     #     extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
     #     extensionProxy = self.getExtensionProxy(extensionAddress)
-    #     element = extensionProxy.RequestElement(request.sobject)
+    #     element = extensionProxy.RequestPrototype(request.sobject)
     #     return element
 
     # def connectElement(self, request, context):

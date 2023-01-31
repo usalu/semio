@@ -25,23 +25,23 @@ class ConnectElementResponse(_message.Message):
     connection_point: _model_pb2.Point
     def __init__(self, connected_element_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., connection_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
 
-class ElementRequest(_message.Message):
-    __slots__ = ["sobject", "target_representation_concepts", "target_representation_lods", "target_representation_platforms", "targets_required"]
-    SOBJECT_FIELD_NUMBER: _ClassVar[int]
+class GetRegisteredExtensionsRequest(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class PrototypeRequest(_message.Message):
+    __slots__ = ["plan", "target_representation_concepts", "target_representation_lods", "target_representation_platforms", "targets_required"]
+    PLAN_FIELD_NUMBER: _ClassVar[int]
     TARGETS_REQUIRED_FIELD_NUMBER: _ClassVar[int]
     TARGET_REPRESENTATION_CONCEPTS_FIELD_NUMBER: _ClassVar[int]
     TARGET_REPRESENTATION_LODS_FIELD_NUMBER: _ClassVar[int]
     TARGET_REPRESENTATION_PLATFORMS_FIELD_NUMBER: _ClassVar[int]
-    sobject: _model_pb2.Sobject
+    plan: _model_pb2.Plan
     target_representation_concepts: _containers.RepeatedScalarFieldContainer[str]
     target_representation_lods: _containers.RepeatedScalarFieldContainer[int]
     target_representation_platforms: _containers.RepeatedScalarFieldContainer[_model_pb2.Platform]
     targets_required: bool
-    def __init__(self, sobject: _Optional[_Union[_model_pb2.Sobject, _Mapping]] = ..., target_representation_platforms: _Optional[_Iterable[_Union[_model_pb2.Platform, str]]] = ..., target_representation_concepts: _Optional[_Iterable[str]] = ..., target_representation_lods: _Optional[_Iterable[int]] = ..., targets_required: bool = ...) -> None: ...
-
-class GetRegisteredExtensionsRequest(_message.Message):
-    __slots__ = []
-    def __init__(self) -> None: ...
+    def __init__(self, plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., target_representation_platforms: _Optional[_Iterable[_Union[_model_pb2.Platform, str]]] = ..., target_representation_concepts: _Optional[_Iterable[str]] = ..., target_representation_lods: _Optional[_Iterable[int]] = ..., targets_required: bool = ...) -> None: ...
 
 class RegisterExtensionRequest(_message.Message):
     __slots__ = ["extending", "replace_existing"]

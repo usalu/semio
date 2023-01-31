@@ -16,10 +16,10 @@ class ManagerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.RequestElement = channel.unary_unary(
-                '/semio.manager.v1.ManagerService/RequestElement',
-                request_serializer=manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Element.FromString,
+        self.RequestPrototype = channel.unary_unary(
+                '/semio.manager.v1.ManagerService/RequestPrototype',
+                request_serializer=manager_dot_v1_dot_manager__pb2.PrototypeRequest.SerializeToString,
+                response_deserializer=model_dot_v1_dot_model__pb2.Prototype.FromString,
                 )
         self.ConnectElement = channel.unary_unary(
                 '/semio.manager.v1.ManagerService/ConnectElement',
@@ -42,7 +42,7 @@ class ManagerServiceServicer(object):
     """A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
     """
 
-    def RequestElement(self, request, context):
+    def RequestPrototype(self, request, context):
         """Request an element from instance information and an optional traget representation parameters.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -73,10 +73,10 @@ class ManagerServiceServicer(object):
 
 def add_ManagerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'RequestElement': grpc.unary_unary_rpc_method_handler(
-                    servicer.RequestElement,
-                    request_deserializer=manager_dot_v1_dot_manager__pb2.ElementRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Element.SerializeToString,
+            'RequestPrototype': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestPrototype,
+                    request_deserializer=manager_dot_v1_dot_manager__pb2.PrototypeRequest.FromString,
+                    response_serializer=model_dot_v1_dot_model__pb2.Prototype.SerializeToString,
             ),
             'ConnectElement': grpc.unary_unary_rpc_method_handler(
                     servicer.ConnectElement,
@@ -105,7 +105,7 @@ class ManagerService(object):
     """
 
     @staticmethod
-    def RequestElement(request,
+    def RequestPrototype(request,
             target,
             options=(),
             channel_credentials=None,
@@ -115,9 +115,9 @@ class ManagerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestElement',
-            manager_dot_v1_dot_manager__pb2.ElementRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Element.FromString,
+        return grpc.experimental.unary_unary(request, target, '/semio.manager.v1.ManagerService/RequestPrototype',
+            manager_dot_v1_dot_manager__pb2.PrototypeRequest.SerializeToString,
+            model_dot_v1_dot_model__pb2.Prototype.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

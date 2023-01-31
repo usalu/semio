@@ -7,8 +7,8 @@ import { RegisterExtensionResponse } from "./manager";
 import { RegisterExtensionRequest } from "./manager";
 import { ConnectElementResponse } from "./manager";
 import { ConnectElementRequest } from "./manager";
-import { Element } from "../../model/v1/model";
-import { ElementRequest } from "./manager";
+import { Prototype } from "../../model/v1/model";
+import { PrototypeRequest } from "./manager";
 import type * as grpc from "@grpc/grpc-js";
 /**
  * A manager service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
@@ -19,9 +19,9 @@ export interface IManagerService extends grpc.UntypedServiceImplementation {
     /**
      * Request an element from instance information and an optional traget representation parameters.
      *
-     * @generated from protobuf rpc: RequestElement(semio.manager.v1.ElementRequest) returns (semio.model.v1.Element);
+     * @generated from protobuf rpc: RequestPrototype(semio.manager.v1.PrototypeRequest) returns (semio.model.v1.Prototype);
      */
-    requestElement: grpc.handleUnaryCall<ElementRequest, Element>;
+    requestPrototype: grpc.handleUnaryCall<PrototypeRequest, Prototype>;
     /**
      * Get the connected pose and the connection point for a connection.
      *
@@ -53,15 +53,15 @@ export interface IManagerService extends grpc.UntypedServiceImplementation {
  * ```
  */
 export const managerServiceDefinition: grpc.ServiceDefinition<IManagerService> = {
-    requestElement: {
-        path: "/semio.manager.v1.ManagerService/RequestElement",
-        originalName: "RequestElement",
+    requestPrototype: {
+        path: "/semio.manager.v1.ManagerService/RequestPrototype",
+        originalName: "RequestPrototype",
         requestStream: false,
         responseStream: false,
-        responseDeserialize: bytes => Element.fromBinary(bytes),
-        requestDeserialize: bytes => ElementRequest.fromBinary(bytes),
-        responseSerialize: value => Buffer.from(Element.toBinary(value)),
-        requestSerialize: value => Buffer.from(ElementRequest.toBinary(value))
+        responseDeserialize: bytes => Prototype.fromBinary(bytes),
+        requestDeserialize: bytes => PrototypeRequest.fromBinary(bytes),
+        responseSerialize: value => Buffer.from(Prototype.toBinary(value)),
+        requestSerialize: value => Buffer.from(PrototypeRequest.toBinary(value))
     },
     connectElement: {
         path: "/semio.manager.v1.ManagerService/ConnectElement",

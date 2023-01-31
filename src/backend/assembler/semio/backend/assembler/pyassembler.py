@@ -1,31 +1,13 @@
 import logging
 
-from typing import Iterable
+from typing import Iterable,Tuple
 from collections import deque
 
-from semio.model import Point,Sobject,Connection,Assembly,Layout,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST
+from semio.model import Point,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
 
 from networkx import Graph,edge_bfs,draw,DiGraph
 from matplotlib.pyplot import plot
-
-def visualize_append_problem():
-    root_assembly = Assembly(sobject_id="root", parts=[])
-    child_assembly = Assembly(sobject_id="child", parts=[])
-    root_assembly.parts.append(child_assembly)
-    grandchild_assembly = Assembly(sobject_id="grandchild", parts=[])
-    child_assembly.parts.append(grandchild_assembly)
-    visualize_assemblies(["root", "child", "grandchild"],[root_assembly])
-    visualize_assemblies(["root", "child", "grandchild"],[child_assembly])
-
-def append_problem_solution():
-    root_assembly = Assembly(sobject_id="root", parts=[])
-    child_assembly = Assembly(sobject_id="child", parts=[])
-    root_assembly.parts.append(child_assembly)
-    child_assembly = root_assembly.parts[0]
-    grandchild_assembly = Assembly(sobject_id="grandchild", parts=[])
-    child_assembly.parts.append(grandchild_assembly)
-    visualize_assemblies(["root", "child", "grandchild"],[root_assembly])
 
 def visualize_graph(G: Graph):
     draw(G, with_labels=True)
@@ -83,13 +65,13 @@ class Assembler(AssemblerServer):
                 assemblies.append(G.nodes[sobject_id]["assembly"])
         return assemblies
 
-    def assemblyToElements(self, ) -> Design:
-        # elements = []
-        # for sobject in layout.sobjects:
-        #     elements.append(self._requestElement(sobject))
+    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Tuple[Iterable[Prototype],Iterable[Element]]:
+        prototypes = []
+        for sobject in sobjects:
+            prototypes.append(self.RequestPrototype(sobject.plan))
         # assembly = request.layout.assemblies[0]
         #elements = getElementsFromAssembly(request.layout.sobjects,request.layout.connections,assembly)
-        return Design()
+        return 
 
 if __name__ == '__main__':
     logging.basicConfig()

@@ -12,7 +12,7 @@ import "extension/v1/extension.proto";
 service ManagerService {
   
   // Request an element from instance information and an optional traget representation parameters.
-  rpc RequestElement(ElementRequest) returns (semio.model.v1.Element);
+  rpc RequestPrototype(PrototypeRequest) returns (semio.model.v1.Prototype);
 
   // Get the connected pose and the connection point for a connection.
   rpc ConnectElement(ConnectElementRequest) returns (ConnectElementResponse);
@@ -24,8 +24,8 @@ service ManagerService {
   rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
 }
 
-message ElementRequest{
-  semio.model.v1.Sobject sobject = 1;
+message PrototypeRequest{
+  semio.model.v1.Plan plan = 1;
   // The target platform tries to be provided by one of the following strategies (lowest number wins).
   // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
   // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)

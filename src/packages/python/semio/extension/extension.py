@@ -46,7 +46,7 @@ class ExtensionServer(SemioServer):
             self.managerProxy = ManagerProxy(self.managerProxyAddress)
         return self.managerProxy
 
-    def getServicesDescriptions(self):
+    def _getServicesDescriptions(self):
         servicesDescriptions = [
             SemioServiceDescription(service=self.adapter,servicer=AdapterServiceServicer,add_Service_to_server=add_AdapterServiceServicer_to_server,descriptor=ADAPTER_DESCRIPTOR),
             SemioServiceDescription(service=self.converter,servicer=ConverterServiceServicer,add_Service_to_server=add_ConverterServiceServicer_to_server,descriptor=CONVERTER_DESCRIPTOR),

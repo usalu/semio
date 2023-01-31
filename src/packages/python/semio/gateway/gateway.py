@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable,Tuple
 from abc import ABC, abstractmethod
 
 from pydantic import Field
@@ -7,7 +7,7 @@ from grpc import insecure_channel
 
 from .v1.gateway_pb2 import DESCRIPTOR,LayoutDesignRequest
 from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewayServiceServicer, GatewayServiceStub
-from model import Platform,Layout,Design
+from model import Platform,Sobject,Assembly,Connection,Layout,Prototype,Element,Design
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
 from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
 
@@ -20,10 +20,10 @@ class GatewayServer(SemioServer, SemioService, ABC):
     def __init__(self,port = DEFAULT_GATEWAY_PORT, name = "Python Semio Gateway Server", **kw):
         super().__init__(port=port,name=name, **kw)
 
-    def getServicesDescriptions(self):
+    def _getServicesDescriptions(self):
         return [SemioServiceDescription(service=self,servicer=GatewayServiceServicer,add_Service_to_server=add_GatewayServiceServicer_to_server,descriptor=DESCRIPTOR)]
 
-    def getAssemblerProxy(self):#->AssemblerProxy:
+    def _getAssemblerProxy(self):#->AssemblerProxy:
         if not hasattr(self,'assemblerProxy'):
             from assembler import AssemblerProxy
             self.assemblerProxy = AssemblerProxy(self.assemblerAddress)
@@ -35,6 +35,19 @@ class GatewayServer(SemioServer, SemioService, ABC):
     
     def LayoutDesign(self, request, context):
         return self.layoutDesign(request.layout,request.target_platform)
+    
+    # Proxy definitions
+
+    def LayoutToAssemblies(self,layout: Layout)->Iterable[Assembly]:
+        return self._getAssemblerProxy().LayoutToAssemblies(layout)
+
+    def AssemblyToElements(self,
+        assembly:Assembly,
+        sobjects: Iterable[Sobject],
+        connections: Iterable[Connection] | None = None,
+        )->Tuple[Iterable[Prototype],Iterable[Element]]:
+        return self._getAssemblerProxy().AssemblyToElements(assembly,sobjects,connections)
+
     
 
 class GatewayProxy(SemioProxy):

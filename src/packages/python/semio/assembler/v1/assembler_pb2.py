@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61ssembler/v1/assembler.proto\x12\x12semio.assembler.v1\x1a\x14model/v1/model.proto\"V\n\x1aLayoutToAssembliesResponse\x12\x38\n\nassemblies\x18\x01 \x03(\x0b\x32\x18.semio.model.v1.AssemblyR\nassemblies\"\xc4\x01\n\x19\x41ssemblyToElementsRequest\x12\x33\n\x08sobjects\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.SobjectR\x08sobjects\x12<\n\x0b\x63onnections\x18\x02 \x03(\x0b\x32\x1a.semio.model.v1.ConnectionR\x0b\x63onnections\x12\x34\n\x08\x61ssembly\x18\x03 \x01(\x0b\x32\x18.semio.model.v1.AssemblyR\x08\x61ssembly\"Q\n\x1a\x41ssemblyToElementsResponse\x12\x33\n\x08\x65lements\x18\x01 \x03(\x0b\x32\x17.semio.model.v1.ElementR\x08\x65lements2\xe5\x01\n\x10\x41ssemblerService\x12\\\n\x12LayoutToAssemblies\x12\x16.semio.model.v1.Layout\x1a..semio.assembler.v1.LayoutToAssembliesResponse\x12s\n\x12\x41ssemblyToElements\x12-.semio.assembler.v1.AssemblyToElementsRequest\x1a..semio.assembler.v1.AssemblyToElementsResponseB\xc7\x01\n\x16\x63om.semio.assembler.v1B\x0e\x41ssemblerProtoP\x01Z3github.com/usalu/semio/src/packages/go/assembler/v1\xa2\x02\x03SAX\xaa\x02\x12Semio.Assembler.V1\xca\x02\x12Semio\\Assembler\\V1\xe2\x02\x1eSemio\\Assembler\\V1\\GPBMetadata\xea\x02\x14Semio::Assembler::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61ssembler/v1/assembler.proto\x12\x12semio.assembler.v1\x1a\x14model/v1/model.proto\"V\n\x1aLayoutToAssembliesResponse\x12\x38\n\nassemblies\x18\x01 \x03(\x0b\x32\x18.semio.model.v1.AssemblyR\nassemblies\"\xc4\x01\n\x19\x41ssemblyToElementsRequest\x12\x34\n\x08\x61ssembly\x18\x01 \x01(\x0b\x32\x18.semio.model.v1.AssemblyR\x08\x61ssembly\x12\x33\n\x08sobjects\x18\x02 \x03(\x0b\x32\x17.semio.model.v1.SobjectR\x08sobjects\x12<\n\x0b\x63onnections\x18\x03 \x03(\x0b\x32\x1a.semio.model.v1.ConnectionR\x0b\x63onnections\"\x8c\x01\n\x1a\x41ssemblyToElementsResponse\x12\x39\n\nprototypes\x18\x01 \x03(\x0b\x32\x19.semio.model.v1.PrototypeR\nprototypes\x12\x33\n\x08\x65lements\x18\x02 \x03(\x0b\x32\x17.semio.model.v1.ElementR\x08\x65lements2\xe5\x01\n\x10\x41ssemblerService\x12\\\n\x12LayoutToAssemblies\x12\x16.semio.model.v1.Layout\x1a..semio.assembler.v1.LayoutToAssembliesResponse\x12s\n\x12\x41ssemblyToElements\x12-.semio.assembler.v1.AssemblyToElementsRequest\x1a..semio.assembler.v1.AssemblyToElementsResponseB\xc7\x01\n\x16\x63om.semio.assembler.v1B\x0e\x41ssemblerProtoP\x01Z3github.com/usalu/semio/src/packages/go/assembler/v1\xa2\x02\x03SAX\xaa\x02\x12Semio.Assembler.V1\xca\x02\x12Semio\\Assembler\\V1\xe2\x02\x1eSemio\\Assembler\\V1\\GPBMetadata\xea\x02\x14Semio::Assembler::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'assembler.v1.assembler_pb2', globals())
@@ -26,8 +26,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LAYOUTTOASSEMBLIESRESPONSE._serialized_end=160
   _ASSEMBLYTOELEMENTSREQUEST._serialized_start=163
   _ASSEMBLYTOELEMENTSREQUEST._serialized_end=359
-  _ASSEMBLYTOELEMENTSRESPONSE._serialized_start=361
-  _ASSEMBLYTOELEMENTSRESPONSE._serialized_end=442
-  _ASSEMBLERSERVICE._serialized_start=445
-  _ASSEMBLERSERVICE._serialized_end=674
+  _ASSEMBLYTOELEMENTSRESPONSE._serialized_start=362
+  _ASSEMBLYTOELEMENTSRESPONSE._serialized_end=502
+  _ASSEMBLERSERVICE._serialized_start=505
+  _ASSEMBLERSERVICE._serialized_end=734
 # @@protoc_insertion_point(module_scope)

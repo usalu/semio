@@ -20,11 +20,12 @@ message LayoutToAssembliesResponse{
 }
 
 message AssemblyToElementsRequest {
-  repeated semio.model.v1.Sobject sobjects = 1;
-  repeated semio.model.v1.Connection connections = 2;
-  semio.model.v1.Assembly assembly = 3;
+  semio.model.v1.Assembly assembly = 1;
+  repeated semio.model.v1.Sobject sobjects = 2;
+  repeated semio.model.v1.Connection connections = 3;
 }
 
 message AssemblyToElementsResponse {
-  repeated semio.model.v1.Element elements = 1;
+  repeated semio.model.v1.Prototype prototypes = 1;
+  repeated semio.model.v1.Element elements = 2;
 }

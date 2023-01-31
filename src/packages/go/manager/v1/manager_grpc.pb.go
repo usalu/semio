@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ManagerServiceClient interface {
 	// Request an element from instance information and an optional traget representation parameters.
-	RequestElement(ctx context.Context, in *ElementRequest, opts ...grpc.CallOption) (*v1.Element, error)
+	RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error)
 	// Get the connected pose and the connection point for a connection.
 	ConnectElement(ctx context.Context, in *ConnectElementRequest, opts ...grpc.CallOption) (*ConnectElementResponse, error)
 	// Register a service to the server.
@@ -37,9 +37,9 @@ func NewManagerServiceClient(cc grpc.ClientConnInterface) ManagerServiceClient {
 	return &managerServiceClient{cc}
 }
 
-func (c *managerServiceClient) RequestElement(ctx context.Context, in *ElementRequest, opts ...grpc.CallOption) (*v1.Element, error) {
-	out := new(v1.Element)
-	err := c.cc.Invoke(ctx, "/semio.manager.v1.ManagerService/RequestElement", in, out, opts...)
+func (c *managerServiceClient) RequestPrototype(ctx context.Context, in *PrototypeRequest, opts ...grpc.CallOption) (*v1.Prototype, error) {
+	out := new(v1.Prototype)
+	err := c.cc.Invoke(ctx, "/semio.manager.v1.ManagerService/RequestPrototype", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *managerServiceClient) GetRegisteredExtensions(ctx context.Context, in *
 // for forward compatibility
 type ManagerServiceServer interface {
 	// Request an element from instance information and an optional traget representation parameters.
-	RequestElement(context.Context, *ElementRequest) (*v1.Element, error)
+	RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error)
 	// Get the connected pose and the connection point for a connection.
 	ConnectElement(context.Context, *ConnectElementRequest) (*ConnectElementResponse, error)
 	// Register a service to the server.
@@ -92,8 +92,8 @@ type ManagerServiceServer interface {
 type UnimplementedManagerServiceServer struct {
 }
 
-func (UnimplementedManagerServiceServer) RequestElement(context.Context, *ElementRequest) (*v1.Element, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestElement not implemented")
+func (UnimplementedManagerServiceServer) RequestPrototype(context.Context, *PrototypeRequest) (*v1.Prototype, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestPrototype not implemented")
 }
 func (UnimplementedManagerServiceServer) ConnectElement(context.Context, *ConnectElementRequest) (*ConnectElementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConnectElement not implemented")
@@ -117,20 +117,20 @@ func RegisterManagerServiceServer(s grpc.ServiceRegistrar, srv ManagerServiceSer
 	s.RegisterService(&ManagerService_ServiceDesc, srv)
 }
 
-func _ManagerService_RequestElement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ElementRequest)
+func _ManagerService_RequestPrototype_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrototypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ManagerServiceServer).RequestElement(ctx, in)
+		return srv.(ManagerServiceServer).RequestPrototype(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/semio.manager.v1.ManagerService/RequestElement",
+		FullMethod: "/semio.manager.v1.ManagerService/RequestPrototype",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ManagerServiceServer).RequestElement(ctx, req.(*ElementRequest))
+		return srv.(ManagerServiceServer).RequestPrototype(ctx, req.(*PrototypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -197,8 +197,8 @@ var ManagerService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ManagerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RequestElement",
-			Handler:    _ManagerService_RequestElement_Handler,
+			MethodName: "RequestPrototype",
+			Handler:    _ManagerService_RequestPrototype_Handler,
 		},
 		{
 			MethodName: "ConnectElement",

@@ -31,7 +31,7 @@ def test_assembler_assemblyToElements(layoutJsonPath,assembliesJsonPath,assemble
     assert result == correct_result
 
 def assemblyToElements(self: Assembler, sobjects:Iterable[Sobject],assembly:Iterable[Assembly])->Iterable[Element]:
-    # element : Element = self.RequestElement(
+    # element : Element = self.RequestPrototype(
         # sobject: Sobject = Sobject(),
         # target_representation_platforms:Iterable[Platform] = [],
         # target_representation_concepts:Iterable[str] = [],
