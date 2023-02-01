@@ -23,6 +23,7 @@ message AssemblyToElementsRequest {
   semio.model.v1.Assembly assembly = 1;
   repeated semio.model.v1.Sobject sobjects = 2;
   repeated semio.model.v1.Connection connections = 3;
+  semio.model.v1.Platform target_platform = 4;
 }
 
 message AssemblyToElementsResponse {

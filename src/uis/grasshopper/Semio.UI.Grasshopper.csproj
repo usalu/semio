@@ -18,6 +18,8 @@
   <ItemGroup>
 	  <PackageReference Include="Grasshopper" Version="7.26.23009.7001" IncludeAssets="compile;build" />
 	<PackageReference Include="RhinoCommon" Version="7.26.23009.7001" />
+	<PackageReference Include="Speckle.Core" Version="2.11.1" />
+	<PackageReference Include="Speckle.Objects.Converter.Grasshopper7" Version="2.11.1" />
 	<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	<PackageReference Include="System.Text.Json" Version="7.0.1" />
   </ItemGroup>

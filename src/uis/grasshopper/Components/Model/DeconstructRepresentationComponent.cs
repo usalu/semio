@@ -12,9 +12,9 @@ using Semio.UI.Grasshopper.Utility;
 
 namespace Semio.UI.Grasshopper.Model
 {
-    public class ImportRepresentationComponent : DeconstructComponent
+    public class DeconstructRepresentationComponent : DeconstructComponent
     {
-        public ImportRepresentationComponent()
+        public DeconstructRepresentationComponent()
           : base("Deconstruct Representation", "DeRepresentation", "Deconstruct an element", "Semio", "Model")
         {
         }

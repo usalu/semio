@@ -46,6 +46,7 @@
     <Protobuf Include="..\..\..\..\schema\semio\google\api\http.proto" GrpcServices="Both" Link="google\api\http.proto" ProtoRoot="..\..\..\..\schema\semio" />
     <Protobuf Include="..\..\..\..\schema\semio\protoc-gen-openapiv2\options\annotations.proto" GrpcServices="Both" Link="protoc-gen-openapiv2\options\annotations.proto" ProtoRoot="..\..\..\..\schema\semio" />
     <Protobuf Include="..\..\..\..\schema\semio\protoc-gen-openapiv2\options\openapiv2.proto" GrpcServices="Both" Link="protoc-gen-openapiv2\options\openapiv2.proto" ProtoRoot="..\..\..\..\schema\semio" />
+    <Protobuf Include="..\..\..\..\schema\semio\geometry\v1\geometry.proto" GrpcServices="Both" Link="geometry\v1\geometry.proto" ProtoRoot="..\..\..\..\schema\semio" />
     <Protobuf Include="..\..\..\..\schema\semio\model\v1\model.proto" GrpcServices="Both" Link="model\v1\model.proto" ProtoRoot="..\..\..\..\schema\semio" />
     <Protobuf Include="..\..\..\..\schema\semio\gateway\v1\gateway.proto" GrpcServices="Both" Link="gateway\v1\gateway.proto" ProtoRoot="..\..\..\..\schema\semio" />
     <Protobuf Include="..\..\..\..\schema\semio\assembler\v1\assembler.proto" GrpcServices="Both" Link="assembler\v1\assembler.proto" ProtoRoot="..\..\..\..\schema\semio" />

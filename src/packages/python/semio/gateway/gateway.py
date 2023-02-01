@@ -7,7 +7,7 @@ from grpc import insecure_channel
 
 from .v1.gateway_pb2 import DESCRIPTOR,LayoutDesignRequest
 from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewayServiceServicer, GatewayServiceStub
-from model import Platform,Sobject,Assembly,Connection,Layout,Prototype,Element,Design
+from model import Platform,Sobject,Assembly,Connection,Layout,Prototype,Element,Design,PLATFORM_SEMIO
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
 from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
 
@@ -45,11 +45,10 @@ class GatewayServer(SemioServer, SemioService, ABC):
         assembly:Assembly,
         sobjects: Iterable[Sobject],
         connections: Iterable[Connection] | None = None,
+        target_platform:Platform = PLATFORM_SEMIO
         )->Tuple[Iterable[Prototype],Iterable[Element]]:
-        return self._getAssemblerProxy().AssemblyToElements(assembly,sobjects,connections)
-
+        return self._getAssemblerProxy().AssemblyToElements(assembly,sobjects,connections,target_platform)
     
-
 class GatewayProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_GATEWAY_PORT), **kw):
         super().__init__(address=address,**kw)

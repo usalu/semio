@@ -23,7 +23,7 @@
             "title": "Element",
             "description": "An element is the atom of a design. It has several representations and a pose."
         },
-        "semio.model.v1.Point": {
+        "semio.geometry.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",
@@ -43,25 +43,7 @@
             "title": "Point",
             "description": "A 3d point with x,y,z coordinates."
         },
-        "semio.model.v1.Pose": {
-            "properties": {
-                "point_of_view": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
-                    "additionalProperties": true,
-                    "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
-                },
-                "view": {
-                    "$ref": "#/definitions/semio.model.v1.Quaternion",
-                    "additionalProperties": true,
-                    "description": "View (orientation) from the pose (reference frame/coordinate system)"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pose",
-            "description": "A pose is a static reference frame/coordinate system."
-        },
-        "semio.model.v1.Quaternion": {
+        "semio.geometry.v1.Quaternion": {
             "properties": {
                 "w": {
                     "type": "number"
@@ -80,6 +62,24 @@
             "type": "object",
             "title": "Quaternion",
             "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
+        },
+        "semio.model.v1.Pose": {
+            "properties": {
+                "point_of_view": {
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
+                    "additionalProperties": true,
+                    "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
+                },
+                "view": {
+                    "$ref": "#/definitions/semio.geometry.v1.Quaternion",
+                    "additionalProperties": true,
+                    "description": "View (orientation) from the pose (reference frame/coordinate system)"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pose",
+            "description": "A pose is a static reference frame/coordinate system."
         }
     }
 }

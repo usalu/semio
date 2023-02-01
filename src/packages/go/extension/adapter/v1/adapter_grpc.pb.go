@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+	v11 "github.com/usalu/semio/src/packages/go/geometry/v1"
 	v1 "github.com/usalu/semio/src/packages/go/model/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -22,7 +23,7 @@ type AdapterServiceClient interface {
 	// Request a prototype.
 	RequestPrototype(ctx context.Context, in *v1.Plan, opts ...grpc.CallOption) (*v1.Prototype, error)
 	// Request an connection point for the connected.
-	RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error)
+	RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v11.Point, error)
 }
 
 type adapterServiceClient struct {
@@ -42,8 +43,8 @@ func (c *adapterServiceClient) RequestPrototype(ctx context.Context, in *v1.Plan
 	return out, nil
 }
 
-func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v1.Point, error) {
-	out := new(v1.Point)
+func (c *adapterServiceClient) RequestConnectionPoint(ctx context.Context, in *ConnectionPointRequest, opts ...grpc.CallOption) (*v11.Point, error) {
+	out := new(v11.Point)
 	err := c.cc.Invoke(ctx, "/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ type AdapterServiceServer interface {
 	// Request a prototype.
 	RequestPrototype(context.Context, *v1.Plan) (*v1.Prototype, error)
 	// Request an connection point for the connected.
-	RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error)
+	RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v11.Point, error)
 	mustEmbedUnimplementedAdapterServiceServer()
 }
 
@@ -69,7 +70,7 @@ type UnimplementedAdapterServiceServer struct {
 func (UnimplementedAdapterServiceServer) RequestPrototype(context.Context, *v1.Plan) (*v1.Prototype, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestPrototype not implemented")
 }
-func (UnimplementedAdapterServiceServer) RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v1.Point, error) {
+func (UnimplementedAdapterServiceServer) RequestConnectionPoint(context.Context, *ConnectionPointRequest) (*v11.Point, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestConnectionPoint not implemented")
 }
 func (UnimplementedAdapterServiceServer) mustEmbedUnimplementedAdapterServiceServer() {}

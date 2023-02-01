@@ -5,6 +5,7 @@ package semio.manager.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/manager/v1";
 option csharp_namespace = "Semio.Manager.V1";
 
+import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 import "extension/v1/extension.proto";
 
@@ -26,17 +27,7 @@ service ManagerService {
 
 message PrototypeRequest{
   semio.model.v1.Plan plan = 1;
-  // The target platform tries to be provided by one of the following strategies (lowest number wins).
-  // 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3) 
-  // 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-  // 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
-  repeated semio.model.v1.Platform target_representation_platforms = 2;
-  // Optional concepts for the representations. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true.
-  repeated string target_representation_concepts = 3;
-  // An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true.
-  repeated int32 target_representation_lods = 4;
-  // Set this to true if all of the targets must be achived.
-  bool targets_required = 5;
+  semio.model.v1.Platform target_platform = 2;
 }
 
 message ConnectElementRequest{
@@ -47,7 +38,7 @@ message ConnectElementRequest{
 
 message ConnectElementResponse{
   semio.model.v1.Pose connected_element_pose = 1;
-  semio.model.v1.Point connection_point = 2;
+  semio.geometry.v1.Point connection_point = 2;
 }
 
 message RegisterExtensionRequest{

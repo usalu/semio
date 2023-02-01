@@ -50,7 +50,7 @@
             "title": "Plan",
             "description": "A plan for an element."
         },
-        "semio.model.v1.Point": {
+        "semio.geometry.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",
@@ -73,7 +73,7 @@
         "semio.model.v1.Pose": {
             "properties": {
                 "point_of_view": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 },
                 "view": {

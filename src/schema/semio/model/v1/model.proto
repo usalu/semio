@@ -5,30 +5,14 @@ package semio.model.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/model/v1";
 option csharp_namespace = "Semio.Model.V1";
 
-// A 3d point with x,y,z coordinates.
-message Point {
-  // X coordinate.
-  double x = 1;
-  // Y coordinate
-  double y = 2;
-  // Z coordinate
-  double z = 3;
-}
-
-// (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
-message Quaternion {
-  double w = 1;
-  double x = 2;
-  double y = 3;
-  double z = 4;
-}
+import "geometry/v1/geometry.proto";
 
 // A pose is a static reference frame/coordinate system.
 message Pose {
   // Point of view (origin) from the pose (reference frame/coordinate system)
-  Point point_of_view = 1;
+  semio.geometry.v1.Point point_of_view = 1;
   // View (orientation) from the pose (reference frame/coordinate system)
-  Quaternion view = 2;
+  semio.geometry.v1.Quaternion view = 2;
 }
 
 // A representation for an element. Basically a file with some semio specific metadata.
@@ -101,10 +85,12 @@ enum FileType {
 // 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
 // 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
 // 2:NONPROFIT: 0:buildingsmart,1:nrel
-// 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+// 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar
 enum Platform {
   // https://github.com/usalu/semio
   PLATFORM_SEMIO = 0;
+  // https://github.com/specklesystems
+  PLATFORM_SPECKLE = 1600350000;
   // https://github.com/mrdoob/three.js/
   PLATFORM_THREE = 1000000100;
   // https://github.com/nortikin/sverchok
@@ -120,7 +106,7 @@ enum Platform {
   // https://github.com/jscad
   PLATFORM_JSCAD = 1500100400;
   // https://github.com/hannobraun/Fornjot
-  PLATFORM_Fornjot = 1700000300;
+  PLATFORM_FORNJOT = 1700000300;
   // https://github.com/ricosjp/truck
   PLATFORM_TRUCK = 1500000400;
   // https://github.com/NREL/EnergyPlus
@@ -135,6 +121,14 @@ enum Platform {
   PLATFORM_REVIT = 2140300100;
   // https://dynamobim.org/
   PLATFORM_DYNAMO = 2140300101;
+  // https://graphisoft.com/solutions/archicad
+  PLATFORM_ARCHICAD = 2140300200;
+  // https://www.esri.com/en-us/arcgis/products/arcgis-cityengine
+  PLATFORM_CITYENGINE = 2140300300;
+  // https://www.microsoft.com/en-us/microsoft-365/excel
+  PLATFORM_EXCEL = 2140300400;
+  // https://hypar.io/
+  PLATFORM_HYPAR = 2140350100;
 }
 
 // Describes the scope of a parameter.
@@ -151,7 +145,7 @@ message Value {
     double number = 2;
     int32 integer_number = 3;
     uint32 natural_number = 4;
-    Point point = 5;
+    semio.geometry.v1.Point point = 5;
   }
 }
 

@@ -15,6 +15,7 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Element } from "../../model/v1/model";
 import { Prototype } from "../../model/v1/model";
+import { Platform } from "../../model/v1/model";
 import { Connection } from "../../model/v1/model";
 import { Sobject } from "../../model/v1/model";
 import { Assembly } from "../../model/v1/model";
@@ -43,6 +44,10 @@ export interface AssemblyToElementsRequest {
      * @generated from protobuf field: repeated semio.model.v1.Connection connections = 3;
      */
     connections: Connection[];
+    /**
+     * @generated from protobuf field: semio.model.v1.Platform target_platform = 4;
+     */
+    targetPlatform: Platform;
 }
 /**
  * @generated from protobuf message semio.assembler.v1.AssemblyToElementsResponse
@@ -110,11 +115,12 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         super("semio.assembler.v1.AssemblyToElementsRequest", [
             { no: 1, name: "assembly", kind: "message", T: () => Assembly },
             { no: 2, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
-            { no: 3, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Connection }
+            { no: 3, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Connection },
+            { no: 4, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
         ]);
     }
     create(value?: PartialMessage<AssemblyToElementsRequest>): AssemblyToElementsRequest {
-        const message = { sobjects: [], connections: [] };
+        const message = { sobjects: [], connections: [], targetPlatform: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AssemblyToElementsRequest>(this, message, value);
@@ -133,6 +139,9 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
                     break;
                 case /* repeated semio.model.v1.Connection connections */ 3:
                     message.connections.push(Connection.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* semio.model.v1.Platform target_platform */ 4:
+                    message.targetPlatform = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -155,6 +164,9 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         /* repeated semio.model.v1.Connection connections = 3; */
         for (let i = 0; i < message.connections.length; i++)
             Connection.internalBinaryWrite(message.connections[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* semio.model.v1.Platform target_platform = 4; */
+        if (message.targetPlatform !== 0)
+            writer.tag(4, WireType.Varint).int32(message.targetPlatform);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

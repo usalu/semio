@@ -6,14 +6,14 @@ from extension.service import ExtensionService
 
 class AdapterService(ExtensionService,AdapterServiceServicer):
 
-    def getDescriptions(self) -> list[Adapting]:
+    def _getDescriptions(self) -> list[Adapting]:
         return []
 
     def requestPrototype(self, plan: Plan) -> Prototype:
         raise NotImplementedError("This method needs to be overriden by the implementation if you want to use it.")
 
     def RequestPrototype(self, request, context):
-        return self.requestPrototype(request.plan)
+        return self.requestPrototype(request)
 
     def requestConnectionPoint(self, connected_plan:Plan, connecting_link:Link) -> Point:
         raise NotImplementedError("This method needs to be overriden by the implementation if you want to use it.")

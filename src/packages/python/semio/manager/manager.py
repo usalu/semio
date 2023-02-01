@@ -3,6 +3,8 @@ from abc import ABC,abstractmethod
 from typing import TYPE_CHECKING,Iterable,Tuple
 from pydantic import Field
 
+import logging
+
 from grpc import insecure_channel
 
 from .v1.manager_pb2 import DESCRIPTOR, PrototypeRequest, ConnectElementRequest, ConnectElementResponse,RegisterExtensionRequest,RegisterExtensionResponse
@@ -48,19 +50,13 @@ class ManagerServer(SemioServer,SemioService,ABC):
     @abstractmethod
     def requestPrototype(self, 
         plan:Plan,
-        target_representation_platforms:Iterable[Platform] | None = None,
-        target_representation_concepts:Iterable[str] | None = None,
-        target_representation_lods:Iterable[int] | None = None,
-        targets_required: bool = False)->Element:
+        target_platform:Platform | None = None)->Prototype:
         pass
 
     def RequestPrototype(self, request, context):
         return self.requestPrototype(
             request.plan,
-            request.target_representation_platforms,
-            request.target_representation_concepts,
-            request.target_representation_lods,
-            request.targets_required)
+            request.target_platform)
     
     @abstractmethod
     def connectElement(self, 
@@ -87,6 +83,7 @@ class ManagerServer(SemioServer,SemioService,ABC):
                 else:
                     raise ValueError(f'There is already an extension with the name {extension.name}. If you wish to replace it set replace existing to true.')
         self.extensions[extending.address]=extending
+        logging.info(f"Extension: {extending.name} was registered at {extending.address}")
         return (True,oldAddress)
 
     def RegisterExtension(self,request, context):
@@ -107,16 +104,10 @@ class ManagerProxy(SemioProxy):
 
     def RequestPrototype(self,
         plan: Plan,
-        target_representation_platforms:Iterable[Platform] | None = None,
-        target_representation_concepts:Iterable[str] | None = None,
-        target_representation_lods:Iterable[int] | None = None,
-        targets_required:bool = False)-> Element:
+        target_platform:Platform | None = None,)-> Prototype:
         return self._stub.RequestPrototype(PrototypeRequest(
             plan=plan,
-            target_representation_platforms=target_representation_platforms,
-            target_representation_concepts=target_representation_concepts,
-            target_representation_lods=target_representation_lods,
-            targets_required=targets_required))
+            target_platform=target_platform))
 
     def ConnectElement(self,
         connected_sobject: Sobject,

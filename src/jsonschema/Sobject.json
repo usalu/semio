@@ -31,6 +31,46 @@
             "title": "Sobject",
             "description": "Instance information for an element."
         },
+        "semio.geometry.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "X coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "Y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "Z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
+        },
+        "semio.geometry.v1.Quaternion": {
+            "properties": {
+                "w": {
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Quaternion",
+            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
+        },
         "semio.model.v1.Parameter": {
             "properties": {
                 "name": {
@@ -74,35 +114,15 @@
             "title": "Plan",
             "description": "A plan for a prototype."
         },
-        "semio.model.v1.Point": {
-            "properties": {
-                "x": {
-                    "type": "number",
-                    "description": "X coordinate."
-                },
-                "y": {
-                    "type": "number",
-                    "description": "Y coordinate"
-                },
-                "z": {
-                    "type": "number",
-                    "description": "Z coordinate"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Point",
-            "description": "A 3d point with x,y,z coordinates."
-        },
         "semio.model.v1.Pose": {
             "properties": {
                 "point_of_view": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true,
                     "description": "Point of view (origin) from the pose (reference frame/coordinate system)"
                 },
                 "view": {
-                    "$ref": "#/definitions/semio.model.v1.Quaternion",
+                    "$ref": "#/definitions/semio.geometry.v1.Quaternion",
                     "additionalProperties": true,
                     "description": "View (orientation) from the pose (reference frame/coordinate system)"
                 }
@@ -111,26 +131,6 @@
             "type": "object",
             "title": "Pose",
             "description": "A pose is a static reference frame/coordinate system."
-        },
-        "semio.model.v1.Quaternion": {
-            "properties": {
-                "w": {
-                    "type": "number"
-                },
-                "x": {
-                    "type": "number"
-                },
-                "y": {
-                    "type": "number"
-                },
-                "z": {
-                    "type": "number"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Quaternion",
-            "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
         },
         "semio.model.v1.Scope": {
             "properties": {
@@ -163,7 +163,7 @@
                     "type": "integer"
                 },
                 "point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 }
             },

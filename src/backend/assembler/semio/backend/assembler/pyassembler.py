@@ -3,7 +3,7 @@ import logging
 from typing import Iterable,Tuple
 from collections import deque
 
-from semio.model import Point,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST
+from semio.model import Point,Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
 
 from networkx import Graph,edge_bfs,draw,DiGraph
@@ -65,13 +65,13 @@ class Assembler(AssemblerServer):
                 assemblies.append(G.nodes[sobject_id]["assembly"])
         return assemblies
 
-    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Tuple[Iterable[Prototype],Iterable[Element]]:
+    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None, target_platform:Platform = PLATFORM_SEMIO)->Tuple[Iterable[Prototype],Iterable[Element]]:
         prototypes = []
         for sobject in sobjects:
-            prototypes.append(self.RequestPrototype(sobject.plan))
-        # assembly = request.layout.assemblies[0]
+            prototypes.append(self.RequestPrototype(sobject.plan,target_platform))
+        elements = []
         #elements = getElementsFromAssembly(request.layout.sobjects,request.layout.connections,assembly)
-        return 
+        return (prototypes,elements)
 
 if __name__ == '__main__':
     logging.basicConfig()

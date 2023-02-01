@@ -20,6 +20,26 @@
             "title": "Connection",
             "description": "An connection can be used to connect two connectables."
         },
+        "semio.geometry.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "X coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "Y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "Z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
+        },
         "semio.model.v1.Connectable": {
             "properties": {
                 "sobject_id": {
@@ -103,26 +123,6 @@
             "title": "Parameter",
             "description": "A parameter is a (common) object that can be used as a parameter in all platforms."
         },
-        "semio.model.v1.Point": {
-            "properties": {
-                "x": {
-                    "type": "number",
-                    "description": "X coordinate."
-                },
-                "y": {
-                    "type": "number",
-                    "description": "Y coordinate"
-                },
-                "z": {
-                    "type": "number",
-                    "description": "Z coordinate"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Point",
-            "description": "A 3d point with x,y,z coordinates."
-        },
         "semio.model.v1.Scope": {
             "properties": {
                 "concept": {
@@ -154,7 +154,7 @@
                     "type": "integer"
                 },
                 "point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 }
             },

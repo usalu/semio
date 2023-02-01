@@ -4,20 +4,28 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Grasshopper;
 using Grasshopper.Documentation;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Data;
 using Rhino.Geometry;
 using Semio.Model.V1;
 using Plane = Rhino.Geometry.Plane;
-using SemioPoint = Semio.Model.V1.Point;
+using SemioPoint = Semio.Geometry.V1.Point;
 using Quaternion = Rhino.Geometry.Quaternion;
-using SemioQuaternion = Semio.Model.V1.Quaternion;
+using SemioQuaternion = Semio.Geometry.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
+using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Rhino;
 using Rhino.FileIO;
 using Rhino.Runtime;
 using Semio.UI.Grasshopper.Goos;
+using Speckle.Core.Api;
 using Encoding = Semio.Model.V1.Encoding;
+using Speckle.Core.Models;
+using Speckle.Core.Models.Extensions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 
 namespace Semio.UI.Grasshopper.Utility
@@ -50,6 +58,31 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return body;
         }
+
+        public static string ToString(GH_Structure<IGH_Goo> tree)
+        {
+            Base @base = new Base();
+            @base["@semio"] = new List<Base>();
+
+            foreach (var item in tree.FlattenData())
+            {
+                switch (item.GetType().Name)
+                {
+                    case "GH_SpeckleBase":
+                        ((List<Base>)@base["@semio"]).Add(((dynamic)item).Value);
+                        break;
+                    default:
+                        var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
+                        converter.SetContextDocument(RhinoDoc.ActiveDoc);
+                        var speckleBase = (Base)converter.ConvertToSpeckle(((dynamic)item).Value);
+                        if (speckleBase != null) ((List<Base>)@base["@semio"]).Add(speckleBase);
+                        else throw new ArgumentException($"The type {item.GetType()} can't be converted.");
+                        break;
+                }
+            }
+            return Operations.Serialize(@base);
+        }
+
         public static string ToString(Value value)
         {
             string text;
@@ -158,22 +191,54 @@ namespace Semio.UI.Grasshopper.Utility
             yAxis.Transform(transform);
             return new Plane(Convert(pose.PointOfView), xAxis, yAxis);
         }
-        public static IEnumerable<GeometryBase> Convert (Representation representation)
+        public static IEnumerable<IGH_Goo> Convert (Representation representation)
         {
-            File3dm file;
+            IEnumerable<IGH_Goo> goos;
             switch (representation.Platform)
             {
+                case Platform.Semio:
+                    var output = Operations.Deserialize(representation.Body.ToStringUtf8());
+                    goos = Converter.Convert(output);
+                    break;
                 case Platform.Rhino:
+                    File3dm file;
                     file = File3dm.FromByteArray(representation.Body.ToByteArray());
+                    goos = file.Objects.Select(o => GH_Convert.ToGoo(o.Geometry));
+                    break;
+                case Platform.Speckle:
+                    var @base = Operations.Deserialize(representation.Body.ToStringUtf8());
+                    var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
+                    converter.SetContextDocument(RhinoDoc.ActiveDoc);
+                    var gooList = new List<IGH_Goo>();
+                    foreach (var atomicBase in @base.Flatten())
+                    {
+                        var native = converter.ConvertToNative(atomicBase);
+                        if (native!=null) gooList.Add(GH_Convert.ToGoo(native));
+                    }
+                    goos = gooList;
                     break;
                 default:
                     throw new ArgumentException($"The platform {representation.Platform} can't be converted (yet).");
             }
-            return file.Objects.Select(o => o.Geometry);
+            return goos;
         }
-        public static IEnumerable<GeometryBase> Convert(Prototype prototype)
+
+        public static IEnumerable<IGH_Goo> Convert(Base @base)
         {
-            List<GeometryBase> geometries = new List<GeometryBase>();
+            var geometries = new List<IGH_Goo>();
+            var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
+            converter.SetContextDocument(RhinoDoc.ActiveDoc);
+            foreach (var atomicBase in ((List<object>)@base["@semio"]).Cast<Base>())
+            {
+                var native = converter.ConvertToNative((Base)((dynamic)atomicBase));
+                if (native != null) geometries.Add(GH_Convert.ToGoo(native));
+            }
+            return geometries;
+        }
+
+        public static IEnumerable<IGH_Goo> Convert(Prototype prototype)
+        {
+            List<IGH_Goo> geometries = new List<IGH_Goo>();
             foreach (var representation in prototype.Representations)
             {
                 try
@@ -192,9 +257,9 @@ namespace Semio.UI.Grasshopper.Utility
             }
             return geometries;
         }
-        public static IEnumerable<GeometryBase> Convert(Design design)
+        public static IEnumerable<IGH_Goo> Convert(Design design)
         {
-            List<GeometryBase> geometries = new List<GeometryBase>();
+            List<IGH_Goo> geometries = new List<IGH_Goo>();
             foreach (var prototype in design.Prototypes)
                 geometries.AddRange(Convert(prototype));
             return geometries;

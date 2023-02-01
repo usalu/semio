@@ -8,7 +8,7 @@ from extension.service import ExtensionService
 
 class TransformerService(ExtensionService,TransformerServiceServicer):
 
-    def getDescriptions(self) -> list[Transforming]:
+    def _getDescriptions(self) -> list[Transforming]:
         return []
 
     def rewriteLayout(self, decisions: Iterable[Decision], initial_layout:Layout | None = None)->Layout:

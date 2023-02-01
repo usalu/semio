@@ -4,7 +4,7 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AdapterService } from "./adapter";
-import type { Point } from "../../../model/v1/model";
+import type { Point } from "../../../geometry/v1/geometry";
 import type { ConnectionPointRequest } from "./adapter";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Prototype } from "../../../model/v1/model";
@@ -26,7 +26,7 @@ export interface IAdapterServiceClient {
     /**
      * Request an connection point for the connected.
      *
-     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
+     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.geometry.v1.Point);
      */
     requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point>;
 }
@@ -53,7 +53,7 @@ export class AdapterServiceClient implements IAdapterServiceClient, ServiceInfo 
     /**
      * Request an connection point for the connected.
      *
-     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.model.v1.Point);
+     * @generated from protobuf rpc: RequestConnectionPoint(semio.extension.adapter.v1.ConnectionPointRequest) returns (semio.geometry.v1.Point);
      */
     requestConnectionPoint(input: ConnectionPointRequest, options?: RpcOptions): UnaryCall<ConnectionPointRequest, Point> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);

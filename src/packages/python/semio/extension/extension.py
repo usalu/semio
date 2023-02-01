@@ -7,13 +7,13 @@ from grpc import insecure_channel
 
 from typing import TYPE_CHECKING, Iterable
 
-from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR
+from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR, ConnectionPointRequest
 from .adapter.v1.adapter_pb2_grpc import add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
-from .converter.v1.converter_pb2 import DESCRIPTOR as CONVERTER_DESCRIPTOR
+from .converter.v1.converter_pb2 import DESCRIPTOR as CONVERTER_DESCRIPTOR, RepresentationConversionRequest
 from .converter.v1.converter_pb2_grpc import add_ConverterServiceServicer_to_server, ConverterServiceServicer, ConverterServiceStub
-from .transformer.v1.transformer_pb2 import DESCRIPTOR as TRANSFORMER_DESCRIPTOR
+from .transformer.v1.transformer_pb2 import DESCRIPTOR as TRANSFORMER_DESCRIPTOR, RewriteLayoutRequest
 from .transformer.v1.transformer_pb2_grpc import add_TransformerServiceServicer_to_server, TransformerServiceServicer, TransformerServiceStub
-from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR
+from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR, TranslateRepresentationRequest
 from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
 from model import Point,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
@@ -40,7 +40,7 @@ class ExtensionServer(SemioServer):
     transformer: TransformerService = Field(default_factory=TransformerService)
     translator: TranslatorService = Field(default_factory=TranslatorService)
 
-    def getManagerProxy(self):#->ManagerProxy:
+    def _getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
             from manager import ManagerProxy
             self.managerProxy = ManagerProxy(self.managerProxyAddress)
@@ -58,19 +58,20 @@ class ExtensionServer(SemioServer):
     def initialize(self):
         from .v1.extension_pb2 import Extending
         address = 'localhost:' +str(self.port)
-        success, oldAddress = self.getManagerProxy().RegisterExtension(
+        success, oldAddress = self._getManagerProxy().RegisterExtension(
                 extending=Extending(
                     name = self.name,
                     address = address,
-                    adaptings = self.adapter.getDescriptions(),
-                    convertings = self.converter.getDescriptions(), 
-                    transformings = self.transformer.getDescriptions(),
-                    translatings = self.translator.getDescriptions()))
+                    adaptings = self.adapter._getDescriptions(),
+                    convertings = self.converter._getDescriptions(), 
+                    transformings = self.transformer._getDescriptions(),
+                    translatings = self.translator._getDescriptions()))
         if success:
-            logging.debug(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
+            logging.info(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
         else:
-            logging.debug(f'The extension {self.name} ({address}) couldn\'t be registered at manager {self.managerProxyAddress}.'+
+            logging.info(f'The extension {self.name} ({address}) couldn\'t be registered at manager {self.managerProxyAddress}.'+
              f'Probably there is already an extension registered either at {address} or with name {self.name}. Make sure to set replace existing in the extension registration request to true if you want to override the other extension.')
+
 
 class ExtensionProxy(SemioProxy):
     def __init__(self,address, **kw):
@@ -81,17 +82,21 @@ class ExtensionProxy(SemioProxy):
         self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
 
     def RequestPrototype(self, plan: Plan)->Prototype:
-        return self._adapterStub.RequestPrototype(plan=plan)
+        return self._adapterStub.RequestPrototype(plan)
 
     def RequestConnectionPoint(self, connected_plan:Plan, connecting_link:Link)-> Point:
-        return self._adapterStub.RequestConnectionPoint(connected_plan,connecting_link)
+        return self._adapterStub.RequestConnectionPoint(
+            ConnectionPointRequest(connected_plan=connected_plan,connecting_link=connecting_link))
 
     def ConvertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:
-        return self._converterStub.ConvertRepresentation(representation,target_platform)
+        return self._converterStub.ConvertRepresentation(
+            RepresentationConversionRequest(representation=representation,target_platform=target_platform))
     
     def RewriteLayout(self, decisions: Iterable[Decision], initial_layout:Layout | None = None)->Layout:
-        return self._transformerStub.RewriteLayout(decisions,initial_layout)
+        return self._transformerStub.RewriteLayout(
+            RewriteLayoutRequest(decisions=decisions,initial_layout=initial_layout))
 
     def TranslateRepresentation(self,representation:Representation, target_pose:Pose ,source_pose:Pose | None = None):
-        return self._translatorStub.TranslateRepresentation(representation,target_pose,source_pose)
+        return self._translatorStub.TranslateRepresentation(
+            TranslateRepresentationRequest(representation=representation,target_pose=target_pose,source_pose=source_pose))
 

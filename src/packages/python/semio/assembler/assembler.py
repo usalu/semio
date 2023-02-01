@@ -8,7 +8,8 @@ from grpc import insecure_channel
 
 from .v1.assembler_pb2 import DESCRIPTOR,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
 from .v1.assembler_pb2_grpc import add_AssemblerServiceServicer_to_server, AssemblerServiceServicer, AssemblerServiceStub
-from model import Point,Pose,Platform,Plan,Sobject,Connection,Assembly,Layout,Prototype,Element
+from geometry import Point
+from model import Pose,Platform,Plan,Sobject,Connection,Assembly,Layout,Prototype,Element,PLATFORM_SEMIO
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
 from constants import DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
 
@@ -28,7 +29,7 @@ class AssemblerServer(SemioServer, SemioService, ABC):
             add_Service_to_server=add_AssemblerServiceServicer_to_server,
             descriptor=DESCRIPTOR)]
 
-    def getManagerProxy(self):#->ManagerProxy:
+    def _getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
             from manager import ManagerProxy
             self.managerProxy = ManagerProxy(self.managerAddress)
@@ -40,15 +41,15 @@ class AssemblerServer(SemioServer, SemioService, ABC):
     def layoutToAssemblies(self, layout: Layout)->Iterable[Assembly]:
         pass
 
-    @abstractmethod
-    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Tuple[Iterable[Prototype],Iterable[Element]]:
-        pass
-
     def LayoutToAssemblies(self, request, context):
         return LayoutToAssembliesResponse(assemblies = self.layoutToAssemblies(request))
 
+    @abstractmethod
+    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None, target_platform:Platform = PLATFORM_SEMIO)->Tuple[Iterable[Prototype],Iterable[Element]]:
+        pass
+
     def AssemblyToElements(self, request, context):
-        prototypes, elements = self.assemblyToElements(request.assembly,request.sobjects,request.connections)
+        prototypes, elements = self.assemblyToElements(request.assembly,request.sobjects,request.connections,request.target_platform)
         return AssemblyToElementsResponse(prototypes=prototypes,elements=elements)
 
     # Proxy definitions
@@ -57,16 +58,12 @@ class AssemblerServer(SemioServer, SemioService, ABC):
         connected_sobject: Sobject,
         connecting_sobject: Sobject,
         connection:Connection)->Tuple[Pose,Point]:
-        return self.managerProxy.ConnectElement(connected_sobject,connecting_sobject,connection)
+        return self._getManagerProxy().ConnectElement(connected_sobject,connecting_sobject,connection)
 
     def RequestPrototype(
         self, plan: Plan,
-        target_representation_platforms:Iterable[Platform] | None = None,
-        target_representation_concepts:Iterable[str] | None = None,
-        target_representation_lods:Iterable[int] | None = None,
-        targets_required:bool = False)-> Element:
-        return self.managerProxy.RequestPrototype(
-            plan,target_representation_platforms,target_representation_concepts,target_representation_lods,targets_required)
+        target_platform:Platform | None = None,)-> Prototype:
+        return self._getManagerProxy().RequestPrototype(plan,target_platform)
 
 class AssemblerProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_ASSEMBLER_PORT), **kw):
@@ -80,11 +77,13 @@ class AssemblerProxy(SemioProxy):
         assembly:Assembly,
         sobjects: Iterable[Sobject],
         connections: Iterable[Connection] | None = None,
+        target_platform:Platform = PLATFORM_SEMIO
         )->Tuple[Iterable[Prototype],Iterable[Element]]:
         assemblyToElementsResponse = self._stub.AssemblyToElements(
             request=AssemblyToElementsRequest(
                 assembly=assembly,
                 sobjects=sobjects,
                 connections=connections,
+                target_platform=target_platform
             ))
         return (assemblyToElementsResponse.prototypes,assemblyToElementsResponse.elements)

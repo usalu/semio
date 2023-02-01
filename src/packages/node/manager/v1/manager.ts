@@ -5,16 +5,16 @@ import { Prototype } from "../../model/v1/model";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import type { BinaryWriteOptions } from "@protobuf-ts/runtime";
 import type { IBinaryWriter } from "@protobuf-ts/runtime";
+import { WireType } from "@protobuf-ts/runtime";
 import type { BinaryReadOptions } from "@protobuf-ts/runtime";
 import type { IBinaryReader } from "@protobuf-ts/runtime";
 import { UnknownFieldHandler } from "@protobuf-ts/runtime";
-import { WireType } from "@protobuf-ts/runtime";
 import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Extending } from "../../extension/v1/extension";
-import { Point } from "../../model/v1/model";
+import { Point } from "../../geometry/v1/geometry";
 import { Pose } from "../../model/v1/model";
 import { Connection } from "../../model/v1/model";
 import { Sobject } from "../../model/v1/model";
@@ -29,32 +29,9 @@ export interface PrototypeRequest {
      */
     plan?: Plan;
     /**
-     * The target platform tries to be provided by one of the following strategies (lowest number wins).
-     * 1. The element directly (1.1) or the extension can convert directly (1.2) or indirectly (1.3)
-     * 2. Another extension can convert these types directly (2.1) or indirectly (2.2)
-     * 3. Multiple extensions together can convert directly (3.1) or indirectly (3.2).
-     *
-     * @generated from protobuf field: repeated semio.model.v1.Platform target_representation_platforms = 2;
+     * @generated from protobuf field: semio.model.v1.Platform target_platform = 2;
      */
-    targetRepresentationPlatforms: Platform[];
-    /**
-     * Optional concepts for the representations. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true.
-     *
-     * @generated from protobuf field: repeated string target_representation_concepts = 3;
-     */
-    targetRepresentationConcepts: string[];
-    /**
-     * An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true.
-     *
-     * @generated from protobuf field: repeated int32 target_representation_lods = 4;
-     */
-    targetRepresentationLods: number[];
-    /**
-     * Set this to true if all of the targets must be achived.
-     *
-     * @generated from protobuf field: bool targets_required = 5;
-     */
-    targetsRequired: boolean;
+    targetPlatform: Platform;
 }
 /**
  * @generated from protobuf message semio.manager.v1.ConnectElementRequest
@@ -82,7 +59,7 @@ export interface ConnectElementResponse {
      */
     connectedElementPose?: Pose;
     /**
-     * @generated from protobuf field: semio.model.v1.Point connection_point = 2;
+     * @generated from protobuf field: semio.geometry.v1.Point connection_point = 2;
      */
     connectionPoint?: Point;
 }
@@ -137,14 +114,11 @@ class PrototypeRequest$Type extends MessageType<PrototypeRequest> {
     constructor() {
         super("semio.manager.v1.PrototypeRequest", [
             { no: 1, name: "plan", kind: "message", T: () => Plan },
-            { no: 2, name: "target_representation_platforms", kind: "enum", repeat: 1 /*RepeatType.PACKED*/, T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] },
-            { no: 3, name: "target_representation_concepts", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "target_representation_lods", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
-            { no: 5, name: "targets_required", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 2, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
         ]);
     }
     create(value?: PartialMessage<PrototypeRequest>): PrototypeRequest {
-        const message = { targetRepresentationPlatforms: [], targetRepresentationConcepts: [], targetRepresentationLods: [], targetsRequired: false };
+        const message = { targetPlatform: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<PrototypeRequest>(this, message, value);
@@ -158,25 +132,8 @@ class PrototypeRequest$Type extends MessageType<PrototypeRequest> {
                 case /* semio.model.v1.Plan plan */ 1:
                     message.plan = Plan.internalBinaryRead(reader, reader.uint32(), options, message.plan);
                     break;
-                case /* repeated semio.model.v1.Platform target_representation_platforms */ 2:
-                    if (wireType === WireType.LengthDelimited)
-                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
-                            message.targetRepresentationPlatforms.push(reader.int32());
-                    else
-                        message.targetRepresentationPlatforms.push(reader.int32());
-                    break;
-                case /* repeated string target_representation_concepts */ 3:
-                    message.targetRepresentationConcepts.push(reader.string());
-                    break;
-                case /* repeated int32 target_representation_lods */ 4:
-                    if (wireType === WireType.LengthDelimited)
-                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
-                            message.targetRepresentationLods.push(reader.int32());
-                    else
-                        message.targetRepresentationLods.push(reader.int32());
-                    break;
-                case /* bool targets_required */ 5:
-                    message.targetsRequired = reader.bool();
+                case /* semio.model.v1.Platform target_platform */ 2:
+                    message.targetPlatform = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -193,26 +150,9 @@ class PrototypeRequest$Type extends MessageType<PrototypeRequest> {
         /* semio.model.v1.Plan plan = 1; */
         if (message.plan)
             Plan.internalBinaryWrite(message.plan, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.model.v1.Platform target_representation_platforms = 2; */
-        if (message.targetRepresentationPlatforms.length) {
-            writer.tag(2, WireType.LengthDelimited).fork();
-            for (let i = 0; i < message.targetRepresentationPlatforms.length; i++)
-                writer.int32(message.targetRepresentationPlatforms[i]);
-            writer.join();
-        }
-        /* repeated string target_representation_concepts = 3; */
-        for (let i = 0; i < message.targetRepresentationConcepts.length; i++)
-            writer.tag(3, WireType.LengthDelimited).string(message.targetRepresentationConcepts[i]);
-        /* repeated int32 target_representation_lods = 4; */
-        if (message.targetRepresentationLods.length) {
-            writer.tag(4, WireType.LengthDelimited).fork();
-            for (let i = 0; i < message.targetRepresentationLods.length; i++)
-                writer.int32(message.targetRepresentationLods[i]);
-            writer.join();
-        }
-        /* bool targets_required = 5; */
-        if (message.targetsRequired !== false)
-            writer.tag(5, WireType.Varint).bool(message.targetsRequired);
+        /* semio.model.v1.Platform target_platform = 2; */
+        if (message.targetPlatform !== 0)
+            writer.tag(2, WireType.Varint).int32(message.targetPlatform);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -307,7 +247,7 @@ class ConnectElementResponse$Type extends MessageType<ConnectElementResponse> {
                 case /* semio.model.v1.Pose connected_element_pose */ 1:
                     message.connectedElementPose = Pose.internalBinaryRead(reader, reader.uint32(), options, message.connectedElementPose);
                     break;
-                case /* semio.model.v1.Point connection_point */ 2:
+                case /* semio.geometry.v1.Point connection_point */ 2:
                     message.connectionPoint = Point.internalBinaryRead(reader, reader.uint32(), options, message.connectionPoint);
                     break;
                 default:
@@ -325,7 +265,7 @@ class ConnectElementResponse$Type extends MessageType<ConnectElementResponse> {
         /* semio.model.v1.Pose connected_element_pose = 1; */
         if (message.connectedElementPose)
             Pose.internalBinaryWrite(message.connectedElementPose, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Point connection_point = 2; */
+        /* semio.geometry.v1.Point connection_point = 2; */
         if (message.connectionPoint)
             Point.internalBinaryWrite(message.connectionPoint, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;

@@ -1,3 +1,4 @@
+from geometry.v1 import geometry_pb2 as _geometry_pb2
 from model.v1 import model_pb2 as _model_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message

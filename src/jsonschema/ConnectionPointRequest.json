@@ -20,6 +20,26 @@
             "title": "Connection Point Request",
             "description": "A connection point request requests a point from the connected (sobject)."
         },
+        "semio.geometry.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "X coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "Y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "Z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
+        },
         "semio.model.v1.Link": {
             "properties": {
                 "representationProtocol": {
@@ -105,26 +125,6 @@
             "title": "Plan",
             "description": "A plan for a prototype."
         },
-        "semio.model.v1.Point": {
-            "properties": {
-                "x": {
-                    "type": "number",
-                    "description": "X coordinate."
-                },
-                "y": {
-                    "type": "number",
-                    "description": "Y coordinate"
-                },
-                "z": {
-                    "type": "number",
-                    "description": "Z coordinate"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Point",
-            "description": "A 3d point with x,y,z coordinates."
-        },
         "semio.model.v1.Scope": {
             "properties": {
                 "concept": {
@@ -156,7 +156,7 @@
                     "type": "integer"
                 },
                 "point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 }
             },

@@ -187,7 +187,7 @@ const CONSTANTS = {
       "URL": "mcneel/rhino",
       "DEFAULT_PORT": 20000,
       "FULL_NAME": "Rhinoceros 3D",
-      "NAME": "rhino3D",
+      "NAME": "rhino",
       "ABBREVIATION": "rhino",
       "EXTENSION": ".3dm",
       "NORMAL_EXTENSIONS": [

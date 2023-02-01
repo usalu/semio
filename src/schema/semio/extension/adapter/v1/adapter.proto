@@ -5,6 +5,7 @@ package semio.extension.adapter.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/extension/adapter/v1";
 option csharp_namespace = "Semio.Extension.Adapter.V1";
 
+import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 
 // An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
@@ -12,7 +13,7 @@ service AdapterService {
   // Request a prototype.
   rpc RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
   // Request an connection point for the connected.
-  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.model.v1.Point);
+  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.geometry.v1.Point);
 }
 
 // Description what an adapter is adapting to.

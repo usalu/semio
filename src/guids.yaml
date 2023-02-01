@@ -32,6 +32,7 @@ ui:
                     Connectable: C20F4D78-1178-4700-973F-6AB81DAC35F1
                     Assembly: 712F6DA6-F74D-449F-83CE-956255450413
                     Layout: E866DD2D-3A02-4540-8A05-F9C0387F7503
+                    Representation: F1E3DA31-99F6-4261-B17E-141ACBE3CA2A
                     Element: 
                     Design:
                 deconstruct:
@@ -41,6 +42,13 @@ ui:
             services:
                 layoutDesign: 15ad0008-1e40-41ff-8e38-116102d7488a
             utils:
-                ImportRepresentation: 464CD7FB-6994-4C81-B510-3EA5508CB650
+                Serialize: 537857BE-97F2-4A22-BBED-B0C230BA4D8A
+                Deserialize: D4C9B4AD-BE63-448A-8C80-501CC8B98C60
+                ImportRepresentation: 7EA9685A-F484-4895-8D91-D513F7C53D14
+                ShowDesign: 464CD7FB-6994-4C81-B510-3EA5508CB650
 
-F1E3DA31-99F6-4261-B17E-141ACBE3CA2A
+
+3053B0B4-8A3C-4774-9C7A-046472EF8F8A
+6E1827B1-01B0-4EE2-B56C-9566EAC395F2
+46B997B8-4A33-4596-92A0-5B6B37250E47
+9E2CABC5-7320-4862-A258-264C81F75F95

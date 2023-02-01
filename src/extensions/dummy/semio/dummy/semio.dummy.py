@@ -10,7 +10,7 @@ class DummyAdapter(AdapterService):
     computeUrl:str = "http://localhost:6500/"
     computeAuthToken:str = ""
 
-    def getDescriptions(self):
+    def _getDescriptions(self):
         return [
             Adapting(platform_url="dummy/verycomplexplatform"),
             Adapting(platform_url='dummy/anothercomplexplatform')

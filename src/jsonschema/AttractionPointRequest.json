@@ -23,7 +23,7 @@
                     "description": "Optional bias parameters of connected."
                 },
                 "simple_representation": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 },
                 "full_representation": {
@@ -35,7 +35,7 @@
             "type": "object",
             "title": "Connection Point Request"
         },
-        "semio.model.v1.Point": {
+        "semio.geometry.v1.Point": {
             "properties": {
                 "x": {
                     "type": "number",

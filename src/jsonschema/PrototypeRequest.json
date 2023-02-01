@@ -8,69 +8,86 @@
                     "$ref": "#/definitions/semio.model.v1.Plan",
                     "additionalProperties": true
                 },
-                "target_representation_platforms": {
-                    "items": {
-                        "enum": [
-                            "PLATFORM_SEMIO",
-                            0,
-                            "PLATFORM_THREE",
-                            1000000100,
-                            "PLATFORM_SVERCHOK",
-                            500000200,
-                            "PLATFORM_IFCOPENSHELL",
-                            1010100000,
-                            "PLATFORM_CADQUERY",
-                            1600100100,
-                            "PLATFORM_FREECAD",
-                            530100200,
-                            "PLATFORM_OPENSCAD",
-                            530100300,
-                            "PLATFORM_JSCAD",
-                            1500100400,
-                            "PLATFORM_Fornjot",
-                            1700000300,
-                            "PLATFORM_TRUCK",
-                            1500000400,
-                            "PLATFORM_ENERGYPLUS",
-                            1900200100,
-                            "PLATFORM_OPENSTUDIO",
-                            1910200101,
-                            "PLATFORM_RHINO",
-                            2140300000,
-                            "PLATFORM_GRASSHOPPER",
-                            2140300001,
-                            "PLATFORM_REVIT",
-                            2140300100,
-                            "PLATFORM_DYNAMO",
-                            2140300101
-                        ]
-                    },
-                    "type": "array",
+                "target_platform": {
+                    "enum": [
+                        "PLATFORM_SEMIO",
+                        0,
+                        "PLATFORM_SPECKLE",
+                        1600350000,
+                        "PLATFORM_THREE",
+                        1000000100,
+                        "PLATFORM_SVERCHOK",
+                        500000200,
+                        "PLATFORM_IFCOPENSHELL",
+                        1010100000,
+                        "PLATFORM_CADQUERY",
+                        1600100100,
+                        "PLATFORM_FREECAD",
+                        530100200,
+                        "PLATFORM_OPENSCAD",
+                        530100300,
+                        "PLATFORM_JSCAD",
+                        1500100400,
+                        "PLATFORM_FORNJOT",
+                        1700000300,
+                        "PLATFORM_TRUCK",
+                        1500000400,
+                        "PLATFORM_ENERGYPLUS",
+                        1900200100,
+                        "PLATFORM_OPENSTUDIO",
+                        1910200101,
+                        "PLATFORM_RHINO",
+                        2140300000,
+                        "PLATFORM_GRASSHOPPER",
+                        2140300001,
+                        "PLATFORM_REVIT",
+                        2140300100,
+                        "PLATFORM_DYNAMO",
+                        2140300101,
+                        "PLATFORM_ARCHICAD",
+                        2140300200,
+                        "PLATFORM_CITYENGINE",
+                        2140300300,
+                        "PLATFORM_EXCEL",
+                        2140300400,
+                        "PLATFORM_HYPAR",
+                        2140350100
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
-                },
-                "target_representation_concepts": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array",
-                    "description": "Optional concepts for the representations. If this can't be unchieved, the default one will be picked unless the target required parameter is set to true."
-                },
-                "target_representation_lods": {
-                    "items": {
-                        "type": "integer"
-                    },
-                    "type": "array",
-                    "description": "An optional level of detail for the target representation. If this can't be unchieved, the closest one will be picked unless the target required parameter is set to true."
-                },
-                "targets_required": {
-                    "type": "boolean",
-                    "description": "Set this to true if all of the targets must be achived."
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar"
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "title": "Prototype Request"
+        },
+        "semio.geometry.v1.Point": {
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "description": "X coordinate."
+                },
+                "y": {
+                    "type": "number",
+                    "description": "Y coordinate"
+                },
+                "z": {
+                    "type": "number",
+                    "description": "Z coordinate"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Point",
+            "description": "A 3d point with x,y,z coordinates."
         },
         "semio.model.v1.Parameter": {
             "properties": {
@@ -115,26 +132,6 @@
             "title": "Plan",
             "description": "A plan for a prototype."
         },
-        "semio.model.v1.Point": {
-            "properties": {
-                "x": {
-                    "type": "number",
-                    "description": "X coordinate."
-                },
-                "y": {
-                    "type": "number",
-                    "description": "Y coordinate"
-                },
-                "z": {
-                    "type": "number",
-                    "description": "Z coordinate"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Point",
-            "description": "A 3d point with x,y,z coordinates."
-        },
         "semio.model.v1.Scope": {
             "properties": {
                 "concept": {
@@ -166,7 +163,7 @@
                     "type": "integer"
                 },
                 "point": {
-                    "$ref": "#/definitions/semio.model.v1.Point",
+                    "$ref": "#/definitions/semio.geometry.v1.Point",
                     "additionalProperties": true
                 }
             },

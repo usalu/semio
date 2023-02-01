@@ -22,6 +22,8 @@
                     "enum": [
                         "PLATFORM_SEMIO",
                         0,
+                        "PLATFORM_SPECKLE",
+                        1600350000,
                         "PLATFORM_THREE",
                         1000000100,
                         "PLATFORM_SVERCHOK",
@@ -36,7 +38,7 @@
                         530100300,
                         "PLATFORM_JSCAD",
                         1500100400,
-                        "PLATFORM_Fornjot",
+                        "PLATFORM_FORNJOT",
                         1700000300,
                         "PLATFORM_TRUCK",
                         1500000400,
@@ -51,7 +53,15 @@
                         "PLATFORM_REVIT",
                         2140300100,
                         "PLATFORM_DYNAMO",
-                        2140300101
+                        2140300101,
+                        "PLATFORM_ARCHICAD",
+                        2140300200,
+                        "PLATFORM_CITYENGINE",
+                        2140300300,
+                        "PLATFORM_EXCEL",
+                        2140300400,
+                        "PLATFORM_HYPAR",
+                        2140350100
                     ],
                     "oneOf": [
                         {
@@ -62,7 +72,7 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar"
                 }
             },
             "additionalProperties": true,
@@ -76,6 +86,8 @@
                     "enum": [
                         "PLATFORM_SEMIO",
                         0,
+                        "PLATFORM_SPECKLE",
+                        1600350000,
                         "PLATFORM_THREE",
                         1000000100,
                         "PLATFORM_SVERCHOK",
@@ -90,7 +102,7 @@
                         530100300,
                         "PLATFORM_JSCAD",
                         1500100400,
-                        "PLATFORM_Fornjot",
+                        "PLATFORM_FORNJOT",
                         1700000300,
                         "PLATFORM_TRUCK",
                         1500000400,
@@ -105,7 +117,15 @@
                         "PLATFORM_REVIT",
                         2140300100,
                         "PLATFORM_DYNAMO",
-                        2140300101
+                        2140300101,
+                        "PLATFORM_ARCHICAD",
+                        2140300200,
+                        "PLATFORM_CITYENGINE",
+                        2140300300,
+                        "PLATFORM_EXCEL",
+                        2140300400,
+                        "PLATFORM_HYPAR",
+                        2140350100
                     ],
                     "oneOf": [
                         {
@@ -116,12 +136,14 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar"
                 },
                 "target_platform": {
                     "enum": [
                         "PLATFORM_SEMIO",
                         0,
+                        "PLATFORM_SPECKLE",
+                        1600350000,
                         "PLATFORM_THREE",
                         1000000100,
                         "PLATFORM_SVERCHOK",
@@ -136,7 +158,7 @@
                         530100300,
                         "PLATFORM_JSCAD",
                         1500100400,
-                        "PLATFORM_Fornjot",
+                        "PLATFORM_FORNJOT",
                         1700000300,
                         "PLATFORM_TRUCK",
                         1500000400,
@@ -151,7 +173,15 @@
                         "PLATFORM_REVIT",
                         2140300100,
                         "PLATFORM_DYNAMO",
-                        2140300101
+                        2140300101,
+                        "PLATFORM_ARCHICAD",
+                        2140300200,
+                        "PLATFORM_CITYENGINE",
+                        2140300300,
+                        "PLATFORM_EXCEL",
+                        2140300400,
+                        "PLATFORM_HYPAR",
+                        2140350100
                     ],
                     "oneOf": [
                         {
@@ -162,7 +192,7 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar"
                 }
             },
             "additionalProperties": true,
@@ -182,6 +212,8 @@
                     "enum": [
                         "PLATFORM_SEMIO",
                         0,
+                        "PLATFORM_SPECKLE",
+                        1600350000,
                         "PLATFORM_THREE",
                         1000000100,
                         "PLATFORM_SVERCHOK",
@@ -196,7 +228,7 @@
                         530100300,
                         "PLATFORM_JSCAD",
                         1500100400,
-                        "PLATFORM_Fornjot",
+                        "PLATFORM_FORNJOT",
                         1700000300,
                         "PLATFORM_TRUCK",
                         1500000400,
@@ -211,7 +243,15 @@
                         "PLATFORM_REVIT",
                         2140300100,
                         "PLATFORM_DYNAMO",
-                        2140300101
+                        2140300101,
+                        "PLATFORM_ARCHICAD",
+                        2140300200,
+                        "PLATFORM_CITYENGINE",
+                        2140300300,
+                        "PLATFORM_EXCEL",
+                        2140300400,
+                        "PLATFORM_HYPAR",
+                        2140350100
                     ],
                     "oneOf": [
                         {
@@ -222,7 +262,7 @@
                         }
                     ],
                     "title": "Platform",
-                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri"
+                    "description": "Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]\r LICENSE (if possible) after https://spdx.org/licenses/: \r 0:AGPL-3.0-or-later,\r 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0\r 100:LGPL-3.0-or-later,101:LGPL-3.0-only\r 150:MIT,160:Apache-2.0,\r 170:0BSD\r 190:EnergyPlus\r 214:Closed\r OWNER starting with OWNERTYPE:\r 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp\r 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad\r 2:NONPROFIT: 0:buildingsmart,1:nrel\r 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar"
                 }
             },
             "additionalProperties": true,

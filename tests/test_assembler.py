@@ -33,9 +33,9 @@ def test_assembler_assemblyToElements(layoutJsonPath,assembliesJsonPath,assemble
 def assemblyToElements(self: Assembler, sobjects:Iterable[Sobject],assembly:Iterable[Assembly])->Iterable[Element]:
     # element : Element = self.RequestPrototype(
         # sobject: Sobject = Sobject(),
-        # target_representation_platforms:Iterable[Platform] = [],
-        # target_representation_concepts:Iterable[str] = [],
-        # target_representation_lods:Iterable[int] = [],
+        # target_platform:Platform = [],
+        # target_concepts:Iterable[str] = [],
+        # target_lods:Iterable[int] = [],
         # targets_required:bool = False)
     # pose : Pose, point: Point = self.ConnectElement(
         # sobjects:Tuple[Sobject,Sobject],

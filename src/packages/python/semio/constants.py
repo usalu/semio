@@ -1,5 +1,6 @@
 import os
 from json import loads
+from model import Platform
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -22,5 +23,5 @@ with open(os.path.join(__location__, 'constants.json')) as constantsFile:
     GENERAL_EXTENSIONS = CONSTANTS['GENERAL_EXTENSIONS']
 
     EXTENSIONS_BYPLATFORMURL = {platform['URL']:platform['EXTENSION'] for platform in PLATFORMS.values()}
-    PLATFORMURL_BYEXTENSION = {platform['EXTENSION']:platform['URL'] for platform in PLATFORMS.values()}
+    PLATFORM_BYEXTENSION = {platform['EXTENSION']:Platform.Value('PLATFORM_'+platform['NAME'].upper()) for platform in PLATFORMS.values()}
     

@@ -6,7 +6,7 @@ from extension.service  import ExtensionService
 
 class ConverterService(ExtensionService,ConverterServiceServicer):
 
-    def getDescriptions(self) -> list[Converting]:
+    def _getDescriptions(self) -> list[Converting]:
         return []
 
     def convertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:

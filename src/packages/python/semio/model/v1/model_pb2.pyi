@@ -1,3 +1,4 @@
+from geometry.v1 import geometry_pb2 as _geometry_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
@@ -24,12 +25,16 @@ FILETYPE_XML: FileType
 FILETYPE_YAML: FileType
 LAYOUTSTRATEGY_BREADTHFIRST: LayoutStrategy
 LAYOUTSTRATEGY_DEPTHFIRST: LayoutStrategy
+PLATFORM_ARCHICAD: Platform
 PLATFORM_CADQUERY: Platform
+PLATFORM_CITYENGINE: Platform
 PLATFORM_DYNAMO: Platform
 PLATFORM_ENERGYPLUS: Platform
+PLATFORM_EXCEL: Platform
+PLATFORM_FORNJOT: Platform
 PLATFORM_FREECAD: Platform
-PLATFORM_Fornjot: Platform
 PLATFORM_GRASSHOPPER: Platform
+PLATFORM_HYPAR: Platform
 PLATFORM_IFCOPENSHELL: Platform
 PLATFORM_JSCAD: Platform
 PLATFORM_OPENSCAD: Platform
@@ -37,6 +42,7 @@ PLATFORM_OPENSTUDIO: Platform
 PLATFORM_REVIT: Platform
 PLATFORM_RHINO: Platform
 PLATFORM_SEMIO: Platform
+PLATFORM_SPECKLE: Platform
 PLATFORM_SVERCHOK: Platform
 PLATFORM_THREE: Platform
 PLATFORM_TRUCK: Platform
@@ -148,23 +154,13 @@ class Plan(_message.Message):
     url: str
     def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Iterable[_Union[Parameter, _Mapping]]] = ...) -> None: ...
 
-class Point(_message.Message):
-    __slots__ = ["x", "y", "z"]
-    X_FIELD_NUMBER: _ClassVar[int]
-    Y_FIELD_NUMBER: _ClassVar[int]
-    Z_FIELD_NUMBER: _ClassVar[int]
-    x: float
-    y: float
-    z: float
-    def __init__(self, x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
-
 class Pose(_message.Message):
     __slots__ = ["point_of_view", "view"]
     POINT_OF_VIEW_FIELD_NUMBER: _ClassVar[int]
     VIEW_FIELD_NUMBER: _ClassVar[int]
-    point_of_view: Point
-    view: Quaternion
-    def __init__(self, point_of_view: _Optional[_Union[Point, _Mapping]] = ..., view: _Optional[_Union[Quaternion, _Mapping]] = ...) -> None: ...
+    point_of_view: _geometry_pb2.Point
+    view: _geometry_pb2.Quaternion
+    def __init__(self, point_of_view: _Optional[_Union[_geometry_pb2.Point, _Mapping]] = ..., view: _Optional[_Union[_geometry_pb2.Quaternion, _Mapping]] = ...) -> None: ...
 
 class Prototype(_message.Message):
     __slots__ = ["description", "plan_hash", "representations"]
@@ -175,18 +171,6 @@ class Prototype(_message.Message):
     plan_hash: str
     representations: _containers.RepeatedCompositeFieldContainer[Representation]
     def __init__(self, plan_hash: _Optional[str] = ..., representations: _Optional[_Iterable[_Union[Representation, _Mapping]]] = ..., description: _Optional[str] = ...) -> None: ...
-
-class Quaternion(_message.Message):
-    __slots__ = ["w", "x", "y", "z"]
-    W_FIELD_NUMBER: _ClassVar[int]
-    X_FIELD_NUMBER: _ClassVar[int]
-    Y_FIELD_NUMBER: _ClassVar[int]
-    Z_FIELD_NUMBER: _ClassVar[int]
-    w: float
-    x: float
-    y: float
-    z: float
-    def __init__(self, w: _Optional[float] = ..., x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
 
 class Representation(_message.Message):
     __slots__ = ["body", "concepts", "description", "encoding", "file_type", "lod", "platform"]
@@ -236,9 +220,9 @@ class Value(_message.Message):
     integer_number: int
     natural_number: int
     number: float
-    point: Point
+    point: _geometry_pb2.Point
     text: str
-    def __init__(self, text: _Optional[str] = ..., number: _Optional[float] = ..., integer_number: _Optional[int] = ..., natural_number: _Optional[int] = ..., point: _Optional[_Union[Point, _Mapping]] = ...) -> None: ...
+    def __init__(self, text: _Optional[str] = ..., number: _Optional[float] = ..., integer_number: _Optional[int] = ..., natural_number: _Optional[int] = ..., point: _Optional[_Union[_geometry_pb2.Point, _Mapping]] = ...) -> None: ...
 
 class Encoding(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

@@ -4,5 +4,5 @@ from utils import SemioService
 class ExtensionService(SemioService,ABC):
     #TODO Make class decorator
     @abstractmethod
-    def getDescriptions(self):
+    def _getDescriptions(self):
         pass

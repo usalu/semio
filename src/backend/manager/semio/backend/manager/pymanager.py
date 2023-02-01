@@ -4,34 +4,34 @@ from typing import Iterable,Tuple
 import logging
 
 from os.path import splitext
-from semio.model import Point,Pose,Platform,Sobject,Connection,Layout,Element,Design, Representation,Platform
+from semio.model import Point,Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
-from semio.constants import PLATFORMURL_BYEXTENSION, GENERAL_EXTENSIONS
+from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
 
 
-def getPlatformUrlFromElementUrl(elementUrl):
+def getPlatformFromElementUrl(elementUrl):
     splitElementUrl = splitext(elementUrl)
     fileExtension = splitElementUrl[1]
     if fileExtension in GENERAL_EXTENSIONS:
         fileExtension=splitext(splitElementUrl[0])[1]+fileExtension
     if not fileExtension:
         raise ValueError(f'The element type with url {elementUrl} can\'t determine the type. Use another second level type extension to tell me what platform the element belongs to e.g. ELEMENT.cadquery.py for indicating that the file is a cadquery file.')
-    if not fileExtension in PLATFORMURL_BYEXTENSION:
+    if not fileExtension in PLATFORM_BYEXTENSION:
         raise ValueError(f'The element type with ending .{fileExtension} is not supported by me (yet).')
-    platformUrl = PLATFORMURL_BYEXTENSION[fileExtension]
-    return platformUrl
+    platform = PLATFORM_BYEXTENSION[fileExtension]
+    return platform
 
 class Manager(ManagerServer):
 
-    def getAdapterAddress(self, platformName:str) -> str:
+    def getAdapterAddress(self, platform:Platform) -> str:
         """Get the adapter address for a platform by its name"""
         for extensionAddress, extendingService in self.extensions.items():
             for adaptingService in extendingService.adaptings:
-                if adaptingService.platform_name == platformName:
+                if adaptingService.platform == platform:
                     return extensionAddress
-        raise ValueError(f"No adapting service was found for the {platformName} platform. Register an appropriate extension which can adapt this element.")
+        raise ValueError(f"No adapting service was found for the {platform} platform. Register an appropriate extension which can adapt this element.")
 
     def getConverterAddress(self, source_platform:Platform,target_platform:Platform) -> str:
         for extensionAddress, extendingService in self.extensions.items():
@@ -51,8 +51,11 @@ class Manager(ManagerServer):
 
     # Services
 
-    def requestPrototype(self, sobject: Sobject, target_representation_platforms: Iterable[Platform] | None = None, target_representation_concepts: Iterable[str] | None = None, target_representation_lods: Iterable[int] | None = None, targets_required: bool = False) -> Element:
-        raise NotImplementedError()
+    def requestPrototype(self, plan: Plan, target_platform: Platform | None = None) -> Prototype:
+        adapterAddress =self.getAdapterAddress(getPlatformFromElementUrl(plan.url))
+        extensionProxy = self._getExtensionProxy(adapterAddress)
+        # TODO Implement target platform logic over checking of response, converters, etc
+        return extensionProxy.RequestPrototype(plan)
     
     def connectElement(self, connected_sobject: Sobject, connecting_sobject: Sobject, connection: Connection) -> Tuple[Pose, Point]:
         raise NotImplementedError()

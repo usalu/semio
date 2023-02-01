@@ -11,54 +11,8 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-/**
- * A 3d point with x,y,z coordinates.
- *
- * @generated from protobuf message semio.model.v1.Point
- */
-export interface Point {
-    /**
-     * X coordinate.
-     *
-     * @generated from protobuf field: double x = 1;
-     */
-    x: number;
-    /**
-     * Y coordinate
-     *
-     * @generated from protobuf field: double y = 2;
-     */
-    y: number;
-    /**
-     * Z coordinate
-     *
-     * @generated from protobuf field: double z = 3;
-     */
-    z: number;
-}
-/**
- * (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.
- *
- * @generated from protobuf message semio.model.v1.Quaternion
- */
-export interface Quaternion {
-    /**
-     * @generated from protobuf field: double w = 1;
-     */
-    w: number;
-    /**
-     * @generated from protobuf field: double x = 2;
-     */
-    x: number;
-    /**
-     * @generated from protobuf field: double y = 3;
-     */
-    y: number;
-    /**
-     * @generated from protobuf field: double z = 4;
-     */
-    z: number;
-}
+import { Quaternion } from "../../geometry/v1/geometry";
+import { Point } from "../../geometry/v1/geometry";
 /**
  * A pose is a static reference frame/coordinate system.
  *
@@ -68,13 +22,13 @@ export interface Pose {
     /**
      * Point of view (origin) from the pose (reference frame/coordinate system)
      *
-     * @generated from protobuf field: semio.model.v1.Point point_of_view = 1;
+     * @generated from protobuf field: semio.geometry.v1.Point point_of_view = 1;
      */
     pointOfView?: Point;
     /**
      * View (orientation) from the pose (reference frame/coordinate system)
      *
-     * @generated from protobuf field: semio.model.v1.Quaternion view = 2;
+     * @generated from protobuf field: semio.geometry.v1.Quaternion view = 2;
      */
     view?: Quaternion;
 }
@@ -187,7 +141,7 @@ export interface Value {
     } | {
         oneofKind: "point";
         /**
-         * @generated from protobuf field: semio.model.v1.Point point = 5;
+         * @generated from protobuf field: semio.geometry.v1.Point point = 5;
          */
         point: Point;
     } | {
@@ -598,7 +552,7 @@ export enum FileType {
  * 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
  * 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
  * 2:NONPROFIT: 0:buildingsmart,1:nrel
- * 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri
+ * 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar
  *
  * @generated from protobuf enum semio.model.v1.Platform
  */
@@ -609,6 +563,12 @@ export enum Platform {
      * @generated from protobuf enum value: PLATFORM_SEMIO = 0;
      */
     SEMIO = 0,
+    /**
+     * https://github.com/specklesystems
+     *
+     * @generated from protobuf enum value: PLATFORM_SPECKLE = 1600350000;
+     */
+    SPECKLE = 1600350000,
     /**
      * https://github.com/mrdoob/three.js/
      *
@@ -654,9 +614,9 @@ export enum Platform {
     /**
      * https://github.com/hannobraun/Fornjot
      *
-     * @generated from protobuf enum value: PLATFORM_Fornjot = 1700000300;
+     * @generated from protobuf enum value: PLATFORM_FORNJOT = 1700000300;
      */
-    Fornjot = 1700000300,
+    FORNJOT = 1700000300,
     /**
      * https://github.com/ricosjp/truck
      *
@@ -698,7 +658,31 @@ export enum Platform {
      *
      * @generated from protobuf enum value: PLATFORM_DYNAMO = 2140300101;
      */
-    DYNAMO = 2140300101
+    DYNAMO = 2140300101,
+    /**
+     * https://graphisoft.com/solutions/archicad
+     *
+     * @generated from protobuf enum value: PLATFORM_ARCHICAD = 2140300200;
+     */
+    ARCHICAD = 2140300200,
+    /**
+     * https://www.esri.com/en-us/arcgis/products/arcgis-cityengine
+     *
+     * @generated from protobuf enum value: PLATFORM_CITYENGINE = 2140300300;
+     */
+    CITYENGINE = 2140300300,
+    /**
+     * https://www.microsoft.com/en-us/microsoft-365/excel
+     *
+     * @generated from protobuf enum value: PLATFORM_EXCEL = 2140300400;
+     */
+    EXCEL = 2140300400,
+    /**
+     * https://hypar.io/
+     *
+     * @generated from protobuf enum value: PLATFORM_HYPAR = 2140350100;
+     */
+    HYPAR = 2140350100
 }
 /**
  * The representation protocol determines what type of representation the connecting will see of the connected in the connection process.
@@ -745,135 +729,6 @@ export enum LayoutStrategy {
     LAYOUTSTRATEGY_DEPTHFIRST = 1
 }
 // @generated message type with reflection information, may provide speed optimized methods
-class Point$Type extends MessageType<Point> {
-    constructor() {
-        super("semio.model.v1.Point", [
-            { no: 1, name: "x", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 2, name: "y", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 3, name: "z", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Point>): Point {
-        const message = { x: 0, y: 0, z: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Point>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Point): Point {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* double x */ 1:
-                    message.x = reader.double();
-                    break;
-                case /* double y */ 2:
-                    message.y = reader.double();
-                    break;
-                case /* double z */ 3:
-                    message.z = reader.double();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Point, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* double x = 1; */
-        if (message.x !== 0)
-            writer.tag(1, WireType.Bit64).double(message.x);
-        /* double y = 2; */
-        if (message.y !== 0)
-            writer.tag(2, WireType.Bit64).double(message.y);
-        /* double z = 3; */
-        if (message.z !== 0)
-            writer.tag(3, WireType.Bit64).double(message.z);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message semio.model.v1.Point
- */
-export const Point = new Point$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Quaternion$Type extends MessageType<Quaternion> {
-    constructor() {
-        super("semio.model.v1.Quaternion", [
-            { no: 1, name: "w", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 2, name: "x", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 3, name: "y", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
-            { no: 4, name: "z", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Quaternion>): Quaternion {
-        const message = { w: 0, x: 0, y: 0, z: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Quaternion>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Quaternion): Quaternion {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* double w */ 1:
-                    message.w = reader.double();
-                    break;
-                case /* double x */ 2:
-                    message.x = reader.double();
-                    break;
-                case /* double y */ 3:
-                    message.y = reader.double();
-                    break;
-                case /* double z */ 4:
-                    message.z = reader.double();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Quaternion, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* double w = 1; */
-        if (message.w !== 0)
-            writer.tag(1, WireType.Bit64).double(message.w);
-        /* double x = 2; */
-        if (message.x !== 0)
-            writer.tag(2, WireType.Bit64).double(message.x);
-        /* double y = 3; */
-        if (message.y !== 0)
-            writer.tag(3, WireType.Bit64).double(message.y);
-        /* double z = 4; */
-        if (message.z !== 0)
-            writer.tag(4, WireType.Bit64).double(message.z);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message semio.model.v1.Quaternion
- */
-export const Quaternion = new Quaternion$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class Pose$Type extends MessageType<Pose> {
     constructor() {
         super("semio.model.v1.Pose", [
@@ -893,10 +748,10 @@ class Pose$Type extends MessageType<Pose> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* semio.model.v1.Point point_of_view */ 1:
+                case /* semio.geometry.v1.Point point_of_view */ 1:
                     message.pointOfView = Point.internalBinaryRead(reader, reader.uint32(), options, message.pointOfView);
                     break;
-                case /* semio.model.v1.Quaternion view */ 2:
+                case /* semio.geometry.v1.Quaternion view */ 2:
                     message.view = Quaternion.internalBinaryRead(reader, reader.uint32(), options, message.view);
                     break;
                 default:
@@ -911,10 +766,10 @@ class Pose$Type extends MessageType<Pose> {
         return message;
     }
     internalBinaryWrite(message: Pose, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* semio.model.v1.Point point_of_view = 1; */
+        /* semio.geometry.v1.Point point_of_view = 1; */
         if (message.pointOfView)
             Point.internalBinaryWrite(message.pointOfView, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Quaternion view = 2; */
+        /* semio.geometry.v1.Quaternion view = 2; */
         if (message.view)
             Quaternion.internalBinaryWrite(message.view, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
@@ -1117,7 +972,7 @@ class Value$Type extends MessageType<Value> {
                         naturalNumber: reader.uint32()
                     };
                     break;
-                case /* semio.model.v1.Point point */ 5:
+                case /* semio.geometry.v1.Point point */ 5:
                     message.value = {
                         oneofKind: "point",
                         point: Point.internalBinaryRead(reader, reader.uint32(), options, (message.value as any).point)
@@ -1147,7 +1002,7 @@ class Value$Type extends MessageType<Value> {
         /* uint32 natural_number = 4; */
         if (message.value.oneofKind === "naturalNumber")
             writer.tag(4, WireType.Varint).uint32(message.value.naturalNumber);
-        /* semio.model.v1.Point point = 5; */
+        /* semio.geometry.v1.Point point = 5; */
         if (message.value.oneofKind === "point")
             Point.internalBinaryWrite(message.value.point, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;

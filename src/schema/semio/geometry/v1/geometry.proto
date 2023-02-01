@@ -1,0 +1,166 @@
+// TODO Make compliant to: https://www.iso.org/standard/84667.html
+// For now it is enough to stay close to speckle as it can be used for translating between interesting platforms.
+// https://github.com/specklesystems/speckle-sharp/tree/main/Objects
+syntax = "proto3";
+
+package semio.geometry.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/geometry/v1";
+option csharp_namespace = "Semio.Geometry.V1";
+
+// A 3d point with x,y,z coordinates.
+message Point {
+  // X coordinate.
+  double x = 1;
+  // Y coordinate
+  double y = 2;
+  // Z coordinate
+  double z = 3;
+}
+
+// A 3d vector with x,y,z coordinates.
+message Vector {
+    // X coordinate.
+    double x = 1;
+    // Y coordinate
+    double y = 2;
+    // Z coordinate
+    double z = 3;
+}
+
+// (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
+message Quaternion {
+    double w = 1;
+    double x = 2;
+    double y = 3;
+    double z = 4;
+  }
+
+// // A (reference) plane. Also called: reference frame, reference coordinate system
+// message Plane {
+//     // Origin
+//     Point origin = 1;
+//     // X-Axis
+//     Vector x = 2;
+//     // Y-Axis
+//     Vector y = 3;
+//     // Normal vector.
+//     Vector z = 4;
+// }
+
+// // A part of a 3d circle.
+// message Arc {
+//     // Radius of the arc.
+//     double radius = 1;
+//     // Plane of the arc. The arcs center point is at the origin of the plane.
+//     Plane plane = 2;
+//     // The angle where the arc starts in radians.
+//     double start_angle = 3;
+//     // The angle where the arc starts in radians.
+//     double end_angle = 4;
+// }
+
+// // A line with a start and end point.
+// message Line {
+//     // Starting point of the line.
+//     Point start = 1;
+//     // Ending point of the line.
+//     Point end = 2;
+// }
+
+// // A polyline with a list of points.
+// message Polyline {
+//     repeated Point points = 1;
+// }
+
+// // An interval (range).
+// message Interval {
+//     // Start of the interval.
+//     double start = 1;
+//     // End of the interval.
+//     double end = 2;
+// }
+
+// // A 3d box.
+// message Box {
+//     // The (reference) plane for the interval (coordinates). 
+//     Plane plane = 1;
+//     // An interval describing the start and the end x coordinate.
+//     Interval x = 2;
+//     // An interval describing the start and the end y coordinate.
+//     Interval y = 3;
+//     // An interval describing the start and the end z coordinate.
+//     Interval z = 4;
+// }
+
+// // A (weighted) control point.
+// message ControlPoint {
+//     Point point = 1;
+//     // The weight of the control point.
+//     double weight = 2;
+// }
+
+
+// message Curve {
+
+// }
+
+// // A point cloud with optional color and size data.
+// message PointCloud {
+//     repeated Point points = 1;
+//     // Optionally the colors for the points.
+//     repeated Color colors = 2;
+//     // Optionally the sizes for the points.
+//     repeated double sizes = 3;
+// }
+
+
+// message Brep {
+//     // Points
+//     repeated Point vertices = 1;
+
+// }
+
+// message BrepEdge {
+
+// }
+
+// message BrepFace {
+
+// }
+
+// message BrepLoop {
+
+// }
+
+// message BrepTrim {
+
+// }
+
+// message Circle {
+
+// }
+
+// message Ellipse {
+
+// }
+
+// message Extrusion {
+
+// }
+
+// message Mesh {
+
+// }
+
+// message Polycurve {
+
+// }
+
+// message Spiral {
+
+// }
+
+// message Surface {
+
+// }

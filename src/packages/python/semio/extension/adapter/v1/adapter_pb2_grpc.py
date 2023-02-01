@@ -3,6 +3,7 @@
 import grpc
 
 from extension.adapter.v1 import adapter_pb2 as extension_dot_adapter_dot_v1_dot_adapter__pb2
+from geometry.v1 import geometry_pb2 as geometry_dot_v1_dot_geometry__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
@@ -24,7 +25,7 @@ class AdapterServiceStub(object):
         self.RequestConnectionPoint = channel.unary_unary(
                 '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
                 request_serializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
-                response_deserializer=model_dot_v1_dot_model__pb2.Point.FromString,
+                response_deserializer=geometry_dot_v1_dot_geometry__pb2.Point.FromString,
                 )
 
 
@@ -57,7 +58,7 @@ def add_AdapterServiceServicer_to_server(servicer, server):
             'RequestConnectionPoint': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestConnectionPoint,
                     request_deserializer=extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.FromString,
-                    response_serializer=model_dot_v1_dot_model__pb2.Point.SerializeToString,
+                    response_serializer=geometry_dot_v1_dot_geometry__pb2.Point.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,6 +101,6 @@ class AdapterService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/semio.extension.adapter.v1.AdapterService/RequestConnectionPoint',
             extension_dot_adapter_dot_v1_dot_adapter__pb2.ConnectionPointRequest.SerializeToString,
-            model_dot_v1_dot_model__pb2.Point.FromString,
+            geometry_dot_v1_dot_geometry__pb2.Point.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

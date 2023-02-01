@@ -1,9 +1,10 @@
+from geometry.v1 import geometry_pb2 as _geometry_pb2
 from model.v1 import model_pb2 as _model_pb2
 from extension.v1 import extension_pb2 as _extension_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -22,26 +23,20 @@ class ConnectElementResponse(_message.Message):
     CONNECTED_ELEMENT_POSE_FIELD_NUMBER: _ClassVar[int]
     CONNECTION_POINT_FIELD_NUMBER: _ClassVar[int]
     connected_element_pose: _model_pb2.Pose
-    connection_point: _model_pb2.Point
-    def __init__(self, connected_element_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., connection_point: _Optional[_Union[_model_pb2.Point, _Mapping]] = ...) -> None: ...
+    connection_point: _geometry_pb2.Point
+    def __init__(self, connected_element_pose: _Optional[_Union[_model_pb2.Pose, _Mapping]] = ..., connection_point: _Optional[_Union[_geometry_pb2.Point, _Mapping]] = ...) -> None: ...
 
 class GetRegisteredExtensionsRequest(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
 
 class PrototypeRequest(_message.Message):
-    __slots__ = ["plan", "target_representation_concepts", "target_representation_lods", "target_representation_platforms", "targets_required"]
+    __slots__ = ["plan", "target_platform"]
     PLAN_FIELD_NUMBER: _ClassVar[int]
-    TARGETS_REQUIRED_FIELD_NUMBER: _ClassVar[int]
-    TARGET_REPRESENTATION_CONCEPTS_FIELD_NUMBER: _ClassVar[int]
-    TARGET_REPRESENTATION_LODS_FIELD_NUMBER: _ClassVar[int]
-    TARGET_REPRESENTATION_PLATFORMS_FIELD_NUMBER: _ClassVar[int]
+    TARGET_PLATFORM_FIELD_NUMBER: _ClassVar[int]
     plan: _model_pb2.Plan
-    target_representation_concepts: _containers.RepeatedScalarFieldContainer[str]
-    target_representation_lods: _containers.RepeatedScalarFieldContainer[int]
-    target_representation_platforms: _containers.RepeatedScalarFieldContainer[_model_pb2.Platform]
-    targets_required: bool
-    def __init__(self, plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., target_representation_platforms: _Optional[_Iterable[_Union[_model_pb2.Platform, str]]] = ..., target_representation_concepts: _Optional[_Iterable[str]] = ..., target_representation_lods: _Optional[_Iterable[int]] = ..., targets_required: bool = ...) -> None: ...
+    target_platform: _model_pb2.Platform
+    def __init__(self, plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., target_platform: _Optional[_Union[_model_pb2.Platform, str]] = ...) -> None: ...
 
 class RegisterExtensionRequest(_message.Message):
     __slots__ = ["extending", "replace_existing"]

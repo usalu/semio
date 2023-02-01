@@ -6,7 +6,7 @@ from extension.service import ExtensionService
 
 class TranslatorService(ExtensionService,TranslatorServiceServicer):
 
-    def getDescriptions(self) -> list[Translating]:
+    def _getDescriptions(self) -> list[Translating]:
         return []
 
     def translateRepresentation(self, representation:Representation, target_pose:Pose ,source_pose:Pose | None = None):

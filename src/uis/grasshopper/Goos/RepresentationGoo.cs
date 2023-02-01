@@ -6,6 +6,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using Semio.Model.V1;
@@ -20,14 +21,15 @@ namespace Semio.UI.Grasshopper.Goos
             Value = new Representation();
         }
 
-        public RepresentationGoo(Representation connection)
+        public RepresentationGoo(Representation representation)
         {
-            Value = connection;
+            Value = representation;
         }
 
         public override IGH_Goo Duplicate() => new RepresentationGoo(Value.Clone());
         public override IGH_GeometricGoo DuplicateGeometry()
         {
+            // TODO: TryToCast all Goos into geometric goos
             //return Converter.Convert(Value);
             throw new NotImplementedException();
         }
