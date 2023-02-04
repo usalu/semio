@@ -9,7 +9,9 @@ from grpc import insecure_channel
 
 from .v1.manager_pb2 import DESCRIPTOR, PrototypeRequest, ConnectElementRequest, ConnectElementResponse,RegisterExtensionRequest,RegisterExtensionResponse
 from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerServiceServicer, ManagerServiceStub
-from model import Point,Pose,Platform,Plan,Sobject,Assembly,Layout,Connection,Prototype,Element,Design
+
+from geometry import Point
+from model import Pose,Platform,Plan,Sobject,Assembly,Layout,Connection,Prototype,Element,Design
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
 from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
 

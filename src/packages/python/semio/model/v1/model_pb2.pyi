@@ -147,12 +147,12 @@ class Parameter(_message.Message):
     def __init__(self, name: _Optional[str] = ..., context: _Optional[_Iterable[_Union[Scope, _Mapping]]] = ..., value: _Optional[_Union[Value, _Mapping]] = ...) -> None: ...
 
 class Plan(_message.Message):
-    __slots__ = ["parameters", "url"]
+    __slots__ = ["parameters", "uri"]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
-    URL_FIELD_NUMBER: _ClassVar[int]
+    URI_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.RepeatedCompositeFieldContainer[Parameter]
-    url: str
-    def __init__(self, url: _Optional[str] = ..., parameters: _Optional[_Iterable[_Union[Parameter, _Mapping]]] = ...) -> None: ...
+    uri: str
+    def __init__(self, uri: _Optional[str] = ..., parameters: _Optional[_Iterable[_Union[Parameter, _Mapping]]] = ...) -> None: ...
 
 class Pose(_message.Message):
     __slots__ = ["point_of_view", "view"]

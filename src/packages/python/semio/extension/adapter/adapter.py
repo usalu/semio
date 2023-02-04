@@ -1,7 +1,8 @@
 from .v1.adapter_pb2 import Adapting
 from .v1.adapter_pb2_grpc import AdapterServiceServicer
 
-from model import Point,Plan,Link,Prototype
+from geometry import Point
+from model import Plan,Link,Prototype
 from extension.service import ExtensionService
 
 class AdapterService(ExtensionService,AdapterServiceServicer):

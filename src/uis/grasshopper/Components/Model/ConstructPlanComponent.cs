@@ -22,8 +22,9 @@ namespace Semio.UI.Grasshopper.Model
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Url", "U", "", GH_ParamAccess.item);
+            pManager.AddTextParameter("Uri", "U", "", GH_ParamAccess.item);
             pManager.AddParameter(new ParameterParam(),"Parameters", "Pr", "", GH_ParamAccess.list);
+            pManager[1].Optional = true;
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -32,15 +33,15 @@ namespace Semio.UI.Grasshopper.Model
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            string url = "";
-            if (!DA.GetData(0, ref url)) return;
+            string uri = "";
+            if (!DA.GetData(0, ref uri)) return;
 
             var parameters = new List<ParameterGoo>();
             DA.GetDataList(1, parameters);
 
             Plan plan = new Plan()
             {
-                Url = url,
+                Uri = uri,
             };
 
             plan.Parameters.AddRange(parameters.Select(x=>x.Value));

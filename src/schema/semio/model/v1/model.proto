@@ -161,8 +161,8 @@ message Parameter {
 
 // A plan for a prototype.
 message Plan {
-  // The url of the prototype definition.
-  string url = 1;
+  // The uri of the prototype definition.
+  string uri = 1;
   // Optional parameters for the prototype.
   repeated Parameter parameters = 2;
 }

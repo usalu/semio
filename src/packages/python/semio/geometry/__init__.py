@@ -1,1 +1,1 @@
-from .v1.model_pb2 import *
+from .v1.geometry_pb2 import *

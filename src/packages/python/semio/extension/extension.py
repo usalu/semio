@@ -16,7 +16,8 @@ from .transformer.v1.transformer_pb2_grpc import add_TransformerServiceServicer_
 from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR, TranslateRepresentationRequest
 from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
-from model import Point,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
+from geometry import Point
+from model import Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
 from utils import SemioServer, SemioServiceDescription, SemioProxy
 from constants import DEFAULT_MANAGER_PORT
 

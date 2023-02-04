@@ -180,11 +180,11 @@ export interface Parameter {
  */
 export interface Plan {
     /**
-     * The url of the prototype definition.
+     * The uri of the prototype definition.
      *
-     * @generated from protobuf field: string url = 1;
+     * @generated from protobuf field: string uri = 1;
      */
-    url: string;
+    uri: string;
     /**
      * Optional parameters for the prototype.
      *
@@ -1080,12 +1080,12 @@ export const Parameter = new Parameter$Type();
 class Plan$Type extends MessageType<Plan> {
     constructor() {
         super("semio.model.v1.Plan", [
-            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "uri", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "parameters", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Parameter }
         ]);
     }
     create(value?: PartialMessage<Plan>): Plan {
-        const message = { url: "", parameters: [] };
+        const message = { uri: "", parameters: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Plan>(this, message, value);
@@ -1096,8 +1096,8 @@ class Plan$Type extends MessageType<Plan> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string url */ 1:
-                    message.url = reader.string();
+                case /* string uri */ 1:
+                    message.uri = reader.string();
                     break;
                 case /* repeated semio.model.v1.Parameter parameters */ 2:
                     message.parameters.push(Parameter.internalBinaryRead(reader, reader.uint32(), options));
@@ -1114,9 +1114,9 @@ class Plan$Type extends MessageType<Plan> {
         return message;
     }
     internalBinaryWrite(message: Plan, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string url = 1; */
-        if (message.url !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.url);
+        /* string uri = 1; */
+        if (message.uri !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.uri);
         /* repeated semio.model.v1.Parameter parameters = 2; */
         for (let i = 0; i < message.parameters.length; i++)
             Parameter.internalBinaryWrite(message.parameters[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();

@@ -246,9 +246,9 @@
     "v1Plan": {
       "type": "object",
       "properties": {
-        "url": {
+        "uri": {
           "type": "string",
-          "description": "The url of the prototype definition."
+          "description": "The uri of the prototype definition."
         },
         "parameters": {
           "type": "array",
