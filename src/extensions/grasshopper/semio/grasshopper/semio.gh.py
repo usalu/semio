@@ -1,13 +1,16 @@
 import logging
 
 from tempfile import TemporaryFile
+from base64 import b64decode
 
-from semio.model import Point,PLATFORM_GRASSHOPPER,Representation,Plan,Link,Prototype
+from semio.geometry import Point
+from semio.model import ENCODING_TEXT_UFT8,PLATFORM_GRASSHOPPER,Representation,Plan,Link,Prototype
 from semio.extension import ExtensionServer
 from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
+from semio.utils import Parse
 
-from grasshopper import callGrasshopper, filterOutputParams
+from grasshopper import callGrasshopper, getOutputParam
 
 def parametersToDict(parameters):
     parametersDictionary = {}
@@ -16,6 +19,25 @@ def parametersToDict(parameters):
         parametersDictionary[parameter.name]=getattr(parameter.value,valueType)
     return parametersDictionary
 
+# def computeResponseToRepresentations(response):
+#     representationsTree = getOutputParam(response,'REPRESENTATIONS')
+#     representations = []
+#     for path,branch in representationsTree.items():
+#         for item in branch:
+#             representations.append(
+#                 Representation(
+#                     body=str.encode(item['data'],'utf-8'),
+#                     encoding=ENCODING_TEXT_UFT8))
+#     return representations
+
+def computeResponseToRepresentations(response):
+    representationsTree = getOutputParam(response,'REPRESENTATIONS')
+    representations = []
+    for path,branch in representationsTree.items():
+        for item in branch:
+            representation = Representation.FromString(b64decode(item['data']))
+            representations.append(representation)
+    return representations
 
 class GrasshopperAdapter(AdapterService):
     """An adapter for the REST Endpoint for Grasshopper of the Compute Rhino server."""
@@ -32,12 +54,12 @@ class GrasshopperAdapter(AdapterService):
         parameters = {}
         if plan.parameters:
             parameters.update(parametersToDict(plan.parameters))
-        representationsDict = filterOutputParams(callGrasshopper(plan.url, parameters, self.computeUrl, self.computeUrl),'REPRESENTATION')
-        representations = []
-        # for name, tree in representationsDict.items():
-            
-        representations = [Representation(body=b'Zzzzh',platform=PLATFORM_GRASSHOPPER)]
+        response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
+        representations = computeResponseToRepresentations(response)
         return Prototype(representations=representations)
+
+        # representations = [Representation(body=b'Zzzzh',platform=PLATFORM_GRASSHOPPER)]
+        # return Prototype(representations=representations)
 
 if __name__=="__main__":
     logging.basicConfig()

@@ -3,7 +3,8 @@ import logging
 from typing import Iterable,Tuple
 from collections import deque
 
-from semio.model import Point,Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
+from semio.geometry import Point
+from semio.model import Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
 
 from networkx import Graph,edge_bfs,draw,DiGraph

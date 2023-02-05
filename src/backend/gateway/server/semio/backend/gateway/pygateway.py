@@ -2,7 +2,8 @@ import logging
 
 from typing import Iterable
 
-from semio.model import Point,Sobject,Platform,Connection,Assembly,Layout,Representation,Prototype,Element,Design
+from semio.geometry import Point
+from semio.model import Sobject,Platform,Connection,Assembly,Layout,Representation,Prototype,Element,Design
 from semio.gateway import GatewayServer
 
 class Gateway(GatewayServer):

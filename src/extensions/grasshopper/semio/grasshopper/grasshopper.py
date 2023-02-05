@@ -137,14 +137,19 @@ def encodeModel(model):
     temp.cleanup()
     return byteModel
 
-def filterOutputParams(grasshopperReply, outputBaseName):
-    valuesDictionary = { valueReply['ParamName']:valueReply['InnerTree'] for valueReply in grasshopperReply['values']}
-    reducedOutput = {}
-    for key, value in valuesDictionary.items():
-        if key.startswith(outputBaseName):
-            reducedOutput[key]=value
-    return reducedOutput
+# def filterOutputParams(grasshopperReply, outputBaseName):
+#     valuesDictionary = { valueReply['ParamName']:valueReply['InnerTree'] for valueReply in grasshopperReply['values']}
+#     reducedOutput = {}
+#     for key, value in valuesDictionary.items():
+#         if key.startswith(outputBaseName):
+#             reducedOutput[key]=value
+#     return reducedOutput
 
+def getOutputParam(grasshopperReply, outputName):
+    valuesDictionary = { valueReply['ParamName']:valueReply['InnerTree'] for valueReply in grasshopperReply['values']}
+    if outputName in valuesDictionary:
+        return valuesDictionary[outputName]
+    raise ValueError(f"Outputname {outputName} was not in the results.")
 
 """Simplified call with dictionaries as input."""
 def callGrasshopper(path,parameters, computeUrl = "http://localhost:6500/", computeAuthToken= ""):

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Grasshopper;
 using Grasshopper.Documentation;
 using Grasshopper.Kernel;
@@ -25,7 +26,7 @@ using Speckle.Core.Api;
 using Encoding = Semio.Model.V1.Encoding;
 using Speckle.Core.Models;
 using Speckle.Core.Models.Extensions;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using RhinoGh = Objects.Converter.RhinoGh;
 
 
 namespace Semio.UI.Grasshopper.Utility
@@ -61,22 +62,24 @@ namespace Semio.UI.Grasshopper.Utility
 
         public static string ToString(GH_Structure<IGH_Goo> tree)
         {
+            if (tree.IsEmpty) return "";
             Base @base = new Base();
             @base["@semio"] = new List<Base>();
 
-            foreach (var item in tree.FlattenData())
+            foreach (var itemGoo in tree.FlattenData())
             {
-                switch (item.GetType().Name)
+                var item = ((dynamic)itemGoo).Value;
+                if (item is null) continue;
+                switch (itemGoo.GetType().Name)
                 {
                     case "GH_SpeckleBase":
-                        ((List<Base>)@base["@semio"]).Add(((dynamic)item).Value);
+                        ((List<Base>)@base["@semio"]).Add(item);
                         break;
                     default:
-                        var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
-                        converter.SetContextDocument(RhinoDoc.ActiveDoc);
-                        var speckleBase = (Base)converter.ConvertToSpeckle(((dynamic)item).Value);
-                        if (speckleBase != null) ((List<Base>)@base["@semio"]).Add(speckleBase);
-                        else throw new ArgumentException($"The type {item.GetType()} can't be converted.");
+                        var converter = new RhinoGh.ConverterRhinoGh();
+                        var speckleBase = (Base)converter.ConvertToSpeckle(item);
+                        if (speckleBase is null) throw new ArgumentException($"The type {item.GetType()} can't be converted.");
+                        ((List<Base>)@base["@semio"]).Add(speckleBase);
                         break;
                 }
             }
@@ -208,7 +211,6 @@ namespace Semio.UI.Grasshopper.Utility
                 case Platform.Speckle:
                     var @base = Operations.Deserialize(representation.Body.ToStringUtf8());
                     var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
-                    converter.SetContextDocument(RhinoDoc.ActiveDoc);
                     var gooList = new List<IGH_Goo>();
                     foreach (var atomicBase in @base.Flatten())
                     {
@@ -227,7 +229,6 @@ namespace Semio.UI.Grasshopper.Utility
         {
             var geometries = new List<IGH_Goo>();
             var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
-            converter.SetContextDocument(RhinoDoc.ActiveDoc);
             foreach (var atomicBase in ((List<object>)@base["@semio"]).Cast<Base>())
             {
                 var native = converter.ConvertToNative((Base)((dynamic)atomicBase));

@@ -80,6 +80,6 @@ namespace Semio.UI.Grasshopper.Model
             DA.SetData(0, new RepresentationGoo(representation));
             }
         public override Guid ComponentGuid=> new("F1E3DA31-99F6-4261-B17E-141ACBE3CA2A");
-        protected override Bitmap Icon => Resources.icon_construct_sobject;
+        protected override Bitmap Icon => Resources.icon_construct_representation;
     }
 }

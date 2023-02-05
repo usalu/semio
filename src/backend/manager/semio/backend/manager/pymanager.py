@@ -4,20 +4,22 @@ from typing import Iterable,Tuple
 import logging
 
 from os.path import splitext
-from semio.model import Point,Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
+
+from semio.geometry import Point
+from semio.model import Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
 
 
-def getPlatformFromElementUrl(elementUrl):
-    splitElementUrl = splitext(elementUrl)
-    fileExtension = splitElementUrl[1]
+def getPlatformFromElementUri(elementUri):
+    splitElementUri = splitext(elementUri)
+    fileExtension = splitElementUri[1]
     if fileExtension in GENERAL_EXTENSIONS:
-        fileExtension=splitext(splitElementUrl[0])[1]+fileExtension
+        fileExtension=splitext(splitElementUri[0])[1]+fileExtension
     if not fileExtension:
-        raise ValueError(f'The element type with url {elementUrl} can\'t determine the type. Use another second level type extension to tell me what platform the element belongs to e.g. ELEMENT.cadquery.py for indicating that the file is a cadquery file.')
+        raise ValueError(f'The element type with uri {elementUri} can\'t determine the type. Rename the file with the extension defined by semio for this platform.')
     if not fileExtension in PLATFORM_BYEXTENSION:
         raise ValueError(f'The element type with ending .{fileExtension} is not supported by me (yet).')
     platform = PLATFORM_BYEXTENSION[fileExtension]
@@ -52,7 +54,7 @@ class Manager(ManagerServer):
     # Services
 
     def requestPrototype(self, plan: Plan, target_platform: Platform | None = None) -> Prototype:
-        adapterAddress =self.getAdapterAddress(getPlatformFromElementUrl(plan.url))
+        adapterAddress =self.getAdapterAddress(getPlatformFromElementUri(plan.uri))
         extensionProxy = self._getExtensionProxy(adapterAddress)
         # TODO Implement target platform logic over checking of response, converters, etc
         return extensionProxy.RequestPrototype(plan)

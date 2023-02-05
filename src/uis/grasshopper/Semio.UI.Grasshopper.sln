@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.UI.Grasshopper", "Sem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio", "..\..\packages\csharp\net48\Semio\Semio.csproj", "{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterRhino7", "..\..\thirdparty\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhino7\ConverterRhino7.csproj", "{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConverterRhinoGhShared", "..\..\thirdparty\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhinoGhShared\ConverterRhinoGhShared.shproj", "{B74CB8C1-187B-46A6-B20B-92B8C129F3EE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "..\..\thirdparty\speckle-sharp\Core\Core\Core.csproj", "{4625F875-EC66-4F2A-860E-0807F4050A1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +27,23 @@ Global
 		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF2155EC-4293-4DA3-B7F4-2C4867BE268E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4387E496-9235-4DCD-BDFC-344F517D8356}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\thirdparty\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhinoGhShared\ConverterRhinoGhShared.projitems*{2ee1a2a0-694d-4f5a-9166-e2c6c5e16659}*SharedItemsImports = 5
+		..\..\thirdparty\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhinoGhShared\ConverterRhinoGhShared.projitems*{b74cb8c1-187b-46a6-b20b-92b8c129f3ee}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
