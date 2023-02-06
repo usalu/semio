@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterRhino7", "..\..\th
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConverterRhinoGhShared", "..\..\thirdparty\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhinoGhShared\ConverterRhinoGhShared.shproj", "{B74CB8C1-187B-46A6-B20B-92B8C129F3EE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "..\..\thirdparty\speckle-sharp\Core\Core\Core.csproj", "{4625F875-EC66-4F2A-860E-0807F4050A1E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,10 +29,6 @@ Global
 		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EE1A2A0-694D-4F5A-9166-E2C6C5E16659}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4625F875-EC66-4F2A-860E-0807F4050A1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

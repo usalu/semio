@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Google.Protobuf.Reflection;
 using Grasshopper.Kernel;
-using Rhino.Geometry;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 
-namespace Semio.UI.Grasshopper
+namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructLayoutComponent : ConstructComponent
     {

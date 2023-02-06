@@ -277,4 +277,13 @@
   <data name="icon_show_design" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\resources\icons\components\show\design\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="icon_serialize" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\resources\icons\components\serialize\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_deserialize" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\resources\icons\components\deserialize\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_prepare" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\resources\icons\components\prepare\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

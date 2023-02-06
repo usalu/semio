@@ -14,8 +14,6 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Element } from "../../model/v1/model";
-import { Prototype } from "../../model/v1/model";
-import { Platform } from "../../model/v1/model";
 import { Connection } from "../../model/v1/model";
 import { Sobject } from "../../model/v1/model";
 import { Assembly } from "../../model/v1/model";
@@ -44,21 +42,13 @@ export interface AssemblyToElementsRequest {
      * @generated from protobuf field: repeated semio.model.v1.Connection connections = 3;
      */
     connections: Connection[];
-    /**
-     * @generated from protobuf field: semio.model.v1.Platform target_platform = 4;
-     */
-    targetPlatform: Platform;
 }
 /**
  * @generated from protobuf message semio.assembler.v1.AssemblyToElementsResponse
  */
 export interface AssemblyToElementsResponse {
     /**
-     * @generated from protobuf field: repeated semio.model.v1.Prototype prototypes = 1;
-     */
-    prototypes: Prototype[];
-    /**
-     * @generated from protobuf field: repeated semio.model.v1.Element elements = 2;
+     * @generated from protobuf field: repeated semio.model.v1.Element elements = 1;
      */
     elements: Element[];
 }
@@ -115,12 +105,11 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         super("semio.assembler.v1.AssemblyToElementsRequest", [
             { no: 1, name: "assembly", kind: "message", T: () => Assembly },
             { no: 2, name: "sobjects", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Sobject },
-            { no: 3, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Connection },
-            { no: 4, name: "target_platform", kind: "enum", T: () => ["semio.model.v1.Platform", Platform, "PLATFORM_"] }
+            { no: 3, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Connection }
         ]);
     }
     create(value?: PartialMessage<AssemblyToElementsRequest>): AssemblyToElementsRequest {
-        const message = { sobjects: [], connections: [], targetPlatform: 0 };
+        const message = { sobjects: [], connections: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AssemblyToElementsRequest>(this, message, value);
@@ -139,9 +128,6 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
                     break;
                 case /* repeated semio.model.v1.Connection connections */ 3:
                     message.connections.push(Connection.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* semio.model.v1.Platform target_platform */ 4:
-                    message.targetPlatform = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -164,9 +150,6 @@ class AssemblyToElementsRequest$Type extends MessageType<AssemblyToElementsReque
         /* repeated semio.model.v1.Connection connections = 3; */
         for (let i = 0; i < message.connections.length; i++)
             Connection.internalBinaryWrite(message.connections[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* semio.model.v1.Platform target_platform = 4; */
-        if (message.targetPlatform !== 0)
-            writer.tag(4, WireType.Varint).int32(message.targetPlatform);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -181,12 +164,11 @@ export const AssemblyToElementsRequest = new AssemblyToElementsRequest$Type();
 class AssemblyToElementsResponse$Type extends MessageType<AssemblyToElementsResponse> {
     constructor() {
         super("semio.assembler.v1.AssemblyToElementsResponse", [
-            { no: 1, name: "prototypes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Prototype },
-            { no: 2, name: "elements", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Element }
+            { no: 1, name: "elements", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Element }
         ]);
     }
     create(value?: PartialMessage<AssemblyToElementsResponse>): AssemblyToElementsResponse {
-        const message = { prototypes: [], elements: [] };
+        const message = { elements: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<AssemblyToElementsResponse>(this, message, value);
@@ -197,10 +179,7 @@ class AssemblyToElementsResponse$Type extends MessageType<AssemblyToElementsResp
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated semio.model.v1.Prototype prototypes */ 1:
-                    message.prototypes.push(Prototype.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* repeated semio.model.v1.Element elements */ 2:
+                case /* repeated semio.model.v1.Element elements */ 1:
                     message.elements.push(Element.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -215,12 +194,9 @@ class AssemblyToElementsResponse$Type extends MessageType<AssemblyToElementsResp
         return message;
     }
     internalBinaryWrite(message: AssemblyToElementsResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated semio.model.v1.Prototype prototypes = 1; */
-        for (let i = 0; i < message.prototypes.length; i++)
-            Prototype.internalBinaryWrite(message.prototypes[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated semio.model.v1.Element elements = 2; */
+        /* repeated semio.model.v1.Element elements = 1; */
         for (let i = 0; i < message.elements.length; i++)
-            Element.internalBinaryWrite(message.elements[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            Element.internalBinaryWrite(message.elements[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

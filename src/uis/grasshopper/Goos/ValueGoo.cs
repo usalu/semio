@@ -11,7 +11,6 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Model;
 using Semio.UI.Grasshopper.Utility;
 using Point = Rhino.Geometry.Point;
 

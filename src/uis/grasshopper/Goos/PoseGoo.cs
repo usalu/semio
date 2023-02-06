@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GH_IO.Serialization;
+﻿using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Utility;
-using Point = Rhino.Geometry.Point;
 
-namespace Semio.UI.Grasshopper.Model
+namespace Semio.UI.Grasshopper.Goos
 {
     public class PoseGoo : SemioGoo<Plane>
     {

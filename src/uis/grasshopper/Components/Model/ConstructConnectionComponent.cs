@@ -1,20 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using Google.Protobuf.Collections;
-using Google.Protobuf.Reflection;
 using Grasshopper.Kernel;
-using Grasshopper.Kernel.Types;
-using Rhino.Geometry;
-using Semio.Assembler.V1;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 
-namespace Semio.UI.Grasshopper.Model
+namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructConnectionComponent : ConstructComponent
     {

@@ -4,8 +4,9 @@ from typing import Iterable,Tuple
 from collections import deque
 
 from semio.geometry import Point
-from semio.model import Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
+from semio.model import Pose,Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
+from semio.utils import hashObject, subtract
 
 from networkx import Graph,edge_bfs,draw,DiGraph
 from matplotlib.pyplot import plot
@@ -24,6 +25,19 @@ def visualize_assemblies(nodes: list[str], assemblies: list[Assembly]):
         for child_assembly in assembly.parts:
             DG.add_edge(assembly.sobject_id, child_assembly.sobject_id)
     visualize_graph(DG)
+
+def findSobjectById(sobjects:Iterable[Sobject],id:str)->Sobject:
+    return next(sobject for sobject in sobjects if sobject.id==id)
+
+def findConnection(connected_sobject: Sobject, connecting_sobject: Sobject, connections: Iterable[Connection])->Connection:
+    return next(connection for connection in connections if (
+        (connection.connected==connected_sobject.id) and (connection.connecting==connecting_sobject.id)
+        or(connection.connected==connecting_sobject.id) and (connection.connecting==connected_sobject.id)))
+
+def getElement(sobject:Sobject, pose:Pose | None = None)->Element:
+    if not pose:
+        pose = sobject.pose
+    return Element(sobject_id=sobject.id,pose=pose,prototype_plan_hash=hashObject(sobject.plan))
 
 class Assembler(AssemblerServer):
 
@@ -66,13 +80,25 @@ class Assembler(AssemblerServer):
                 assemblies.append(G.nodes[sobject_id]["assembly"])
         return assemblies
 
-    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None, target_platform:Platform = PLATFORM_SEMIO)->Tuple[Iterable[Prototype],Iterable[Element]]:
-        prototypes = []
-        for sobject in sobjects:
-            prototypes.append(self.RequestPrototype(sobject.plan,target_platform))
-        elements = []
-        #elements = getElementsFromAssembly(request.layout.sobjects,request.layout.connections,assembly)
-        return (prototypes,elements)
+    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
+        sobject = findSobjectById(sobjects,assembly.sobject_id)
+        elements = [getElement(sobject)]
+        if assembly.parts:
+            for part in assembly.parts:
+                elements += self.partToElements(sobject,part,sobjects,connections)
+        return elements
+
+    def partToElements(self, parent:Sobject,part:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
+        sobject = findSobjectById(sobjects,part.sobject_id)
+        pose,point = self.ConnectElement(parent,sobject,findConnection(parent,sobject,connections))
+        discrepancy = subtract(sobject.pose.point_of_view,pose.point_of_view)
+        # TODO Create copy of all sobjects and adjust their point of view according the discrepancy.
+        # movedSobjects = [ Sobject(pose = s.pose) sobject.pose=]
+        elements = [getElement(sobject,pose)]
+        if part.parts:
+            for part in part.parts:
+                elements += self.partToElements(sobject,part,sobjects,connections)
+        return elements
 
 if __name__ == '__main__':
     logging.basicConfig()

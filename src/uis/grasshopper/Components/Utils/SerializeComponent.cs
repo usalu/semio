@@ -1,25 +1,11 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using Google.Protobuf;
-using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Types;
-using Rhino;
-using Rhino.FileIO;
-using Rhino.Geometry;
-using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
-using Semio.UI.Grasshopper.Goos;
-using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 using Semio.UI.Grasshopper.Utility;
-using Speckle.Core.Api;
-using Speckle.Core.Models;
 
-namespace Semio.UI.Grasshopper.Utils
+namespace Semio.UI.Grasshopper.Components.Utils
 {
     public class SerializeComponent : GH_Component
     {
@@ -47,7 +33,7 @@ namespace Semio.UI.Grasshopper.Utils
             //dynamic input = ((dynamic)obj.Value).Value;
             DA.SetData(0, Converter.ToString(tree));
         }
-        protected override System.Drawing.Bitmap Icon => Resources.icon_show_design;
+        protected override System.Drawing.Bitmap Icon => Resources.icon_serialize;
 
         public override Guid ComponentGuid => new ("537857BE-97F2-4A22-BBED-B0C230BA4D8A");
 

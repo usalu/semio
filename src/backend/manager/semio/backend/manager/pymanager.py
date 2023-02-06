@@ -60,15 +60,32 @@ class Manager(ManagerServer):
         return extensionProxy.RequestPrototype(plan)
     
     def connectElement(self, connected_sobject: Sobject, connecting_sobject: Sobject, connection: Connection) -> Tuple[Pose, Point]:
-        raise NotImplementedError()
-    # def requestElement(self, request: PrototypeRequest, context):
-    #     extensionAddress = self.getAdapterAddress(getPlatformUrlFromElementUrl(request.sobject.url))
-    #     extensionProxy = self.getExtensionProxy(extensionAddress)
-    #     element = extensionProxy.RequestPrototype(request.sobject)
-    #     return element
+        adapterAddressConnected = self.getAdapterAddress(getPlatformFromElementUri(connected_sobject.plan.uri))
+        extensionProxyConnected = self._getExtensionProxy(adapterAddressConnected)
+        adapterAddressConnecting = self.getAdapterAddress(getPlatformFromElementUri(connecting_sobject.plan.uri))
+        extensionProxyConnecting = self._getExtensionProxy(adapterAddressConnecting)
+        
+        # TODO Migrate all functions to behaviour.py and import appropriate functions here.
+        # connectingPointOfViewFromConnected = getLocalPointOfView(connected_sobject.pose,self.connecting.pose.pointOfView)
 
-    # def connectElement(self, request, context):
-    #     raise NotImplementedError('Method not implemented!')
+        connectedPointFromConnected = extensionProxyConnected.ConnectElement(connected_sobject.plan,connection.connecting.link)
+    
+
+
+        connectedPointFromWorld =  self.connected.pose.getWorldPointOfView(connectedPointFromConnected)
+        
+        connectedPointOfViewFromConnecting = self.connecting.pose.getLocalPointOfView(self.connected.pose.pointOfView,considerPointOfView=False)
+        connectingPointFromConnecting = self.connecting.meetingPoint(connectedPointOfViewFromConnecting,self.biasConnecting)
+
+        #This is the point that will be connecting from the connecting but only relative from the connecting.
+        #This is because the point of view of the connecting is irrelevant after the meeting points have been exchanged.
+        relativeConnectingPointFromWorld = self.connecting.pose.getWorldPointOfView(connectingPointFromConnecting,considerPointOfView=False)
+
+        connectingTargetPointOfViewFromWorld = connectedPointFromWorld-relativeConnectingPointFromWorld
+
+
+        return (Pose(point_of_view=connectingTargetPointOfViewFromWorld,view=connecting_sobject.pose),connectedPointFromWorld)
+
 
 
 if __name__ == '__main__':

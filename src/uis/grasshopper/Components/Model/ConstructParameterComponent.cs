@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Xml.Linq;
 using Grasshopper.Kernel;
-using Rhino.Geometry;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 
-namespace Semio.UI.Grasshopper.Model
+namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructParameterComponent : ConstructComponent
     {

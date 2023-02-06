@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Grasshopper.Kernel;
 using Semio.Model.V1;
 using Semio.UI.Grasshopper.Goos;
-using Semio.UI.Grasshopper.Model;
 using Semio.UI.Grasshopper.Properties;
 
 namespace Semio.UI.Grasshopper.Params

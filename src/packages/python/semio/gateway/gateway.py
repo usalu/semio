@@ -7,15 +7,16 @@ from grpc import insecure_channel
 
 from .v1.gateway_pb2 import DESCRIPTOR,LayoutDesignRequest
 from .v1.gateway_pb2_grpc import add_GatewayServiceServicer_to_server, GatewayServiceServicer, GatewayServiceStub
-from model import Platform,Sobject,Assembly,Connection,Layout,Prototype,Element,Design,PLATFORM_SEMIO
+from model import Platform,Plan,Sobject,Assembly,Connection,Layout,Prototype,Element,Design,PLATFORM_SEMIO
 from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
-from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT
+from constants import DEFAULT_GATEWAY_PORT, DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
 
 if TYPE_CHECKING:
     from assembler import AssemblerProxy
 
 class GatewayServer(SemioServer, SemioService, ABC):
     assemblerAddress: str = "localhost:"+str(DEFAULT_ASSEMBLER_PORT)
+    managerAddress: str = "localhost:"+str(DEFAULT_MANAGER_PORT)
 
     def __init__(self,port = DEFAULT_GATEWAY_PORT, name = "Python Semio Gateway Server", **kw):
         super().__init__(port=port,name=name, **kw)
@@ -28,6 +29,12 @@ class GatewayServer(SemioServer, SemioService, ABC):
             from assembler import AssemblerProxy
             self.assemblerProxy = AssemblerProxy(self.assemblerAddress)
         return self.assemblerProxy
+
+    def _getManagerProxy(self):#->ManagerProxy:
+        if not hasattr(self,'managerProxy'):
+            from manager import ManagerProxy
+            self.managerProxy = ManagerProxy(self.managerAddress)
+        return self.managerProxy
 
     @abstractmethod
     def layoutDesign(self, layout:Layout,target_platform:Platform)->Design:
@@ -44,10 +51,14 @@ class GatewayServer(SemioServer, SemioService, ABC):
     def AssemblyToElements(self,
         assembly:Assembly,
         sobjects: Iterable[Sobject],
-        connections: Iterable[Connection] | None = None,
-        target_platform:Platform = PLATFORM_SEMIO
+        connections: Iterable[Connection] | None = None
         )->Tuple[Iterable[Prototype],Iterable[Element]]:
-        return self._getAssemblerProxy().AssemblyToElements(assembly,sobjects,connections,target_platform)
+        return self._getAssemblerProxy().AssemblyToElements(assembly,sobjects,connections)
+
+    def RequestPrototype(self, 
+        plan:Plan,
+        target_platform:Platform = PLATFORM_SEMIO)->Prototype:
+        return self._getManagerProxy().RequestPrototype(plan,target_platform)
     
 class GatewayProxy(SemioProxy):
     def __init__(self,address ='localhost:'+str(DEFAULT_GATEWAY_PORT), **kw):

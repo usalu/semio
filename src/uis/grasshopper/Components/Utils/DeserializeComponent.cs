@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Google.Protobuf;
-using Grasshopper;
 using Grasshopper.Kernel;
-using Grasshopper.Kernel.Types;
-using Rhino.FileIO;
-using Rhino.Geometry;
 using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 using Semio.UI.Grasshopper.Utility;
 using Speckle.Core.Api;
-using Speckle.Core.Models;
 
-namespace Semio.UI.Grasshopper.Utils
+namespace Semio.UI.Grasshopper.Components.Utils
 {
     public class DeserializeComponent : GH_Component
     {
@@ -59,7 +50,7 @@ namespace Semio.UI.Grasshopper.Utils
             }
             DA.SetDataList(0, outputs);
         }
-        protected override System.Drawing.Bitmap Icon => Resources.icon_show_design;
+        protected override System.Drawing.Bitmap Icon => Resources.icon_deserialize;
 
         public override Guid ComponentGuid => new ("D4C9B4AD-BE63-448A-8C80-501CC8B98C60");
 

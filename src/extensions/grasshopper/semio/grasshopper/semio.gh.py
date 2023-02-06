@@ -4,11 +4,11 @@ from tempfile import TemporaryFile
 from base64 import b64decode
 
 from semio.geometry import Point
-from semio.model import ENCODING_TEXT_UFT8,PLATFORM_GRASSHOPPER,Representation,Plan,Link,Prototype
+from semio.model import ENCODING_TEXT_UFT8,PLATFORM_GRASSHOPPER,REPRESENTATIONPROTOCOL_NONE,REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Representation,Plan,Link,Prototype
 from semio.extension import ExtensionServer
 from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
-from semio.utils import Parse
+from semio.utils import hashObject
 
 from grasshopper import callGrasshopper, getOutputParam
 
@@ -48,7 +48,16 @@ class GrasshopperAdapter(AdapterService):
         return [Adapting(platform=PLATFORM_GRASSHOPPER)]
     
     def requestConnectionPoint(self, connected_plan: Plan, connecting_link: Link) -> Point:
-        return Point(x=-5)
+        parameters = {}
+        if connected_plan.parameters:
+            parameters.update(parametersToDict(connected_plan.parameters))
+        match connecting_link.representationProtocol:
+            case 
+        if connecting_link.bias_parameters:
+
+        response = callGrasshopper(connected_plan.uri, parameters, self.computeUrl, self.computeUrl)
+        representations = computeResponseToRepresentations(response)
+
 
     def requestPrototype(self, plan: Plan) -> Prototype:
         parameters = {}
@@ -56,7 +65,7 @@ class GrasshopperAdapter(AdapterService):
             parameters.update(parametersToDict(plan.parameters))
         response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
         representations = computeResponseToRepresentations(response)
-        return Prototype(representations=representations)
+        return Prototype(representations=representations,plan_hash=hashObject(plan))
 
         # representations = [Representation(body=b'Zzzzh',platform=PLATFORM_GRASSHOPPER)]
         # return Prototype(representations=representations)

@@ -18,15 +18,16 @@ using SemioQuaternion = Semio.Geometry.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Objects.Converter.Rhino;
 using Rhino;
 using Rhino.FileIO;
 using Rhino.Runtime;
 using Semio.UI.Grasshopper.Goos;
 using Speckle.Core.Api;
+//using Speckle.Core.Api.Operations;
 using Encoding = Semio.Model.V1.Encoding;
 using Speckle.Core.Models;
 using Speckle.Core.Models.Extensions;
-using RhinoGh = Objects.Converter.RhinoGh;
 
 
 namespace Semio.UI.Grasshopper.Utility
@@ -76,7 +77,7 @@ namespace Semio.UI.Grasshopper.Utility
                         ((List<Base>)@base["@semio"]).Add(item);
                         break;
                     default:
-                        var converter = new RhinoGh.ConverterRhinoGh();
+                        var converter = new ConverterRhinoGh();
                         var speckleBase = (Base)converter.ConvertToSpeckle(item);
                         if (speckleBase is null) throw new ArgumentException($"The type {item.GetType()} can't be converted.");
                         ((List<Base>)@base["@semio"]).Add(speckleBase);
@@ -210,7 +211,7 @@ namespace Semio.UI.Grasshopper.Utility
                     break;
                 case Platform.Speckle:
                     var @base = Operations.Deserialize(representation.Body.ToStringUtf8());
-                    var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
+                    var converter = new ConverterRhinoGh();
                     var gooList = new List<IGH_Goo>();
                     foreach (var atomicBase in @base.Flatten())
                     {
@@ -228,7 +229,7 @@ namespace Semio.UI.Grasshopper.Utility
         public static IEnumerable<IGH_Goo> Convert(Base @base)
         {
             var geometries = new List<IGH_Goo>();
-            var converter = new Objects.Converter.RhinoGh.ConverterRhinoGh();
+            var converter = new ConverterRhinoGh();
             foreach (var atomicBase in ((List<object>)@base["@semio"]).Cast<Base>())
             {
                 var native = converter.ConvertToNative((Base)((dynamic)atomicBase));

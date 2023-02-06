@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-
 using Grasshopper.Kernel;
-using Rhino.Geometry;
-using Semio.Model.V1;
-using Semio.UI.Grasshopper.Components.Model;
 using Semio.UI.Grasshopper.Goos;
 using Semio.UI.Grasshopper.Params;
 using Semio.UI.Grasshopper.Properties;
 using Semio.UI.Grasshopper.Utility;
 
-namespace Semio.UI.Grasshopper.Model
+namespace Semio.UI.Grasshopper.Components.Model
 {
     public class DeconstructRepresentationComponent : DeconstructComponent
     {

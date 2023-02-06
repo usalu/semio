@@ -45,12 +45,12 @@ class AssemblerServer(SemioServer, SemioService, ABC):
         return LayoutToAssembliesResponse(assemblies = self.layoutToAssemblies(request))
 
     @abstractmethod
-    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None, target_platform:Platform = PLATFORM_SEMIO)->Tuple[Iterable[Prototype],Iterable[Element]]:
+    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
         pass
 
     def AssemblyToElements(self, request, context):
-        prototypes, elements = self.assemblyToElements(request.assembly,request.sobjects,request.connections,request.target_platform)
-        return AssemblyToElementsResponse(prototypes=prototypes,elements=elements)
+        elements = self.assemblyToElements(request.assembly,request.sobjects,request.connections)
+        return AssemblyToElementsResponse(elements=elements)
 
     # Proxy definitions
 
@@ -76,14 +76,12 @@ class AssemblerProxy(SemioProxy):
     def AssemblyToElements(self,
         assembly:Assembly,
         sobjects: Iterable[Sobject],
-        connections: Iterable[Connection] | None = None,
-        target_platform:Platform = PLATFORM_SEMIO
+        connections: Iterable[Connection] | None = None
         )->Tuple[Iterable[Prototype],Iterable[Element]]:
         assemblyToElementsResponse = self._stub.AssemblyToElements(
             request=AssemblyToElementsRequest(
                 assembly=assembly,
                 sobjects=sobjects,
-                connections=connections,
-                target_platform=target_platform
+                connections=connections
             ))
-        return (assemblyToElementsResponse.prototypes,assemblyToElementsResponse.elements)
+        return assemblyToElementsResponse.elements
