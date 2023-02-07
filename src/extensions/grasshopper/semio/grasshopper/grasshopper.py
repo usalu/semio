@@ -49,20 +49,12 @@ def convertToTrees(parameters):
         trees.append(tree)
     return trees
 
-def parseSingleResults(valuesReply):
-    results = {}
-    log = []
-    for valueReply in valuesReply['values']:
-        tree = valueReply['InnerTree']
-        if len(tree)!=1:
-            log.append("Tree did not have exactly one 1 branch" +valueReply)
-            continue
-        value =list(tree.values())[0]
-        if len(value)!=1:
-            log.append("Branch did not have exactly one 1 value")
-        results[valueReply['ParamName']]=decode(value)
-    return (results,log)
-
+def parseSingleItemTree(tree):
+    assert len(tree)==1
+    values =list(tree.values())[0]
+    assert len(values)==1
+    result=decode(values[0])
+    return result
 
 decodeDict= {
     "Rhino.Geometry.Point3d": DecodeToPoint3d,

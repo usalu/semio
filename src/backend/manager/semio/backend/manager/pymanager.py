@@ -6,13 +6,13 @@ import logging
 from os.path import splitext
 
 from semio.geometry import Point
-from semio.model import Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
+from semio.model import REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
 
-from behaviour import getLocalPointOfView, getWorldPointOfView
+from semio.utils import getLocalPointOfView, getWorldPointOfView, subtract
 
 def getPlatformFromElementUri(elementUri):
     splitElementUri = splitext(elementUri)
@@ -65,26 +65,37 @@ class Manager(ManagerServer):
         extensionProxyConnected = self._getExtensionProxy(adapterAddressConnected)
         adapterAddressConnecting = self.getAdapterAddress(getPlatformFromElementUri(connecting_sobject.plan.uri))
         extensionProxyConnecting = self._getExtensionProxy(adapterAddressConnecting)
+      
         
-        # TODO Migrate all functions to behaviour.py and import appropriate functions here.
-        # connectingPointOfViewFromConnected = getLocalPointOfView(connected_sobject.pose,self.connecting.pose.pointOfView)
+        protocol = connection.connected.link.representationProtocol
 
-        connectingPoseFromConnected, connectedPointFromConnected = extensionProxyConnected.ConnectElement(connected_sobject.plan,connection.connecting.link)
-        connectedPointFromWorld =  getWorldPointOfView(connectingPoseFromConnected,connectedPointFromConnected)
+        if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
+            # Representation is the point of view from the connecting from the pose of the connected.
+            representationConnecting = getLocalPointOfView(connected_sobject.pose,connecting_sobject.pose.point_of_view)
+        elif protocol == REPRESENTATIONPROTOCOL_FULL:
+            # TODO Implement
+            #representationConnecting = 
+            raise NotImplementedError()
+        else:
+            representationConnecting = None
+    
+        connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject.plan,connection.connected.link,representationConnecting)
+        connectionPointFromWorld = getWorldPointOfView(connected_sobject.pose,connectionPointFromConnected)
         
-        connectedPointOfViewFromConnecting = self.connecting.pose.getLocalPointOfView(self.connected.pose.pointOfView,considerPointOfView=False)
-        connectingPointFromConnecting = self.connecting.meetingPoint(connectedPointOfViewFromConnecting,self.biasConnecting)
+        if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
+            # Representation is the point of view from the connecting from the pose of the connected.
+            representationConnected = getLocalPointOfView(connected_sobject.pose,connecting_sobject.pose.point_of_view)
+        elif protocol == REPRESENTATIONPROTOCOL_FULL:
+            # TODO Implement
+            #representationConnected = 
+            raise NotImplementedError()
+        else:
+            representationConnected = None
+        connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject.plan,connection.connecting.link,representationConnected)
+        connectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject.pose,connectionPointFromConnecting)
 
-        #This is the point that will be connecting from the connecting but only relative from the connecting.
-        #This is because the point of view of the connecting is irrelevant after the meeting points have been exchanged.
-        relativeConnectingPointFromWorld = self.connecting.pose.getWorldPointOfView(connectingPointFromConnecting,considerPointOfView=False)
-
-        connectingTargetPointOfViewFromWorld = connectedPointFromWorld-relativeConnectingPointFromWorld
-
-
-        return (Pose(point_of_view=connectingTargetPointOfViewFromWorld,view=connecting_sobject.pose),connectedPointFromWorld)
-
-
+        connectingTargetPointOfView = subtract(connectionPointFromWorld,connectionPointFromConnectedFromWorld)
+        return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject.pose.view),connectionPointFromWorld)
 
 if __name__ == '__main__':
     logging.basicConfig()

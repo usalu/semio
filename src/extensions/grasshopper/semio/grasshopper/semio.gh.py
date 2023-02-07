@@ -11,7 +11,7 @@ from semio.constants import PLATFORMS, GRASSHOPPER
 from semio.utils import hashObject
 
 from rhino import Rhino3dmTranslator
-from grasshopper import callGrasshopper, getOutputParam
+from grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
 
 def parametersToDict(parameters):
     parametersDictionary = {}
@@ -41,17 +41,21 @@ class GrasshopperAdapter(AdapterService):
         parameters = {}
         if plan.parameters:
             parameters.update(parametersToDict(plan.parameters))
-        # match link.representationProtocol:
 
-        #     case REPRESENTATIONPROTOCOL_SIMPLE:
-        #         parameters['CONNECTION:CONNECTING']=RhinoPoint(link)
+        protocol = link.representationProtocol
+        if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
+            parameters['CONNECTION:CONNECTING']=Rhino3dmTranslator.translate(representation)
+        elif protocol == REPRESENTATIONPROTOCOL_FULL:
+            # TODO Implement
+            #representationConnected = 
+            raise NotImplementedError()
 
         if link.bias_parameters:
             parameters.update({'CONNECTION:'+name:key for name,key in parametersToDict(plan.parameters).items()})
         if len(link.ports)>0:
             parameters['CONNECTION:PORTS']= link.ports
         response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
-        connectionPoint = getOutputParam(response,'CONNECTION:POINT')
+        connectionPoint = parseSingleItemTree(getOutputParam(response,'CONNECTION:POINT'))
         return Rhino3dmTranslator.translate(connectionPoint)
 
     def requestPrototype(self, plan: Plan) -> Prototype:

@@ -59,14 +59,15 @@ namespace Semio.UI.Grasshopper.Components.Utils
 
             foreach (var element in design.Value.Elements)
             {
+                var transform = Transform.PlaneToPlane(Plane.WorldXY, Converter.Convert(element.Pose));
                 try
                 {
-                    var elementGeometries = prototypeGeometry[element.PrototypePlanHash]
-                        .Select(g => g.Duplicate());
-                    foreach (var elementGeometry in elementGeometries)
-                        elementGeometry.Transform(
-                            Transform.PlaneToPlane(Plane.WorldXY, Converter.Convert(element.Pose)));
-                    geometries.AddRange(elementGeometries);
+                    foreach (var elementGeometry in prototypeGeometry[element.PrototypePlanHash])
+                    {
+                        var duplicate = elementGeometry.Duplicate();
+                        var result = duplicate.Transform(transform);
+                        geometries.Add(duplicate);
+                    }
                 }
                 catch (Exception e)
                 {

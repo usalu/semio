@@ -6,7 +6,7 @@ from collections import deque
 from semio.geometry import Point
 from semio.model import Pose,Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
-from semio.utils import hashObject, subtract, adjustPointOfView
+from semio.utils import hashObject, subtract, adjustPointOfView,add
 
 from networkx import Graph,edge_bfs,draw,DiGraph
 from matplotlib.pyplot import plot
@@ -31,13 +31,16 @@ def findSobjectById(sobjects:Iterable[Sobject],id:str)->Sobject:
 
 def findConnection(connected_sobject: Sobject, connecting_sobject: Sobject, connections: Iterable[Connection])->Connection:
     return next(connection for connection in connections if (
-        (connection.connected==connected_sobject.id) and (connection.connecting==connecting_sobject.id)
-        or(connection.connected==connecting_sobject.id) and (connection.connecting==connected_sobject.id)))
+        (connection.connected.sobject_id==connected_sobject.id) and (connection.connecting.sobject_id==connecting_sobject.id)
+        or(connection.connected.sobject_id==connecting_sobject.id) and (connection.connecting.sobject_id==connected_sobject.id)))
 
 def getElement(sobject:Sobject, pointOfView:Point | None = None)->Element:
-    if pointOfView:
-        sobject = adjustPointOfView(sobject,pointOfView)
-    return Element(sobject_id=sobject.id,pose=sobject.pose,prototype_plan_hash=hashObject(sobject.plan))
+    if not pointOfView:
+        pointOfView = sobject.pose.point_of_view
+    return Element(
+        sobject_id=sobject.id,
+        pose=Pose(point_of_view=pointOfView,view=sobject.pose.view),
+        prototype_plan_hash=hashObject(sobject.plan))
 
 class Assembler(AssemblerServer):
 
@@ -90,12 +93,13 @@ class Assembler(AssemblerServer):
 
     def partToElements(self,origin:Point, parent:Sobject,part:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
         sobject = findSobjectById(sobjects,part.sobject_id)
-        pose,point = self.ConnectElement(parent,sobject,findConnection(parent,sobject,connections))
-        discrepancy = subtract(sobject.pose.point_of_view,pose.point_of_view)
-        elements = [getElement(sobject,pose)]
+        connection = findConnection(parent,sobject,connections)
+        pose,point = self.ConnectElement(parent,sobject,connection)
+        newOrigin = add(origin,pose.point_of_view)
+        elements = [getElement(sobject,newOrigin)]
         if part.parts:
             for part in part.parts:
-                elements += self.partToElements(sobject,part,sobjects,connections)
+                elements += self.partToElements(newOrigin,sobject,part,sobjects,connections)
         return elements
 
 if __name__ == '__main__':
