@@ -86,14 +86,14 @@ class ExtensionProxy(SemioProxy):
         return self._adapterStub.RequestPrototype(plan)
 
     def RequestConnectionPoint(self, plan:Plan, link:Link, representation: None | Point | Representation  = None)-> Point:
-        request = ConnectionPointRequest(plan=plan,link=link)
         representationType = link.representationProtocol
         if representationType == REPRESENTATIONPROTOCOL_SIMPLE:
-            request.simple_representation = representation
+            connectionPointRequest = ConnectionPointRequest(plan=plan,link=link,simple_representation=representation)
         elif representationType == REPRESENTATIONPROTOCOL_FULL:
-            request.full_representation = representation
-           
-        return self._adapterStub.RequestConnectionPoint(request)
+            connectionPointRequest = ConnectionPointRequest(plan=plan,link=link,full_representation=representation)
+        else:
+            connectionPointRequest = ConnectionPointRequest(plan=plan,link=link)
+        return self._adapterStub.RequestConnectionPoint(connectionPointRequest)
 
     def ConvertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:
         return self._converterStub.ConvertRepresentation(

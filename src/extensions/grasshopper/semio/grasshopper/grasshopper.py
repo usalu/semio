@@ -36,11 +36,11 @@ def convertToTrees(parameters):
         branches = parameters[kw]
         tree = gh.DataTree(kw)
         #check if branches is just item
-        if type(branches) != list:
+        if not type(branches) is list:
             tree.Append([0], [prepareParameter(branches)])
         else:
             #check if branches is list
-            if type(branches[0]) != list:
+            if not type(branches[0]) is list:
                 tree.Append([0], [prepareParameter(item) for item in branches])
             else:
                 #branches must be a "real" tree with many branches

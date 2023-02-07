@@ -71,8 +71,6 @@ namespace Semio.UI.Grasshopper.Components.Utils
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
                 }
             }
 

@@ -66,9 +66,7 @@ class Manager(ManagerServer):
         adapterAddressConnecting = self.getAdapterAddress(getPlatformFromElementUri(connecting_sobject.plan.uri))
         extensionProxyConnecting = self._getExtensionProxy(adapterAddressConnecting)
       
-        
         protocol = connection.connected.link.representationProtocol
-
         if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
             # Representation is the point of view from the connecting from the pose of the connected.
             representationConnecting = getLocalPointOfView(connected_sobject.pose,connecting_sobject.pose.point_of_view)

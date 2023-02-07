@@ -14,9 +14,14 @@ Transform)
 from multipledispatch import dispatch
 from numpy import shape,array,matmul,dot
 
-class Rhino3dmTranslator():
+class Rhino3dmConverter():
     
     @dispatch(Point3d)
     @staticmethod
-    def translate(point):
+    def convert(point):
         return Point(x=point.X,y=point.Y,z=point.Z)
+
+    @dispatch(Point)
+    @staticmethod
+    def convert(point:Point):
+        return Point3d(x=point.x,y=point.y,z=point.z)
