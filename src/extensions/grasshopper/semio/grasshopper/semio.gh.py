@@ -10,6 +10,7 @@ from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
 from semio.utils import hashObject
 
+from rhino import Rhino3dmTranslator
 from grasshopper import callGrasshopper, getOutputParam
 
 def parametersToDict(parameters):
@@ -18,17 +19,6 @@ def parametersToDict(parameters):
         valueType = parameter.value.WhichOneof("value")
         parametersDictionary[parameter.name]=getattr(parameter.value,valueType)
     return parametersDictionary
-
-# def computeResponseToRepresentations(response):
-#     representationsTree = getOutputParam(response,'REPRESENTATIONS')
-#     representations = []
-#     for path,branch in representationsTree.items():
-#         for item in branch:
-#             representations.append(
-#                 Representation(
-#                     body=str.encode(item['data'],'utf-8'),
-#                     encoding=ENCODING_TEXT_UFT8))
-#     return representations
 
 def computeResponseToRepresentations(response):
     representationsTree = getOutputParam(response,'REPRESENTATIONS')
@@ -47,17 +37,22 @@ class GrasshopperAdapter(AdapterService):
     def _getDescriptions(self):
         return [Adapting(platform=PLATFORM_GRASSHOPPER)]
     
-    def requestConnectionPoint(self, connected_plan: Plan, connecting_link: Link) -> Point:
+    def requestConnectionPoint(self, plan: Plan, link: Link, representation: object = None) -> Point:
         parameters = {}
-        if connected_plan.parameters:
-            parameters.update(parametersToDict(connected_plan.parameters))
-        match connecting_link.representationProtocol:
-            case 
-        if connecting_link.bias_parameters:
+        if plan.parameters:
+            parameters.update(parametersToDict(plan.parameters))
+        # match link.representationProtocol:
 
-        response = callGrasshopper(connected_plan.uri, parameters, self.computeUrl, self.computeUrl)
-        representations = computeResponseToRepresentations(response)
+        #     case REPRESENTATIONPROTOCOL_SIMPLE:
+        #         parameters['CONNECTION:CONNECTING']=RhinoPoint(link)
 
+        if link.bias_parameters:
+            parameters.update({'CONNECTION:'+name:key for name,key in parametersToDict(plan.parameters).items()})
+        if len(link.ports)>0:
+            parameters['CONNECTION:PORTS']= link.ports
+        response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
+        connectionPoint = getOutputParam(response,'CONNECTION:POINT')
+        return Rhino3dmTranslator.translate(connectionPoint)
 
     def requestPrototype(self, plan: Plan) -> Prototype:
         parameters = {}

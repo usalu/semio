@@ -25,7 +25,12 @@ message Adapting{
 // A connection point request requests a point from the connected (sobject).
 message ConnectionPointRequest {
   // The plan of the connected (sobject).
-  semio.model.v1.Plan connected_plan = 1;
-  // The link of the connecting (sobject).
-  semio.model.v1.Link connecting_link = 2;
+  semio.model.v1.Plan plan = 1;
+  // The link to the connected (sobject).
+  semio.model.v1.Link link = 2;
+  // The representation according the representation protocol of the link.
+  oneof representation {
+    semio.geometry.v1.Point simple_representation = 3;
+    semio.model.v1.Representation full_representation = 4;
+  }
 }

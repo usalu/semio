@@ -12,6 +12,7 @@ from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionReques
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
 
+from behaviour import getLocalPointOfView, getWorldPointOfView
 
 def getPlatformFromElementUri(elementUri):
     splitElementUri = splitext(elementUri)
@@ -68,11 +69,8 @@ class Manager(ManagerServer):
         # TODO Migrate all functions to behaviour.py and import appropriate functions here.
         # connectingPointOfViewFromConnected = getLocalPointOfView(connected_sobject.pose,self.connecting.pose.pointOfView)
 
-        connectedPointFromConnected = extensionProxyConnected.ConnectElement(connected_sobject.plan,connection.connecting.link)
-    
-
-
-        connectedPointFromWorld =  self.connected.pose.getWorldPointOfView(connectedPointFromConnected)
+        connectingPoseFromConnected, connectedPointFromConnected = extensionProxyConnected.ConnectElement(connected_sobject.plan,connection.connecting.link)
+        connectedPointFromWorld =  getWorldPointOfView(connectingPoseFromConnected,connectedPointFromConnected)
         
         connectedPointOfViewFromConnecting = self.connecting.pose.getLocalPointOfView(self.connected.pose.pointOfView,considerPointOfView=False)
         connectingPointFromConnecting = self.connecting.meetingPoint(connectedPointOfViewFromConnecting,self.biasConnecting)

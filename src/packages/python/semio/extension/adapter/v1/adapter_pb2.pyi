@@ -13,9 +13,13 @@ class Adapting(_message.Message):
     def __init__(self, platform: _Optional[_Union[_model_pb2.Platform, str]] = ...) -> None: ...
 
 class ConnectionPointRequest(_message.Message):
-    __slots__ = ["connected_plan", "connecting_link"]
-    CONNECTED_PLAN_FIELD_NUMBER: _ClassVar[int]
-    CONNECTING_LINK_FIELD_NUMBER: _ClassVar[int]
-    connected_plan: _model_pb2.Plan
-    connecting_link: _model_pb2.Link
-    def __init__(self, connected_plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., connecting_link: _Optional[_Union[_model_pb2.Link, _Mapping]] = ...) -> None: ...
+    __slots__ = ["full_representation", "link", "plan", "simple_representation"]
+    FULL_REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
+    LINK_FIELD_NUMBER: _ClassVar[int]
+    PLAN_FIELD_NUMBER: _ClassVar[int]
+    SIMPLE_REPRESENTATION_FIELD_NUMBER: _ClassVar[int]
+    full_representation: _model_pb2.Representation
+    link: _model_pb2.Link
+    plan: _model_pb2.Plan
+    simple_representation: _geometry_pb2.Point
+    def __init__(self, plan: _Optional[_Union[_model_pb2.Plan, _Mapping]] = ..., link: _Optional[_Union[_model_pb2.Link, _Mapping]] = ..., simple_representation: _Optional[_Union[_geometry_pb2.Point, _Mapping]] = ..., full_representation: _Optional[_Union[_model_pb2.Representation, _Mapping]] = ...) -> None: ...

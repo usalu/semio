@@ -1,68 +1,68 @@
 from multipledispatch import dispatch
 
-from semio.geometry import Point
+from semio.geometry import Point,Quaternion
 from semio.model import Pose,Sobject
 
-from mathutils import Matrix,Vector,Quaternion,Euler
+from mathutils import Vector as BlenderVector, Quaternion as BlenderQuaternion,Euler as BlenderEuler ,  Matrix as BlenderMatrix
 from numpy import shape,array,matmul,dot, allclose
 
+class BlenderMathConverter:
 
-@dispatch(Point,Point)
-def add(p1:Point,p2:Point):
-    Point(x=p1.x+p2.x,y=p1.y+p2.y,z=p1.z+p2.z)
+    # Semio to Blender
+    @dispatch(Quaternion)
+    @staticmethod
+    def convert(view:Quaternion):
+        return BlenderQuaternion((view.w,view.x,view.y,view.z))
 
-@dispatch(Point,Point)
-def subtract(p1:Point,p2:Point):
-    Point(x=p1.x-p2.x,y=p1.y-p2.y,z=p1.z-p2.z)
+    @dispatch(Point)
+    @staticmethod
+    def convert(point:Point):
+        return BlenderVector((point.x,point.y,point.z))
 
-@dispatch(Pose,Point)
-def adjustPointOfView(pose:Pose,pointOfView:Point)->Pose:
-    return Pose(point_of_view=pointOfView,view=pose.view)
+    @dispatch(Pose)
+    @staticmethod
+    def convert(pose:Pose):
+        origin = convert(pose.point_of_view)
+        quaternion = convert(pose.view)
+        matrix = quaternion.to_matrix().to_4x4()
+        matrix[0][3]=origin.x
+        matrix[1][3]=origin.y
+        matrix[2][3]=origin.z
+        return matrix
 
-@dispatch(Sobject,Point)
-def adjustPointOfView(sobject:Sobject,pointOfView:Point)->Sobject:
-    # TODO: Make a function that takes message, a property name and a value and returns a copy of the message with replacing that property and copying all other values automagically. 
-    return Sobject(id=sobject.id,pose=adjustPointOfView(sobject.pose),concepts=sobject.concepts)
+    # Blender to Semio
 
+    @dispatch(BlenderVector)
+    @staticmethod
+    def convert(vector:Point):
+        return Point(x=vector.x,y=vector.y,z=vector.z)
 
+def applyTransforms(vector:BlenderVector,transform:BlenderMatrix):
+        """Apply transformation to a point of view."""
+        return Vector(matmul(array(transform),array(vector.to_4d())))
 
-# @dispatch(Pose)
-# def toTransform(pose:Pose):
-#     matrix  = Matrix()
-#     return matrix
+def getLocalPointOfView(pose:Pose ,worldPointOfView:Point, considerPointOfView = True, considerView = True)->Point:
+    """
+    Get another point of view from a world perspective in a local perspective.
+    Parameters:
+    worldPointOfViewLike: Point of view from world view.
+    """
+    transformedPointOfView = BlenderMathConverter.convert(worldPointOfView)
+    if considerPointOfView:
+        transformedPointOfView = applyTransforms(transformedPointOfView,BlenderMatrix.Translation(-BlenderMathConverter.convert(pose.point_of_view)))
+    if considerView:
+        transformedPointOfView = applyTransforms(transformedPointOfView,BlenderMathConverter.convert(pose.view).to_matrix().to_4x4())
+    return convert(transformedPointOfView)
 
-# @dispatch(list)
-# def toPoint(l:list):
-#     return Point(x=l[0],y=l[1],z=l[2])
-
-# def applyTransforms(pointOfView:Point,transform:Matrix):
-#         """Apply transformation to a point of view."""
-#         return toPoint(matmul(array(toTransform(Matrix)),array(pointOfView)+[0]))
-
-
-# def getLocalPointOfView( worldPointOfView:Point, considerPointOfView = True, considerView = True):
-#     """
-#     Get another point of view from a world perspective in a local perspective.
-#     Parameters:
-#     worldPointOfViewLike: Point of view from world view.
-#     """
-#     transformedPointOfView = worldPointOfView
-#     if considerPointOfView:
-#         transformedPointOfView = Pose.applyTransforms(transformedPointOfView,-self.pointOfView)
-#     if considerView:
-#         transformedPointOfView = Pose.applyTransforms(transformedPointOfView,self.view)
-#     return transformedPointOfView
-
-# def getWorldPointOfView(self, localPointOfViewLike:PointOfViewLike,considerPointOfView = True, considerView = True):
-#     """
-#     Get another point of view from a local perspective in a world perspective.
-#     Parameters:
-#     localPointOfViewLike: Point of view from the local view.
-#     """
-#     localPointOfView = PointOfViewParser.get(localPointOfViewLike)
-#     transformedPointOfView = localPointOfView
-#     if considerView:
-#         transformedPointOfView = Pose.applyTransforms(transformedPointOfView,self.view.inverted())
-#     if considerPointOfView:
-#         transformedPointOfView = Pose.applyTransforms(transformedPointOfView,self.pointOfView)
-#     return transformedPointOfView
+def getWorldPointOfView(pose:Pose, localPointOfView:Point, considerPointOfView = True, considerView = True)->Point:
+    """
+    Get another point of view from a local perspective in a world perspective.
+    Parameters:
+    localPointOfView: Point of view from the local view.
+    """
+    transformedPointOfView = convert(localPointOfView)
+    if considerView:
+        transformedPointOfView = applyTransforms(transformedPointOfView,BlenderMathConverter.convert(pose.view).inverted().to_matrix().to_4x4())
+    if considerPointOfView:
+        transformedPointOfView = applyTransforms(transformedPointOfView,BlenderMatrix.Translation(BlenderMathConverter.convert(pose.point_of_view)))
+    return BlenderMathConverter.convert(transformedPointOfView)

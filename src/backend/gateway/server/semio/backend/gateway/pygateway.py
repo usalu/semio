@@ -12,7 +12,6 @@ class Gateway(GatewayServer):
     def layoutDesign(self, layout:Layout, target_platform:Platform)->Design:
         
         # Task 1
-        # Plan hash as key and prototype as value
         prototypes = []
         sobjectPlanHashes = {sobject.id:hashObject(sobject.plan) for sobject in layout.sobjects}
 
@@ -24,10 +23,10 @@ class Gateway(GatewayServer):
 
         # Task 2
         elements = []
-        # assemblies = self.LayoutToAssemblies(layout)
-        # for assembly in assemblies:
-        #     elementsFromAssembly = self.AssemblyToElements(assembly,layout.sobjects,layout.connections)
-        #     elements+=elementsFromAssembly
+        assemblies = self.LayoutToAssemblies(layout)
+        for assembly in assemblies:
+            elementsFromAssembly = self.AssemblyToElements(assembly,layout.sobjects,layout.connections)
+            elements+=elementsFromAssembly
 
         # await Task 1 & 2
         return Design(prototypes=prototypes,elements=elements)

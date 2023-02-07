@@ -15,7 +15,7 @@ from geometry.v1 import geometry_pb2 as geometry_dot_v1_dot_geometry__pb2
 from model.v1 import model_pb2 as model_dot_v1_dot_model__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"extension/adapter/v1/adapter.proto\x12\x1asemio.extension.adapter.v1\x1a\x1ageometry/v1/geometry.proto\x1a\x14model/v1/model.proto\"@\n\x08\x41\x64\x61pting\x12\x34\n\x08platform\x18\x01 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x08platform\"\x94\x01\n\x16\x43onnectionPointRequest\x12;\n\x0e\x63onnected_plan\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PlanR\rconnectedPlan\x12=\n\x0f\x63onnecting_link\x18\x02 \x01(\x0b\x32\x14.semio.model.v1.LinkR\x0e\x63onnectingLink2\xbd\x01\n\x0e\x41\x64\x61pterService\x12\x43\n\x10RequestPrototype\x12\x14.semio.model.v1.Plan\x1a\x19.semio.model.v1.Prototype\x12\x66\n\x16RequestConnectionPoint\x12\x32.semio.extension.adapter.v1.ConnectionPointRequest\x1a\x18.semio.geometry.v1.PointB\xf6\x01\n\x1e\x63om.semio.extension.adapter.v1B\x0c\x41\x64\x61pterProtoP\x01Z;github.com/usalu/semio/src/packages/go/extension/adapter/v1\xa2\x02\x03SEA\xaa\x02\x1aSemio.Extension.Adapter.V1\xca\x02\x1aSemio\\Extension\\Adapter\\V1\xe2\x02&Semio\\Extension\\Adapter\\V1\\GPBMetadata\xea\x02\x1dSemio::Extension::Adapter::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"extension/adapter/v1/adapter.proto\x12\x1asemio.extension.adapter.v1\x1a\x1ageometry/v1/geometry.proto\x1a\x14model/v1/model.proto\"@\n\x08\x41\x64\x61pting\x12\x34\n\x08platform\x18\x01 \x01(\x0e\x32\x18.semio.model.v1.PlatformR\x08platform\"\xa2\x02\n\x16\x43onnectionPointRequest\x12(\n\x04plan\x18\x01 \x01(\x0b\x32\x14.semio.model.v1.PlanR\x04plan\x12(\n\x04link\x18\x02 \x01(\x0b\x32\x14.semio.model.v1.LinkR\x04link\x12O\n\x15simple_representation\x18\x03 \x01(\x0b\x32\x18.semio.geometry.v1.PointH\x00R\x14simpleRepresentation\x12Q\n\x13\x66ull_representation\x18\x04 \x01(\x0b\x32\x1e.semio.model.v1.RepresentationH\x00R\x12\x66ullRepresentationB\x10\n\x0erepresentation2\xbd\x01\n\x0e\x41\x64\x61pterService\x12\x43\n\x10RequestPrototype\x12\x14.semio.model.v1.Plan\x1a\x19.semio.model.v1.Prototype\x12\x66\n\x16RequestConnectionPoint\x12\x32.semio.extension.adapter.v1.ConnectionPointRequest\x1a\x18.semio.geometry.v1.PointB\xf6\x01\n\x1e\x63om.semio.extension.adapter.v1B\x0c\x41\x64\x61pterProtoP\x01Z;github.com/usalu/semio/src/packages/go/extension/adapter/v1\xa2\x02\x03SEA\xaa\x02\x1aSemio.Extension.Adapter.V1\xca\x02\x1aSemio\\Extension\\Adapter\\V1\xe2\x02&Semio\\Extension\\Adapter\\V1\\GPBMetadata\xea\x02\x1dSemio::Extension::Adapter::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension.adapter.v1.adapter_pb2', globals())
@@ -26,7 +26,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _ADAPTING._serialized_start=116
   _ADAPTING._serialized_end=180
   _CONNECTIONPOINTREQUEST._serialized_start=183
-  _CONNECTIONPOINTREQUEST._serialized_end=331
-  _ADAPTERSERVICE._serialized_start=334
-  _ADAPTERSERVICE._serialized_end=523
+  _CONNECTIONPOINTREQUEST._serialized_end=473
+  _ADAPTERSERVICE._serialized_start=476
+  _ADAPTERSERVICE._serialized_end=665
 # @@protoc_insertion_point(module_scope)

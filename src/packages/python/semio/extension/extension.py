@@ -17,7 +17,7 @@ from .translator.v1.translator_pb2 import DESCRIPTOR as TRANSLATOR_DESCRIPTOR, T
 from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_server, TranslatorServiceServicer, TranslatorServiceStub
 
 from geometry import Point
-from model import Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
+from model import REPRESENTATIONPROTOCOL_NONE,REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
 from utils import SemioServer, SemioServiceDescription, SemioProxy
 from constants import DEFAULT_MANAGER_PORT
 
@@ -85,9 +85,17 @@ class ExtensionProxy(SemioProxy):
     def RequestPrototype(self, plan: Plan)->Prototype:
         return self._adapterStub.RequestPrototype(plan)
 
-    def RequestConnectionPoint(self, connected_plan:Plan, connecting_link:Link)-> Point:
-        return self._adapterStub.RequestConnectionPoint(
-            ConnectionPointRequest(connected_plan=connected_plan,connecting_link=connecting_link))
+    def RequestConnectionPoint(self, plan:Plan, link:Link, representation: None | Point | Representation  = None)-> Point:
+        request = ConnectionPointRequest(plan=plan,link=link)
+        representationType = link.representationProtocol
+        match representationType:
+            case Point(): #REPRESENTATIONPROTOCOL_SIMPLE:
+                request.simple_representation = representation
+            case Representation(): # REPRESENTATIONPROTOCOL_FULL:
+                request.full_representation = representation
+            case _:
+                pass
+        return self._adapterStub.RequestConnectionPoint(request)
 
     def ConvertRepresentation(self, representation:Representation, target_platform:Platform)->Representation:
         return self._converterStub.ConvertRepresentation(
