@@ -1,0 +1,35 @@
+name: Generate gRPC code
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [src/schema/**]
+
+jobs:
+  generate-grpc-code:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    # - uses: actions/setup-node@v3
+    # - uses: actions/setup-go@v3
+    # Install plugins
+    # - run: |
+    #     sudo npm install -g google-protobuf
+    #     sudo npm install -g typescript
+    #     sudo npm install -g protoc-gen-ts
+    #     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    - uses: bufbuild/buf-setup-action@v1.11.0
+      with:
+        github_token: ${{ github.token }}
+    - uses: arduino/setup-protoc@v1
+    - name: Generate code
+      run: |
+        cd ./src/schema
+        buf format -w semio
+        cd ./semio
+        buf generate
+    - name: Commit and push changes
+      uses: devops-infra/action-commit-push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        commit_message: Generated gRPC code
