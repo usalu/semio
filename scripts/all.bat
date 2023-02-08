@@ -1,4 +1,4 @@
 call conda activate semio
-call localscripts\uninstall.bat
-call localscripts\build.bat
-call localscripts\install.bat
+call scripts\uninstall.bat
+call scripts\build.bat
+call scripts\install.bat
