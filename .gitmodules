@@ -1,0 +1,2 @@
+[submodule "src/thirdparty/speckle-sharp"]
+	url = https://github.com/usalu/speckle-sharp
