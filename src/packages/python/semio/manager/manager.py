@@ -94,6 +94,7 @@ class ManagerServer(SemioServer,SemioService,ABC):
 
     def getRegisteredExtensions(self)->Iterable[Extending]:
         return self.extensions.values()
+        
     
     def GetRegisteredExtensions(self, request, context):
         return self.getRegisteredExtensions

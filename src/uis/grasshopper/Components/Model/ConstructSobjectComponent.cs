@@ -38,7 +38,7 @@ namespace Semio.UI.Grasshopper.Components.Model
             Sobject sobject = new Sobject()
             {
                 Id = Guid.NewGuid().ToString(),
-                Pose = pose.GetPose(),
+                Pose = pose.Value,
                 Plan = plan.Value,
             };
 

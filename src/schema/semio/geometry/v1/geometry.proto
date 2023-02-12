@@ -30,10 +30,14 @@ message Vector {
 
 // (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
 message Quaternion {
-    double w = 1;
-    double x = 2;
-    double y = 3;
-    double z = 4;
+  // The value of the real part of the quaternion.
+  double w = 1;
+  // The first value of the imaginary part of the quaternion.
+  double x = 2;
+  // The second value of the imaginary part of the quaternion.
+  double y = 3;
+  // The third value of the imaginary part of the quaternion.
+  double z = 4;
   }
 
 // // A (reference) plane. Also called: reference frame, reference coordinate system

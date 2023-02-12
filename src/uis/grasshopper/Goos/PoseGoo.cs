@@ -7,42 +7,30 @@ using Semio.UI.Grasshopper.Utility;
 
 namespace Semio.UI.Grasshopper.Goos
 {
-    public class PoseGoo : SemioGoo<Plane>
+    public class PoseGoo : SemioGoo<Pose>
     {
-        private Pose _pose = new();
-        public Pose GetPose() => _pose;
-        private void setValue(Plane plane)
-        {
-            _pose = Converter.Convert(plane);
-            Value = plane;
-        }
-        private void setValue(Pose pose)
-        {
-            _pose = pose;
-            Value = Converter.Convert(pose);
-        }
         public PoseGoo()
         {
-            setValue(Plane.WorldXY);
+            Value = new Pose();
         }
         public PoseGoo(Plane plane)
         {
-            setValue(plane);
+            Value = Converter.Convert(plane);
         }
 
         public PoseGoo(Pose pose)
         {
-            setValue(pose);
+            Value = pose;
         }
 
-        public override IGH_Goo Duplicate()=> new PoseGoo(_pose.Clone());
+        public override IGH_Goo Duplicate()=> new PoseGoo(Value.Clone());
 
-        public override string ToString() => _pose.ToString();
+        public override string ToString() => Value.ToString();
         public override bool CastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
             {
-                object ptr = new GH_Plane(Value);
+                object ptr = new GH_Plane(Converter.Convert(Value));
                 target = (Q)ptr;
                 return true;
             }
@@ -55,25 +43,13 @@ namespace Semio.UI.Grasshopper.Goos
             Plane plane = new();
             if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
             {
-                setValue(plane);
+                Value = Converter.Convert(plane);
                 return true;
             }
             return false;
         }
         public override string TypeName => "Pose";
         public override string TypeDescription => "A pose is an orientation.";
-
-        public override bool Write(GH_IWriter writer)
-        {
-            writer.SetString("pose", _pose.ToString());
-            return true;
-        }
-        public override bool Read(GH_IReader reader)
-        {
-            _pose = Pose.Parser.ParseJson(reader.GetString("pose"));
-            Value = Converter.Convert(_pose);
-            return true;
-        }
 
     }
 }

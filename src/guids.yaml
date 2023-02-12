@@ -38,6 +38,7 @@ ui:
                 deconstruct:
                     Representation: 4E7849BC-25BB-4452-BFC5-B9E26E445AD1
                     Prototype: F7D844B8-495D-4A85-A748-4F400DC85183
+                    Element: 6E1827B1-01B0-4EE2-B56C-9566EAC395F2
                     Design: 452510D6-9554-4106-B740-363341BEDD0C
             services:
                 layoutDesign: 15ad0008-1e40-41ff-8e38-116102d7488a
@@ -50,6 +51,5 @@ ui:
 
 
 
-6E1827B1-01B0-4EE2-B56C-9566EAC395F2
 46B997B8-4A33-4596-92A0-5B6B37250E47
 9E2CABC5-7320-4862-A258-264C81F75F95

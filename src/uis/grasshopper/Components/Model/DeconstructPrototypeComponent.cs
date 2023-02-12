@@ -27,7 +27,7 @@ namespace Semio.UI.Grasshopper.Components.Model
         {
             PrototypeGoo prototype = new();
             if (!DA.GetData(0, ref prototype)) return;
-            DA.SetDataList(0, prototype.Value.PlanHash);
+            DA.SetData(0, prototype.Value.PlanHash);
             if (prototype.Value.Representations.Any()) DA.SetDataList(1, prototype.Value.Representations.Select(e => new RepresentationGoo(e)));
             DA.SetDataList(2, prototype.Value.Description);
         }

@@ -179,7 +179,32 @@ namespace Semio.UI.Grasshopper.Utility
             Plane rotationPlane = plane.Clone();
             rotationPlane.Origin = Point3d.Origin;
             Transform rotationTransform = Transform.PlaneToPlane(Plane.WorldXY, rotationPlane);
-            rotationTransform.GetQuaternion(out var quaternion);
+            // This method is exactly what I need but it is pure junk. Not reliable at all.
+            //rotationTransform.GetQuaternion(out var quaternion);
+
+            var matrixArray = rotationTransform.ToFloatArray(true);
+            Matrix4x4 convertedRotationMatrix = new Matrix4x4(
+                matrixArray[0],
+                matrixArray[1],
+                matrixArray[2],
+                matrixArray[3],
+                matrixArray[4],
+                matrixArray[5],
+                matrixArray[6],
+                matrixArray[7],
+                matrixArray[8],
+                matrixArray[9],
+                matrixArray[10],
+                matrixArray[11],
+                matrixArray[12],
+                matrixArray[13],
+                matrixArray[14],
+                matrixArray[15]);
+            var convertedQuaternion = System.Numerics.Quaternion.CreateFromRotationMatrix(convertedRotationMatrix);
+            var quaternion = new Quaternion(convertedQuaternion.W, convertedQuaternion.X, convertedQuaternion.Y, convertedQuaternion.Z);
+
+            if (Double.IsNaN(quaternion.A) || Double.IsNaN(quaternion.B) || Double.IsNaN(quaternion.C) || Double.IsNaN(quaternion.D))
+                throw new ArgumentException("This plane can't be properly converted by Rhino to a quaternion.");
             return new Pose()
             {
                 PointOfView = Convert(plane.Origin),View = Convert(quaternion)

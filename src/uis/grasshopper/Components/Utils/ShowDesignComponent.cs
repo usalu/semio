@@ -59,7 +59,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
 
             foreach (var element in design.Value.Elements)
             {
-                var transform = Transform.PlaneToPlane(Plane.WorldXY, Converter.Convert(element.Pose));
+                var transform = Transform.PlaneToPlane(Plane.WorldXY,Converter.Convert(element.Pose));
                 try
                 {
                     foreach (var elementGeometry in prototypeGeometry[element.PrototypePlanHash])
