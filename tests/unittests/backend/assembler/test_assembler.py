@@ -15,7 +15,7 @@ def assembler():
 
 @mark.parametrize("layoutJsonPath, assembliesJsonPath",
 [
-    ("requests/assembler/sample_layoutDesignRequest_02.json","requests/assembler/sample_02_result.json")
+    ("../../../assets/requests/assembler/sample_layoutDesignRequest_02.json","../../../assets/requests/assembler/sample_02_result.json")
 ])
 def test_assembler_assemblyToElements(layoutJsonPath,assembliesJsonPath,assembler):
     path_to_current_file = realpath(__file__)
