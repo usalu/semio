@@ -72,16 +72,20 @@
         "semio.geometry.v1.Quaternion": {
             "properties": {
                 "w": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "The value of the real part of the quaternion."
                 },
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "The first value of the imaginary part of the quaternion."
                 },
                 "y": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "The second value of the imaginary part of the quaternion."
                 },
                 "z": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "The third value of the imaginary part of the quaternion."
                 }
             },
             "additionalProperties": true,

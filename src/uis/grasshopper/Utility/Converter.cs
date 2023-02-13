@@ -34,9 +34,9 @@ namespace Semio.UI.Grasshopper.Utility
 {
     public static class Converter
     {
-        public static Quaternion ToQuaternion(SemioQuaternion quaternion) => new((float)quaternion.X, (float)quaternion.Y, (float)quaternion.Z, (float)quaternion.W);
-        public static Vector3 ToVector(SemioPoint point) => new ((float)point.X, (float)point.Y, (float)point.Z);
-        public static Vector3 ToVector(Point3d point) => new((float)point.X, (float)point.Y, (float)point.Z);
+        //public static Quaternion ToQuaternion(SemioQuaternion quaternion) => new((float)quaternion.W, (float)quaternion.X, (float)quaternion.Y, (float)quaternion.Z);
+        //public static Vector3 ToVector(SemioPoint point) => new ((float)point.X, (float)point.Y, (float)point.Z);
+        //public static Vector3 ToVector(Point3d point) => new((float)point.X, (float)point.Y, (float)point.Z);
         public static string ToString(Representation representation)
         {
             string body = "";
@@ -183,7 +183,7 @@ namespace Semio.UI.Grasshopper.Utility
             //rotationTransform.GetQuaternion(out var quaternion);
 
             var matrixArray = rotationTransform.ToFloatArray(true);
-            Matrix4x4 convertedRotationMatrix = new Matrix4x4(
+            Matrix4x4 systemRotationMatrix = new Matrix4x4(
                 matrixArray[0],
                 matrixArray[1],
                 matrixArray[2],
@@ -200,8 +200,8 @@ namespace Semio.UI.Grasshopper.Utility
                 matrixArray[13],
                 matrixArray[14],
                 matrixArray[15]);
-            var convertedQuaternion = System.Numerics.Quaternion.CreateFromRotationMatrix(convertedRotationMatrix);
-            var quaternion = new Quaternion(convertedQuaternion.W, convertedQuaternion.X, convertedQuaternion.Y, convertedQuaternion.Z);
+            var convertedSystemQuaternion = System.Numerics.Quaternion.CreateFromRotationMatrix(systemRotationMatrix);
+            var quaternion = new Quaternion(convertedSystemQuaternion.W, convertedSystemQuaternion.X, convertedSystemQuaternion.Y, convertedSystemQuaternion.Z);
 
             if (Double.IsNaN(quaternion.A) || Double.IsNaN(quaternion.B) || Double.IsNaN(quaternion.C) || Double.IsNaN(quaternion.D))
                 throw new ArgumentException("This plane can't be properly converted by Rhino to a quaternion.");
@@ -213,7 +213,32 @@ namespace Semio.UI.Grasshopper.Utility
         public static Plane Convert(Pose pose)
         {
             Quaternion quaternion = Convert(pose.View);
-            Transform transform = quaternion.MatrixForm();
+            // This method is exactly what I need but it is pure junk. Not reliable at all.
+            // Transform transform = quaternion.MatrixForm();
+
+            var systemTransform = System.Numerics.Matrix4x4.CreateFromQuaternion(
+                new System.Numerics.Quaternion((float)quaternion.B, (float)quaternion.C, (float)quaternion.D, (float)quaternion.A));
+
+            Transform transform = new Transform()
+            {
+                M00 = systemTransform.M11,
+                M01 = systemTransform.M12,
+                M02 = systemTransform.M13,
+                M03 = systemTransform.M14,
+                M10 = systemTransform.M21,
+                M11 = systemTransform.M22,
+                M12 = systemTransform.M23,
+                M13 = systemTransform.M24,
+                M20 = systemTransform.M31,
+                M21 = systemTransform.M32,
+                M22 = systemTransform.M33,
+                M23 = systemTransform.M34,
+                M30 = systemTransform.M41,
+                M31 = systemTransform.M42,
+                M32 = systemTransform.M43,
+                M33 = systemTransform.M44,
+            };
+
             var xAxis = Vector3d.XAxis;
             xAxis.Transform(transform);
             var yAxis = Vector3d.YAxis;

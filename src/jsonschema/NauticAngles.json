@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$ref": "#/definitions/NauticAngles",
+    "definitions": {
+        "NauticAngles": {
+            "properties": {
+                "yaw": {
+                    "type": "number",
+                    "description": "Angle of rotation around the normal axis.\r Usually the z axis.\r This angle is applied first."
+                },
+                "pitch": {
+                    "type": "number",
+                    "description": "Angle of rotation around the transverse (also called lateral) axis.\r Usually the y axis.\r This angle is applied second (after yaw)."
+                },
+                "roll": {
+                    "type": "number",
+                    "description": "Angle of rotation around the longitudinal axis.\r Usually the x axis.\r This angle is applied last (after yaw and pitch)."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Nautic Angles",
+            "description": "Nautic angles describe a rotation of an object in 3d. \r See: https://en.wikipedia.org/wiki/Aircraft_principal_axes"
+        }
+    }
+}

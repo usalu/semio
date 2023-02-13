@@ -40,6 +40,83 @@ message Quaternion {
   double z = 4;
   }
 
+// A transform is a 4x4 matrix that is used to describe transformations of objects in 3d space.
+// The transform is in row dominant form.
+message Transform {
+  // The value of the first row and the first column.
+  double m00 = 1;
+  // The value of the first row and the second column.
+  double m01 = 2;
+  // The value of the first row and the third column.
+  double m02 = 3;
+  // The value of the first row and the fourth column.
+  double m03 = 4;
+  // The value of the second row and the first column.
+  // It describes the x part of a translation of the origin.
+  double m10 = 5;
+  // The value of the second row and the second column.
+  double m11 = 6;
+  // The value of the second row and the third column.
+  double m12 = 7;
+  // The value of the second row and the fourth column.
+  // It describes the y part of a translation of the origin.
+  double m13 = 8;
+  // The value of the third row and the first column. 
+  double m20 = 9;
+  // The value of the third row and the second column.
+  double m21 = 10;
+  // The value of the third row and the third column.
+  double m22 = 11;
+  // The value of the third row and the fourth column.
+  // It describes the z part of a translation of the origin.
+  double m23 = 12;
+  // The value of the fourth row and the first column. 
+  double m30 = 13;
+  // The value of the fourth row and the second column.
+  // It describes the x part of possible perspective distortion.
+  // Default is usually 0.
+  double m31 = 14;
+  // The value of the fourth row and the third column.
+  // It describes the y part of possible perspective distortion.
+  // Default is usually 0.
+  double m32 = 15;
+  // The value of the fourth row and the fourth column.
+  // This should always be 1.
+  double m33 = 16;
+}
+
+// (XYZ) Euler angles describe a rotation of an object in 3d.
+// See: https://en.wikipedia.org/wiki/Euler_angles
+message EulerAngles {
+  // Angle of rotation around x axis.
+  // This angle is applied first.
+  double x = 1;
+   // Angle of rotation around x axis.
+   // This angle is applied second (after x).
+  double y = 2;
+   // Angle of rotation around x axis.
+   // This angle is applied last (after x and y).
+  double z = 3;
+}
+
+// Nautic angles describe a rotation of an object in 3d. 
+// See: https://en.wikipedia.org/wiki/Aircraft_principal_axes
+message NauticAngles {
+  // Angle of rotation around the normal axis.
+  // Usually the z axis.
+  // This angle is applied first.
+   double yaw = 1;
+  // Angle of rotation around the transverse (also called lateral) axis.
+  // Usually the y axis.
+  // This angle is applied second (after yaw).
+  double pitch = 2;
+   // Angle of rotation around the longitudinal axis.
+   // Usually the x axis.
+   // This angle is applied last (after yaw and pitch).
+  double roll = 3;
+}
+
+
 // // A (reference) plane. Also called: reference frame, reference coordinate system
 // message Plane {
 //     // Origin

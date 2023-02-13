@@ -68,21 +68,202 @@ export interface Vector {
  */
 export interface Quaternion {
     /**
+     * The value of the real part of the quaternion.
+     *
      * @generated from protobuf field: double w = 1;
      */
     w: number;
     /**
+     * The first value of the imaginary part of the quaternion.
+     *
      * @generated from protobuf field: double x = 2;
      */
     x: number;
     /**
+     * The second value of the imaginary part of the quaternion.
+     *
      * @generated from protobuf field: double y = 3;
      */
     y: number;
     /**
+     * The third value of the imaginary part of the quaternion.
+     *
      * @generated from protobuf field: double z = 4;
      */
     z: number;
+}
+/**
+ * A transform is a 4x4 matrix that is used to describe transformations of objects in 3d space.
+ * The transform is in row dominant form.
+ *
+ * @generated from protobuf message semio.geometry.v1.Transform
+ */
+export interface Transform {
+    /**
+     * The value of the first row and the first column.
+     *
+     * @generated from protobuf field: double m00 = 1;
+     */
+    m00: number;
+    /**
+     * The value of the first row and the second column.
+     *
+     * @generated from protobuf field: double m01 = 2;
+     */
+    m01: number;
+    /**
+     * The value of the first row and the third column.
+     *
+     * @generated from protobuf field: double m02 = 3;
+     */
+    m02: number;
+    /**
+     * The value of the first row and the fourth column.
+     *
+     * @generated from protobuf field: double m03 = 4;
+     */
+    m03: number;
+    /**
+     * The value of the second row and the first column.
+     * It describes the x part of a translation of the origin.
+     *
+     * @generated from protobuf field: double m10 = 5;
+     */
+    m10: number;
+    /**
+     * The value of the second row and the second column.
+     *
+     * @generated from protobuf field: double m11 = 6;
+     */
+    m11: number;
+    /**
+     * The value of the second row and the third column.
+     *
+     * @generated from protobuf field: double m12 = 7;
+     */
+    m12: number;
+    /**
+     * The value of the second row and the fourth column.
+     * It describes the y part of a translation of the origin.
+     *
+     * @generated from protobuf field: double m13 = 8;
+     */
+    m13: number;
+    /**
+     * The value of the third row and the first column.
+     *
+     * @generated from protobuf field: double m20 = 9;
+     */
+    m20: number;
+    /**
+     * The value of the third row and the second column.
+     *
+     * @generated from protobuf field: double m21 = 10;
+     */
+    m21: number;
+    /**
+     * The value of the third row and the third column.
+     *
+     * @generated from protobuf field: double m22 = 11;
+     */
+    m22: number;
+    /**
+     * The value of the third row and the fourth column.
+     * It describes the z part of a translation of the origin.
+     *
+     * @generated from protobuf field: double m23 = 12;
+     */
+    m23: number;
+    /**
+     * The value of the fourth row and the first column.
+     *
+     * @generated from protobuf field: double m30 = 13;
+     */
+    m30: number;
+    /**
+     * The value of the fourth row and the second column.
+     * It describes the x part of possible perspective distortion.
+     * Default is usually 0.
+     *
+     * @generated from protobuf field: double m31 = 14;
+     */
+    m31: number;
+    /**
+     * The value of the fourth row and the third column.
+     * It describes the y part of possible perspective distortion.
+     * Default is usually 0.
+     *
+     * @generated from protobuf field: double m32 = 15;
+     */
+    m32: number;
+    /**
+     * The value of the fourth row and the fourth column.
+     * This should always be 1.
+     *
+     * @generated from protobuf field: double m33 = 16;
+     */
+    m33: number;
+}
+/**
+ * (XYZ) Euler angles describe a rotation of an object in 3d.
+ * See: https://en.wikipedia.org/wiki/Euler_angles
+ *
+ * @generated from protobuf message semio.geometry.v1.EulerAngles
+ */
+export interface EulerAngles {
+    /**
+     * Angle of rotation around x axis.
+     * This angle is applied first.
+     *
+     * @generated from protobuf field: double x = 1;
+     */
+    x: number;
+    /**
+     * Angle of rotation around x axis.
+     * This angle is applied second (after x).
+     *
+     * @generated from protobuf field: double y = 2;
+     */
+    y: number;
+    /**
+     * Angle of rotation around x axis.
+     * This angle is applied last (after x and y).
+     *
+     * @generated from protobuf field: double z = 3;
+     */
+    z: number;
+}
+/**
+ * Nautic angles describe a rotation of an object in 3d.
+ * See: https://en.wikipedia.org/wiki/Aircraft_principal_axes
+ *
+ * @generated from protobuf message semio.geometry.v1.NauticAngles
+ */
+export interface NauticAngles {
+    /**
+     * Angle of rotation around the normal axis.
+     * Usually the z axis.
+     * This angle is applied first.
+     *
+     * @generated from protobuf field: double yaw = 1;
+     */
+    yaw: number;
+    /**
+     * Angle of rotation around the transverse (also called lateral) axis.
+     * Usually the y axis.
+     * This angle is applied second (after yaw).
+     *
+     * @generated from protobuf field: double pitch = 2;
+     */
+    pitch: number;
+    /**
+     * Angle of rotation around the longitudinal axis.
+     * Usually the x axis.
+     * This angle is applied last (after yaw and pitch).
+     *
+     * @generated from protobuf field: double roll = 3;
+     */
+    roll: number;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Point$Type extends MessageType<Point> {
@@ -274,3 +455,277 @@ class Quaternion$Type extends MessageType<Quaternion> {
  * @generated MessageType for protobuf message semio.geometry.v1.Quaternion
  */
 export const Quaternion = new Quaternion$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Transform$Type extends MessageType<Transform> {
+    constructor() {
+        super("semio.geometry.v1.Transform", [
+            { no: 1, name: "m00", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 2, name: "m01", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 3, name: "m02", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 4, name: "m03", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 5, name: "m10", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 6, name: "m11", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 7, name: "m12", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 8, name: "m13", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 9, name: "m20", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 10, name: "m21", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 11, name: "m22", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 12, name: "m23", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 13, name: "m30", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 14, name: "m31", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 15, name: "m32", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 16, name: "m33", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Transform>): Transform {
+        const message = { m00: 0, m01: 0, m02: 0, m03: 0, m10: 0, m11: 0, m12: 0, m13: 0, m20: 0, m21: 0, m22: 0, m23: 0, m30: 0, m31: 0, m32: 0, m33: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Transform>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Transform): Transform {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* double m00 */ 1:
+                    message.m00 = reader.double();
+                    break;
+                case /* double m01 */ 2:
+                    message.m01 = reader.double();
+                    break;
+                case /* double m02 */ 3:
+                    message.m02 = reader.double();
+                    break;
+                case /* double m03 */ 4:
+                    message.m03 = reader.double();
+                    break;
+                case /* double m10 */ 5:
+                    message.m10 = reader.double();
+                    break;
+                case /* double m11 */ 6:
+                    message.m11 = reader.double();
+                    break;
+                case /* double m12 */ 7:
+                    message.m12 = reader.double();
+                    break;
+                case /* double m13 */ 8:
+                    message.m13 = reader.double();
+                    break;
+                case /* double m20 */ 9:
+                    message.m20 = reader.double();
+                    break;
+                case /* double m21 */ 10:
+                    message.m21 = reader.double();
+                    break;
+                case /* double m22 */ 11:
+                    message.m22 = reader.double();
+                    break;
+                case /* double m23 */ 12:
+                    message.m23 = reader.double();
+                    break;
+                case /* double m30 */ 13:
+                    message.m30 = reader.double();
+                    break;
+                case /* double m31 */ 14:
+                    message.m31 = reader.double();
+                    break;
+                case /* double m32 */ 15:
+                    message.m32 = reader.double();
+                    break;
+                case /* double m33 */ 16:
+                    message.m33 = reader.double();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Transform, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* double m00 = 1; */
+        if (message.m00 !== 0)
+            writer.tag(1, WireType.Bit64).double(message.m00);
+        /* double m01 = 2; */
+        if (message.m01 !== 0)
+            writer.tag(2, WireType.Bit64).double(message.m01);
+        /* double m02 = 3; */
+        if (message.m02 !== 0)
+            writer.tag(3, WireType.Bit64).double(message.m02);
+        /* double m03 = 4; */
+        if (message.m03 !== 0)
+            writer.tag(4, WireType.Bit64).double(message.m03);
+        /* double m10 = 5; */
+        if (message.m10 !== 0)
+            writer.tag(5, WireType.Bit64).double(message.m10);
+        /* double m11 = 6; */
+        if (message.m11 !== 0)
+            writer.tag(6, WireType.Bit64).double(message.m11);
+        /* double m12 = 7; */
+        if (message.m12 !== 0)
+            writer.tag(7, WireType.Bit64).double(message.m12);
+        /* double m13 = 8; */
+        if (message.m13 !== 0)
+            writer.tag(8, WireType.Bit64).double(message.m13);
+        /* double m20 = 9; */
+        if (message.m20 !== 0)
+            writer.tag(9, WireType.Bit64).double(message.m20);
+        /* double m21 = 10; */
+        if (message.m21 !== 0)
+            writer.tag(10, WireType.Bit64).double(message.m21);
+        /* double m22 = 11; */
+        if (message.m22 !== 0)
+            writer.tag(11, WireType.Bit64).double(message.m22);
+        /* double m23 = 12; */
+        if (message.m23 !== 0)
+            writer.tag(12, WireType.Bit64).double(message.m23);
+        /* double m30 = 13; */
+        if (message.m30 !== 0)
+            writer.tag(13, WireType.Bit64).double(message.m30);
+        /* double m31 = 14; */
+        if (message.m31 !== 0)
+            writer.tag(14, WireType.Bit64).double(message.m31);
+        /* double m32 = 15; */
+        if (message.m32 !== 0)
+            writer.tag(15, WireType.Bit64).double(message.m32);
+        /* double m33 = 16; */
+        if (message.m33 !== 0)
+            writer.tag(16, WireType.Bit64).double(message.m33);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.geometry.v1.Transform
+ */
+export const Transform = new Transform$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class EulerAngles$Type extends MessageType<EulerAngles> {
+    constructor() {
+        super("semio.geometry.v1.EulerAngles", [
+            { no: 1, name: "x", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 2, name: "y", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 3, name: "z", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
+        ]);
+    }
+    create(value?: PartialMessage<EulerAngles>): EulerAngles {
+        const message = { x: 0, y: 0, z: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<EulerAngles>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: EulerAngles): EulerAngles {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* double x */ 1:
+                    message.x = reader.double();
+                    break;
+                case /* double y */ 2:
+                    message.y = reader.double();
+                    break;
+                case /* double z */ 3:
+                    message.z = reader.double();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: EulerAngles, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* double x = 1; */
+        if (message.x !== 0)
+            writer.tag(1, WireType.Bit64).double(message.x);
+        /* double y = 2; */
+        if (message.y !== 0)
+            writer.tag(2, WireType.Bit64).double(message.y);
+        /* double z = 3; */
+        if (message.z !== 0)
+            writer.tag(3, WireType.Bit64).double(message.z);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.geometry.v1.EulerAngles
+ */
+export const EulerAngles = new EulerAngles$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NauticAngles$Type extends MessageType<NauticAngles> {
+    constructor() {
+        super("semio.geometry.v1.NauticAngles", [
+            { no: 1, name: "yaw", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 2, name: "pitch", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 3, name: "roll", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
+        ]);
+    }
+    create(value?: PartialMessage<NauticAngles>): NauticAngles {
+        const message = { yaw: 0, pitch: 0, roll: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<NauticAngles>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: NauticAngles): NauticAngles {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* double yaw */ 1:
+                    message.yaw = reader.double();
+                    break;
+                case /* double pitch */ 2:
+                    message.pitch = reader.double();
+                    break;
+                case /* double roll */ 3:
+                    message.roll = reader.double();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: NauticAngles, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* double yaw = 1; */
+        if (message.yaw !== 0)
+            writer.tag(1, WireType.Bit64).double(message.yaw);
+        /* double pitch = 2; */
+        if (message.pitch !== 0)
+            writer.tag(2, WireType.Bit64).double(message.pitch);
+        /* double roll = 3; */
+        if (message.roll !== 0)
+            writer.tag(3, WireType.Bit64).double(message.roll);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message semio.geometry.v1.NauticAngles
+ */
+export const NauticAngles = new NauticAngles$Type();

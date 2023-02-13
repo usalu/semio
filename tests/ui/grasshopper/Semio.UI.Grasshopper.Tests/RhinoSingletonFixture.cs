@@ -18,15 +18,11 @@ namespace Rhino.Test
     }
     static RhinoSingletonFixture()
     {
-      // This MUST be included in a static constructor to ensure that no Rhino DLLs
-      // are loaded before the resolver is set up. Avoid creating other static functions
-      // and members which may reference Rhino assemblies, as that may cause those
-      // assemblies to be loaded before this is called.
-      if (!_isResolverInitialized)
-      {
-        RhinoInside.Resolver.Initialize();
-        _isResolverInitialized = true;
-      }
+        // This MUST be included in a static constructor to ensure that no Rhino DLLs
+        // are loaded before the resolver is set up. Avoid creating other static functions
+        // and members which may reference Rhino assemblies, as that may cause those
+        // assemblies to be loaded before this is called.
+        InitializeResolver();
     }
     public static void InitializeResolver()
     {

@@ -425,19 +425,23 @@
       "properties": {
         "w": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "description": "The value of the real part of the quaternion."
         },
         "x": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "description": "The first value of the imaginary part of the quaternion."
         },
         "y": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "description": "The second value of the imaginary part of the quaternion."
         },
         "z": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "description": "The third value of the imaginary part of the quaternion."
         }
       },
       "description": "(Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object."
