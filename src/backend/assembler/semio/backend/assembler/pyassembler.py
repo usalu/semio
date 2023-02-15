@@ -83,23 +83,38 @@ class Assembler(AssemblerServer):
                 assemblies.append(G.nodes[sobject_id]["assembly"])
         return assemblies
 
-    def assemblyToElements(self, assembly:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
-        sobject = findSobjectById(sobjects,assembly.sobject_id)
-        elements = [getElement(sobject)]
+    def assemblyToElements(
+        self, 
+        assembly:Assembly, 
+        sobjects: Iterable[Sobject], 
+        connections: Iterable[Connection] | None = None
+        )->Iterable[Element]:
+        root = findSobjectById(sobjects,assembly.sobject_id)
+        elements = [getElement(root)]
         if assembly.parts:
             for part in assembly.parts:
-                elements += self.partToElements(sobject.pose.point_of_view,sobject,part,sobjects,connections)
+                elements += self.partToElements(root,part,sobjects,connections)
         return elements
 
-    def partToElements(self,origin:Point, parent:Sobject,part:Assembly, sobjects: Iterable[Sobject], connections: Iterable[Connection] | None = None)->Iterable[Element]:
+    def partToElements(
+        self,
+        parent:Sobject,
+        part:Assembly,
+        sobjects: Iterable[Sobject],
+        connections: Iterable[Connection] | None = None,
+        discrepancy:Point | None = None
+        )->Iterable[Element]:
+        if not discrepancy:
+            discrepancy = Point()
         sobject = findSobjectById(sobjects,part.sobject_id)
         connection = findConnection(parent,sobject,connections)
-        pose,point = self.ConnectElement(parent,sobject,connection)
-        newOrigin = add(origin,pose.point_of_view)
-        elements = [getElement(sobject,newOrigin)]
+        connectingPose,connectionPoint = self.ConnectElement(parent,sobject,connection)
+        newPointOfView = add(connectingPose.point_of_view,discrepancy)
+        elements = [getElement(sobject,newPointOfView)]
+        newDiscrepancy = add(discrepancy,subtract(connectingPose.point_of_view,sobject.pose.point_of_view))
         if part.parts:
-            for part in part.parts:
-                elements += self.partToElements(newOrigin,sobject,part,sobjects,connections)
+            for partOfPart in part.parts:
+                elements += self.partToElements(sobject,partOfPart,sobjects,connections,newDiscrepancy)
         return elements
 
 if __name__ == '__main__':

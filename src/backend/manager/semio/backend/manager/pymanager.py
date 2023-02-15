@@ -90,9 +90,9 @@ class Manager(ManagerServer):
         else:
             representationConnected = None
         connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject.plan,connection.connecting.link,representationConnected)
-        connectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject.pose,connectionPointFromConnecting,False)
+        relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject.pose,connectionPointFromConnecting,False)
 
-        connectingTargetPointOfView = subtract(connectionPointFromWorld,connectionPointFromConnectedFromWorld)
+        connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
         return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject.pose.view),connectionPointFromWorld)
 
 if __name__ == '__main__':
