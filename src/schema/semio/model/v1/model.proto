@@ -189,6 +189,7 @@ enum RepresentationProtocol{
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
+// TODO: Implement Dependency
 // The (pose) dependency determines to what extend the connecting sobject is dependent on the connected sobject.
 enum Dependency{
   // The connecting sobject is independant and stays on its own pose.
