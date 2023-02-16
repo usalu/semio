@@ -189,6 +189,19 @@ enum RepresentationProtocol{
   REPRESENTATIONPROTOCOL_FULL = 2;
 }
 
+// The (pose) dependency determines to what extend the connecting sobject is dependent on the connected sobject.
+enum Dependency{
+  // The connecting sobject is independant and stays on its own pose.
+  DEPENDENCY_INDEPENDENT = 0;
+  // The connecting sobject only depends on the point of view which will be determined by the connected sobject but uses its own view.
+  DEPENDENCY_POINTDEPENDENT = 1;
+  // The connecting sobject only depends on the view which will be determined by the connected sobject but uses its own point of view.
+  DEPENDENCY_VIEWDEPENDENT = 2;
+  // The connecting sobject is fully dependant on the pose which will be determined by the connected sobject.
+  // With this the connecting sobject doesn't need to have a pose at all.
+  DEPENDENCY_DEPENDENT = 3;
+}
+
 // A link defines the parameters for a connectable.
 message Link{
     // An optional representation protocol for the link.

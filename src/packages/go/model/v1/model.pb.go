@@ -352,6 +352,64 @@ func (RepresentationProtocol) EnumDescriptor() ([]byte, []int) {
 	return file_model_v1_model_proto_rawDescGZIP(), []int{3}
 }
 
+// The (pose) dependency determines to what extend the connecting sobject is dependent on the connected sobject.
+type Dependency int32
+
+const (
+	// The connecting sobject is independant and stays on its own pose.
+	Dependency_DEPENDENCY_INDEPENDENT Dependency = 0
+	// The connecting sobject only depends on the point of view which will be determined by the connected sobject but uses its own view.
+	Dependency_DEPENDENCY_POINTDEPENDENT Dependency = 1
+	// The connecting sobject only depends on the view which will be determined by the connected sobject but uses its own point of view.
+	Dependency_DEPENDENCY_VIEWDEPENDENT Dependency = 2
+	// The connecting sobject is fully dependant on the pose which will be determined by the connected sobject.
+	// With this the connecting sobject doesn't need to have a pose at all.
+	Dependency_DEPENDENCY_DEPENDENT Dependency = 3
+)
+
+// Enum value maps for Dependency.
+var (
+	Dependency_name = map[int32]string{
+		0: "DEPENDENCY_INDEPENDENT",
+		1: "DEPENDENCY_POINTDEPENDENT",
+		2: "DEPENDENCY_VIEWDEPENDENT",
+		3: "DEPENDENCY_DEPENDENT",
+	}
+	Dependency_value = map[string]int32{
+		"DEPENDENCY_INDEPENDENT":    0,
+		"DEPENDENCY_POINTDEPENDENT": 1,
+		"DEPENDENCY_VIEWDEPENDENT":  2,
+		"DEPENDENCY_DEPENDENT":      3,
+	}
+)
+
+func (x Dependency) Enum() *Dependency {
+	p := new(Dependency)
+	*p = x
+	return p
+}
+
+func (x Dependency) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Dependency) Descriptor() protoreflect.EnumDescriptor {
+	return file_model_v1_model_proto_enumTypes[4].Descriptor()
+}
+
+func (Dependency) Type() protoreflect.EnumType {
+	return &file_model_v1_model_proto_enumTypes[4]
+}
+
+func (x Dependency) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Dependency.Descriptor instead.
+func (Dependency) EnumDescriptor() ([]byte, []int) {
+	return file_model_v1_model_proto_rawDescGZIP(), []int{4}
+}
+
 // A layout strategy affects in which orders connections are triggered.
 type LayoutStrategy int32
 
@@ -385,11 +443,11 @@ func (x LayoutStrategy) String() string {
 }
 
 func (LayoutStrategy) Descriptor() protoreflect.EnumDescriptor {
-	return file_model_v1_model_proto_enumTypes[4].Descriptor()
+	return file_model_v1_model_proto_enumTypes[5].Descriptor()
 }
 
 func (LayoutStrategy) Type() protoreflect.EnumType {
-	return &file_model_v1_model_proto_enumTypes[4]
+	return &file_model_v1_model_proto_enumTypes[5]
 }
 
 func (x LayoutStrategy) Number() protoreflect.EnumNumber {
@@ -398,7 +456,7 @@ func (x LayoutStrategy) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use LayoutStrategy.Descriptor instead.
 func (LayoutStrategy) EnumDescriptor() ([]byte, []int) {
-	return file_model_v1_model_proto_rawDescGZIP(), []int{4}
+	return file_model_v1_model_proto_rawDescGZIP(), []int{5}
 }
 
 // A pose is a static reference frame/coordinate system.
@@ -1850,24 +1908,32 @@ var file_model_v1_model_proto_rawDesc = []byte{
 	0x4e, 0x54, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x43, 0x4f, 0x4c, 0x5f,
 	0x53, 0x49, 0x4d, 0x50, 0x4c, 0x45, 0x10, 0x01, 0x12, 0x1f, 0x0a, 0x1b, 0x52, 0x45, 0x50, 0x52,
 	0x45, 0x53, 0x45, 0x4e, 0x54, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x43,
-	0x4f, 0x4c, 0x5f, 0x46, 0x55, 0x4c, 0x4c, 0x10, 0x02, 0x2a, 0x50, 0x0a, 0x0e, 0x4c, 0x61, 0x79,
-	0x6f, 0x75, 0x74, 0x53, 0x74, 0x72, 0x61, 0x74, 0x65, 0x67, 0x79, 0x12, 0x1f, 0x0a, 0x1b, 0x4c,
-	0x41, 0x59, 0x4f, 0x55, 0x54, 0x53, 0x54, 0x52, 0x41, 0x54, 0x45, 0x47, 0x59, 0x5f, 0x42, 0x52,
-	0x45, 0x41, 0x44, 0x54, 0x48, 0x46, 0x49, 0x52, 0x53, 0x54, 0x10, 0x00, 0x12, 0x1d, 0x0a, 0x19,
-	0x4c, 0x41, 0x59, 0x4f, 0x55, 0x54, 0x53, 0x54, 0x52, 0x41, 0x54, 0x45, 0x47, 0x59, 0x5f, 0x44,
-	0x45, 0x50, 0x54, 0x48, 0x46, 0x49, 0x52, 0x53, 0x54, 0x10, 0x01, 0x42, 0xab, 0x01, 0x0a, 0x12,
-	0x63, 0x6f, 0x6d, 0x2e, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2e,
-	0x76, 0x31, 0x42, 0x0a, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x75, 0x73, 0x61,
-	0x6c, 0x75, 0x2f, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2f, 0x73, 0x72, 0x63, 0x2f, 0x70, 0x61, 0x63,
-	0x6b, 0x61, 0x67, 0x65, 0x73, 0x2f, 0x67, 0x6f, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f, 0x76,
-	0x31, 0xa2, 0x02, 0x03, 0x53, 0x4d, 0x58, 0xaa, 0x02, 0x0e, 0x53, 0x65, 0x6d, 0x69, 0x6f, 0x2e,
-	0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0e, 0x53, 0x65, 0x6d, 0x69, 0x6f,
-	0x5c, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1a, 0x53, 0x65, 0x6d, 0x69,
-	0x6f, 0x5c, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x10, 0x53, 0x65, 0x6d, 0x69, 0x6f, 0x3a, 0x3a,
-	0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x4f, 0x4c, 0x5f, 0x46, 0x55, 0x4c, 0x4c, 0x10, 0x02, 0x2a, 0x7f, 0x0a, 0x0a, 0x44, 0x65, 0x70,
+	0x65, 0x6e, 0x64, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x1a, 0x0a, 0x16, 0x44, 0x45, 0x50, 0x45, 0x4e,
+	0x44, 0x45, 0x4e, 0x43, 0x59, 0x5f, 0x49, 0x4e, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e,
+	0x54, 0x10, 0x00, 0x12, 0x1d, 0x0a, 0x19, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x43,
+	0x59, 0x5f, 0x50, 0x4f, 0x49, 0x4e, 0x54, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x54,
+	0x10, 0x01, 0x12, 0x1c, 0x0a, 0x18, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x43, 0x59,
+	0x5f, 0x56, 0x49, 0x45, 0x57, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x54, 0x10, 0x02,
+	0x12, 0x18, 0x0a, 0x14, 0x44, 0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x43, 0x59, 0x5f, 0x44,
+	0x45, 0x50, 0x45, 0x4e, 0x44, 0x45, 0x4e, 0x54, 0x10, 0x03, 0x2a, 0x50, 0x0a, 0x0e, 0x4c, 0x61,
+	0x79, 0x6f, 0x75, 0x74, 0x53, 0x74, 0x72, 0x61, 0x74, 0x65, 0x67, 0x79, 0x12, 0x1f, 0x0a, 0x1b,
+	0x4c, 0x41, 0x59, 0x4f, 0x55, 0x54, 0x53, 0x54, 0x52, 0x41, 0x54, 0x45, 0x47, 0x59, 0x5f, 0x42,
+	0x52, 0x45, 0x41, 0x44, 0x54, 0x48, 0x46, 0x49, 0x52, 0x53, 0x54, 0x10, 0x00, 0x12, 0x1d, 0x0a,
+	0x19, 0x4c, 0x41, 0x59, 0x4f, 0x55, 0x54, 0x53, 0x54, 0x52, 0x41, 0x54, 0x45, 0x47, 0x59, 0x5f,
+	0x44, 0x45, 0x50, 0x54, 0x48, 0x46, 0x49, 0x52, 0x53, 0x54, 0x10, 0x01, 0x42, 0xab, 0x01, 0x0a,
+	0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c,
+	0x2e, 0x76, 0x31, 0x42, 0x0a, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x75, 0x73,
+	0x61, 0x6c, 0x75, 0x2f, 0x73, 0x65, 0x6d, 0x69, 0x6f, 0x2f, 0x73, 0x72, 0x63, 0x2f, 0x70, 0x61,
+	0x63, 0x6b, 0x61, 0x67, 0x65, 0x73, 0x2f, 0x67, 0x6f, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x53, 0x4d, 0x58, 0xaa, 0x02, 0x0e, 0x53, 0x65, 0x6d, 0x69, 0x6f,
+	0x2e, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0e, 0x53, 0x65, 0x6d, 0x69,
+	0x6f, 0x5c, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1a, 0x53, 0x65, 0x6d,
+	0x69, 0x6f, 0x5c, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x10, 0x53, 0x65, 0x6d, 0x69, 0x6f, 0x3a,
+	0x3a, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -1882,65 +1948,66 @@ func file_model_v1_model_proto_rawDescGZIP() []byte {
 	return file_model_v1_model_proto_rawDescData
 }
 
-var file_model_v1_model_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_model_v1_model_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_model_v1_model_proto_goTypes = []interface{}{
 	(Encoding)(0),                      // 0: semio.model.v1.Encoding
 	(FileType)(0),                      // 1: semio.model.v1.FileType
 	(Platform)(0),                      // 2: semio.model.v1.Platform
 	(RepresentationProtocol)(0),        // 3: semio.model.v1.RepresentationProtocol
-	(LayoutStrategy)(0),                // 4: semio.model.v1.LayoutStrategy
-	(*Pose)(nil),                       // 5: semio.model.v1.Pose
-	(*Representation)(nil),             // 6: semio.model.v1.Representation
-	(*Scope)(nil),                      // 7: semio.model.v1.Scope
-	(*Value)(nil),                      // 8: semio.model.v1.Value
-	(*Parameter)(nil),                  // 9: semio.model.v1.Parameter
-	(*Plan)(nil),                       // 10: semio.model.v1.Plan
-	(*Sobject)(nil),                    // 11: semio.model.v1.Sobject
-	(*Link)(nil),                       // 12: semio.model.v1.Link
-	(*Connectable)(nil),                // 13: semio.model.v1.Connectable
-	(*Connection)(nil),                 // 14: semio.model.v1.Connection
-	(*Assembly)(nil),                   // 15: semio.model.v1.Assembly
-	(*Layout)(nil),                     // 16: semio.model.v1.Layout
-	(*Prototype)(nil),                  // 17: semio.model.v1.Prototype
-	(*Element)(nil),                    // 18: semio.model.v1.Element
-	(*Design)(nil),                     // 19: semio.model.v1.Design
-	(*LayoutModification)(nil),         // 20: semio.model.v1.LayoutModification
-	(*LayoutModificationStrategy)(nil), // 21: semio.model.v1.LayoutModificationStrategy
-	(*Decision)(nil),                   // 22: semio.model.v1.Decision
-	(*v1.Point)(nil),                   // 23: semio.geometry.v1.Point
-	(*v1.Quaternion)(nil),              // 24: semio.geometry.v1.Quaternion
+	(Dependency)(0),                    // 4: semio.model.v1.Dependency
+	(LayoutStrategy)(0),                // 5: semio.model.v1.LayoutStrategy
+	(*Pose)(nil),                       // 6: semio.model.v1.Pose
+	(*Representation)(nil),             // 7: semio.model.v1.Representation
+	(*Scope)(nil),                      // 8: semio.model.v1.Scope
+	(*Value)(nil),                      // 9: semio.model.v1.Value
+	(*Parameter)(nil),                  // 10: semio.model.v1.Parameter
+	(*Plan)(nil),                       // 11: semio.model.v1.Plan
+	(*Sobject)(nil),                    // 12: semio.model.v1.Sobject
+	(*Link)(nil),                       // 13: semio.model.v1.Link
+	(*Connectable)(nil),                // 14: semio.model.v1.Connectable
+	(*Connection)(nil),                 // 15: semio.model.v1.Connection
+	(*Assembly)(nil),                   // 16: semio.model.v1.Assembly
+	(*Layout)(nil),                     // 17: semio.model.v1.Layout
+	(*Prototype)(nil),                  // 18: semio.model.v1.Prototype
+	(*Element)(nil),                    // 19: semio.model.v1.Element
+	(*Design)(nil),                     // 20: semio.model.v1.Design
+	(*LayoutModification)(nil),         // 21: semio.model.v1.LayoutModification
+	(*LayoutModificationStrategy)(nil), // 22: semio.model.v1.LayoutModificationStrategy
+	(*Decision)(nil),                   // 23: semio.model.v1.Decision
+	(*v1.Point)(nil),                   // 24: semio.geometry.v1.Point
+	(*v1.Quaternion)(nil),              // 25: semio.geometry.v1.Quaternion
 }
 var file_model_v1_model_proto_depIdxs = []int32{
-	23, // 0: semio.model.v1.Pose.point_of_view:type_name -> semio.geometry.v1.Point
-	24, // 1: semio.model.v1.Pose.view:type_name -> semio.geometry.v1.Quaternion
+	24, // 0: semio.model.v1.Pose.point_of_view:type_name -> semio.geometry.v1.Point
+	25, // 1: semio.model.v1.Pose.view:type_name -> semio.geometry.v1.Quaternion
 	0,  // 2: semio.model.v1.Representation.encoding:type_name -> semio.model.v1.Encoding
 	1,  // 3: semio.model.v1.Representation.file_type:type_name -> semio.model.v1.FileType
 	2,  // 4: semio.model.v1.Representation.platform:type_name -> semio.model.v1.Platform
-	23, // 5: semio.model.v1.Value.point:type_name -> semio.geometry.v1.Point
-	7,  // 6: semio.model.v1.Parameter.context:type_name -> semio.model.v1.Scope
-	8,  // 7: semio.model.v1.Parameter.value:type_name -> semio.model.v1.Value
-	9,  // 8: semio.model.v1.Plan.parameters:type_name -> semio.model.v1.Parameter
-	5,  // 9: semio.model.v1.Sobject.pose:type_name -> semio.model.v1.Pose
-	10, // 10: semio.model.v1.Sobject.plan:type_name -> semio.model.v1.Plan
+	24, // 5: semio.model.v1.Value.point:type_name -> semio.geometry.v1.Point
+	8,  // 6: semio.model.v1.Parameter.context:type_name -> semio.model.v1.Scope
+	9,  // 7: semio.model.v1.Parameter.value:type_name -> semio.model.v1.Value
+	10, // 8: semio.model.v1.Plan.parameters:type_name -> semio.model.v1.Parameter
+	6,  // 9: semio.model.v1.Sobject.pose:type_name -> semio.model.v1.Pose
+	11, // 10: semio.model.v1.Sobject.plan:type_name -> semio.model.v1.Plan
 	3,  // 11: semio.model.v1.Link.representationProtocol:type_name -> semio.model.v1.RepresentationProtocol
-	9,  // 12: semio.model.v1.Link.bias_parameters:type_name -> semio.model.v1.Parameter
-	12, // 13: semio.model.v1.Connectable.link:type_name -> semio.model.v1.Link
-	13, // 14: semio.model.v1.Connection.connecting:type_name -> semio.model.v1.Connectable
-	13, // 15: semio.model.v1.Connection.connected:type_name -> semio.model.v1.Connectable
-	15, // 16: semio.model.v1.Assembly.parts:type_name -> semio.model.v1.Assembly
-	11, // 17: semio.model.v1.Layout.sobjects:type_name -> semio.model.v1.Sobject
-	14, // 18: semio.model.v1.Layout.connections:type_name -> semio.model.v1.Connection
-	4,  // 19: semio.model.v1.Layout.strategy:type_name -> semio.model.v1.LayoutStrategy
-	15, // 20: semio.model.v1.Layout.assemblies:type_name -> semio.model.v1.Assembly
-	6,  // 21: semio.model.v1.Prototype.representations:type_name -> semio.model.v1.Representation
-	5,  // 22: semio.model.v1.Element.pose:type_name -> semio.model.v1.Pose
-	17, // 23: semio.model.v1.Design.prototypes:type_name -> semio.model.v1.Prototype
-	18, // 24: semio.model.v1.Design.elements:type_name -> semio.model.v1.Element
-	16, // 25: semio.model.v1.LayoutModification.context:type_name -> semio.model.v1.Layout
-	16, // 26: semio.model.v1.LayoutModification.modified_context:type_name -> semio.model.v1.Layout
-	20, // 27: semio.model.v1.Decision.modification:type_name -> semio.model.v1.LayoutModification
-	21, // 28: semio.model.v1.Decision.strategy:type_name -> semio.model.v1.LayoutModificationStrategy
+	10, // 12: semio.model.v1.Link.bias_parameters:type_name -> semio.model.v1.Parameter
+	13, // 13: semio.model.v1.Connectable.link:type_name -> semio.model.v1.Link
+	14, // 14: semio.model.v1.Connection.connecting:type_name -> semio.model.v1.Connectable
+	14, // 15: semio.model.v1.Connection.connected:type_name -> semio.model.v1.Connectable
+	16, // 16: semio.model.v1.Assembly.parts:type_name -> semio.model.v1.Assembly
+	12, // 17: semio.model.v1.Layout.sobjects:type_name -> semio.model.v1.Sobject
+	15, // 18: semio.model.v1.Layout.connections:type_name -> semio.model.v1.Connection
+	5,  // 19: semio.model.v1.Layout.strategy:type_name -> semio.model.v1.LayoutStrategy
+	16, // 20: semio.model.v1.Layout.assemblies:type_name -> semio.model.v1.Assembly
+	7,  // 21: semio.model.v1.Prototype.representations:type_name -> semio.model.v1.Representation
+	6,  // 22: semio.model.v1.Element.pose:type_name -> semio.model.v1.Pose
+	18, // 23: semio.model.v1.Design.prototypes:type_name -> semio.model.v1.Prototype
+	19, // 24: semio.model.v1.Design.elements:type_name -> semio.model.v1.Element
+	17, // 25: semio.model.v1.LayoutModification.context:type_name -> semio.model.v1.Layout
+	17, // 26: semio.model.v1.LayoutModification.modified_context:type_name -> semio.model.v1.Layout
+	21, // 27: semio.model.v1.Decision.modification:type_name -> semio.model.v1.LayoutModification
+	22, // 28: semio.model.v1.Decision.strategy:type_name -> semio.model.v1.LayoutModificationStrategy
 	29, // [29:29] is the sub-list for method output_type
 	29, // [29:29] is the sub-list for method input_type
 	29, // [29:29] is the sub-list for extension type_name
@@ -2183,7 +2250,7 @@ func file_model_v1_model_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_model_v1_model_proto_rawDesc,
-			NumEnums:      5,
+			NumEnums:      6,
 			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,

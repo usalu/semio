@@ -54,7 +54,10 @@ namespace Semio.UI.Grasshopper.Components.Server
                     TargetPlatform = platform.Value,
                 };
 
-                using (var client = new HttpClient())
+                using (var client = new HttpClient()
+                       {
+                           MaxResponseContentBufferSize = Int32.MaxValue
+                })
                 {
                     HttpContent content = new StringContent(layoutDesignRequest.ToString());
                     var task = client.PostAsync(url + _route, content);
@@ -65,6 +68,9 @@ namespace Semio.UI.Grasshopper.Components.Server
                         Design design = Design.Parser.ParseJson(designContent.Result);
                         DA.SetData(0, new DesignGoo(design));
                     }
+                    else
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error,response.ReasonPhrase);
+                    
                 }
             }
         }

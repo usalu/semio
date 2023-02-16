@@ -1,0 +1,153 @@
+{
+  "layout": {
+    "sobjects": [
+      {
+        "id": "35b81922-3db6-41c3-92be-7915425d3e48",
+        "pose": {
+          "pointOfView": {
+            "x": -400,
+            "y": 10,
+            "z": -5
+          },
+          "view": {
+            "w": 1
+          }
+        },
+        "plan": {
+          "uri": "C:\\Git\\Studium\\PhD\\semio\\tests\\assets\\elements\\ProfiledWoodWithMitter.gh",
+          "parameters": [
+            {
+              "name": "Length",
+              "value": {
+                "number": 330
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "05d70c04-12c3-498b-a656-ead58cd2d551",
+        "pose": {
+          "pointOfView": {
+            "x": 30,
+            "y": 500,
+            "z": 20
+          },
+          "view": {
+            "x": 0.70710676908493042,
+            "y": -0.70710676908493042
+          }
+        },
+        "plan": {
+          "uri": "C:\\Git\\Studium\\PhD\\semio\\tests\\assets\\elements\\ProfiledWoodWithMitter.gh",
+          "parameters": [
+            {
+              "name": "Length",
+              "value": {
+                "number": 330
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "9c42d0c8-78b2-48e3-a143-2bbc809d78f2",
+        "pose": {
+          "pointOfView": {
+            "x": 30,
+            "y": 750,
+            "z": 100
+          },
+          "view": {
+            "w": 0.70710676908493042,
+            "z": -0.70710676908493042
+          }
+        },
+        "plan": {
+          "uri": "C:\\Git\\Studium\\PhD\\semio\\tests\\assets\\elements\\ProfiledWoodWithMitter.gh",
+          "parameters": [
+            {
+              "name": "Length",
+              "value": {
+                "number": 330
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aae70814-e0d3-4aba-ad04-4ecc19952575",
+        "pose": {
+          "pointOfView": {
+            "x": -500,
+            "y": 1000,
+            "z": 400
+          },
+          "view": {
+            "x": 1
+          }
+        },
+        "plan": {
+          "uri": "C:\\Git\\Studium\\PhD\\semio\\tests\\assets\\elements\\ProfiledWoodWithMitter.gh",
+          "parameters": [
+            {
+              "name": "Length",
+              "value": {
+                "number": 330
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "connections": [
+      {
+        "connecting": {
+          "sobjectId": "35b81922-3db6-41c3-92be-7915425d3e48",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        },
+        "connected": {
+          "sobjectId": "05d70c04-12c3-498b-a656-ead58cd2d551",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        }
+      },
+      {
+        "connecting": {
+          "sobjectId": "05d70c04-12c3-498b-a656-ead58cd2d551",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        },
+        "connected": {
+          "sobjectId": "9c42d0c8-78b2-48e3-a143-2bbc809d78f2",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        }
+      },
+      {
+        "connecting": {
+          "sobjectId": "9c42d0c8-78b2-48e3-a143-2bbc809d78f2",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        },
+        "connected": {
+          "sobjectId": "aae70814-e0d3-4aba-ad04-4ecc19952575",
+          "link": {
+            "representationProtocol": "REPRESENTATIONPROTOCOL_SIMPLE"
+          }
+        }
+      }
+    ],
+    "assemblies": [
+      {
+        "sobjectId": "35b81922-3db6-41c3-92be-7915425d3e48"
+      }
+    ]
+  }  
+}

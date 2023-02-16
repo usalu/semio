@@ -710,6 +710,38 @@ export enum RepresentationProtocol {
     REPRESENTATIONPROTOCOL_FULL = 2
 }
 /**
+ * The (pose) dependency determines to what extend the connecting sobject is dependent on the connected sobject.
+ *
+ * @generated from protobuf enum semio.model.v1.Dependency
+ */
+export enum Dependency {
+    /**
+     * The connecting sobject is independant and stays on its own pose.
+     *
+     * @generated from protobuf enum value: DEPENDENCY_INDEPENDENT = 0;
+     */
+    INDEPENDENT = 0,
+    /**
+     * The connecting sobject only depends on the point of view which will be determined by the connected sobject but uses its own view.
+     *
+     * @generated from protobuf enum value: DEPENDENCY_POINTDEPENDENT = 1;
+     */
+    POINTDEPENDENT = 1,
+    /**
+     * The connecting sobject only depends on the view which will be determined by the connected sobject but uses its own point of view.
+     *
+     * @generated from protobuf enum value: DEPENDENCY_VIEWDEPENDENT = 2;
+     */
+    VIEWDEPENDENT = 2,
+    /**
+     * The connecting sobject is fully dependant on the pose which will be determined by the connected sobject.
+     * With this the connecting sobject doesn't need to have a pose at all.
+     *
+     * @generated from protobuf enum value: DEPENDENCY_DEPENDENT = 3;
+     */
+    DEPENDENT = 3
+}
+/**
  * A layout strategy affects in which orders connections are triggered.
  *
  * @generated from protobuf enum semio.model.v1.LayoutStrategy

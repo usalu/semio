@@ -5,6 +5,10 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
+DEPENDENCY_DEPENDENT: Dependency
+DEPENDENCY_INDEPENDENT: Dependency
+DEPENDENCY_POINTDEPENDENT: Dependency
+DEPENDENCY_VIEWDEPENDENT: Dependency
 DESCRIPTOR: _descriptor.FileDescriptor
 ENCODING_TEXT_ASCII: Encoding
 ENCODING_TEXT_BASE64: Encoding
@@ -234,6 +238,9 @@ class Platform(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []
 
 class RepresentationProtocol(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+
+class Dependency(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []
 
 class LayoutStrategy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
