@@ -107,3 +107,7 @@ class ExtensionProxy(SemioProxy):
         return self._translatorStub.TranslateRepresentation(
             TranslateRepresentationRequest(representation=representation,target_pose=target_pose,source_pose=source_pose))
 
+    def __hash__(self):
+        return hash(self.address)
+
+

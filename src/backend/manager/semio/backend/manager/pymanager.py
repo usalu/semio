@@ -4,15 +4,24 @@ from typing import Iterable,Tuple
 import logging
 
 from os.path import splitext
+from functools import lru_cache
 
 from semio.geometry import Point
-from semio.model import REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform
+from semio.model import REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Plan,Sobject,Connection,Layout,Prototype,Element,Design, Representation,Platform,Link
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
 from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
 
-from semio.utils import getLocalPointOfView, getWorldPointOfView, subtract
+from semio.utils import getLocalPointOfView, getWorldPointOfView, subtract, hashObject
+
+# In order to be able to cache objects, a hash function is monkey patched
+def hashMonkeyPatch(self):
+    return hash(hashObject(self))
+
+Pose.__hash__= hashMonkeyPatch
+Plan.__hash__= hashMonkeyPatch
+Link.__hash__= hashMonkeyPatch
 
 def getPlatformFromElementUri(elementUri):
     splitElementUri = splitext(elementUri)
@@ -25,6 +34,53 @@ def getPlatformFromElementUri(elementUri):
         raise ValueError(f'The element type with ending .{fileExtension} is not supported by me (yet).')
     platform = PLATFORM_BYEXTENSION[fileExtension]
     return platform
+
+# TODO Add cache invalidation when extension changes.
+
+@lru_cache()
+def requestPrototypeCached(extensionProxy:ExtensionProxy, plan:Plan, target_platform: Platform | None = None) -> Prototype:
+    return extensionProxy.RequestPrototype(plan)
+
+@lru_cache()
+def connectElementCached(
+    extensionProxyConnected:ExtensionProxy, 
+    extensionProxyConnecting:ExtensionProxy, 
+    connected_sobject_pose: Pose,
+    connected_sobject_plan: Plan, 
+    connecting_sobject_pose: Pose,
+    connecting_sobject_plan: Plan, 
+    connected_link: Link,
+    connecting_link: Link
+    ) -> Tuple[Pose, Point]:
+    protocol = connected_link.representationProtocol
+    if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
+        # Representation is the point of view from the connecting from the pose of the connected.
+        representationConnecting = getLocalPointOfView(connected_sobject_pose,connecting_sobject_pose.point_of_view)
+    elif protocol == REPRESENTATIONPROTOCOL_FULL:
+        # TODO Implement
+        #representationConnecting = 
+        raise NotImplementedError()
+    else:
+        representationConnecting = None
+
+    connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject_plan,connected_link,representationConnecting)
+    connectionPointFromWorld = getWorldPointOfView(connected_sobject_pose,connectionPointFromConnected)
+    
+    protocol = connecting_link.representationProtocol
+    if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
+        # Representation is the point of view from the connecting from the pose of the connected.
+        representationConnected = getLocalPointOfView(connected_sobject_pose,connecting_sobject_pose.point_of_view)
+    elif protocol == REPRESENTATIONPROTOCOL_FULL:
+        # TODO Implement
+        #representationConnected = 
+        raise NotImplementedError()
+    else:
+        representationConnected = None
+    connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject_plan,connecting_link,representationConnected)
+    relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject_pose,connectionPointFromConnecting,False)
+
+    connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
+    return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject_pose.view),connectionPointFromWorld)
 
 class Manager(ManagerServer):
 
@@ -53,47 +109,25 @@ class Manager(ManagerServer):
         # raise ValueError(f"No transforming service was found that can transform. Register an appropriate extension which can convert this type.")
 
     # Services
-
     def requestPrototype(self, plan: Plan, target_platform: Platform | None = None) -> Prototype:
         adapterAddress =self.getAdapterAddress(getPlatformFromElementUri(plan.uri))
         extensionProxy = self._getExtensionProxy(adapterAddress)
         # TODO Implement target platform logic over checking of response, converters, etc
-        return extensionProxy.RequestPrototype(plan)
-    
+        return requestPrototypeCached(extensionProxy,plan,target_platform)
+
     def connectElement(self, connected_sobject: Sobject, connecting_sobject: Sobject, connection: Connection) -> Tuple[Pose, Point]:
         adapterAddressConnected = self.getAdapterAddress(getPlatformFromElementUri(connected_sobject.plan.uri))
         extensionProxyConnected = self._getExtensionProxy(adapterAddressConnected)
         adapterAddressConnecting = self.getAdapterAddress(getPlatformFromElementUri(connecting_sobject.plan.uri))
         extensionProxyConnecting = self._getExtensionProxy(adapterAddressConnecting)
-      
-        protocol = connection.connected.link.representationProtocol
-        if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
-            # Representation is the point of view from the connecting from the pose of the connected.
-            representationConnecting = getLocalPointOfView(connected_sobject.pose,connecting_sobject.pose.point_of_view)
-        elif protocol == REPRESENTATIONPROTOCOL_FULL:
-            # TODO Implement
-            #representationConnecting = 
-            raise NotImplementedError()
-        else:
-            representationConnecting = None
-    
-        connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject.plan,connection.connected.link,representationConnecting)
-        connectionPointFromWorld = getWorldPointOfView(connected_sobject.pose,connectionPointFromConnected)
-        
-        if protocol == REPRESENTATIONPROTOCOL_SIMPLE:
-            # Representation is the point of view from the connecting from the pose of the connected.
-            representationConnected = getLocalPointOfView(connected_sobject.pose,connecting_sobject.pose.point_of_view)
-        elif protocol == REPRESENTATIONPROTOCOL_FULL:
-            # TODO Implement
-            #representationConnected = 
-            raise NotImplementedError()
-        else:
-            representationConnected = None
-        connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject.plan,connection.connecting.link,representationConnected)
-        relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject.pose,connectionPointFromConnecting,False)
 
-        connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
-        return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject.pose.view),connectionPointFromWorld)
+        return connectElementCached(extensionProxyConnected,extensionProxyConnecting,
+            connected_sobject.pose,
+            connected_sobject.plan,
+            connecting_sobject.pose,
+            connecting_sobject.plan,
+            connection.connected.link,
+            connection.connecting.link)
 
 if __name__ == '__main__':
     logging.basicConfig()

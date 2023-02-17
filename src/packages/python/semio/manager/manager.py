@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC,abstractmethod
+# from abc import ABC,abstractmethod
 from typing import TYPE_CHECKING,Iterable,Tuple
 from pydantic import Field
 
@@ -19,7 +19,7 @@ from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
 if TYPE_CHECKING:
     from semio.extension import Extending
 
-class ManagerServer(SemioServer,SemioService,ABC):
+class ManagerServer(SemioServer,SemioService):
     assemblerAddress: str = "localhost:"+str(DEFAULT_ASSEMBLER_PORT)
     # dict[str,Extending]
     extensions: dict[str,object]= Field(default_factory=dict, description="Extensions with address as key and extension description as value.")
@@ -49,23 +49,23 @@ class ManagerServer(SemioServer,SemioService,ABC):
             self.extensionsProxies[extensionAddress] = ExtensionProxy(extensionAddress)
         return self.extensionsProxies[extensionAddress]
 
-    @abstractmethod
-    def requestPrototype(self, 
-        plan:Plan,
-        target_platform:Platform | None = None)->Prototype:
-        pass
+    # @abstractmethod
+    # def requestPrototype(self, 
+    #     plan:Plan,
+    #     target_platform:Platform | None = None)->Prototype:
+    #     pass
 
     def RequestPrototype(self, request, context):
         return self.requestPrototype(
             request.plan,
             request.target_platform)
     
-    @abstractmethod
-    def connectElement(self, 
-        connected_sobject: Sobject,
-        connecting_sobject:Sobject,
-        connection: Connection)->Tuple[Pose,Point]:
-        pass
+    # @abstractmethod
+    # def connectElement(self, 
+    #     connected_sobject: Sobject,
+    #     connecting_sobject:Sobject,
+    #     connection: Connection)->Tuple[Pose,Point]:
+    #     pass
 
     def ConnectElement(self, request, context):
         connected_element_pose,connection_point = self.connectElement(
