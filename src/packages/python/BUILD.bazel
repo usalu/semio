@@ -1,0 +1,13 @@
+load("@pip//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "semio",
+    srcs = glob(["semio/**/.py"]),
+    deps = [
+        requirement("grpcio"),
+        requirement("protobuf"),
+        requirement("grpcio-reflection"),
+    ],
+    visibility = ["//visibility:public"]
+)
