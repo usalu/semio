@@ -10,10 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-pydantic = "^1.10.5"
-networkx = "*"
-mathutils = "*"
+python = "^3.10"
 
 # # Use this for production
 # semio = "*"
@@ -30,3 +27,6 @@ semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-p
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+main = "semio.backend.gateway.pygateway:main"

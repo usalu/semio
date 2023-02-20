@@ -10,10 +10,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-pydantic = "*"
-networkx = "*"
-mathutils = "*"
+python = "^3.10"
+pydantic = "^1.10.5"
+networkx = "^3.0"
+numpy = "^1.24.2"
 semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 #semio = {path = "../packages/python/dist/semio-0.0.1-py3-none-any.whl"}
 

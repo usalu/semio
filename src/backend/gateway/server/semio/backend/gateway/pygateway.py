@@ -35,7 +35,10 @@ class Gateway(GatewayServer):
         # await Task 1 & 2
         return Design(prototypes=prototypes,elements=elements)
     
-if __name__ == '__main__':
+def main():
     logging.basicConfig()
     gateway = Gateway()
     gateway.serve()
+
+if __name__ == '__main__':
+    main()

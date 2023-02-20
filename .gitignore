@@ -30,7 +30,8 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+# dist folder because poetry doesn't support relative paths
+#dist/
 downloads/
 eggs/
 .eggs/
@@ -273,7 +274,8 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# dist folder because poetry doesn't support relative paths
+# dist
 
 # Gatsby files
 .cache/

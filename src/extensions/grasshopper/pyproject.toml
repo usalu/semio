@@ -10,8 +10,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-rhino3dm = "*"
+python = "^3.10"
+rhino3dm = "7.11.1"
 compute-rhino3d = "*"
 pydantic = "*"
 semio = {path = "C:/Git/Studium/PhD/semio/src/packages/python/dist/semio-0.0.1-py3-none-any.whl"}
