@@ -1,28 +1,51 @@
-# services:
+services:
 
-#   server:
-#     image: semio/server
-#     build: server
-#     container_name: semio_server
-#     ports:
-#       - 80:80
-#     restart: always
-#     networks:
-#       - public
-#       - private
-#     command: python3 server.py
+  gateway:
+    image: semio-gateway:base
+    container_name: semio-gateway-00
+    ports:
+      - 2000:2000
+    restart: always
+    # networks:
+    #   - public
+    #   - private
+
+  gatewayrestproxy:
+    image: semio-gateway-restproxy:tiny
+    container_name: semio-server-00
+    ports:
+      - 2999:2999
+    restart: always
+    # networks:
+    #   - public
+    #   - private
+
+  assembler:
+    image: semio-assembler:base
+    container_name: semio-assembler-00
+    ports:
+      - 2001:2001
+    restart: always
+    # networks:
+    #   - public
+    #   - private
   
-#   grasshopper-extension:
-#     image: semio/grasshopper
-#     build: extensions/grasshopper
-#     container_name: semio_server
-#     restart: always
-#     networks:
-#       - private
+  manager:
+    image: semio-manager:base
+    container_name: semio-manager-00
+    ports:
+      - 2002:2002
+    restart: always
+    # networks:
+    #   - public
+    #   - private
 
-#   vscode-ui:
-#     image: semio/grasshopper
-#     build: extensions/grasshopper
-#     restart: always
-#     networks:
-#       - public
+  grasshopper:
+    image: semio-grasshopper:base
+    container_name: semio-grasshopper-00
+    restart: always
+    ports:
+      - 20000:20000
+      - 6500:6500
+    # networks:
+    #   - private

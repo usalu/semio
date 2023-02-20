@@ -13,7 +13,7 @@ packages = [
 python = "^3.10"
 
 # # Use this for production
-# semio = "*"
+# semio = "0.0.1"
 
 # Use this for latest development version on github
 semio = { git = "https://github.com/usalu/semio.git", subdirectory = "src/packages/python" }

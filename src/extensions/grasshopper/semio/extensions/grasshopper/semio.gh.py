@@ -69,8 +69,11 @@ class GrasshopperAdapter(AdapterService):
         # representations = [Representation(body=b'Zzzzh',platform=PLATFORM_GRASSHOPPER)]
         # return Prototype(representations=representations)
 
-if __name__=="__main__":
+def main():
     logging.basicConfig()
     grasshopperServer = ExtensionServer(port=GRASSHOPPER['DEFAULT_PORT'],name='semio.gh')
     grasshopperServer.adapter=GrasshopperAdapter()
     grasshopperServer.serve()
+
+if __name__=="__main__":
+    main()

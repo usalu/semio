@@ -2,12 +2,12 @@ module github.com/usalu/semio/src/backend/gateway/restproxy
 
 go 1.19
 
-replace github.com/usalu/semio/src/packages/go => ../../../packages/go
+// replace github.com/usalu/semio/src/packages/go => ../../../packages/go
 
 require (
 	github.com/golang/glog v1.0.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
-	github.com/usalu/semio/src/packages/go v0.0.0-00010101000000-000000000000
+	github.com/usalu/semio/src/packages/go v0.0.0-20230220010751-6d87fbe883f8
 	google.golang.org/grpc v1.52.0
 )
 

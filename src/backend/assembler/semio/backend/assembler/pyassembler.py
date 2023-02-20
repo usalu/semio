@@ -117,7 +117,10 @@ class Assembler(AssemblerServer):
                 elements += self.partToElements(sobject,partOfPart,sobjects,connections,newDiscrepancy)
         return elements
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig()
     assembler = Assembler()
     assembler.serve()
+
+if __name__ == '__main__':
+    main()
