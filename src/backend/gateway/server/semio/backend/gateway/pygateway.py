@@ -2,11 +2,7 @@ import logging
 
 from typing import Iterable
 
-try:
-    from semio.geometry import Point
-except ImportError:
-    from geometry import Point
-
+from semio.geometry import Point
 from semio.model import Sobject,Platform,Connection,Assembly,Layout,Representation,Prototype,Element,Design
 from semio.gateway import GatewayServer
 from semio.utils import hashObject

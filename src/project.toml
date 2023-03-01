@@ -1,0 +1,22 @@
+[project]
+id = "com.github.usalu.semio"
+name = "semio"
+version = "0.1.0"
+authors = ["Ueli Saluz"]
+source-url = "https://github.com/usalu/semio"
+
+[build]
+[[build.buildpacks]]
+uri = "backend/gateway/server"
+[[build.buildpacks]]
+uri = "backend/gateway/restproxy"
+[[build.buildpacks]]
+uri = "backend/assembler"
+[[build.buildpacks]]
+uri = "backend/manager"
+[[build.buildpacks]]
+uri = "backend/extensions/grasshopper"
+[[build.env]]
+name = "BP_CPYTHON_VERSION"
+value = "3.10.*"
+

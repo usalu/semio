@@ -643,9 +643,8 @@ pydantic = "^1.10.5"
 type = "git"
 url = "https://github.com/usalu/semio.git"
 reference = "HEAD"
-resolved_reference = "6d87fbe883f8279c59e6a4f2aec1cad402b6884f"
+resolved_reference = "bcf70b7f4d8e6f3152d4faf9484dbdf14e8069c1"
 subdirectory = "src/packages/python"
-
 [[package]]
 name = "six"
 version = "1.16.0"

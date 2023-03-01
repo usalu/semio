@@ -1,1 +1,1 @@
-from .pygateway import Gateway
+from .pygateway import main

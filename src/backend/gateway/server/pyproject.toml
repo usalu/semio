@@ -29,4 +29,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-main = "semio.backend.gateway.pygateway:main"
+main = "semio.backend.gateway:main"

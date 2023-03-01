@@ -129,7 +129,10 @@ class Manager(ManagerServer):
             connection.connected.link,
             connection.connecting.link)
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig()
     manager = Manager()
     manager.serve()
+
+if __name__ == '__main__':
+    main()

@@ -1,1 +1,1 @@
-from .pymanager import Manager
+from .pymanager import main

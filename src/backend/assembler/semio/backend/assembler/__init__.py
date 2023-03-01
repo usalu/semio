@@ -1,1 +1,1 @@
-from .pyassembler import Assembler
+from .pyassembler import main
