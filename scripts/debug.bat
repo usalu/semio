@@ -1,1 +1,1 @@
-"C:\Programs_Shared\Windows\grpcui\1.3.1\grpcui.exe" -plaintext localhost:50001
+"C:\Programs_Shared\Windows\grpcui\1.3.1\grpcui.exe" -plaintext localhost:2000

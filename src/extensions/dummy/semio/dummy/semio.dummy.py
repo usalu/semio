@@ -6,10 +6,8 @@ from semio.extension.adapter import AdapterService, ConnectionPointRequest, Repr
 from semio.constants import PLATFORMS
 
 class DummyAdapter(AdapterService):
-    """An adapter for the REST Endpoint for Dummy of the Compute Rhino server."""
-    computeUrl:str = "http://localhost:6500/"
-    computeAuthToken:str = ""
-
+    """A dummy adapter."""
+    
     def _getDescriptions(self):
         return [
             Adapting(platform_url="dummy/verycomplexplatform"),

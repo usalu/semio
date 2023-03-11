@@ -6,16 +6,28 @@ authors = ["Ueli Saluz"]
 source-url = "https://github.com/usalu/semio"
 
 [build]
+exclude = [
+    "/README.md",
+    "bash-script-buildpack"
+]
+
+# Directories are not supported under windows.
+# https://buildpacks.io/docs/app-developer-guide/specify-buildpacks/
 [[build.buildpacks]]
 uri = "backend/gateway/server"
+# uri = "docker:///semio-gateway:base"
 [[build.buildpacks]]
 uri = "backend/gateway/restproxy"
+# uri = "docker:///semio-gateway-restproxy:tiny"
 [[build.buildpacks]]
 uri = "backend/assembler"
+# uri = "docker:///semio-assembler:base"
 [[build.buildpacks]]
 uri = "backend/manager"
+# uri = "docker:///semio-manager:base"
 [[build.buildpacks]]
 uri = "backend/extensions/grasshopper"
+# uri = "docker:///semio-extension:base"
 [[build.env]]
 name = "BP_CPYTHON_VERSION"
 value = "3.10.*"
