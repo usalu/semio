@@ -1,1 +1,1 @@
-from .extension import main
+from .semioextension import main

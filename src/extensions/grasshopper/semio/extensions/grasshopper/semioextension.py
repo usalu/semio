@@ -10,8 +10,8 @@ from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
 from semio.utils import hashObject
 
-from .rhino import Rhino3dmConverter
-from .grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
+from rhino import Rhino3dmConverter
+from grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
 
 def parametersToDict(parameters):
     parametersDictionary = {}

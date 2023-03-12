@@ -65,17 +65,17 @@ def connectElementCached(
     connecting_link: Link
     ) -> Tuple[Pose, Point]:
     
-   
     representationConnecting = getRepresentation(connected_sobject_pose,connected_link.representationProtocol,connecting_sobject_pose.point_of_view)
     connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject_plan,connected_link,representationConnecting)
     connectionPointFromWorld = getWorldPointOfView(connected_sobject_pose,connectionPointFromConnected)
     
-    representationConnected = getRepresentation(connecting_sobject_pose,connecting_link.representationProtocol,connecting_sobject_pose.point_of_view)
+    representationConnected = getRepresentation(connected_sobject_pose,connecting_link.representationProtocol,connecting_sobject_pose.point_of_view)
     connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject_plan,connecting_link,representationConnected)
     relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject_pose,connectionPointFromConnecting,False)
 
     connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
     return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject_pose.view),connectionPointFromWorld)
+
 
 class Manager(ManagerServer):
 

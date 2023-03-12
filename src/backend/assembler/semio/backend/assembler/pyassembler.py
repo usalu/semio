@@ -9,7 +9,9 @@ from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyT
 from semio.utils import hashObject, subtract, adjustPointOfView,add
 
 from networkx import Graph,edge_bfs,draw,DiGraph
-from matplotlib.pyplot import plot
+
+# TODO Debug mode
+# from matplotlib.pyplot import plot
 
 def visualize_graph(G: Graph):
     draw(G, with_labels=True)
