@@ -38,7 +38,7 @@ def getPlatformFromElementUri(elementUri):
 
 # TODO Add cache invalidation when extension changes.
 
-# @lru_cache()
+@lru_cache()
 def requestPrototypeCached(extensionProxy:ExtensionProxy, plan:Plan, target_platform: Platform | None = None) -> Prototype:
     return extensionProxy.RequestPrototype(plan)
 
@@ -53,7 +53,7 @@ def getRepresentation(connected_sobject_pose: Pose, representationProtocol: Repr
     else:
         return None
 
-# @lru_cache()
+@lru_cache()
 def connectElementCached(
     extensionProxyConnected:ExtensionProxy, 
     extensionProxyConnecting:ExtensionProxy, 
