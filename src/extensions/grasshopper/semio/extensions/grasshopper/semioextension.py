@@ -10,8 +10,8 @@ from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
 from semio.utils import hashObject
 
-from rhino import Rhino3dmConverter
-from grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
+from .rhino import Rhino3dmConverter
+from .grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
 
 def parametersToDict(parameters):
     parametersDictionary = {}
@@ -51,7 +51,7 @@ class GrasshopperAdapter(AdapterService):
             raise NotImplementedError()
 
         if link.bias_parameters:
-            parameters.update({'CONNECTION:'+name:key for name,key in parametersToDict(plan.parameters).items()})
+            parameters.update({'CONNECTION:BIAS:'+name:key for name,key in parametersToDict(link.bias_parameters).items()})
         if len(link.ports)>0:
             parameters['CONNECTION:PORTS'] = list(link.ports)
         response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
@@ -70,7 +70,6 @@ class GrasshopperAdapter(AdapterService):
         # return Prototype(representations=representations)
 
 def main():
-    logging.basicConfig()
     grasshopperServer = ExtensionServer(port=GRASSHOPPER['DEFAULT_PORT'],name='semio.gh')
     grasshopperServer.adapter=GrasshopperAdapter()
     grasshopperServer.serve()

@@ -1,3 +1,6 @@
+from logging import basicConfig, info, debug, DEBUG
+from argparse import ArgumentParser
+
 from concurrent import futures
 import grpc
 from grpc_reflection.v1alpha import reflection
@@ -23,6 +26,8 @@ class SemioServiceDescription(BaseModel):
 class SemioServer(BaseModel,ABC):
     port: int =  8080
     name: str = ""
+    # Set this to True, to find all other services under localhost
+    local: bool = False
     
     # TODO replace with abstractclassmethod
     @abstractmethod
@@ -31,7 +36,23 @@ class SemioServer(BaseModel,ABC):
 
     def serve(self) -> None:
         """Call this function to start the server."""
-        self.initialize()
+        parser = ArgumentParser(
+                    prog=self.name,
+                    description='The gateway in the semio service landscape.')
+        parser.add_argument('-l', '--local', action='store_true',
+                            help = 'When local mode is on, all other services will be searched under localhost.') 
+        parser.add_argument('-v', '--verbose', action='store_true',
+                            help = 'This will set logging level to the lowest (debug) and display all information.') 
+        args = parser.parse_args()
+        # Set logging
+        if args.verbose:
+            basicConfig(level=DEBUG)
+        else:
+            basicConfig()
+        if args.local:
+            self.initialize(args.local)
+            debug('Starting in local mode where other services are supposed to be available under localhost.')
+
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port('[::]:' + str(self.port))
         for serviceDescription in self._getServicesDescriptions():
@@ -43,11 +64,15 @@ class SemioServer(BaseModel,ABC):
             )
             reflection.enable_server_reflection(SERVICE_NAMES, server)    
         server.start()
-        print(f"{self.name} started, listening on " + str(self.port))
+        info(f"{self.name} started, listening on " + str(self.port))
         server.wait_for_termination()
     
-    def initialize(self):
-        """Override this method to add additional initialization."""
+    def initialize(self,local=False):
+        """Override this method to add additional initialization logic.
+        
+        Keyword arguments:
+        local -- Wheather all other service are running on localhost. (default False)
+        """
         return
 
     class Config:

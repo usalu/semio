@@ -1,5 +1,3 @@
-import logging
-
 from typing import Iterable
 
 from semio.geometry import Point
@@ -30,11 +28,9 @@ class Gateway(GatewayServer):
 
         # await Task 1 & 2
         return Design(prototypes=prototypes,elements=elements)
-    
+
 def main():
-    logging.basicConfig()
-    gateway = Gateway()
-    gateway.serve()
+    Gateway().serve()
 
 if __name__ == '__main__':
     main()

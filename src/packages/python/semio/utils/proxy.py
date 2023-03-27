@@ -6,7 +6,8 @@ from typing import Iterable
 #     stub:type
 
 class SemioProxy(BaseModel,ABC):
-    address: str
-
+    baseAddress: str
+    port: int
+    
     class Config:
         extra = 'allow'

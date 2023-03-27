@@ -3,16 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING,Iterable,Tuple
 from pydantic import Field
 
-import logging
+from logging import debug
 
 from grpc import insecure_channel
+
+from urllib.parse import urlparse
 
 from .v1.manager_pb2 import DESCRIPTOR, PrototypeRequest, ConnectElementRequest, ConnectElementResponse,RegisterExtensionRequest,RegisterExtensionResponse
 from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerServiceServicer, ManagerServiceStub
 
 from geometry import Point
 from model import Pose,Platform,Plan,Sobject,Assembly,Layout,Connection,Prototype,Element,Design
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService, getAddressFromBaseAndPort
 from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
 
 # Avoid import cycle
@@ -27,6 +29,11 @@ class ManagerServer(SemioServer,SemioService):
     def __init__(self,port = DEFAULT_MANAGER_PORT, name = "Python Semio Manager Server", **kw):
         super().__init__(port=port,name=name, **kw)
 
+    def initialize(self,local=False):
+        if local:
+            self.assemblerAddress = 'localhost'
+            debug(f'Manager server [{self.name}] initialized in local mode. \n The assembler service is supposed to be available under localhost.')
+
     def _getServicesDescriptions(self):
         return [SemioServiceDescription(service=self,servicer=ManagerServiceServicer,add_Service_to_server=add_ManagerServiceServicer_to_server,descriptor=DESCRIPTOR)]
 
@@ -39,14 +46,24 @@ class ManagerServer(SemioServer,SemioService):
 
     def _getExtensionProxy(self,extensionAddress: str):#->ExtensionProxy
         """Get the extension proxy for an address. The proxy needs to be created at runtime to avoid cyclic imports between proxies and servers."""
+        parsedExtensionAddress = urlparse(extensionAddress)
+        
+        if not parsedExtensionAddress.netloc:
+            if extensionAddress.startswith('localhost:'):
+                url, port = extensionAddress.split(':')
+            else:
+                raise ValueError(f'The extension address {extensionAddress} is not valid. Either localhost or a url is requested.')
+        else:
+            url = parsedExtensionAddress.hostname
+            port = parsedExtensionAddress.port
         if not extensionAddress in self.extensions:
             raise ValueError(f'There is no extension registered at {extensionAddress}. Make sure that the extension initializes properly.')
         if not hasattr(self,'extensionsProxies'):
             from extension import ExtensionProxy
-            self.extensionsProxies = {extensionAddress:ExtensionProxy(extensionAddress)}
+            self.extensionsProxies = {extensionAddress:ExtensionProxy(url,port)}
         if not extensionAddress in self.extensionsProxies:
             from extension import ExtensionProxy
-            self.extensionsProxies[extensionAddress] = ExtensionProxy(extensionAddress)
+            self.extensionsProxies[extensionAddress] = ExtensionProxy(url,port)
         return self.extensionsProxies[extensionAddress]
 
     # @abstractmethod
@@ -85,7 +102,7 @@ class ManagerServer(SemioServer,SemioService):
                 else:
                     raise ValueError(f'There is already an extension with the name {extension.name}. If you wish to replace it set replace existing to true.')
         self.extensions[extending.address]=extending
-        logging.info(f"Extension: {extending.name} was registered at {extending.address}")
+        debug(f"Extension: {extending.name} was registered at {extending.address}")
         return (True,oldAddress)
 
     def RegisterExtension(self,request, context):
@@ -95,15 +112,15 @@ class ManagerServer(SemioServer,SemioService):
     def getRegisteredExtensions(self)->Iterable[Extending]:
         return self.extensions.values()
         
-    
     def GetRegisteredExtensions(self, request, context):
         return self.getRegisteredExtensions
 
 
 class ManagerProxy(SemioProxy):
-    def __init__(self,address ='localhost:'+str(DEFAULT_MANAGER_PORT), **kw):
-        super().__init__(address=address,**kw)
-        self._stub = ManagerServiceStub(insecure_channel(self.address))
+    def __init__(self,baseAddress ='manager', port = DEFAULT_MANAGER_PORT, **kw):
+        super().__init__(baseAddress=baseAddress,port=port,**kw)
+        address = getAddressFromBaseAndPort(baseAddress,port)
+        self._stub = ManagerServiceStub(insecure_channel(address))
 
     def RequestPrototype(self,
         plan: Plan,

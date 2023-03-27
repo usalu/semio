@@ -4,23 +4,31 @@ from abc import ABC, abstractmethod
 
 from pydantic import Field
 
+from logging import debug
+
 from grpc import insecure_channel
 
 from .v1.assembler_pb2 import DESCRIPTOR,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
 from .v1.assembler_pb2_grpc import add_AssemblerServiceServicer_to_server, AssemblerServiceServicer, AssemblerServiceStub
 from geometry import Point
 from model import Pose,Platform,Plan,Sobject,Connection,Assembly,Layout,Prototype,Element,PLATFORM_SEMIO
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService
+from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService, getAddressFromBaseAndPort
 from constants import DEFAULT_ASSEMBLER_PORT, DEFAULT_MANAGER_PORT
 
 if TYPE_CHECKING:
     from manager import ManagerProxy
 
 class AssemblerServer(SemioServer, SemioService, ABC):
-    managerAddress: str = "localhost:"+str(DEFAULT_MANAGER_PORT)
+    managerBaseAddress: str = 'manager'
+    managerPort: int = DEFAULT_MANAGER_PORT
 
     def __init__(self,port = DEFAULT_ASSEMBLER_PORT, name = "Python Semio Assembler Server", **kw):
         super().__init__(port=port,name=name, **kw)
+
+    def initialize(self,local=False):
+        if local:
+            self.managerBaseAddress = 'localhost'
+            debug(f'Assembler server [{self.name}] initialized in local mode. \n The manager service is supposed to be available under localhost.')
 
     def _getServicesDescriptions(self):
         return [SemioServiceDescription(
@@ -32,7 +40,7 @@ class AssemblerServer(SemioServer, SemioService, ABC):
     def _getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
             from manager import ManagerProxy
-            self.managerProxy = ManagerProxy(self.managerAddress)
+            self.managerProxy = ManagerProxy(self.managerBaseAddress,self.managerPort)
         return self.managerProxy
     
     # Service definitions
@@ -66,9 +74,9 @@ class AssemblerServer(SemioServer, SemioService, ABC):
         return self._getManagerProxy().RequestPrototype(plan,target_platform)
 
 class AssemblerProxy(SemioProxy):
-    def __init__(self,address ='localhost:'+str(DEFAULT_ASSEMBLER_PORT), **kw):
-        super().__init__(address=address,**kw)
-        self._stub = AssemblerServiceStub(insecure_channel(self.address))
+    def __init__(self,baseAddress ='assembler:', port = DEFAULT_ASSEMBLER_PORT, **kw):
+        super().__init__(baseAddress=baseAddress,port=port,**kw)
+        self._stub = AssemblerServiceStub(insecure_channel(getAddressFromBaseAndPort(self.baseAddress,self.port)))
 
     def LayoutToAssemblies(self, layout: Layout):
         return self._stub.LayoutToAssemblies(request=layout).assemblies

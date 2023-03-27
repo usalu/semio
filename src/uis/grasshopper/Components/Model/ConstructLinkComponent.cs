@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Grasshopper.Kernel;
 using Semio.Model.V1;
 using Semio.UI.Grasshopper.Goos;
@@ -46,6 +47,7 @@ namespace Semio.UI.Grasshopper.Components.Model
                 RepresentationProtocol = representationProtocol
             };
             connectable.Ports.AddRange(ports);
+            connectable.BiasParameters.AddRange(biasParameters.Select(p=>p.Value));
 
             DA.SetData(0, new LinkGoo(connectable));
         }

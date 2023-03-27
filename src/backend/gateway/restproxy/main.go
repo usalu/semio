@@ -17,8 +17,8 @@ var (
 	// command-line options:
 	// gRPC server endpoint
 	// DNS record of gateway needs to be resolvable
-	// grpcServerEndpoint = flag.String("grpc-server-endpoint", "semio-gateway:2000", "gRPC server endpoint")
-	grpcServerEndpoint = flag.String("grpc-server-endpoint", "localhost:2000", "gRPC server endpoint")
+	grpcServerEndpoint = flag.String("grpc-server-endpoint", "gateway:2000", "gRPC server endpoint")
+	// grpcServerEndpoint = flag.String("grpc-server-endpoint", "localhost:2000", "gRPC server endpoint")
 )
 
 func run() error {

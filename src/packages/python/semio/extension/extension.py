@@ -3,9 +3,13 @@ import logging
 
 from pydantic import Field
 
+from logging import debug
+
 from grpc import insecure_channel
 
 from typing import TYPE_CHECKING, Iterable
+
+from socket import gethostbyname,gethostname
 
 from .adapter.v1.adapter_pb2 import DESCRIPTOR as ADAPTER_DESCRIPTOR, ConnectionPointRequest
 from .adapter.v1.adapter_pb2_grpc import add_AdapterServiceServicer_to_server, AdapterServiceServicer, AdapterServiceStub
@@ -18,7 +22,7 @@ from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_
 
 from geometry import Point
 from model import REPRESENTATIONPROTOCOL_NONE,REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
-from utils import SemioServer, SemioServiceDescription, SemioProxy
+from utils import SemioServer, SemioServiceDescription, SemioProxy, getAddressFromBaseAndPort
 from constants import DEFAULT_MANAGER_PORT
 
 from extension.adapter import AdapterService
@@ -33,7 +37,8 @@ if TYPE_CHECKING:
 import manager
 
 class ExtensionServer(SemioServer):
-    managerProxyAddress: str = "localhost:" + str(DEFAULT_MANAGER_PORT)
+    managerBaseAddress: str = "manager"
+    managerPort: int = DEFAULT_MANAGER_PORT
     # These should be abstract classes but pydantic doesn't let you define this without using Union[ALL, SUB, CLASSES]
     # https://stackoverflow.com/questions/58301364/pydantic-and-subclasses-of-abstract-class
     adapter: AdapterService = Field(default_factory=AdapterService)
@@ -41,10 +46,33 @@ class ExtensionServer(SemioServer):
     transformer: TransformerService = Field(default_factory=TransformerService)
     translator: TranslatorService = Field(default_factory=TranslatorService)
 
+    def initialize(self,local):
+        if local:
+            self.managerBaseAddress = 'localhost'
+            debug(f'Extension server [{self.name}] initialized in local mode. \n The manager service is supposed to be available under localhost.')
+            address = getAddressFromBaseAndPort('localhost',(self.port))
+        else:
+            address = gethostbyname(gethostname())  + ':' + str(self.port)
+        from .v1.extension_pb2 import Extending
+        
+        success, oldAddress = self._getManagerProxy().RegisterExtension(
+                extending=Extending(
+                    address = address,
+                    name = self.name,
+                    adaptings = self.adapter._getDescriptions(),
+                    convertings = self.converter._getDescriptions(), 
+                    transformings = self.transformer._getDescriptions(),
+                    translatings = self.translator._getDescriptions()))
+        if success:
+            logging.info(f'Extension {self.name} ({address}) was successfully registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}')
+        else:
+            logging.info(f'The extension {self.name} ({address}) couldn\'t be registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}.'+
+             f'Probably there is already an extension registered either at {address} or with name {self.name}. Make sure to set replace existing in the extension registration request to true if you want to override the other extension.')
+    
     def _getManagerProxy(self):#->ManagerProxy:
         if not hasattr(self,'managerProxy'):
             from manager import ManagerProxy
-            self.managerProxy = ManagerProxy(self.managerProxyAddress)
+            self.managerProxy = ManagerProxy(self.managerBaseAddress,self.managerPort)
         return self.managerProxy
 
     def _getServicesDescriptions(self):
@@ -55,32 +83,15 @@ class ExtensionServer(SemioServer):
             SemioServiceDescription(service=self.translator,servicer=TranslatorServiceServicer,add_Service_to_server=add_TranslatorServiceServicer_to_server,descriptor=TRANSLATOR_DESCRIPTOR)
         ]
         return servicesDescriptions
-    
-    def initialize(self):
-        from .v1.extension_pb2 import Extending
-        address = 'localhost:' +str(self.port)
-        success, oldAddress = self._getManagerProxy().RegisterExtension(
-                extending=Extending(
-                    name = self.name,
-                    address = address,
-                    adaptings = self.adapter._getDescriptions(),
-                    convertings = self.converter._getDescriptions(), 
-                    transformings = self.transformer._getDescriptions(),
-                    translatings = self.translator._getDescriptions()))
-        if success:
-            logging.info(f'Extension {self.name} ({address}) was successfully registered at manager {self.managerProxyAddress}')
-        else:
-            logging.info(f'The extension {self.name} ({address}) couldn\'t be registered at manager {self.managerProxyAddress}.'+
-             f'Probably there is already an extension registered either at {address} or with name {self.name}. Make sure to set replace existing in the extension registration request to true if you want to override the other extension.')
-
 
 class ExtensionProxy(SemioProxy):
-    def __init__(self,address, **kw):
-        super().__init__(address=address,**kw)
-        self._adapterStub = AdapterServiceStub(insecure_channel(self.address))
-        self._converterStub = ConverterServiceStub(insecure_channel(self.address))
-        self._transformerStub = TransformerServiceStub(insecure_channel(self.address))
-        self._translatorStub = TranslatorServiceStub(insecure_channel(self.address))
+    def __init__(self,baseAddress,port, **kw):
+        super().__init__(baseAddress=baseAddress,port=port,**kw)
+        address = getAddressFromBaseAndPort(baseAddress,port)
+        self._adapterStub = AdapterServiceStub(insecure_channel(address))
+        self._converterStub = ConverterServiceStub(insecure_channel(address))
+        self._transformerStub = TransformerServiceStub(insecure_channel(address))
+        self._translatorStub = TranslatorServiceStub(insecure_channel(address))
 
     def RequestPrototype(self, plan: Plan)->Prototype:
         return self._adapterStub.RequestPrototype(plan)
@@ -108,6 +119,6 @@ class ExtensionProxy(SemioProxy):
             TranslateRepresentationRequest(representation=representation,target_pose=target_pose,source_pose=source_pose))
 
     def __hash__(self):
-        return hash(self.address)
+        return hash((self.baseAddress,self.port))
 
 

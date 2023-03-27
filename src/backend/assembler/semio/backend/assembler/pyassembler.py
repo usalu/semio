@@ -120,9 +120,7 @@ class Assembler(AssemblerServer):
         return elements
 
 def main():
-    logging.basicConfig()
-    assembler = Assembler()
-    assembler.serve()
+    Assembler().serve()
 
 if __name__ == '__main__':
     main()

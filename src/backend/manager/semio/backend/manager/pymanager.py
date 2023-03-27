@@ -125,9 +125,7 @@ class Manager(ManagerServer):
             connection.connecting.link)
 
 def main():
-    logging.basicConfig()
-    manager = Manager()
-    manager.serve()
+    Manager().serve()
 
 if __name__ == '__main__':
     main()
