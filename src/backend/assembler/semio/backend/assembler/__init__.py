@@ -1,1 +1,1 @@
-from .pyassembler import main
+from .semioassembler import main

@@ -238,7 +238,7 @@ pydantic = "^1.10.5"
 type = "git"
 url = "https://github.com/usalu/semio.git"
 reference = "HEAD"
-resolved_reference = "ae8a4b0c0a57750a8260ba010ffaa5cbd9b08565"
+resolved_reference = "340b6281936ca8f8cef771815f5f146721dbd845"
 subdirectory = "src/packages/python"
 [[package]]
 name = "six"
@@ -266,5 +266,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "5ec566f8c6bbe82eaf561f46f9e67d3a17d2753fbe75d9282ebc94db48c0c88b"
+python-versions = "^3.11"
+content-hash = "5e810a0ab133eef15b0e7334bfc024c58fff11dc6f983200eeaf2ccaae08bdd1"

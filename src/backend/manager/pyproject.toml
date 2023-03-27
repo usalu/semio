@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "semio-backend-manager"
+name = "semiomanager"
 version = "0.0.1"
 description = "A manager for the backend of semio."
 authors = ["Ueli Saluz <semio@posteo.org>"]

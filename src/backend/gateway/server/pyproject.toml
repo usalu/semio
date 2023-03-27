@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "semio-backend-gateway"
+name = "semiogateway"
 version = "0.0.1"
 description = "A gateway backend for semio."
 authors = ["Ueli Saluz <semio@posteo.org>"]
@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 
 # # Use this for production
 # semio = "0.0.1"

@@ -1,1 +1,1 @@
-from .pygateway import main
+from .semiogateway import main
