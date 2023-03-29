@@ -1,1 +1,1 @@
-from .pymanager import main
+from .semiomanager import main

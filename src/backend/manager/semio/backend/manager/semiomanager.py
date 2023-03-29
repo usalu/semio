@@ -12,28 +12,19 @@ from semio.model import (RepresentationProtocol,Pose,Platform,Plan,Sobject,Conne
 from semio.assembler import AssemblerProxy
 from semio.manager import ManagerServer,PrototypeRequest,RegisterExtensionRequest, RegisterExtensionResponse
 from semio.extension import ExtensionProxy
-from semio.constants import PLATFORM_BYEXTENSION, GENERAL_EXTENSIONS
+from semio.constants import PLATFORM_BYFILEEXTENSION, GENERAL_FILEEXTENSIONS
 
-from semio.utils import getLocalPointOfView, getWorldPointOfView, subtract, hashObject
-
-# In order to be able to cache objects, a hash function is monkey patched
-def hashMonkeyPatch(self):
-    return hash(hashObject(self))
-
-Pose.__hash__= hashMonkeyPatch
-Plan.__hash__= hashMonkeyPatch
-Link.__hash__= hashMonkeyPatch
 
 def getPlatformFromElementUri(elementUri):
     splitElementUri = splitext(elementUri)
     fileExtension = splitElementUri[1]
-    if fileExtension in GENERAL_EXTENSIONS:
+    if fileExtension in GENERAL_FILEEXTENSIONS:
         fileExtension=splitext(splitElementUri[0])[1]+fileExtension
     if not fileExtension:
         raise ValueError(f'The element type with uri {elementUri} can\'t determine the type. Rename the file with the extension defined by semio for this platform.')
-    if not fileExtension in PLATFORM_BYEXTENSION:
+    if not fileExtension in PLATFORM_BYFILEEXTENSION:
         raise ValueError(f'The element type with ending .{fileExtension} is not supported by me (yet).')
-    platform = PLATFORM_BYEXTENSION[fileExtension]
+    platform = PLATFORM_BYFILEEXTENSION[fileExtension]
     return platform
 
 # TODO Add cache invalidation when extension changes.
@@ -47,7 +38,7 @@ def getRepresentation(connected_sobject_pose: Pose, representationProtocol: Repr
     if representationProtocol == REPRESENTATIONPROTOCOL_SIMPLE:
         # Representation is the point of view from the connecting from the pose of the connected.
         assert isinstance(connecting,Point)
-        return getLocalPointOfView(connected_sobject_pose,connecting)
+        return connected_sobject_pose.getLocalPointOfView(connecting)
     elif representationProtocol == REPRESENTATIONPROTOCOL_FULL:
         return connecting
     else:
@@ -67,13 +58,13 @@ def connectElementCached(
     
     representationConnecting = getRepresentation(connected_sobject_pose,connected_link.representationProtocol,connecting_sobject_pose.point_of_view)
     connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject_plan,connected_link,representationConnecting)
-    connectionPointFromWorld = getWorldPointOfView(connected_sobject_pose,connectionPointFromConnected)
+    connectionPointFromWorld = connected_sobject_pose.getWorldPointOfView(connectionPointFromConnected)
     
     representationConnected = getRepresentation(connected_sobject_pose,connecting_link.representationProtocol,connecting_sobject_pose.point_of_view)
     connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject_plan,connecting_link,representationConnected)
-    relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject_pose,connectionPointFromConnecting,False)
+    relativeConnectionPointFromConnectedFromWorld = connecting_sobject_pose.getWorldPointOfView(connectionPointFromConnecting,False)
 
-    connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
+    connectingTargetPointOfView = connectionPointFromWorld-relativeConnectionPointFromConnectedFromWorld
     return (Pose(point_of_view=connectingTargetPointOfView,view=connecting_sobject_pose.view),connectionPointFromWorld)
 
 
@@ -125,7 +116,7 @@ class Manager(ManagerServer):
             connection.connecting.link)
 
 def main():
-    Manager().serve()
+    Manager(startOverCli=True).serve()
 
 if __name__ == '__main__':
     main()

@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Iterable
 
-# class SemioServerDescription(BaseModel):
+# class ServerDescription(BaseModel):
 #     stub:type
 
-class SemioProxy(BaseModel,ABC):
+class Proxy(BaseModel,ABC):
     baseAddress: str
     port: int
     

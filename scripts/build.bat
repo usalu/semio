@@ -1,20 +1,20 @@
 cd src\packages\python
 poetry build
-cd ..
-cd ..
-cd backend\gateway\server
-poetry build
-cd ..
-cd ..
-cd manager
-poetry build
-cd ..
-cd assembler
-poetry build
-cd ..
-cd ..
-cd extensions\grasshopper
-poetry build
+@REM cd ..
+@REM cd ..
+@REM cd backend\gateway\server
+@REM poetry build
+@REM cd ..
+@REM cd ..
+@REM cd manager
+@REM poetry build
+@REM cd ..
+@REM cd assembler
+@REM poetry build
+@REM cd ..
+@REM cd ..
+@REM cd extensions\grasshopper
+@REM poetry build
 cd ..
 cd ..
 cd ..

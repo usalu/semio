@@ -14,13 +14,13 @@ tmp.setGracefulCleanup();
 
 
 const name = "semio.three"
-const address = '[::]:' + SEMIO_THREE['DEFAULT_PORT'];
+const address = '[::]:' + SEMIO_THREE['PORT'];
 
 const threeConverterService: IConverterService = {
 
     convertRepresentation(call: ServerUnaryCall<RepresentationConversionRequest, Representation>, callback: sendUnaryData<Representation>): void {
       switch (call.request.targetType){
-        case RHINO['EXTENSION']:
+        case RHINO['FILEEXTENSION']:
             const tempRhinoFileName = tmp.tmpNameSync();
             fs.writeFile(tempRhinoFileName, new TextDecoder().decode(call.request.representation?.body?.value),err =>{console.log(err);
             });

@@ -1,4 +1,4 @@
-import logging
+from pydantic import Field
 
 from tempfile import TemporaryFile
 from base64 import b64decode
@@ -8,7 +8,6 @@ from semio.model import ENCODING_TEXT_UFT8,PLATFORM_GRASSHOPPER,REPRESENTATIONPR
 from semio.extension import ExtensionServer
 from semio.extension.adapter import AdapterService, Adapting
 from semio.constants import PLATFORMS, GRASSHOPPER
-from semio.utils import hashObject
 
 from .rhino import Rhino3dmConverter
 from .grasshopper import callGrasshopper, getOutputParam, parseSingleItemTree
@@ -64,15 +63,15 @@ class GrasshopperAdapter(AdapterService):
             parameters.update(parametersToDict(plan.parameters))
         response = callGrasshopper(plan.uri, parameters, self.computeUrl, self.computeUrl)
         representations = computeResponseToRepresentations(response)
-        return Prototype(representations=representations,plan_hash=hashObject(plan))
+        return Prototype(representations=representations,plan_hash=plan.hash())
 
-        # representations = [Representation(body=b'Zzzzh',platform=PLATFORM_GRASSHOPPER)]
-        # return Prototype(representations=representations)
+class GrasshopperExtensionServer(ExtensionServer):
+    port = GRASSHOPPER['PORT']
+    name = 'semioextensiongrasshopper'
+    adapter = Field(default_factory=GrasshopperAdapter)
 
 def main():
-    grasshopperServer = ExtensionServer(port=GRASSHOPPER['DEFAULT_PORT'],name='semio.gh')
-    grasshopperServer.adapter=GrasshopperAdapter()
-    grasshopperServer.serve()
+    GrasshopperExtensionServer(startOverCli=True).serve()
 
 if __name__=="__main__":
     main()

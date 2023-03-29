@@ -5,37 +5,47 @@ from pydantic import Field
 
 from logging import debug
 
-from grpc import insecure_channel
+from argparse import ArgumentParser, Namespace
 
-from urllib.parse import urlparse
+from grpc import insecure_channel
 
 from .v1.manager_pb2 import DESCRIPTOR, PrototypeRequest, ConnectElementRequest, ConnectElementResponse,RegisterExtensionRequest,RegisterExtensionResponse
 from .v1.manager_pb2_grpc import add_ManagerServiceServicer_to_server, ManagerServiceServicer, ManagerServiceStub
 
 from geometry import Point
 from model import Pose,Platform,Plan,Sobject,Assembly,Layout,Connection,Prototype,Element,Design
-from utils import SemioServer, SemioServiceDescription, SemioProxy, SemioService, getAddressFromBaseAndPort
-from constants import DEFAULT_MANAGER_PORT, DEFAULT_ASSEMBLER_PORT
+from server import GrpcServer, GrpcServiceDescription
+from service import GrpcService
+from proxy import Proxy
+from networking import getAddressFromBaseAndPort
+from constants import MANAGER_PORT, ASSEMBLER_PORT
 
 # Avoid import cycle
 if TYPE_CHECKING:
     from semio.extension import Extending
 
-class ManagerServer(SemioServer,SemioService):
-    assemblerAddress: str = "localhost:"+str(DEFAULT_ASSEMBLER_PORT)
+class ManagerServer(GrpcServer,GrpcService):
+    assemblerBaseAddress: str = "assembler"
+    assemblerPort: int = ASSEMBLER_PORT
     # dict[str,Extending]
     extensions: dict[str,object]= Field(default_factory=dict, description="Extensions with address as key and extension description as value.")
     
-    def __init__(self,port = DEFAULT_MANAGER_PORT, name = "Python Semio Manager Server", **kw):
+    def __init__(self,port = MANAGER_PORT, name = "Python Semio Manager Server", **kw):
         super().__init__(port=port,name=name, **kw)
 
-    def initialize(self,local=False):
-        if local:
-            self.assemblerAddress = 'localhost'
+    def modifyArgumentParser(self, argumentParser: ArgumentParser):
+       
+    
+    def initialize(self,args):
+        if args.local:
+            self.assemblerBaseAddress = 'localhost'
+            debug(f'Manager server [{self.name}] initialized in local mode. \n The assembler service is supposed to be available under localhost.')
+        elif args.assemblerBaseAddress:
+            self.assemblerBaseAddress = 'localhost'
             debug(f'Manager server [{self.name}] initialized in local mode. \n The assembler service is supposed to be available under localhost.')
 
-    def _getServicesDescriptions(self):
-        return [SemioServiceDescription(service=self,servicer=ManagerServiceServicer,add_Service_to_server=add_ManagerServiceServicer_to_server,descriptor=DESCRIPTOR)]
+    def _getGrpcServicesDescriptions(self):
+        return [GrpcServiceDescription(service=self,servicer=ManagerServiceServicer,add_Service_to_server=add_ManagerServiceServicer_to_server,descriptor=DESCRIPTOR)]
 
     def _getAssemblerProxy(self):#->AssemblerProxy:
         """Get the assembler proxy. The proxy needs to be created at runtime to avoid cyclic imports between proxies and servers."""
@@ -116,8 +126,8 @@ class ManagerServer(SemioServer,SemioService):
         return self.getRegisteredExtensions
 
 
-class ManagerProxy(SemioProxy):
-    def __init__(self,baseAddress ='manager', port = DEFAULT_MANAGER_PORT, **kw):
+class ManagerProxy(Proxy):
+    def __init__(self,baseAddress ='manager', port = MANAGER_PORT, **kw):
         super().__init__(baseAddress=baseAddress,port=port,**kw)
         address = getAddressFromBaseAndPort(baseAddress,port)
         self._stub = ManagerServiceStub(insecure_channel(address))

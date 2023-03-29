@@ -32,7 +32,7 @@ class ExternalDocumentation(_message.Message):
 
 class Header(_message.Message):
     __slots__ = ["default", "description", "format", "pattern", "type"]
-    DEFAULT_FIELD_NUMBER: _ClassVar[int]
+    FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     FORMAT_FIELD_NUMBER: _ClassVar[int]
     PATTERN_FIELD_NUMBER: _ClassVar[int]
@@ -76,7 +76,7 @@ class Info(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_struct_pb2.Value, _Mapping]] = ...) -> None: ...
     CONTACT_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     LICENSE_FIELD_NUMBER: _ClassVar[int]
     TERMS_OF_SERVICE_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -109,13 +109,13 @@ class JSONSchema(_message.Message):
     ARRAY: JSONSchema.JSONSchemaSimpleTypes
     ARRAY_FIELD_NUMBER: _ClassVar[int]
     BOOLEAN: JSONSchema.JSONSchemaSimpleTypes
-    DEFAULT_FIELD_NUMBER: _ClassVar[int]
+    FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     ENUM_FIELD_NUMBER: _ClassVar[int]
     EXAMPLE_FIELD_NUMBER: _ClassVar[int]
     EXCLUSIVE_MAXIMUM_FIELD_NUMBER: _ClassVar[int]
     EXCLUSIVE_MINIMUM_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     FIELD_CONFIGURATION_FIELD_NUMBER: _ClassVar[int]
     FORMAT_FIELD_NUMBER: _ClassVar[int]
     INTEGER: JSONSchema.JSONSchemaSimpleTypes
@@ -195,7 +195,7 @@ class Operation(_message.Message):
     CONSUMES_FIELD_NUMBER: _ClassVar[int]
     DEPRECATED_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     EXTERNAL_DOCS_FIELD_NUMBER: _ClassVar[int]
     OPERATION_ID_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
@@ -251,7 +251,7 @@ class Response(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[Header, _Mapping]] = ...) -> None: ...
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     EXAMPLES_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     HEADERS_FIELD_NUMBER: _ClassVar[int]
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     description: str
@@ -336,7 +336,7 @@ class SecurityScheme(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_struct_pb2.Value, _Mapping]] = ...) -> None: ...
     AUTHORIZATION_URL_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     FLOW_ACCESS_CODE: SecurityScheme.Flow
     FLOW_APPLICATION: SecurityScheme.Flow
     FLOW_FIELD_NUMBER: _ClassVar[int]
@@ -383,7 +383,7 @@ class Swagger(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[Response, _Mapping]] = ...) -> None: ...
     BASE_PATH_FIELD_NUMBER: _ClassVar[int]
     CONSUMES_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     EXTERNAL_DOCS_FIELD_NUMBER: _ClassVar[int]
     HOST_FIELD_NUMBER: _ClassVar[int]
     INFO_FIELD_NUMBER: _ClassVar[int]
@@ -419,7 +419,7 @@ class Tag(_message.Message):
         value: _struct_pb2.Value
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_struct_pb2.Value, _Mapping]] = ...) -> None: ...
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     EXTERNAL_DOCS_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     description: str

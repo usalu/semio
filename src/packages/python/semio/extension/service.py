@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from utils import SemioService
+from service import Service
 
-class ExtensionService(SemioService,ABC):
+class ExtensionService(Service,ABC):
     #TODO Make class decorator
     @abstractmethod
     def _getDescriptions(self):

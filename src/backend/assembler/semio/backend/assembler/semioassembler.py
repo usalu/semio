@@ -6,7 +6,7 @@ from collections import deque
 from semio.geometry import Point
 from semio.model import Pose,Platform,Sobject,Connection,Assembly,Layout,Prototype,Element,Design,LAYOUTSTRATEGY_BREADTHFIRST,PLATFORM_SEMIO
 from semio.assembler import AssemblerServer,LayoutToAssembliesResponse,AssemblyToElementsRequest,AssemblyToElementsResponse
-from semio.utils import hashObject, subtract, adjustPointOfView,add
+from semio.behaviour import subtract, adjustPointOfView, add
 
 from networkx import Graph,edge_bfs,draw,DiGraph
 
@@ -42,7 +42,7 @@ def getElement(sobject:Sobject, pointOfView:Point | None = None)->Element:
     return Element(
         sobject_id=sobject.id,
         pose=Pose(point_of_view=pointOfView,view=sobject.pose.view),
-        prototype_plan_hash=hashObject(sobject.plan))
+        prototype_plan_hash=hash(sobject.plan))
 
 class Assembler(AssemblerServer):
 
@@ -120,7 +120,7 @@ class Assembler(AssemblerServer):
         return elements
 
 def main():
-    Assembler().serve()
+    Assembler(startOverCli=True).serve()
 
 if __name__ == '__main__':
     main()

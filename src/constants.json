@@ -1,23 +1,41 @@
 {
-  "DEFAULT_GATEWAY_PORT": 2000,
-  "DEFAULT_GATEWAY_PROXY_PORT": 2999,
-  "DEFAULT_ASSEMBLER_PORT": 2001,
-  "DEFAULT_MANAGER_PORT": 2002,
-  "GENERAL_EXTENSIONS": [
+  "GENERAL_FILEEXTENSIONS": [
     "txt",
     "json",
     "xml"
   ],
+  "SERVICES": {
+    "GATEWAY": {
+      "NAME": "gateway",
+      "ABBREVIATION": "g",
+      "PORT": 2000
+    },
+    "GATEWAYRESTPROXY": {
+      "NAME": "gatewayrestproxy",
+      "ABBREVIATION": "gp",
+      "PORT": 2999
+    },
+    "ASSEMBLER": {
+      "NAME": "assembler",
+      "ABBREVIATION": "a",
+      "PORT": 2001
+    },
+    "MANAGER": {
+      "NAME": "manager",
+      "ABBREVIATION": "m",
+      "PORT": 2002
+    }
+  },
   "PLATFORMS": {
     "SEMIO": {
       "URL": "usalu/semio",
-      "DEFAULT_PORT": 65000,
+      "PORT": 65000,
       "FULL_NAME": "semio",
       "NAME": "semio",
       "LICENSE": "AGPL-3.0-or-later",
       "ABBREVIATION": "semio",
-      "EXTENSION": ".semio",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".semio",
+      "NORMALFILEEXTENSIONS": [
         ".semio",
         ".semio.json"
       ],
@@ -26,13 +44,13 @@
     },
     "THREE": {
       "URL": "mrdoob/three",
-      "DEFAULT_PORT": 64900,
+      "PORT": 64900,
       "FULL_NAME": "Three.js",
       "NAME": "three",
       "LICENSE": "MIT",
       "ABBREVIATION": "three",
-      "EXTENSION": ".three.json",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".three.json",
+      "NORMALFILEEXTENSIONS": [
         ".json"
       ],
       "SOURCE": "https://github.com/mrdoob/three.js/",
@@ -40,13 +58,13 @@
     },
     "SVERCHOK": {
       "URL": "nortikin/sverchok",
-      "DEFAULT_PORT": 64800,
+      "PORT": 64800,
       "FULL_NAME": "Sverchok",
       "NAME": "sverchok",
       "LICENSE": "GPL-3.0-only",
       "ABBREVIATION": "sk",
-      "EXTENSION": ".sk.json",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".sk.json",
+      "NORMALFILEEXTENSIONS": [
         ".json",
         ".sk.json"
       ],
@@ -55,13 +73,13 @@
     },
     "IFCOPENSHELL": {
       "URL": "ifcopenshell/ifcopenshell",
-      "DEFAULT_PORT": 50000,
+      "PORT": 50000,
       "FULL_NAME": "IfcOpenShell",
       "NAME": "ifcopenshell",
       "LICENSE": "LGPL-3.0-only",
       "ABBREVIATION": "ifcos",
-      "EXTENSION": ".ifcos",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".ifcos",
+      "NORMALFILEEXTENSIONS": [
         ".cpp",
         ".py"
       ],
@@ -70,13 +88,13 @@
     },
     "CADQUERY": {
       "URL": "cadquery/cadquery",
-      "DEFAULT_PORT": 49900,
+      "PORT": 49900,
       "FULL_NAME": "CadQuery",
       "NAME": "cadquery",
       "LICENSE": "LGPL-3.0-only",
       "ABBREVIATION": "cq",
-      "EXTENSION": ".cq",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".cq",
+      "NORMALFILEEXTENSIONS": [
         ".py",
         ".cq.py"
       ],
@@ -85,13 +103,13 @@
     },
     "FREECAD": {
       "URL": "freecad/freecad",
-      "DEFAULT_PORT": 49800,
+      "PORT": 49800,
       "FULL_NAME": "FreeCAD",
       "NAME": "freecad",
       "LICENSE": "GPL-2.0",
       "ABBREVIATION": "fc",
-      "EXTENSION": ".fc",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".fc",
+      "NORMALFILEEXTENSIONS": [
         ".FCMAcro",
         ".py"
       ],
@@ -100,13 +118,13 @@
     },
     "OPENSCAD": {
       "URL": "openscad/openscad",
-      "DEFAULT_PORT": 49700,
+      "PORT": 49700,
       "FULL_NAME": "OpenSCAD",
       "NAME": "openscad",
       "LICENSE": "GPL-2.0",
       "ABBREVIATION": "oc",
-      "EXTENSION": ".scad",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".scad",
+      "NORMALFILEEXTENSIONS": [
         ".scad"
       ],
       "SOURCE": "https://github.com/openscad",
@@ -114,13 +132,13 @@
     },
     "JSCAD": {
       "URL": "jscad/jscad",
-      "DEFAULT_PORT": 49600,
+      "PORT": 49600,
       "FULL_NAME": "OpenJSCAD",
       "NAME": "jscad",
       "LICENSE": "Apache-2.0",
       "ABBREVIATION": "jc",
-      "EXTENSION": "jc.js",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": "jc.js",
+      "NORMALFILEEXTENSIONS": [
         ".js"
       ],
       "SOURCE": "https://github.com/jscad",
@@ -128,13 +146,13 @@
     },
     "FORNJOT": {
       "URL": "hannobraun/fornjot",
-      "DEFAULT_PORT": 49500,
+      "PORT": 49500,
       "FULL_NAME": "Fornjot",
       "NAME": "fornjot",
       "LICENSE": "0BSD",
       "ABBREVIATION": "fj",
-      "EXTENSION": ".fj.rs",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".fj.rs",
+      "NORMALFILEEXTENSIONS": [
         ".rs"
       ],
       "SOURCE": "https://github.com/hannobraun/Fornjot",
@@ -142,13 +160,13 @@
     },
     "TRUCK": {
       "URL": " ricosjp/truck",
-      "DEFAULT_PORT": 49400,
+      "PORT": 49400,
       "FULL_NAME": "Truck",
       "NAME": "truck",
       "LICENSE": "Apache-2.0",
       "ABBREVIATION": "tk",
-      "EXTENSION": "tk.rs",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": "tk.rs",
+      "NORMALFILEEXTENSIONS": [
         ".rs"
       ],
       "SOURCE": "https://github.com/ricosjp/truck",
@@ -156,13 +174,13 @@
     },
     "ENERGYPLUS": {
       "URL": " nrel/energyplus",
-      "DEFAULT_PORT": 40000,
+      "PORT": 40000,
       "FULL_NAME": "EnergyPlus",
       "NAME": "energyplus",
       "LICENSE": "EnergyPlus",
       "ABBREVIATION": "ep",
-      "EXTENSION": ".ep",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".ep",
+      "NORMALFILEEXTENSIONS": [
         ".idf",
         ".epJSON"
       ],
@@ -171,13 +189,13 @@
     },
     "OPENSTUDIO": {
       "URL": " nrel/openstudio",
-      "DEFAULT_PORT": 40001,
+      "PORT": 40001,
       "FULL_NAME": "OpenStudio",
       "NAME": "openstudio",
       "LICENSE": "OpenStudio",
       "ABBREVIATION": "os",
-      "EXTENSION": ".osm",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".osm",
+      "NORMALFILEEXTENSIONS": [
         ".osm"
       ],
       "SOURCE": "https://github.com/NREL/OpenStudio",
@@ -185,12 +203,12 @@
     },
     "RHINO": {
       "URL": "mcneel/rhino",
-      "DEFAULT_PORT": 20000,
+      "PORT": 20000,
       "FULL_NAME": "Rhinoceros 3D",
       "NAME": "rhino",
       "ABBREVIATION": "rhino",
-      "EXTENSION": ".3dm",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".3dm",
+      "NORMALFILEEXTENSIONS": [
         ".3dm"
       ],
       "LEARN": "https://www.rhino3d.com/"
@@ -198,11 +216,11 @@
     "GRASSHOPPER": {
       "URL": "mcneel/rhino/grasshopper",
       "FULL_NAME": "Grasshopper 3D",
-      "DEFAULT_PORT": 20001,
+      "PORT": 20001,
       "NAME": "grasshopper",
       "ABBREVIATION": "gh",
-      "EXTENSION": ".gh",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".gh",
+      "NORMALFILEEXTENSIONS": [
         ".gh",
         ".ghx"
       ],
@@ -210,36 +228,36 @@
     },
     "REVIT": {
       "URL": "autodesk/revit",
-      "DEFAULT_PORT": 19900,
+      "PORT": 19900,
       "FULL_NAME": "Revit",
       "NAME": "revit",
       "ABBREVIATION": "rvt",
-      "EXTENSION": ".rfa",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".rfa",
+      "NORMALFILEEXTENSIONS": [
         ".rfa"
       ],
       "LEARN": "https://www.autodesk.com/autodesk-university/class/Revit-Family-Creation-Step-Step-Introduction-Just-Beginners-2017"
     },
     "DYNAMO": {
       "URL": "autodesk/revit/dynamo",
-      "DEFAULT_PORT": 19901,
+      "PORT": 19901,
       "FULL_NAME": "Dynamo",
       "NAME": "dynamo",
       "ABBREVIATION": "dyn",
-      "EXTENSION": ".dyn",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".dyn",
+      "NORMALFILEEXTENSIONS": [
         ".dyn"
       ],
       "LEARN": "https://primer2.dynamobim.org/"
     },
     "ARCHICAD": {
       "URL": "graphisoft/archicad",
-      "DEFAULT_PORT": 19800,
+      "PORT": 19800,
       "FULL_NAME": "ArchiCAD",
       "NAME": "archicad",
       "ABBREVIATION": "ac",
-      "EXTENSION": ".gsl",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".gsl",
+      "NORMALFILEEXTENSIONS": [
         ".gdl",
         ".gsl"
       ],
@@ -247,12 +265,12 @@
     },
     "CITYENGINE": {
       "URL": "esri/arcgis/cityengine",
-      "DEFAULT_PORT": 19600,
+      "PORT": 19600,
       "FULL_NAME": "ArcGIS CityEngine",
       "NAME": "cityengine",
       "ABBREVIATION": "ce",
-      "EXTENSION": ".rpk",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".rpk",
+      "NORMALFILEEXTENSIONS": [
         ".rpk",
         ".cga"
       ],
@@ -260,12 +278,12 @@
     },
     "EXCEL": {
       "URL": "microsoft/excel",
-      "DEFAULT_PORT": 19500,
+      "PORT": 19500,
       "FULL_NAME": "Microsoft Excel",
       "NAME": "excel",
       "ABBREVIATION": "xl",
-      "EXTENSION": ".xlsm",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".xlsm",
+      "NORMALFILEEXTENSIONS": [
         ".xls",
         ".xlsm"
       ],
@@ -273,12 +291,12 @@
     },
     "HYPAR": {
       "URL": "hypar/hypar",
-      "DEFAULT_PORT": 10000,
+      "PORT": 10000,
       "FULL_NAME": "Hypar",
       "NAME": "hypar",
       "ABBREVIATION": "hpr",
-      "EXTENSION": ".hpr",
-      "NORMAL_EXTENSIONS": [
+      "FILEEXTENSION": ".hpr",
+      "NORMALFILEEXTENSIONS": [
         ".json"
       ],
       "LEARN": "https://docs.hypar.io/getting-started"

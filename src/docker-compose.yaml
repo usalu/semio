@@ -1,64 +1,81 @@
 services:
 
   gateway:
-    image: semio-gateway:base
-    container_name: semio-gateway
-    ports:
-      # Service access port
-      - 2000:2000
-      # # Access to assembler
-      # - 2001:2001
+    image: semiogateway:base
+    container_name: gateway
+    # ports:
+    #   # Service access port
+    #   - 2000:2000
+    #   # # Access to assembler
+    #   # - 2001:2001
+    expose:
+      - "2000"
     restart: always
-    # networks:
-    #   - public
-    #   - private
+    networks:
+      - public
+      - private
     # Only works under linux
     # network_mode: "host" 
 
   gatewayrestproxy:
-    image: semio-gateway-restproxy:tiny
-    container_name: semio-gateway-restproxy
+    image: semiogatewayrestproxy:tiny
+    container_name: gatewayrestproxy
     ports:
       # Service access port
       - 2999:2999
     restart: always
-    # networks:
-    #   - public
-    #   - private
+    networks:
+      - public
+      - private
     # Only works under linux
     # network_mode: "host" 
 
   assembler:
-    image: semio-assembler:base
-    container_name: semio-assembler
-    ports:
-      - 2001:2001
+    image: semioassembler:base
+    container_name: assembler
+    # ports:
+    #   - 2001:2001
+    expose:
+      - "2001"
     restart: always
-    # networks:
-    #   - public
-    #   - private
+    networks:
+      - public
+      - private
     # Only works under linux
     # network_mode: "host" 
   
   manager:
-    image: semio-manager:base
-    container_name: semio-manager
-    ports:
-      - 2002:2002
+    image: semiomanager:base
+    container_name: manager
+    # ports:
+    #   - 2002:2002
+    expose:
+      - "2002"
     restart: always
-    # networks:
-    #   - public
-    #   - private
+    networks:
+      - public
+      - private
     # Only works under linux
     # network_mode: "host" 
 
-  # grasshopper:
-  #   image: semio-grasshopper:latest
-  #   container_name: semio-grasshopper
-  #   restart: always
-  #   # ports:
-  #   #   - 20000:20000
-  #   #   - 6500:6500
-  #   # networks:
-  #   #   - private
-  #   network_mode: "host" 
+  semiograsshopper:
+    image: semio-grasshopper:latest
+    container_name: semiograsshopper
+    restart: always
+    # ports:
+    #   - 20000:20000
+    #   - 6500:6500
+    expose:
+      - "20000"
+    networks:
+      - private
+    # network_mode: "host" 
+    depends_on:
+      manager:
+        condition: service_completed_successfully
+        restart: true
+
+
+networks:
+  private: {}
+  public: {}

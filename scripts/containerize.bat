@@ -9,7 +9,7 @@ cd manager
 pack build semiomanager:base --builder=paketobuildpacks/builder:base
 cd ..
 cd assembler
-pack build semiomanager:base --builder=paketobuildpacks/builder:base
+pack build semioassembler:base --builder=paketobuildpacks/builder:base
 cd ..
 cd ..
 cd extensions\grasshopper

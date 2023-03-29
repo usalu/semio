@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging
 
 from pydantic import Field
 
@@ -22,8 +21,11 @@ from .translator.v1.translator_pb2_grpc import add_TranslatorServiceServicer_to_
 
 from geometry import Point
 from model import REPRESENTATIONPROTOCOL_NONE,REPRESENTATIONPROTOCOL_SIMPLE,REPRESENTATIONPROTOCOL_FULL,Pose,Platform,Representation,Plan,Link,Sobject,Layout,Decision,Prototype
-from utils import SemioServer, SemioServiceDescription, SemioProxy, getAddressFromBaseAndPort
-from constants import DEFAULT_MANAGER_PORT
+from server import GrpcServer
+from service import ServiceDescription
+from proxy import Proxy
+from networking import getAddressFromBaseAndPort
+from constants import MANAGER_PORT
 
 from extension.adapter import AdapterService
 from extension.converter import ConverterService
@@ -36,9 +38,9 @@ if TYPE_CHECKING:
 # This import style is necissary to not trigger cyclic imports.
 import manager
 
-class ExtensionServer(SemioServer):
+class ExtensionServer(GrpcServer):
     managerBaseAddress: str = "manager"
-    managerPort: int = DEFAULT_MANAGER_PORT
+    managerPort: int = MANAGER_PORT
     # These should be abstract classes but pydantic doesn't let you define this without using Union[ALL, SUB, CLASSES]
     # https://stackoverflow.com/questions/58301364/pydantic-and-subclasses-of-abstract-class
     adapter: AdapterService = Field(default_factory=AdapterService)
@@ -64,9 +66,9 @@ class ExtensionServer(SemioServer):
                     transformings = self.transformer._getDescriptions(),
                     translatings = self.translator._getDescriptions()))
         if success:
-            logging.info(f'Extension {self.name} ({address}) was successfully registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}')
+            debug(f'Extension {self.name} ({address}) was successfully registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}')
         else:
-            logging.info(f'The extension {self.name} ({address}) couldn\'t be registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}.'+
+            debug(f'The extension {self.name} ({address}) couldn\'t be registered at manager {getAddressFromBaseAndPort(self.managerBaseAddress,self.managerPort)}.'+
              f'Probably there is already an extension registered either at {address} or with name {self.name}. Make sure to set replace existing in the extension registration request to true if you want to override the other extension.')
     
     def _getManagerProxy(self):#->ManagerProxy:
@@ -75,16 +77,16 @@ class ExtensionServer(SemioServer):
             self.managerProxy = ManagerProxy(self.managerBaseAddress,self.managerPort)
         return self.managerProxy
 
-    def _getServicesDescriptions(self):
+    def _getGrpcServicesDescriptions(self):
         servicesDescriptions = [
-            SemioServiceDescription(service=self.adapter,servicer=AdapterServiceServicer,add_Service_to_server=add_AdapterServiceServicer_to_server,descriptor=ADAPTER_DESCRIPTOR),
-            SemioServiceDescription(service=self.converter,servicer=ConverterServiceServicer,add_Service_to_server=add_ConverterServiceServicer_to_server,descriptor=CONVERTER_DESCRIPTOR),
-            SemioServiceDescription(service=self.transformer,servicer=TransformerServiceServicer,add_Service_to_server=add_TransformerServiceServicer_to_server,descriptor=TRANSFORMER_DESCRIPTOR),
-            SemioServiceDescription(service=self.translator,servicer=TranslatorServiceServicer,add_Service_to_server=add_TranslatorServiceServicer_to_server,descriptor=TRANSLATOR_DESCRIPTOR)
+            ServiceDescription(service=self.adapter,servicer=AdapterServiceServicer,add_Service_to_server=add_AdapterServiceServicer_to_server,descriptor=ADAPTER_DESCRIPTOR),
+            ServiceDescription(service=self.converter,servicer=ConverterServiceServicer,add_Service_to_server=add_ConverterServiceServicer_to_server,descriptor=CONVERTER_DESCRIPTOR),
+            ServiceDescription(service=self.transformer,servicer=TransformerServiceServicer,add_Service_to_server=add_TransformerServiceServicer_to_server,descriptor=TRANSFORMER_DESCRIPTOR),
+            ServiceDescription(service=self.translator,servicer=TranslatorServiceServicer,add_Service_to_server=add_TranslatorServiceServicer_to_server,descriptor=TRANSLATOR_DESCRIPTOR)
         ]
         return servicesDescriptions
 
-class ExtensionProxy(SemioProxy):
+class ExtensionProxy(Proxy):
     def __init__(self,baseAddress,port, **kw):
         super().__init__(baseAddress=baseAddress,port=port,**kw)
         address = getAddressFromBaseAndPort(baseAddress,port)

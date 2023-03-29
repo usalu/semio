@@ -63,6 +63,6 @@ class RegisteredExtensionsResponse(_message.Message):
         key: str
         value: _extension_pb2.Extending
         def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_extension_pb2.Extending, _Mapping]] = ...) -> None: ...
-    EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    FILEEXTENSIONS_FIELD_NUMBER: _ClassVar[int]
     extensions: _containers.MessageMap[str, _extension_pb2.Extending]
     def __init__(self, extensions: _Optional[_Mapping[str, _extension_pb2.Extending]] = ...) -> None: ...

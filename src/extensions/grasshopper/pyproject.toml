@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.9.16"
 pydantic = "^1.10.5"
 rhino3dm = "^7.15.0"
 compute-rhino3d = "^0.12.2"

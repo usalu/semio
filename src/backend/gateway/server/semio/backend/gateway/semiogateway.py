@@ -3,7 +3,6 @@ from typing import Iterable
 from semio.geometry import Point
 from semio.model import Sobject,Platform,Connection,Assembly,Layout,Representation,Prototype,Element,Design
 from semio.gateway import GatewayServer
-from semio.utils import hashObject
 
 class Gateway(GatewayServer):
 
@@ -11,7 +10,7 @@ class Gateway(GatewayServer):
         
         # Task 1
         prototypes = []
-        sobjectPlanHashes = {sobject.id:hashObject(sobject.plan) for sobject in layout.sobjects}
+        sobjectPlanHashes = {sobject.id:sobject.plan.hash() for sobject in layout.sobjects}
 
         for sobject in layout.sobjects:
             if not sobjectPlanHashes[sobject.id] in prototypes:
@@ -30,7 +29,7 @@ class Gateway(GatewayServer):
         return Design(prototypes=prototypes,elements=elements)
 
 def main():
-    Gateway().serve()
+    Gateway(startOverCli=True).serve()
 
 if __name__ == '__main__':
     main()

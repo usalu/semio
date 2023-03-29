@@ -3,9 +3,10 @@ from pytest import mark,fixture
 from numpy import array
 from numpy.testing import assert_array_almost_equal
 
-from semio.utils import PointOfViewParser,ViewParser,PoseParser, getLocalPointOfView, getWorldPointOfView
+from semio.parsers import PointOfViewParser,ViewParser,PoseParser
+from semio.behaviour import getLocalPointOfView, getWorldPointOfView
 
-from .test_config import decimalPlaces
+from ..test_config import decimalPlaces
 
 @mark.parametrize('pointOfView,view,point,localPoint,worldPoint',
 [

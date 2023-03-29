@@ -2,15 +2,7 @@
 # Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [3]
 # SEMIOMAJORVERSION (concatenate major version number and add 2)) e.g. 2:0.6.80
 # COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager,999:GatewayProxy
-
-DEFAULT_GATEWAY_PORT = 2000
-# Port for the rest endpoint
-DEFAULT_GATEWAY_PROXY_PORT = 2999
-DEFAULT_ASSEMBLER_PORT = 2001
-DEFAULT_MANAGER_PORT = 2002
-
-GENERAL_EXTENSIONS = ['txt','json','xml']
-
+#
 # Default port number for extensions: 650 - OWNERID[3] + PLATFORMID[2]
 # OWNERID:
 # 0:usalu,1:mrdoob,2:nortikin,
@@ -20,154 +12,178 @@ GENERAL_EXTENSIONS = ['txt','json','xml']
 # 550:hypar
 # Licenses after https://spdx.org/licenses/
 
+GENERAL_FILEEXTENSIONS = ['txt','json','xml']
+
+[SERVICES]
+
+[SERVICES.GATEWAY]
+NAME = 'gateway'
+ABBREVIATION = 'g'
+PORT = 2000
+
+[SERVICES.GATEWAYRESTPROXY]
+NAME = 'gatewayrestproxy'
+ABBREVIATION = 'gp'
+PORT = 2999
+
+[SERVICES.ASSEMBLER]
+NAME = 'assembler'
+ABBREVIATION = 'a'
+PORT = 2001
+
+[SERVICES.MANAGER]
+NAME = 'manager'
+ABBREVIATION = 'm'
+PORT = 2002
+
 [PLATFORMS]
 
 # Open-source
 
 [PLATFORMS.SEMIO]
 URL = 'usalu/semio'
-DEFAULT_PORT = 65000
+PORT = 65000
 FULL_NAME = 'semio'
 NAME = 'semio'
 LICENSE = 'AGPL-3.0-or-later'
 ABBREVIATION = 'semio'
-EXTENSION = '.semio'
-NORMAL_EXTENSIONS = ['.semio','.semio.json']
+FILEEXTENSION = '.semio'
+NORMALFILEEXTENSIONS = ['.semio','.semio.json']
 SOURCE = 'https://github.com/usalu/semio'
 #LEARN = 'https://usalu.github.io/semio/'
 LEARN = 'https://github.com/usalu/semio'
 
 [PLATFORMS.THREE]
 URL = 'mrdoob/three'
-DEFAULT_PORT = 64900
+PORT = 64900
 FULL_NAME = 'Three.js'
 NAME = 'three'
 LICENSE = 'MIT'
 ABBREVIATION = 'three'
-EXTENSION = '.three.json'
-NORMAL_EXTENSIONS = ['.json']
+FILEEXTENSION = '.three.json'
+NORMALFILEEXTENSIONS = ['.json']
 SOURCE = 'https://github.com/mrdoob/three.js/'
 LEARN = 'https://threejs.org/'
 
 [PLATFORMS.SVERCHOK]
 URL = 'nortikin/sverchok'
-DEFAULT_PORT = 64800
+PORT = 64800
 FULL_NAME = 'Sverchok'
 NAME = 'sverchok'
 LICENSE = 'GPL-3.0-only'
 ABBREVIATION = 'sk'
-EXTENSION = '.sk.json'
-NORMAL_EXTENSIONS = ['.json','.sk.json']
+FILEEXTENSION = '.sk.json'
+NORMALFILEEXTENSIONS = ['.json','.sk.json']
 SOURCE = 'https://github.com/nortikin/sverchok'
 LEARN = 'https://nortikin.github.io/sverchok/'
 
 [PLATFORMS.IFCOPENSHELL]
 URL = 'ifcopenshell/ifcopenshell'
-DEFAULT_PORT = 50000
+PORT = 50000
 FULL_NAME = 'IfcOpenShell'
 NAME = 'ifcopenshell'
 LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'ifcos'
-EXTENSION = '.ifcos'
-NORMAL_EXTENSIONS = ['.cpp','.py']
+FILEEXTENSION = '.ifcos'
+NORMALFILEEXTENSIONS = ['.cpp','.py']
 SOURCE = 'https://github.com/IfcOpenShell/IfcOpenShell'
 LEARN = 'https://ifcopenshell.org/'
 
 [PLATFORMS.CADQUERY]
 URL = 'cadquery/cadquery'
-DEFAULT_PORT = 49900
+PORT = 49900
 FULL_NAME = 'CadQuery'
 NAME = 'cadquery'
 LICENSE = 'LGPL-3.0-only'
 ABBREVIATION = 'cq'
-EXTENSION = '.cq'
-NORMAL_EXTENSIONS = ['.py','.cq.py']
+FILEEXTENSION = '.cq'
+NORMALFILEEXTENSIONS = ['.py','.cq.py']
 SOURCE = 'https://github.com/CadQuery/cadquery/'
 LEARN = 'https://cadquery.readthedocs.io/en/latest/'
 
 [PLATFORMS.FREECAD]
 URL = 'freecad/freecad'
-DEFAULT_PORT = 49800
+PORT = 49800
 FULL_NAME = 'FreeCAD'
 NAME = 'freecad'
 LICENSE = 'GPL-2.0'
 ABBREVIATION = 'fc'
-EXTENSION = '.fc'
-NORMAL_EXTENSIONS = ['.FCMAcro','.py']
+FILEEXTENSION = '.fc'
+NORMALFILEEXTENSIONS = ['.FCMAcro','.py']
 SOURCE = 'https://github.com/FreeCAD/FreeCAD'
 LEARN = 'https://wiki.freecadweb.org/Main_Page'
 
 [PLATFORMS.OPENSCAD]
 URL = 'openscad/openscad'
-DEFAULT_PORT = 49700
+PORT = 49700
 FULL_NAME = 'OpenSCAD'
 NAME = 'openscad'
 LICENSE = 'GPL-2.0'
 ABBREVIATION = 'oc'
-EXTENSION = '.scad'
-NORMAL_EXTENSIONS = ['.scad']
+FILEEXTENSION = '.scad'
+NORMALFILEEXTENSIONS = ['.scad']
 SOURCE = 'https://github.com/openscad'
 LEARN = 'https://openscad.org/'
 
 [PLATFORMS.JSCAD]
 URL = 'jscad/jscad'
-DEFAULT_PORT = 49600
+PORT = 49600
 FULL_NAME = 'OpenJSCAD'
 NAME = 'jscad'
 LICENSE = 'Apache-2.0'
 ABBREVIATION = 'jc'
-EXTENSION = 'jc.js'
-NORMAL_EXTENSIONS = ['.js']
+FILEEXTENSION = 'jc.js'
+NORMALFILEEXTENSIONS = ['.js']
 SOURCE = 'https://github.com/jscad'
 LEARN = 'https://openjscad.xyz/'
 
 [PLATFORMS.FORNJOT]
 URL = 'hannobraun/fornjot'
-DEFAULT_PORT = 49500
+PORT = 49500
 FULL_NAME = 'Fornjot'
 NAME = 'fornjot'
 LICENSE = '0BSD'
 ABBREVIATION = 'fj'
-EXTENSION = '.fj.rs'
-NORMAL_EXTENSIONS = ['.rs']
+FILEEXTENSION = '.fj.rs'
+NORMALFILEEXTENSIONS = ['.rs']
 SOURCE = 'https://github.com/hannobraun/Fornjot'
 LEARN = 'https://fornjot.app/'
 
 [PLATFORMS.TRUCK]
 URL = ' ricosjp/truck'
-DEFAULT_PORT = 49400
+PORT = 49400
 FULL_NAME = 'Truck'
 NAME = 'truck'
 LICENSE = 'Apache-2.0'
 ABBREVIATION = 'tk'
-EXTENSION = 'tk.rs'
-NORMAL_EXTENSIONS = ['.rs']
+FILEEXTENSION = 'tk.rs'
+NORMALFILEEXTENSIONS = ['.rs']
 SOURCE = 'https://github.com/ricosjp/truck'
 LEARN = 'https://github.com/ricosjp/truck'
 
 [PLATFORMS.ENERGYPLUS]
 URL = ' nrel/energyplus'
-DEFAULT_PORT = 40000
+PORT = 40000
 FULL_NAME = 'EnergyPlus'
 NAME = 'energyplus'
 # Non-standard license
 LICENSE = 'EnergyPlus'
 ABBREVIATION = 'ep'
-EXTENSION = '.ep'
-NORMAL_EXTENSIONS = ['.idf','.epJSON']
+FILEEXTENSION = '.ep'
+NORMALFILEEXTENSIONS = ['.idf','.epJSON']
 SOURCE = 'https://github.com/NREL/EnergyPlus'
 LEARN = 'https://energyplus.net/'
 
 [PLATFORMS.OPENSTUDIO]
 URL = ' nrel/openstudio'
-DEFAULT_PORT = 40001
+PORT = 40001
 FULL_NAME = 'OpenStudio'
 NAME = 'openstudio'
 # Non-standard license
 LICENSE = 'OpenStudio'
 ABBREVIATION = 'os'
-EXTENSION = '.osm'
-NORMAL_EXTENSIONS = ['.osm']
+FILEEXTENSION = '.osm'
+NORMALFILEEXTENSIONS = ['.osm']
 SOURCE =  'https://github.com/NREL/OpenStudio'
 LEARN = 'https://openstudio.net/'
 
@@ -175,81 +191,81 @@ LEARN = 'https://openstudio.net/'
 
 [PLATFORMS.RHINO]
 URL = 'mcneel/rhino'
-DEFAULT_PORT = 20000
+PORT = 20000
 FULL_NAME = 'Rhinoceros 3D'
 NAME = 'rhino'
 ABBREVIATION = 'rhino'
-EXTENSION = '.3dm'
-NORMAL_EXTENSIONS = ['.3dm']
+FILEEXTENSION = '.3dm'
+NORMALFILEEXTENSIONS = ['.3dm']
 LEARN = 'https://www.rhino3d.com/'
 
 [PLATFORMS.GRASSHOPPER]
 URL = 'mcneel/rhino/grasshopper'
 FULL_NAME = 'Grasshopper 3D'
-DEFAULT_PORT = 20001
+PORT = 20001
 NAME = 'grasshopper'
 ABBREVIATION = 'gh'
-EXTENSION = '.gh'
-NORMAL_EXTENSIONS = ['.gh','.ghx']
+FILEEXTENSION = '.gh'
+NORMALFILEEXTENSIONS = ['.gh','.ghx']
 LEARN = 'https://www.grasshopper3d.com/'
 
 [PLATFORMS.REVIT]
 URL = 'autodesk/revit'
-DEFAULT_PORT = 19900
+PORT = 19900
 FULL_NAME = 'Revit'
 NAME = 'revit'
 ABBREVIATION = 'rvt'
-EXTENSION = '.rfa'
-NORMAL_EXTENSIONS = ['.rfa']
+FILEEXTENSION = '.rfa'
+NORMALFILEEXTENSIONS = ['.rfa']
 LEARN = 'https://www.autodesk.com/autodesk-university/class/Revit-Family-Creation-Step-Step-Introduction-Just-Beginners-2017'
 
 [PLATFORMS.DYNAMO]
 URL = 'autodesk/revit/dynamo'
-DEFAULT_PORT = 19901
+PORT = 19901
 FULL_NAME = 'Dynamo'
 NAME = 'dynamo'
 ABBREVIATION = 'dyn'
-EXTENSION = '.dyn'
-NORMAL_EXTENSIONS = ['.dyn']
+FILEEXTENSION = '.dyn'
+NORMALFILEEXTENSIONS = ['.dyn']
 LEARN = 'https://primer2.dynamobim.org/'
 
 [PLATFORMS.ARCHICAD]
 URL = 'graphisoft/archicad'
-DEFAULT_PORT = 19800
+PORT = 19800
 FULL_NAME = 'ArchiCAD'
 NAME = 'archicad'
 ABBREVIATION = 'ac'
-EXTENSION = '.gsl'
-NORMAL_EXTENSIONS = ['.gdl','.gsl']
+FILEEXTENSION = '.gsl'
+NORMALFILEEXTENSIONS = ['.gdl','.gsl']
 LEARN = 'https://gdl.graphisoft.com/'
 
 [PLATFORMS.CITYENGINE]
 URL = 'esri/arcgis/cityengine'
-DEFAULT_PORT = 19600
+PORT = 19600
 FULL_NAME = 'ArcGIS CityEngine'
 NAME = 'cityengine'
 ABBREVIATION = 'ce'
-EXTENSION = '.rpk'
-NORMAL_EXTENSIONS = ['.rpk','.cga']
+FILEEXTENSION = '.rpk'
+NORMALFILEEXTENSIONS = ['.rpk','.cga']
 LEARN = 'https://esri.github.io/cityengine/'
 
 [PLATFORMS.EXCEL]
 URL = 'microsoft/excel'
-DEFAULT_PORT = 19500
+PORT = 19500
 FULL_NAME = 'Microsoft Excel'
 NAME = 'excel'
 ABBREVIATION = 'xl'
-EXTENSION = '.xlsm'
-NORMAL_EXTENSIONS = ['.xls','.xlsm']
+FILEEXTENSION = '.xlsm'
+NORMALFILEEXTENSIONS = ['.xls','.xlsm']
 LEARN = 'https://support.microsoft.com/en-us/office/use-the-name-manager-in-excel-4d8c4c2b-9f7d-44e3-a3b4-9f61bd5c64e4'
 
 
 [PLATFORMS.HYPAR]
 URL = 'hypar/hypar'
-DEFAULT_PORT = 10000
+PORT = 10000
 FULL_NAME = 'Hypar'
 NAME = 'hypar'
 ABBREVIATION = 'hpr'
-EXTENSION = '.hpr'
-NORMAL_EXTENSIONS = ['.json']
+FILEEXTENSION = '.hpr'
+NORMALFILEEXTENSIONS = ['.json']
 LEARN = 'https://docs.hypar.io/getting-started'
