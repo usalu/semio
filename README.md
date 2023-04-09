@@ -4,6 +4,22 @@ You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, �
 
 ![Example](docs/examples/simpletower/simpletower.png)
 
+# Installtion
+
+semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs.
+
+All services can either run locally, with docker-compose or inside kubernetes.
+
+## UIs
+
+Currently there is one UI for Grasshopper.
+![Menu ribbon](docs/extensions/grasshopper/ribbon.png)
+
+## Extensions
+
+Currently there is one extension for Grasshopper that makes it possible to define scripts.
+
+
 # Contribution
 
 If you want to contribute to the project, there are lot's of opportunities! Do you want to write an extension for a platform or contribute to the core?
