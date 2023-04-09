@@ -2,7 +2,7 @@
 
 You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ takes all your time? Then try to capture the 🧬 and 💉 it into a new design. 🖇️ your elements and describe your drawing, simulation and other computations and let semio 🖧,🖩,✏️.
 
-![Example] (docs/examples/simpletower/simpletower.png)
+![Example](docs/examples/simpletower/simpletower.png)
 
 # Contribution
 
