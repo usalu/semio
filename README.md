@@ -2,6 +2,8 @@
 
 You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ takes all your time? Then try to capture the 🧬 and 💉 it into a new design. 🖇️ your elements and describe your drawing, simulation and other computations and let semio 🖧,🖩,✏️.
 
+![Example] (docs/examples/simpletower/simpletower.png)
+
 # Contribution
 
 If you want to contribute to the project, there are lot's of opportunities! Do you want to write an extension for a platform or contribute to the core?
