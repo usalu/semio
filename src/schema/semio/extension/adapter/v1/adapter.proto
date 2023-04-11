@@ -12,8 +12,8 @@ import "model/v1/model.proto";
 service AdapterService {
   // Request a prototype.
   rpc RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
-  // Request an connection point for the connected.
-  rpc RequestConnectionPoint(ConnectionPointRequest) returns (semio.geometry.v1.Point);
+  // Request an connection pose for the connected.
+  rpc RequestConnectionPose(ConnectionPoseRequest) returns (semio.geometry.v1.Pose);
 }
 
 // Description what an adapter is adapting to.
@@ -23,11 +23,9 @@ message Adapting{
 }
 
 // A connection point request requests a point from the connected (sobject).
-message ConnectionPointRequest {
+message ConnectionPoseRequest {
   // The plan of the connected (sobject).
   semio.model.v1.Plan plan = 1;
-  // The link to the connected (sobject).
-  semio.model.v1.Link link = 2;
   // The representation according the representation protocol of the link.
   oneof representation {
     semio.geometry.v1.Point simple_representation = 3;

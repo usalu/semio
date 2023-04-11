@@ -5,75 +5,37 @@ package semio.model.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/model/v1";
 option csharp_namespace = "Semio.Model.V1";
 
+import "google/protobuf/timestamp.proto";
+
 import "geometry/v1/geometry.proto";
 
-// A pose is a static reference frame/coordinate system.
-message Pose {
-  // Point of view (origin) from the pose (reference frame/coordinate system)
-  semio.geometry.v1.Point point_of_view = 1;
-  // View (orientation) from the pose (reference frame/coordinate system)
-  semio.geometry.v1.Quaternion view = 2;
-}
-
-// A representation for an element. Basically a file with some semio specific metadata.
-message Representation {
-  // The body depends on the serialization format of the representation.
-  bytes body = 1;
-  // Encoding of the body
-  Encoding encoding = 2;
-  // Use the abbreviation of the platform. You can find that in the constants part of the package.
-  FileType file_type = 3;
-  // Native platform of representation
-  Platform platform = 4;
-  // A description of the representation for humans to understand what the purpose of this representation is.
-  string description = 5;
-  // Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...). 
-  repeated string concepts = 6;
-  // Level of detail allows to further define representation details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
-  // For architectural design it is recommended to choose the scale multiplier.
-  // For BIM you might want to choose:
-  // 100:Conceptual
-  // 200:Approximate
-  // 300:Precise
-  // 400:Fabriaction
-  // 500:Real 
-  int32 lod = 7;
-}
-
-// Encoding of a byte array.
+// 🔢 Encoding of a byte array.
 enum Encoding {
-  ENCODING_TEXT_UFT8 = 0;
-  ENCODING_TEXT_UFT16 = 1;
-  ENCODING_TEXT_UFT32 = 2;
-  ENCODING_TEXT_ASCII = 3;
+  ENCODING_UFT8 = 0;
+  ENCODING_UFT16 = 1;
+  ENCODING_UFT32 = 2;
+  ENCODING_ASCII = 3;
   // Also ASCII but with further base 64 encoding of the text.
-  ENCODING_TEXT_BASE64 = 4;
+  ENCODING_BASE64 = 4;
 }
 
-enum FileType {
-  // Native serialization according platform. Use this only when it is none of the others.
+// A body type defines
+enum Serialization {
+  // When there is no common 
+  SERIALIZATION_BYTES = 0;
+  // Custom text serialization according platform.
   // Often files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.
-  FILETYPE_NATIVE = 0;
-  FILETYPE_JSON = 1;
-  FILETYPE_XML = 2;
-  FILETYPE_YAML = 3;
-  FILETYPE_TOML = 4;
+  SERIALIZATION_TEXT = 1;
+  SERIALIZATION_JSON = 2;
+  SERIALIZATION_XML = 3;
+  SERIALIZATION_YAML = 4;
+  SERIALIZATION_TOML = 5;
   // https://www.iso.org/standard/63141.html
-  FILETYPE_STEP = 5;
-  // Python
-  FILETYPE_PY = 6;
-  FILETYPE_C = 7;
-  // C++
-  FILETYPE_CPP = 8;
-  // C#
-  FILETYPE_CSHARP = 9;
-  // Golang
-  FILETYPE_GO = 10;
-  FILETYPE_RUST = 11;
+  SERIALIZATION_STEP = 6;
 }
 
-// Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] + OWNERID [3] + PLATFORMID [2]
-// LICENSE (if possible) after https://spdx.org/licenses/: 
+// Platform. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
+// LICENSE (if possible after https://spdx.org/licenses/): 
 // 0:AGPL-3.0-or-later,
 // 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
 // 100:LGPL-3.0-or-later,101:LGPL-3.0-only
@@ -81,7 +43,7 @@ enum FileType {
 // 170:0BSD
 // 190:EnergyPlus
 // 214:Closed
-// OWNER starting with OWNERTYPE:
+// OWNERID after OWNERTYPE:
 // 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
 // 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
 // 2:NONPROFIT: 0:buildingsmart,1:nrel
@@ -131,6 +93,64 @@ enum Platform {
   PLATFORM_HYPAR = 2140350100;
 }
 
+// TODO: Add structured way of determining
+// Datamodel. Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
+// LICENSE (if possible after https://spdx.org/licenses/): 
+// 0:AGPL-3.0-or-later,
+// 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
+// 100:LGPL-3.0-or-later,101:LGPL-3.0-only
+// 150:MIT,160:Apache-2.0,
+// 170:0BSD
+// 190:EnergyPlus
+// 214:Closed
+// OWNERID after OWNERTYPE:
+// 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
+// 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
+// 2:NONPROFIT: 0:buildingsmart,1:nrel
+// 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar
+enum Language {
+  LANGUAGE_TEXT = 0;
+  LANGUAGE_IFC = 1;
+  LANGUAGE_SPECKLE = 2;
+  LANGUAGE_SPECKLE = 2;
+}
+
+// A model is basically a file with metadata.
+message Model {
+  // The raw body of the model.
+  bytes body = 1;
+  // The platform where the model can be interpreted.
+  Platform platform = 2;
+  // Optional encoding of the body if the model is stored as a text format.
+  Encoding encoding = 3;
+  // Optional file type if the model is in a text format and a common file type.
+  Serialization body_type = 4;
+  // Optional metadata for a model
+  message Metadata{
+    // Name of the model
+    string name = 1;
+    // A description of the model for humans to understand what the purpose of this model is.
+    string description = 2;
+    // Timestamp when the model was created.
+    google.protobuf.Timestamp timestamp_created = 3;
+    // The platform in which the model was created.
+    Platform modelling_platform = 4;
+    // Author of the model.
+    string author = 5;
+    // Add a list of concepts that help filtering models. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...). 
+    repeated string concepts = 6;
+    // Level of detail allows to further define model details. Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+    // For architectural design it is recommended to choose the scale multiplier.
+    // For BIM you might want to choose:
+    // 100:Conceptual
+    // 200:Approximate
+    // 300:Precise
+    // 400:Fabriaction
+    // 500:Real 
+    int32 lod = 7;
+  }
+}
+
 // Describes the scope of a parameter.
 message Scope {
   // Concept for the scope e.g Fassade, Floor
@@ -139,6 +159,7 @@ message Scope {
   int32 order = 2; 
 }
 
+// A value that will tried to mapped to a native type in the corresponding platform.
 message Value {
   oneof value {
     string text = 1;
@@ -149,84 +170,49 @@ message Value {
   }
 }
 
-// A parameter is a (common) object that can be used as a parameter in all platforms.
+// 🎚️ A parameter is a (common) object that can be used as a parameter in all platforms.
 message Parameter {
   // Name of the parameter
   string name = 1;
-  // Optional context field to describe the context of the parameter.
-  repeated Scope context = 2;
   // Value of the parameter.
-  Value value = 3;
+  Value value = 2;
+  // Optional context field to describe the context of the parameter.
+  repeated Scope context = 3;
 }
 
-// A plan for a prototype.
+// 🛠️ A plan of a script.
 message Plan {
-  // The uri of the prototype definition.
+  // 🔗 The uri of the script.
   string uri = 1;
-  // Optional parameters for the prototype.
+  // 🎛️ Optional parameters for the prototype.
   repeated Parameter parameters = 2;
 }
 
-// Instance information for an element.
+//  A sobject is a virtual object which can be connected with other sobjects.
+//  It has all semantical information, so that a definition information for an element can produce it.
 message Sobject {
-  // Id that allows to distinguish it from other sobjects.
+  // 🆔 Id that allows to distinguish it from other sobjects.
   string id = 1;
-  // The (rough) pose of the element. In the layout process this will most likely be adjusted if not specified otherwise in the assembly.
-  Pose pose = 2;
-  // The plan for the prototype.
-  Plan plan = 3;
-  // Concept that are relevent for the sobject.
-  repeated string concepts = 4;
+  // 🛠️ The plan for the element.
+  Plan plan = 2;
 }
 
-// The representation protocol determines what type of representation the connecting will see of the connected in the connection process.
-enum RepresentationProtocol{
-  // The connecting sees no representation of the connected.
-  REPRESENTATIONPROTOCOL_NONE = 0;
-  // In the simple representation protocol everything is represented by a point.
-  REPRESENTATIONPROTOCOL_SIMPLE = 1;
-  // In the full representation protocol everything is represented by its native form where all information is available. This will most likely lead to strong coupled elements. Only use when absolutely necessary.
-  REPRESENTATIONPROTOCOL_FULL = 2;
-}
-
-// TODO: Implement Dependency
-// The (pose) dependency determines to what extend the connecting sobject is dependent on the connected sobject.
-enum Dependency{
-  // The connecting sobject is independant and stays on its own pose.
-  DEPENDENCY_INDEPENDENT = 0;
-  // The connecting sobject only depends on the point of view which will be determined by the connected sobject but uses its own view.
-  DEPENDENCY_POINTDEPENDENT = 1;
-  // The connecting sobject only depends on the view which will be determined by the connected sobject but uses its own point of view.
-  DEPENDENCY_VIEWDEPENDENT = 2;
-  // The connecting sobject is fully dependant on the pose which will be determined by the connected sobject.
-  // With this the connecting sobject doesn't need to have a pose at all.
-  DEPENDENCY_DEPENDENT = 3;
-}
-
-// A link defines the parameters for a connectable.
-message Link{
-    // An optional representation protocol for the link.
-    RepresentationProtocol representationProtocol = 1;
-    // Optional port names to connect to. The hierarchy should matter.
-    repeated string ports = 2;
-    // Optional parameters to bias the connection.
-    repeated Parameter bias_parameters = 3;
-}
-
-// A connectable (sobject) connects in an connection process.
-message Connectable {
-  // Id of connectable (sobject).
+// A port is an abstract location where a sobject should be connected.
+message Port {
+  // 🆔 Id of the sobject which will be the host of the port.
   string sobject_id = 1;
-  // A link for the connectable (sobject).
-  Link link = 2;
+  // 🎛️ Parameters for the port.
+  repeated Parameter parameters = 2;
+  // An optional model of the other user of the port.
+  Model user = 3;
 }
 
-// An connection can be used to connect two connectables.
+// An connection can be used to connect two ports.
 message Connection {
   // The connecting sobject. It is interchangable with the connected.
-  Connectable connecting = 1;
+  Port connecting = 1;
   // The connected sobject. It is interchangable with the connecting.
-  Connectable connected = 2;
+  Port connected = 2;
 }
 
 // An assembly (tree) defines a subset of a layout that can be assembled unambiguously.
@@ -237,69 +223,49 @@ message Assembly{
   repeated Assembly parts = 2;
 }
 
-// A layout strategy affects in which orders connections are triggered.
-enum LayoutStrategy {
-  // A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.
-  LAYOUTSTRATEGY_BREADTHFIRST = 0;
-  // A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root.
-  LAYOUTSTRATEGY_DEPTHFIRST = 1;
-}
-
 // A layout (graph) is a plan for a set of sobjects and their connections between each other.
 message Layout {
   // Sobjects (nodes) that are part of the layout (graph).
   repeated Sobject sobjects = 1;
   // Connections (edges) that are part of the layout (graph).
   repeated Connection connections = 2;
-  LayoutStrategy strategy = 3;
-  // Optional assemblies that can possibly unambiguously describe the layout order of sobjects.
-  // Most of the time this field is only necissary when elements that don't work well together in a general way.
-  // Therefore if you can update the element definitions to be more robust, rather use your time for that.
-  repeated Assembly assemblies = 4;
 }
 
 // A prototype acts as a template from which an element can be cloned.
 message Prototype {
   // The hash of the plan used for the construction of the prototype.
   string plan_hash = 1;
-  // Representations of the prototype.
-  repeated Representation representations = 2;
-  // An optional human readable description of the prototype.
-  string description = 3;
+  // Models of the prototype.
+  repeated Model models = 2;
 }
 
-// An element is the atom of a design. It has several representations and a pose.
+// An element is the atom of a design.
 message Element {
   // The sobject id that was used to construct the element.
   string sobject_id = 1;
   // The hash of the plan for the prototype of the element.
   string prototype_plan_hash = 2;
   // The pose of the element instance.
-  Pose pose = 3;
-  // TODO: Think of a formalization for modifiers.
-  // repeated Modifier modifiers = 3;
+  semio.geometry.v1.Pose pose = 3;
 }
 
-// A design is an aggregation of elements (actually element instances).
+// 🏢 A design is an aggregation of elements (actually element occurances of prototypes).
 message Design {
   repeated Prototype prototypes = 1;
   repeated Element elements = 2;
 }
 
-// A layout modification describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
-message LayoutModification {
-  Layout context = 1;
+// A decision
+// Multiple decisions: 🧬
+
+// 🖧 A rule describes declaratively a layout and the layout after its modification. The rules on how to imperatively change such a layout need to be found by the transformation system.
+message Rule {
+  Plan plan = 1;
   Layout modified_context = 2;
 }
 
-// A decision strategy holds information on how modifications are applied.
+// A rule strategy holds information on how modifications are applied.
 message LayoutModificationStrategy {
   // The match count describes how often a layout modification should be applied. It beeing finite will make sure that the system always terminates. Make sure to set the threshold high enough.
   uint32 match_count = 1;
-}
-
-// A decision is a layout modification with a strategy on how to apply it to a new layout.
-message Decision {
-  LayoutModification modification = 1;
-  LayoutModificationStrategy strategy = 2;
 }
