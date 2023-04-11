@@ -1,0 +1,6 @@
+graph layout {
+    shaft -- capsuleSouthFloor1 [label=val1]
+    shaft -- capsuleSouthFloor2
+    shaft -- capsuleSouthFloor3
+    shaft -- {capsuleEastFloor1, capsuleEastFloor2, capsuleEastFloor3}
+}

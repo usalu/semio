@@ -1,0 +1,13 @@
+uri: shaft.gh
+plan: {
+ width: 400
+ #floors: 3
+ floorheight: 300
+}
+
+port:{
+    parameters: [
+        name: door
+        value: True
+    ]
+}
