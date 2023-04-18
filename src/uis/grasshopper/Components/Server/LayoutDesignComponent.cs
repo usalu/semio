@@ -56,8 +56,10 @@ namespace Semio.UI.Grasshopper.Components.Server
 
                 using (var client = new HttpClient()
                        {
-                           MaxResponseContentBufferSize = Int32.MaxValue
-                })
+                           MaxResponseContentBufferSize = Int32.MaxValue,
+                           Timeout = new TimeSpan(0,10,0)
+
+                       })
                 {
                     HttpContent content = new StringContent(layoutDesignRequest.ToString());
                     var task = client.PostAsync(url + _route, content);
