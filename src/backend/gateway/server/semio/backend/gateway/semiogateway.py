@@ -10,14 +10,14 @@ class Gateway(GatewayServer):
     def layoutDesign(self, layout:Layout, target_platform:Platform)->Design:
         
         # Task 1
-        prototypes = []
+        prototypesDict = {}
         sobjectPlanHashes = {sobject.id:hashObject(sobject.plan) for sobject in layout.sobjects}
 
         for sobject in layout.sobjects:
-            if not sobjectPlanHashes[sobject.id] in prototypes:
+            if not sobjectPlanHashes[sobject.id] in prototypesDict:
                 prototype = self.RequestPrototype(sobject.plan,target_platform)
                 assert sobjectPlanHashes[sobject.id]==prototype.plan_hash
-                prototypes.append(prototype)
+                prototypesDict[prototype.plan_hash]=prototype
 
         # Task 2
         elements = []
@@ -27,7 +27,7 @@ class Gateway(GatewayServer):
             elements+=elementsFromAssembly
 
         # await Task 1 & 2
-        return Design(prototypes=prototypes,elements=elements)
+        return Design(prototypes=list(prototypesDict.values()),elements=elements)
 
 def main():
     Gateway().serve()
