@@ -54,6 +54,9 @@ def getRepresentation(connected_sobject_pose: Pose, representationProtocol: Repr
         return None
 
 @lru_cache()
+def requestConnectionPointCached(extensionProxy:ExtensionProxy, plan: Plan, link:Link, representation: Point | None):
+    return extensionProxy.RequestConnectionPoint(plan,link,representation)
+
 def connectElementCached(
     extensionProxyConnected:ExtensionProxy, 
     extensionProxyConnecting:ExtensionProxy, 
@@ -66,11 +69,11 @@ def connectElementCached(
     ) -> Tuple[Pose, Point]:
     
     representationConnecting = getRepresentation(connected_sobject_pose,connected_link.representationProtocol,connecting_sobject_pose.point_of_view)
-    connectionPointFromConnected = extensionProxyConnected.RequestConnectionPoint(connected_sobject_plan,connected_link,representationConnecting)
+    connectionPointFromConnected = requestConnectionPointCached(extensionProxyConnected,connected_sobject_plan,connected_link,representationConnecting)
     connectionPointFromWorld = getWorldPointOfView(connected_sobject_pose,connectionPointFromConnected)
     
     representationConnected = getRepresentation(connected_sobject_pose,connecting_link.representationProtocol,connecting_sobject_pose.point_of_view)
-    connectionPointFromConnecting = extensionProxyConnecting.RequestConnectionPoint(connecting_sobject_plan,connecting_link,representationConnected)
+    connectionPointFromConnecting = requestConnectionPointCached(extensionProxyConnecting,connecting_sobject_plan,connecting_link,representationConnected)
     relativeConnectionPointFromConnectedFromWorld = getWorldPointOfView(connecting_sobject_pose,connectionPointFromConnecting,False)
 
     connectingTargetPointOfView = subtract(connectionPointFromWorld,relativeConnectionPointFromConnectedFromWorld)
