@@ -4,7 +4,7 @@
 
 You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ takes all your time? Then try to capture the 🧬 and 💉 it into a new design. 🖇️ your elements and describe your drawing, simulation and other computations and let semio 🖧,🖩,✏️.
 
-![Example](docs/examples/simplecapsuletower/simplecapsuletower.png)
+![Example](docs/examples/capsuletower/small/smallcapsuletower.png)
 
 semio is a framework that makes procedural modelling platforms interoperable. Any file when given to a platform (like Grasshopper, Dynamo, Python, Cadquery, ...) along with paremeters (numerical, textual or geometrical) that returns an output is a script. Depending on the type of inputs and outputs that the script accepts, it can (currently) be either a definition, rule or a modifier.
 
