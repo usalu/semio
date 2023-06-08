@@ -1,0 +1,54 @@
+%\newsavebox\bridgeRuleLHS
+%	\sbox\bridgeRuleLHS{
+%		\begin{tikzpicture}
+%       		\sSobjectWithDescription{b}{}{below}{}{b}
+%            \sSobjectWithDescription{s1}{above left=0.25and2.0of b}{above}{xshift=0.3cm}{s1}
+%            \sSobjectWithDescription{s2}{above right=0.25and2.0of b}{above}{xshift=-0.3cm}{s2}
+%            \sSobjectWithDescription{c1}{right=1.3of s1}{above}{xshift=-0.3cm}{c1}
+%            \sSobjectWithDescription{c2}{left=1.3of s2}{above}{xshift=0.3cm}{c2}
+%            
+%            \sConnectionWithPorts{b}{s1}{\emoji{🛗🅰️}}{\emoji{⬇️}}{north east}{north west}
+%            \sConnectionWithPorts{b}{s2}{\emoji{🛗🅱️}}{\emoji{⬇️}}{north west}{north east}
+%            \sConnectionWithPorts{s1}{c1}{$d_1$\emoji{🎚️🏅}}{\emoji{🚪}}{south west}{north east}
+%            \sConnectionWithPorts{s2}{c2}{$d_2$\emoji{🎚️🏅}}{\emoji{🚪}}{south east}{north west}
+%    		\end{tikzpicture}}
+%
+%\newsavebox\bridgeRuleRHS
+%    \sbox\bridgeRuleRHS{
+%        \begin{tikzpicture}
+%            \sSobject{bRHS}{}{b}
+%            \sSobject{s1RHS}{above left=0.25and1.5of bRHS}{s1}
+%            \sSobject{s2RHS}{above right=0.25and1.5of bRHS}{s2}
+%            \sSobject{brRHS}{right=1.25 of s1RHS}{br}
+%            
+%            \sConnection{bRHS}{s1RHS}
+%            \sConnection{bRHS}{s2RHS}
+%            \sConnectionWithPorts{s1RHS}{brRHS}{$d_1$\emoji{🎚️🏅}}{$d_1$}{south west}{north east}
+%            \sConnectionWithPorts{s2RHS}{brRHS}{$d_2$\emoji{🎚️🏅}}{$d_2$}{south east}{north west}
+%        \end{tikzpicture}}
+
+
+%\tikzset{bridgeRuleLHS/.pic={
+%	\sSobjectWithDescription{b}{}{below}{}{b}
+%	\sSobjectWithDescription{s1}{above left=0.25and2.0of b}{above}{xshift=0.3cm}{s1}
+%	\sSobjectWithDescription{s2}{above right=0.25and2.0of b}{above}{xshift=-0.3cm}{s2}
+%	\sSobjectWithDescription{c1}{right=1.3of s1}{above}{xshift=-0.3cm}{c1}
+%	\sSobjectWithDescription{c2}{left=1.3of s2}{above}{xshift=0.3cm}{c2}
+%            
+%%            \sConnectionWithPorts{b}{s1}{\emoji{🛗🅰️}}{\emoji{⬇️}}{north east}{north west}
+%%            \sConnectionWithPorts{b}{s2}{\emoji{🛗🅱️}}{\emoji{⬇️}}{north west}{north east}
+%%            \sConnectionWithPorts{s1}{c1}{$d_1$\emoji{🎚️🏅}}{\emoji{🚪}}{south west}{north east}
+%%            \sConnectionWithPorts{s2}{c2}{$d_2$\emoji{🎚️🏅}}{\emoji{🚪}}{south east}{north west}
+%}}
+%
+%\tikzset{bridgeRuleRHS/.pic={
+%	\sSobject{bRHS}{}{b}
+%	\sSobject{s1RHS}{above left=0.25and1.5of bRHS}{s1}
+%	\sSobject{s2RHS}{above right=0.25and1.5of bRHS}{s2}
+%	\sSobject{brRHS}{right=1.25 of s1RHS}{br}
+%            
+%%            \sConnection{b}{s1}
+%%            \sConnection{b}{s2}
+%%            \sConnectionWithPorts{s1}{br}{$d_1$\emoji{🎚️🏅}}{$d_1$}{south west}{north east}
+%%            \sConnectionWithPorts{s2}{br}{$d_2$\emoji{🎚️🏅}}{$d_2$}{south east}{north west}
+%}}

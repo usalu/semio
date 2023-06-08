@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\sSobjectWithDescription{b}{}{below}{}{b}
+\sSobjectWithDescription{s1}{above left=0.25and2.0of b}{above}{xshift=0.3cm}{s1}
+\sSobjectWithDescription{s2}{above right=0.25and2.0of b}{above}{xshift=-0.3cm}{s2}
+\sSobjectWithDescription{c1}{right=1.3of s1}{above}{xshift=-0.3cm}{c1}
+\sSobjectWithDescription{c2}{left=1.3of s2}{above}{xshift=0.3cm}{c2}
+            
+\sConnectionWithPorts{b}{s1}{\emoji{🛗🅰️}}{\emoji{⬇️}}{north east}{north west}
+\sConnectionWithPorts{b}{s2}{\emoji{🛗🅱️}}{\emoji{⬇️}}{north west}{north east}
+\sConnectionWithPorts{s1}{c1}{$d_1$\emoji{🎚️🏅}}{\emoji{🚪}}{south west}{north east}
+\sConnectionWithPorts{s2}{c2}{$d_2$\emoji{🎚️🏅}}{\emoji{🚪}}{south east}{north west}
+\end{tikzpicture}
