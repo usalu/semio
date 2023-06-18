@@ -1,0 +1,374 @@
+\documentclass[tikz]{standalone}
+
+\input{../kagincapsuletower.tex}
+
+\newcommand{\baseIcon}{\normalsize\baseDefinitionIcon}
+\newcommand{\shaftIcon}{\small\shaftDefinitionIcon}
+\newcommand{\capitalIcon}{\footnotesize\capitalDefinitionIcon}
+\newcommand{\bridgeIcon}{\scriptsize\bridgeDefinitionIcon}
+\newcommand{\capsuleIcon}{\tiny\capsuleDefinitionIcon}
+
+% \tikzexternalize[prefix=figures/]
+
+% First parameter value, second type
+\newcommand{\parameterWithType}[2]{\overbrace{#1}^{#2}}
+% parameters [except last], last parameter
+\newcommand{\parameters}[2]{\left(\foreach \p in {#1}{\p,}#2\right)}
+%script name, parameters [except last], last parameter
+\newcommand{\scriptCall}[3]{$\memoji{#1}\parameters{#2}{#3}$}
+\newcommand{\capsuleParameters}[2]{\left(\memoji{#1},\memoji{#2}\right)}
+\newcommand{\horizontalDots}{\CIRCLE\CIRCLE\CIRCLE}
+
+
+\newcommand{\initialSchemeContent}{
+  \scriptCall{\kaginSchemeIcon}{10,1}{\begin{bmatrix}3\\6\\9\end{bmatrix}}}
+
+\newcommand{\towerANorthFirstCapsuleParameters}{
+  \begin{bmatrix}
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+  \end{bmatrix}}
+\newcommand{\towerANorthSecondCapsuleParameters}{
+  \begin{bmatrix}
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+    \capsuleParameters{⬇️}{⬆️}\\
+  \end{bmatrix}}
+\newcommand{\towerBWestFirstCapsuleParameters}{
+  \begin{bmatrix}
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+  \end{bmatrix}}
+\newcommand{\towerBWestSecondCapsuleParameters}{
+  \begin{bmatrix}
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+    \capsuleParameters{↔️}{⬆️}\\
+  \end{bmatrix}}
+
+\newcommand{\towerANorthCapsuleParameters}{
+  \parameters
+    {\towerANorthFirstCapsuleParameters}
+    {\towerANorthSecondCapsuleParameters}}
+\newcommand{\towerBWestCapsuleParameters}{
+  \parameters
+    {\towerBWestFirstCapsuleParameters}
+    {\towerBWestSecondCapsuleParameters}}
+
+\newcommand{\towerASchemeContent}{
+  \scriptCall{\towerSchemeIcon}{ 
+    \memoji{🅰️},
+    11,
+    \memoji{➡️}}
+    {\parameters\towerANorthCapsuleParameters\horizontalDots}}
+
+\newcommand{\towerBSchemeContent}{
+  \scriptCall{\towerSchemeIcon}{
+    \memoji{🅱️},
+    9,
+    \memoji{⬅️}}
+    {\parameters\horizontalDots\towerBWestCapsuleParameters}}
+
+\newcommand{\bridgeRuleContent}[1]{
+  \scriptCall{\bridgeRuleIcon}{\memoji{🅰️},\memoji{🅱️}}{#1}}
+\newcommand{\bridgeThreeRuleContent}{\bridgeRuleContent{3}}
+\newcommand{\bridgeSixRuleContent}{\bridgeRuleContent{6}}
+\newcommand{\bridgeNineRuleContent}{\bridgeRuleContent{9}}
+
+\newcommand{\towerRuleContent}[3]{{\scriptCall{🏭}{\memoji{#1},#2}{\memoji{#3}}}}
+\newcommand{\towerARuleContent}{\towerRuleContent{🅰️}{11}{➡️}}
+\newcommand{\towerBRuleContent}{\towerRuleContent{🅰️}{9}{⬅️}}
+
+\newcommand{\sideSchemeContent}[3]{
+  \scriptCall{\sideSchemeIcon}{\memoji{#1},\memoji{#2}}{#3}}
+\newcommand{\towerASideNorthSchemeContent}{
+  \sideSchemeContent{🅰️}{⬆️}{\towerANorthCapsuleParameters}}
+\newcommand{\towerBSideWestSchemeContent}{
+  \sideSchemeContent{🅱️}{⬅️}{\towerBWestCapsuleParameters}}
+
+\newcommand{\stackContent}[4]{
+  \scriptCall{\stackRuleIcon}{\memoji{#1},\memoji{#2},\memoji{#3}}{#4}}
+\newcommand{\towerASideNorthStackFirstContent}{
+  \stackContent{🅰️}{⬆️}{🥇}{\towerANorthFirstCapsuleParameters}}
+\newcommand{\towerBSideWestStackSecondContent}{
+  \stackContent{🅱️}{⬅️}{🥈}{\towerBWestSecondCapsuleParameters}}
+
+\newcommand{\dotsContent}{{$\horizontalDots$}}
+
+\newcommand{\horizontalSpacing}{0.2}
+\newcommand{\verticalSpacing}{0.2}
+% |[-14,9.6]|/6=3.93333
+\newcommand{\designSpacing}{3.93333}
+
+% NW Isonometry: z={(90:10mm)},x={(150:10mm)},y={(30:10mm)}
+% z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}
+% \newcommand{\axonometryPlaneX}{x={(170:10mm)}}
+% \newcommand{\axonometryPlaneY}{y={(10:10mm)}}
+% \newcommand{\axonometryPlaneZ}{z={(90:10mm)}}
+
+\tikzset{
+	base/.style={circle,minimum size=3ex,inner sep=0pt, outer sep=0pt,anchor=center},
+	shaft/.style={circle,minimum size=2ex,inner sep=0pt, outer sep=0pt,anchor=center},
+	capital/.style={circle,minimum size=1ex,inner sep=0pt, outer sep=0pt,anchor=center},
+	bridge/.style={circle,minimum size=2pt,inner sep=0pt, outer sep=0pt,anchor=center},
+	capsule/.style={circle,minimum size=2pt,inner sep=0pt, outer sep=0pt,anchor=center},
+}
+	
+\tikzset{
+  iL/.pic={\node [base,new] (b) {\baseIcon};},
+  tAL/.pic={
+    \begin{scope}[scale=0.98]
+      \node [base] (b) at (0,0){\baseIcon};
+      \node [shaft,new] (s) at (0,2.5){\shaftIcon};
+      \node [capital,new] (cp) at (0,5){\capitalIcon};
+      \draw[new] (b) -- (s) -- (cp);
+    \end{scope}},
+  tASNSRL/.pic={
+    \begin{scope}[scale=0.98,z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}]
+      \input{layouts/tASNSRL.tikz.tex}
+    \end{scope}},
+  tASNSFL/.pic={
+    \begin{scope}[scale=0.98,z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}]
+      \input{layouts/tASNSFL.tikz.tex}
+    \end{scope}
+  },
+  tBL/.pic={
+    \begin{scope}[z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}]
+      \input{layouts/tBL.tikz.tex}
+    \end{scope}
+  },
+  tBSWSSL/.pic={
+    \begin{scope}[z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}]
+      \input{layouts/tBSWSSL.tikz.tex}
+    \end{scope}},
+  bTL/.pic={
+    \begin{scope}[z={(90:10mm)},x={(170:10mm)},y={(10:10mm)}]
+      \input{layouts/bTL.tikz.tex}
+    \end{scope}},
+  bNL/.pic={
+    \begin{scope}[z={(90:10mm)},x={(10:10mm)},y={(170:10mm)}]
+      \input{layouts/bNL.tikz.tex}
+    \end{scope}
+  },
+  iD/.pic={
+    \begin{design}
+      \input{designs/iD.tikz.tex}
+    \end{design}},
+  tAD/.pic={
+    \begin{design}
+      \input{designs/tAD.tikz.tex}
+    \end{design}},
+  tASNSFD/.pic={
+    \begin{design}
+      \input{designs/tASNSFD.tikz.tex}
+    \end{design}},
+  tASNSRD/.pic={
+    \begin{design}
+      \input{designs/tASNSRD.tikz.tex}
+    \end{design}},
+  tBD/.pic={
+    \begin{design}
+      \input{designs/tBD.tikz.tex}
+    \end{design}},
+  tBSWSSD/.pic={
+    \begin{design}
+      \input{designs/tBSWSSD.tikz.tex}
+    \end{design}},
+  bND/.pic={
+    \begin{designLast}
+      \input{designs/bND.tikz.tex}
+    \end{designLast}}}
+
+\begin{document}
+
+\begin{tikzpicture}[rounded corners]
+    \node[semioTerm] (iS) {\initialSchemeContent};
+    \node[semioTermText,left=\horizontalSpacing of iS,align=right] (iSD) {INITIAL \\ SCHEME};
+
+    \node[semioScheme,below=\verticalSpacing*2+0.6 of iS] (tBS) {\towerBSchemeContent};
+    \node[semioScheme,left=\horizontalSpacing of tBS] (tAS) {\towerASchemeContent};
+    \node[semioRule,right=\horizontalSpacing of tBS] (bTR) {\bridgeThreeRuleContent};
+    \node[semioRule,right=\horizontalSpacing of bTR] (bSR) {\bridgeSixRuleContent};
+    \node[semioRule,right=\horizontalSpacing of bSR] (bNR) {\bridgeNineRuleContent};
+
+    \begin{scope}[scriptCall]
+      \draw (iS.south) -- +(0,-\verticalSpacing) -| (tAS.north);
+      \draw (iS.south) -- +(0,-\verticalSpacing) -| (tBS.north);
+      \draw (iS.south) -- +(0,-\verticalSpacing) -| (bTR.north);
+      \draw (iS.south) -- +(0,-\verticalSpacing) -| (bSR.north);
+      \draw (iS.south) -- +(0,-\verticalSpacing) -| (bNR.north);
+    \end{scope}
+
+    \node[semioRule,below=\verticalSpacing*2+2.2 of tAS.south west,anchor=north west] (tAR) {\towerARuleContent};
+    \node[semioScheme,right=\horizontalSpacing of tAR] (tASNS) {\towerASideNorthSchemeContent};
+    \node[semioScheme,right=\horizontalSpacing of tASNS] (tASRS) {\dotsContent};
+    \node[semioRule,right=\verticalSpacing of tASRS] (tBR) {\towerBRuleContent};
+    \node[semioScheme,right=\horizontalSpacing of tBR] (tBSRS) {\dotsContent};
+    \node[semioScheme,right=\horizontalSpacing of tBSRS] (tBSWS) {\towerBSideWestSchemeContent};
+
+    \begin{scope}[scriptCall]
+      \draw (tAS.south) -- +(0,-\verticalSpacing) -| (tAR.north);
+      \draw (tAS.south) -- +(0,-\verticalSpacing) -| (tASNS.north);
+      \draw (tAS.south) -- +(0,-\verticalSpacing) -| (tASRS.north);
+
+      \draw (tBS.south) -- +(0,-\verticalSpacing-0.4) -| (tBR.north);
+      \draw (tBS.south) -- +(0,-\verticalSpacing-0.4) -| (tBSRS.north);
+      \draw (tBS.south) -- +(0,-\verticalSpacing-0.4) -| (tBSWS.north);
+    \end{scope}
+
+    \node[semioScheme,below=\verticalSpacing of tASNS] (tASNRR) {\dotsContent};
+    \node[semioRule,below=\verticalSpacing*2+2.022 of tASRS] (tASRR) {\dotsContent};
+    \node[semioRule,below=\verticalSpacing*2+2.022 of tBSRS] (tBSRR) {\dotsContent};
+    \node[semioRule,below=\verticalSpacing*2+0.3 of tBSWS] (tBSWRR) {\dotsContent};
+   
+    \begin{scope}[scriptCall]
+      \draw (tASNS.south) -- (tASNRR.north);
+      \draw (tASRS.south) -- (tASRR.north);
+      \draw (tBSRS.south) -- (tBSRR.north);
+      \draw (tBSWS.south) -- (tBSWRR.north);
+    \end{scope}
+
+    \node[semioRule,below=\verticalSpacing*2+5 of tAR] (tARC) {\towerARuleContent};
+    \node[semioRule,right=\horizontalSpacing of tARC] (tASNSFRC) {\towerASideNorthStackFirstContent};
+    \node[semioRule,right=\horizontalSpacing of tASNSFRC] (tASNRRC) {\dotsContent};
+    \node[semioRule,right=\horizontalSpacing of tASNRRC] (tBRC) {\towerBRuleContent};
+    \node[semioRule,right=\horizontalSpacing of tBRC] (tBSRRC) {\dotsContent};
+    \node[semioRule,right=\verticalSpacing of tBSRRC] (tBSWSSRC) {\towerBSideWestStackSecondContent};
+    \node[semioRule,right=\horizontalSpacing of tBSWSSRC] (bTRC) {\bridgeThreeRuleContent};
+    \node[semioRule,right=\horizontalSpacing of bTRC] (bSRC) {\bridgeSixRuleContent};
+    \node[semioRule,right=\horizontalSpacing of bSRC] (bNRC) {\bridgeNineRuleContent};
+
+    \node[semioTermText,right=\horizontalSpacing of bNRC, align=center] (sD) {A\\R\\R\\A\\N\\G\\E\\M\\E\\N\\T};
+    \node [semioTerm,fit=(tARC)(tASNSFRC)(tASNRRC)(tBRC)(tBSRRC)(tBSWSSRC)(bTRC)(bSRC)(bNRC)] (iSB) {};
+
+    \draw (tARC.east)[->]->(tASNSFRC.west);
+    \draw (tASNSFRC.east)[->]->(tASNRRC.west);
+    \draw (tASNRRC.east)[->]->(tBRC.west);
+    \draw (tBRC.east)[->]->(tBSRRC.west);
+    \draw (tBSRRC.east)[->]->(tBSWSSRC.west);
+    \draw (tBSWSSRC.east)[->]->(bTRC.west);
+    \draw (bTRC.east)[->]->(bSRC.west);
+    \draw (bSRC.east)[->]->(bNRC.west);
+
+    \begin{scope}[ruleCopy]
+      \draw (tAR.south) -- (tARC.north);
+      \draw (tASNRR.south) -- +(0,-\verticalSpacing) -| (tASNSFRC.north);
+      \draw (tASNRR.south) -- +(0,-\verticalSpacing) -| (tASNRRC.north);  
+      \draw (tASRR.south) -- +(0,-\verticalSpacing-0.8) -| (tASNRRC.north);
+      \draw (tBR.south) -- ++(0,-\verticalSpacing-1.3) -| ++(-1.25,-2.9) -| (tBRC.north);
+      \draw (tBSRR.south) -- +(0,-\verticalSpacing) -| (tBSRRC.north);
+      \draw (tBSWRR.south) -- +(0,-\verticalSpacing*3) -| (tBSRRC.north);
+      \draw (tBSWRR.south) -- +(0,-\verticalSpacing*3) -| (tBSWSSRC.north);
+      \draw (bTR.south) |- ++(3,-\verticalSpacing-2.1) |- ++(-2.15,-\verticalSpacing-6.5) -| (bTRC.north);
+      \draw (bSR.south) |- +(1.5,-\verticalSpacing-1.1) |- +(0,-\verticalSpacing-9.7) -| (bSRC.north);
+      \draw (bNR.south) -- (bNRC.60);
+    \end{scope}
+
+    \node[semioTermText,below=\verticalSpacing*2+1 of iSB.south west,anchor= north west,align=left] (iLIT) {I\\N\\I\\T\\I\\T\\A\\L};
+    \node[semioTermText,right=0 of iLIT.south east,anchor= south west,align=left] (iLLT) {L\\A\\Y\\O\\U\\T};
+    \node [fit=(iLIT)(iLLT)] (iLT) {};
+
+    \pic (iL) at (-12.5,-21.1)  {iL};
+    \pic (tAL) at (-10.5,-23.5)  {tAL};
+    \pic (tASNSFL) at (-9.5,-23)  {tASNSFL};
+    \pic (tASNSRL) at (-6,-23) {tASNSRL};
+    \pic (tBL) at (-2,-23.1)  {tBL};
+    \pic (tBSWSSL) at (2,-23.1)  {tBSWSSL};
+    \pic (bTL) at (6,-23.1)  {bTL};
+    \pic (bNL) at (11.4,-23.1)  {bNL};
+
+    \pic (iD) at (-14,-29.55)  {iD};
+    \pic (tAD) at (-14+\designSpacing,-29.55)  {tAD};
+    \pic (tASNSFD) at (-14+\designSpacing*2,-29.55)  {tASNSFD};
+    \pic (tASNSRD) at (-14+\designSpacing*3,-29.55) {tASNSRD};
+    \pic (tBD) at (-14+\designSpacing*4,-29.55)  {tBD};
+    \pic (tBSWSSD) at (-14+\designSpacing*5,-29.55)  {tBSWSSD};
+    \pic (bND) at (9.6,-29.55)  {bND};
+
+    \node [semioTerm,fit=(iLb)] (iLB) {};
+    \node [semioLayout,fit=(tALb)(tALs)(tALcp)] (tALB) {};
+    \node [semioLayout,fit=(tASNSFLb0)(tASNSFLcp0)(tASNSFLc76)] (tASNSFLB) {};
+    \node [semioLayout,
+      fit=(tASNSRLb0)(tASNSRLcp0)
+      (tASNSRLc76)(tASNSRLc16)(tASNSRLc49)(tASNSRLc19)
+      (tASNSRLc57)(tASNSRLc8)(tASNSRLc83)(tASNSRLc41)] (tASNSRLB) {};
+    \node [semioLayout,
+      fit=(tBLb0)(tBLcp0)(tBLcp1)
+      (tBLc76)(tBLc16)(tBLc49)(tBLc19)
+      (tBLc57)(tBLc8)(tBLc83)(tBLc41)] (tBLB) {};
+    \node [semioLayout,
+      fit=(tBSWSSLb0)(tBSWSSLcp0)(tBSWSSLcp1)
+      (tBSWSSLc76)(tBSWSSLc16)(tBSWSSLc49)(tBSWSSLc19)
+      (tBSWSSLc57)(tBSWSSLc8)(tBSWSSLc83)(tBSWSSLc41)
+      (tBSWSSLc94)(tBSWSSLc141)(tBSWSSLc103)(tBSWSSLc124)
+      (tBSWSSLc112)(tBSWSSLc137)] (tBSWSSLB) {};
+    \node [semioLayout,
+      fit=(bTLb0)(bTLcp0)(bTLcp1)
+      (bTLc76)(bTLc16)(bTLc49)(bTLc19)
+      (bTLc57)(bTLc8)(bTLc83)(bTLc41)
+      (bTLc94)(bTLc141)(bTLc103)(bTLc124)
+      (bTLc112)(bTLc137)] (bTLB) {};
+    \node [semioLayout,
+      fit=(bNLb0)(bNLcp0)(bNLcp1)
+      (bNLc76)(bNLc16)(bNLc49)(bNLc19)
+      (bNLc57)(bNLc8)(bNLc83)(bNLc41)
+      (bNLc94)(bNLc141)(bNLc103)(bNLc124)
+      (bNLc112)(bNLc137)] (bNLB) {};
+
+    \draw[ruleInput] (tARC.200) -- +(0,-3) -| (iLB.north);
+    \draw[ruleOutput] (tARC.340) |- +(0.5,-2.4) -| (tALB.north);
+    \draw[ruleInput] (tASNSFRC.250) |- (tALB.east);
+    \draw[ruleOutput] (tASNSFRC.284) -- (tASNSFLB.north);
+    \draw[ruleInput] (tASNRRC.223) |- +(-1,-2.48) |- (tASNSFLB.east);
+    \draw[ruleOutput] (tASNRRC.320) -- +(0,-2.48) -| (tASNSRLB.north);
+    \draw[ruleInput] (tBRC.205) |- +(0.75,-2.42) |- (tASNSRLB.east);
+    \draw[ruleOutput] (tBRC.325) -- +(0,-2.42) |- (tBLB.west);
+    \draw[ruleInput] (tBSRRC.223) -- +(0,-2.48) -| (tBLB.north);
+    \draw[ruleOutput] (tBSWSSRC.292) -- (tBSWSSLB.north);
+    \draw[ruleInput] (bTRC.205) |- +(-0.35,-2.42) |- (tBSWSSLB.east);
+    \draw[ruleOutput] (bTRC.325) -- +(0,-2.42) -| (bTLB.north);
+    \draw[ruleInput] (bSRC.205) |- +(1,-2.42) |- (bTLB.east);
+    \draw[ruleOutput] (bNRC.325) -- +(0,-2.42) -| (bNLB.north);
+    
+    \draw[resolvesTo] (iLB.south) -- (iDbB.north);
+    \draw[resolvesTo] (tALB.south) |- (tADbB.west);
+    \draw[resolvesTo] (tASNSFLB.south) |- ++(1.3,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tASNSFDbB.west);
+    \draw[resolvesTo] (tASNSRLB.south) |- ++(2.0,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tASNSRDbB.west);
+    \draw[resolvesTo] (tBLB.south) |- ++(2.3,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tBDbB.west);
+    \draw[resolvesTo] (tBSWSSLB.south) |- ++(2.5,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tBSWSSDbB.west);
+    \draw[resolvesTo] (bNLB.south) |- ++(-1.75,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (bNDbB.west);
+
+    \node[semioTermText,right=\horizontalSpacing+0.35 of bNDbB.east,anchor=east,align=center] (DD) {D\\E\\S\\I\\G\\N};
+\end{tikzpicture}   
+
+\end{document}

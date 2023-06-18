@@ -1,0 +1,14 @@
+\sobject{b}{\baseDefinitionIcon}{}{}{}{}{}{}
+\begin{scope}[new]
+  \sobjectWithDescription{s}{\shaftDefinitionIcon}{}{}{above=0.35of b}
+    {right}
+    {\parameterAssign{\shaftDefinitionFloorsParameterIcon}{\memoji{\shaftDefinitionFloorsParameterIcon}}\\
+    \parameterAssign{\shaftDefinitionElevatorSideParameterIcon}{\memoji{\shaftDefinitionElevatorSideParameterIcon}}\\
+    \attributeAssign{🆔}{\memoji{🆔}}}
+    {}
+  \sobject{cp}{\capitalDefinitionIcon}{}{}{above=0.35of s}
+  % left-right emoji will appear as up down because of sloped
+  \sAttractionWithPorts{b}{s}{\emoji{↔️}}{}{}{}{south west}{south east}{west}
+  \sAttractionWithPorts{s}{cp}{\emoji{↔️}}{}{}{}{south east}{south west}{east}
+\end{scope}
+

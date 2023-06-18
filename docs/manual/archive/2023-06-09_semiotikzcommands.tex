@@ -1,0 +1,146 @@
+\usepackage{fontspec}
+\newfontfamily\NotoEmoji{Noto Emoji}
+
+\usepackage{amsmath}
+%For \CIRCLE
+\usepackage{wasysym}
+
+
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{
+	positioning,
+	shapes.geometric, shapes.callouts,
+	external,
+	graphs, graphdrawing,
+	trees,
+	backgrounds,
+	fit,
+	3d,
+	svg.path,
+	decorations.pathreplacing,
+	calligraphy}
+\usegdlibrary{trees, layered}
+
+%\tikzset{external/system call={lualatex -enable-write18 -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"}}
+% \tikzset{external/system call={lualatex -shell-escape -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"}}
+% \tikzexternalize[prefix=figures/]
+
+\usepackage{forest}
+\useforestlibrary{edges}
+% For using forked edge style
+\ProvidesForestLibrary{edges}[2016/12/05 v0.1.1]
+
+% % For scaling tikzpictures to a width
+% % https://tex.stackexchange.com/questions/481915/how-can-i-scale-tikz-picture-to-full-width
+% % https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
+% \usepackage{environ}
+% \newsavebox{\measure@tikzpicture}
+% \NewEnviron{scaletikzpicturetowidth}[1]{
+%   \def\tikz@width{#1}
+%   \def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}
+%   \BODY
+%   \end{lrbox}
+%   \pgfmathparse{#1/\wd\measure@tikzpicture}
+%   \edef\tikzscale{\pgfmathresult}
+%   \BODY
+% }
+
+% \newcommand{\inputtikz}[1]{\tikzsetnextfilename{#1}\input{#1.tikz.tex}}
+
+% \usepackage[dvipsnames]{xcolor}
+\definecolor{semioturquoise}{HTML}{00A69D}
+\definecolor{semiopink}{HTML}{FF344F}
+\definecolor{semioblue}{HTML}{334fea}
+\definecolor{semioyellow}{HTML}{eacf33}
+\definecolor{semioorange}{RGB}{240,117,24}
+\definecolor{semiopurple}{HTML}{9d00a5}
+\definecolor{semioanthrazite}{RGB}{75,85,100}
+\definecolor{semioanthraziteLite}{RGB}{191,216,255}
+\definecolor{semioanthraziteDark}{RGB}{37,42,50}
+
+\tikzset{
+    sobject/.style={draw,circle,node font=\normalsize},
+    sobjectDescription/.style={dotted,draw,rectangle,align=left,node font=\tiny},
+    sobjectDescriptionEdge/.style={dotted,node font=\tiny}
+	% Port style causes infinite loop somehow...    
+    %port/.style={sloped,anchor=south,node font=\tiny}
+}
+
+\usepackage{ifthen}
+
+%---------------------------------------SYMBOLS---------------------------------------
+
+\newcommand{\emoji}[1]{{\NotoEmoji{#1}}}
+% math emoji
+\newcommand{\memoji}[1]{{\text{\emoji{#1}}}}
+
+\newcommand{\sTabSpace}{0.15cm}
+\newcommand{\sTabs}[1]{\foreach \s in {1,...,#1} {\hspace{\sTabSpace}}}
+
+
+\def\semioname{Semio}
+\def\semioversion{0.2.0}
+
+\newcommand{\sobjectWithDescriptionDescriptionSpace}{0.1cm}
+
+\newcommand{\sUri}{\emoji{🔗}}
+
+\newcommand{\sDefinition}{\emoji{🏗️}}
+\newcommand{\sPlan}{\emoji{🛠️}}
+\newcommand{\sPort}{\emoji{🪝}}
+
+%---------------------------------------GENERAL PURPOSE FUNCIONS---------------------------------------
+
+%inputs: cardinal direction
+\newcommand{\cardianalToDirection}[1] {\ifthenelse{\equal{#1}{north}}{above}{\ifthenelse{\equal{#1}{east}}{right}{\ifthenelse{\equal{#1}{south}}{below}{left}}}}
+
+%inputs: direction
+\newcommand{\directionToCardinal}[1] {\ifthenelse{\equal{#1}{above}}{north}{\ifthenelse{\equal{#1}{right}}{east}{\ifthenelse{\equal{#1}{below}}{south}{west}}}}
+
+%inputs: cardinal direction
+\newcommand{\invertCardianal}[1] {\ifthenelse{\equal{#1}{north}}{south}{\ifthenelse{\equal{#1}{east}}{west}{\ifthenelse{\equal{#1}{south}}{north}{east}}}}
+
+%inputs: direction
+\newcommand{\invertDirection}[1] {\ifthenelse{\equal{#1}{above}}{below}{\ifthenelse{\equal{#1}{right}}{left}{\ifthenelse{\equal{#1}{below}}{above}{right}}}}
+
+%---------------------------------------SPECIAL PURPOSE FUNCIONS---------------------------------------
+
+%inputs: uri,parameters[], attributes[]
+\newcommand{\sobjectWithDescriptionDescription}[1]{\sDefinition:\\\sTabs{1}\sPlan:\\\sTabs{2}\sUri=#1}
+
+\newcommand{\sSimpleDefinitionDescription}[1]{\sobjectWithDescriptionDescription{#1}}
+
+%inputs: id, location attributes, description attributes 
+\newcommand{\sobjectWithDescription}[5]{
+	\node [sobject] (#1) [#2] {#5};
+	\node [sobjectDescription] (#1D)
+		[rectangle callout,callout absolute pointer={(#1)},
+		#3=\sobjectWithDescriptionDescriptionSpace of #1,#4]
+		{\sSimpleDefinitionDescription{base}};}
+
+%inputs: id, location attributes, display
+\newcommand{\sobject}[3]{
+	\node [sobject] (#1) [#2] {#3};}
+
+%inputs: attractingId, attractedId
+\newcommand{\sAttraction}[2]{
+	\draw (#1) -- (#2);}
+
+%inputs: attractingId, attractedId
+\newcommand{\sAttractionWithPorts}[6]{
+	\draw (#1) -- (#2)
+		% port style doesn't work: sloped,anchor=south,node font=\tiny
+		node[sloped,anchor=south,node font=\tiny, at start,anchor=#5]{\sPort: #3}
+		node[sloped,anchor=south,node font=\tiny, at end,anchor=#6]{\sPort: #4};}
+
+%inputs: attractingId, attractedId, attractedPorts, connectingPorts, attractedPortSide: north|south, connectingPortSide: north|south
+\newcommand{\sAttractionWithPortsBroken}[6]{
+	\draw (#1) -- (#2)
+		node[port,at start,anchor=#5]{\sPort: #3}
+		node[port,at end,anchor=#6]{\sPort: #4};}
+
+\tikzset{
+	semioTermText/.style={},
+	semioTerm/.style={draw=black,dashed},
+	semioSpecificTerm/.style={draw=black,dotted},
+}

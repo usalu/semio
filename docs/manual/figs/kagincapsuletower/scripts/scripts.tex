@@ -1,0 +1,144 @@
+\documentclass[tikz]{standalone}
+
+\input{../kagincapsuletower.tex}
+
+\newcommand{\baseDefinitionParcelParameterIcon}{\emoji{↪️}}
+\newcommand{\baseDefinitionHeightParameterIcon}{\emoji{↕️}}
+\newcommand{\baseDefinitionFloorHeightParameterIcon}{\emoji{🔼}}
+\newcommand{\baseDefinitionCorePrimaryLengthParameterIcon}{\emoji{⬅️}}
+\newcommand{\baseDefinitionCoreSecondaryLengthParameterIcon}{\emoji{➡️}}
+
+\newcommand{\baseDefinitionCorePrimaryPortIcon}{\emoji{🅰️}}
+\newcommand{\baseDefinitionCoreSecondaryPortIcon}{\emoji{🅱️}}
+
+\newcommand{\shaftDefinitionLengthParameterIcon}{\emoji{📏}}
+\newcommand{\shaftDefinitionWidthParameterIcon}{\emoji{↔️}}
+\newcommand{\shaftDefinitionHeightParameterIcon}{\emoji{↕️}}
+\newcommand{\shaftDefinitionFloorsParameterIcon}{\emoji{🎚️}}
+\newcommand{\shaftDefinitionElevatorSideParameterIcon}{\emoji{🧭}}
+
+\newcommand{\shaftDefinitionTopPortIcon}{\emoji{⬆️}}
+\newcommand{\shaftDefinitionDownPortIcon}{\emoji{⬇️}}
+
+
+\newcommand{\sDWOODPI}{\emoji{⬅️}1\emoji{🥇}\emoji{🚪}}
+
+\newcommand{\bridgeDefinitionLeftLengthParameterIcon}{\emoji{⬅️}}
+\newcommand{\bridgeDefinitionRightLengthParameterIcon}{\emoji{➡️}}
+% \newcommand{\bridgeDefinitionAdditionLengthParameterIcon}{\emoji{➕}}
+\newcommand{\bridgeDefinitionWidthParameterIcon}{\emoji{↔️}}
+\newcommand{\bridgeDefinitionHeightParameterIcon}{\emoji{↕️}}
+\newcommand{\bridgeDefinitionToleranceParameterIcon}{\emoji{🤏}}
+
+\newcommand{\bridgeDefinitionRightPortIcon}{\emoji{➡️}}
+\newcommand{\bridgeDefinitionLeftPortIcon}{\emoji{⬅️}}
+
+\newcommand{\capitalDefinitionLengthParameterIcon}{\emoji{📏}}
+\newcommand{\capitalDefinitionWidthParameterIcon}{\emoji{↔️}}
+\newcommand{\capitalDefinitionHeightParameterIcon}{\emoji{↕️}}
+\newcommand{\capitalDefinitionRightHeightParameterIcon}{\emoji{↩️}}
+\newcommand{\capitalDefinitionLeftHeightParameterIcon}{\emoji{↪️}}
+\newcommand{\capitalDefinitionLowerHeightParameterIcon}{\emoji{⏬}}
+
+\newcommand{\capitalDefinitionDownPortIcon}{\emoji{⬇️}}
+
+\newcommand{\capsuleDefinitionLengthParameterIcon}{\emoji{📏}}
+\newcommand{\capsuleDefinitionWidthParameterIcon}{\emoji{↔️}}
+\newcommand{\capsuleDefinitionHeightParameterIcon}{\emoji{↕️}}
+\newcommand{\capsuleDefinitionDoorParameterIcon}{\emoji{🚪}}
+\newcommand{\capsuleDefinitionWindowParameterIcon}{\emoji{🪟}}
+
+\newcommand{\capsuleDefinitionDownPortIcon}{\emoji{🚪}}
+
+
+
+\tikzset{
+    definitionDrawing/.style={draw,dotted},
+    definitionDrawingHidden/.style={draw,densely dotted},
+    % Somehow doesn't do anything: label distance=0
+    definitionDrawingAnnotation/.style={semioturquoise,|<->|,font=\tiny,minimum size=0,inner sep=1pt},
+    definitionDrawingPort/.style={semiopink,font=\tiny,minimum size=0,inner sep=0pt},
+    definitionDrawingPortAxis/.style={semiopink,->,minimum size=0,inner sep=1pt},
+    definitionDrawingPortAxisText/.style={semiopink,font=\tiny}
+}
+
+
+\tikzset{
+  bD/.pic={
+    \begin{definition}{\baseDefinitionIcon}
+      \input{definitions/base.tikz.tex}
+    \end{definition}},
+  sD/.pic={
+    \begin{definition}{\shaftDefinitionIcon}
+      \input{definitions/shaft.tikz.tex}
+    \end{definition}},
+  brD/.pic={
+    \begin{definition}{\bridgeDefinitionIcon}
+      \input{definitions/bridge.tikz.tex}
+    \end{definition}},
+  cpD/.pic={
+    \begin{definition}{\capitalDefinitionIcon}
+      \input{definitions/capital.tikz.tex}
+    \end{definition}},
+  cD/.pic={
+    \begin{definition}{\capsuleDefinitionIcon}
+      \input{definitions/capsule.tikz.tex}
+    \end{definition}},
+  tTR/.pic={
+    \begin{transformationSide}
+      \input{trfs/towerr.tikz.tex}
+    \end{transformationSide}},
+  tTL/.pic={
+    \begin{transformationSide}
+      \input{trfs/towerl.tikz.tex}
+    \end{transformationSide}},
+  sTR/.pic={
+    \begin{transformationSide}
+      \input{trfs/stackr.tikz.tex}
+    \end{transformationSide}},
+  sTL/.pic={
+    \begin{transformationSide}
+      \input{trfs/stackl.tikz.tex}
+    \end{transformationSide}},
+  bTR/.pic={
+    \begin{transformationSide}
+      \input{trfs/bridger.tikz.tex}
+    \end{transformationSide}},
+  bTL/.pic={
+    \begin{transformationSide}
+      \input{trfs/bridgel.tikz.tex}
+    \end{transformationSide}}}
+
+
+\begin{document}
+
+
+
+\begin{tikzpicture}
+  \begin{scope}[local bounding box/.expanded=tlbB]
+    \sTransformation{tT}{\towerRuleIcon}{0}{0}{1.5}{-1.2}
+    \sTransformation{bT}{\bridgeRuleIcon}{2.5}{-3.8}{7.8}{-3.8}
+    \sTransformation{sT}{\stackRuleIcon}{4.3}{1}{6.5}{0.2}
+  \end{scope}
+  \node [semioGeneralTerm,fit=(tlbB)] (tbB) {};
+\end{tikzpicture}
+
+
+% \begin{tikzpicture}[rounded corners]
+%   \begin{scope}[local bounding box/.expanded=dBB]
+%     % \pic [scale=0.975] (sD) at (0,-15.6)  {sD};
+%     % \pic [scale=0.95] (cpD) at (4.9,-7)  {cpD};
+%     % \pic (cD) at (4.9,-11.55)  {cD};
+%     % \pic (brD) at (4.9,-15.7)  {brD};
+%     % \pic (bD) at (0,-21.25)  {bD};
+%     \pic (sD) at (0,-7.5)  {sD};
+%     \pic (cpD) at (2.5,-3.5)  {cpD};
+%     \pic (cD) at (2.5,-5.75)  {cD};
+%     \pic (brD) at (2.5,-7.5)  {brD};
+%     \pic (bD) at (0,-10.5)  {bD};
+%   \end{scope}
+
+%   \node [semioTerm,fit=(dBB)] (bB) {};
+% \end{tikzpicture}
+
+\end{document}
