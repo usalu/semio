@@ -1,6 +1,11 @@
 \documentclass[tikz]{standalone}
+% \documentclass[tikz]{article}
 
 \input{../kagincapsuletower.tex}
+
+\newcommand{\kaginSchemeFloorsParameterIcon}{\emoji{🎚️}}
+\newcommand{\kaginSchemeFloorsDifferenceParameterIcon}{\pm}
+\newcommand{\kaginSchemeFloorsBridgesParameterIcon}{≡}
 
 \newcommand{\baseDefinitionParcelParameterIcon}{\emoji{↪️}}
 \newcommand{\baseDefinitionHeightParameterIcon}{\emoji{↕️}}
@@ -17,6 +22,10 @@
 \newcommand{\shaftDefinitionFloorsParameterIcon}{\emoji{🎚️}}
 \newcommand{\shaftDefinitionElevatorSideParameterIcon}{\emoji{🧭}}
 
+\newcommand{\shaftDefinitionSidePortIcon}{\emoji{🏢}}
+\newcommand{\shaftDefinitionDoorNumberPortIcon}{\emoji{🏅}}
+\newcommand{\shaftDefinitionDoorFirstPortIcon}{\emoji{🥇}}
+\newcommand{\shaftDefinitionDoorSecondPortIcon}{\emoji{🥇}}
 \newcommand{\shaftDefinitionTopPortIcon}{\emoji{⬆️}}
 \newcommand{\shaftDefinitionDownPortIcon}{\emoji{⬇️}}
 
@@ -51,7 +60,6 @@
 \newcommand{\capsuleDefinitionDownPortIcon}{\emoji{🚪}}
 
 
-
 \tikzset{
     definitionDrawing/.style={draw,dotted},
     definitionDrawingHidden/.style={draw,densely dotted},
@@ -84,6 +92,14 @@
     \begin{definition}{\capsuleDefinitionIcon}
       \input{definitions/capsule.tikz.tex}
     \end{definition}},
+  mOM/.pic={
+    \begin{transformationSide}
+      \input{mods/mirrororiginal.tikz.tex}
+    \end{transformationSide}},
+  mMM/.pic={
+      \begin{transformationSide}
+        \input{mods/mirroryz.tikz.tex}
+      \end{transformationSide}},
   tTR/.pic={
     \begin{transformationSide}
       \input{trfs/towerr.tikz.tex}
@@ -110,19 +126,75 @@
     \end{transformationSide}}}
 
 
+
 \begin{document}
 
-
-
 \begin{tikzpicture}
-  \begin{scope}[local bounding box/.expanded=tlbB]
-    \sTransformation{tT}{\towerRuleIcon}{0}{0}{1.5}{-1.2}
-    \sTransformation{bT}{\bridgeRuleIcon}{2.5}{-3.8}{7.8}{-3.8}
-    \sTransformation{sT}{\stackRuleIcon}{4.3}{1}{6.5}{0.2}
-  \end{scope}
-  \node [semioGeneralTerm,fit=(tlbB)] (tbB) {};
+  \begin{boundingBox}{mods}{MODIFICATIONS}{semioGeneralTerm}{0}{0}{}
+    \begin{boundingBox}{modsm}{$\memoji{🪞}(\memoji{✈️})$}{semioSpecificTerm}{0}{0}{}
+      \sModification{m}{\emoji{↕️}}{0}{0}{2.8}{0}
+    \end{boundingBox}
+  \end{boundingBox}
+  \begin{boundingBox}{smes}{SCHEMES}{semioGeneralTerm}{1.5cm}{-3cm}{}
+    \begin{boundingBox}{smesKS}
+      {$\memoji{\kaginSchemeIcon}
+        (\memoji{\kaginSchemeFloorsParameterIcon},
+        \kaginSchemeFloorsDifferenceParameterIcon,
+        \kaginSchemeFloorsBridgesParameterIcon
+        )$}{semioSpecificTerm}{0}{0}{}
+      \node [align=left] (kS)
+          {$\text{\tiny{1}\sTabs{1}}\memoji{\towerSchemeIcon}(A,\memoji{🎚️}+\pm,\memoji{➡️})$\\
+          $\text{\tiny{2}\sTabs{1}}\memoji{\towerSchemeIcon}(B,\memoji{🎚️}-\pm,\memoji{⬅️})$\\
+          $\text{\tiny{3}\sTabs{1}}$foreach ─ in \kaginSchemeFloorsBridgesParameterIcon:\\
+          $\text{\tiny{4}\sTabs{3}}\memoji{\bridgeRuleIcon}($A$,$B$,─)$};
+    \end{boundingBox}
+    \begin{boundingBox}{tS}
+      {$\memoji{\towerSchemeIcon}
+        (\memoji{🆔},
+        \kaginSchemeFloorsDifferenceParameterIcon,
+        \kaginSchemeFloorsBridgesParameterIcon
+        )$}{semioSpecificTerm}{0}{0}{}
+      \node [align=left,below=\verticalSpacing of smesKSbBT] (tS)
+      {$\text{\tiny{1}\sTabs{1}}\memoji{\towerRuleIcon}(\memoji{🆔},\memoji{🎚️},\memoji{🧭})$\\
+      $\text{\tiny{2}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬆️},\memoji{👆})$\\
+      $\text{\tiny{3}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{➡️},\memoji{👉})$\\
+      $\text{\tiny{4}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬇️},\memoji{👇})$\\
+      $\text{\tiny{5}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬅️},\memoji{👈})$};
+    \end{boundingBox}
+    \node [align=left,below=\verticalSpacing of tS] (sS)
+      {$\text{\tiny{1}\sTabs{1}}\memoji{\stackRuleIcon}(\memoji{🆔},\memoji{🏢},\memoji{🥇},\memoji{\sPrototype}[0])$\\
+      $\text{\tiny{2}\sTabs{1}}\memoji{\stackRuleIcon}(\memoji{🆔},\memoji{🏢},\memoji{🥈},\memoji{\sPrototype}[1])$};
+    \node [semioGeneralTerm,fit=(kS)(tS)(sS)] (SbB){};
+  \end{boundingBox}
 \end{tikzpicture}
 
+% \begin{tikzpicture}
+%   \node [semioSpecificTerm,align=left] (kS)
+%     {$\text{\tiny{1}\sTabs{1}}\memoji{\towerSchemeIcon}(A,\memoji{🎚️}+\pm,\memoji{➡️})$\\
+%     $\text{\tiny{2}\sTabs{1}}\memoji{\towerSchemeIcon}(B,\memoji{🎚️}-\pm,\memoji{⬅️})$\\
+%     $\text{\tiny{3}\sTabs{1}}$foreach ─ in ≡:\\
+%     $\text{\tiny{4}\sTabs{3}}\memoji{\bridgeRuleIcon}($A$,$B$,─)$};
+%   \node [semioSpecificTerm,align=left,below=\verticalSpacing of kS] (tS)
+%     {$\text{\tiny{1}\sTabs{1}}\memoji{\towerRuleIcon}(\memoji{🆔},\memoji{🎚️},\memoji{🧭})$\\
+%     $\text{\tiny{2}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬆️},\memoji{👆})$\\
+%     $\text{\tiny{3}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{➡️},\memoji{👉})$\\
+%     $\text{\tiny{4}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬇️},\memoji{👇})$\\
+%     $\text{\tiny{5}\sTabs{1}}\memoji{\sideSchemeIcon}(\memoji{🆔},\memoji{⬅️},\memoji{👈})$};
+%   \node [semioSpecificTerm,align=left,below=\verticalSpacing of tS] (sS)
+%     {$\text{\tiny{1}\sTabs{1}}\memoji{\stackRuleIcon}(\memoji{🆔},\memoji{🏢},\memoji{🥇},\memoji{\sPrototype}[0])$\\
+%     $\text{\tiny{2}\sTabs{1}}\memoji{\stackRuleIcon}(\memoji{🆔},\memoji{🏢},\memoji{🥈},\memoji{\sPrototype}[1])$};
+%   \node [semioGeneralTerm,fit=(kS)(tS)(sS)] (SbB){};
+% \end{tikzpicture}
+
+
+% \begin{tikzpicture}
+%   \begin{scope}[local bounding box/.expanded=tlbB]
+%     \sTransformation{tT}{\towerRuleIcon}{0.3}{-0.8}{1.6}{-1.54}
+%     \sTransformation{bT}{\bridgeRuleIcon}{2.5}{-3.8}{7.8}{-3.8}
+%     \sTransformation{sT}{\stackRuleIcon}{4.3}{-0.95}{6.2}{-0.65}
+%   \end{scope}
+%   \node [semioGeneralTerm,fit=(tlbB)] (tbB) {};
+% \end{tikzpicture}
 
 % \begin{tikzpicture}[rounded corners]
 %   \begin{scope}[local bounding box/.expanded=dBB]

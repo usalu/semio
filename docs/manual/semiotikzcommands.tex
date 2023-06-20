@@ -66,17 +66,21 @@
 	semioItem/.style={draw,dotted},
 	semioSpecificItem/.style={draw,densely dotted},
 	semioTermText/.style={},
-    sobject/.style={circle,node font=\normalsize,minimum size=0,inner sep=0pt},
+    sobject/.style={rectangle,node font=\normalsize,minimum size=0,inner sep=0pt},
     sobjectDescription/.style={rectangle,align=left,node font=\tiny},
 	attractionEdge/.style={->},  
     port/.style={sloped,anchor=south,node font=\tiny},
-	new/.style={semioturquoise,fill=white},
+	new/.style={semioturquoise},
+	newSobject/.style={semioturquoise,fill=white},
+	newConnection/.style={semioturquoise},
+	newDesign/.style={semioturquoise},
 	old/.style={black},
 	modified/.style={semioorange},
 }
 
 \tikzset{
 	semioScheme/.style={draw=black,dotted},
+	semioSchemeAlgorithm/.style={draw,rectangle,node font=\normalsize,minimum size=0,inner sep=3pt},
 	semioRule/.style={draw=black,dotted},
 	ruleCopy/.style={semiopink,->},
 	ruleInput/.style={semiopurple,<-},
@@ -91,6 +95,25 @@
 
 \usepackage{ifthen}
 
+\usepackage{listings}
+\lstdefinestyle{schemeStyle}{
+	backgroundcolor=\color{semioanthraziteLite},   
+	numberstyle=\tiny,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=schemeStyle}
+
+
 %---------------------------------------SYMBOLS---------------------------------------
 
 \newcommand{\emoji}[1]{{\NotoEmoji{#1}}}
@@ -99,7 +122,8 @@
 
 \newcommand{\sTabSpace}{0.15cm}
 \newcommand{\sTabs}[1]{\foreach \s in {1,...,#1} {\hspace{\sTabSpace}}}
-
+\newcommand{\horizontalSpacing}{0.2}
+\newcommand{\verticalSpacing}{0.2}
 
 \def\semioname{Semio}
 \def\semioversion{0.2.0}
@@ -171,7 +195,17 @@
 	\node [semioSpecificTerm,fit=(#1lbB)] (#1bB) {};
 	\draw (#1LbB.east)[draw=none]--(#1RbB.west) node [midway,label={[anchor=south]north:{#2}}] {\TransformationArrow};}
 
+%inputs: modificationPrefix, parameter, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
+\newcommand{\sModification}[6]{
+	\pic (#1OM) at (#3,#4)  {#1OM};
+	\pic (#1MM) at (#5,#6)  {#1MM};
+	\draw (#1OMbB.east)[draw=none]--(#1MMbB.west) node [midway,label={[anchor=south]north:{#2}}] {\TransformationArrow};}
+
+
 %https://tex.stackexchange.com/questions/609638/tikz-local-bounding-box-in-nested-scopes
+% Auxillary variable as workaround to pass argument into custom environment command
+% https://tex.stackexchange.com/questions/380277/custom-environment-with-minipages-causes-illegal-parameter-number-in-definition
+
 \pgfmathsetmacro\designlevel{0}
 \newenvironment{design}[0]
 {\pgfmathsetmacro\designlevel{int(\designlevel+1)}
@@ -182,13 +216,9 @@
 {\begin{scope}[local bounding box/.expanded=bounding box designLastlevel,sharp corners]}
 {\end{scope}\node [semioTerm,fit=(bounding box designLastlevel)] (bB) {};}
 		
-
-%https://tex.stackexchange.com/questions/609638/tikz-local-bounding-box-in-nested-scopes
 \pgfmathsetmacro\definitionLevel{0}
 \newenvironment{definition}[1]
-  { % Auxillary variable as workaround to pass argument into custom environment command
-    % https://tex.stackexchange.com/questions/380277/custom-environment-with-minipages-causes-illegal-parameter-number-in-definition
-    \def\labelNameAuxiallaryVariable{#1}
+  { \def\labelNameAuxiallaryVariable{#1}
     \pgfmathsetmacro\definitionLevel{int(\definitionLevel+1)}
   \begin{scope}[local bounding box/.expanded=bounding box \definitionLevel,sharp corners]}
   {\end{scope}
@@ -196,7 +226,6 @@
       label={[semioTermText, anchor=north east]north east:{\labelNameAuxiallaryVariable}}] 
       (bB) {};}
 
-%https://tex.stackexchange.com/questions/609638/tikz-local-bounding-box-in-nested-scopes
 \pgfmathsetmacro\transformationSideLevel{0}
 \newenvironment{transformationSide}[0]
   {\pgfmathsetmacro\transformationSideLevel{int(\transformationSideLevel+1)}
@@ -204,3 +233,16 @@
   {\end{scope}
     \node [semioItem,fit=(bounding box \transformationSideLevel)](bB) {};}
 
+%inputs: nodeNamePrefix, labelText, boxStyle, xShift, yShift, additionalScopeStyles
+\pgfmathsetmacro\boundingBoxNumber{0}
+\newenvironment{boundingBox}[6]
+	{\def\nodeNamePrefixAuxiallaryVariable{#1}
+	\def\labelAuxiallaryVariable{#2}
+	\def\boxStyleAuxiallaryVariable{#3}
+	\pgfmathsetmacro\boundingBoxNumber{int(\boundingBoxNumber+1)}
+	\begin{scope}[local bounding box/.expanded=bounding box \boundingBoxNumber,xshift=#4,yshift=#5,#6]}
+	{\end{scope}
+	\node [\boxStyleAuxiallaryVariable,fit=(bounding box \boundingBoxNumber),
+		label={[semioTermText, anchor=south west,name={\nodeNamePrefixAuxiallaryVariable}bBL]north west:{\labelAuxiallaryVariable}}] 
+		({\nodeNamePrefixAuxiallaryVariable}bB) {};
+	\node [fit=({\nodeNamePrefixAuxiallaryVariable}bB)({\nodeNamePrefixAuxiallaryVariable}bBL)]({\nodeNamePrefixAuxiallaryVariable}bBT) {};}
