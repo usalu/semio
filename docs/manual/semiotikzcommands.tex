@@ -5,6 +5,7 @@
 %For \CIRCLE
 \usepackage{wasysym}
 
+\usepackage{varwidth}
 
 \usepackage{tikz,pgfplots}
 \usetikzlibrary{
@@ -65,11 +66,14 @@
 	semioGeneralItem/.style={draw,loosely dotted},
 	semioItem/.style={draw,dotted},
 	semioSpecificItem/.style={draw,densely dotted},
-	semioTermText/.style={},
+	semioTermText/.style={node font={\large}},% Somehow \textsc doesn't work
+	semioBoundingBox/.style={rounded corners},
     sobject/.style={rectangle,node font=\normalsize,minimum size=0,inner sep=0pt},
+	unknownSobject/.style={draw,circle,minimum size=1em},
     sobjectDescription/.style={rectangle,align=left,node font=\tiny},
 	attractionEdge/.style={->},  
     port/.style={sloped,anchor=south,node font=\tiny},
+	knotPort/.style={},
 	new/.style={semioturquoise},
 	newSobject/.style={semioturquoise,fill=white},
 	newConnection/.style={semioturquoise},
@@ -89,9 +93,31 @@
 	semioLayout/.style={draw=black,dotted},
 	semioDesign/.style={draw=black,dotted},
 	scriptCall/.style={->},
-	connection/.style={--}
+	connection/.style={--},
+	scriptLegend/.style={node font=\footnotesize}
 }
-	
+
+%inputs: nodeNamePrefix,boxStyle, xShift, yShift, additionalScopeStyle
+\newenvironment{boundingBox}[5]
+	{\def\nodeNamePrefixAuxiallaryVariable{#1}
+	\def\boxStyleAuxiallaryVariable{#2}
+	\begin{scope}[local bounding box/.expanded=\nodeNamePrefixAuxiallaryVariable-lBB,xshift=#3,yshift=#4,inner sep=1pt,#5]}
+	{\end{scope}
+	\node [semioBoundingBox, fit=(\nodeNamePrefixAuxiallaryVariable-lBB),\boxStyleAuxiallaryVariable](\nodeNamePrefixAuxiallaryVariable-bB) {};}
+
+%inputs: nodeNamePrefix, labelContent, boxStyle, labelStyle, xShift, yShift, additionalScopeStyle
+\newenvironment{boundingBoxWithLabel}[7]
+	{\def\nodeNamePrefixAuxiallaryVariable{#1}
+	\def\labelAuxiallaryVariable{#2}
+	\def\boxStyleAuxiallaryVariable{#3}
+ 	\def\labelStyleAuxiallaryVariable{#4}
+	\begin{scope}[local bounding box/.expanded=\nodeNamePrefixAuxiallaryVariable-lBB,xshift=#5,yshift=#6,#7]}
+	{\end{scope}
+	\node [semioBoundingBox, fit=(\nodeNamePrefixAuxiallaryVariable-lBB),
+		label={[anchor=south west,name=\nodeNamePrefixAuxiallaryVariable-bBL,align=left,\labelStyleAuxiallaryVariable]north west:{\labelAuxiallaryVariable}},\boxStyleAuxiallaryVariable] 
+		(\nodeNamePrefixAuxiallaryVariable-bB) {};
+	\coordinate[yshift=-\fitSpacing] (\nodeNamePrefixAuxiallaryVariable-bBTM) at (\nodeNamePrefixAuxiallaryVariable-bB.north);
+	\node [fit=(\nodeNamePrefixAuxiallaryVariable-bB)(\nodeNamePrefixAuxiallaryVariable-bBTM)] (\nodeNamePrefixAuxiallaryVariable-bBT) {};}
 
 \usepackage{ifthen}
 
@@ -124,25 +150,26 @@
 \newcommand{\sTabs}[1]{\foreach \s in {1,...,#1} {\hspace{\sTabSpace}}}
 \newcommand{\horizontalSpacing}{0.2}
 \newcommand{\verticalSpacing}{0.2}
+\newcommand{\fitSpacing}{0.125}
 
 \def\semioname{Semio}
 \def\semioversion{0.2.0}
 
 \newcommand{\sobjectWithDescriptionDescriptionSpace}{0.1cm}
 
-\newcommand{\sUri}{\emoji{🔗}}
-\newcommand{\sAttribute}{\emoji{🏷️}}
-\newcommand{\attributeEqual}[2]{$\text{\sAttribute}[\memoji{#1}]=#2$}
-\newcommand{\attributeAssign}[2]{$\text{\sAttribute}[\memoji{#1}]:#2$}
+\newcommand{\uriIcon}{\emoji{🔗}}
+\newcommand{\attributeIcon}{\emoji{🏷️}}
+\newcommand{\attributeEqual}[2]{$\text{\attributeIcon}[\memoji{#1}]=#2$}
+\newcommand{\attributeAssign}[2]{$\text{\attributeIcon}[\memoji{#1}]:#2$}
 
-\newcommand{\sPrototype}{☐}
-\newcommand{\sDefinition}{\emoji{🏗️}}
-\newcommand{\sPlan}{\emoji{🛠️}}
-\newcommand{\parameterEqual}[2]{$\text{\sPlan}[\memoji{#1}]=#2$}
-\newcommand{\parameterAssign}[2]{$\text{\sPlan}[\memoji{#1}]:#2$}
+\newcommand{\prototypeIcon}{□}
+\newcommand{\definitionIcon}{\emoji{🏗️}}
+\newcommand{\planIcon}{\emoji{🛠️}}
+\newcommand{\parameterEqual}[2]{$\text{\planIcon}[\memoji{#1}]=#2$}
+\newcommand{\parameterAssign}[2]{$\text{\planIcon}[\memoji{#1}]:#2$}
 
-\newcommand{\sPort}{\emoji{🪝}}
-\newcommand{\TransformationArrow}{\emoji{➡️}}
+\newcommand{\portIcon}{\emoji{🪝}}
+\newcommand{\transformationArrow}{\Rightarrow}
 
 %---------------------------------------GENERAL PURPOSE FUNCIONS---------------------------------------
 
@@ -160,17 +187,17 @@
 
 %---------------------------------------SPECIAL PURPOSE FUNCIONS---------------------------------------
 
-%inputs: nodeId, uri, prototype, displayId, location attributes
-\newcommand{\sobject}[5]{
-	\node [sobject,#5] (#1) {$\text{#2}_{\text{#4}}^{\text{#3}}$};}
+%inputs: nodeId, uri, prototype, displayId, location attributes, additionalStyle
+\newcommand{\sobject}[6]{
+	\node [sobject,#5,#6] (#1) {$\text{#2}_{\text{#4}}^{\text{#3}}$};}
 	
 %inputs: nodeId, uri, prototype, displayId, location attributes, content, description attributes
-\newcommand{\sobjectWithDescription}[8]{
-	\sobject{#1}{#2}{#3}{#4}{#5}
+\newcommand{\sobjectWithDescription}[9]{
+	\sobject{#1}{#2}{#3}{#4}{#5}{#6}
 	\node [semioSpecificItem,sobjectDescription] (#1D)
 		[rectangle callout,callout absolute pointer={(#1)},
-		#6=\sobjectWithDescriptionDescriptionSpace of #1,#8]
-		{#7};}
+		#7=\sobjectWithDescriptionDescriptionSpace of #1,#9]
+		{#8};}
 
 %inputs: attractingId, attractedId
 \newcommand{\sAttraction}[2]{
@@ -188,19 +215,25 @@
 
 %inputs: rulePrefix, ruleIcon, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
 \newcommand{\sTransformation}[6]{
-	\begin{scope}[local bounding box/.expanded=#1lbB]
+	\begin{boundingBoxWithLabel}{trfs-#1}{#2}{semioSpecificTerm}{}{0}{0}{}
 		\pic (#1L) at (#3,#4)  {#1L};
 		\pic (#1R) at (#5,#6)  {#1R};
-	\end{scope}
-	\node [semioSpecificTerm,fit=(#1lbB)] (#1bB) {};
-	\draw (#1LbB.east)[draw=none]--(#1RbB.west) node [midway,label={[anchor=south]north:{#2}}] {\TransformationArrow};}
+	\end{boundingBoxWithLabel}
+	\draw (#1LbB.east)[draw=none]--(#1RbB.west) node [midway] {\transformationArrow};}
 
 %inputs: modificationPrefix, parameter, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
 \newcommand{\sModification}[6]{
 	\pic (#1OM) at (#3,#4)  {#1OM};
 	\pic (#1MM) at (#5,#6)  {#1MM};
-	\draw (#1OMbB.east)[draw=none]--(#1MMbB.west) node [midway,label={[anchor=south]north:{#2}}] {\TransformationArrow};}
+	\draw (#1OMbB.east)[draw=none]--(#1MMbB.west) node [midway,label={[anchor=south]north:{#2}}] {$\transformationArrow$};}
 
+%inputs: attractingNodeId, attractedNodeId, attractingPort, attractedPort, distanceBetweenNodes, portStyle
+\newcommand{\sKnot}[6]{
+	\sobject{#1}{}{}{}{}{}
+	\sobject{#2}{}{}{}{right=#5 of knts-ud-l}{}
+	\draw (#1) [attractionEdge]-- (#2)
+		node[knotPort,at start,anchor=south west,#6]{#3} %port attracting
+		node[knotPort,at end,anchor=south east,#6]{#4};} %port attracted
 
 %https://tex.stackexchange.com/questions/609638/tikz-local-bounding-box-in-nested-scopes
 % Auxillary variable as workaround to pass argument into custom environment command
@@ -232,17 +265,3 @@
   \begin{scope}[local bounding box/.expanded=bounding box \transformationSideLevel,sharp corners]}
   {\end{scope}
     \node [semioItem,fit=(bounding box \transformationSideLevel)](bB) {};}
-
-%inputs: nodeNamePrefix, labelText, boxStyle, xShift, yShift, additionalScopeStyles
-\pgfmathsetmacro\boundingBoxNumber{0}
-\newenvironment{boundingBox}[6]
-	{\def\nodeNamePrefixAuxiallaryVariable{#1}
-	\def\labelAuxiallaryVariable{#2}
-	\def\boxStyleAuxiallaryVariable{#3}
-	\pgfmathsetmacro\boundingBoxNumber{int(\boundingBoxNumber+1)}
-	\begin{scope}[local bounding box/.expanded=bounding box \boundingBoxNumber,xshift=#4,yshift=#5,#6]}
-	{\end{scope}
-	\node [\boxStyleAuxiallaryVariable,fit=(bounding box \boundingBoxNumber),
-		label={[semioTermText, anchor=south west,name={\nodeNamePrefixAuxiallaryVariable}bBL]north west:{\labelAuxiallaryVariable}}] 
-		({\nodeNamePrefixAuxiallaryVariable}bB) {};
-	\node [fit=({\nodeNamePrefixAuxiallaryVariable}bB)({\nodeNamePrefixAuxiallaryVariable}bBL)]({\nodeNamePrefixAuxiallaryVariable}bBT) {};}

@@ -83,11 +83,11 @@
 
 \newcommand{\sobjectWithDescriptionDescriptionSpace}{0.1cm}
 
-\newcommand{\sUri}{\emoji{🔗}}
+\newcommand{\uriIcon}{\emoji{🔗}}
 
-\newcommand{\sDefinition}{\emoji{🏗️}}
-\newcommand{\sPlan}{\emoji{🛠️}}
-\newcommand{\sPort}{\emoji{🪝}}
+\newcommand{\definitionIcon}{\emoji{🏗️}}
+\newcommand{\planIcon}{\emoji{🛠️}}
+\newcommand{\portIcon}{\emoji{🪝}}
 
 %---------------------------------------GENERAL PURPOSE FUNCIONS---------------------------------------
 
@@ -106,7 +106,7 @@
 %---------------------------------------SPECIAL PURPOSE FUNCIONS---------------------------------------
 
 %inputs: uri,parameters[], attributes[]
-\newcommand{\sobjectWithDescriptionDescription}[1]{\sDefinition:\\\sTabs{1}\sPlan:\\\sTabs{2}\sUri=#1}
+\newcommand{\sobjectWithDescriptionDescription}[1]{\definitionIcon:\\\sTabs{1}\planIcon:\\\sTabs{2}\uriIcon=#1}
 
 \newcommand{\sSimpleDefinitionDescription}[1]{\sobjectWithDescriptionDescription{#1}}
 
@@ -130,14 +130,14 @@
 \newcommand{\sAttractionWithPorts}[6]{
 	\draw (#1) -- (#2)
 		% port style doesn't work: sloped,anchor=south,node font=\tiny
-		node[sloped,anchor=south,node font=\tiny, at start,anchor=#5]{\sPort: #3}
-		node[sloped,anchor=south,node font=\tiny, at end,anchor=#6]{\sPort: #4};}
+		node[sloped,anchor=south,node font=\tiny, at start,anchor=#5]{\portIcon: #3}
+		node[sloped,anchor=south,node font=\tiny, at end,anchor=#6]{\portIcon: #4};}
 
 %inputs: attractingId, attractedId, attractedPorts, connectingPorts, attractedPortSide: north|south, connectingPortSide: north|south
 \newcommand{\sAttractionWithPortsBroken}[6]{
 	\draw (#1) -- (#2)
-		node[port,at start,anchor=#5]{\sPort: #3}
-		node[port,at end,anchor=#6]{\sPort: #4};}
+		node[port,at start,anchor=#5]{\portIcon: #3}
+		node[port,at end,anchor=#6]{\portIcon: #4};}
 
 \tikzset{
 	semioTermText/.style={},

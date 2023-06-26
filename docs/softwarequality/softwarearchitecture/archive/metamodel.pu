@@ -1,0 +1,209 @@
+@startuml
+allowmixing
+
+package geometry{
+        class Point{
+            x:Double
+            y:Double
+            z:Double
+        }
+        class Quaternion{
+            w:Double
+            x:Double
+            y:Double
+            z:Double
+        }
+        class Pose{
+            point_of_view:Point
+            view:Quaternion
+    }
+    }
+
+package model {
+    enum Encoding{
+        NONE
+        UTF8
+        ASCII
+        BASE64
+        ...
+    }
+    enum Serialization{
+        NONE
+        JSON
+        XML
+        YAML
+        ...
+    }
+    enum Language{
+        NONE
+        GLTF
+        IFC
+        SPECKLE
+        ...
+    }
+    enum Platform{
+        SEMIO
+        GRASSHOPPER
+        CADQUERY
+        PYTHON
+        ...
+    }
+    class Model{
+        body:Byte[]
+    }
+    class Script{
+        uri:String
+        body:Byte[]
+    }
+    class Layout
+    class Sequence
+    class Sobject{
+        id:String
+        defintition_plan:Plan
+        modifiers_plans:Plan[]
+    }
+    class Plan{
+        script_uri: String
+    }
+    class Parameter{
+        name:String
+        context:Scope[]
+    }
+    class Scope{
+        name:String
+        order:Int
+    }
+    abstract class Value
+    class Number
+    class Text
+    class Curve
+    class Brep
+    class ANOTHERVALUE
+    class Port {
+        sobject_id:String
+        user:Model
+    }
+    class Connection{
+        connected:Port
+        connecting:Port
+    }
+    class Decision{
+        id:String
+    }
+
+    class Design
+    class Prototype{
+        definition_plan_hash:String
+    }
+    class Variant{
+        definition_plan_hash:String
+        modifications_plans_hashes:String[]
+    }
+    class Object{
+        sobject_id:String
+        variant_plans_hash:String
+    }
+
+    Sequence o-- Decision
+
+    Decision o-- Plan
+
+    Layout o-- "1..*" Sobject
+    Layout o-- "1..*" Connection
+
+    Sobject o-- Plan
+
+    Connection o-- "2" Port
+
+    Port o-- "0..*" Parameter
+    Port o-- Model
+
+    Model o-- Encoding
+    Model o-- Serialization
+    Model o-- Language
+
+    Script o-- Encoding
+    Script o-- Serialization
+    Script o-- Platform
+
+    Plan o-- Parameter
+
+    Parameter o--"0..*" Scope
+    Parameter o-- Value
+
+    Value <|-- Number
+    Value <|-- Text
+    Value <|-- Curve
+    Value <|-- Brep
+    Value <|-- Model
+    Value <|-- ANOTHERVALUE
+
+    Design o-- "1..*" Prototype
+    Design o--"1..*" Object
+
+    Prototype o-- "1..*" Variant
+
+    Variant o-- "1..*"Model
+
+    Object o-- Pose
+    Pose o-- Point
+    Pose o-- Quaternion
+}
+
+package script{
+        interface Transformation{
+            getLayout(Plan,Layout):Layout
+        }
+        interface Scheme{
+            getSequence(Plan):Sequence
+        }
+        interface Definition{
+            getPrototype(Plan):Prototype
+            getConnectionPose(Plan,Model):Pose
+        }
+        interface Modification{
+            getModel(Plan,Model):Model
+        }
+
+        Transformation --> Plan
+        Transformation --> Layout
+
+        Scheme --> Plan
+        Scheme --> Sequence
+
+        Definition --> Plan
+        Definition --> Model
+        Definition --> Pose
+
+        Modification --> Plan
+        Modification --> Model
+    }
+
+file SCRIPT
+SCRIPT --|> Transformation
+SCRIPT --|> Scheme
+SCRIPT --|> Definition
+SCRIPT --|> Modification
+
+folder backend{
+    package design{
+        class Designer{
+            Design(DesignRequest):Design
+        }
+
+        class DesignRequest{
+            initial_layout:Layout
+            scheme_plan:Plan
+            target_language:Language
+        }
+        
+        Designer o-- DesignRequest
+        Designer --> Design
+
+        DesignRequest o-- Layout
+        DesignRequest o-- Sequence
+        DesignRequest o-- Plan
+    }
+}
+
+@enduml
