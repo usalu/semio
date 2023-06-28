@@ -3,16 +3,6 @@
 
 \input{../kagincapsuletower.tex}
 
-\tikzset{
-    definitionDrawing/.style={draw,dotted},
-    definitionDrawingHidden/.style={draw,densely dotted},
-    % Somehow doesn't do anything: label distance=0
-    definitionDrawingAnnotation/.style={semioturquoise,|<->|,font=\tiny,minimum size=0,inner sep=1pt},
-    definitionDrawingPort/.style={semiopink,font=\tiny,minimum size=0,inner sep=0pt},
-    definitionDrawingPortAxis/.style={semiopink,->,minimum size=0,inner sep=1pt},
-    definitionDrawingPortAxisText/.style={semiopink,font=\tiny}
-}
-
 
 \tikzset{
   bD/.pic={\input{definitions/base.tikz.tex}},
@@ -69,8 +59,18 @@
       {semioSpecificTerm}{}{-0.05cm}{-6.5cm}{}
       \pic (sD) {sD};
     \end{boundingBoxWithLabel}
+    \begin{boundingBoxWithLabel}{defs-bD}
+      {$\memoji{\baseDefinitionIcon}
+        (\memoji{\baseDefinitionParcelParameterIcon},
+        \memoji{\baseDefinitionHeightParameterIcon},
+        \memoji{\baseDefinitionFloorHeightParameterIcon},
+        \memoji{\baseDefinitionCorePrimaryLengthParameterIcon},
+        \memoji{\baseDefinitionCoreSecondaryLengthParameterIcon})$}
+      {semioSpecificTerm}{}{-0.25cm}{-12cm}{}
+      \pic (bD) {bD};
+    \end{boundingBoxWithLabel}
     \begin{boundingBoxWithLabel}{defs-cpD}
-      {$\memoji{\shaftDefinitionIcon}
+      {$\memoji{\capitalDefinitionIcon}
         (\memoji{\capitalDefinitionLengthParameterIcon},
         \memoji{\capitalDefinitionWidthParameterIcon},
         \memoji{\capitalDefinitionHeightParameterIcon},
@@ -79,31 +79,24 @@
       \pic (cpD) {cpD};
     \end{boundingBoxWithLabel}
     \begin{boundingBoxWithLabel}{defs-cD}
-      {$\memoji{\shaftDefinitionIcon}
-        (\memoji{\capitalDefinitionLengthParameterIcon},
-        \memoji{\capitalDefinitionWidthParameterIcon},
-        \memoji{\capitalDefinitionHeightParameterIcon},
-        \memoji{\capitalDefinitionLowerHeightParameterIcon})$}
+      {$\memoji{\capsuleDefinitionIcon}
+        (\memoji{\capsuleDefinitionLengthParameterIcon},
+        \memoji{\capsuleDefinitionWidthParameterIcon},
+        \memoji{\capsuleDefinitionHeightParameterIcon},
+        \memoji{\capsuleDefinitionDoorParameterIcon},
+        \memoji{\capsuleDefinitionWindowParameterIcon})$}
       {semioSpecificTerm}{}{4.3cm}{-3.1cm}{}
       \pic (cD) {cD};
     \end{boundingBoxWithLabel}
     \begin{boundingBoxWithLabel}{defs-brD}
-      {$\memoji{\shaftDefinitionIcon}
-        (\memoji{\capitalDefinitionLengthParameterIcon},
-        \memoji{\capitalDefinitionWidthParameterIcon},
-        \memoji{\capitalDefinitionHeightParameterIcon},
-        \memoji{\capitalDefinitionLowerHeightParameterIcon})$}
+      {$\memoji{\bridgeDefinitionIcon}
+        (\memoji{\bridgeDefinitionLeftLengthParameterIcon},
+        \memoji{\bridgeDefinitionRightLengthParameterIcon},
+        \memoji{\bridgeDefinitionWidthParameterIcon},
+        \memoji{\bridgeDefinitionHeightParameterIcon},
+        \memoji{\bridgeDefinitionToleranceParameterIcon})$}
       {semioSpecificTerm}{}{4.3cm}{-7.1cm}{}
       \pic (brD) {brD};
-    \end{boundingBoxWithLabel}
-    \begin{boundingBoxWithLabel}{defs-bD}
-      {$\memoji{\shaftDefinitionIcon}
-        (\memoji{\capitalDefinitionLengthParameterIcon},
-        \memoji{\capitalDefinitionWidthParameterIcon},
-        \memoji{\capitalDefinitionHeightParameterIcon},
-        \memoji{\capitalDefinitionLowerHeightParameterIcon})$}
-      {semioSpecificTerm}{}{-0.25cm}{-12cm}{}
-      \pic (bD) {bD};
     \end{boundingBoxWithLabel}
   \end{boundingBoxWithLabel}
   \begin{boundingBoxWithLabel}{trfs}{\textsc{Transformations}}{semioTerm}{semioTermText}{-7.9cm}{-19.7cm}{}
