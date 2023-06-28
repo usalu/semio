@@ -214,7 +214,7 @@
 
 \begin{tikzpicture}[rounded corners]
     \node[semioTerm] (iS) {\initialSchemeContent};
-    \node[semioTermText,left=\horizontalSpacing of iS,align=right] (iSD) {INITIAL \\ SCHEME};
+    \node[semioTermText,left=\horizontalSpacing of iS,align=right] (iSD) {\textsc{Initial} \\ \textsc{scheme}};
 
     \node[semioScheme,below=\verticalSpacing*2+0.6 of iS] (tBS) {\towerBSchemeContent};
     \node[semioScheme,left=\horizontalSpacing of tBS] (tAS) {\towerASchemeContent};
@@ -269,7 +269,7 @@
     \node[semioRule,right=\horizontalSpacing of bTRC] (bSRC) {\bridgeSixRuleContent};
     \node[semioRule,right=\horizontalSpacing of bSRC] (bNRC) {\bridgeNineRuleContent};
 
-    \node[semioTermText,right=\horizontalSpacing of bNRC, align=center] (sD) {A\\R\\R\\A\\N\\G\\E\\M\\E\\N\\T};
+    \node[semioTermText,right=\horizontalSpacing of bNRC, align=center] (sD) {\textsc{A}\\\textsc{r}\\\textsc{r}\\\textsc{a}\\\textsc{n}\\\textsc{g}\\\textsc{e}\\\textsc{m}\\\textsc{e}\\\textsc{n}\\\textsc{t}};
     \node [semioTerm,fit=(tARC)(tASNSFRC)(tASNRRC)(tBRC)(tBSRRC)(tBSWSSRC)(bTRC)(bSRC)(bNRC)] (iSB) {};
 
     \draw (tARC.east)[->]->(tASNSFRC.west);
@@ -290,23 +290,25 @@
       \draw (tBSRR.south) -- +(0,-\verticalSpacing) -| (tBSRRC.north);
       \draw (tBSWRR.south) -- +(0,-\verticalSpacing*3) -| (tBSRRC.north);
       \draw (tBSWRR.south) -- +(0,-\verticalSpacing*3) -| (tBSWSSRC.north);
-      \draw (bTR.south) |- ++(3,-\verticalSpacing-2.1) |- ++(-2.15,-\verticalSpacing-6.5) -| (bTRC.north);
-      \draw (bSR.south) |- +(1.5,-\verticalSpacing-1.1) |- +(0,-\verticalSpacing-9.7) -| (bSRC.north);
-      \draw (bNR.south) -- (bNRC.60);
+      \draw (bTR.south) |- ++(3,-\verticalSpacing-2.1) -- ++(0,-\verticalSpacing-6.5) -| (bTRC.north);
+      \draw (bSR.south) |- ++(1.5,-\verticalSpacing-1.1) -| (bSRC.north);
+      \draw (bNR.south) -- ++(0,-\verticalSpacing-0.1) -| (bNRC.60);
     \end{scope}
 
-  \begin{scope}[xshift=2cm,yshift=-2cm]
-    \node[semioTermText,below=\verticalSpacing*2+1 of iSB.south west,anchor= north west,align=left] (iLIT) {I\\N\\I\\T\\I\\T\\A\\L};
-    \node[semioTermText,right=0 of iLIT.south east,anchor= south west,align=left] (iLLT) {L\\A\\Y\\O\\U\\T};
+  \begin{scope}[xshift=2cm,yshift=-1.7cm]
+    \node[semioTermText,below=\verticalSpacing*2+1 of iSB.south west,anchor= north west,align=left] (iLIT) {\textsc{I}\\\textsc{n}\\\textsc{i}\\\textsc{t}\\\textsc{i}\\\textsc{a}\\\textsc{l}};
+    \node[semioTermText,right=0 of iLIT.south east,anchor= south west,align=left] (iLLT) {\textsc{l}\\\textsc{a}\\\textsc{y}\\\textsc{o}\\\textsc{u}\\\textsc{t}};
     \node [fit=(iLIT)(iLLT)] (iLT) {};
 
     \pic (iL) at (-11.5,-21.1)  {iL};
-    \pic (tAL) at (-10.5,-23.5)  {tAL};
+    \pic (tAL) at (-10,-23.5)  {tAL};
     \pic (tASNSFL) at (-9.5,-23)  {tASNSFL};
     \pic (tASNSRL) at (-6,-23) {tASNSRL};
-    \pic (tBL) at (-2,-23.1)  {tBL};
-    \pic (tBSWSSL) at (2,-23.1)  {tBSWSSL};
-    \pic (bTL) at (6,-23.1)  {bTL};
+    \begin{scope}[xshift=-0.1cm]
+      \pic (tBL) at (-2,-23.1)  {tBL};
+      \pic (tBSWSSL) at (2,-23.1)  {tBSWSSL};
+      \pic (bTL) at (6,-23.1)  {bTL};
+    \end{scope}
     \pic (bNL) at (11,-23.1)  {bNL};
 
     \begin{scope}[xshift=1cm]
@@ -349,29 +351,29 @@
         (bNLc112)(bNLc137)] (bNLB) {};
 
       \draw[ruleInput] (tARC.200) -- +(0,-3) -| (iLB.north);
-      \draw[ruleOutput] (tARC.340) |- +(0.5,-2.4) -| (tALB.north);
+      \draw[ruleOutput] (tARC.340) -- +(0,-2.4) -| (tALB.north);
       \draw[ruleInput] (tASNSFRC.250) |- (tALB.east);
-      \draw[ruleOutput] (tASNSFRC.284) -- (tASNSFLB.north);
+      \draw[ruleOutput] (tASNSFRC.284) -- +(0,-\verticalSpacing-0.1) -| (tASNSFLB.north);
       \draw[ruleInput] (tASNRRC.223) |- +(-1,-2.48) |- (tASNSFLB.east);
       \draw[ruleOutput] (tASNRRC.320) -- +(0,-2.48) -| (tASNSRLB.north);
       \draw[ruleInput] (tBRC.205) |- +(0.75,-2.42) |- (tASNSRLB.east);
       \draw[ruleOutput] (tBRC.325) -- +(0,-2.42) |- (tBLB.west);
       \draw[ruleInput] (tBSRRC.223) -- +(0,-2.48) -| (tBLB.north);
-      \draw[ruleOutput] (tBSWSSRC.292) -- (tBSWSSLB.north);
-      \draw[ruleInput] (bTRC.205) |- +(-0.35,-2.42) |- (tBSWSSLB.east);
+      \draw[ruleOutput] (tBSWSSRC.292) -- +(0,-\verticalSpacing-0.1) -| (tBSWSSLB.north);
+      \draw[ruleInput] (bTRC.205) |- +(0.35,-2.42) |- (tBSWSSLB.east);
       \draw[ruleOutput] (bTRC.325) -- +(0,-2.42) -| (bTLB.north);
-      \draw[ruleInput] (bSRC.205) |- +(1,-2.42) |- (bTLB.east);
+      \draw[ruleInput] (bSRC.205) |- +(1.7,-2.42) |- (bTLB.east);
       \draw[ruleOutput] (bNRC.325) -- +(0,-2.42) -| (bNLB.north);
       
       \draw[resolvesTo] (iLB.south) -- (iDbB.north);
       \draw[resolvesTo] (tALB.south) |- (tADbB.west);
-      \draw[resolvesTo] (tASNSFLB.south) |- ++(1.3,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tASNSFDbB.west);
-      \draw[resolvesTo] (tASNSRLB.south) |- ++(2.0,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tASNSRDbB.west);
-      \draw[resolvesTo] (tBLB.south) |- ++(2.3,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tBDbB.west);
-      \draw[resolvesTo] (tBSWSSLB.south) |- ++(2.5,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (tBSWSSDbB.west);
-      \draw[resolvesTo] (bNLB.south) |- ++(-1.75,-\verticalSpacing) |- ++(0,-\verticalSpacing*2) |- (bNDbB.west);
+      \draw[resolvesTo] (tASNSFLB.south) |- ++(1.8,-\verticalSpacing) |- (tASNSFDbB.west);
+      \draw[resolvesTo] (tASNSRLB.south) |- ++(2.15,-\verticalSpacing) |- (tASNSRDbB.west);
+      \draw[resolvesTo] (tBLB.south) |- ++(2.2,-\verticalSpacing) |- (tBDbB.west);
+      \draw[resolvesTo] (tBSWSSLB.south) |- ++(2.1,-\verticalSpacing) |- (tBSWSSDbB.west);
+      \draw[resolvesTo] (bNLB.south) |- ++(-2.15,-\verticalSpacing) |- (bNDbB.west);
 
-      \node[semioTermText,right=\horizontalSpacing+0.35 of bNDbB.east,anchor=east,align=center] (DD) {D\\E\\S\\I\\G\\N};
+      \node[semioTermText,right=\horizontalSpacing+0.35 of bNDbB.east,anchor=east,align=center] (DD) {\textsc{D}\\\textsc{e}\\\textsc{s}\\\textsc{i}\\\textsc{g}\\\textsc{n}};
     \end{scope}
   \end{scope}
 

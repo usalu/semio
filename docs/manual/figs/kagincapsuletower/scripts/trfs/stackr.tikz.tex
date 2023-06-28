@@ -2,32 +2,27 @@
 \begin{scope}[new]
   \sobject{c1}{\capsuleDefinitionIcon}
     {☐[1]}
-    {\text{1}}{below right=0.4 and 0.9of s}{}
+    {\text{1}}{below right=0.4 and 1.7cm of s}{}
   \sobject{c2}{\capsuleDefinitionIcon}
     {☐[2]}
-    {\text{2}}{below right=-0.1 and 0.9of s}{}
+    {\text{2}}{below right=-0.1 and 1.7cm of s}{}
   \sobject{cd}{\dots}
     {}
-    {}{right= 0.9of s}{}
+    {}{right= 1.7cm of s}{}
   \sobject{cnm}{\capsuleDefinitionIcon}
     {☐[\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}-1]}
-    {\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}-1}{above right=-0.2 and 0.9of s}{}
+    {\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}-1}{above right=-0.2 and 1.7cm of s}{}
   \sobject{cn}{\capsuleDefinitionIcon}
     {☐[\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}]}
-    {\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}}{above right=0.4 and 0.9of s}{}
+    {\text{\shaftDefinitionIcon.\shaftDefinitionFloorsParameterIcon}}{above right=0.4 and 1.7cm of s}{}
 
-  \sAttractionWithPorts{s}{c1}{$\memoji{\capsuleStitchingIcon}(\memoji{\shaftDefinitionSidePortIcon}\memoji{\shaftDefinitionIcon}.[1]\memoji{\shaftDefinitionDoorNumberPortIcon})$}
-    {}
-    {}{}{south west,yshift=-0.05cm}{south east}{west}
-  \sAttractionWithPorts{s}{c2}{}
-    {\shaftDefinitionSidePortIcon\shaftDefinitionDoorNumberPortIcon}
-    {\emoji{🚪}}{}{south west,yshift=-0.05cm}{south east}{west}
-  % \sAttractionWithPorts{s}{cd}{\emoji{🚪}}{}{}{}{south west}{south east}{west}
-  \sAttractionWithPorts{s}{cnm}{}
-    {\shaftDefinitionSidePortIcon\shaftDefinitionDoorNumberPortIcon}
-    {\emoji{🚪}}{}{south west,yshift=-0.05cm}{south east}{west}
-  \sAttractionWithPorts{s}{cn}{}
-    {\shaftDefinitionSidePortIcon\shaftDefinitionDoorNumberPortIcon}
-    {\emoji{🚪}}{}{south west,yshift=-0.05cm}{south east}{west}
+  \sAttractionWithPorts{s}{c1}{\emoji{\capsuleStitchingIcon}(\emoji{\shaftDefinitionSidePortIcon}, 1,\emoji{\shaftDefinitionDoorNumberPortIcon})}
+    {}{}{}{south west,yshift=-0.05cm}{south east}{west}
+  \sAttractionWithPorts{s}{c2}{\emoji{\capsuleStitchingIcon}(\emoji{\shaftDefinitionSidePortIcon}, 2,\emoji{\shaftDefinitionDoorNumberPortIcon})}
+    {}{}{}{south west,yshift=-0.05cm}{south east}{west}
+  \sAttractionWithPorts{s}{cnm}{\emoji{\capsuleStitchingIcon}(\emoji{\shaftDefinitionSidePortIcon},\emoji{\shaftDefinitionIcon}.\emoji{\shaftDefinitionFloorsParameterIcon}-1,\emoji{\shaftDefinitionDoorNumberPortIcon})}
+    {}{}{}{south west,yshift=-0.05cm}{south east}{west}
+  \sAttractionWithPorts{s}{cn}{\emoji{\capsuleStitchingIcon}(\emoji{\shaftDefinitionSidePortIcon},\emoji{\shaftDefinitionIcon}.\emoji{\shaftDefinitionFloorsParameterIcon},\memoji{\shaftDefinitionDoorNumberPortIcon})}
+    {}{}{}{south west,yshift=-0.05cm}{south east}{west}
 \end{scope}
 
