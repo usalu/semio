@@ -1,5 +1,7 @@
 \usepackage{fontspec}
 \newfontfamily\NotoEmoji{Noto Emoji}
+% \newfontfamily\NotoEmoji{../fonts/notoemoji/static/NotoEmoji-Regular.ttf}
+
 
 \usepackage{amsmath}
 %For \CIRCLE
@@ -92,7 +94,7 @@
 	semioDesign/.style={draw=black,dotted},
 	scriptCall/.style={semioSenaryColor,->},
 	connection/.style={--},
-	scriptLegend/.style={node font=\footnotesize},
+	scriptLegend/.style={node font=\scriptsize},
 	definitionDrawing/.style={draw,dotted},
     definitionDrawingHidden/.style={draw,densely dotted},
     % Somehow doesn't do anything: label distance=0
@@ -111,7 +113,7 @@
 \newenvironment{boundingBox}[5]
 	{\def\nodeNamePrefixAuxiallaryVariable{#1}
 	\def\boxStyleAuxiallaryVariable{#2}
-	\begin{scope}[local bounding box/.expanded=\nodeNamePrefixAuxiallaryVariable-lBB,xshift=#3,yshift=#4,inner sep=1pt,#5]}
+	\begin{scope}[local bounding box/.expanded=\nodeNamePrefixAuxiallaryVariable-lBB,xshift=#3,yshift=#4,#5]}
 	{\end{scope}
 	\node [semioBoundingBox, fit=(\nodeNamePrefixAuxiallaryVariable-lBB),\boxStyleAuxiallaryVariable](\nodeNamePrefixAuxiallaryVariable-bB) {};}
 
@@ -227,19 +229,29 @@
 		node[port, at start,anchor=#9]{#6} %id
 		node[port, at end,anchor=#8]{#5};} %port attracted
 
-%inputs: rulePrefix, ruleIcon, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
+%inputs: transformationName, transformationLabel, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
 \newcommand{\sTransformation}[6]{
-	\begin{boundingBoxWithLabel}{trfs-#1}{#2}{semioSpecificTerm}{}{0}{0}{}
-		\pic (#1L) at (#3,#4)  {#1L};
-		\pic (#1R) at (#5,#6)  {#1R};
+	\begin{boundingBoxWithLabel}{trf-#1}{#2}{semioSpecificTerm}{}{0}{0}{}
+		\begin{boundingBox}{trf-l-#1}{semioItem}{0}{0}{}
+			\pic (trf-l-#1) at (#3,#4) {trf-l-#1};
+		\end{boundingBox}
+		\begin{boundingBox}{trf-r-#1}{semioItem}{0}{0}{}
+			\pic (trf-r-#1) at (#5,#6) {trf-r-#1};
+		\end{boundingBox}
 	\end{boundingBoxWithLabel}
-	\draw (#1LbB.east)[draw=none]--(#1RbB.west) node [midway] {\transformationArrow};}
+	\draw (trf-l-#1-bB.east)[draw=none]--(trf-r-#1-bB.west) node [midway] {\transformationArrow};}
 
-%inputs: modificationPrefix, parameter, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
-\newcommand{\sModification}[6]{
-	\pic (#1OM) at (#3,#4)  {#1OM};
-	\pic (#1MM) at (#5,#6)  {#1MM};
-	\draw (#1OMbB.east)[draw=none]--(#1MMbB.west) node [midway,label={[anchor=south]north:{#2}}] {$\transformationArrow$};}
+%inputs: modificationName, modificationLabel, parameter, xCoordinateLHS, yCoordinateLHS, xCoordinateRHS, yCoordinateRHS, scaling factor
+\newcommand{\sModification}[8]{
+	\begin{boundingBoxWithLabel}{mod-#1}{#2}{semioSpecificTerm}{}{0}{0}{}
+		\begin{boundingBox}{mod-o-#1}{semioItem}{0}{0}{}
+			\pic[scale=#8] (mod-o-#1) at (#4,#5) {mod-o-#1};
+		\end{boundingBox}
+		\begin{boundingBox}{mod-m-#1}{semioItem}{0}{0}{}
+			\pic[scale=#8] (mod-m-#1) at (#6,#7) {mod-m-#1};
+		\end{boundingBox}
+	\end{boundingBoxWithLabel}
+	\draw (mod-o-#1-bB.east)[draw=none]--(mod-m-#1-bB.west) node [midway,label={[anchor=south]north:{#3}}] {$\transformationArrow$};}
 
 %inputs: attractingNodeId, attractedNodeId, attractingPort, attractedPort, distanceBetweenNodes, portStyle
 \newcommand{\sKnot}[6]{
@@ -272,10 +284,3 @@
     \node [semioSpecificTerm,fit=(bounding box \definitionLevel),
       label={[semioTermText, anchor=north east]north east:{\labelNameAuxiallaryVariable}}] 
       (bB) {};}
-
-\pgfmathsetmacro\transformationSideLevel{0}
-\newenvironment{transformationSide}[0]
-  {\pgfmathsetmacro\transformationSideLevel{int(\transformationSideLevel+1)}
-  \begin{scope}[local bounding box/.expanded=bounding box \transformationSideLevel,sharp corners]}
-  {\end{scope}
-    \node [semioItem,fit=(bounding box \transformationSideLevel)](bB) {};}

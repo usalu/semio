@@ -1,0 +1,17 @@
+\sobject{b}{\baseDefinitionIcon}{}{}{}{}
+\sobject{s1}{\shaftDefinitionIcon}{}{1}{above left=0.25and0.7of b}{}
+\sobject{s2}{\shaftDefinitionIcon}{}{2}{above right=0.25and0.7of b}{}
+\begin{scope}[new]
+  \sobjectWithDescription{br}{\bridgeDefinitionIcon}{}{}{above=0.25of b}{}
+    {above}
+    {\parameterAssign{⬅️}{{\text{\capsuleDefinitionIcon}_1.\text{\capitalDefinitionWidthParameterIcon}}}\\
+    \parameterAssign{➡️}{{\text{\capsuleDefinitionIcon}_2.\text{\capitalDefinitionWidthParameterIcon}}}}
+    {}
+\end{scope}
+
+\sAttraction{b}{s1}{}
+\sAttraction{b}{s2}{}
+\begin{scope}[modified]
+  \sAttractionWithPorts{s1}{br}{}{}{\emoji{➡️}}{a}{south west}{south east}{west}
+  \sAttractionWithPorts{s2}{br}{}{}{\emoji{⬅️}}{b}{south east}{south west}{east}
+\end{scope}
