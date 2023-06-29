@@ -2,7 +2,6 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" width="419.52pt" height="595.2pt" viewBox="0 0 419.52 595.2" overflow="visible" xmlns="http://www.w3.org/2000/svg">
   <path d="M209.8478,364.8241 L212.0963,365.0694" stroke="#000000" stroke-width="0.24" fill="none" />
-  <path d="M208.8362,231.7222 L209.8478,231.2807 L209.8478,233.5425" stroke="#000000" stroke-width="0.24" fill="none" />
   <path d="M209.8478,231.2807 L212.0963,231.526" stroke="#000000" stroke-width="0.24" fill="none" />
   <path d="M202.6659,281.8359 L200.6429,281.6151" stroke="#000000" stroke-width="0.24" fill="none" />
   <path d="M223.301,287.2512 L221.278,287.0305" stroke="#000000" stroke-width="0.24" fill="none" />
@@ -124,5 +123,10 @@
   <path d="M223.301,311.5318 L223.301,313.7391" stroke="#000000" stroke-width="0.24" fill="none" />
   <path d="M202.6659,306.1165 L202.6659,308.3238" stroke="#000000" stroke-width="0.24" fill="none" />
   <path d="M207.5213,305.7633 L207.5213,307.9706" stroke="#000000" stroke-width="0.24" fill="none" />
-  <path d="M208.8362,365.2655 L209.8478,364.8241 L209.8478,367.0859" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M209.76,364.8007 L212.023,365.0476" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M208.742,230.8437 L209.76,230.3994" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M209.76,230.3994 L209.76,232.6757" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M209.76,230.3994 L212.023,230.6463" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M208.742,365.245 L209.76,364.8007" stroke="#000000" stroke-width="0.24" fill="none" />
+  <path d="M209.76,364.8007 L209.76,367.0771" stroke="#000000" stroke-width="0.24" fill="none" />
 </svg>

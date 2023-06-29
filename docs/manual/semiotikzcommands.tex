@@ -96,7 +96,10 @@
 	definitionDrawing/.style={draw,dotted},
     definitionDrawingHidden/.style={draw,densely dotted},
     % Somehow doesn't do anything: label distance=0
+    definitionDrawingPointAnnotation/.style={draw,cross out,semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
     definitionDrawingLinearAnnotation/.style={semioSenaryColor,|<->|,font=\tiny,minimum size=0,inner sep=1pt},
+    % curly brace doesn't work as style somehow
+	definitionDrawingCountAnnotation/.style={decorate,decoration={brace,mirror},semioSenaryColor,font=\tiny},
 	definitionDrawingCurveAnnotation/.style={semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
     definitionDrawingTextAnnotation/.style={semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
     definitionDrawingPort/.style={semioTertiaryColor,font=\tiny,minimum size=0,inner sep=0pt},
