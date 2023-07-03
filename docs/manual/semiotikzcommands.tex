@@ -12,7 +12,7 @@
 \usepackage{tikz,pgfplots}
 \usetikzlibrary{
 	positioning,
-	shapes.geometric, shapes.callouts,
+	shapes.geometric, shapes.callouts, shapes.misc,
 	external,
 	graphs, graphdrawing,
 	trees,
@@ -26,12 +26,14 @@
 
 %\tikzset{external/system call={lualatex -enable-write18 -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"}}
 % \tikzset{external/system call={lualatex -shell-escape -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"}}
+% \tikzexternalize[prefix=figures/,shell escape=-enable-write18]
 % \tikzexternalize[prefix=figures/]
 
-\usepackage{forest}
-\useforestlibrary{edges}
-% For using forked edge style
-\ProvidesForestLibrary{edges}[2016/12/05 v0.1.1]
+
+% \usepackage{forest}
+% \useforestlibrary{edges}
+% % For using forked edge style
+% \ProvidesForestLibrary{edges}[2016/12/05 v0.1.1]
 
 % % For scaling tikzpictures to a width
 % % https://tex.stackexchange.com/questions/481915/how-can-i-scale-tikz-picture-to-full-width
@@ -98,12 +100,12 @@
 	definitionDrawing/.style={draw,dotted},
     definitionDrawingHidden/.style={draw,densely dotted},
     % Somehow doesn't do anything: label distance=0
-    definitionDrawingPointAnnotation/.style={draw,cross out,semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
-    definitionDrawingLinearAnnotation/.style={semioSenaryColor,|<->|,font=\tiny,minimum size=0,inner sep=1pt},
+    definitionDrawingPointAnnotation/.style={draw,cross out,semioSecondaryAccentColor,font=\tiny,minimum size=0,inner sep=1pt},
+    definitionDrawingLinearAnnotation/.style={semioSecondaryAccentColor,|<->|,font=\tiny,minimum size=0,inner sep=1pt},
     % curly brace doesn't work as style somehow
-	definitionDrawingCountAnnotation/.style={decorate,decoration={brace,mirror},semioSenaryColor,font=\tiny},
-	definitionDrawingCurveAnnotation/.style={semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
-    definitionDrawingTextAnnotation/.style={semioSenaryColor,font=\tiny,minimum size=0,inner sep=1pt},
+	definitionDrawingCountAnnotation/.style={decorate,decoration={brace,mirror},semioSecondaryAccentColor,font=\tiny},
+	definitionDrawingCurveAnnotation/.style={semioSecondaryAccentColor,font=\tiny,minimum size=0,inner sep=1pt},
+    definitionDrawingTextAnnotation/.style={semioSecondaryAccentColor,font=\tiny,minimum size=0,inner sep=1pt},
     definitionDrawingPort/.style={semioTertiaryColor,font=\tiny,minimum size=0,inner sep=0pt},
     definitionDrawingPortAxis/.style={semioTertiaryColor,->,minimum size=0,inner sep=1pt},
     definitionDrawingPortAxisText/.style={semioTertiaryColor,font=\tiny}
@@ -223,11 +225,13 @@
 %WARNING: 10th parameter needs to be passed over helper variable: \def\tempVarAAttractionWithPorts{idAnchor}
 %Latex only accepts up to 9 parameters...
 \newcommand{\sAttractionWithPorts}[9]{
-	\draw (#1) [attractionEdge]-- (#2)
-		node[port, at start,anchor=#7]{#4} %port attracting
-		node[port, midway,anchor=center]{#3} %knots
-		node[port, at start,anchor=#9]{#6} %id
-		node[port, at end,anchor=#8]{#5};} %port attracted
+	\begin{pgfonlayer}{ports}
+		\draw (#1) [attractionEdge]-- (#2)
+			node[port, at start,anchor=#7]{#4} %port attracting
+			node[port, midway,anchor=center]{#3} %knots
+			node[port, at start,anchor=#9]{#6} %id
+			node[port, at end,anchor=#8]{#5}; %port attracted
+	\end{pgfonlayer}}
 
 %inputs: transformationName, transformationLabel, xCoordinateLHS, yCoordinateLHS,xCoordinateRHS, yCoordinateRHS,
 \newcommand{\sTransformation}[6]{

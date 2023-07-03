@@ -1,8 +1,12 @@
 \documentclass[tikz]{standalone}
+% \documentclass[tikz,convert={outfile=\jobname.svg}]{standalone}
 
 \input{../../semiotikzcommands.tex}
+% \input{/mnt/c/git/semio/docs/manual/semiotikzcommands.tex}
+
 
 \setmainfont{Times}
+%\setmainfont{TeX Gyre Termes}
 
 %scripts
 
@@ -263,6 +267,7 @@
     capsule/.style={circle,minimum size=2pt,inner sep=0pt, outer sep=0pt,anchor=center},
 }
 
+% /mnt/c/git/semio/docs/manual/figs/kagincapsuletower/
 \tikzset{
   bD/.pic={\input{defs/base.tikz.tex}},
   sD/.pic={\input{defs/shaft.tikz.tex}},
@@ -813,6 +818,11 @@
         \end{scope}
     \end{boundingBox}}}
 
+\pgfdeclarelayer{background layer}
+\pgfdeclarelayer{knots}
+\pgfdeclarelayer{ports}
+\pgfsetlayers{background layer,main,knots,ports}
+
 \begin{document}
 
 % \begin{tikzpicture}
@@ -820,12 +830,12 @@
 %     \pic(computation) at(21.7cm,2.5cm) {computation};
 % \end{tikzpicture}
 
-% \begin{tikzpicture}
-%     \pic(artifacts) {artifacts};
-% \end{tikzpicture}
-
 \begin{tikzpicture}
-    \pic(computation) {computation};
+   \pic(artifacts) {artifacts};
 \end{tikzpicture}
+
+%  \begin{tikzpicture}
+%      \pic(computation) {computation};
+%  \end{tikzpicture}
 
 \end{document}
