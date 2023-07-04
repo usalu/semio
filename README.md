@@ -27,10 +27,9 @@ Currently there is one UI for Grasshopper.
 
 Currently there is one extension for Grasshopper that makes it possible to turn Grasshopper scripts into semio scripts.
 
-
 # Contribution
 
-![Menu ribbon](docs/extensions/grasshopper/ribbon.png)
+![Components](docs/softwarequality/softwarearchitecture/frameworkrelationships.svg)
 
 
 If you want to contribute to the project, there are lot's of opportunities! Do you want to write an extension for a platform or contribute to the core?
