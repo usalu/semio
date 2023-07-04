@@ -23,7 +23,7 @@ text.art-f10 {font-family:art-nf0;font-size:4.98132px}
 text.art-f11 {font-family:art-nf0;font-size:9.96264px}
 ]]>
 </style>
-<g id='artifacts'>
+<g id='artifacts' style="background-color:#FFFFFF;">
 <path d='M-33.98 52.4492V75.6836L-38.242 73.82812V50.5937Z' stroke='#000' fill='none' stroke-width='.3985' stroke-miterlimit='10'/>
 <path d='M-33.98 84.4023V107.6367L-38.242 105.7734V82.5391Z' stroke='#000' fill='none' stroke-width='.3985' stroke-miterlimit='10'/>
 <path d='M-33.98 276.0783V299.3123L-38.242 297.4493V274.2153Z' stroke='#000' fill='none' stroke-width='.3985' stroke-miterlimit='10'/>

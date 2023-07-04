@@ -22,7 +22,7 @@ text.f9 {font-family:cmsy10;font-size:9.96264px}
 text.f10 {font-family:cmmi10;font-size:9.96264px}
 ]]>
 </style>
-<g id='computation'>
+<g id='computation' style="background-color:#FFFFFF;">
 <path d='M419.949-68.48045H80.105C77.906-68.48045 76.121-66.69535 76.121-64.49605V66.73825C76.121 68.93745 77.906 70.72265 80.105 70.72265H419.949C422.152 70.72265 423.934 68.93745 423.934 66.73825V-64.49605C423.934-66.69535 422.152-68.48045 419.949-68.48045Z' stroke='#000' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883'/>
 <text class='f5' x='250.028017' y='1.120447' transform='matrix(1 0 0 1 -170.5865 2.49069)'>🏯</text>
 <text class='f8' x='264.336299' y='-66.725807' transform='matrix(1 0 0 1 -170.5865 2.49069)'>⎛<tspan x='264.336299' y='-49.191372'>⎜</tspan><tspan x='264.336299' y='-43.213727'>⎜</tspan><tspan x='264.336299' y='-37.236082'>⎜</tspan><tspan x='264.336299' y='-31.258437'>⎜</tspan><tspan x='264.336299' y='-25.280792'>⎜</tspan><tspan x='264.336299' y='-19.303147'>⎜</tspan><tspan x='264.336299' y='-13.325502'>⎜</tspan><tspan x='264.336299' y='-7.347858'>⎜</tspan><tspan x='264.336299' y='-1.370213'>⎜</tspan><tspan x='264.336299' y='4.607432'>⎜</tspan><tspan x='264.336299' y='10.585077'>⎜</tspan><tspan x='264.336299' y='16.562722'>⎜</tspan><tspan x='264.336299' y='22.540367'>⎜</tspan><tspan x='264.336299' y='28.518012'>⎜</tspan><tspan x='264.336299' y='34.495657'>⎜</tspan><tspan x='264.336299' y='40.473301'>⎜</tspan><tspan x='264.336299' y='46.849431'>⎝</tspan></text>
