@@ -35,9 +35,9 @@ All services can either run locally, with docker-compose, inside kubernetes or b
 Currently there is one UI for Grasshopper.
 ![Menu ribbon](docs/adapters/grasshopper/ribbon.png)
 
-## Extensions
+## Adapters
 
-Currently there is one extension for Grasshopper that makes it possible to turn Grasshopper scripts into semio scripts.
+Currently there is one adapter for Grasshopper that makes it possible to turn Grasshopper scripts into semio scripts.
 
 # Contribution
 

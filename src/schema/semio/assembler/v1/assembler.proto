@@ -15,6 +15,23 @@ service AssemblerService {
   rpc AssemblyToElements(AssemblyToElementsRequest) returns (AssemblyToElementsResponse);
 }
 
+message LayoutToAssembliesRequest{
+  semio.model.v1.Layout layout = 1;
+  LayoutStrategy strategy = 2;
+  // Optional assemblies that can possibly unambiguously describe the layout order of sobjects.
+  // Most of the time this field is only necissary when elements that don't work well together in a general way.
+  // Therefore if you can update the element definitions to be more robust, rather use your time for that.
+  repeated Assembly assemblies = 4;
+}
+
+// A layout strategy affects in which orders connections are triggered.
+enum LayoutStrategy {
+  // A breadth first layout strategy will connect all neighbours first before these start to do the same with their neighbours.
+  LAYOUTSTRATEGY_BREADTHFIRST = 0;
+  // A depth first layout strategy will always prioritize to choose the neighbour of the neighbour first before the other neighbours of the root.
+  LAYOUTSTRATEGY_DEPTHFIRST = 1;
+}
+
 message LayoutToAssembliesResponse{
   repeated semio.model.v1.Assembly assemblies = 1;
 }
