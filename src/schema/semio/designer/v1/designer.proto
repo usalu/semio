@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package semio.designer.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/designer/v1";
+option csharp_namespace = "Semio.Designer.V1";
+
+import "geometry/v1/geometry.proto";
+import "model/v1/model.proto";
+import "extension/v1/extension.proto";
+
+// ✏️ Designer (dsnr/Dr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
+service DsnrSrv{
+  // Request a representation from a definition
+  rpc CmpDsn(RepDefRqt) returns (semio.model.v1.Rep);
+}

@@ -13,6 +13,7 @@ You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, �
 <p align="center">
     <img src="docs/examples/capsuletower/artifacts.svg" alt="drawing" width="800"/>
     <img src="docs/examples/capsuletower/computation.svg" alt="drawing" width="800"/>
+    <img src="docs/examples/capsuletower/variants.png" alt="drawing" width="400"/>
 </p>
 <!-- ![Artifacts](docs/examples/capsuletower/artifacts.svg)
 ![Computation](docs/examples/capsuletower/computation.svg)
@@ -22,9 +23,12 @@ semio is a framework that makes procedural modelling platforms interoperable. An
 
 # Overview
 
-![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
-
-![Example](docs/softwarequality/softwarearchitecture/metamodel.svg)
+<p align="center">
+    <img src="docs/softwarequality/systemarchitecture/componentsdiagram.svg" alt="drawing" width="400"/>
+    <img src="docs/softwarequality/softwarearchitecture/metamodel.svg" alt="drawing" width="800"/>
+</p>
+<!-- ![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
+![Example](docs/softwarequality/softwarearchitecture/metamodel.svg) -->
 
 semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs.
 
@@ -41,7 +45,10 @@ Currently there is one adapter for Grasshopper that makes it possible to turn Gr
 
 # Contribution
 
-![Components](docs/softwarequality/softwarearchitecture/frameworkrelationships.svg)
+<p align="center">
+    <img src="docs/softwarequality/softwarearchitecture/frameworkrelationships.svg" alt="drawing" width="400"/>
+</p>
+<!-- ![Components](docs/softwarequality/softwarearchitecture/frameworkrelationships.svg) -->
 
 
 If you want to contribute to the project, there are lot's of opportunities! Do you want to write an apapter for a platform or contribute to the core?

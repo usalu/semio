@@ -1,15 +1,15 @@
 syntax = "proto3";
 
-package semio.manager.v1;
+package semio.calculator.v1;
 
-option go_package = "github.com/usalu/semio/src/packages/go/manager/v1";
-option csharp_namespace = "Semio.Manager.V1";
+option go_package = "github.com/usalu/semio/src/packages/go/calculator/v1";
+option csharp_namespace = "Semio.Calculator.V1";
 
 import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 import "extension/v1/extension.proto";
 
-// 🧑‍💼 Manager (mngr/Mr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
+// 🖩 Calculator (mngr/Mr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
 service MngrSrv{
   
   // Request a representation from a definition

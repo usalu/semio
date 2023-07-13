@@ -8,27 +8,26 @@ option csharp_namespace = "Semio.Extension.Adapter.V1";
 import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 
-// An adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
-service AdapterService {
+// adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
+service AdpSrv {
   // Request a prototype.
-  rpc RequestPrototype(semio.model.v1.Plan) returns (semio.model.v1.Prototype);
-  // Request an connection pose for the connected.
-  rpc RequestConnectionPose(ConnectionPoseRequest) returns (semio.geometry.v1.Pose);
+  rpc CmpScr(CmpScrRqt) returns (CmpScrRes);
 }
 
-// Description what an adapter is adapting to.
-message Adapting{
-  // The platform that is adapted.
-  semio.model.v1.Platform platform = 1;
+// Adapting
+message Adpn{
+  // Platform that is adapted.
+  semio.model.v1.Ptf ptf = 1;
 }
 
-// A connection point request requests a point from the connected (sobject).
-message ConnectionPoseRequest {
-  // The plan of the connected (sobject).
-  semio.model.v1.Plan plan = 1;
-  // The representation according the representation protocol of the link.
-  oneof representation {
-    semio.geometry.v1.Point simple_representation = 3;
-    semio.model.v1.Representation full_representation = 4;
-  }
+// Request for computing a script.
+message CmpScrRqt {
+  // Parameters in the form of namevaluepairs for the computation.
+  repeated semio.model.v1.Nvp nvps = 1;
+}
+
+// Response from computing a script.
+message CmpScrRsp {
+  // Namevaluepairs for the computation.
+  repeated semio.model.v1.Nvp nvps = 1;
 }
