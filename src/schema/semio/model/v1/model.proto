@@ -20,6 +20,7 @@ import "google/protobuf/timestamp.proto";
 import "geometry/v1/geometry.proto";
 
 //------------------------BEFORE DESIGN SYNTHESIS------------------------
+option dummy="Prevent comment to be part of the next message";
 
 // 💯 Number (num,Nu) value.
 message Number {
@@ -175,14 +176,16 @@ message Knot {
 // 🧑‍🤝‍🧑 Attraction (atr/A) for a layout.
 // An attraction connects two ports where the 🧲 attracting (atn/An) sobject is attracting the 🪙 attracted (atd/Ad) sobject.
 message Attraction {
+  // Identification that allows to distinguish it from other attractions.
+  string id = 1;
   // Plans for stitchings of attraction.
-  repeated Plan stcs_plas = 1;
+  repeated Plan stcs_plas = 2;
   // Identifications of the knots of the attraction.
-  repeated string knts_ids = 2;
+  repeated string knts_ids = 3;
   // Port of the attracting sobject.
-  Port atn_por = 3;
+  Port atn_por = 4;
   // Port of the attracted sobject.
-  Port atd_por = 4;
+  Port atd_por = 5;
 }
 
 // 🧑‍🏭 Assembly (asm/As) is a scene tree of sobjects.

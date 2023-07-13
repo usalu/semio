@@ -5,25 +5,26 @@ package semio.extension.translator.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/extension/translator/v1";
 option csharp_namespace = "Semio.Extension.Translator.V1";
 
+import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 
-// A translator service can (mostly) translate representations of the specific extension platform. Translating means moving, rotating and scaling representations.
+// A translator service can (mostly) translate representations of the specific language. Translating means moving, rotating and scaling representations.
 service TranslatorService {
-  // Translate a representation from one pose (coordinate system) into another one.
-  rpc TranslateRepresentation(TranslateRepresentationRequest) returns (semio.model.v1.Representation);
+  // Move a representation from one plane into another one.
+  rpc MoveRepresentationPlaneToPlane(TranslateRepresentationRequest) returns (semio.model.v1.Representation);
 }
 
 // Description what a translator is translating.
 message Translating{
-  // Platform in which the translator can translate.
-  semio.model.v1.Platform platform = 1;
+  // Language in which the translator can translate.
+  semio.model.v1.Language lng = 1;
 }
 
 message TranslateRepresentationRequest {
   // Representation that should be translated.
   semio.model.v1.Representation representation = 1;
   // Target pose of representation.
-  semio.model.v1.Pose target_pose = 2;
+  semio.geometry.v1.Plane trg_pln = 2;
   // Optional source pose of representation.
-  semio.model.v1.Pose source_pose = 3;
+  semio.geometry.v1.Plane trg_pln = 3;
 }

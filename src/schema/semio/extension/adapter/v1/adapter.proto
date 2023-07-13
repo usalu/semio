@@ -5,29 +5,28 @@ package semio.extension.adapter.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/extension/adapter/v1";
 option csharp_namespace = "Semio.Extension.Adapter.V1";
 
-import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 
-// adapter service is an adapter for elements to a specific platform where your elements are (parameterically) defined in.
-service AdpSrv {
+// 🔌 Adapter (adp/Ap) service is adapting the computation of a script in a certain platform.
+service AdapterService {
   // Request a prototype.
-  rpc CmpScr(CmpScrRqt) returns (CmpScrRes);
+  rpc ComputeScript(ComputeScriptRequest) returns (ComputeScriptResponse);
 }
 
 // Adapting
-message Adpn{
+message Adapting{
   // Platform that is adapted.
-  semio.model.v1.Ptf ptf = 1;
+  semio.model.v1.Platform ptf = 1;
 }
 
 // Request for computing a script.
-message CmpScrRqt {
+message ComputeScriptRequest {
   // Parameters in the form of namevaluepairs for the computation.
-  repeated semio.model.v1.Nvp nvps = 1;
+  repeated semio.model.v1.Namevaluepair prms = 1;
 }
 
 // Response from computing a script.
-message CmpScrRsp {
+message ComputeScriptResponse {
   // Namevaluepairs for the computation.
-  repeated semio.model.v1.Nvp nvps = 1;
+  repeated semio.model.v1.Namevaluepair nvps = 1;
 }

@@ -7,19 +7,19 @@ option csharp_namespace = "Semio.Extension.Converter.V1";
 
 import "model/v1/model.proto";
 
-// A converter service can convert an element from one representation into another representation.
+// ⛪ Converter (cnv/Cv) service converts a representation from one language into another language.
 service ConverterService {
   rpc ConvertRepresentation(RepresentationConversionRequest) returns (semio.model.v1.Representation);
 }
 
 // Description what a converter is converting.
 message Converting{
-  semio.model.v1.Platform source_platform = 1;
-  semio.model.v1.Platform target_platform = 2;
+  semio.model.v1.Language src_lng = 1;
+  semio.model.v1.Language trg_lng = 2;
 }
 
-// A request for converting a represenation.
+// Request for converting a representation.
 message RepresentationConversionRequest {
-  semio.model.v1.Representation representation = 1;
-  semio.model.v1.Platform target_platform = 2;
+  semio.model.v1.Representation rep = 1;
+  semio.model.v1.Language trg_lng = 2;
 }
