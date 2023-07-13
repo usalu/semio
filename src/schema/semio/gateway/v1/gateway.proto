@@ -5,8 +5,7 @@ package semio.gateway.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/gateway/v1";
 option csharp_namespace = "Semio.Gateway.V1";
 
-import "model/v1/model.proto";
-// import "assembler/v1/assembler.proto";
+import "designer/v1/designer.proto";
 import "google/api/annotations.proto";
 // import "google/api/client.proto";
 // import "google/api/resource.proto";
@@ -16,7 +15,7 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
     title: "Semio";
-    version: "0.0.1";
+    version: "0.2.0";
     contact: {
       name: "Ueli Saluz";
       url: "https://github.com/usalu/semio";
@@ -33,18 +32,11 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 service GatewayService {
   //   option (google.api.default_host) = "localhost:50000";
 
-  // Lay out a design from a layout and return a design.
-  rpc LayoutDesign(LayoutDesignRequest) returns (semio.model.v1.Design) {
+  // Synthesize a design
+  rpc SynthesizeDesign(semio.designer.v1.SynthesizeDesignRequest) returns (semio.designer.v1.SynthesizeDesignResponse){
     option (google.api.http) = {
-       post: "/v1/layoutdesign"
-       body: "*"
-     };
+      post: "/v1/synthesizedesign"
+      body: "*"
+    };
   }
-}
-
-message LayoutDesignRequest {
-  // The layout that 
-  semio.model.v1.Layout layout = 1;
-  // An optional target platform which will try to convert all elements into it.
-  semio.model.v1.Platform target_platform = 2;
 }

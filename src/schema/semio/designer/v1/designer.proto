@@ -9,8 +9,8 @@ import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
 import "extension/v1/extension.proto";
 
-// ✏️ Designer (dsnr/Dr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
-service DsnrSrv{
-  // Request a representation from a definition
-  rpc CmpDsn(RepDefRqt) returns (semio.model.v1.Rep);
+// ✏️ Designer (dsnr/Dr) service is responsible for synthesizing designs.
+service DesignerService{
+  // Synthesize a design
+  rpc SynthesizeDesign(SynthesizeDesignRequest) returns (SynthesizeDesignResponse);
 }

@@ -5,57 +5,10 @@ package semio.calculator.v1;
 option go_package = "github.com/usalu/semio/src/packages/go/calculator/v1";
 option csharp_namespace = "Semio.Calculator.V1";
 
-import "geometry/v1/geometry.proto";
 import "model/v1/model.proto";
-import "extension/v1/extension.proto";
 
-// 🖩 Calculator (mngr/Mr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
-service MngrSrv{
+// 🖩 Calculator (clc/Cl) service is responsible for handling cross cutting concerns such as hashing, merging, expanding, ...
+service CalculatorService{
   
-  // Request a representation from a definition
-  rpc RqtDefRep(RepDefRqt) returns (semio.model.v1.Rep);
-  // Request a representation from a definition
-  rpc RqtDefCon(ConDefRqt) returns (ConDefRsp);
-
-
-
-  // Register a service to the server.
-  rpc RegExt(RegisterExtensionRequest) returns (RegisterExtensionResponse);
-  // Get all registered extensions.
-  rpc GetRegExts(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
-}
-
-message RepDefRqt{
-  semio.model.v1.Plan plan = 1;
-  semio.model.v1.Platform target_platform = 2;
-}
-
-message ConnectElementRequest{
-  semio.model.v1.Sobject connected_sobject = 1;
-  semio.model.v1.Sobject connecting_sobject = 2;
-  semio.model.v1.Connection connection = 3;
-}
-
-message ConnectElementResponse{
-  semio.model.v1.Pose connected_element_pose = 1;
-  semio.geometry.v1.Point connection_point = 2;
-}
-
-message RegisterExtensionRequest{
-  semio.extension.v1.Extending extending = 1;
-  bool replace_existing = 2;
-}
-
-message RegisterExtensionResponse{
-  bool success = 1;
-  // The old address of the same service type if there was one.
-  string old_address = 2;
-}
-
-message GetRegisteredExtensionsRequest{
-}
-
-message RegisteredExtensionsResponse{
-  // A map with extensions where the address is the key and the extension description is the value.
-  map <string,semio.extension.v1.Extending> extensions = 1;
+  
 }

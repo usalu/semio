@@ -1,5 +1,5 @@
-// TODO Make compliant to: https://www.iso.org/standard/84667.html
-// For now it is enough to stay close to speckle as it can be used for translating between interesting platforms.
+// TODO: Make compliant to: https://www.iso.org/standard/84667.html
+// For now it is enough to stay close to speckle as it can be used for translating between most platforms.
 // https://github.com/specklesystems/speckle-sharp/tree/main/Objects
 syntax = "proto3";
 
@@ -28,27 +28,27 @@ message Point {
 //   double theta = 3;
 // }
 
-// // A 3d vector with x,y,z coordinates.
-// message Vector {
-//     // X coordinate.
-//     double x = 1;
-//     // Y coordinate
-//     double y = 2;
-//     // Z coordinate
-//     double z = 3;
-// }
-
-// (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
-message Quaternion {
-  // The value of the real part of the quaternion.
-  double w = 1;
-  // The first value of the imaginary part of the quaternion.
-  double x = 2;
-  // The second value of the imaginary part of the quaternion.
-  double y = 3;
-  // The third value of the imaginary part of the quaternion.
-  double z = 4;
+// A 3d vector with x,y,z components.
+message Vector {
+    // X component.
+    double x = 1;
+    // Y component
+    double y = 2;
+    // Z component
+    double z = 3;
 }
+
+// // (Unit) quaternions represent (here) (rotational) orientation. It can be interpreted as the view of an object.  
+// message Quaternion {
+//   // The value of the real part of the quaternion.
+//   double w = 1;
+//   // The first value of the imaginary part of the quaternion.
+//   double x = 2;
+//   // The second value of the imaginary part of the quaternion.
+//   double y = 3;
+//   // The third value of the imaginary part of the quaternion.
+//   double z = 4;
+// }
 
 // // A transform is a 4x4 matrix that is used to describe transformations of objects in 3d space.
 // // The transform is in row dominant form.
@@ -127,25 +127,23 @@ message Quaternion {
 // }
 
 
-// A pose is a static reference frame/coordinate system where all base vectors are orthonormal and the orientation is described by a quaternion.
-message Pose {
-  // Point of view (origin) from the pose (reference frame/coordinate system)
-  semio.geometry.v1.Point point_of_view = 1;
-  // View (orientation) from the pose (reference frame/coordinate system)
-  semio.geometry.v1.Quaternion view = 2;
-}
+// // A pose is a static reference frame/coordinate system where all base vectors are orthonormal and the orientation is described by a quaternion.
+// message Pose {
+//   // Point of view (origin) from the pose (reference frame/coordinate system)
+//   semio.geometry.v1.Point point_of_view = 1;
+//   // View (orientation) from the pose (reference frame/coordinate system)
+//   semio.geometry.v1.Quaternion view = 2;
+// }
 
-// // // A (reference) plane. Also called: reference frame, reference coordinate system
-// // message Plane {
-// //     // Origin
-// //     Point origin = 1;
-// //     // X-Axis
-// //     Vector x = 2;
-// //     // Y-Axis
-// //     Vector y = 3;
-// //     // Normal vector.
-// //     Vector z = 4;
-// // }
+// A (reference) plane. Also called: reference frame, reference coordinate system
+message Plane {
+    // Origin
+    Point org = 1;
+    // X-Axis
+    Vector x_axis = 2;
+    // Y-Axis
+    Vector y_axis = 3;
+}
 
 // // A part of a 3d circle.
 // message Arc {
@@ -263,3 +261,12 @@ message Pose {
 // message Surface {
 
 // }
+
+// 🌐 Geometry (geo/Go) is oneof all data structures of the geometry namespace.
+message Geometry {
+  oneof geo{
+    Point pt = 1;
+    Vector vec = 2;
+    Plane pln = 3;
+  }
+}

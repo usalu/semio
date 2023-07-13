@@ -14,29 +14,15 @@ syntax = "proto3";
 package semio.representation.v1;
 
 option go_package = "github.com/usalu/semio/src/packages/go/representation/v1";
-option csharp_namespace = "Semio.Representation.V1";
+option csharp_namespace = "Semio.Representationresentation.V1";
 
 import "google/protobuf/timestamp.proto";
 import "geometry/v1/geometry.proto";
 
 //------------------------BEFORE DESIGN SYNTHESIS------------------------
 
-
-// 🏷️ Scope (scp/Sc) of a NameValuePair. Multiple scopes form a context
-// The purpose of a scope is to allow to reconstruct native collection types in each platform.
-// Example: Multiple rectangles for windows for a fassade of a standard box shaped building.
-// A windows belongs both to a fassade [north,west,east,south] and a floor [0,1,...].
-// Depending on the purpose of the script, you need either a storey or fassade ordering.
-// Depending on the platform that can be nested dictionaries, list of lists, native data trees, ...
-message Scp {
-  // Concept for the scope e.g Fassade, Floor
-  string cpt = 1;
-  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration order.
-  string odr = 2; 
-}
-
 // 💯 Number (num,Nu) value.
-message Num {
+message Number {
   oneof num {
     // 🧾 Decimal (dcm/DN) number value.
     float dcm = 1;
@@ -48,7 +34,7 @@ message Num {
 }
 
 // 🔤 Text (txt,Tx) value.
-message Txt {
+message Text {
   oneof txt {
     // Description text value.
     string dcp = 1;
@@ -60,46 +46,59 @@ message Txt {
 }
 
 // 🎚️ Value (val/V) that will be mapped to a native type in the corresponding platform.
-message Val {
+message Value {
   oneof val {
-    Num num =1;
-    Txt txt = 2;
-    semio.geometry.v1.Geo geo = 3;
+    Number num =1;
+    Text txt = 2;
+    semio.geometry.v1.Geometry geo = 3;
   }
 }
 
+// 🏷️ Scope (scp/Sc) of a Namevaluepair. Multiple scopes form a context
+// The purpose of a scope is to allow to reconstruct native collection types in each platform.
+// Example: Multiple rectangles for windows for a fassade of a standard box shaped building.
+// A windows belongs both to a fassade [north,west,east,south] and a floor [0,1,...].
+// Depending on the purpose of the script, you need either a storey or fassade ordering.
+// Depending on the platform that can be nested dictionaries, list of lists, native data trees, ...
+message Scope {
+  // Concept for the scope e.g Fassade, Floor
+  string cpt = 1;
+  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration order.
+  string odr = 2; 
+}
+
 // 🗃️ Namevaluepair is a pair of a name and a (common) value optionally with a context.
-message Nvp {
+message Namevaluepair {
   // Name of the namevaluepair.
   string name = 1;
   // Value of the namevaluepair.
-  Val val = 2;
+  Value val = 2;
   // Optional context to describe the context of the namevaluepair.
-  repeated Scp ctx = 3;
+  repeated Scope ctx = 3;
 }
 
 // 🧬 Gene (gne,G) is an identifiable list of namevaluepairs.
-message Gne {
+message Gene {
   // Identification that allows to distinguish it from other genes.
   string id = 1;
-  // NameValuePairs of the gene.
-  repeated Nvp nvps = 2;
+  // Namevaluepairs of the gene.
+  repeated Namevaluepair nvps = 2;
 }
 
 // 📄 Specification (spc,Pl) of a plan.
-message Spc {
+message Specification {
   // Identification that allows to distinguish it from other specifications.
   string id = 1;
   // Optional plans of generations scripts.
-  repeated Pla gnrs_plas = 2;
+  repeated Plan gnrs_plas = 2;
   // Optional identifications of genes.
   repeated string gnes_ids = 3;
   // Optional parameters for the script.
-  repeated Nvp prms = 4;
+  repeated Namevaluepair prms = 4;
 }
 
 // A list of identifications of specifications.
-message Spcs {
+message Specifications {
   repeated string spcs_ids=1;
 }
 
@@ -114,7 +113,7 @@ message Key {
 }
 
 // 🛠️ Plan (pla,Pl) for a script.
-message Pla {
+message Plan {
   // 🔗 Uniqueresourceidentifier (uri/U) of the script.
   // The uniqueresourceidentifier has to be the url to fetch the file.
   // The extension(s) have to stand for the platform. Otherwise the adapter can't be determined.
@@ -127,35 +126,35 @@ message Pla {
 
 // ☐ Prototype (ptp/P) of a layout.
 // It has all semantical information for an object.
-message Ptp {
+message Prototype {
   // Identification that allows to distinguish it from other sobjects.
   string id = 1;
   // Optional identifiactions of specifications for the definition.
   repeated string def_spcs_ids = 2;
   // Optional map with uniqueresourceidentifier of modification as key and identifiactions of specifications for the modification as a key.
-  map<string,Spcs> mods_spcs_ids = 3;
+  map<string,Specifications> mods_spcs_ids = 3;
   // Optional plans of modifications.
-  repeated Pla mods_plas = 4;
+  repeated Plan mods_plas = 4;
 }
 
 // 🛈 Sobject (sbj/S) of a layout.
 // It has all semantical information for constructing an object.
-message Sbj {
+message Sobject {
   // Identification that allows to distinguish it from other sobjects.
   string id = 1;
   // Identifications for the prototypes of the sobject.
   repeated string ptys_ids = 2;
   // Plans for the factories of the sobject.
-  repeated Pla fcts_plas = 3;
+  repeated Plan fcts_plas = 3;
   // Plan for the definition script of the sobject.
-  Pla def_pla = 4;
+  Plan def_pla = 4;
   // Plans for the modifications of the sobject. These modifications will be applied after the
-  repeated Pla mods_plas = 5;
+  repeated Plan mods_plas = 5;
 }
 
 // ⚓ Port (pot/Po) for an attraction.
 // A port is an abstract location inside or outside of a sobject where another sobject can connect to.
-message Pot {
+message Port {
   // Identification of the sobject which is the host of the port.
   string sbj_id = 1;
   // Identifications of specifications of the port.
@@ -164,7 +163,7 @@ message Pot {
 
 // 🪢 Knot (knt/Po) for an attraction.
 // A knot is a predefined specification
-message Knt {
+message Knot {
   // Identification that allows to distinguish it from other knots.
   string id = 1;
   // Identifications of specifications of the attracting (atn) sobject of the attraction.
@@ -175,19 +174,19 @@ message Knt {
 
 // 🧑‍🤝‍🧑 Attraction (atr/A) for a layout.
 // An attraction connects two ports where the 🧲 attracting (atn/An) sobject is attracting the 🪙 attracted (atd/Ad) sobject.
-message Atr {
+message Attraction {
   // Plans for stitchings of attraction.
-  repeated Pla stcs_plas = 1;
+  repeated Plan stcs_plas = 1;
   // Identifications of the knots of the attraction.
   repeated string knts_ids = 2;
   // Port of the attracting sobject.
-  Pot atn_por = 3;
+  Port atn_por = 3;
   // Port of the attracted sobject.
-  Pot atd_por = 4;
+  Port atd_por = 4;
 }
 
 // 🧑‍🏭 Assembly (asm/As) is a scene tree of sobjects.
-message Asm{
+message Assembly{
   // The id of the sobject to place.
   string sbj_id = 1;
   // The parts of an assembly are again assemblies.
@@ -195,42 +194,42 @@ message Asm{
 }
 
 // 🖧 Layout (lyt/L) is a graph of sobjects (nodes) and attractions (slightly directed edges).
-message Lyt {
+message Layout {
   // Sobjects (nodes) of the layout (graph).
-  repeated Sbj sbjs = 1;
+  repeated Sobject sbjs = 1;
   // Attractions (edges) of the layout (graph).
-  repeated Atr atrs = 2;
+  repeated Attraction atrs = 2;
 }
 
 //------------------------AFTER DESIGN SYNTHESIS------------------------
 
 // 🔐 Encoding (enc/Ec) of a byte array.
-enum Enc {
-  ENC_UFT8 = 0;
-  ENC_UFT16 = 1;
-  ENC_UFT32 = 2;
-  ENC_ASCII = 3;
+enum Encoding {
+  ENCODING_UFT8 = 0;
+  ENCODING_UFT16 = 1;
+  ENCODING_UFT32 = 2;
+  ENCODING_ASCII = 3;
   // Also ASCII but with further base 64 encoding of the text.
-  ENC_BASE64 = 4;
+  ENCODING_BASE64 = 4;
 }
 
 // ⚞ Serialization (slz/Sz) format of string.
-enum Slz {
+enum Serialization {
   // When it is no common serialization format. 
-  SLZ_BYTES = 0;
+  SERIALIZATION_BYTES = 0;
   // Custom text serialization according platform.
   // Often files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.
-  SLZ_TEXT = 1;
-  SLZ_JSON = 2;
-  SLZ_XML = 3;
-  SLZ_YAML = 4;
-  SLZ_TOML = 5;
+  SERIALIZATION_TEXT = 1;
+  SERIALIZATION_JSON = 2;
+  SERIALIZATION_XML = 3;
+  SERIALIZATION_YAML = 4;
+  SERIALIZATION_TOML = 5;
   // https://www.iso.org/standard/63141.html
-  SLZ_STEP = 6;
+  SERIALIZATION_STEP = 6;
 }
 
 // 🚉 Platform (ptf/Pf) for a script. A platform determines where a script should be computed.
-// Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] +  OWNERID [3] + PTFID [2] < max (int32) = 2,147,483,647
+// Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
 // LICENSE (if possible after https://spdx.org/licenses/): 
 // 0:AGPL-3.0-or-later,
 // 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
@@ -244,80 +243,80 @@ enum Slz {
 // 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
 // 2:NONPROFIT: 0:buildingsmart,1:nrel,2:w3c
 // 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar
-enum Ptf {
+enum Platform {
   // https://github.com/usalu/semio
-  PTF_SEMIO = 0;
+  PLATFORM_SEMIO = 0;
   // https://github.com/specklesystems
-  PTF_SPECKLE = 1600350000;
+  PLATFORM_SPECKLE = 1600350000;
   // https://github.com/mrdoob/three.js/
-  PTF_THREE = 1000000100;
+  PLATFORM_THREE = 1000000100;
   // https://github.com/nortikin/sverchok
-  PTF_SVERCHOK = 500000200;
+  PLATFORM_SVERCHOK = 500000200;
   // https://github.com/IfcOpenShell
-  PTF_IFCOPENSHELL = 1010100000;
+  PLATFORM_IFCOPENSHELL = 1010100000;
   // https://github.com/CadQuery
-  PTF_CADQUERY = 1600100100;
+  PLATFORM_CADQUERY = 1600100100;
   // https://github.com/FreeCAD
-  PTF_FREECAD = 530100200;
+  PLATFORM_FREECAD = 530100200;
   // https://github.com/openscad
-  PTF_OPENSCAD = 530100300;
+  PLATFORM_OPENSCAD = 530100300;
   // https://github.com/jscad
-  PTF_JSCAD = 1500100400;
+  PLATFORM_JSCAD = 1500100400;
   // https://github.com/hannobraun/Fornjot
-  PTF_FORNJOT = 1700000300;
+  PLATFORM_FORNJOT = 1700000300;
   // https://github.com/ricosjp/truck
-  PTF_TRUCK = 1500000400;
+  PLATFORM_TRUCK = 1500000400;
   // https://github.com/NREL/EnergyPlus
-  PTF_ENERGYPLUS = 1900200100;
+  PLATFORM_ENERGYPLUS = 1900200100;
   // https://github.com/NREL/OpenStudio
-  PTF_OPENSTUDIO = 1910200101;
+  PLATFORM_OPENSTUDIO = 1910200101;
   // https://www.rhino3d.com/
-  PTF_RHINO = 2140300000;
+  PLATFORM_RHINO = 2140300000;
   // https://www.grasshopper3d.com/
-  PTF_GRASSHOPPER = 2140300001;
+  PLATFORM_GRASSHOPPER = 2140300001;
   // https://www.autodesk.de/products/revit/
-  PTF_REVIT = 2140300100;
+  PLATFORM_REVIT = 2140300100;
   // https://dynamobim.org/
-  PTF_DYNAMO = 2140300101;
+  PLATFORM_DYNAMO = 2140300101;
   // https://graphisoft.com/solutions/archicad
-  PTF_ARCHICAD = 2140300200;
+  PLATFORM_ARCHICAD = 2140300200;
   // https://www.esri.com/en-us/arcgis/products/arcgis-cityengine
-  PTF_CITYENGINE = 2140300300;
+  PLATFORM_CITYENGINE = 2140300300;
   // https://www.microsoft.com/en-us/microsoft-365/excel
-  PTF_EXCEL = 2140300400;
+  PLATFORM_EXCEL = 2140300400;
   // https://hypar.io/
-  PTF_HYPAR = 2140350100;
+  PLATFORM_HYPAR = 2140350100;
 }
 
-// 💬 Language (lng/Lg) of a representation. This is the schema of the data representation.
-// Constants are encoded with pattern ROYALTY [1] + ID [2] + OWNERTYPE [2] +  OWNERID [3] + PTFID [2] < max (int32) = 2,147,483,647
+// 💬 Language (lng/Lg) of a representation. This is the schema of the dataof the representation.
+// Constants are encoded with pattern ROYALTY [1] + ID [2] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
 // ROYALTY: FREE:0 PAYED:1
-// OWNERTYPE, OWNERID and PTFID same as in platform.
-enum Lng {
+// OWNERTYPE, OWNERID and PLATFORMID same as in platform.
+enum Language {
   // No machine readable language.
-  LNG_CUSTOM = 0;
+  LANGUAGE_CUSTOM = 0;
   // Industry Foundation Classes (IFC) from Building Information Modelling (BIM)
   // https://technical.buildingsmart.org/standards/ifc/ifc-schema-specifications/
-  LNG_IFC = 200000;
+  LANGUAGE_IFC = 200000;
   // Scalable Vector Graphics (SVG) from World Wide Web Consortium (W3C)
   // https://www.w3.org/TR/SVG2/
-  LNG_SVG = 200200;
+  LANGUAGE_SVG = 200200;
   // https://github.com/specklesystems
-  LNG_SPECKLE = 350000;
+  LANGUAGE_SPECKLE = 350000;
   // https://www.rhino3d.com/
-  LNG_3DM = 1000300000;
+  LANGUAGE_3DM = 1000300000;
 }
 
-// 🏠 Representation (rep/R) of an object. Basically a file with metadata.
-message Rep {
+// 🏠 Representationresentation (rep/R) of an object. Basically a file with metadata.
+message Representation {
   // 👕 Body (bdy/B) of representation
   bytes bdy = 1;
   // Optional encoding of the body if the representation is a text format.
-  Enc enc = 2;
+  Encoding enc = 2;
   // Optional serialization if the representation is a text format.
-  Slz slz = 3;
+  Serialization slz = 3;
   // Optional language of the representation.
-  Lng lng = 4;
+  Language lng = 4;
   // Optional metadata for a representation
   message Metadata{
     // Name of the representation
@@ -327,7 +326,7 @@ message Rep {
     // Timestamp when the representation was created.
     google.protobuf.Timestamp ts_created = 3;
     // The platform in which the representation was created/authored.
-    Ptf aut_ptf = 4;
+    Platform aut_ptf = 4;
     // Author of the representation.
     string aut = 5;
     // Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...). 
@@ -347,7 +346,7 @@ message Rep {
 
 // 🏘️ Type (typ,Ty) is a representation that was produced by a definition and a sequence of modifications.
 // In conventional CAD programs, this is a block definition.
-message Typ {
+message Type {
   // Overall hash of the plans of definition and modifications.
   string plas_hsh = 1;
   // Hash of the plan of the definition.
@@ -355,12 +354,12 @@ message Typ {
   // List of hashes of plans of the modifications.
   repeated string mods_plas_hshs = 3;
   // Models of the prototype.
-  repeated Rep reps = 4;
+  repeated Representation reps = 4;
 }
 
 // ⌂ Object (obj/O) is an instance of a type.
 // In conventional CAD programs, this is a block instance.
-message Obj {
+message Object {
   // Hash of the plan of the type for the object.
   string typ_plas_hsh = 1;
   // Identification of the sobject that was used to construct the object.
@@ -370,9 +369,40 @@ message Obj {
 }
 
 // 🏙️ Design (dsn/D) is an aggregation of objects.
-message Dsn {
+message Design {
   // Types from which objects occur inside of the design.
-  repeated Typ typs = 1;
+  repeated Type typs = 1;
   // Objects that form the design.
-  repeated Obj objs = 2;
+  repeated Object objs = 2;
+}
+
+// ⭕ Model (mdl/Ml) is oneof all data structures of the model namespace.
+message Model {
+  oneof mdl{
+    Number num = 1;
+    Text txt = 2;
+    Value val = 3;
+    Scope scp = 4;
+    Namevaluepair nvp = 5;
+    Gene gne = 6;
+    Specification spc = 7;
+    Specifications spcs = 8;
+    Key key = 9;
+    Plan pla = 10;
+    Prototype ptp = 11;
+    Sobject sbj = 12;
+    Port pot = 13;
+    Knot knt = 14;
+    Attraction atr = 15;
+    Assembly asm = 16;
+    Layout lyt = 17;
+    Encoding enc = 18;
+    Serialization slz = 19;
+    Platform pft = 20;
+    Language lng = 21;
+    Representation rep = 22;
+    Type typ = 23;
+    Object obj = 24;
+    Design dsn = 25;
+  }
 }
