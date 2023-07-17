@@ -1,0 +1,217 @@
+// General abbreviations:
+// 👤 Author (aut/Au)
+// ✍️ Concept (cpt/Cp)
+// 🗺️ Context (ctx/Cx)
+// 📝 Description (dcp/Dp)
+// 🆔 Identification (id/ID)
+// 🗄️ Metadata (md,MD)
+// ⏓ Order (odr,Or)
+// ⏕ Ordering (odn,On)
+// ⌚ Timestamp (ts,TS)
+
+syntax = "proto3";
+
+package semio.core.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/core/v1";
+option csharp_namespace = "Semio.Core.V1";
+
+import "google/protobuf/timestamp.proto";
+import "geometry/v1/geometry.proto";
+
+// 💯 Number (num,Nu) value.
+message Number {
+  oneof num {
+    // 🧾 Decimal (dcm/DN) number value.
+    float dcm = 1;
+    // 🔢 Integer (int/IN) number value.
+    int32 int = 2;
+    // 🧮 Natural (nnr/NN) number value.
+    int32 nnr = 3;
+  }
+}
+
+// 🔤 Text (txt,Tx) value.
+message Text {
+  oneof txt {
+    // Description text value.
+    string dcp = 1;
+    // ☶ Choice (chc/Cc) text value.
+    string chc = 2;
+    // ☑️ TrueOrFalse (tof/TF) text value.
+    int32 tof = 3;
+  }
+}
+
+// 🎚️ Value (val/V) that will be mapped to a native type in the corresponding platform.
+message Value {
+  oneof val {
+    Number num =1;
+    Text txt = 2;
+    semio.geometry.v1.Geometry geo = 3;
+  }
+}
+
+// 🏷️ Scope (scp/Sc) of a Namevaluepair. Multiple scopes form a context
+// The purpose of a scope is to allow to reconstruct native collection types in each platform.
+// Example: Multiple rectangles for windows for a fassade of a standard box shaped building.
+// A windows belongs both to a fassade [north,west,east,south] and a floor [0,1,...].
+// Depending on the purpose of the script, you need either a storey or fassade ordering.
+// Depending on the platform that can be nested dictionaries, list of lists, native data trees, ...
+message Scope {
+  // Concept for the scope e.g Fassade, Floor
+  string cpt = 1;
+  // Optionally define the order. Othwerwise it will be implicitly ordered by declaration order.
+  string odr = 2; 
+}
+
+// 🗃️ Namevaluepair is a pair of a name and a (common) value optionally with a context.
+message Namevaluepair {
+  // Name of the namevaluepair.
+  string name = 1;
+  // Value of the namevaluepair.
+  Value val = 2;
+  // Optional context to describe the context of the namevaluepair.
+  repeated Scope ctx = 3;
+}
+
+// 🔐 Encoding (enc/Ec) of a byte array.
+enum Encoding {
+  ENCODING_UFT8 = 0;
+  ENCODING_UFT16 = 1;
+  ENCODING_UFT32 = 2;
+  ENCODING_ASCII = 3;
+  // Also ASCII but with further base 64 encoding of the text.
+  ENCODING_BASE64 = 4;
+}
+
+// ⚞ Serialization (slz/Sz) format of string.
+enum Serialization {
+  // When it is no common serialization format. 
+  SERIALIZATION_BYTES = 0;
+  // Custom text serialization according platform.
+  // Often files have a platform specific extension but if you open them in a text editor you can see that they are serialized in a standard format.
+  SERIALIZATION_TEXT = 1;
+  SERIALIZATION_JSON = 2;
+  SERIALIZATION_XML = 3;
+  SERIALIZATION_YAML = 4;
+  SERIALIZATION_TOML = 5;
+  // https://www.iso.org/standard/63141.html
+  SERIALIZATION_STEP = 6;
+}
+
+// 🚉 Platform (ptf/Pf) for a script. A platform determines where a script should be computed.
+// Constants are encoded with pattern LICENSE [3] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
+// LICENSE (if possible after https://spdx.org/licenses/): 
+// 0:AGPL-3.0-or-later,
+// 50:GPL-3.0+,51:GPL-3.0,52:GPL-2.0+,53:GPL-2.0
+// 100:LGPL-3.0-or-later,101:LGPL-3.0-only
+// 150:MIT,160:Apache-2.0,
+// 170:0BSD
+// 190:EnergyPlus
+// 214:Closed
+// OWNERID after OWNERTYPE:
+// 0:INDIVIDUALS: 0:usalu,1:mrdoob,2:nortikin,3:hannobraun,4:ricosjp
+// 1:COLLECTIVE: 0:ifcopenshell,1:cadquery,2:freecad,3:openscad,4:jscad
+// 2:NONPROFIT: 0:buildingsmart,1:nrel,2:w3c
+// 3:COMPANY: 0:mcneel,1:autodesk,2:nemetschek,3:esri,4:microsoft, 500:speckle,501:hypar
+enum Platform {
+  // https://github.com/usalu/semio
+  PLATFORM_SEMIO = 0;
+  // https://github.com/specklesystems
+  PLATFORM_SPECKLE = 1600350000;
+  // https://github.com/mrdoob/three.js/
+  PLATFORM_THREE = 1000000100;
+  // https://github.com/nortikin/sverchok
+  PLATFORM_SVERCHOK = 500000200;
+  // https://github.com/IfcOpenShell
+  PLATFORM_IFCOPENSHELL = 1010100000;
+  // https://github.com/CadQuery
+  PLATFORM_CADQUERY = 1600100100;
+  // https://github.com/FreeCAD
+  PLATFORM_FREECAD = 530100200;
+  // https://github.com/openscad
+  PLATFORM_OPENSCAD = 530100300;
+  // https://github.com/jscad
+  PLATFORM_JSCAD = 1500100400;
+  // https://github.com/hannobraun/Fornjot
+  PLATFORM_FORNJOT = 1700000300;
+  // https://github.com/ricosjp/truck
+  PLATFORM_TRUCK = 1500000400;
+  // https://github.com/NREL/EnergyPlus
+  PLATFORM_ENERGYPLUS = 1900200100;
+  // https://github.com/NREL/OpenStudio
+  PLATFORM_OPENSTUDIO = 1910200101;
+  // https://www.rhino3d.com/
+  PLATFORM_RHINO = 2140300000;
+  // https://www.grasshopper3d.com/
+  PLATFORM_GRASSHOPPER = 2140300001;
+  // https://www.autodesk.de/products/revit/
+  PLATFORM_REVIT = 2140300100;
+  // https://dynamobim.org/
+  PLATFORM_DYNAMO = 2140300101;
+  // https://graphisoft.com/solutions/archicad
+  PLATFORM_ARCHICAD = 2140300200;
+  // https://www.esri.com/en-us/arcgis/products/arcgis-cityengine
+  PLATFORM_CITYENGINE = 2140300300;
+  // https://www.microsoft.com/en-us/microsoft-365/excel
+  PLATFORM_EXCEL = 2140300400;
+  // https://hypar.io/
+  PLATFORM_HYPAR = 2140350100;
+}
+
+// 💬 Language (lng/Lg) of a representation. This is the schema of the dataof the representation.
+// Constants are encoded with pattern ROYALTY [1] + ID [2] + OWNERTYPE [2] +  OWNERID [3] + PLATFORMID [2] < max (int32) = 2,147,483,647
+// ROYALTY: FREE:0 PAYED:1
+// OWNERTYPE, OWNERID and PLATFORMID same as in platform.
+enum Language {
+  // No machine readable language.
+  LANGUAGE_CUSTOM = 0;
+  // Industry Foundation Classes (IFC) from Building Information Modelling (BIM)
+  // https://technical.buildingsmart.org/standards/ifc/ifc-schema-specifications/
+  LANGUAGE_IFC = 200000;
+  // Scalable Vector Graphics (SVG) from World Wide Web Consortium (W3C)
+  // https://www.w3.org/TR/SVG2/
+  LANGUAGE_SVG = 200200;
+  // https://github.com/specklesystems
+  LANGUAGE_SPECKLE = 350000;
+  // https://www.rhino3d.com/
+  LANGUAGE_3DM = 1000300000;
+}
+
+// 🏠 Representationresentation (rep/R) of an object. Basically a file with metadata.
+message Representation {
+  // 👕 Body (bdy/B) of representation
+  bytes bdy = 1;
+  // Optional encoding of the body if the representation is a text format.
+  Encoding enc = 2;
+  // Optional serialization if the representation is a text format.
+  Serialization slz = 3;
+  // Optional language of the representation.
+  Language lng = 4;
+  // Optional metadata for a representation
+  message Metadata{
+    // Name of the representation
+    string name = 1;
+    // Description of the representation for humans to understand what the purpose of this representation is.
+    string dcp = 2;
+    // Timestamp when the representation was created.
+    google.protobuf.Timestamp ts_created = 3;
+    // Platform in which the representation was created/authored.
+    Platform aut_ptf = 4;
+    // Author of the representation.
+    string aut = 5;
+    // Add a list of concepts that help filtering representations. This can be used for functional purpose (e.g. statical, energetical, ...) or for visualization purpose (e.g. volumetric,comic, , ...). 
+    repeated string cpts = 6;
+    // 🔍 LevelOfDetail (lod,LD) allows to further define representation details.
+    // Like name this can be used either for visualization purpose (e.g. 200 (scale 1to200)) or functional purpose (e.g level of structural detail)
+    // For architectural design it is recommended to choose the scale multiplier.
+    // For BIM you might want to choose:
+    // 100:Conceptual
+    // 200:Approximate
+    // 300:Precise
+    // 400:Fabriaction
+    // 500:Real
+    int32 lod = 7;
+  }
+}

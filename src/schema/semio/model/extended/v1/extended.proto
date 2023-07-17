@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package semio.model.extended.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/model/extended/v1";
+option csharp_namespace = "Semio.Model.Extended.V1";
+
+import "core/v1/core.proto";
+import "model/v1/model.proto";
+
+// 🧬 Gene (gne,G) is an identifiable list of namevaluepairs.
+message Gene {
+  // Identification that allows to distinguish it from other genes.
+  string id = 1;
+  // Namevaluepairs of the gene.
+  repeated Namevaluepair nvps = 2;
+}
+  
+// 📄 Specification (spc,Pl) of a plan.
+message Specification {
+  // Identification that allows to distinguish it from other specifications.
+  string id = 1;
+  // Optional plans of generations scripts.
+  repeated Plan gnrs_plas = 2;
+  // Optional identifications of genes.
+  repeated string gnes_ids = 3;
+  // Optional parameters for the script.
+  repeated Namevaluepair prms = 4;
+}
+
+// A list of identifications of specifications.
+message Specifications {
+repeated string spcs_ids=1;
+}
+
+// Extended plan for a script.
+message ExtendedPlan {
+  // 🔗 Uniqueresourceidentifier (uri/U) of the script.
+  // The uniqueresourceidentifier has to be the url to fetch the file.
+  // The extension(s) have to stand for the platform. Otherwise the adapter can't be determined.
+  string uri = 1;
+  // Optional key in order to use the script.
+  Key key = 2;
+  // Optional identifiactions of specifications for the script.
+  repeated string spcs_ids = 3;
+}
+
+// ☐ Prototype (ptp/P) is a (partial) set of specifications for an extended sobject.
+message Prototype {
+  // Identification that allows to distinguish it from other sobjects.
+  string id = 1;
+  // Optional identifiactions of specifications for the definition.
+  repeated string def_spcs_ids = 2;
+  // Optional map with uniqueresourceidentifier of modification as key and identifiactions of specifications for the modification as a key.
+  map<string,Specifications> mods_spcs_ids = 3;
+  // Optional plans of modifications.
+  repeated ExtendedPlan mods_plas = 4;
+}
+
+// Extended sobject of an extended layout.
+message ExtendedSobject {
+  // Identification that allows to distinguish it from other extended sobjects.
+  string id = 1;
+  // Identifications for the prototypes of the sobject.
+  repeated string ptys_ids = 2;
+  // Extended plans for the factories of the sobject.
+  repeated ExtendedPlan fcts_ext_plas = 3;
+  // Extended plan for the definition script of the sobject.
+  ExtendedPlan def_ext_pla = 4;
+  // Extended plans for the modifications of the sobject. These modifications will be applied after the
+  repeated ExtendedPlan mods_plas = 5;
+}
+
+// Extended port for an extended attraction.
+message ExtendedPort {
+  // Identification of the extended sobject which is the host of the extended port.
+  string ext_sbj_id = 1;
+  // Identifications of specifications of the port.
+  repeated string spcs_ids = 2;
+}
+
+// 🪢 Knot (knt/Po) for an extended attraction.
+// A knot is predefined
+message Knot {
+  // Identification that allows to distinguish it from other knots.
+  string id = 1;
+  // Identifications of specifications of the attracting (atn) sobject of the attraction.
+  repeated string atn_spcs_ids = 2;
+  // Identifications of specifications of the attracted (atd) sobject of the attraction.
+  repeated string atd_spcs_ids = 3;
+  // Optional transforms for the attraction plane.
+  repeated semio.geometry.v1.Transform trms = 4;
+}
+
+// Extended attraction for an extended layout.
+message ExtendedAttraction {
+  // Identification that allows to distinguish it from other attractions.
+  string id = 1;
+  // Plans for stitchings of attraction.
+  repeated ExtendedPlan stcs_ext_plas = 2;
+  // Identifications of the knots of the attraction.
+  repeated string knts_ids = 3;
+  // Port of the attracting sobject.
+  ExtendedPort atn_ext_por = 4;
+  // Port of the attracted sobject.
+  ExtendedPort atd_ext_por = 5;
+}
+
+// Extended layout is a graph of extended sobjects (nodes) and extended attractions (slightly directed edges).
+message ExtendedLayout {
+  // Sobjects (nodes) of the layout (graph).
+  repeated ExtendedSobject ext_sbjs = 1;
+  // Attractions (edges) of the layout (graph).
+  repeated ExtendedAttraction ext_atrs = 2;
+}
+
+// Extended model is oneof all data structures of the extended model namespace.
+message ExtendedModel {
+  oneof ext_mdl{
+    Gene gne = 1;
+    Specification spc = 2;
+    Specifications spcs = 3;
+    ExtendedPlan ext_pla = 4;
+    Prototype ptp = 5;
+    ExtendedSobject ext_sbj = 6;
+    ExtendedPort ext_pot = 7;
+    Knot knt = 8;
+    ExtendedAttraction ext_atr = 9;
+    ExtendedLayout ext_lyt = 10;
+  }
+}

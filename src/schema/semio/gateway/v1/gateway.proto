@@ -28,7 +28,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   };
 };
 
-// The gateway service is the gateway for all other apis of semio.
+// 🚪 Gateway (gw/GW) service is the main service to access all apis of semio.
 service GatewayService {
   //   option (google.api.default_host) = "localhost:50000";
 
