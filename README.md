@@ -25,7 +25,7 @@ semio is a framework that makes procedural modelling platforms interoperable. An
 
 <p align="center">
     <img src="docs/softwarequality/systemarchitecture/componentsdiagram.svg" alt="drawing" width="400"/>
-    <img src="docs/softwarequality/softwarearchitecture/metamodel.svg" alt="drawing" width="800"/>
+    <img src="docs/softwarequality/dataarchitecture/metamodel.svg" alt="drawing" width="800"/>
 </p>
 <!-- ![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
 ![Example](docs/softwarequality/softwarearchitecture/metamodel.svg) -->

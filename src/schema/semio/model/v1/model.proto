@@ -125,6 +125,22 @@ message Plan {
   repeated string spcs_ids = 3;
 }
 
+// 🤝 Decision (dcn,Dc) is an identifiable plan.
+message Decision {
+  // Identification that allows to distinguish it from other decisions.
+  string id = 1;
+  // Plan of decision
+  Plan pla = 2;
+}
+
+// 🎞️ Arrangement (arr,Ar) is a sequence of decisions.
+message Arrangement {
+  // Identification that allows to distinguish it from other arrangements.
+  string id = 1;
+  // Plan of arrangement
+  repeated Decision dcns = 2;
+}
+
 // ☐ Prototype (ptp/P) of a layout.
 // It has all semantical information for an object.
 message Prototype {

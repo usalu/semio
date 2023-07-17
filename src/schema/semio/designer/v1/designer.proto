@@ -33,7 +33,7 @@ message SynthesizeDesignRequest {
 // Response from computing a script.
 message SynthesizeDesignResponse {
   // Synthesized design
-  semio.model.v1.Design design = 1;
+  semio.model.v1.Design dsn = 1;
   // Map of identification of the attraction as a key and attraction plane as value.
   map<string,Plane> atrs_plns = 2;
 }

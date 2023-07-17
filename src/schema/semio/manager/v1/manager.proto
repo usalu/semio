@@ -10,35 +10,44 @@ import "model/v1/model.proto";
 import "extension/v1/extension.proto";
 
 // 🧑‍💼 Manager (mngr/Mr) service is responsible for calling extensions, storing/caching results while offering a cleaner interface to the server.
-service MngrSrv{
-  
-  // Request a representation from a definition
-  rpc RqtDefRep(RepDefRqt) returns (semio.model.v1.Rep);
-  // Request a representation from a definition
-  rpc RqtDefCon(ConDefRqt) returns (ConDefRsp);
-
-
+service ManagerService{
+  // Compute a generation.
+  rpc ComputeGeneration(semio.model.v1.Plan) returns (semio.model.v1.Gene);
+  // Compute a scheme.
+  rpc ComputeScheme(semio.model.v1.Plan) returns (semio.model.v1.Arrangement);
+  // Compute a transformation.
+  rpc ComputeTransformation(TransformationRequest) returns (semio.model.v1.Layout);
+  // Compute a stitching.
+  rpc ComputeStitching(semio.model.v1.Plan) returns (semio.model.v1.Knot);
+  // Compute a factory.
+  rpc ComputeFactory(PrototypeRequest) returns (semio.model.v1.Prototype);
+  // Compute a representation from a definition.
+  rpc ComputeDefinitionRepresentations(semio.model.v1.Plan) returns (ComputeDefinitionRepresentationsResponse);
+  // Compute a connection plane from a definition.
+  rpc ComputeDefinitionConnectionPlane(DefinitionConnectionPlaneRequest) returns (semio.geometry.v1.Plane);
+  // Compute a modification.
+  rpc ComputeModification(ModificationRequest) returns (semio.model.v1.Representation);
 
   // Register a service to the server.
-  rpc RegExt(RegisterExtensionRequest) returns (RegisterExtensionResponse);
+  rpc RegisterExtension(RegisterExtensionRequest) returns (RegisterExtensionResponse);
   // Get all registered extensions.
-  rpc GetRegExts(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
+  rpc GetRegisteredExtensions(GetRegisteredExtensionsRequest) returns (RegisteredExtensionsResponse);
 }
 
-message RepDefRqt{
-  semio.model.v1.Plan plan = 1;
-  semio.model.v1.Platform target_platform = 2;
+message ComputeDefinitionRepresentationsRequest{
+  semio.model.v1.Plan pln = 1;
+  // Optional languages. If script doesn't provide then converters are used.
+  // If the language can't be converted then an error is thrown.
+  repeated semio.model.v1.Language lngs = 2;
 }
 
-message ConnectElementRequest{
-  semio.model.v1.Sobject connected_sobject = 1;
-  semio.model.v1.Sobject connecting_sobject = 2;
-  semio.model.v1.Connection connection = 3;
+message ComputeDefinitionRepresentationsResponse{
+  repeated semio.model.v1.Representation reps = 1;
 }
 
-message ConnectElementResponse{
-  semio.model.v1.Pose connected_element_pose = 1;
-  semio.geometry.v1.Point connection_point = 2;
+message TransformationRequest{
+  semio.model.v1.Layout lyt = 1;
+  repeated semio.model.v1.Plan pln = 2;
 }
 
 message RegisterExtensionRequest{

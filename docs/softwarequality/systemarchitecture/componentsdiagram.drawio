@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2023-07-12T08:11:39.365Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="5HwYSbUYfzS0y4GN1g4X" version="21.6.1" type="device">
+<mxfile host="Electron" modified="2023-07-17T11:45:58.903Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="49Csu3KjKIpYXbgMUdU3" version="21.6.1" type="device">
   <diagram name="Page-1" id="DfaM-wiBBWeSXnydS-ET">
-    <mxGraphModel dx="568" dy="330" grid="1" gridSize="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="318" dy="312" grid="1" gridSize="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -351,10 +351,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="pyTdxpyBmTztNzusO8cf-302" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.946;entryY=1.017;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=none;" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-146" edge="1">
+        <mxCell id="pyTdxpyBmTztNzusO8cf-302" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.946;entryY=1.017;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;fillColor=none;" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-146" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="456" y="227" />
+              <mxPoint x="456" y="242" />
               <mxPoint x="456" y="70" />
             </Array>
           </mxGeometry>
@@ -384,9 +384,6 @@
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-308" value="&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;🗔:user interface&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;📕&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:library&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
           <mxGeometry x="306" y="367" width="101" height="39" as="geometry" />
-        </mxCell>
-        <mxCell id="pyTdxpyBmTztNzusO8cf-309" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🚉&lt;/font&gt;:platform&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🔌&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:adapter&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
-          <mxGeometry x="976" y="943" width="76" height="39" as="geometry" />
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-310" value="&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:server&lt;/font&gt;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;span style=&quot;border-color: var(--border-color); font-family: &amp;quot;Noto Emoji&amp;quot;;&quot;&gt;🤖&lt;/span&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:executable&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
           <mxGeometry x="105" y="367" width="89" height="39" as="geometry" />
@@ -432,6 +429,26 @@
         <mxCell id="ea1j2bkc8s0OYxYyL4-c-6" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
           <mxGeometry x="71" y="2" width="20" height="20" as="geometry">
             <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JB4bVpNzzD89UVgIc8EX-1" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.531;entryY=0.002;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=none;" edge="1" parent="1" source="ea1j2bkc8s0OYxYyL4-c-8" target="ea1j2bkc8s0OYxYyL4-c-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="258" y="105" as="sourcePoint" />
+            <mxPoint x="230" y="70" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="306" y="79" />
+              <mxPoint x="404" y="79" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JB4bVpNzzD89UVgIc8EX-2" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.884;entryY=1.003;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=none;" edge="1" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-110">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="307" y="92" as="sourcePoint" />
+            <mxPoint x="405" y="92" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="426" y="209" />
+              <mxPoint x="428" y="209" />
+            </Array>
           </mxGeometry>
         </mxCell>
       </root>
