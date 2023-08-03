@@ -11,8 +11,10 @@ import "model/v1/model.proto";
 service CalculatorService{
   rpc Hash(semio.model.v1.Model) returns (string);
   rpc Merge(MergeRequest) returns (semio.model.v1.Model);
-  rpc Expand(semio.model.v1.Model) returns (semio.model.v1.Model);
+  rpc Reduce(semio.model.v1.Model) returns (semio.model.v1.Model);
 }
+
+message Hash
 
 // Request to merge multiple models.
 message MergeRequest {
