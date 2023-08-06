@@ -491,3 +491,9 @@ message Computation{
   map <string,Values> in = 1;
   map <string,Values> out = 2;
 }
+
+// 📖 Dictionary (dic/Di) of computations.
+message Dictionary{
+  // Dictionary of computations where the URI:VERSION is the key and Computation is the value.
+  map <string,Computation> dic = 1;
+}

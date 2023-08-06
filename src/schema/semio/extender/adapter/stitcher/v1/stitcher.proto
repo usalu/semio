@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package semio.extender.adapter.stitcher.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/extender/adapter/stitcher/v1";
+option csharp_namespace = "Semio.Extender.Adapter.Stitcher.V1";
+
+import "model/v1/model.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// 🧪 Stitcher (stc/St) service is computating stitching scripts.
+service StitcherService {
+  // Stitch a knot from a stitching script.
+  rpc Stitch(semio.model.v1.Plan) returns (semio.model.v1.Knot){
+    option (google.api.http) = {
+      post: "/v1/stitch"
+      body: "*"
+    };
+  }
+}

@@ -1,17 +1,14 @@
 # TODO Update port numbering
-# Default port number for semio components: SEMIOMAJORVERSION [2] add 2 + COMPONENTTYPE [3]
-# SEMIOMAJORVERSION (concatenate major version number and add 2)) e.g. 2:0.6.80
-# COMPONENTTYPE: 0:Gateway,1:Assembler,2:Manager,999:GatewayProxy
+# Default port number for semio components: SEMIOMAJORVERSIONPLUSTWO [2] + COMPONENTTYPE [3]
+# SEMIOMAJORVERSIONPLUSTWO (concatenate major version number and add 2)) e.g. 1.6.80=>3
+# COMPONENTTYPE: 0:Server(GRPC),1:Server(REST)
 
-DEFAULT_GATEWAY_PORT = 2000
-# Port for the rest endpoint
-DEFAULT_GATEWAY_PROXY_PORT = 2999
-DEFAULT_ASSEMBLER_PORT = 2001
-DEFAULT_MANAGER_PORT = 2002
+DEFAULT_SERVER_GRPC_PORT = 2000
+DEFAULT_SERVER_REST_PORT = 2001
 
-GENERAL_EXTENSIONS = ['txt','json','xml']
+GENERAL_EXTENSIONS = ['json','xml','txt']
 
-# Default port number for extensions: 650 - OWNERID[3] + PLATFORMID[2]
+# Default port number for extenders: 650 - OWNERID[3] + PLATFORMID[2]
 # OWNERID:
 # 0:usalu,1:mrdoob,2:nortikin,
 # 150:ifcopenshell,151:cadquery,252:freecad,253:openscad

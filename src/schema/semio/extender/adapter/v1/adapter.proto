@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package semio.extender.adapter.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/extender/adapter/v1";
+option csharp_namespace = "Semio.Extender.Adapter.V1";
+
+import "model/v1/model.proto";
+
+// 🔌 Adapter (adp/Ap) service is adapting the computation of a script in a certain platform.
+service AdapterService {
+}
+
+// Adapting
+message Adapting{
+  // Platform that is adapted.
+  semio.model.v1.Platform ptf = 1;
+}

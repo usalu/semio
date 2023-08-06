@@ -1,8 +1,8 @@
 services:
 
-  gateway:
-    image: semio-gateway:base
-    container_name: semio-gateway
+  server:
+    image: semio-server:base
+    container_name: semio-server
     ports:
       # Service access port
       - 2000:2000
