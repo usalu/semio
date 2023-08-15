@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package semio.extender.adapter.generator.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/extender/adapter/generator/v1";
+option csharp_namespace = "Semio.Extender.Adapter.Generator.V1";
+
+import "model/v1/model.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// 🧪 Generator (gnr/Gr) service is computating generation scripts.
+service GeneratorService {
+  // Generate a gene from a generation script.
+  rpc Generate(semio.model.v1.Plan) returns (semio.model.v1.Gene){
+    option (google.api.http) = {
+      post: "/v1/generate"
+      body: "*"
+    };
+  }
+}

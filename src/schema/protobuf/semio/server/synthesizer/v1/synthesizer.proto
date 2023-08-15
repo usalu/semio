@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package semio.server.synthesizer.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/server/synthesizer/v1";
+option csharp_namespace = "Semio.Server.Synthesizer.V1";
+
+import "google/api/annotations.proto";
+import "geometry/v1/geometry.proto";
+import "model/v1/model.proto";
+
+
+// 🧑‍🔬 Synthesizer (syn/Sy) service is synthesizing a design.
+service SynthesizerService {
+  // Synthesize a design.
+  rpc Synthesize(SynthesizeRequest) returns (SynthesizeResponse){
+    option (google.api.http) = {
+      post: "/v1/synthesize"
+      body: "*"
+    };
+  }
+  // Extended synthesize a design.
+  rpc ExtendedSynthesizeDesign(ExtendedSynthesizeRequest) returns (SynthesizeResponse){
+    option (google.api.http) = {
+      post: "/v1/extendedsynthesize"
+      body: "*"
+    };
+  }
+}
+
+message SynthesizeRequest{
+  // Dictionary of all necissary computations for scripts.
+  semio.model.v1.Dictionary dic = 1;
+  // Layout to synthesize design from.
+  semio.model.v1.Layout lyt = 2;
+}
+
+// Request for an extended design synthesis.
+message ExtendedSynthesizeRequest {
+  // Dictionary of all necissary computations for scripts.
+  semio.model.v1.Dictionary dic = 1;
+  // Optional initial extended layout
+  semio.model.v1.ExtendedLayout ini_lyt = 2;
+  // Optional extended plan of the scheme.
+  semio.model.v1.ExtendedPlan sme_pla = 3;
+  // Optional specifications for the design
+  repeated semio.model.v1.Specification spcs = 4;
+  // Optional prototypes for the design
+  repeated semio.model.v1.Prototype ptps = 5;
+  // Optional knots for the design
+  repeated semio.model.v1.Knot knts = 6;
+  // Optional genes for the design
+  repeated semio.model.v1.Gene gnes = 7;
+}
+
+// Response from computing a script.
+message SynthesizeResponse {
+  // Synthesized design
+  semio.model.v1.Design dsn = 1;
+  // Map of identification of the attraction as a key and attraction plane as value.
+  map<string,semio.geometry.v1.Plane> atrs_plns = 2;
+}

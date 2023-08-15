@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package semio.scripter.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/scripter/v1";
+option csharp_namespace = "Semio.Scripter.V1";
+
+import "model/v1/model.proto";
+import "google/api/annotations.proto";
+
+// 📜 Scripter (scr/S) service is computing scripts.
+service ScripterService {
+    rpc Compute(ComputeRequest) returns (semio.model.v1.Namevaluespairs){
+        option (google.api.http) = {
+            post: "/v1/compute"
+            body: "*"
+          };
+    }
+}
+
+enum ScriptType{
+    SCRIPTTYPE_DEFINITION = 0;
+    SCRIPTTYPE_MODIFICATION = 1;
+    SCRIPTTYPE_TRANSFORATION = 2;
+    SCRIPTTYPE_SCHEMING = 3;
+    SCRIPTTYPE_GENERATION = 4;
+    SCRIPTTYPE_STITCHING = 5;
+    SCRIPTTYPE_FORMATION = 6;
+}
+
+// Request for computing a script.
+message ComputeRequest{
+    // Name of the script.
+    string name = 1;
+    // Type of the script.
+    ScriptType type = 2;
+    // Optional version of the script.
+    string ver = 3;
+    // Optional platform of the script.
+    semio.model.v1.Platform ptf = 4;
+    // Optional parameters for the script.
+    semio.model.v1.Namevaluespairs prms = 5;
+}

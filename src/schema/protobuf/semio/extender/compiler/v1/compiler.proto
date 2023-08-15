@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package semio.extender.compiler.v1;
+
+option go_package = "github.com/usalu/semio/src/packages/go/extender/compiler/v1";
+option csharp_namespace = "Semio.Extender.Compiler.V1";
+
+import "google/api/annotations.proto";
+import "model/v1/model.proto";
+
+//  Compiler (adp/Ap) service is compiling a design with typs from the same language into a representation of the same language.
+service CompilerService {
+  // Compile a design with typs from the same language into a representation of the same language.
+  rpc Compile(semio.model.v1.Design) returns (semio.model.v1.Representation){
+    option (google.api.http) = {
+      post: "/v1/compile"
+      body: "*"
+    };
+  }
+}
+
+// Compiling
+message Compiling{
+  // Language that is compiled.
+  semio.model.v1.Language lng = 1;
+}
