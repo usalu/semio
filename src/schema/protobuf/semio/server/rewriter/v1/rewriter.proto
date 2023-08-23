@@ -23,6 +23,7 @@ enum RuleType {
     RULETYPE_STRICT = 1;
 }
 
+<<<<<<< Updated upstream:src/schema/protobuf/semio/server/rewriter/v1/rewriter.proto
 // Rewrite rule.
 message Rule {
   // Left hand side of rewrite rule.
@@ -38,4 +39,17 @@ message Rule {
       // Number of matches
       int32 num_mtchs = 5;
   }
+=======
+message Transformation {
+    semio.model.v1.Layout lhs = 1;
+    semio.model.v1.Layout rhs = 2;
+    semio.model.v1.RuleType rt = 3;
+    // Define the way the transformation should be applied.
+    oneof app{
+        // Greedy will match as often as possible. This is dangerous because it can be stuck in recursion.
+        bool gdy = 4;
+        // Number of matches
+        int32 num_mtchs = 5;
+    }
+>>>>>>> Stashed changes:src/schema/semio/transformer/v1/transformer.proto
 }

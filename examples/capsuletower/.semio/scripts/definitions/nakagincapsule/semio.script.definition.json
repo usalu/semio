@@ -1,0 +1,29 @@
+{
+    "name":"nakagin capsule",
+    "description":"A capsule from the nakagin capsule tower.",
+    "parameters":{
+        "length":{
+            "name":"Length",
+            "abbreviation":"L",
+            "type":"decimal",
+            "unit":"m",
+            "default":4.2
+        },
+        "width":{
+            "name":"Width",
+            "abbreviation":"W",
+            "type":"decimal",
+            "unit":"m",
+            "default":2.7
+        }
+    },
+    "connection-parameters":[
+        {
+            "name":"Gap",
+            "abbreviation":"G",
+            "type":"decimal",
+            "unit":"cm",
+            "default":20
+        }
+    ]
+}

@@ -15,4 +15,19 @@ service AdapterService {
 message Adapting{
   // Platform that is adapted.
   semio.model.v1.Platform ptf = 1;
+<<<<<<< Updated upstream:src/schema/protobuf/semio/extender/adapter/v1/adapter.proto
+=======
+}
+
+// Request for computing a script.
+message ComputeScriptRequest {
+  // Parameters for the computation.
+  map <string,semio.model.v1.Values> prms = 1;
+}
+
+// Response from computing a script.
+message ComputeScriptResponse {
+  // Name values pairs from the computation.
+  map <string,semio.model.v1.Values> nvps = 1;
+>>>>>>> Stashed changes:src/schema/semio/extension/adapter/v1/adapter.proto
 }

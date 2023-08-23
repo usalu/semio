@@ -25,6 +25,10 @@ message TranslateRepresentationRequest {
   semio.model.v1.Representation representation = 1;
   // Target plane of representation.
   semio.geometry.v1.Plane trg_pln = 2;
+<<<<<<< Updated upstream:src/schema/protobuf/semio/extender/translator/v1/translator.proto
   // Optional source plane of representation. Otherwise world xy plane will be assumed.
+=======
+  // Optional source pose of representation.
+>>>>>>> Stashed changes:src/schema/semio/extension/translator/v1/translator.proto
   semio.geometry.v1.Plane src_pln = 3;
 }
