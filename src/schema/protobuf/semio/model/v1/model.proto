@@ -391,7 +391,7 @@ message Specification {
   // Optional identifications of genes.
   repeated string gnes_ids = 3;
   // Optional parameters for the script.
- Namevaluespairs prms = 4;
+  Namevaluespairs prms = 4;
 }
 
 // A list of identifications of specifications.

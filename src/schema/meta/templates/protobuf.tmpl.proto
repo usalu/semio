@@ -1,0 +1,4 @@
+{{ with .Artifact.Description }}/*
+{{.Artifact.Description}}
+*/
+{{ end }}{{ if .Version = 3 }}syntax = "proto3";

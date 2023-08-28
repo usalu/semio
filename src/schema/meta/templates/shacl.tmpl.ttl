@@ -1,0 +1,29 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix ms: <http://github.com/usalu/semio/raw/main/src/schema/linkeddata/metasemio.ttl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix semio: <http://github.com/usalu/semio/raw/main/src/schema/linkeddata/semio.ttl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+<http://github.com/usalu/semio/raw/main/src/schema/linkeddata/semio.ttl>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "The semio ontology is the application file format of semio (http://github.com/usalu/semio)" ;
+  ms:version "{{.Version}}"
+.
+
+{{ range .Classes }}
+semio:{{.Name}}
+  rdf:type rdfs:Class ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "{{.Name}}" ;
+  rdfs:comment "{{.Description}}" ;
+  ms:abbreviation "{{.Abbreviation}}" ;
+  ms:logogram "{{.Logogram}}" ;
+  ms:symbol "{{.Symbol}}" ;
+  ms:package semio:{{.Package}} ;
+  rdfs:subClassOf {{if .Parent}}{{.Parent}}{{else}}rdfs:Resource{{end}} ;
+  {{ range .Properties }}
+    sh:path {{.LowercaseFirstLetter .Name}}
+  {{ end }}
+.
+{{ end }}
