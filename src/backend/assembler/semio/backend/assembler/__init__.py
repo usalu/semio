@@ -1,1 +1,0 @@
-from .semioassembler import main

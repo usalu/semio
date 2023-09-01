@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "semio"
+version = "0.2.0"
+description = ""
+authors = ["Ueli Saluz <usaluz@posteo.de>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyshacl = "^0.23.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

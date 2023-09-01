@@ -1,0 +1,91 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix ms: <http://github.com/usalu/semio/raw/main/src/schema/linkeddata/metasemio.ttl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix se: <http://github.com/usalu/semio/raw/main/src/schema/linkeddata/semio.ttl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+<http://github.com/usalu/semio/raw/main/src/schema/linkeddata/semio.ttl>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "The semio ontology is the schema for the application file format of semio.\nYou can find out more about semio on: http://github.com/usalu/semio" ;
+  ms:version "1"
+.
+se:Repository
+  rdf:type rdfs:Class ;
+  rdfs:subClassOf rdfs:Resource ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Repository" ;
+  rdfs:comment "🗃️ Repository (repo/R) is a container for Artifacts." ;
+  ms:abbreviation "repo" ;
+  ms:logogram "R" ;
+  ms:symbol "🗃️" ;
+  ms:package se:Model ;
+  sh:property [
+    sh:path se:uniqueresourcelocator ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:order 0 ;
+  ]
+  sh:property [
+    sh:path se:layouts ;
+    sh:class se:Layout ;
+    sh:order 1 ;
+  ]
+.
+se:Artifact
+  rdf:type rdfs:Class ;
+  rdfs:subClassOf rdfs:Resource ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Artifact" ;
+  rdfs:comment "📝 Artifact (art/A) is anything that is produced by human or a computer." ;
+  ms:abbreviation "art" ;
+  ms:logogram "A" ;
+  ms:symbol "📝" ;
+  ms:package se:Model ;
+.
+se:Delineation
+  rdf:type rdfs:Class ;
+  rdfs:subClassOf se:Characterization ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Delineation" ;
+  rdfs:comment "🖋️ Delineation (dln/Dl) is anything that decouples something complex." ;
+  ms:abbreviation "dln" ;
+  ms:logogram "Dl" ;
+  ms:symbol "🖋️" ;
+  ms:package se:Model ;
+  sh:property [
+    sh:path se:symbol ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:order 0 ;
+  ]
+.
+se:Layout
+  rdf:type rdfs:Class ;
+  rdfs:subClassOf se:Delineation ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Layout" ;
+  rdfs:comment "🖧 Layout (lyt/L) is a graph of sobjects (nodes) and attractions (slightly directed edges)." ;
+  ms:abbreviation "lyt" ;
+  ms:logogram "L" ;
+  ms:symbol "🖧" ;
+  ms:package se:Model ;
+  sh:property [
+    sh:path se:sobjects ;
+    sh:class se:Sobject ;
+    sh:minCount 1 ;
+    sh:order 0 ;
+  ]
+.
+se:Sobject
+  rdf:type rdfs:Class ;
+  rdfs:subClassOf se:Delineation ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Sobject" ;
+  rdfs:comment "🛈 Sobject (sbj/S) is the semantic description of an object." ;
+  ms:abbreviation "sbj" ;
+  ms:logogram "S" ;
+  ms:symbol "🛈" ;
+  ms:package se:Model ;
+.

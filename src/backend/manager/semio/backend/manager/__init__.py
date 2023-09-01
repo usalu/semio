@@ -1,1 +1,0 @@
-from .semiomanager import main

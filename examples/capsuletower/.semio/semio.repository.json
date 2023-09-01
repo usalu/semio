@@ -1,9 +1,0 @@
-{
-    "semio":{
-        "version":"0.2.0"
-    },
-    "name":"capsule tower",
-    "description":"Everything to make a tower out of capsules.",
-    "authors":["Ueli Saluz"],
-    "version":"1.0.0"
-}
