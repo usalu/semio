@@ -3,12 +3,13 @@ from numbers import Number
 from dataclasses import dataclass, field
 from asyncio import gather
 from importlib import resources as impresources
-from . import schema
+from ..schema import linkeddata
 from rdflib import Graph, URIRef, Namespace, Literal
 from rdflib.namespace import RDF
 from pyshacl import validate as psvalidate
+from semio.errors import InvalidKindException
 
-semioAsset = (impresources.files(assets) / 'semio.ttl')
+semioAsset = (impresources.files(linkeddata) / 'semio.ttl')
 with semioAsset.open("rt", encoding="utf-8") as f:
     semio = f.read()
 SE = Namespace("http://github.com/usalu/semio/schema/linkeddata/semio.ttl#")
@@ -33,11 +34,14 @@ class Artifact():
             f""
         )
 
-        (conforms, validationGraph, text) = await artifact.validate(minOneShape)
+        return await artifact.validate(minOneShape)
         
 
     async def validate(self, shapes = None):
-        """Perform validation on artifact."""
+        """Perform validation on artifact. On failure, a (specific) InvalidArtifactException is thrown. On success, self is returned."""
+        actualKind = self._graph.value(self._uri,RDF.type).fragment()
+        if not actualKind == self._kind:
+            raise InvalidKindException(actualKind)
 
         if shapes:
             if not isinstance(shapes,list):
@@ -53,7 +57,8 @@ class Artifact():
             validationGraph += validationGraphShape
             text = text + "\n" + textShape
 
-        return (conforms, validationGraph, text)
+        return self
+
     
     def __getattr__(self, name: str) -> Any:
         return self._graph.value(self._uri,SE[name])

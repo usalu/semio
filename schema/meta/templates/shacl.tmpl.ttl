@@ -6,14 +6,15 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 <http://github.com/usalu/semio/raw/main/src/schema/linkeddata/semio.ttl>
-  rdf:type owl:Ontology ;
-  owl:versionInfo "The semio ontology is the schema for the application file format of semio.\nYou can find out more about semio on: http://github.com/usalu/semio" ;
+  a owl:Ontology ;
+  rdfs:label "{{ .Characterization.Name }}" ;
+  rdfs:comment "{{ .Characterization.Summary }}" ;
   ms:version "{{ .Version }}"
 .{{ range $i, $p := .Packages }}{{ range .Classes }}
 se:{{ .Characterization.Name }}
-  rdf:type rdfs:Class ;
+  a rdfs:Class ;
+  a sh:NodeShape ;
   rdfs:subClassOf {{if .Parent}}se:{{.Parent}}{{else}}rdfs:Resource{{end}} ;
-  rdf:type sh:NodeShape ;
   rdfs:label "{{ .Characterization.Name }}" ;
   rdfs:comment "{{ .Characterization.Summary }}" ;
   ms:abbreviation "{{ .Characterization.Abbreviation }}" ;
