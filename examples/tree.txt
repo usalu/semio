@@ -1,0 +1,34 @@
+Folder PATH listing for volume ???
+Volume serial number is F62B-311D
+C:.
+|   tree.txt
+|   
++---metabolism
+|   |   metabolism.semio.gh
+|   |   
+|   +---.semio
+|   |   |   archive.ttl
+|   |   |   
+|   |   +---designs
+|   |   |       ct.ttl
+|   |   |       
+|   |   \---types
+|   |           c.ttl
+|   |           cm.ttl
+|   |           
+|   \---scripts
+|       |   simplelayout.gh
+|       |   smallcapsuletower.gh
+|       |   
+|       \---prototypes
+|               base.gh
+|               bouleenewtoncapsule.gh
+|               bridge.gh
+|               capital.gh
+|               capsule.gh
+|               shaft.gh
+|               
+\---nakagincapsuletower
+    |   nakagincapsuletower.semio.gh
+    |   
+    \---.semio
