@@ -1,7 +1,7 @@
 <p align="center">
-    <img src="resources/logo/logo-horizontal.svg" alt="drawing" width="400"/>
+    <img src="logo/logo-horizontal.svg" alt="drawing" width="400"/>
 </p>
-<!-- ![Logo](resources/logo/logo.svg) -->
+<!-- ![Logo](logo/logo.svg) -->
 
 You want to design the next 🏛️🏘️🏢🏭🏫🏨⛪🕌? But 📐, 🔢 and 🗣️ takes all your time? Then try to capture the 🧬 and 💉 it into a new design and let semio 🖧,🖩,✏️.
 
