@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "semio"
+version = "0.1.0"
+description = "A frozen version of windows binaries for semio (v0.1.0). The only purpose of poetry here is to create a reproducible venv for pyinstaller."
+authors = ["Ueli Saluz <semio-community@posteo.org>"]
+repository = "https://github.com/usalu/semio"
+keywords = ["semio", "grasshopper", "procedural modelling", "generative design", "prototypes", "architecture", "design"]
+license = "AGPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.10"
+multipledispatch = "1.0.0"
+numpy = "1.26.0"
+grpcio = "1.58.0"
+protobuf = "4.24.3"
+grpcio-reflection = "1.58.0"
+pydantic = "2.3.0"
+mathutils = "3.3.0"
+networkx = "3.1"
+compute-rhino3d = "0.12.2"
+rhino3dm = "7.15.0"
+pyinstaller = "5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
