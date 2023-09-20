@@ -17,12 +17,13 @@ namespace Semio.UI.Grasshopper.Components.Server
     public class LayoutDesignComponent : GH_Component
     {
         private static string _route = "/v1/layoutdesign";
+        
         public LayoutDesignComponent() : base("Layout Design", "Layout Design", "Lay out a design.", "Semio", "Server")
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item,"localhost:2999");
             pManager.AddParameter(new LayoutParam());
             pManager.AddParameter(new PlatformParam());
             pManager[2].Optional = true;

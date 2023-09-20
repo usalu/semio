@@ -1,5 +1,3 @@
-local
-
 #--------------------------------------TEX--------------------------------------
 
 ## Core latex/pdflatex auxiliary files:
@@ -318,8 +316,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-# dist folder because poetry doesn't support relative paths
-#dist/
+dist/
 downloads/
 eggs/
 .eggs/
@@ -1027,3 +1024,16 @@ FodyWeavers.xsd
 
 # Go workspace file
 go.work
+
+#--------------------------------------EXCEPTIONS--------------------------------------
+
+local
+
+# dist folder because poetry doesn't support relative paths
+!src/packages/python/dist/*
+
+# Frozen restproxy binary for backend bundle
+!src/bundle/restproxy.exe
+
+# Frozen binaries for Grasshopper UI bundle
+!src/uis/grasshopper/semio/*
