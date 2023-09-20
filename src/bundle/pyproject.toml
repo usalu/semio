@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "semio"
-version = "0.1.0"
-description = "A frozen version of windows binaries for semio (v0.1.0). The only purpose of poetry here is to create a reproducible venv for pyinstaller."
+version = "1.0.0"
+description = "A frozen version of windows binaries for semio (1.0.0). The only purpose of poetry here is to create a reproducible venv for pyinstaller."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 repository = "https://github.com/usalu/semio"
 keywords = ["semio", "grasshopper", "procedural modelling", "generative design", "prototypes", "architecture", "design"]
