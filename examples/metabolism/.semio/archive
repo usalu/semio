@@ -1,17 +1,136 @@
 # @base <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
 @prefix mba: <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
+# <.semio/properties/>
+@prefix mbap: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/properties/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <http://schema.org/> .
 @prefix se: <https://github.com/usalu/semio/releases/download/v2/semio.ttl#> .
-# <.semio/types/bc#> .
-@prefix bct: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bc#> .
-# <.semio/types/bcm#> .
-@prefix bcmt: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bcm#> .
-# <.semio/designs/ct#> .
-@prefix ctd: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/designs/ct#> .
-mba:mb a se:Archive ;
-    rdfs:label "Metabolism" ;
-    se:type bct:bc, 
-        bcmt:bcm ;
-    se:design ctd:ct
+@prefix sp: <https://github.com/specklesystems/speckle-sharp/releases/tag/2.11.1#> .
+mba:archive
+    a se:Archive ;
+    se:name "Metabolism" ;
+    se:explanation "A one person apartment box capsule." ;
+    se:type mba:bc, 
+        mba:bcm ;
+    se:design mba:ct
+.
+mba:type_qcs
+    a se:Type ;
+    se:id "qcs" ;
+    se:name "Quadratic Capsule Shaft" ;
+    se:explanation "A quadratic shaft with a central development (elevator at the core and stairs around it) to hold capsules" ;
+    se:symbol "🛗" ;
+    se:property [
+        se:name "Length" ;
+        se:value 6 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Width" ;
+        se:value 6 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Height" ;
+        se:value 2.7 ;
+        se:unit "m" ;
+        se:context "Floor" ;
+    ] ;
+    se:property [
+        se:name "Volume" ;
+        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        a sp:Box ;
+        se:unit "m" ;
+    ] ;
+.
+mba:type_bc
+    a se:Type ;
+    se:id "bc" ;
+    se:name "Box Capsule" ;
+    se:explanation "A one person apartment box capsule." ;
+    se:symbol "📦" ;
+    se:property [
+        se:name "Length" ;
+        se:value 4.2 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Width" ;
+        se:value 2.5 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Height" ;
+        se:value 2.7 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Volume" ;
+        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        a sp:Box ;
+        se:unit "m" ;
+    ] ;
+.
+mba:type_ccp
+    a se:Type ;
+    se:id "ccp" ;
+    se:name "Cut capital" ;
+    se:explanation "A cut box with three different heights." ;
+    se:symbol "🎓" ;
+    se:property [
+        se:name "Length" ;
+        se:value 6 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Width" ;
+        se:value 2.5 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Height" ;
+        se:value 2.7 ;
+        se:unit "m" ;
+    ] ;
+    se:property [
+        se:name "Volume" ;
+        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        a sp:Box ;
+        se:unit "m" ;
+    ] ;
+.
+mba:thing_ct_qcs
+    a se:Thing ;
+    se:id "qcs" ;
+    se:explanation "The main shaft to attach capsules." ;
+    se:type mba:type_qcs ;
+.
+mba:thing_ct_f1nc1
+    a se:Thing ;
+    se:id "f1nc1" ;
+    se:symbol "📦{_1,1}^n" ;
+    se:explanation "First capsule on floor 1 one the north fassade" ;
+    se:type mba:type_bc ;
+.
+mba:thing_ct_cp
+    a se:Thing ;
+    se:id "cp" ;
+    se:explanation "The main (figurative) capital of the tower." ;
+    se:type mba:type_bc ;
+.
+mba:design_ct
+    a se:Design,
+        se:Artifact ;
+    se:id "ct"
+    se:name "Capsule Tower" ;
+    se:explanation "A ten storey capsule tower that has a shaft with single room capsules attached to it and with a cut off capital." ;
+    se:symbol "🗼" ;
+    se:thing
+
+    se:attraction
+        [
+            se:attracting 
+        ] ;
 .
