@@ -73,6 +73,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_clearcache {
+            get {
+                object obj = ResourceManager.GetObject("icon_clearcache", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_connectable {
             get {
                 object obj = ResourceManager.GetObject("icon_connectable", resourceCulture);
@@ -153,6 +163,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_construct_link {
+            get {
+                object obj = ResourceManager.GetObject("icon_construct_link", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_construct_modification {
             get {
                 object obj = ResourceManager.GetObject("icon_construct_modification", resourceCulture);
@@ -173,6 +193,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_construct_plan {
+            get {
+                object obj = ResourceManager.GetObject("icon_construct_plan", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_construct_pose {
             get {
                 object obj = ResourceManager.GetObject("icon_construct_pose", resourceCulture);
@@ -183,9 +213,29 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_construct_prototype {
+            get {
+                object obj = ResourceManager.GetObject("icon_construct_prototype", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_construct_representation {
             get {
                 object obj = ResourceManager.GetObject("icon_construct_representation", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_construct_scope {
+            get {
+                object obj = ResourceManager.GetObject("icon_construct_scope", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -263,6 +313,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_deconstruct_link {
+            get {
+                object obj = ResourceManager.GetObject("icon_deconstruct_link", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_deconstruct_modification {
             get {
                 object obj = ResourceManager.GetObject("icon_deconstruct_modification", resourceCulture);
@@ -283,9 +343,29 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_deconstruct_plan {
+            get {
+                object obj = ResourceManager.GetObject("icon_deconstruct_plan", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_deconstruct_pose {
             get {
                 object obj = ResourceManager.GetObject("icon_deconstruct_pose", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_deconstruct_prototype {
+            get {
+                object obj = ResourceManager.GetObject("icon_deconstruct_prototype", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -303,9 +383,29 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_deconstruct_scope {
+            get {
+                object obj = ResourceManager.GetObject("icon_deconstruct_scope", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_deconstruct_sobject {
             get {
                 object obj = ResourceManager.GetObject("icon_deconstruct_sobject", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_deserialize {
+            get {
+                object obj = ResourceManager.GetObject("icon_deserialize", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -326,6 +426,26 @@ namespace Semio.UI.Grasshopper.Properties {
         internal static System.Drawing.Bitmap icon_element {
             get {
                 object obj = ResourceManager.GetObject("icon_element", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_encoding {
+            get {
+                object obj = ResourceManager.GetObject("icon_encoding", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_filetype {
+            get {
+                object obj = ResourceManager.GetObject("icon_filetype", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -363,6 +483,16 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_link {
+            get {
+                object obj = ResourceManager.GetObject("icon_link", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_modification {
             get {
                 object obj = ResourceManager.GetObject("icon_modification", resourceCulture);
@@ -383,9 +513,49 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_plan {
+            get {
+                object obj = ResourceManager.GetObject("icon_plan", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_platform {
+            get {
+                object obj = ResourceManager.GetObject("icon_platform", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_pose {
             get {
                 object obj = ResourceManager.GetObject("icon_pose", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_prepare {
+            get {
+                object obj = ResourceManager.GetObject("icon_prepare", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_prototype {
+            get {
+                object obj = ResourceManager.GetObject("icon_prototype", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -403,9 +573,39 @@ namespace Semio.UI.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_scope {
+            get {
+                object obj = ResourceManager.GetObject("icon_scope", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_semio {
             get {
                 object obj = ResourceManager.GetObject("icon_semio", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_serialize {
+            get {
+                object obj = ResourceManager.GetObject("icon_serialize", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_show_design {
+            get {
+                object obj = ResourceManager.GetObject("icon_show_design", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -419,202 +619,13 @@ namespace Semio.UI.Grasshopper.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_scope {
-            get {
-                object obj = ResourceManager.GetObject("icon_scope", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_scope {
-            get {
-                object obj = ResourceManager.GetObject("icon_construct_scope", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_scope {
-            get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_scope", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_plan {
-            get {
-                object obj = ResourceManager.GetObject("icon_plan", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_plan {
-            get {
-                object obj = ResourceManager.GetObject("icon_construct_plan", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_plan {
-            get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_plan", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_link {
-            get {
-                object obj = ResourceManager.GetObject("icon_link", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_link {
-            get {
-                object obj = ResourceManager.GetObject("icon_construct_link", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_link {
-            get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_link", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_prototype {
-            get {
-                object obj = ResourceManager.GetObject("icon_prototype", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_construct_prototype {
-            get {
-                object obj = ResourceManager.GetObject("icon_construct_prototype", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_deconstruct_prototype {
-            get {
-                object obj = ResourceManager.GetObject("icon_deconstruct_prototype", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_filetype {
-            get {
-                object obj = ResourceManager.GetObject("icon_filetype", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_encoding {
-            get {
-                object obj = ResourceManager.GetObject("icon_encoding", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_platform {
-            get {
-                object obj = ResourceManager.GetObject("icon_platform", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap icon_value {
             get {
                 object obj = ResourceManager.GetObject("icon_value", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_show_design {
-            get {
-                object obj = ResourceManager.GetObject("icon_show_design", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_serialize {
-            get {
-                object obj = ResourceManager.GetObject("icon_serialize", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_deserialize {
-            get {
-                object obj = ResourceManager.GetObject("icon_deserialize", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap icon_prepare {
-            get {
-                object obj = ResourceManager.GetObject("icon_prepare", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

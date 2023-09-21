@@ -6,7 +6,6 @@ authors = ["Ueli Saluz <semio-community@posteo.org>"]
 repository = "https://github.com/usalu/semio"
 keywords = ["semio", "grasshopper", "procedural modelling", "generative design", "prototypes", "architecture", "design"]
 license = "AGPL-3.0-or-later"
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "3.10.10"

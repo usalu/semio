@@ -286,4 +286,7 @@
   <data name="icon_prepare" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\resources\icons\components\prepare\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="icon_clearcache" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

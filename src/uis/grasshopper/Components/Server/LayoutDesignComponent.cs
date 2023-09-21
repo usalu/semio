@@ -35,6 +35,9 @@ namespace Semio.UI.Grasshopper.Components.Server
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            if (!Backend.IsRunning)
+                Backend.start();
+
             string url = "";
             if (!DA.GetData(0, ref url)) return;
 
