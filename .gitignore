@@ -1025,6 +1025,17 @@ FodyWeavers.xsd
 # Go workspace file
 go.work
 
+#--------------------------------------PROTOBUF--------------------------------------
+
+# Python
+*_pb2*
+# Go
+*.pb.go
+# Node
+src/packages/node/*
+!src/packages/package*
+!src/packages/constants*
+
 #--------------------------------------EXCEPTIONS--------------------------------------
 
 local
