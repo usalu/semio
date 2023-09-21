@@ -1,0 +1,36 @@
+# @base <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bc#> .
+@prefix mbap: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/properties/> .
+@prefix bct: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bc#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix se: <https://github.com/usalu/semio/releases/download/v2/semio.ttl#> .
+@prefix sp: <https://github.com/specklesystems/speckle-sharp/releases/tag/2.11.1#> .
+bct:bc a se:Artifact,
+        se:Type ;
+    rdf:ID "bc" ;
+    rdfs:label "Box Capsule" ;
+    rdfs:comment "A one person apartment box capsule." ;
+    se:symbol "📦" ;
+    rdf:Property [
+        rdfs:label "Length" ;
+        rdf:value 4.2 ;
+        se:unit "m" ;
+    ] ;
+    rdf:Property [
+        rdfs:label "Width" ;
+        rdf:value 2.5 ;
+        se:unit "m" ;
+    ] ;
+    rdf:Property [
+        rdfs:label "Height" ;
+        rdf:value 2.7 ;
+        se:unit "m" ;
+    ] ;
+    rdf:Property [
+        rdfs:label "Volume" ;
+        rdf:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        a sp:Box ;
+        se:unit "m" ;
+    ] ;
+.

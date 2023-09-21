@@ -1,0 +1,17 @@
+# @base <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
+@prefix mba: <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix se: <https://github.com/usalu/semio/releases/download/v2/semio.ttl#> .
+# <.semio/types/bc#> .
+@prefix bct: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bc#> .
+# <.semio/types/bcm#> .
+@prefix bcmt: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/types/bcm#> .
+# <.semio/designs/ct#> .
+@prefix ctd: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/designs/ct#> .
+mba:mb a se:Archive ;
+    rdfs:label "Metabolism" ;
+    se:type bct:bc, 
+        bcmt:bcm ;
+    se:design ctd:ct
+.
