@@ -25,7 +25,7 @@ namespace Semio.UI.Grasshopper.Components.Server
         }
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddParameter(new DesignParam());
+            
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
