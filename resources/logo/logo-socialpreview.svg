@@ -7,7 +7,7 @@
    version="1.1"
    id="svg106"
    sodipodi:docname="logo-socialpreview.svg"
-   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
    inkscape:export-filename="logosocialpreview.jpg"
    inkscape:export-xdpi="72"
    inkscape:export-ydpi="72"
@@ -27,24 +27,18 @@
    inkscape:deskcolor="#505050"
    inkscape:document-units="pt"
    showgrid="false"
-   inkscape:zoom="0.18040518"
-   inkscape:cx="1141.8741"
-   inkscape:cy="296.55468"
-   inkscape:window-width="1440"
-   inkscape:window-height="890"
+   inkscape:zoom="1.0205258"
+   inkscape:cx="1304.2296"
+   inkscape:cy="574.2138"
+   inkscape:window-width="1920"
+   inkscape:window-height="1010"
    inkscape:window-x="-6"
-   inkscape:window-y="-6"
+   inkscape:window-y="1073"
    inkscape:window-maximized="1"
-   inkscape:current-layer="layer5"
+   inkscape:current-layer="g8736"
    showborder="false"
    borderlayer="false" />
-
-
-
-
-
- --&gt;
-  <g
+&#10;&#10;&#10;&#10;&#10;&#10; --&gt;&#10;  <g
    inkscape:groupmode="layer"
    id="layer2"
    inkscape:label="logogram"
@@ -177,29 +171,26 @@
          style="fill:#000000;fill-opacity:1"
          transform="translate(1.4764266e-6)" />
       <path
-         d="M 387.69,346.88 V 244.86 l -20.4,20.4 v 81.62 z"
+         d="M 367.29,346.88 V 244.86 l 20.4,20.4 v 81.62 z"
          stroke="#000000"
          stroke-width="0.24"
          fill-opacity="0"
          id="path68"
-         style="fill:#000000;fill-opacity:1"
-         transform="translate(1.4764266e-6)" />
+         style="fill:#000000;fill-opacity:1" />
       <path
-         d="m 326.48,267.3 -0.01,79.58 20.41,-20.4 V 267.3 Z"
+         d="m 346.86997,267.3 0.01,79.58 -20.41,-20.4 V 267.3 Z"
          stroke="#000000"
          stroke-width="0.24"
          fill-opacity="0"
          id="path70"
-         style="fill:#000000;fill-opacity:1"
-         transform="translate(1.4764266e-6)" />
+         style="fill:#000000;fill-opacity:1" />
       <path
-         d="m 285.66,267.3 v 79.58 l 20.41,-20.4 V 267.3 Z"
+         d="m 306.07,267.3 v 79.58 l -20.41,-20.4 V 267.3 Z"
          stroke="#000000"
          stroke-width="0.24"
          fill-opacity="0"
          id="path72"
-         style="fill:#000000;fill-opacity:1"
-         transform="translate(1.4764266e-6)" />
+         style="fill:#000000;fill-opacity:1" />
       <path
          d="M 244.86,346.88 V 246.3 l 20.4,20.41 v 80.17 z"
          stroke="#000000"
@@ -294,7 +285,7 @@
          stroke-width="0.24"
          fill-opacity="0"
          id="path100"
-         style="fill:#fa9500;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#fa9500;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
          transform="translate(1.4764266e-6)" />
       <path
          d="m -40.876622,392.55577 0.06,-201.22 -40.81,40.8 -0.06,160.42 z"
@@ -302,7 +293,7 @@
          stroke-width="0.24"
          fill-opacity="0"
          id="path102"
-         style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ff344f;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
          transform="translate(1.4764266e-6)" />
       <path
          d="m -244.92662,188.50577 h 201.169998 l -40.81,40.81 H -244.92662 Z"
@@ -310,7 +301,7 @@
          stroke-width="0.24"
          fill-opacity="0"
          id="path104"
-         style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ff344f;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
          transform="translate(1.4764266e-6)" />
       <path
          d="m -163.30662,392.55577 40.81,-40.81 h 36.729998 v 40.81 z"
@@ -318,14 +309,14 @@
          stroke-width="0.24"
          fill-opacity="0"
          id="path96"
-         style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#00a69d;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
       <path
          d="m -163.30662,310.93577 40.81,-40.81 h 36.729998 v 40.81 z"
          stroke="#000000"
          stroke-width="0.24"
          fill-opacity="0"
          id="path98"
-         style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#00a69d;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>
 </g>
