@@ -56,12 +56,12 @@ The installation of semio is just one click inside of the default Rhino Package 
 
 
 > NOTE: Hops (in reality Rhino.Compute) needs certain runtimes which are not by default installed. The developers probably didn't notice because every one had Visual Studio already installed. You can fix this by installing [Visual Studio](https://visualstudio.microsoft.com/) and install .NET for desktop development.
-![Alt text](docs\installation\visual-studio-dotnet.png)
+![Alt text](docs/installation/visual-studio-dotnet.png)
 To check if Hops is running correctly, you can uncheck the checkbox "Hide 
 Compute.Compute Console Window". Make sure that "Launch Local Rhino.Compute at Start" checkbox is checked.
-![Alt text](docs\installation\show-compute.png)
+![Alt text](docs/installation/show-compute.png)
 When you restart Rhino and start Grasshopper a window like this should appear for Rhino.Compute:
-![Alt text](docs\installation\compute.png)
+![Alt text](docs/installation/compute.png)
 If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src\compute.sln` in Visual Studio and agree on downloading the missing packages.
 ## 
 
