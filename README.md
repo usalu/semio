@@ -37,11 +37,13 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
 </p>
 
 ## What is semio?
-<p align="center">
-    <img src="docs/conceptual/simplifiedcontext.svg" alt="drawing" width="400"/>
-</p>
 
-semio
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/conceptual/analogies-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/conceptual/analogies.svg">
+    <img alt="Analogies" src="docs/conceptual/analogies.svg">
+</picture>
+
 
 # Getting started
 
@@ -63,10 +65,8 @@ Compute.Compute Console Window". Make sure that "Launch Local Rhino.Compute at S
 When you restart Rhino and start Grasshopper a window like this should appear for Rhino.Compute:
 ![Alt text](docs/installation/compute.png)
 If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src\compute.sln` in Visual Studio and agree on downloading the missing packages.
-## 
 
 
-# How does semio work?
 
 ![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
 
