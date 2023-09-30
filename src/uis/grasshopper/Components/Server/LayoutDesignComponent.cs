@@ -23,7 +23,7 @@ namespace Semio.UI.Grasshopper.Components.Server
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item,"localhost:2999");
+            pManager.AddTextParameter("Url", "Url", "Url of Semio server.", GH_ParamAccess.item,"http://localhost:2999");
             pManager.AddParameter(new LayoutParam());
             pManager.AddParameter(new PlatformParam());
             pManager[2].Optional = true;
