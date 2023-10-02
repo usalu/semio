@@ -45,36 +45,49 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
 </picture>
 
 
-# Getting started
+## Getting started
 
-## Installation
 
-Requirements:
+
+### Requirements
 - Windows 11
 - Rhino 7 with Grasshopper 1
 - Hops from the Rhino Package Manger
 
-The installation of semio is just one click inside of the default Rhino Package Manger:
-
-
 > NOTE: Hops (in reality Rhino.Compute) needs certain runtimes which are not by default installed. The developers probably didn't notice because every one had Visual Studio already installed. You can fix this by installing [Visual Studio](https://visualstudio.microsoft.com/) and install .NET for desktop development.
-![Alt text](docs/installation/visual-studio-dotnet.png)
+![Visual Studio .NET](docs/installation/visual-studio-dotnet.png)
 To check if Hops is running correctly, you can uncheck the checkbox "Hide 
 Compute.Compute Console Window". Make sure that "Launch Local Rhino.Compute at Start" checkbox is checked.
-![Alt text](docs/installation/show-compute.png)
+![Show Compute Option](docs/installation/show-compute.png)
 When you restart Rhino and start Grasshopper a window like this should appear for Rhino.Compute:
-![Alt text](docs/installation/compute.png)
+![Compute](docs/installation/compute.png)
 If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src\compute.sln` in Visual Studio and agree on downloading the missing packages.
 
+### Installation
+1. Open Rhino Package Manger
+1. Search for semio
+1. Install the latest version
 
+
+
+> WARNING: The first time you will use semio, the Windows Firewall will ask you to allow for internet access for
+`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. You you want to host the backend somewhere else, you **<ins>can</ins>** but that requires a Rhino.Compute license and an active server.
+
+### Hello World
+Now you can layout your first design!
+![Hello World](docs/examples/helloworld/grasshopper.gif)
+
+### Nakagin Capsule Tower
+At least in semio, the iconic capsule tower(s) will keep on existing!
+![Nakagin Capsule Tower](docs/examples/capsuletower/grasshopper.gif)
+
+## How does semio work?
 
 ![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
 
+semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs. All services including their depenencies are vendored into the platform extensions to run as a binary.
+
 ![Example](docs/softwarequality/softwarearchitecture/metamodel.svg)
-
-semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs.
-
-All services can either run locally, with docker-compose, inside kubernetes or be simply called over an active server.
 
 ## UIs
 
