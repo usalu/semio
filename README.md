@@ -86,11 +86,35 @@ Ever wanted to change the capsules with one click?
 
 ## How does semio work?
 
-![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
+>NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totaly different metamodel, a different system architecture and hence aswell a different software architecture and different implementation. Short: Almost everything will change... but many more exciting things will come such as a persistance layer for easy sharing design components. No more complicated runtime needed such as Rhino, Grasshopper, Grasshopper Plugins at exact version, etc. A file server will be enough.
+
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/systemarchitecture/componentsdiagram-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/softwarequality/systemarchitecture/componentsdiagram.svg">
+    <img alt="Components" src="docs/softwarequality/systemarchitecture/componentsdiagram.svg">
+</picture>
 
 semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs. All services including their depenencies are vendored into the platform extensions to run as a binary. Consider the rest as magic.
 
-![Example](docs/softwarequality/softwarearchitecture/metamodel.svg)
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/softwarearchitecture/metamodel-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/softwarequality/softwarearchitecture/metamodel.svg">
+    <img alt="Metamodel" src="docs/softwarequality/softwarearchitecture/metamodel.svg">
+</picture>
+
+Here is a brief overview over the process:
+
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/softwarearchitecture/designprocessmodel-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/softwarequality/softwarearchitecture/designprocessmodel.svg">
+    <img alt="Process Part 1" src="docs/softwarequality/softwarearchitecture/designprocessmodel.svg">
+</picture>
+
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/softwarearchitecture/designprocessmodel2-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/softwarequality/softwarearchitecture/designprocessmodel2.svg">
+    <img alt="Process Part 2" src="docs/softwarequality/softwarearchitecture/designprocessmodel2.svg">
+</picture>
 
 ## UIs
 
@@ -103,7 +127,13 @@ Currently there is one extension for Grasshopper that makes it possible to turn 
 
 ## Contribution
 
-![Components](docs/softwarequality/softwarearchitecture/frameworkrelationships.svg)
+![]()
+
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/softwarearchitecture/frameworkrelationships-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/softwarequality/softwarearchitecture/frameworkrelationships.svg">
+    <img alt="Components" src="docs/softwarequality/softwarearchitecture/frameworkrelationships.svg">
+</picture>
 
 
 If you want to contribute to the project, there are lot's of opportunities! Do you want to write an apapter for a platform or contribute to the core?
