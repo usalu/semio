@@ -81,11 +81,14 @@ Now you can layout your first design!
 At least in semio, the iconic capsule tower(s) will keep on existing!
 ![Nakagin Capsule Tower](docs/examples/capsuletower/grasshopper.gif)
 
+Ever wanted to change the capsules with one click?
+![Nakagin Capsule Tower](docs/examples/capsuletower/grasshopper-variant.gif)
+
 ## How does semio work?
 
 ![Components](docs/softwarequality/systemarchitecture/componentsdiagram.svg)
 
-semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs. All services including their depenencies are vendored into the platform extensions to run as a binary.
+semio is an ecosystem of several components. There is a backend that can be extended on different platforms and different frontends for viewing and/or authoring designs. All services including their depenencies are vendored into the platform extensions to run as a binary. Consider the rest as magic.
 
 ![Example](docs/softwarequality/softwarearchitecture/metamodel.svg)
 
