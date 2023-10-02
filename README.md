@@ -1,15 +1,3 @@
-<style>
-    @font-face {
-        font-family: 'Noto Emoji';
-        src: url('docs/fonts/notoemoji.woff2') format('woff2');
-        font-weight: normal;
-        font-style: normal;
-        font-display: swap;
-    }
-    emoji{
-        font-family:Noto Emoji;
-    }
-</style>
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="resources/logo/logo-horizontal-dark.svg">
