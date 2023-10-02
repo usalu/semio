@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class PlanParam : SemioPersistentParam<PlanGoo>
     {
         public PlanParam() :
-            base("Plan", "Pl", "", "Semio", "Model")
+            base("Plan", "Pl", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("87F6F9AC-F2AD-45E1-A5EC-AD666A20C3B8");
         protected override GH_GetterResult Prompt_Singular(ref PlanGoo value)

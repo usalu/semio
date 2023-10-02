@@ -8,7 +8,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
     public class PrepareComponent : GH_Component
     {
         public PrepareComponent()
-          : base("Prepare", "Prepare", "", "Semio", "Utils")
+          : base("Prepare", "Prepare", "", "semio", "Utils")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

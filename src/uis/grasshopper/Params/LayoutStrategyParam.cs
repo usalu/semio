@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class LayoutStrategyParam : SemioPersistentParam<LayoutStrategyGoo>
     {
         public LayoutStrategyParam() :
-            base("Layout Strategy", "LS", "", "Semio", "Model")
+            base("Layout Strategy", "LS", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("9F6C33F9-EAF5-40A5-9C27-B5B8110A87EC");
         protected override GH_GetterResult Prompt_Singular(ref LayoutStrategyGoo value)

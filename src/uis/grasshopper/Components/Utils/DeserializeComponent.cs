@@ -12,7 +12,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
     public class DeserializeComponent : GH_Component
     {
         public DeserializeComponent()
-          : base("Deserialize", "Deserialize", "", "Semio", "Utils")
+          : base("Deserialize", "Deserialize", "", "semio", "Utils")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

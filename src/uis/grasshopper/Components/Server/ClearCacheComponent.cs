@@ -16,7 +16,7 @@ namespace Semio.UI.Grasshopper.Components.Server
 {
     public class ClearCacheComponent : GH_Component
     {
-        public ClearCacheComponent() : base("Clear Cache", "ClrCache", "Clear the cache of semio.", "Semio", "Server")
+        public ClearCacheComponent() : base("Clear Cache", "ClrCache", "Clear the cache of semio.", "semio", "Server")
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)

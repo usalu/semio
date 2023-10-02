@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class FileTypeParam : SemioPersistentParam<FileTypeGoo>
     {
         public FileTypeParam() :
-            base("File Type", "FT", "", "Semio", "Model")
+            base("File Type", "FT", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("E52EADC4-1702-4032-867B-7B78616D17B2");
         protected override GH_GetterResult Prompt_Singular(ref FileTypeGoo value)

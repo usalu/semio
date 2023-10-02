@@ -10,7 +10,7 @@ namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructConnectionComponent : ConstructComponent
     {
-        public ConstructConnectionComponent() : base("Construct Connection", "Connection", "", "Semio", "Model")
+        public ConstructConnectionComponent() : base("Construct Connection", "Connection", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

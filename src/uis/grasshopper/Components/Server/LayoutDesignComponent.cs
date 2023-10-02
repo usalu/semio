@@ -18,7 +18,7 @@ namespace Semio.UI.Grasshopper.Components.Server
     {
         private static string _route = "/v1/layoutdesign";
         
-        public LayoutDesignComponent() : base("Layout Design", "Layout Design", "Lay out a design.", "Semio", "Server")
+        public LayoutDesignComponent() : base("Layout Design", "Layout Design", "Lay out a design.", "semio", "Server")
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)

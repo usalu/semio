@@ -16,7 +16,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
     public class ShowDesignComponent : GH_Component
     {
         public ShowDesignComponent()
-          : base("Show Design", ":Design", "", "Semio", "Utils")
+          : base("Show Design", ":Design", "", "semio", "Utils")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

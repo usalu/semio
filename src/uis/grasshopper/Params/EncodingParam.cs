@@ -15,7 +15,7 @@
 //    public class EncodingParam : SemioPersistentParam<EncodingGoo>
 //    {
 //        public EncodingParam() :
-//            base("Encoding", "EC", "", "Semio", "Model")
+//            base("Encoding", "EC", "", "semio", "Model")
 //        { }
 //        public override Guid ComponentGuid => new("9F6C33F9-EAF5-40A5-9C27-B5B8110A87EC");
 //        protected override GH_GetterResult Prompt_Singular(ref EncodingGoo value)

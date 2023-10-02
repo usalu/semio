@@ -10,7 +10,7 @@ namespace Semio.UI.Grasshopper.Components.Model
     public class DeconstructRepresentationComponent : DeconstructComponent
     {
         public DeconstructRepresentationComponent()
-          : base("Deconstruct Representation", "DeRepresentation", "Deconstruct an element", "Semio", "Model")
+          : base("Deconstruct Representation", "DeRepresentation", "Deconstruct an element", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

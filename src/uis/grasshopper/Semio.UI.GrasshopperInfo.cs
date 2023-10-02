@@ -21,8 +21,8 @@ namespace Semio.UI.Grasshopper
     {
         public override GH_LoadingInstruction PriorityLoad()
         {
-            Instances.ComponentServer.AddCategoryIcon("Semio", Resources.icon_semio);
-            Instances.ComponentServer.AddCategorySymbolName("Semio", 'P');
+            Instances.ComponentServer.AddCategoryIcon("semio", Resources.icon_semio);
+            Instances.ComponentServer.AddCategorySymbolName("semio", 'P');
             return GH_LoadingInstruction.Proceed;
         }
     }

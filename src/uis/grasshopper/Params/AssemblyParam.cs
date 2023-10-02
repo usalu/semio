@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class AssemblyParam : SemioPersistentParam<AssemblyGoo>
     {
         public AssemblyParam() :
-            base("Assembly", "A", "", "Semio", "Model")
+            base("Assembly", "A", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("02C84754-4800-4EB1-BF27-12FB84C5585E");
         protected override GH_GetterResult Prompt_Singular(ref AssemblyGoo value)

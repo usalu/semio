@@ -10,7 +10,7 @@ namespace Semio.UI.Grasshopper.Components.Model
     public class DeconstructPrototypeComponent : DeconstructComponent
     {
         public DeconstructPrototypeComponent()
-          : base("Deconstruct Prototype", "DePrototype", "", "Semio", "Model")
+          : base("Deconstruct Prototype", "DePrototype", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class LayoutParam : SemioPersistentParam<LayoutGoo>
     {
         public LayoutParam() :
-            base("Layout", "L", "", "Semio", "Model")
+            base("Layout", "L", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("4D8B21C7-8F20-4BC2-B6FB-6DDC058B27F1");
         protected override GH_GetterResult Prompt_Singular(ref LayoutGoo value)

@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class PlatformParam : SemioPersistentParam<PlatformGoo>
     {
         public PlatformParam() :
-            base("Platform", "Pf", "", "Semio", "Model")
+            base("Platform", "Pf", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("7DA7E9B0-3FE0-4E85-A615-A7196E6E073E");
         protected override GH_GetterResult Prompt_Singular(ref PlatformGoo value)

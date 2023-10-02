@@ -10,7 +10,7 @@ namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructSobjectComponent : ConstructComponent
     {
-        public ConstructSobjectComponent() : base("Construct Sobject", "Sobject", "", "Semio", "Model")
+        public ConstructSobjectComponent() : base("Construct Sobject", "Sobject", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

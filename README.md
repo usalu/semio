@@ -67,11 +67,12 @@ If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute
 1. Open Rhino Package Manger
 1. Search for semio
 1. Install the latest version
+1. Restart Rhino
 
-
+That's it!
 
 > WARNING: The first time you will use semio, the Windows Firewall will ask you to allow for internet access for
-`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. You you want to host the backend somewhere else, you **<ins>can</ins>** but that requires a Rhino.Compute license and an active server.
+`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. If you you want to host the backend somewhere else, you **<ins>can</ins>** but that requires a Rhino.Compute license and an active server and in the client the url needs to be set.
 
 ### Hello World
 Now you can layout your first design!
@@ -86,7 +87,7 @@ Ever wanted to change the capsules with one click?
 
 ## How does semio work?
 
->NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totaly different metamodel, a different system architecture and hence aswell a different software architecture and different implementation. Short: Almost everything will change... but many more exciting things will come such as a persistance layer for easy sharing design components. No more complicated runtime needed such as Rhino, Grasshopper, Grasshopper Plugins at exact version, etc. A file server will be enough.
+>NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totaly different metamodel, a different system architecture and hence aswell a different software architecture and different implementation. Short: Almost everything will change... but many more exciting things will come such as a persistance layer for easy sharing design components. No more complicated runtimes are needed such as Rhino, Grasshopper, Grasshopper Plugins at exact versions for sharing a type. A file server will be enough.
 
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/systemarchitecture/componentsdiagram-dark.svg">

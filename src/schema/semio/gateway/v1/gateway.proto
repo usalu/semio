@@ -15,7 +15,7 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
-    title: "Semio";
+    title: "semio";
     version: "0.0.1";
     contact: {
       name: "Ueli Saluz";

@@ -12,7 +12,7 @@ namespace Semio.UI.Grasshopper.Components.Model
 {
     public class ConstructAssemblyComponent : ConstructComponent
     {
-        public ConstructAssemblyComponent() : base("Construct Assembly", "Assembly", "", "Semio", "Model")
+        public ConstructAssemblyComponent() : base("Construct Assembly", "Assembly", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

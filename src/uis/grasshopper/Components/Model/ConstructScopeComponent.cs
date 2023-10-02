@@ -11,7 +11,7 @@ namespace Semio.UI.Grasshopper.Components.Model
     public class ConstructScopeComponent : ConstructComponent
     {
         public ConstructScopeComponent()
-          : base("Construct Scope", "Scope", "", "Semio", "Model")
+          : base("Construct Scope", "Scope", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

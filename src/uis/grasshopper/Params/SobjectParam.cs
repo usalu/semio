@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class SobjectParam : SemioPersistentParam<SobjectGoo>
     {
         public SobjectParam() :
-            base("Sobject", "So", "", "Semio", "Model")
+            base("Sobject", "So", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("A6B3D7AF-5B3D-445E-8F33-9B2A28DA1D22");
         protected override GH_GetterResult Prompt_Singular(ref SobjectGoo value)

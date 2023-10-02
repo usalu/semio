@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class RepresentationParam : SemioPersistentParam<RepresentationGoo>
     {
         public RepresentationParam() :
-            base("Representation", "R", "", "Semio", "Model")
+            base("Representation", "R", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("9B039F8F-AC2D-4079-8D5A-675350861B9C");
         protected override GH_GetterResult Prompt_Singular(ref RepresentationGoo value)

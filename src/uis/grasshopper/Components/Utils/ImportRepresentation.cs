@@ -11,7 +11,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
     public class ImportRepresentationComponent : DeconstructComponent
     {
         public ImportRepresentationComponent()
-          : base("Import Representation", "ImRepresentation", "", "Semio", "Model")
+          : base("Import Representation", "ImRepresentation", "", "semio", "Model")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

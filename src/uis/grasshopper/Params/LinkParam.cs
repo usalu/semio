@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class LinkParam : SemioPersistentParam<LinkGoo>
     {
         public LinkParam() :
-            base("Link", "Lk", "", "Semio", "Model")
+            base("Link", "Lk", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("F55CFEF8-4555-41B0-AA80-1697E955A3CD");
         protected override GH_GetterResult Prompt_Singular(ref LinkGoo value)

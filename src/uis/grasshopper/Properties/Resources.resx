@@ -220,9 +220,6 @@
   <data name="icon_representationprotocol" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\resources\icons\model\representationprotocol\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="icon_semio" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\..\..\resources\icons\semio\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="icon_sobject" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\resources\icons\model\sobject\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -288,5 +285,8 @@
   </data>
   <data name="icon_clearcache" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\favicon-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_semio" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\emblem-24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

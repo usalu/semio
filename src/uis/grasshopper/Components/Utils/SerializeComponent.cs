@@ -10,7 +10,7 @@ namespace Semio.UI.Grasshopper.Components.Utils
     public class SerializeComponent : GH_Component
     {
         public SerializeComponent()
-          : base("Serialize", "Serialize", "", "Semio", "Utils")
+          : base("Serialize", "Serialize", "", "semio", "Utils")
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

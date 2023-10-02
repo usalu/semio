@@ -15,7 +15,7 @@ namespace Semio.UI.Grasshopper.Params
     public class ElementParam : SemioPersistentParam<ElementGoo>
     {
         public ElementParam() :
-            base("Element", "E", "", "Semio", "Model")
+            base("Element", "E", "", "semio", "Model")
         { }
         public override Guid ComponentGuid => new("2507E825-CB09-4268-83FC-454114B39DB1");
         protected override GH_GetterResult Prompt_Singular(ref ElementGoo value)

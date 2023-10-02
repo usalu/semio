@@ -18,16 +18,17 @@ using SemioQuaternion = Semio.Geometry.V1.Quaternion;
 using Grasshopper.Kernel.Geometry;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Objects.Converter.Rhino;
+using Objects.Converter.RhinoGh;
 using Rhino;
 using Rhino.FileIO;
 using Rhino.Runtime;
 using Semio.UI.Grasshopper.Goos;
 using Speckle.Core.Api;
-//using Speckle.Core.Api.Operations;
-using Encoding = Semio.Model.V1.Encoding;
 using Speckle.Core.Models;
 using Speckle.Core.Models.Extensions;
+//using Speckle.Core.Api.Operations;
+using Encoding = Semio.Model.V1.Encoding;
+
 
 
 namespace Semio.UI.Grasshopper.Utility
