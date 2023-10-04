@@ -1,1 +1,0 @@
-from semio.extensions.grasshopper.semioextensiongrasshopper import main
