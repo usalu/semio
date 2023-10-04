@@ -1,0 +1,1 @@
+from semio.backend.assembler.semioassembler import main

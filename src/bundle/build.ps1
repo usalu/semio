@@ -1,2 +1,3 @@
 .venv/Scripts/activate.ps1
-pyinstaller --clean -y -n "semio" -c -i semio.ico --add-binary="restproxy.exe;." semio.py
+copy-item "pyinstallerhooks\*" ".venv\Lib\site-packages\PyInstaller\hooks"
+pyinstaller --clean -y -n "semio" -c -i semio.ico --add-binary="restproxy.exe;." cli.py
