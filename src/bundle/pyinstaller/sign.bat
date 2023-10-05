@@ -1,0 +1,1 @@
+signtool.exe sign /a /s MY /sha1 sha1_thumbprint_value /t http://timestamp.verisign.com/scripts/timstamp.dll /v "C:\filename.dll"

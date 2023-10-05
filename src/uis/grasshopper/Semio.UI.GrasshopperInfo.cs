@@ -14,7 +14,7 @@ namespace Semio.UI.Grasshopper
         public override Guid Id => new Guid("ecc07d8a-d211-4ca5-b066-109a60c5dc5d");
         public override string AuthorName => "Ueli Saluz";
         public override string AuthorContact => "semio-community@posteo.org";
-        public override string Version => "0.1.0";
+        public override string Version => "1.0.1";
     }
 
     public class SemioCategoryIcon : GH_AssemblyPriority
