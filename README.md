@@ -44,15 +44,14 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
     <img alt="Analogies" src="docs/conceptual/analogies.svg">
 </picture>
 
+semio is intended to become an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows, but you can define more individual, complex and flexible types, which can be freely combined via a generalized port mechanism.
 
 ## Getting started
 
-
-
 ### Requirements
-- Windows 11
-- Rhino 7 with Grasshopper 1
-- Hops from the Rhino Package Manger
+- Windows
+- Rhino 7
+- Hops package from the Rhino Package Manger
 
 > NOTE: Hops (in reality Rhino.Compute) needs certain runtimes which are not by default installed. The developers probably didn't notice because every one had Visual Studio already installed. You can fix this by installing [Visual Studio](https://visualstudio.microsoft.com/) and install .NET for desktop development.
 ![Visual Studio .NET](docs/installation/visual-studio-dotnet.png)
@@ -71,11 +70,11 @@ If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute
 
 That's it!
 
-> WARNING: The first time you will use semio, the Windows Firewall will ask you to allow for internet access for
-`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. If you you want to host the backend somewhere else, you **<ins>can</ins>** but that requires a Rhino.Compute license and an active server and in the client the url needs to be set.
+> NOTE: The first time you will use semio, the Windows Firewall will ask you to allow internet access for
+`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. If you want to host the backend somewhere else you **<ins>can</ins>** but that requires a Rhino.Compute license, an active server and configuration in the client.
 
 ### Hello World
-Now you can layout your first design!
+Now you can lay out your first design!
 ![Hello World](docs/examples/helloworld/grasshopper.gif)
 
 ### Nakagin Capsule Tower
@@ -87,7 +86,7 @@ Ever wanted to change the capsules with one click?
 
 ## How does semio work?
 
->NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totaly different metamodel, a different system architecture and hence aswell a different software architecture and different implementation. Short: Almost everything will change... but many more exciting things will come such as a persistance layer for easy sharing design components. No more complicated runtimes are needed such as Rhino, Grasshopper, Grasshopper Plugins at exact versions for sharing a type. A file server will be enough.
+>NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totally different metamodel, system architecture and software architecture. Short: Almost everything will change... but many more exciting features will come! Such as a persistance layer for easy sharing design components. A shared type no longer needs a runtime but parameters and geometry are persisted.
 
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/softwarequality/systemarchitecture/componentsdiagram-dark.svg">
