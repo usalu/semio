@@ -63,6 +63,7 @@ When you restart Rhino and start Grasshopper a window like this should appear fo
 If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src\compute.sln` in Visual Studio and agree on downloading the missing packages.
 
 ### Installation
+![Rhino Package](docs/installation/rhinopackage.gif)
 1. Open Rhino Package Manger
 1. Search for semio
 1. Install the latest version
