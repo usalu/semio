@@ -36,7 +36,7 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
     </picture>
 </p>
 
-## What is semio?
+# What is semio?
 
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/conceptual/analogies-dark.svg">
@@ -46,9 +46,9 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
 
 semio is intended to become an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows, but you can define more individual, complex and flexible types, which can be freely combined via a generalized port mechanism.
 
-## Getting started
+# Getting started
 
-### Requirements
+## Requirements
 - Windows
 - Rhino 7
 - Hops package from the Rhino Package Manger
@@ -62,7 +62,7 @@ When you restart Rhino and start Grasshopper a window like this should appear fo
 ![Compute](docs/installation/compute.png)
 If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src\compute.sln` in Visual Studio and agree on downloading the missing packages.
 
-### Installation
+## Installation
 ![Rhino Package](docs/installation/rhinopackage.gif)
 1. Open Rhino Package Manger
 1. Search for semio
@@ -73,6 +73,10 @@ That's it!
 
 > NOTE: The first time you will use semio, the Windows Firewall will ask you to allow internet access for
 `restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. If you want to host the backend somewhere else you **<ins>can</ins>** but that requires a Rhino.Compute license, an active server and configuration in the client.
+
+## Examples
+
+You can download the examples from the [release](https://github.com/usalu/semio/releases/download/1.0/examples.zip).
 
 ### Hello World
 Now you can lay out your first design!
@@ -85,7 +89,7 @@ At least in semio, the iconic capsule tower(s) will keep on existing!
 Ever wanted to change the capsules with one click?
 ![Nakagin Capsule Tower](docs/examples/capsuletower/grasshopper-variant.gif)
 
-## How does semio work?
+# How does semio work?
 
 >NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totally different metamodel, system architecture and software architecture. Short: Almost everything will change... but many more exciting features will come! Such as a persistance layer for easy sharing design components. A shared type no longer needs a runtime but parameters and geometry are persisted.
 
@@ -126,7 +130,7 @@ Currently there is one UI for Grasshopper.
 
 Currently there is one extension for Grasshopper that makes it possible to turn Grasshopper scripts into semio scripts.
 
-## Contribution
+# Contribution
 
 ![]()
 
