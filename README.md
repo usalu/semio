@@ -5,7 +5,7 @@
         <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main/resources/logo/logo-horizontal.svg">
     </picture>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://img.shields.io/badge/doi-10.5281/zenodo.8419156-blue?style=flat-square&color=0052a1" alt="Latest Release"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/doi-zenodo.svg" alt="Latest Release"></a>
     <a href="https://github.com/usalu/semio/"><img src="https://img.shields.io/github/v/release/usalu/semio?style=flat-square&color=ff344f" alt="Latest Release"></a>
     <a href="https://choosealicense.com/licenses/lgpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/license-LGPL_v3.svg" alt="LGPLv3 License"></a>
     <br/>
@@ -45,7 +45,7 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
     <img alt="Analogies" src="https://raw.githubusercontent.com/usalu/semio/main/docs/conceptual/analogies.svg">
 </picture>
 
-semio is intended to become an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows, but you can define more individual, complex and flexible types, which can be freely combined via a generalized port mechanism.
+semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be freely combined via a generalized port mechanism.
 
 # Getting started
 
