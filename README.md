@@ -5,7 +5,7 @@
         <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main/resources/logo/logo-horizontal.svg">
     </picture>
     <br/>
-    <a href="https://doi.orXg/10.5281/zenodo.8419156"><img src="https://img.shields.io/badge/doi-10.5281/zenodo.8419156-blue?style=flat-square&color=0052a1" alt="Latest Release"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://img.shields.io/badge/doi-10.5281/zenodo.8419156-blue?style=flat-square&color=0052a1" alt="Latest Release"></a>
     <a href="https://github.com/usalu/semio/"><img src="https://img.shields.io/github/v/release/usalu/semio?style=flat-square&color=ff344f" alt="Latest Release"></a>
     <a href="https://choosealicense.com/licenses/lgpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/license-LGPL_v3.svg" alt="LGPLv3 License"></a>
     <br/>
