@@ -1,0 +1,18 @@
+---
+name: semio
+version: 1.0.2
+authors:
+- Ueli Saluz
+description: >
+  Collaborative, scalable and cross-platform designing. 
+url: https://github.com/usalu/semio
+icon: icon.png
+keywords:
+- procedural_modelling
+- generative_design
+- graph-based_design
+- port-based_design
+- design_prototypes
+- shape_grammar
+- building_information_modelling
+- bim

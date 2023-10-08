@@ -1,0 +1,2570 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Objects</name>
+    </assembly>
+    <members>
+        <member name="P:Objects.BuiltElements.Alignment.stationEquations">
+            <summary>
+            Station equation list contains doubles indicating raw station back, station back, and station ahead for each station equation
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Alignment.stationEquationDirections">
+            <summary>
+            Station equation direction for the corresponding station equation should be true for increasing or false for decreasing
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Civil.CivilAlignment.parent">
+            <summary>
+            Name of parent alignment if this is an offset alignment
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Civil.CivilProfile.pvis">
+            <summary>
+            Points of vertical intersection
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Civil.CivilProfile.parent">
+            <summary>
+            Name of parent profile if this is an offset profile
+            </summary>
+        </member>
+        <member name="M:Objects.BuiltElements.Area.#ctor(System.String,System.String,Objects.BuiltElements.Level,Objects.Geometry.Point)">
+            <summary>
+            SchemaBuilder constructor for a Room
+            </summary>
+            <remarks>Assign units when using this constructor due to <paramref name="height"/> param</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitColumn.#ctor(System.String,System.String,Objects.ICurve,Objects.BuiltElements.Level,Objects.BuiltElements.Level,System.Double,System.Double,System.Boolean,System.Double,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit column
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseLine"></param>
+            <param name="level"></param>
+            <param name="topLevel"></param>
+            <param name="baseOffset"></param>
+            <param name="topOffset"></param>
+            <param name="structural"></param>
+            <param name="rotation"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="baseOffset"/> and <paramref name="topOffset"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitDuct.#ctor(System.String,System.String,Objects.Geometry.Line,System.String,System.String,Objects.BuiltElements.Level,System.Double,System.Double,System.Double,System.Double,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit duct (deprecated)
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseLine"></param>
+            <param name="systemName"></param>
+            <param name="systemType"></param>
+            <param name="level"></param>
+            <param name="width"></param>
+            <param name="height"></param>
+            <param name="diameter"></param>
+            <param name="velocity"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="width"/>, <paramref name="height"/>, and <paramref name="diameter"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitDuct.#ctor(System.String,System.String,Objects.ICurve,System.String,System.String,Objects.BuiltElements.Level,System.Double,System.Double,System.Double,System.Double,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit duct
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseCurve"></param>
+            <param name="systemName"></param>
+            <param name="systemType"></param>
+            <param name="level"></param>
+            <param name="width"></param>
+            <param name="height"></param>
+            <param name="diameter"></param>
+            <param name="velocity"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="width"/>, <paramref name="height"/>, and <paramref name="diameter"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitFlexDuct.#ctor(System.String,System.String,Objects.ICurve,System.String,System.String,Objects.BuiltElements.Level,System.Double,System.Double,System.Double,Objects.Geometry.Vector,Objects.Geometry.Vector,System.Double,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit flex duct
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseCurve"></param>
+            <param name="systemName"></param>
+            <param name="systemType"></param>
+            <param name="level"></param>
+            <param name="width"></param>
+            <param name="height"></param>
+            <param name="diameter"></param>
+            <param name="velocity"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="width"/>, <paramref name="height"/>, and <paramref name="diameter"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitLevel.#ctor(System.String,System.Double,System.Boolean,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit level
+            </summary>
+            <param name="name"></param>
+            <param name="elevation"></param>
+            <param name="createView"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="elevation"/> param</remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkElement.isCurveBased">
+            <summary>
+            Indicates if this element was constructed from an MEP curve
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkElement.isConnectorBased">
+            <summary>
+            Indicates if this element needs temporary placeholder objects to be created first when receiving
+            </summary>
+            <remarks>
+            For example, some fittings cannot be created based on connectors, and so will be created similarly to mechanical equipment
+            </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.systemName">
+            <summary>
+            The system category
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.shape">
+            <summary>
+            The connector profile shape of the <see cref="T:Objects.BuiltElements.NetworkLink"/>
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.domain">
+            <summary>
+            The link domain
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.fittingIndex">
+            <summary>
+            The index indicating the position of this link on the connected fitting element, if applicable
+            </summary>
+            <remarks>
+            Revit fitting links are 1-indexed. For example, "T" fittings will have ordered links from index 1-3.
+            </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.needsPlaceholders">
+            <summary>
+            Indicates if this link needs temporary placeholder objects to be created first when receiving
+            </summary>
+            <remarks>
+            Placeholder geometry are curves.
+            For example, U-bend links need temporary pipes to be created first, if one or more linked pipes have not yet been created in the network.
+            </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitNetworkLink.isConnected">
+            <summary>
+            Indicates if this link has been connected to its elements
+            </summary>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitShaft.#ctor(Objects.ICurve,Objects.BuiltElements.Level,Objects.BuiltElements.Level,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit shaft
+            </summary>
+            <param name="outline"></param>
+            <param name="bottomLevel"></param>
+            <param name="topLevel"></param>
+            <param name="parameters"></param>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.DirectShape.#ctor(System.String,Objects.BuiltElements.Revit.RevitCategory,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+             Constructs a new <see cref="T:Objects.BuiltElements.Revit.DirectShape"/> instance given a list of <see cref="T:Speckle.Core.Models.Base"/> objects.
+            </summary>
+            <param name="name">The name of the <see cref="T:Objects.BuiltElements.Revit.DirectShape"/></param>
+            <param name="category">The <see cref="T:Objects.BuiltElements.Revit.RevitCategory"/> of this instance.</param>
+            <param name="baseGeometries">A list of base classes to represent the direct shape (only mesh and brep are allowed, anything else will be ignored.)</param>
+            <param name="parameters">Optional Parameters for this instance.</param>
+        </member>
+        <member name="T:Objects.BuiltElements.Revit.RevitFamilyCategory">
+            <summary>
+            FamilyDocuments can only be assigned these categories
+            This is a subset of the list above which was manually retrieved from Revit's UI
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.FreeformElement.baseGeometry">
+            <summary>
+            DEPRECATED. Sets the geometry contained in the FreeformElement. This field has been deprecated in favor of `baseGeometries`
+            to align with Revit's API. It remains as a setter-only property for backwards compatibility.
+            It will set the first item on the baseGeometries list, and instantiate a list if necessary.
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.Parameter.isShared">
+            <summary>
+            If True it's a Shared Parameter, in which case the ApplicationId field will contain this parameter GUID,
+            otherwise it will store its BuiltInParameter name
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.Parameter.isTypeParameter">
+            <summary>
+            True = Type Parameter, False = Instance Parameter
+            </summary>
+        </member>
+        <member name="T:Objects.BuiltElements.Revit.RevitElement">
+            <summary>
+            A generic Revit element for which we don't have direct conversions
+            </summary>
+        </member>
+        <member name="T:Objects.BuiltElements.Revit.RevitSymbolElementType">
+            <summary>
+            Represents the FamilySymbol subclass of ElementType in Revit
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitSymbolElementType.placementType">
+            <summary>
+            The type of placement for this family symbol
+            </summary>
+            <remarks> See https://www.revitapidocs.com/2023/2abb8627-1da3-4069-05c9-19e4be5e02ad.htm </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Revit.RevitSymbolElementType.elements">
+            <summary>
+            Subcomponents found in this family symbol
+            </summary>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitRoof.RevitExtrusionRoof.#ctor(System.String,System.String,System.Double,System.Double,Objects.Geometry.Line,Objects.BuiltElements.Level,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit extrusion roof
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="start"></param>
+            <param name="end"></param>
+            <param name="referenceLine"></param>
+            <param name="level"></param>
+            <param name="elements"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="start"/> and <paramref name="end"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitWall.#ctor(System.String,System.String,Objects.ICurve,Objects.BuiltElements.Level,Objects.BuiltElements.Level,System.Double,System.Double,System.Boolean,System.Boolean,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit wall
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseLine"></param>
+            <param name="level"></param>
+            <param name="topLevel"></param>
+            <param name="baseOffset"></param>
+            <param name="topOffset"></param>
+            <param name="flipped"></param>
+            <param name="structural"></param>
+            <param name="elements"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="baseOffset"/> and <paramref name="topOffset"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Revit.RevitWall.#ctor(System.String,System.String,Objects.ICurve,Objects.BuiltElements.Level,System.Double,System.Double,System.Double,System.Boolean,System.Boolean,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Revit wall
+            </summary>
+            <param name="family"></param>
+            <param name="type"></param>
+            <param name="baseLine"></param>
+            <param name="level"></param>
+            <param name="height"></param>
+            <param name="baseOffset"></param>
+            <param name="topOffset"></param>
+            <param name="flipped"></param>
+            <param name="structural"></param>
+            <param name="elements"></param>
+            <param name="parameters"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="height"/>, <paramref name="baseOffset"/>, and <paramref name="topOffset"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Duct.#ctor(Objects.Geometry.Line,System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            SchemaBuilder constructor for a Speckle duct
+            </summary>
+            <param name="baseLine"></param>
+            <param name="width"></param>
+            <param name="height"></param>
+            <param name="diameter"></param>
+            <param name="velocity"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="width"/>, <paramref name="height"/>, and <paramref name="diameter"/> params</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Duct.#ctor(Objects.ICurve,System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            SchemaBuilder constructor for a Speckle duct
+            </summary>
+            <param name="baseCurve"></param>
+            <param name="width"></param>
+            <param name="height"></param>
+            <param name="diameter"></param>
+            <param name="velocity"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="width"/>, <paramref name="height"/>, and <paramref name="diameter"/> params</remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Featureline.curve">
+            <summary>
+            The base curve of the featureline
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Featureline.points">
+            <summary>
+            The points constructing the Featureline
+            </summary>
+            <remarks>
+            Can include both intersection and elevation points
+            </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Featureline.displayValue">
+            <summary>
+            The 3D curves generated from the curve and points of the featureline
+            </summary>
+        </member>
+        <member name="M:Objects.BuiltElements.Level.#ctor(System.String,System.Double)">
+            <summary>
+            SchemaBuilder constructor for a Speckle level
+            </summary>
+            <param name="name"></param>
+            <param name="elevation"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="elevation"/> param</remarks>
+        </member>
+        <member name="T:Objects.BuiltElements.Network">
+            <summary>
+            Represents graph connections between built elements objects
+            </summary>
+            <remarks>
+            Network <see cref="P:Objects.BuiltElements.Network.elements"/> may need to be created first in native applications before they are linked.
+            </remarks>
+        </member>
+        <member name="P:Objects.BuiltElements.Network.elements">
+            <summary>
+            The elements contained in the network
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.Network.links">
+            <summary>
+            The connections between <see cref="P:Objects.BuiltElements.Network.elements"/>
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.NetworkElement.linkIndices">
+            <summary>
+            The index of the links in <see cref="P:Objects.BuiltElements.NetworkElement.network"/> that are connected to this element
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.NetworkElement.links">
+            <summary>
+            Retrieves the links for this element
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.NetworkLink.elementIndices">
+            <summary>
+            The index of the elements in <see cref="P:Objects.BuiltElements.NetworkLink.network"/> that are connected by this link
+            </summary>
+        </member>
+        <member name="P:Objects.BuiltElements.NetworkLink.elements">
+            <summary>
+            Retrieves the elements for this link
+            </summary>
+        </member>
+        <member name="M:Objects.BuiltElements.Room.#ctor(System.String,System.String,Objects.BuiltElements.Level,Objects.Geometry.Point)">
+            <summary>
+            SchemaBuilder constructor for a Room
+            </summary>
+            <remarks>Assign units when using this constructor due to <paramref name="height"/> param</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Room.#ctor(System.String,System.String,Objects.BuiltElements.Level,Objects.Geometry.Point,System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            SchemaBuilder constructor for a Room
+            </summary>
+            <remarks>Assign units when using this constructor due to <paramref name="height"/> param</remarks>
+        </member>
+        <member name="M:Objects.BuiltElements.Wall.#ctor(System.Double,Objects.ICurve,System.Collections.Generic.List{Speckle.Core.Models.Base})">
+            <summary>
+            SchemaBuilder constructor for a Speckle wall
+            </summary>
+            <param name="height"></param>
+            <param name="baseLine"></param>
+            <param name="elements"></param>
+            <remarks>Assign units when using this constructor due to <paramref name="height"/> param</remarks>
+        </member>
+        <member name="T:Objects.Geometry.Arc">
+            <summary>
+            Represents a sub-curve of a three-dimensional circle.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Arc.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Arc.#ctor(Objects.Geometry.Plane,System.Double,System.Double,System.Double,System.Double,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Arc"/> using angle values.
+            </summary>
+            <param name="plane">The Plane where the arc will be drawn</param>
+            <param name="radius">The radius of the Arc</param>
+            <param name="startAngle">The angle formed between the start point and the X Axis of the plane</param>
+            <param name="endAngle">The angle formed between the end point and the X Axis of the plane</param>
+            <param name="angleRadians">The total angle of the Arc in Radians</param>
+            <param name="units">The object's units</param>
+            <param name="applicationId">The object's unique application ID</param>
+        </member>
+        <member name="M:Objects.Geometry.Arc.#ctor(Objects.Geometry.Point,Objects.Geometry.Point,System.Double,System.String,System.String)">
+            <summary>
+            Initialise an `Arc` using the arc angle and the start and end points.
+            The radius, midpoint, start angle, and end angle will be calculated.
+            For now, this assumes 2D arcs on the XY plane
+            </summary>
+            <param name="startPoint">The start point of the arc</param>
+            <param name="endPoint">The end point of the arc</param>
+            <param name="angleRadians">The arc angle</param>
+            <param name="units">Units (defaults to "m")</param>
+            <param name="applicationId">ID given to the arc in the authoring programme (defaults to null)</param>
+        </member>
+        <member name="M:Objects.Geometry.Arc.#ctor(Objects.Geometry.Plane,Objects.Geometry.Point,Objects.Geometry.Point,System.Double,System.String,System.String)">
+            <summary>
+            Initialise an `Arc` using a plane, the arc angle and the start and end points.
+            The radius, midpoint, start angle, and end angle will be calculated.
+            </summary>
+            <param name="plane">The Plane where the arc will be drawn</param>
+            <param name="startPoint">The start point of the arc</param>
+            <param name="endPoint">The end point of the arc</param>
+            <param name="angleRadians">The arc angle</param>
+            <param name="units">Units (defaults to "m")</param>
+            <param name="applicationId">ID given to the arc in the authoring programme (defaults to null)</param>
+        </member>
+        <member name="P:Objects.Geometry.Arc.radius">
+            <summary>
+            The radius of the <see cref="T:Objects.Geometry.Arc"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.startAngle">
+            <summary>
+            The start angle of the <see cref="T:Objects.Geometry.Arc"/> based on it's <see cref="P:Objects.Geometry.Arc.plane"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.endAngle">
+            <summary>
+            The end angle of the <see cref="T:Objects.Geometry.Arc"/> based on it's <see cref="P:Objects.Geometry.Arc.plane"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.angleRadians">
+            <summary>
+            The inner angle of the <see cref="T:Objects.Geometry.Arc"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.plane">
+            <summary>
+            Gets or sets the plane of the <see cref="T:Objects.Geometry.Arc"/>. The plane origin is the <see cref="T:Objects.Geometry.Arc"/> center.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.startPoint">
+            <summary>
+            The start <see cref="T:Objects.Geometry.Point"/> of the <see cref="T:Objects.Geometry.Arc"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.midPoint">
+            <summary>
+            Gets or sets the point at 0.5 length.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.endPoint">
+            <summary>
+            The end <see cref="T:Objects.Geometry.Point"/> of the <see cref="T:Objects.Geometry.Arc"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.units">
+            <summary>
+            The units this object was specified in.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Arc.domain">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Arc.length">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Arc.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Arc.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Arc.TransformTo(Objects.Other.Transform,Objects.Geometry.Arc@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Arc.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Arc.ToList">
+            <summary>
+            Creates a flat list with the values of the <see cref="T:Objects.Geometry.Arc"/>
+            This is only used for serialisation purposes.
+            </summary>
+            <returns>A list of numbers representing the <see cref="T:Objects.Geometry.Arc"/>'s value</returns>
+        </member>
+        <member name="M:Objects.Geometry.Arc.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Arc"/> instance based on a flat list of numerical values.
+            This is only used for deserialisation purposes.
+            </summary>
+            <remarks>The input list should be the result of having called <see cref="M:Objects.Geometry.Arc.ToList"/></remarks>
+            <param name="list">A list of numbers</param>
+            <returns>A new <see cref="T:Objects.Geometry.Arc"/> with the values assigned from the list.</returns>
+        </member>
+        <member name="T:Objects.Geometry.Box">
+            <summary>
+            Represents a 3-dimensional box oriented on a plane.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Box.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Box.#ctor(Objects.Geometry.Plane,Objects.Primitive.Interval,Objects.Primitive.Interval,Objects.Primitive.Interval,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Box"/> instance with a <see cref="T:Objects.Geometry.Plane"/> and coordinate intervals for all 3 axis {x , y , z}
+            </summary>
+            <param name="basePlane">The plane the box will be oriented by.</param>
+            <param name="xSize">The range of coordinates (min, max) for the X axis</param>
+            <param name="ySize">The range of coordinates (min, max) for the Y axis</param>
+            <param name="zSize">The range of coordinates (min, max) for the Z axis</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique application ID of the object.</param>
+        </member>
+        <member name="P:Objects.Geometry.Box.basePlane">
+            <summary>
+            Gets or sets the plane that defines the orientation of the <see cref="T:Objects.Geometry.Box"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Box.xSize">
+            <summary>
+            Gets or sets the <see cref="T:Objects.Primitive.Interval"/> that defines the min and max coordinate in the X direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Box.ySize">
+            <summary>
+            Gets or sets the <see cref="T:Objects.Primitive.Interval"/> that defines the min and max coordinate in the Y direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Box.zSize">
+            <summary>
+            Gets or sets the <see cref="T:Objects.Primitive.Interval"/> that defines the min and max coordinate in the Y direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Box.units">
+            <summary>
+            The units this object's coordinates are in.
+            </summary>
+            <remarks>
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Box.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Box.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Box.volume">
+            <inheritdoc/>
+        </member>
+        <member name="T:Objects.Geometry.Brep">
+            <summary>
+            Represents a "Boundary Representation" Solid
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Brep.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:Objects.Geometry.Brep"/> class.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.units">
+            <summary>
+            The unit's this object's coordinates are in.
+            </summary>
+            <remarks>
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Surfaces">
+            <summary>
+            Gets or sets the list of surfaces in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.SurfacesValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s surfaces.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Curve3D">
+            <summary>
+            Gets or sets the list of 3-dimensional curves in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Curve3DValues">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s 3D curves.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Curve3D"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Curve2D">
+            <summary>
+            Gets or sets the list of 2-dimensional UV curves in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Curve2DValues">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s 2D curves.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Curve2D"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Vertices">
+            <summary>
+            Gets or sets the list of vertices in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.VerticesValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s vertices.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Vertices"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Edges">
+            <summary>
+            Gets or sets the list of edges in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.EdgesValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s edges.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Edges"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Loops">
+            <summary>
+            Gets or sets the list of closed UV loops in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.LoopsValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s loops.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Loops"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Trims">
+            <summary>
+            Gets or sets the list of UV trim segments for each surface in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.TrimsValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s trims.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Trims"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Faces">
+            <summary>
+            Gets or sets the list of faces in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.FacesValue">
+            <summary>
+            Gets or sets the flat list of numbers representing the <see cref="T:Objects.Geometry.Brep"/>'s faces.
+            </summary>
+            <remarks>
+            This is only used for the <see cref="T:Objects.Geometry.Brep"/> class serialisation/deserialisation. You should use <see cref="P:Objects.Geometry.Brep.Faces"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Objects.Geometry.Brep.IsClosed">
+            <summary>
+            Gets or sets if this <see cref="T:Objects.Geometry.Brep"/> instance is closed or not.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.Orientation">
+            <summary>
+            Gets or sets the list of surfaces in this <see cref="T:Objects.Geometry.Brep"/> instance.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Brep.displayValue">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Brep.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Brep.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Brep.volume">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Brep.TransformTo(Objects.Other.Transform,Objects.Geometry.Brep@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Brep.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Objects.Geometry.BrepOrientation">
+            <summary>
+            Represents the orientation of a <see cref="T:Objects.Geometry.Brep"/>
+            </summary>
+        </member>
+        <member name="F:Objects.Geometry.BrepOrientation.None">
+            Brep has no specific orientation
+        </member>
+        <member name="F:Objects.Geometry.BrepOrientation.Inward">
+            Brep faces inward
+        </member>
+        <member name="F:Objects.Geometry.BrepOrientation.Outward">
+            Brep faces outward
+        </member>
+        <member name="F:Objects.Geometry.BrepOrientation.Unknown">
+            Orientation is not known
+        </member>
+        <member name="T:Objects.Geometry.BrepLoopType">
+            <summary>
+            Represents the type of a loop in a <see cref="T:Objects.Geometry.Brep"/>'s face.
+            </summary>
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.Unknown">
+            Loop type is not known
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.Outer">
+            Loop is the outer loop of a face
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.Inner">
+            Loop is an inner loop of a face
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.Slit">
+            Loop is a closed curve with no area.
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.CurveOnSurface">
+            Loop represents a curve on a surface
+        </member>
+        <member name="F:Objects.Geometry.BrepLoopType.PointOnSurface">
+            Loop is collapsed to a point.
+        </member>
+        <member name="T:Objects.Geometry.BrepTrimType">
+            <summary>
+            Represents the type of a trim in a <see cref="T:Objects.Geometry.Brep"/>'s loop.
+            </summary>
+        </member>
+        <member name="T:Objects.Geometry.BrepEdge">
+            <summary>
+            Represents an edge of the <see cref="P:Objects.Geometry.BrepEdge.Brep"/>.
+            </summary>
+        </member>
+        <member name="T:Objects.Geometry.BrepFace">
+            <summary>
+            Represents a face on a <see cref="P:Objects.Geometry.BrepFace.Brep"/>
+            </summary>
+        </member>
+        <member name="T:Objects.Geometry.BrepLoop">
+            <summary>
+            Represents a UV Trim Closed Loop on one of the <see cref="P:Objects.Geometry.BrepLoop.Brep"/>'s surfaces.
+            </summary>
+        </member>
+        <member name="T:Objects.Geometry.BrepTrim">
+            <summary>
+            Represents a UV Trim curve for one of the <see cref="P:Objects.Geometry.BrepTrim.Brep"/>'s surfaces.
+            </summary>
+        </member>
+        <member name="T:Objects.Geometry.Circle">
+            <summary>
+            Represents a circular curve based on a base <see cref="T:Objects.Geometry.Plane"/> and a <see cref="T:System.Double"/> as radius.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Circle.#ctor">
+            <summary>
+            Constructs an empty <see cref="T:Objects.Geometry.Circle"/> instance.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Circle.#ctor(Objects.Geometry.Plane,System.Double,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Circle"/> instance.
+            </summary>
+            <param name="plane">The plane where the circle lies</param>
+            <param name="radius">The radius of the circle</param>
+            <param name="units">The units the circle is modeled in</param>
+            <param name="applicationId">The unique ID of this circle in a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Circle.radius">
+            <summary>
+            The radius of the circle
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Circle.plane">
+            <summary>
+            The <see cref="T:Objects.Geometry.Plane"/> the circle lies in.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Circle.units">
+            <summary>
+            The units this object was modeled in.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Circle.domain">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Circle.length">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Circle.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Circle.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Circle.ToList">
+            <summary>
+            Returns the coordinates of this <see cref="T:Objects.Geometry.Circle"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the <see cref="T:Objects.Geometry.Circle"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Circle.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Circle"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this <see cref="T:Objects.Geometry.Circle"/></param>
+            <returns>A new <see cref="T:Objects.Geometry.Circle"/> with the provided values.</returns>
+        </member>
+        <member name="P:Objects.Geometry.ControlPoint.value">
+            <summary>
+            OBSOLETE - This is just here for backwards compatibility.
+            You should not use this for anything. Access coordinates using X,Y,Z and weight fields.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Curve.#ctor">
+            <summary>
+            Constructs an empty <see cref="T:Objects.Geometry.Curve"/> instance.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Curve.#ctor(Objects.Geometry.Polyline,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Curve"/> instance based on displayValue a polyline.
+            </summary>
+            <param name="poly">The polyline that will be this curve's <see cref="P:Objects.Geometry.Curve.displayValue"/></param>
+            <param name="units">The units this curve is be modelled in</param>
+            <param name="applicationId">The unique ID of this curve in a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Curve.rational">
+            <summary>
+            "True" if weights differ, "False" if weights are the same.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Curve.weights">
+            <summary>
+            Gets or sets the weights for this <see cref="T:Objects.Geometry.Curve"/>. Use a default value of 1 for unweighted points.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Curve.knots">
+            <summary>
+            Gets or sets the knots for this <see cref="T:Objects.Geometry.Curve"/>. Count should be equal to <see cref="P:Objects.Geometry.Curve.points"/> count + <see cref="P:Objects.Geometry.Curve.degree"/> + 1.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Curve.units">
+            <summary>
+            The units this object was specified in.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Curve.domain">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Curve.length">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Curve.displayValue">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Curve.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Curve.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Curve.TransformTo(Objects.Other.Transform,Objects.Geometry.Curve@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Curve.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Curve.GetPoints">
+            <returns><see cref="P:Objects.Geometry.Curve.points"/> as list of <see cref="T:Objects.Geometry.Point"/>s</returns>
+            <exception cref="T:Speckle.Core.Logging.SpeckleException">when list is malformed</exception>
+        </member>
+        <member name="M:Objects.Geometry.Curve.ToList">
+            <summary>
+            Returns the vales of this <see cref="T:Objects.Geometry.Curve"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the <see cref="T:Objects.Geometry.Curve"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Curve.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Curve"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this <see cref="T:Objects.Geometry.Curve"/></param>
+            <returns>A new <see cref="T:Objects.Geometry.Curve"/> with the provided values.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Ellipse.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Objects.Geometry.Ellipse"/> class.
+            This constructor is only intended for serialization/deserialization purposes.
+            Use other constructors to manually create ellipses.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Ellipse.#ctor(Objects.Geometry.Plane,System.Double,System.Double,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Objects.Geometry.Ellipse"/> class.
+            </summary>
+            <param name="plane">The plane to draw the ellipse in.</param>
+            <param name="radius1">First radius of the ellipse.</param>
+            <param name="radius2">Second radius of the ellipse.</param>
+            <param name="applicationId">Application ID, defaults to null.</param>
+        </member>
+        <member name="M:Objects.Geometry.Ellipse.#ctor(Objects.Geometry.Plane,System.Double,System.Double,Objects.Primitive.Interval,Objects.Primitive.Interval,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Objects.Geometry.Ellipse"/> class.
+            </summary>
+            <param name="plane">The plane to draw the ellipse in.</param>
+            <param name="radius1">First radius of the ellipse.</param>
+            <param name="radius2">Second radius of the ellipse.</param>
+            <param name="domain">The curve's internal parametrization domain.</param>
+            <param name="trimDomain">The domain to trim the curve with. Will be null if the ellipse is not trimmed.</param>
+            <param name="applicationId">Application ID, defaults to null.</param>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.firstRadius">
+            <summary>
+            Gets or sets the first radius of the <see cref="T:Objects.Geometry.Ellipse"/>. This is usually the major radius.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.secondRadius">
+            <summary>
+            Gets or sets the second radius of the <see cref="T:Objects.Geometry.Ellipse"/>. This is usually the minor radius.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.plane">
+            <summary>
+            Gets or sets the plane to draw this ellipse in.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.trimDomain">
+            <summary>
+            Gets or set the domain interval to trim this <see cref="T:Objects.Geometry.Ellipse"/> with.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.bbox">
+            <inheritdoc />
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.domain">
+            <summary>
+            Gets or sets the domain interval for this <see cref="T:Objects.Geometry.Ellipse"/>.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.length">
+            <inheritdoc />
+        </member>
+        <member name="P:Objects.Geometry.Ellipse.area">
+            <inheritdoc />
+        </member>
+        <member name="P:Objects.Geometry.Line.value">
+            <summary>
+            OBSOLETE - This is just here for backwards compatibility.
+            You should not use this for anything. Access coordinates using start and end point.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.#ctor(System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Double},System.String,System.String)">
+            <summary>
+            Constructs a new mesh from it's raw values.
+            </summary>
+            <param name="vertices"></param>
+            <param name="faces"></param>
+            <param name="colors"></param>
+            <param name="texture_coords"></param>
+            <param name="units"></param>
+            <param name="applicationId"></param>
+        </member>
+        <member name="P:Objects.Geometry.Mesh.colors">
+            <summary> Vertex colors as ARGB <see cref="T:System.Int32"/>s</summary>
+        </member>
+        <member name="P:Objects.Geometry.Mesh.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Mesh"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Mesh.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Mesh.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Mesh.volume">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.Transform(Objects.Other.Transform)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.TransformTo(Objects.Other.Transform,Objects.Geometry.Mesh@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.GetPoint(System.Int32)">
+            <summary>
+            Gets a vertex as a <see cref="T:Objects.Geometry.Point"/> by <paramref name="index"/>
+            </summary>
+            <param name="index">The index of the vertex</param>
+            <returns>Vertex as a <see cref="T:Objects.Geometry.Point"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.GetPoints">
+            <returns><see cref="P:Objects.Geometry.Mesh.vertices"/> as list of <see cref="T:Objects.Geometry.Point"/>s</returns>
+            <exception cref="T:Speckle.Core.Logging.SpeckleException">when list is malformed</exception>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.GetTextureCoordinate(System.Int32)">
+            <summary>
+            Gets a texture coordinate as a <see cref="!:(T1, T2)"/> by <paramref name="index"/>
+            </summary>
+            <param name="index">The index of the texture coordinate</param>
+            <returns>Texture coordinate as a <see cref="!:(T1, T2)"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Mesh.AlignVerticesWithTexCoordsByIndex">
+            <summary>
+            If not already so, this method will align <see cref="P:Objects.Geometry.Mesh.vertices"/>
+            such that a vertex and its corresponding texture coordinates have the same index.
+            This alignment is what is expected by most applications.<br/>
+            </summary>
+            <remarks>
+            If the calling application expects
+            <code>vertices.count == textureCoordinates.count</code>
+            Then this method should be called by the <c>MeshToNative</c> method before parsing <see cref="P:Objects.Geometry.Mesh.vertices"/> and <see cref="P:Objects.Geometry.Mesh.faces"/>
+            to ensure compatibility with geometry originating from applications that map <see cref="P:Objects.Geometry.Mesh.vertices"/> to <see cref="P:Objects.Geometry.Mesh.textureCoordinates"/> using vertex instance index (rather than vertex index)
+            <br/>
+            <see cref="P:Objects.Geometry.Mesh.vertices"/>, <see cref="P:Objects.Geometry.Mesh.colors"/>, and <see cref="P:Objects.Geometry.Mesh.faces"/> lists will be modified to contain no shared vertices (vertices shared between polygons)
+            </remarks>
+        </member>
+        <member name="T:Objects.Geometry.Plane">
+            <summary>
+            A 3-dimensional Plane consisting of an origin <see cref="T:Objects.Geometry.Point"/>, and 3 <see cref="T:Objects.Geometry.Vector"/> as it's X, Y and Z axis.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Plane.#ctor">
+            <summary>
+            Constructs an empty <see cref="T:Objects.Geometry.Plane"/>
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Plane.#ctor(Objects.Geometry.Point,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Geometry.Vector,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Plane"/> given it's individual values.
+            </summary>
+            <param name="origin">The point to be used as origin</param>
+            <param name="normal">The vector to be used as Z axis</param>
+            <param name="xDir">The vector to be used as the X axis</param>
+            <param name="yDir">The vector to be used as the Y axis</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique ID of this polyline in a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Plane.origin">
+            <summary>
+            The <see cref="T:Objects.Geometry.Plane"/>s origin point.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Plane.normal">
+            <summary>
+            The <see cref="T:Objects.Geometry.Plane"/>s Z axis.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Plane.xdir">
+            <summary>
+            The <see cref="T:Objects.Geometry.Plane"/>s X axis.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Plane.ydir">
+            <summary>
+            The <see cref="T:Objects.Geometry.Plane"/>s Y axis.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Plane.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Plane"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Plane.TransformTo(Objects.Other.Transform,Objects.Geometry.Plane@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Plane.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Plane.ToList">
+            <summary>
+            Returns the values of this <see cref="T:Objects.Geometry.Plane"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the Plane.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Plane.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Plane"/> based on a list of values and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this plane</param>
+            <returns>A new <see cref="T:Objects.Geometry.Plane"/> with the provided values.</returns>
+        </member>
+        <member name="T:Objects.Geometry.Point">
+            <summary>
+            A 3-dimensional point
+            </summary>
+            <remarks>
+            TODO: The Point class does not override the Equality operator, which means that there may be cases where `Equals` is used instead of `==`, as the comparison will be done by reference, not value.
+            </remarks>
+        </member>
+        <member name="M:Objects.Geometry.Point.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Point.#ctor(System.Double,System.Double,System.Double,System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Point"/> from a set of coordinates and it's units.
+            </summary>
+            <param name="x">The x coordinate</param>
+            <param name="y">The y coordinate</param>
+            <param name="z">The z coordinate</param>
+            <param name="units">The units the point's coordinates are in.</param>
+            <param name="applicationId">The object's unique application ID</param>
+        </member>
+        <member name="M:Objects.Geometry.Point.#ctor(Objects.Geometry.Vector)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Point"/> from a <see cref="T:Objects.Geometry.Vector"/>
+            </summary>
+            <param name="vector">The Vector whose coordinates will be used for the Point</param>
+        </member>
+        <member name="P:Objects.Geometry.Point.value">
+            <summary>
+            Gets or sets the coordinates of the <see cref="T:Objects.Geometry.Point"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Point.x">
+            <summary>
+            The x coordinate of the point.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Point.y">
+            <summary>
+            The y coordinate of the point.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Point.z">
+            <summary>
+            The z coordinate of the point.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Point.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Vector"/> is in.
+            This should be one of the units specified in <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Point.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Point.TransformTo(Objects.Other.Transform,Objects.Geometry.Point@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Point.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Point.ToList">
+            <summary>
+            Returns the coordinates of this <see cref="T:Objects.Geometry.Point"/> as a list of numbers
+            </summary>
+            <returns>A list of coordinates {x, y, z} </returns>
+        </member>
+        <member name="M:Objects.Geometry.Point.FromList(System.Collections.Generic.IList{System.Double},System.String)">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Point"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of coordinates {x, y, z}</param>
+            <param name="units">The units the coordinates are in</param>
+            <returns>A new <see cref="T:Objects.Geometry.Point"/> with the provided coordinates.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Point.Deconstruct(System.Double@,System.Double@,System.Double@,System.String@)">
+            <summary>
+            Deconstructs a <see cref="T:Objects.Geometry.Point"/> into it's coordinates and units
+            </summary>
+            <param name="x">The x coordinate</param>
+            <param name="y">The y coordinate</param>
+            <param name="z">The z coordinate</param>
+            <param name="units">The units the point's coordinates are in.</param>
+        </member>
+        <member name="M:Objects.Geometry.Point.Deconstruct(System.Double@,System.Double@,System.Double@)">
+            <summary>
+            Deconstructs a <see cref="T:Objects.Geometry.Point"/> into it's coordinates and units
+            </summary>
+            <param name="x">The x coordinate</param>
+            <param name="y">The y coordinate</param>
+            <param name="z">The z coordinate</param>
+        </member>
+        <member name="M:Objects.Geometry.Point.Midpoint(Objects.Geometry.Point,Objects.Geometry.Point)">
+            <summary>
+            Computes a point equidistant from two points.
+            </summary>
+            <param name="point1">First point.</param>
+            <param name="point2">Second point.</param>
+            <returns>A point at the same distance from <paramref name="point1"/> and <paramref name="point2"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Point.Distance(Objects.Geometry.Point,Objects.Geometry.Point)">
+            <summary>
+            Computes the distance between two points
+            </summary>
+            <param name="point1">First point.</param>
+            <param name="point2">Second point.</param>
+            <returns>The distance from <paramref name="point1"/> to <paramref name="point2"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Point.DistanceTo(Objects.Geometry.Point)">
+            <summary>
+            Computes the distance between two points.
+            </summary>
+            <param name="point">point for distance measurement</param>
+            <returns>The length of the line between this and the other point</returns>
+        </member>
+        <member name="T:Objects.Geometry.Pointcloud">
+            <summary>
+            A collection of points, with color and size support.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Pointcloud.#ctor">
+            <summary>
+            Constructs an empty <see cref="T:Objects.Geometry.Pointcloud"/>
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Pointcloud.#ctor(System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Double})">
+            <param name="points">Flat list of x,y,z coordinates</param>
+            <param name="colors">Optional list of colors</param>
+            <param name="sizes">Optional list of sizes</param>
+        </member>
+        <member name="P:Objects.Geometry.Pointcloud.points">
+            <summary>
+            Gets or sets the list of points of this <see cref="T:Objects.Geometry.Pointcloud"/>, stored as a flat list of coordinates [x1,y1,z1,x2,y2,...]
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Pointcloud.colors">
+            <summary>
+            Gets or sets the list of colors of this <see cref="T:Objects.Geometry.Pointcloud"/>'s points., stored as ARGB <see cref="T:System.Int32"/>s.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Pointcloud.sizes">
+            <summary>
+            Gets or sets the list of sizes of this <see cref="T:Objects.Geometry.Pointcloud"/>'s points.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Pointcloud.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Pointcloud"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Pointcloud.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Pointcloud.TransformTo(Objects.Other.Transform,Objects.Geometry.Pointcloud@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Pointcloud.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Pointcloud.GetPoints">
+            <returns><see cref="P:Objects.Geometry.Pointcloud.points"/> as list of <see cref="T:Objects.Geometry.Point"/>s</returns>
+            <exception cref="T:Speckle.Core.Logging.SpeckleException">when list is malformed</exception>
+        </member>
+        <member name="T:Objects.Geometry.Polycurve">
+            <summary>
+            A curve that is comprised of multiple curves connected.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.#ctor">
+            <summary>
+            Constructs a new empty <see cref="T:Objects.Geometry.Polycurve"/> instance.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.#ctor(System.String,System.String)">
+            <summary>
+            Constructs a new empty <see cref="T:Objects.Geometry.Polycurve"/> with defined units and unique application ID.
+            </summary>
+            <param name="units">The units the Polycurve was modelled in.</param>
+            <param name="applicationId">The unique ID of this polyline in a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.segments">
+            <summary>
+            Gets or sets the list of segments that comprise this <see cref="T:Objects.Geometry.Polycurve"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.closed">
+            <summary>
+            Gets or sets a Boolean value indicating if the <see cref="T:Objects.Geometry.Polycurve"/> is closed
+            (i.e. The start point of the first segment and the end point of the last segment coincide.)
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Polycurve"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.domain">
+            <summary>
+            The internal domain of this curve.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.length">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Polycurve.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.op_Implicit(Objects.Geometry.Polyline)~Objects.Geometry.Polycurve">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Polycurve"/> instance from an existing <see cref="T:Objects.Geometry.Polyline"/> curve.
+            </summary>
+            <param name="polyline">The polyline to be used when constructing the <see cref="T:Objects.Geometry.Polycurve"/></param>
+            <returns>A <see cref="T:Objects.Geometry.Polycurve"/> with the same shape as the provided polyline.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.ToList">
+            <summary>
+            Returns the values of this <see cref="T:Objects.Geometry.Polycurve"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the polycurve.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Polycurve.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Polycurve"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this polycurve</param>
+            <returns>A new <see cref="T:Objects.Geometry.Polycurve"/> with the provided values.</returns>
+        </member>
+        <member name="T:Objects.Geometry.Polyline">
+            <summary>
+            A polyline curve, defined by a set of vertices.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.#ctor">
+            <summary>
+            Constructs an empty <see cref="T:Objects.Geometry.Polyline"/>
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.#ctor(System.Collections.Generic.IEnumerable{System.Double},System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Polyline"/> instance from a flat list of coordinates.
+            </summary>
+            <param name="coordinatesArray">The array of 3-dimensional coordinates [x1,y1,z1,x2,y2,...</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique ID of this polyline in a specific application</param>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.#ctor(System.Collections.Generic.List{System.Double},System.String,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Polyline"/> instance from a flat list of coordinates.
+            </summary>
+            <param name="coordinates">The list of 3-dimensional coordinates [x1,y1,z1,x2,y2,...</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique ID of this polyline in a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.value">
+            <summary>
+            Gets or sets the raw coordinates that define this polyline. Use GetPoints instead to access this data as <see cref="T:Objects.Geometry.Point"/> instances instead.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.closed">
+            <summary>
+            If true, do not add the last point to the value list. Polyline first and last points should be unique.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Polyline"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.points">
+            <summary>
+            Gets the list of points representing the vertices of this polyline.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToType(System.Type,System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.GetTypeCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToBoolean(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToByte(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToChar(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToDateTime(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToDecimal(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToDouble(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToInt16(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToInt32(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToInt64(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToSByte(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToSingle(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToString(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToUInt16(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToUInt32(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToUInt64(System.IFormatProvider)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.domain">
+            <summary>
+            The internal domain of this curve.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.length">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Polyline.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.GetPoints">
+            <remarks>This function may be suboptimal for performance for polylines with many points</remarks>
+             <returns><see cref="P:Objects.Geometry.Polyline.value"/> as List of <see cref="T:Objects.Geometry.Point"/>s</returns>
+             <exception cref="T:Speckle.Core.Logging.SpeckleException">when list is malformed</exception>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.ToList">
+            <summary>
+            Returns the values of this <see cref="T:Objects.Geometry.Polyline"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the polyline.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Polyline.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Polyline"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this polyline</param>
+            <returns>A new <see cref="T:Objects.Geometry.Polyline"/> with the provided values.</returns>
+        </member>
+        <member name="T:Objects.Geometry.Surface">
+            <summary>
+            A Surface in NURBS form.
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Surface.#ctor">
+            <summary>
+            Constructs a new empty <see cref="T:Objects.Geometry.Surface"/>
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Surface.#ctor(System.String,System.String)">
+            <summary>
+            Constructs a new empty <see cref="T:Objects.Geometry.Surface"/>
+            </summary>
+            <param name="units">The units this surface is modeled in</param>
+            <param name="applicationId">This surface's unique identifier on a specific application</param>
+        </member>
+        <member name="P:Objects.Geometry.Surface.degreeU">
+            <summary>
+            The degree of the surface in the U direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.degreeV">
+            <summary>
+            The degree of the surface in the V direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.rational">
+            <summary>
+            Determines if the <see cref="T:Objects.Geometry.Surface"/> is rational.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.pointData">
+            <summary>
+            The raw data of the surface's control points. Use GetControlPoints or SetControlPoints instead of accessing this directly.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.countU">
+            <summary>
+            The number of control points in the U direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.countV">
+            <summary>
+            The number of control points in the V direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.knotsU">
+            <summary>
+            The knot vector in the U direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.knotsV">
+            <summary>
+            The knot vector in the V direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.domainU">
+            <summary>
+            The surface's domain in the U direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.domainV">
+            <summary>
+            The surface's domain in the V direction
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.closedU">
+            <summary>
+            Determines if a surface is closed around the <see cref="P:Objects.Geometry.Surface.domainU"/>.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.closedV">
+            <summary>
+            Determines if a surface is closed around the <see cref="P:Objects.Geometry.Surface.domainV"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Surface"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Surface.area">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.Geometry.Surface.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Surface.TransformTo(Objects.Other.Transform,Objects.Geometry.Surface@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Surface.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Surface.GetControlPoints">
+            <summary>
+            Gets the control points of this s<see cref="T:Objects.Geometry.Surface"/>
+            </summary>
+            <returns>A 2-dimensional array representing this <see cref="T:Objects.Geometry.Surface"/>s control points.</returns>
+            <remarks>The ControlPoints will be ordered following directions "[u][v]"</remarks>
+        </member>
+        <member name="M:Objects.Geometry.Surface.SetControlPoints(System.Collections.Generic.List{System.Collections.Generic.List{Objects.Geometry.ControlPoint}})">
+            <summary>
+            Sets the control points of this <see cref="T:Objects.Geometry.Surface"/>.
+            </summary>
+            <param name="value">A 2-dimensional array of <see cref="T:Objects.Geometry.ControlPoint"/> instances.</param>
+            <remarks>The <see cref="!:value"/> must be ordered following directions "[u][v]"</remarks>
+        </member>
+        <member name="M:Objects.Geometry.Surface.ToList">
+            <summary>
+            Returns the coordinates of this <see cref="T:Objects.Geometry.Surface"/> as a list of numbers
+            </summary>
+            <returns>A list of values representing the surface</returns>
+        </member>
+        <member name="M:Objects.Geometry.Surface.FromList(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Creates a new <see cref="T:Objects.Geometry.Surface"/> based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of values representing this surface</param>
+            <returns>A new <see cref="T:Objects.Geometry.Surface"/> with the provided values.</returns>
+        </member>
+        <member name="T:Objects.Geometry.Vector">
+            <summary>
+            A 3-dimensional vector
+            </summary>
+        </member>
+        <member name="M:Objects.Geometry.Vector.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Vector.#ctor(System.Double,System.Double,System.String,System.String)">
+            <summary>
+            Constructs a new 2D <see cref="T:Objects.Geometry.Vector"/> from it's X and Y coordinates.
+            </summary>
+            <param name="x">The x coordinate of the vector</param>
+            <param name="y">The y coordinate of the vector</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique application ID of the object.</param>
+        </member>
+        <member name="M:Objects.Geometry.Vector.#ctor(System.Double,System.Double,System.Double,System.String,System.String)">
+            <summary>
+            Constructs a new 2D <see cref="T:Objects.Geometry.Vector"/> from it's X and Y coordinates.
+            </summary>
+            <param name="x">The x coordinate of the vector</param>
+            <param name="y">The y coordinate of the vector</param>
+            <param name="z">The y coordinate of the vector</param>
+            <param name="units">The units the coordinates are in.</param>
+            <param name="applicationId">The unique application ID of the object.</param>
+        </member>
+        <member name="M:Objects.Geometry.Vector.#ctor(Objects.Geometry.Point,System.String)">
+            <summary>
+            Constructs a new <see cref="T:Objects.Geometry.Vector"/> from a <see cref="T:Objects.Geometry.Point"/>
+            </summary>
+            <param name="point">The point whose coordinates will be used</param>
+            <param name="applicationId">The unique application ID of the object.</param>
+        </member>
+        <member name="P:Objects.Geometry.Vector.value">
+            <summary>
+            Gets or sets the coordinates of the vector
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Vector.units">
+            <summary>
+            The unit's this <see cref="T:Objects.Geometry.Vector"/> is in.
+            This should be one of <see cref="T:Speckle.Core.Kits.Units"/>
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Vector.x">
+            <summary>
+            The x coordinate of the vector.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Vector.y">
+            <summary>
+            The y coordinate of the vector.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Vector.z">
+            <summary>
+            The z coordinate of the vector.
+            </summary>
+        </member>
+        <member name="P:Objects.Geometry.Vector.Length">
+            <summary>
+            Gets the Euclidean length of this vector.
+            </summary>
+            <returns>Length of the vector.</returns>
+        </member>
+        <member name="P:Objects.Geometry.Vector.bbox">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Vector.TransformTo(Objects.Other.Transform,Objects.Geometry.Vector@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Vector.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.Geometry.Vector.ToList">
+            <summary>
+            Returns the coordinates of this <see cref="T:Objects.Geometry.Vector"/> as a list of numbers
+            </summary>
+            <returns>A list of coordinates {x, y, z} </returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.FromList(System.Collections.Generic.List{System.Double},System.String)">
+            <summary>
+            Creates a new vector based on a list of coordinates and the unit they're drawn in.
+            </summary>
+            <param name="list">The list of coordinates {x, y, z}</param>
+            <param name="units">The units the coordinates are in</param>
+            <returns>A new <see cref="T:Objects.Geometry.Vector"/> with the provided coordinates.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.op_Division(Objects.Geometry.Vector,System.Double)">
+            <summary>
+            Divides a vector by a numerical value. This will divide each coordinate by the provided value.
+            </summary>
+            <param name="vector">The vector to divide</param>
+            <param name="val">The value to divide by</param>
+            <returns>The resulting <see cref="T:Objects.Geometry.Vector"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.op_Multiply(Objects.Geometry.Vector,System.Double)">
+            <summary>
+            Multiplies a vector by a numerical value. This will multiply each coordinate by the provided value.
+            </summary>
+            <param name="vector">The vector to multiply</param>
+            <param name="val">The value to multiply by</param>
+            <returns>The resulting <see cref="T:Objects.Geometry.Vector"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.op_Addition(Objects.Geometry.Vector,Objects.Geometry.Vector)">
+            <summary>
+            Adds two vectors by adding each of their coordinates.
+            </summary>
+            <param name="vector1">The first vector</param>
+            <param name="vector2">The second vector</param>
+            <returns>The resulting <see cref="T:Objects.Geometry.Vector"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.op_Subtraction(Objects.Geometry.Vector,Objects.Geometry.Vector)">
+            <summary>
+            Subtracts two vectors by subtracting each of their coordinates.
+            </summary>
+            <param name="vector1">The first vector</param>
+            <param name="vector2">The second vector</param>
+            <returns>The resulting <see cref="T:Objects.Geometry.Vector"/></returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.DotProduct(Objects.Geometry.Vector,Objects.Geometry.Vector)">
+            <summary>
+            Gets the scalar product (dot product) of two given vectors
+            Dot product = u1*v1 + u2*v2 + u3*v3.
+            </summary>
+            <param name="u">First vector.</param>
+            <param name="v">Second vector.</param>
+            <returns>Numerical value of the dot product.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.CrossProduct(Objects.Geometry.Vector,Objects.Geometry.Vector)">
+            <summary>
+            Computes the vector product (cross product) of two given vectors
+            Cross product = { u2 * v3 - u3 * v2; u3 * v1 - u1 * v3; u1 * v2 - u2 * v1 }.
+            </summary>
+            <param name="u">First vector.</param>
+            <param name="v">Second vector.</param>
+            <returns>Vector result of the cross product.</returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.Normalize">
+            <summary>
+            Compute and return a unit vector from this vector
+            </summary>
+            <returns>a normalized unit vector</returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.Negate">
+            <summary>
+            Inverses the direction of the vector, equivalent to multiplying by -1
+            </summary>
+            <returns>A pointing in the opposite direction</returns>
+        </member>
+        <member name="M:Objects.Geometry.Vector.Unit">
+            <summary>
+            Returns a normalized copy of this vector.
+            </summary>
+            <returns>A copy of this vector unitized.</returns>
+        </member>
+        <member name="T:Objects.IHasBoundingBox">
+            <summary>
+            Represents an object that has a <see cref="P:Objects.IHasBoundingBox.bbox"/>
+            </summary>
+        </member>
+        <member name="P:Objects.IHasBoundingBox.bbox">
+            <summary>
+            The bounding box containing the object.
+            </summary>
+        </member>
+        <member name="T:Objects.IHasArea">
+            <summary>
+            Represents a <see cref="T:Speckle.Core.Models.Base"/> object that has <see cref="P:Objects.IHasArea.area"/>
+            </summary>
+        </member>
+        <member name="P:Objects.IHasArea.area">
+            <summary>
+            The area of the object
+            </summary>
+        </member>
+        <member name="T:Objects.IHasVolume">
+            <summary>
+            Represents an object that has <see cref="P:Objects.IHasVolume.volume"/>
+            </summary>
+        </member>
+        <member name="P:Objects.IHasVolume.volume">
+            <summary>
+            The volume of the object
+            </summary>
+        </member>
+        <member name="T:Objects.ICurve">
+            <summary>
+            Represents
+            </summary>
+        </member>
+        <member name="P:Objects.ICurve.length">
+            <summary>
+            The length of the curve.
+            </summary>
+        </member>
+        <member name="P:Objects.ICurve.domain">
+            <summary>
+            The numerical domain driving the curve's internal parametrization.
+            </summary>
+        </member>
+        <member name="T:Objects.ITransformable`1">
+            <summary>
+            Generic Interface for transformable objects.
+            </summary>
+            <typeparam name="T">The type of object to support transformations.</typeparam>
+        </member>
+        <member name="M:Objects.ITransformable`1.TransformTo(Objects.Other.Transform,`0@)">
+            <inheritdoc cref="M:Objects.ITransformable.TransformTo(Objects.Other.Transform,Objects.ITransformable@)"/>
+        </member>
+        <member name="T:Objects.ITransformable">
+            <summary>
+            Interface for transformable objects where the type may not be known on convert (eg ICurve implementations)
+            </summary>
+        </member>
+        <member name="M:Objects.ITransformable.TransformTo(Objects.Other.Transform,Objects.ITransformable@)">
+            <summary>
+            Returns a copy of the object with it's coordinates transformed by the provided <paramref name="transform"/>
+            </summary>
+            <param name="transform">The <see cref="T:Objects.Other.Transform"/> to be applied.</param>
+            <param name="transformed">The transformed copy of the object.</param>
+            <returns>True if the transform operation was successful, false otherwise.</returns>
+        </member>
+        <member name="T:Objects.IDisplayValue`1">
+            <summary>
+            Specifies displayable <see cref="T:Speckle.Core.Models.Base"/> value(s) to be used as a fallback
+            if a displayable form cannot be converted.
+            </summary>
+            <example>
+            <see cref="T:Speckle.Core.Models.Base"/> objects that represent conceptual / abstract / mathematically derived geometry
+            can use <see cref="P:Objects.IDisplayValue`1.displayValue"/> to be used in case the object lacks a natively displayable form.
+            (e.g <see cref="T:Objects.Geometry.Spiral"/>, <see cref="T:Objects.BuiltElements.Wall"/>, <see cref="T:Objects.BuiltElements.Pipe"/>)
+            </example>
+            <typeparam name="T">
+            Type of display value.
+            Expected to be either a <see cref="T:Speckle.Core.Models.Base"/> type or a <see cref="T:System.Collections.Generic.List`1"/> of <see cref="T:Speckle.Core.Models.Base"/>s,
+            most likely <see cref="T:Objects.Geometry.Mesh"/> or <see cref="T:Objects.Geometry.Polyline"/>.
+            </typeparam>
+        </member>
+        <member name="P:Objects.IDisplayValue`1.displayValue">
+            <summary>
+            <see cref="P:Objects.IDisplayValue`1.displayValue"/> <see cref="T:Speckle.Core.Models.Base"/>(s) will be used to display this <see cref="T:Speckle.Core.Models.Base"/>
+            if a native displayable object cannot be converted.
+            </summary>
+        </member>
+        <member name="T:Objects.ObjectsKit">
+            <summary>
+            The default Speckle Kit
+            </summary>
+        </member>
+        <member name="P:Objects.ObjectsKit.ObjectsFolder">
+            <summary>
+            Local installations store objects in C:\Users\USERNAME\AppData\Roaming\Speckle\Kits\Objects
+            Admin/System-wide installations in C:\ProgramData\Speckle\Kits\Objects
+            </summary>
+        </member>
+        <member name="P:Objects.ObjectsKit.Description">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.ObjectsKit.Name">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.ObjectsKit.Author">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.ObjectsKit.WebsiteOrEmail">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.ObjectsKit.Types">
+            <inheritdoc/>
+        </member>
+        <member name="P:Objects.ObjectsKit.Converters">
+            <inheritdoc/>
+        </member>
+        <member name="M:Objects.ObjectsKit.LoadConverter(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Objects.Organization.ModelInfo">
+            <summary>
+            Basic model info class to be attached to the <see cref="!:Model.info"/> field on a <see cref="!:Model"/> object.
+            It contains general information about the model and can be extended or subclassed to include more application-specific
+            information.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.ModelInfo.name">
+            <summary>
+            The name of the model.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.ModelInfo.number">
+            <summary>
+            The identifying number of the model.
+            </summary>
+        </member>
+        <member name="T:Objects.Organization.BIMModelInfo">
+            <summary>
+            Extended <see cref="T:Objects.Organization.ModelInfo"/> to be attached to the <see cref="!:Model.info"/> field on a <see cref="!:Model"/> object.
+            This contains additional properties applicable to AEC projects.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.clientName">
+            <summary>
+            The name of the client
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.buildingName">
+            <summary>
+            The name of the building
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.status">
+            <summary>
+            The status or phase of the model.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.address">
+            <summary>
+            The address of the model.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.siteName">
+            <summary>
+            The name of the site location as a string.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.latitude">
+            <summary>
+            The latitude of the site location in radians.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.longitude">
+            <summary>
+            The longitude of the site location in radians.
+            </summary>
+        </member>
+        <member name="P:Objects.Organization.BIMModelInfo.locations">
+            <summary>
+            A list of origin locations within this model as a list of <see cref="T:Objects.Other.Transform"/>s
+            </summary>
+        </member>
+        <member name="T:Objects.Other.BlockDefinition">
+            <summary>
+            Block definition class
+            </summary>
+        </member>
+        <member name="P:Objects.Other.BlockDefinition.basePoint">
+            <summary>
+            The definition base point of the block
+            </summary>
+        </member>
+        <member name="M:Objects.Other.BlockDefinition.GetBasePointTransform">
+            <summary>
+            Returns the translation transform of the base point to the internal origin [0,0,0]
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Objects.Other.Dimension">
+            <summary>
+            Dimension class
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.measurement">
+            <summary>
+            The measurement of the dimension.
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.value">
+            <summary>
+            The text of the dimension, without any formatting
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.richText">
+            <summary>
+            The text of the dimension, with rtf formatting
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.position">
+            <summary>
+            The position of the dimension
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.textPosition">
+            <summary>
+            The position of the text of the dimension
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Dimension.displayValue">
+            <summary>
+            Curves representing the annotation
+            </summary>
+        </member>
+        <member name="T:Objects.Other.DistanceDimension">
+            <summary>
+            Dimension class measuring a distance
+            </summary>
+        </member>
+        <member name="P:Objects.Other.DistanceDimension.direction">
+            <summary>
+            The unitized normal of the dimension.
+            </summary>
+        </member>
+        <member name="P:Objects.Other.DistanceDimension.isOrdinate">
+            <summary>
+            Indicates if this dimension is an ordinate dimension
+            </summary>
+            <remarks> Ordinate dimensions (measuring distance between two points exclusively along the x or y axis)
+            are in practice drawn with different conventions than linear dimensions, and are treated as a special subset of them.</remarks>
+        </member>
+        <member name="P:Objects.Other.DistanceDimension.measured">
+            <summary>
+            The objects being measured.
+            </summary>
+            <remarks>
+            Distance measurements are between two points
+            </remarks>
+        </member>
+        <member name="T:Objects.Other.LengthDimension">
+            <summary>
+            Dimension class measuring a length
+            </summary>
+        </member>
+        <member name="P:Objects.Other.LengthDimension.measured">
+            <summary>
+            The objects being measured.
+            </summary>
+            <remarks>
+            For length dimensions, this is a curve
+            </remarks>
+        </member>
+        <member name="T:Objects.Other.AngleDimension">
+            <summary>
+            Dimension class measuring an angle
+            </summary>
+        </member>
+        <member name="P:Objects.Other.AngleDimension.measured">
+            <summary>
+            The objects being measured.
+            </summary>
+            <remarks>
+            For angle dimensions, this is two lines
+            </remarks>
+        </member>
+        <member name="T:Objects.Other.DisplayStyle">
+            <summary>
+            Minimal display style class. Developed primarily for display styles in Rhino and AutoCAD.
+            Rhino object attributes uses OpenNURBS definition for linetypes and lineweights
+            </summary>
+        </member>
+        <member name="P:Objects.Other.DisplayStyle.lineweight">
+            <summary>
+            The plot weight in the style units
+            </summary>
+            <remarks>A value of 0 indicates a default weight, and -1 indicates an invisible line</remarks>
+        </member>
+        <member name="T:Objects.Other.HatchLoop">
+            <summary>
+            Represents a Hatch Loop from a <see cref="T:Objects.Other.Hatch"/>'s curve.
+            </summary>
+        </member>
+        <member name="T:Objects.Other.HatchLoopType">
+            <summary>
+            Represents the type of a loop in a <see cref="T:Objects.Other.Hatch"/>'s curves.
+            </summary>
+        </member>
+        <member name="P:Objects.Other.Instance.transform">
+            <summary>
+            The column-dominant 4x4 transform of this instance.
+            </summary>
+            <remarks>
+            Indicates transform from internal origin [0,0,0]
+            </remarks>
+        </member>
+        <member name="P:Objects.Other.Instance.units">
+            <summary>
+            The units of this Instance, should be the same as the instance transform units
+            </summary>
+        </member>
+        <member name="T:Objects.Other.Instance`1">
+            <summary>
+            Generic instance class
+            </summary>
+        </member>
+        <member name="T:Objects.Other.BlockInstance">
+            <summary>
+            Block instance class
+            </summary>
+        </member>
+        <member name="M:Objects.Other.BlockInstance.GetInsertionPlane">
+            <summary>
+            Returns a plane representing the insertion point and orientation of this Block instance.
+            </summary>
+            <remarks>This method will skip scaling. If you need scaling, we recommend using the transform instead.</remarks>
+            <returns>A Plane on the insertion point of this Block Instance, with the correct 3-axis rotations.</returns>
+        </member>
+        <member name="M:Objects.Other.Revit.RevitInstance.GetInsertionPlane">
+            <summary>
+            Returns a plane representing the insertion point and orientation of this revit instance.
+            </summary>
+            <remarks>This method will skip scaling. If you need scaling, we recommend using the transform instead.</remarks>
+            <returns>A Plane on the insertion point of this Block Instance, with the correct 3-axis rotations.</returns>
+        </member>
+        <member name="T:Objects.Other.Revit.RevitMaterial">
+            <summary>
+            Material in Revit defininf all revit properties from Autodesk.Revit.DB.Material
+            </summary>
+        </member>
+        <member name="T:Objects.Other.Material">
+            <summary>
+            Generic class for materials containing generic parameters
+            </summary>
+        </member>
+        <member name="P:Objects.Other.MaterialQuantity.area">
+            <summary>
+            Area of the material on a element
+            </summary>
+        </member>
+        <member name="P:Objects.Other.MaterialQuantity.units">
+            <summary>
+            UnitMeasure of the quantity,e.g meters implies squaremeters for area and cubicmeters for the volume
+            </summary>
+        </member>
+        <member name="T:Objects.Other.RenderMaterial">
+             <summary>
+             Minimal physically based material DTO class. Based on references from
+             https://threejs.org/docs/index.html#api/en/materials/MeshStandardMaterial
+             Theoretically has equivalents in Unity and Unreal.
+            
+             See: https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html
+             And: https://blogs.unity3d.com/2014/10/29/physically-based-shading-in-unity-5-a-primer/
+             </summary>
+        </member>
+        <member name="T:Objects.Other.Text">
+            <summary>
+            Text class for Rhino and AutoCAD
+            </summary>
+        </member>
+        <member name="T:Objects.Other.Transform">
+            <summary>
+            Generic transform class
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.#ctor(System.Double[],System.String)">
+            <summary>
+            Construct a transform from a row-based double array of size 16
+            </summary>
+            <param name="value"></param>
+            <param name="units"></param>
+            <exception cref="T:Speckle.Core.Logging.SpeckleException"></exception>
+        </member>
+        <member name="M:Objects.Other.Transform.#ctor(System.Single[],System.String)">
+            <summary>
+            Construct a transform from a row-based float array of size 16
+            </summary>
+            <param name="value"></param>
+            <param name="units"></param>
+            <exception cref="T:Speckle.Core.Logging.SpeckleException"></exception>
+        </member>
+        <member name="M:Objects.Other.Transform.#ctor(System.DoubleNumerics.Matrix4x4,System.String)">
+            <summary>
+            Construct a transform from a 4x4 matrix and translation units
+            </summary>
+            <param name="matrix"></param>
+            <param name="units"></param>
+        </member>
+        <member name="M:Objects.Other.Transform.#ctor(Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Geometry.Vector)">
+            <summary>
+            Construct a transform given the x, y, and z bases and the translation vector
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
+            <param name="z"></param>
+            <param name="translation"></param>
+        </member>
+        <member name="P:Objects.Other.Transform.matrix">
+            <summary>
+            The column-based 4x4 transform matrix
+            </summary>
+            <remarks>
+            Graphics based apps typically use column-based matrices, where the last column defines translation.
+            Modelling apps may use row-based matrices, where the last row defines translation. Transpose if so.
+            </remarks>
+        </member>
+        <member name="P:Objects.Other.Transform.units">
+            <summary>
+            Units for translation
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.Decompose(System.DoubleNumerics.Vector3@,System.DoubleNumerics.Quaternion@,System.DoubleNumerics.Vector4@)">
+            <summary>
+            Decomposes matrix into its scaling, rotation, and translation components
+            </summary>
+            <param name="scale"></param>
+            <param name="rotation"></param>
+            <param name="translation"></param>
+            <returns>True if successful, false otherwise</returns>
+        </member>
+        <member name="M:Objects.Other.Transform.ConvertToUnits(System.String)">
+            <summary>
+            Converts this transform to the input units
+            </summary>
+            <param name="newUnits">The target units</param>
+            <returns>A matrix array with the translation scaled by input units</returns>
+            <remarks>If either the transform's <see cref="P:Objects.Other.Transform.units"/> or the given <paramref name="newUnits"/> is <see langword="null"/>, will return the matrix array data unscaled</remarks>
+        </member>
+        <member name="M:Objects.Other.Transform.op_Multiply(Objects.Other.Transform,Objects.Other.Transform)">
+            <summary>
+            Returns the matrix that results from multiplying two matrices together.
+            </summary>
+            <param name="t1">The first transform</param>
+            <param name="t2">The second transform</param>
+            <returns>A transform matrix with the units of the first transform</returns>
+        </member>
+        <member name="M:Objects.Other.Transform.ToArray">
+            <summary>
+            Returns the double array of the transform matrix
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToPoints(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Transform a flat list of doubles representing points
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToPoints(System.Collections.Generic.List{Objects.Geometry.Point})">
+            <summary>
+            Transform a flat list of speckle Points
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToPoint(Objects.Geometry.Point)">
+            <summary>
+            Transform a single speckle Point
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToPoint(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Transform a list of three doubles representing a point
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToVector(Objects.Geometry.Vector)">
+            <summary>
+            Transform a single speckle Vector
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToVector(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Transform a list of three doubles representing a vector
+            </summary>
+        </member>
+        <member name="M:Objects.Other.Transform.ApplyToCurves(System.Collections.Generic.List{Objects.ICurve},System.Boolean@)">
+            <summary>
+            Transform a flat list of ICurves. Note that if any of the ICurves does not implement `ITransformable`,
+            it will not be returned.
+            </summary>
+        </member>
+        <member name="M:Objects.Structural.Analysis.Model.#ctor(Objects.Structural.Analysis.ModelInfo,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base})">
+            <summary>
+            SchemaBuilder constructor for a structural model object
+            </summary>
+            <param name="modelInfo"></param>
+            <param name="nodes"></param>
+            <param name="elements"></param>
+            <param name="loads"></param>
+            <param name="restraints"></param>
+            <param name="properties"></param>
+            <param name="materials"></param>
+        </member>
+        <member name="M:Objects.Structural.Analysis.ModelInfo.#ctor(System.String,System.String,System.String,System.String,Objects.Structural.Analysis.ModelSettings,System.String,System.String)">
+            <summary>
+            SchemaBuilder constructor for a model specifications (containing general model and project info) object
+            </summary>
+            <param name="name"></param>
+            <param name="description"></param>
+            <param name="projectNumber"></param>
+            <param name="projectName"></param>
+            <param name="settings"></param>
+            <param name="engInitials">Initials that identify the creator of the model</param>
+            <param name="application"></param>
+        </member>
+        <member name="T:Objects.Structural.Analysis.ModelSettings">
+            <summary>
+            Codes and standards references, model units, design settings, analysis settings, precision and tolerances
+            </summary>
+        </member>
+        <member name="M:Objects.Structural.Analysis.ModelSettings.#ctor(Objects.Structural.Analysis.ModelUnits,System.String,System.String,System.Double)">
+            <summary>
+            SchemaBuilder constructor for a model settings object
+            </summary>
+            <param name="modelUnits"></param>
+            <param name="steelCode"></param>
+            <param name="concreteCode"></param>
+            <param name="coincidenceTolerance"></param>
+        </member>
+        <member name="P:Objects.Structural.Analysis.ModelSettings.modelUnits">
+            <summary>
+            Units object containing units information for key structural model quantities
+            </summary>
+        </member>
+        <member name="M:Objects.Structural.CSI.Geometry.CSIElement1D.#ctor(Objects.Geometry.Line,Objects.Structural.Properties.Property1D,Objects.Structural.Geometry.ElementType1D,System.String,Objects.Structural.Geometry.Restraint,Objects.Structural.Geometry.Restraint,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Geometry.Plane,Objects.Structural.CSI.Properties.CSILinearSpring,System.Double[],Objects.Structural.CSI.Properties.DesignProcedure)">
+            <summary>
+            SchemaBuilder constructor for structural 1D element (based on local axis)
+            </summary>
+            <param name="baseLine"></param>
+            <param name="property"></param>
+            <param name="type"></param>
+            <param name="name"></param>
+            <param name="end1Releases"></param>
+            <param name="end2Releases"></param>
+            <param name="end1Offset"></param>
+            <param name="end2Offset"></param>
+            <param name="localAxis"></param>
+        </member>
+        <member name="M:Objects.Structural.CSI.Geometry.CSIElement1D.#ctor(Objects.Geometry.Line,Objects.Structural.Properties.Property1D,Objects.Structural.Geometry.ElementType1D,System.String,Objects.Structural.Geometry.Restraint,Objects.Structural.Geometry.Restraint,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Structural.Geometry.Node,System.Double,Objects.Structural.CSI.Properties.CSILinearSpring,System.Double[],Objects.Structural.CSI.Properties.DesignProcedure)">
+            <summary>
+            SchemaBuilder constructor for structural 1D element (based on orientation node and angle)
+            </summary>
+            <param name="baseLine"></param>
+            <param name="property"></param>
+            <param name="type"></param>
+            <param name="name"></param>
+            <param name="end1Releases"></param>
+            <param name="end2Releases"></param>
+            <param name="end1Offset"></param>
+            <param name="end2Offset"></param>
+            <param name="orientationNode"></param>
+            <param name="orientationAngle"></param>
+        </member>
+        <member name="M:Objects.Structural.GSA.Geometry.GSANode.#ctor(System.Int32,Objects.Geometry.Point,Objects.Structural.Geometry.Restraint,Objects.Structural.Geometry.Axis,Objects.Structural.Properties.PropertySpring,Objects.Structural.Properties.PropertyMass,Objects.Structural.Properties.PropertyDamper,System.Double,System.String)">
+            <summary>
+            SchemaBuilder constructor for a GSA node
+            </summary>
+            <param name="basePoint"></param>
+            <param name="restraint"></param>
+            <param name="constraintAxis"></param>
+            <param name="springProperty"></param>
+            <param name="massProperty"></param>
+            <param name="damperProperty"></param>
+            <param name="localElementSize"></param>
+        </member>
+        <member name="M:Objects.Structural.Geometry.Element1D.#ctor(Objects.Geometry.Line,Objects.Structural.Properties.Property1D,Objects.Structural.Geometry.ElementType1D,System.String,Objects.Structural.Geometry.Restraint,Objects.Structural.Geometry.Restraint,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Geometry.Plane)">
+            <summary>
+            SchemaBuilder constructor for structural 1D element (based on local axis)
+            </summary>
+            <param name="baseLine"></param>
+            <param name="property"></param>
+            <param name="type"></param>
+            <param name="name"></param>
+            <param name="end1Releases"></param>
+            <param name="end2Releases"></param>
+            <param name="end1Offset"></param>
+            <param name="end2Offset"></param>
+            <param name="localAxis"></param>
+        </member>
+        <member name="M:Objects.Structural.Geometry.Element1D.#ctor(Objects.Geometry.Line,Objects.Structural.Properties.Property1D,Objects.Structural.Geometry.ElementType1D,System.String,Objects.Structural.Geometry.Restraint,Objects.Structural.Geometry.Restraint,Objects.Geometry.Vector,Objects.Geometry.Vector,Objects.Structural.Geometry.Node,System.Double)">
+            <summary>
+            SchemaBuilder constructor for structural 1D element (based on orientation node and angle)
+            </summary>
+            <param name="baseLine"></param>
+            <param name="property"></param>
+            <param name="type"></param>
+            <param name="name"></param>
+            <param name="end1Releases"></param>
+            <param name="end2Releases"></param>
+            <param name="end1Offset"></param>
+            <param name="end2Offset"></param>
+            <param name="orientationNode"></param>
+            <param name="orientationAngle"></param>
+        </member>
+        <member name="M:Objects.Structural.Geometry.Storey.#ctor(System.String,System.Double)">
+            <summary>
+            A storey in the structural model
+            </summary>
+            <param name="name">The name of the storey</param>
+            <param name="elevation">The elevation of the storey (along the global z-axis, ie. storey exists in the global XY plane)</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.Load.#ctor(System.String,Objects.Structural.Loading.LoadCase)">
+            <summary>
+            A generalised structural load, described by a name and load case
+            </summary>
+            <param name="name">Name of the load</param>
+            <param name="loadCase">Load case specification for the load</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadBeam.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Structural.Loading.BeamLoadType,Objects.Structural.Loading.LoadDirection,Objects.Structural.LoadAxisType,System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Double},System.Boolean,System.String)">
+            <summary>
+            A beam load (for 1D elements)
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of 1D elements to apply the load to</param>
+            <param name="loadType">The type of loading applied</param>
+            <param name="direction">The direction of the load, with respect to the specified axis</param>
+            <param name="loadAxis">The axis in which the direction of the load is defined</param>
+            <param name="values">The magnitude of the load, either a force or moment</param>
+            <param name="positions">The locations of the load</param>
+            <param name="isProjected">Whether the load is projected (ie. whether the distributed load is specified as the intensity applied to the projection of the element on the surface normal to the direction of the load, like snow in an inclined roof)</param>
+            <param name="name">A name or description to identify the load</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadBeam.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Structural.Loading.BeamLoadType,Objects.Structural.Loading.LoadDirection,Objects.Structural.Geometry.Axis,System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Double},System.Boolean,System.String)">
+            <summary>
+            A beam load (for 1D elements) with a user-defined axis
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of 1D elements to apply the load to</param>
+            <param name="loadType">The type of loading applied</param>
+            <param name="direction">The direction of the load, with respect to the specified axis</param>
+            <param name="loadAxis">The axis in which the direction of the load is defined (can be a user-defined axis)</param>
+            <param name="values">The magnitude of the load, either a force or moment</param>
+            <param name="positions">The locations of the load</param>
+            <param name="isProjected">Whether the load is projected (ie. whether the distributed load is specified as the intensity applied to the projection of the element on the surface normal to the direction of the load, like snow in an inclined roof)</param>
+            <param name="name">A name or description to identify the load</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadCase.#ctor(System.String,Objects.Structural.Loading.LoadType,System.String,Objects.Structural.Loading.ActionType,System.String)">
+            <summary>
+            A structural load case, a load case gives a way of grouping load effects together
+            </summary>
+            <param name="name">The name of the load case (the names of individual loads that are associated with the load case are defined elsewhere, in the loads themselves)</param>
+            <param name="loadType">The type of the load case</param>
+            <param name="group">A way of grouping load cases with the similar characteristics (ex. the source/mass source/origin of the loads)</param>
+            <param name="actionType">The type of action of the load</param>
+            <param name="description">A description of the load case</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadCombination.#ctor(System.String,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{System.Double},Objects.Structural.Loading.CombinationType)">
+             <summary>
+            
+             </summary>
+             <param name="name"></param>
+             <param name="loadCases"></param>
+             <param name="loadFactors"></param>
+             <param name="combinationType"></param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadFace.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Structural.Loading.FaceLoadType,Objects.Structural.Loading.LoadDirection2D,Objects.Structural.LoadAxisType,System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Double},System.Boolean,System.String)">
+            <summary>
+            A face load (for 2D elements)
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of 2D elements to apply the load to</param>
+            <param name="loadType">The type of loading applied</param>
+            <param name="direction">The direction of the load, with respect to the specified axis</param>
+            <param name="loadAxis">The axis in which the direction of the load is defined</param>
+            <param name="values">The magnitude of the load, either a pressure or a force at the specified point</param>
+            <param name="positions">The locations of the load</param>
+            <param name="isProjected">Whether the load is projected (ie. whether the distributed load is specified as the intensity applied to the projection of the element on the surface normal to the direction of the load, like snow in an inclined roof)</param>
+            <param name="name">A name or description to identify the load</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadFace.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Structural.Loading.FaceLoadType,Objects.Structural.Loading.LoadDirection2D,Objects.Structural.Geometry.Axis,System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Double},System.Boolean,System.String)">
+            <summary>
+            A face load (for 2D elements) with a user-defined axis
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of 2D elements to apply the load to</param>
+            <param name="loadType">The type of loading applied</param>
+            <param name="direction">The direction of the load, with respect to the specified axis</param>
+            <param name="loadAxis">The axis in which the direction of the load is defined (can be a user-defined axis)</param>
+            <param name="values">The magnitude of the load, either a pressure or a force at the specified point</param>
+            <param name="positions">The locations of the load</param>
+            <param name="isProjected">Whether the load is projected (ie. whether the distributed load is specified as the intensity applied to the projection of the element on the surface normal to the direction of the load, like snow in an inclined roof)</param>
+            <param name="name">A name or description to identify the load</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadGravity.#ctor(Objects.Structural.Loading.LoadCase,Objects.Geometry.Vector,System.String)">
+            <summary>
+            A gravity load (applied to all elements)
+            </summary>
+            <param name="name">A name or description to identify the load</param>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="gravityFactors">A list of factors that apply on the “magnitude" of gravity (in terms of g, accleration of gravity) in each of the global axis (x, y and z) directions. Ex. For a model with global z-axis vertically upwards, the gravity factors of (0, 0, −1) represent a normal vertical gravity load on the structure</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadGravity.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Geometry.Vector,System.String)">
+            <summary>
+            A gravity load (applied to the specified elements)
+            </summary>
+            <param name="name">A name or description to identify the load</param>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of elements to apply the load to</param>
+            <param name="gravityFactors">A list of factors that apply on the “magnitude" of gravity (in terms of g, accleration of gravity) in each of the global axis (x, y and z) directions. Ex. For a model with global z-axis vertically upwards, the gravity factors of (0, 0, −1) represent a normal vertical gravity load on the structure</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadGravity.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Speckle.Core.Models.Base},System.Collections.Generic.List{Speckle.Core.Models.Base},Objects.Geometry.Vector,System.String)">
+            <summary>
+            A gravity load (applied to the specified elements and nodes)
+            </summary>
+            <param name="name">A name or description to identify the load</param>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="elements">A list of elements to apply the load to</param>
+            <param name="nodes">A list of nodes to apply the load to</param>
+            <param name="gravityFactors">A list of factors that apply on the “magnitude" of gravity (in terms of g, accleration of gravity) in each of the global axis (x, y and z) directions. Ex. For a model with global z-axis vertically upwards, the gravity factors of (0, 0, −1) represent a normal vertical gravity load on the structure</param>
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadNode.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Objects.Structural.Geometry.Node},Objects.Structural.Loading.LoadDirection,System.Double,System.String)">
+            <summary>
+            A node load (applied in the global axis)
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="nodes">>A list of nodes to apply the load to</param>
+            <param name="direction">The direction of the loading, relative to the specified axis</param>
+            <param name="value">The magnitude of the load, either a force or moment</param>
+            <param name="name">A name or description to identify the load</param>///
+        </member>
+        <member name="M:Objects.Structural.Loading.LoadNode.#ctor(Objects.Structural.Loading.LoadCase,System.Collections.Generic.List{Objects.Structural.Geometry.Node},Objects.Structural.Geometry.Axis,Objects.Structural.Loading.LoadDirection,System.Double,System.String)">
+            <summary>
+            A node load (based on a user-defined axis)
+            </summary>
+            <param name="loadCase">The load case in which the load applies</param>
+            <param name="nodes">>A list of nodes to apply the load to</param>
+            <param name="loadAxis">The axis in which the load is applied</param>
+            <param name="direction">The direction of the loading, relative to the specified axis</param>
+            <param name="value">The magnitude of the load, either a force or moment</param>
+            <param name="name">A name or description to identify the load</param>///
+        </member>
+        <member name="T:Objects.Utils.MeshTriangulationHelper">
+            <summary>
+            Set of functions to triangulate n-gon faces (i.e. polygon faces with an arbitrary (n) number of vertices) in <see cref="T:Objects.Geometry.Mesh"/>es.
+            </summary>
+        </member>
+        <member name="M:Objects.Utils.MeshTriangulationHelper.TriangulateMesh(Objects.Geometry.Mesh,System.Boolean)">
+            <summary>
+            Triangulates all faces in <paramref name="Mesh"/>.
+            </summary>
+            <param name="mesh">The mesh to triangulate.</param>
+            <param name="preserveQuads">If <see langword="true"/>, will not triangulate quad faces.</param>
+        </member>
+        <member name="M:Objects.Utils.MeshTriangulationHelper.TriangulateFace(System.Int32,Objects.Geometry.Mesh,System.Boolean)">
+            <overloads>Overload using a <see cref="T:Objects.Geometry.Mesh"/>, does not mutate <paramref name="mesh"/></overloads>
+            <inheritdoc cref="M:Objects.Utils.MeshTriangulationHelper.TriangulateFace(System.Int32,System.Collections.Generic.IReadOnlyList{System.Int32},System.Collections.Generic.IReadOnlyList{System.Double},System.Boolean)"/>
+        </member>
+        <member name="M:Objects.Utils.MeshTriangulationHelper.TriangulateFace(System.Int32,System.Collections.Generic.IReadOnlyList{System.Int32},System.Collections.Generic.IReadOnlyList{System.Double},System.Boolean)">
+            <summary>
+            Calculates the triangulation of the face at <paramref name="faceIndex"/> in <paramref name="mesh"/>.
+            </summary>
+            <remarks>
+            This implementation is based the ear clipping method
+            Proposed by "Christer Ericson (2005) <i>Real-Time Collision Detection</i>".
+            </remarks>
+            <param name="faceIndex">The index of the face's cardinality indicator <c>n</c> in <paramref name="mesh"/>.<see cref="P:Objects.Geometry.Mesh.faces"/></param>.
+            <param name="faces"></param>
+            <param name="vertices"></param>
+            <param name="includeIndicators">if <see langword="true"/>, the returned list will include cardinality indicators for each triangle
+            (i.e 4 ints for each tri), otherwise will simply be 3 ints for each tri.</param>
+            <returns>List of triangle faces in the specified format.</returns>
+        </member>
+        <member name="M:Objects.Utils.MeshTriangulationHelper.TestPointTriangle(Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3)">
+            <summary>
+            Tests if point <paramref name="v"/> is within triangle <paramref name="a"/><paramref name="b"/><paramref name="c"/>
+            </summary>
+            <returns>true if <paramref name="v"/> is within triangle</returns>
+        </member>
+        <member name="M:Objects.Utils.MeshTriangulationHelper.TriangleIsCCW(Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3,Objects.Utils.MeshTriangulationHelper.Vector3)">
+            <summary>
+            Checks that triangle <paramref name="a"/><paramref name="b"/><paramref name="c"/> is clockwise with reference to <paramref name="referenceNormal"/>
+            </summary>
+            <param name="referenceNormal">The normal direction of the face</param>
+            <param name="a"></param>
+            <param name="b"></param>
+            <param name="c"></param>
+            <returns>true if triangle is ccw</returns>
+        </member>
+        <member name="T:Objects.Utils.MeshTriangulationHelper.Vector3">
+            <summary>
+            3-dimension x, Y, Z Vector of <see cref="T:System.Double"/>s encapsulating necessary vector mathematics
+            </summary>
+        </member>
+        <member name="M:Objects.Utils.Parameters.ToBase(System.Collections.Generic.List{Objects.BuiltElements.Revit.Parameter})">
+            <summary>
+            Turns a List of Parameters into a Base so that it can be used with the Speckle parameters prop
+            </summary>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

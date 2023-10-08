@@ -1051,3 +1051,4 @@ local
 
 # Frozen bineries for Rhino Package Manger bundle
 !src/bundle/yak/*
+!src/bundle/yak/dist/*
