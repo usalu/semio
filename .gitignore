@@ -1048,3 +1048,6 @@ local
 
 # Frozen binaries for Grasshopper UI bundle
 !src/uis/grasshopper/semio/*
+
+# Frozen bineries for Rhino Package Manger bundle
+!src/bundle/yak/*
