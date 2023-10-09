@@ -79,6 +79,8 @@ That's it!
 
 You can download the examples from the [release](https://github.com/usalu/semio/releases/download/1.0/examples.zip).
 
+> NOTE: When you open an example, then semio will automatically start. Make sure to wait a second until you see a command line program like this: ![semio cli](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/semiocli.png)
+
 ### Hello World
 Now you can lay out your first design!
 ![Hello World](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/helloworld/grasshopper.gif)
