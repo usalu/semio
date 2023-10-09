@@ -17,6 +17,7 @@ keywords:
   - engineering
   - construction
   - "urban design"
+  - art
   - generative
   - parametric
   - "graph-based"
@@ -38,6 +39,8 @@ keywords:
   - "computer-based"
   - "computer-aided"
   - "design-oriented"
+  - concept
+  - conceptual
   - procedural
   - design
   - synthesis
@@ -102,6 +105,17 @@ references:
     volume: 7
     issue: 2021
     title: "Graph Rewriting Techniques in Engineering Design"
+    type: article
+  - authors:
+      - family-names: Herr
+        given-names: "Christiane M."
+      - family-names: Ford
+        given-names: "Ryan C."
+    doi: "10.1016/j.autcon.2016.07.005"
+    year: 2016
+    journal: "Automation in Construction"
+    volume: 72
+    title: "Cellular automata in architectural design: From generic systems to specific design tools"
     type: article
   - authors:
       - family-names: Chakrabarti
@@ -205,6 +219,15 @@ references:
       name: "Oxford University Press"
     title: "A pattern language: towns, buildings, construction"
     type: book
+  - authors:
+      - family-names: Eastman
+        given-names: Charles
+    url: "https://www.researchgate.net/publication/234643558_The_Use_of_Computers_Instead_of_Drawings_in_Building_Design"
+    year: 1975
+    journal: "AIA Journal"
+    volume: 63
+    title: "The Use of Computers Instead of Drawings in Building Design"
+    type: article
   - authors:
       - family-names: Stiny
         given-names: George
