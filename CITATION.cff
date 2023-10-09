@@ -1,0 +1,168 @@
+title: "semio"
+authors:
+  - family-names: Saluz
+    given-names: Ueli
+    orcid: "https://orcid.org/0009-0007-1089-9792"
+  - family-names: Kaatz
+    given-names: Jonathan
+contact:
+  - email: semio-community@posteo.org
+    family-names: Saluz
+    given-names: Ueli
+date-released: "2023-10-08"
+abstract: "semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be defined and freely combined via a generalized port mechanism."
+keywords:
+  - architecture
+  - architectural
+  - engineering
+  - construction
+  - "urban design"
+  - generative
+  - parametric
+  - "graph-based"
+  - graphs
+  - "port-based"
+  - ports
+  - "block-based"
+  - blocks
+  - "node-based"
+  - nodes
+  - "interface-based"
+  - interfaces
+  - "knowledge-based"
+  - knowledge
+  - "component-based"
+  - components
+  - "agent-based"
+  - agents
+  - "computer-based"
+  - "computer-aided"
+  - procedural
+  - design
+  - synthesis
+  - patterns
+  - prototypes
+  - shape
+  - ontology
+  - grammar
+  - l
+  - system
+  - cellular
+  - automata
+  - designing
+  - building
+  - information
+  - modelling
+  - rewriting
+  - transformation
+  - scripting
+  - visual
+  - programming
+  - language
+  - fuzzy
+  - logic
+  - dag # directed acyclic graph
+  - "directed acyclic graph"
+  - vpl # visual programming language
+  - cds # computer-based design synthesis
+  - aec # architecture engineering construction
+  - bim # building information modelling
+  - caad # computer aided architectural design
+  - cad # computer aided design
+identifiers:
+  - description: "The concept DOI of the work."
+    type: doi
+    value: 10.5281/zenodo.8419156
+  - description: "The versioned DOI for version 1.0 of the work."
+    type: doi
+    value: 10.5281/zenodo.8419157
+  - description: "The GitHub release URL of tag 1.0."
+    type: url
+    value: "https://github.com/usalu/semio/releases/tag/1.0"
+  - description: "The GitHub release URL of the commit tagged with 1.0"
+    type: url
+    value: "https://github.com/usalu/semio/commit/ba120ce70cf229c3aa1b17c902b04e76d8854176"
+references:
+  - authors:
+      - family-names: Parish
+        given-names: "Yoav I. H."
+      - family-names: Müller
+        given-names: Pascal
+    doi: "10.1145/383259.383292"
+    year: 2001
+    publisher:
+      name: "Association for Computing Machinery"
+    title: "A pattern language: towns, buildings, construction"
+    type: conference-paper
+  - authors:
+      - family-names: Gero
+        given-names: "John S."
+    doi: "10.1609/aimag.v11i4.854"
+    year: 1990
+    journal: "AI Magazine"
+    title: "Design Prototypes: A Knowledge Representation Schema for Design"
+    type: article
+  - authors:
+      - family-names: Alexander
+        given-names: Christopher
+      - family-names: Ishikawa
+        given-names: Sara
+      - family-names: Silverstein
+        given-names: Murray
+    isbn: "9780195019193"
+    year: 1977
+    publisher:
+      name: "Oxford University Press"
+    title: "A pattern language: towns, buildings, construction"
+    type: book
+  - authors:
+      - family-names: Stiny
+        given-names: George
+      - family-names: Gips
+        given-names: James
+    url: "https://www.semanticscholar.org/paper/Shape-Grammars-and-the-Generative-Specification-of-Stiny-Gips/c8f7baf704f7d7713eee196de6cb90cbfb7fc4cd"
+    year: 1971
+    conference:
+      name: "IFIP Congress"
+    title: "Shape Grammars and the Generative Specification of Painting and Sculpture"
+    type: conference-paper
+  - abbreviation: SPARQL
+    authors:
+      - name: "World Wide Web Consortium"
+    url: "https://www.w3.org/TR/sparql11-query/"
+    title: "SPARQL 1.1 Query Language"
+    type: standard
+  - abbreviation: SHACL
+    authors:
+      - name: "World Wide Web Consortium"
+    url: "https://www.w3.org/TR/shacl/"
+    title: "Shapes Constraint Language (SHACL)"
+    type: standard
+  - authors:
+      - name: "Python Software Foundation"
+    url: "https://www.python.org/"
+    title: "Python"
+    type: software
+  - authors:
+      - name: "RDFlib"
+    repository-code: "https://github.com/RDFLib/rdflib"
+    title: "RDFlib"
+    type: software
+  - authors:
+      - name: "RDFlib"
+    repository-code: "https://github.com/RDFLib/pySHACL"
+    title: "pySHACL"
+    type: software
+  - abbreviation: Speckle
+    authors:
+      - name: "Speckle Systems"
+    repository-code: "https://github.com/specklesystems/speckle-sharp"
+    title: "Speckle | Sharp"
+    type: software
+  - authors:
+      - name: "Robert McNeel & Associates, (TLM, Inc.)"
+    url: "https://www.grasshopper3d.com/"
+    title: "Grasshopper"
+    type: software
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."

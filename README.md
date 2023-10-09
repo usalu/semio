@@ -45,7 +45,7 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
     <img alt="Analogies" src="https://raw.githubusercontent.com/usalu/semio/main/docs/conceptual/analogies.svg">
 </picture>
 
-semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be freely combined via a generalized port mechanism.
+semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be defined and freely combined via a generalized port mechanism.
 
 # Getting started
 
