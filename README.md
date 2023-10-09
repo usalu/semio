@@ -7,7 +7,7 @@
     <br/>
     <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/doi-zenodo.svg" alt="Latest Release"></a>
     <a href="https://github.com/usalu/semio/"><img src="https://img.shields.io/github/v/release/usalu/semio?style=flat-square&color=ff344f" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/lgpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/license-LGPL_v3.svg" alt="LGPLv3 License"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/license-AGPL_v3.svg" alt="AGPLv3 License"></a>
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-Grasshopper.svg" alt="Grasshopper"></a>
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-comming_soon(Python).svg" alt="Python"></a>
