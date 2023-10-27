@@ -1,56 +1,60 @@
 # @base <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
-@prefix mba: <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
+@prefix metabolisma: <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
 # <.semio/properties/>
-@prefix mbap: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/properties/> .
+@prefix metabolismap: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/properties/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix schema: <http://schema.org/> .
-@prefix se: <https://github.com/usalu/semio/releases/download/v2/semio.ttl#> .
+@prefix se: <https://github.com/usalu/semio/releases/download/2/semio.ttl#> .
 @prefix sp: <https://github.com/specklesystems/speckle-sharp/releases/tag/2.11.1#> .
-mba:archive
+metabolisma:a
     a se:Archive ;
     se:name "Metabolism" ;
     se:explanation "A one person apartment box capsule." ;
-    se:type mba:bc, 
-        mba:bcm ;
-    se:design mba:ct
+    se:type metabolisma:bc, 
+        metabolisma:bcm ;
+    se:formation metabolisma:ct
 .
-mba:type_qcs
+metabolisma:t_quadraticcapsuleshaft_0
     a se:Type ;
-    se:id "qcs" ;
     se:name "Quadratic Capsule Shaft" ;
     se:explanation "A quadratic shaft with a central development (elevator at the core and stairs around it) to hold capsules" ;
-    se:symbol "🛗" ;
-    se:property [
-        se:name "Length" ;
-        se:value 6 ;
-        se:unit "m" ;
-    ] ;
-    se:property [
-        se:name "Width" ;
-        se:value 6 ;
-        se:unit "m" ;
-    ] ;
-    se:property [
-        se:name "Height" ;
-        se:value 2.7 ;
-        se:unit "m" ;
-        se:context "Floor" ;
-    ] ;
-    se:property [
-        se:name "Volume" ;
-        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
-        a sp:Box ;
-        se:unit "m" ;
-    ] ;
+    se:property metabolisma:p_quadraticcapsuleshaft_0_length_0 ,
+        metabolisma:p_quadraticcapsuleshaft_0_width_0 ,
+        metabolisma:p_quadraticcapsuleshaft_0_floorheight_0 ,
+        metabolisma:p_quadraticcapsuleshaft_0_volume_0 ;
 .
-mba:type_bc
+metabolisma:p_quadraticcapsuleshaft_0_length_0
+    a se:DecimalProperty ;
+    se:name "Length" ;
+    se:value 6.0 ;
+    se:unit "m" ;
+.
+metabolisma:p_quadraticcapsuleshaft_0_width_0
+    a se:DecimalProperty ;
+    se:name "Width" ;
+    se:value 6.0 ;
+    se:unit "m" ;
+.
+metabolisma:p_quadraticcapsuleshaft_0_floorheight_0
+    a se:DecimalProperty ,
+    se:name "Floor Height" ;
+    se:value 2.7 ;
+    se:unit "m" ;
+.
+metabolisma:p_quadraticcapsuleshaft_0_volume_0
+    a se:BlobProperty ;
+    se:name "Volume" ;
+    se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+    se:encoding se:Utf8Encoding ;
+    se:serialization se:JsonSerialization ;
+    se:schema sp:Box ;
+    se:unit "m" ;
+.
+metabolisma:type_bc
     a se:Type ;
-    se:id "bc" ;
     se:name "Box Capsule" ;
     se:explanation "A one person apartment box capsule." ;
-    se:symbol "📦" ;
     se:property [
         se:name "Length" ;
         se:value 4.2 ;
@@ -68,12 +72,12 @@ mba:type_bc
     ] ;
     se:property [
         se:name "Volume" ;
-        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
         a sp:Box ;
         se:unit "m" ;
     ] ;
 .
-mba:type_ccp
+metabolisma:type_ccp
     a se:Type ;
     se:id "ccp" ;
     se:name "Cut capital" ;
@@ -96,32 +100,32 @@ mba:type_ccp
     ] ;
     se:property [
         se:name "Volume" ;
-        se:value mbap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+        se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
         a sp:Box ;
         se:unit "m" ;
     ] ;
 .
-mba:thing_ct_qcs
+metabolisma:thing_ct_qcs
     a se:Thing ;
     se:id "qcs" ;
     se:explanation "The main shaft to attach capsules." ;
-    se:type mba:type_qcs ;
+    se:type metabolisma:type_quadraticcapsuleshaft ;
 .
-mba:thing_ct_f1nc1
+metabolisma:thing_ct_f1nc1
     a se:Thing ;
     se:id "f1nc1" ;
     se:symbol "📦{_1,1}^n" ;
     se:explanation "First capsule on floor 1 one the north fassade" ;
-    se:type mba:type_bc ;
+    se:type metabolisma:type_bc ;
 .
-mba:thing_ct_cp
+metabolisma:thing_ct_cp
     a se:Thing ;
     se:id "cp" ;
     se:explanation "The main (figurative) capital of the tower." ;
-    se:type mba:type_bc ;
+    se:type metabolisma:type_bc ;
 .
-mba:design_ct
-    a se:Design,
+metabolisma:design_ct
+    a se:formation,
         se:Artifact ;
     se:id "ct"
     se:name "Capsule Tower" ;
