@@ -31,21 +31,17 @@ se:Archive
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
-    ] ;
-  sh:property
+    ] ,
     [
       sh:path se:explanation ;
       sh:name "explanation"@en ;
       sh:description "An explanation of the archive."@en ;
       sh:datatype rdf:langString ;
-      sh:maxCount 1 ;
       sh:uniqueLang true ;
-    ] ;
-  sh:property
+    ] ,
     [
       sh:path se:type ;
-    ] ;
-  sh:property
+    ] ,
     [
       sh:path se:formation ;
     ] ;
@@ -56,106 +52,150 @@ se:Type
   sh:description "A type is a reusable definition for an object. In CAD lingo a type is a block (definition)."@en ;
   sh:targetObjectsOf se:type ;
   sh:property
-  [
-    sh:path se:property ;
-    sh:name "property"@en ;
-    sh:description "A property for the type."@en ;
-  ] ;
-.
-se:Property
-  a sh:NodeShape ;
-  sh:targetObjectsOf se:property ;
-  sh:property
-  [
+    [
     sh:path se:name ;
     sh:name "name"@en ;
-    sh:description "The name of the property."@en ;
+    sh:description "The name of the type."@en ;
     sh:datatype rdf:langString ;
     sh:minCount 1 ;
     sh:uniqueLang true ;
-  ] ;
+    ] ,
+    [
+    sh:path se:explanation ;
+    sh:name "explanation"@en ;
+    sh:description "An explanation of the type."@en ;
+    sh:datatype rdf:langString ;
+    sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:property ;
+      sh:name "property"@en ;
+      sh:description "A property for the type."@en ;
+    ] ;
+.
+se:DecimalNumberProperty
+  a sh:NodeShape ;
+  sh:name "decimal number property"@en ;
+  sh:description "A decimal number property is real number with floating point arithmetic."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the decimal number property."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ;
+.
+se:IntegerProperty
+  a sh:NodeShape ;
+  sh:name "integer property"@en ;
+  sh:description "An integer number (whole number) property."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the integer number property."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:integer ;
+    ] ;
+.
+se:NaturalNumberProperty
+  a sh:NodeShape ;
+  sh:name "natural number property"@en ;
+  sh:description "A natural number property is positive (=not zero or negative) integer (=no decimals) number."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the natural number property."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:positiveInteger ; 
+    ] ;
+.
+se:ChoiceProperty
+  a sh:NodeShape ;
+  sh:name "choice property"@en ;
+  sh:description "A choice property is a textual value which represents one choice from a known finite amount of possible choises."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the natural number property."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ;
 .
 se:BlobProperty
   a sh:NodeShape ;
   sh:name "blob property"@en ;
   sh:description "A binary large object (blob) property is any data that is not in rdf."@en ;
-  sh:and (
-    se:Property
-      [
-        sh:path se:value ;
-        sh:minCount 1 ;
-        sh:maxCount 1 ;
-      ] ;
-      [
-        # TODO: Create encoding enum
-        sh:path se:encoding ;
-        sh:name "encoding"@en ;
-        sh:description "The encoding format of the blob property."@en ;
-      ]
-      [
-        # TODO: Create schema enum
-        sh:path se:serialization ;
-        sh:name "serialization"@en ;
-        sh:description "The serialization format of the blob property."@en ;
-      ]
-      [
-        sh:path se:schema ;
-        sh:name "schema"@en ;
-        sh:description "The schema of the blob property."@en ;
-        sh:datatype xsd:string ;
-      ]
-  ) ;
-.
-se:IntegerProperty
-  a sh:NodeShape ;
-  sh:name "integer property"@en ;
-  sh:description "A binary large object (blob) property is any data that is not in rdf."@en ;
-  sh:and (
-    se:Property
-      [
-        sh:path se:value ;
-        sh:minCount 1 ;
-        sh:maxCount 1 ;
-      ] ;
-      [
-        # TODO: Create encoding enum
-        sh:path se:encoding ;
-        sh:name "encoding"@en ;
-        sh:description "The encoding format of the blob property."@en ;
-      ]
-      [
-        # TODO: Create schema enum
-        sh:path se:serialization ;
-        sh:name "serialization"@en ;
-        sh:description "The serialization format of the blob property."@en ;
-      ]
-      [
-        sh:path se:schema ;
-        sh:name "schema"@en ;
-        sh:description "The schema of the blob property."@en ;
-        sh:datatype xsd:string ;
-      ]
-  ) ;
-.
-
-se:Value
-  a sh:NodeShape ;
-  sh:targetObjectsOf se:value ;
-  sh:or (
+  sh:property
     [
-      sh:name "decimal value"@en ;
-      sh:description "Decimal value of the property."@en ;
-      sh:datatype xsd:double ;
-    ]
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the natural number property."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
     [
-      sh:name "integer value"@en ;
-      sh:description "Integer value of the property."@en ;
-      sh:datatype xsd:integer ;
-    ]
+      sh:path se:value ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:nodeKind sh:IRI ;
+    ] ,
     [
-      sh:name "text value"@en ;
-      sh:description "text value of the property."@en ;
-      sh:datatype xsd:string ;
-    ]
-  ) ;
+      # TODO: Create encoding enum
+      sh:path se:encoding ;
+      sh:name "encoding"@en ;
+      sh:description "The encoding format of the blob property."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+    ] ,
+    [
+      # TODO: Create schema enum
+      sh:path se:serialization ;
+      sh:name "serialization"@en ;
+      sh:description "The serialization format of the blob property."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+    ] ,
+    [
+      sh:path se:schema ;
+      sh:name "schema"@en ;
+      sh:description "The schema of the blob property."@en ;
+      sh:nodeKind sh:IRI ; 
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+    ] ;
 .
