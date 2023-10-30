@@ -25,8 +25,7 @@ metabolisma:type_quadraticcapsuleshaft_0
         metabolisma:property_quadraticcapsuleshaft_0_length_0 ,
         metabolisma:property_quadraticcapsuleshaft_0_width_0 ,
         metabolisma:property_quadraticcapsuleshaft_0_floorheight_0 ,
-        metabolisma:property_quadraticcapsuleshaft_0_floors_0 ,
-        metabolisma:property_quadraticcapsuleshaft_0_volume_0 ;
+        metabolisma:property_quadraticcapsuleshaft_0_floors_0 ;
 .
 metabolisma:property_quadraticcapsuleshaft_0_length_0
     a se:DecimalNumberProperty ;
@@ -84,6 +83,7 @@ metabolisma:property_boxcapsule_0_volume_0
     a se:BlobProperty ;
     se:name "volume"@en ;
     se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+    se:endianness se:BigEndian ;
     se:encoding se:Utf8Encoding ;
     se:serialization se:JsonSerialization ;
     se:schema sp:Box ;

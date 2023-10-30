@@ -20,6 +20,7 @@ se:
 .
 se:Archive
   a sh:NodeShape ;
+  sh:targetClass se:Archive ; # TODO: create pyshacl issue
   sh:name "Archive"@en ;
   sh:description "An archive is a container for a bundle of related artifacts."@en ;
   sh:targetObjectsOf se:archive ;
@@ -48,6 +49,7 @@ se:Archive
 .
 se:Type
   a sh:NodeShape ;
+  sh:targetClass se:Type ; # TODO: create pyshacl issue
   sh:name "Type"@en ;
   sh:description "A type is a reusable definition for an object. In CAD lingo a type is a block (definition)."@en ;
   sh:targetObjectsOf se:type ;
@@ -71,10 +73,28 @@ se:Type
       sh:path se:property ;
       sh:name "property"@en ;
       sh:description "A property for the type."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalNumberProperty ;
+        ]
+        [
+          sh:class se:IntegerNumberProperty ;
+        ]
+        [
+          sh:class se:NaturalNumberProperty ;
+        ]
+        [
+          sh:class se:ChoiceProperty ;
+        ]
+        [
+          sh:class se:BlobProperty ;
+        ]
+      )
     ] ;
 .
 se:DecimalNumberProperty
   a sh:NodeShape ;
+  sh:targetClass se:DecimalNumberProperty ; # TODO: create pyshacl issue
   sh:name "decimal number property"@en ;
   sh:description "A decimal number property is real number with floating point arithmetic."@en ;
   sh:property
@@ -93,9 +113,10 @@ se:DecimalNumberProperty
       sh:datatype xsd:double ; 
     ] ;
 .
-se:IntegerProperty
+se:IntegerNumberProperty
   a sh:NodeShape ;
-  sh:name "integer property"@en ;
+  sh:targetClass se:IntegerNumberProperty ; # TODO: create pyshacl issue
+  sh:name "integer number property"@en ;
   sh:description "An integer number (whole number) property."@en ;
   sh:property
     [
@@ -115,6 +136,7 @@ se:IntegerProperty
 .
 se:NaturalNumberProperty
   a sh:NodeShape ;
+  sh:targetClass se:NaturalNumberProperty ; # TODO: create pyshacl issue
   sh:name "natural number property"@en ;
   sh:description "A natural number property is positive (=not zero or negative) integer (=no decimals) number."@en ;
   sh:property
@@ -135,6 +157,7 @@ se:NaturalNumberProperty
 .
 se:ChoiceProperty
   a sh:NodeShape ;
+  sh:targetClass se:ChoiceProperty ; # TODO: create pyshacl issue
   sh:name "choice property"@en ;
   sh:description "A choice property is a textual value which represents one choice from a known finite amount of possible choises."@en ;
   sh:property
@@ -157,6 +180,7 @@ se:ChoiceProperty
 .
 se:BlobProperty
   a sh:NodeShape ;
+  sh:targetClass se:BlobProperty ; # TODO: create pyshacl issue
   sh:name "blob property"@en ;
   sh:description "A binary large object (blob) property is any data that is not in rdf."@en ;
   sh:property
@@ -170,20 +194,40 @@ se:BlobProperty
     ] ,
     [
       sh:path se:value ;
+      se:name "value"@en ;
+      se:description "The url value where the blob is stored."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:nodeKind sh:IRI ;
     ] ,
     [
-      # TODO: Create encoding enum
+      sh:path se:endianness ;
+      sh:name "endianness"@en ;
+      se:description "The endianness specifcies the order of bytes. Either big-endian (BE) with most siginificant bit first or little-endian with least significant first."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:BigEndian
+        se:LittleEndian
+      ) ;
+    ] ,
+    [
       sh:path se:encoding ;
       sh:name "encoding"@en ;
       sh:description "The encoding format of the blob property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:in (
+        se:Utf8Encoding
+        se:Utf8BOMEncoding
+        se:Utf16Encoding
+        se:ASCIIEncoding
+        se:BASE32Encoding
+        se:BASE64Encoding
+      ) ;
     ] ,
     [
-      # TODO: Create schema enum
+      # TODO: Create serilization enum
       sh:path se:serialization ;
       sh:name "serialization"@en ;
       sh:description "The serialization format of the blob property."@en ;
