@@ -15,7 +15,7 @@ metabolisma:archive
         metabolisma:type_quadraticcapsuleshaft_0 ,
         metabolisma:type_boxcapsule_0 , 
         metabolisma:type_cutcapital_0 ;
-    se:formation metabolisma:ct ;
+    se:formation metabolisma:formation_capsuletower_0 ;
 .
 metabolisma:type_quadraticcapsuleshaft_0
     a se:Type ;
@@ -85,7 +85,7 @@ metabolisma:property_boxcapsule_0_volume_0
     se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
     se:endianness se:BigEndian ;
     se:encoding se:Utf8Encoding ;
-    se:serialization se:JsonSerialization ;
+    se:dataFormat se:JsonDataFormat ;
     se:schema sp:Box ;
 .
 metabolisma:type_cutcapital_0
@@ -121,28 +121,39 @@ metabolisma:agent_capsuletower_0_cutcapital_0_0
 .
 metabolisma:attraction_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
     a se:Attraction ;
-    se:attractingAttractionRole metabolisma:attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
-    se:attractedAttractionRole metabolisma:attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
+    se:attractingAttractionPole metabolisma:attactionPole_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
+    se:attractedAttractionPole metabolisma:attactionPole_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
 .
-metabolisma:attactionRole_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
-    a se:AttractionRole ;
+metabolisma:attactionPole_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
+    a se:AttractionPole ;
     se:agent metabolisma:agent_capsuletower_0_quadraticcapsuleshaft_0_0 ;
     se:property
-        metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0 ,
-        metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0 ,
         metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0 ;
 .
-metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0
+metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0
+    a se:TrueOrFalseProperty ;
+    se:name "door"@en ;
+    se:value true ;
+.
+metabolisma:attactionPole_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
+    a se:AttractionPole ;
+    se:agent metabolisma:agent_capsuletower_0_quadraticcapsuleshaft_0_0 ;
+    se:property
+        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0 ,
+        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0 ,
+        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0 ;
+.
+metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0
     a se:ChoiceProperty ;
     se:name "fassade"@en ;
     se:value "north"@en ;
 .
-metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0
+metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0
     a se:NaturalNumberProperty ;
     se:name "floor"@en ;
     se:value "1"^^xsd:positiveInteger ;
 .
-metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0
+metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0
     a se:NaturalNumberProperty ;
     se:name "door"@en ;
     se:value "1"^^xsd:positiveInteger ;
