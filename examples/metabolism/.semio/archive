@@ -1,7 +1,7 @@
 # @base <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
-@prefix metabolisma: <https://github.com/usalu/semio/tree/main/examples/metabolism/> .
+@prefix metabolisma: <https://github.com/usalu/semio/tree/1.x/examples/metabolism/> .
 # <.semio/properties/>
-@prefix metabolismap: <https://github.com/usalu/semio/tree/main/examples/metabolism/.semio/properties/> .
+@prefix metabolismap: <https://github.com/usalu/semio/tree/1.x/examples/metabolism/.semio/properties/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -10,7 +10,7 @@
 metabolisma:archive
     a se:Archive ;
     se:name "Metabolism"@en ;
-    se:explanation "A one person apartment box capsule."@en ;
+    se:explanation "An archive for metabolistic architecture."@en ;
     se:type
         metabolisma:type_quadraticcapsuleshaft_0 ,
         metabolisma:type_boxcapsule_0 , 
@@ -22,76 +22,121 @@ metabolisma:type_quadraticcapsuleshaft_0
     se:name "Quadratic Capsule Shaft"@en ;
     se:explanation "A quadratic shaft with a central development (elevator at the core and stairs around it) to hold capsules"@en ;
     se:property
-        metabolisma:property_quadraticcapsuleshaft_0_length_0 ,
-        metabolisma:property_quadraticcapsuleshaft_0_width_0 ,
-        metabolisma:property_quadraticcapsuleshaft_0_floorheight_0 ,
-        metabolisma:property_quadraticcapsuleshaft_0_floors_0 ;
+        metabolisma:property_type_quadraticcapsuleshaft_0_length_0 ,
+        metabolisma:property_type_quadraticcapsuleshaft_0_width_0 ,
+        metabolisma:property_type_quadraticcapsuleshaft_0_floorheight_0 ,
+        metabolisma:property_type_quadraticcapsuleshaft_0_floors_0 ;
 .
-metabolisma:property_quadraticcapsuleshaft_0_length_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_quadraticcapsuleshaft_0_length_0
+    a se:DecimalProperty ;
     se:name "length"@en ;
     se:value "6"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_quadraticcapsuleshaft_0_width_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_quadraticcapsuleshaft_0_width_0
+    a se:DecimalProperty ;
     se:name "width"@en ;
     se:value "6"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_quadraticcapsuleshaft_0_floorheight_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_quadraticcapsuleshaft_0_floorheight_0
+    a se:DecimalProperty ;
     se:name "floor height"@en ;
     se:value "2.7"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_quadraticcapsuleshaft_0_floors_0
-    a se:NaturalNumberProperty ;
+metabolisma:property_type_quadraticcapsuleshaft_0_floors_0
+    a se:NaturalProperty ;
     se:name "floors"@en ;
     se:value "10"^^xsd:positiveInteger ;
     se:unit "m" ;
+.
+metabolisma:port_quadraticcapsuleshaft_0_0
+    a se:Port ;
+    se:property
+        metabolisma:property_port_quadraticcapsuleshaft_0_0_fassade_0 ,
+        metabolisma:property_port_quadraticcapsuleshaft_0_0_floor_0 ,
+        metabolisma:property_port_quadraticcapsuleshaft_0_0_door_0 ;
+.
+metabolisma:property_port_quadraticcapsuleshaft_0_0_fassade_0
+    a se:ChoiceProperty ;
+    se:name "fassade"@en ;
+    se:value "north"@en ;
+.
+metabolisma:property_port_quadraticcapsuleshaft_0_0_floor_0
+    a se:NaturalProperty ;
+    se:name "floor"@en ;
+    se:value "1"^^xsd:positiveInteger ;
+.
+metabolisma:property_port_quadraticcapsuleshaft_0_0_door_0
+    a se:NaturalProperty ;
+    se:name "door"@en ;
+    se:value "1"^^xsd:positiveInteger ;
 .
 metabolisma:type_boxcapsule_0
     a se:Type ;
     se:name "Box Capsule"@en ;
     se:explanation "A one person apartment box capsule."@en ;
     se:property 
-        metabolisma:property_boxcapsule_0_length_0 ,
-        metabolisma:property_boxcapsule_0_width_0 ,
-        metabolisma:property_boxcapsule_0_floorheight_0 ,
-        metabolisma:property_boxcapsule_0_volume_0 ;
+        metabolisma:property_type_boxcapsule_0_length_0 ,
+        metabolisma:property_type_boxcapsule_0_width_0 ,
+        metabolisma:property_type_boxcapsule_0_floorheight_0 ,
+        metabolisma:property_type_boxcapsule_0_volume_0 ;
+    se:port metabolisma:port_boxcapsule_0_0 ;
 .
-metabolisma:property_boxcapsule_0_length_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_boxcapsule_0_length_0
+    a se:DecimalProperty ;
     se:name "length"@en ;
     se:value "4.2"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_boxcapsule_0_width_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_boxcapsule_0_width_0
+    a se:DecimalProperty ;
     se:name "width"@en ;
     se:value "2.7"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_boxcapsule_0_floorheight_0
-    a se:DecimalNumberProperty ;
+metabolisma:property_type_boxcapsule_0_floorheight_0
+    a se:DecimalProperty ;
     se:name "height"@en ;
     se:value "2.5"^^xsd:double ;
     se:unit "m" ;
 .
-metabolisma:property_boxcapsule_0_volume_0
+metabolisma:property_type_boxcapsule_0_volume_0
     a se:BlobProperty ;
     se:name "volume"@en ;
-    se:value metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
+    se:value metabolisma:blob_property_type_boxcapsule_0_volume_0
+.
+metabolisma:blob_property_type_boxcapsule_0_volume_0
+    se:url metabolismap:2625c8f90472e5940e7c83ede925cb80160c4820de118abaa1f1047d ;
     se:endianness se:BigEndian ;
     se:encoding se:Utf8Encoding ;
     se:dataFormat se:JsonDataFormat ;
     se:schema sp:Box ;
 .
+metabolisma:port_boxcapsule_0_0
+    a se:Port ;
+    se:property metabolisma:property_port_boxcapsule_0_0_door_0 ;
+.
+metabolisma:property_port_boxcapsule_0_0_door_0
+    a se:BooleanProperty ;
+    se:name "door"@en ;
+    se:value true ;
+.
 metabolisma:type_cutcapital_0
     a se:Type ;
     se:name "Cut Capital"@en ;
     se:explanation "A cut box with three different heights."@en ;
+.
+metabolisma:port_cutcapital_0_0
+    a se:Port ;
+    se:property
+        metabolisma:property_port_cutcapital_0_0_bottom_0 ,
+.
+metabolisma:property_port_cutcapital_0_0_fassade_0
+    a se:BooleanProperty ;
+    se:name "bottom"@en ;
+    se:value true ;
 .
 metabolisma:formation_capsuletower_0
     a se:Formation ;
@@ -106,55 +151,28 @@ metabolisma:formation_capsuletower_0
 .
 metabolisma:agent_capsuletower_0_quadraticcapsuleshaft_0_0
     a se:Agent ;
-    se:explanation "The main shaft to attach capsules."@en ;
     se:type metabolisma:type_quadraticcapsuleshaft_0 ;
 .
 metabolisma:agent_capsuletower_0_boxcapsule_0_0
     a se:Agent ;
-    se:explanation "First capsule on floor 1 one the north fassade"@en ;
     se:type metabolisma:type_boxcapsule_0 ;
 .
 metabolisma:agent_capsuletower_0_cutcapital_0_0
     a se:Agent ;
-    se:explanation "The main (figurative) capital of the tower."@en ;
     se:type metabolisma:type_cutcapital_0 ;
 .
 metabolisma:attraction_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
     a se:Attraction ;
-    se:attractingAttractionPole metabolisma:attactionPole_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
-    se:attractedAttractionPole metabolisma:attactionPole_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
+    se:attractingSide metabolisma:side_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
+    se:attractedSide metabolisma:side_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0 ;
 .
-metabolisma:attactionPole_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
-    a se:AttractionPole ;
+metabolisma:side_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
+    a se:Side ;
     se:agent metabolisma:agent_capsuletower_0_quadraticcapsuleshaft_0_0 ;
-    se:property
-        metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0 ;
+    se:port metabolisma:port_quadraticcapsuleshaft_0_0 ;
 .
-metabolisma:property_attracting_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0
-    a se:TrueOrFalseProperty ;
-    se:name "door"@en ;
-    se:value true ;
-.
-metabolisma:attactionPole_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
-    a se:AttractionPole ;
-    se:agent metabolisma:agent_capsuletower_0_quadraticcapsuleshaft_0_0 ;
-    se:property
-        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0 ,
-        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0 ,
-        metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0 ;
-.
-metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_fassade_0
-    a se:ChoiceProperty ;
-    se:name "fassade"@en ;
-    se:value "north"@en ;
-.
-metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_floor_0
-    a se:NaturalNumberProperty ;
-    se:name "floor"@en ;
-    se:value "1"^^xsd:positiveInteger ;
-.
-metabolisma:property_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0_door_0
-    a se:NaturalNumberProperty ;
-    se:name "door"@en ;
-    se:value "1"^^xsd:positiveInteger ;
+metabolisma:side_attracted_capsuletower_0_quadraticcapsuleshaft_0_0_capsuletower_0_boxcapsule_0_0
+    a se:Side ;
+    se:agent metabolisma:agent_capsuletower_0_boxcapsule_0_0 ;
+    se:port metabolisma:port_boxcapsule_0_0 ;
 .
