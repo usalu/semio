@@ -6,7 +6,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix se: <https://github.com/usalu/semio/releases/download/2/semio.ttl#> .
+@prefix se: <https://usalu.github.io/semio/2/shacl#> .
 se:
   a owl:Ontology ;
   rdfs:label "semio Vocabulary"@en ;
@@ -77,19 +77,19 @@ se:Formation
       sh:uniqueLang true ;
     ] ,
     [
-      sh:path se:agent ;
+      sh:path se:piece ;
       sh:minCount 1 ;
     ] ,
     [
       sh:path se:attraction ;
     ] ;
 .
-se:Agent
+se:Piece
   a sh:NodeShape ;
-  sh:targetClass se:Agent ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:agent ;
-  sh:name "Agent"@en ;
-  sh:description "An agent is like a LEGO piece inside a set."@en ;
+  sh:targetClass se:Piece ; # TODO: create pyshacl issue
+  sh:targetObjectsOf se:piece ;
+  sh:name "Piece"@en ;
+  sh:description "An piece is like a LEGO piece inside a set."@en ;
   sh:property
     [
       sh:path se:type ;
@@ -102,7 +102,7 @@ se:Attraction
   sh:targetClass se:Attraction ; # TODO: create pyshacl issue
   sh:targetObjectsOf se:attraction ;
   sh:name "Attraction"@en ;
-  sh:description "An attraction makes the attracted agent being pulled to the attracting agent."@en ;
+  sh:description "An attraction makes the attracted piece being pulled to the attracting piece."@en ;
   sh:property
     [
       sh:path se:attractingSide ;
@@ -124,13 +124,13 @@ se:Side
   sh:description "A side ."@en ;
   sh:property
     [
-      sh:path se:agent ;
+      sh:path se:piece ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
     ] ,
     [
       sh:path se:port ;
-      sh:description "The port of the type of the agent of the side."@en ;
+      sh:description "The port of the type of the piece of the side."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
     ] ;
@@ -228,6 +228,11 @@ se:DecimalProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:unit ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
     ] ;
 .
 se:IntegerProperty
@@ -374,7 +379,7 @@ se:Blob
       se:description "The url where the blob is stored."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
-      sh:datatype xsd:anyURI ;
+      sh:nodeKind sh:IRI ;
     ] ,
     [
       sh:path se:endianness ;
