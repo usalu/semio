@@ -1,0 +1,10 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "metabolism",
+            "database": "metabolism.db"
+        }
+    ]
+}

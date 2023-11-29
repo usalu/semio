@@ -1,13 +1,22 @@
 [tool.poetry]
 name = "semio"
-version = "0.2.0"
-description = ""
+version = "2.0.0"
+description = "Next gen design tool. Collaborativ, scalable and cross-platform. Promised."
 authors = ["Ueli Saluz <usaluz@posteo.de>"]
-readme = "README.md"
+maintainers = ["Ueli Saluz <usaluz@posteo.de>"]
+license = "LGPL-3.0-or-later"
+repository = "https://github.com/usalu/semio"
+homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-pyshacl = "^0.23.0"
+python = "^3.12"
+sqlalchemy = "^2.0.23"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.11.0"
 
 [build-system]
 requires = ["poetry-core"]
