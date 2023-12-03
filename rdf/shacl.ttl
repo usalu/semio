@@ -338,6 +338,12 @@ se:DecimalProperty
       sh:description "The unit of the decimal (number) property."@en ;
       sh:maxCount 1 ;
       sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the decimal (number) property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:IntegerProperty
@@ -361,6 +367,12 @@ se:IntegerProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:integer ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the integer (number) property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:NaturalProperty
@@ -384,6 +396,12 @@ se:NaturalProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:positiveInteger ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the natural (number) property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:BooleanProperty
@@ -407,6 +425,12 @@ se:BooleanProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:boolean ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the boolean property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:FuzzyProperty
@@ -432,6 +456,12 @@ se:FuzzyProperty
       sh:datatype xsd:double ;
       sh:minInclusive "0"^^xsd:double ;
       sh:maxInclusive "1"^^xsd:double ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the fuzzy property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:ChoiceProperty
@@ -457,6 +487,12 @@ se:ChoiceProperty
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the choice property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:BlobProperty
@@ -480,6 +516,12 @@ se:BlobProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Blob ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the blob property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:Blob
@@ -566,6 +608,12 @@ se:PlaneProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Plane ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the plane property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:Plane
@@ -621,6 +669,12 @@ se:VectorProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Vector ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the vector property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:Vector
@@ -675,6 +729,12 @@ se:PointProperty
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Point ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the point property."@en ;
+      sh:class se:Context ;
     ] ;
 .
 se:Point
@@ -708,6 +768,60 @@ se:Point
       sh:datatype xsd:double ; 
     ] ;
 .
+se:Context
+  a sh:NodeShape ;
+  sh:targetClass se:Context ;
+  sh:name "context"@en ;
+  sh:description "A context allows to (re)create complex data structures from single values."
+  sh:property
+    [
+      sh:path se:category ;
+      sh:name "category"@en ;
+      sh:description "The category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:order ;
+      sh:name "order"@en ;
+      sh:description "The order of the the category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ;
+.
+# se:Enumeration
+#   a sh:NodeShape ;
+#   sh:targetClass se:Enumeration ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:ordering ;
+#       sh:minCount 1 ;
+#       sh:class se:Ordering; 
+#     ] ;
+# .
+# se:Ordering
+#   a sh:NodeShape ;
+#   sh:targetClass se:Map ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:category ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ,
+#     [
+#       sh:path se:integer ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:integer ; 
+#     ] ;
+# .
 # Runtime
 # se:Transformation
 #   a sh:NodeShape ;
@@ -787,56 +901,5 @@ se:Point
 #           sh:description "A plane property parameter of the transformation."@en ;
 #         ]
 #       )
-#     ] ;
-# .
-# Avoid context if possible. See after implementation, if necissary.
-# se:Context
-#   a sh:NodeShape ;
-#   sh:targetClass se:Context ;
-#   sh:name "context"@en ;
-#   sh:description "A context allows to (re)create complex data structures from single values."
-#   sh:property
-#     [
-#       sh:path se:category ;
-#       sh:minCount 1 ;
-#       sh:maxCount 1 ;
-#       sh:datatype xsd:string ; 
-#     ] ,
-#     [
-#       sh:path se:order ;
-#       sh:minCount 1 ;
-#       sh:maxCount 1 ;
-#       sh:datatype xsd:string ; 
-#     ] ;
-# .
-# se:Enumeration
-#   a sh:NodeShape ;
-#   sh:targetClass se:Enumeration ;
-#   sh:name "enumeration"@en ;
-#   sh:description "An enumeration is "
-#   sh:property
-#     [
-#       sh:path se:ordering ;
-#       sh:minCount 1 ;
-#       sh:class se:Ordering; 
-#     ] ;
-# .
-# se:Ordering
-#   a sh:NodeShape ;
-#   sh:targetClass se:Map ;
-#   sh:name "enumeration"@en ;
-#   sh:description "An enumeration is "
-#   sh:property
-#     [
-#       sh:path se:category ;
-#       sh:minCount 1 ;
-#       sh:maxCount 1 ;
-#       sh:datatype xsd:string ; 
-#     ] ,
-#     [
-#       sh:path se:integer ;
-#       sh:minCount 1 ;
-#       sh:maxCount 1 ;
-#       sh:datatype xsd:integer ; 
 #     ] ;
 # .
