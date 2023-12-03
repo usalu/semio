@@ -1,4 +1,4 @@
-# baseURI: https://github.com/usalu/semio/releases/download/2/semio.ttl#
+# baseURI: https://usalu.github.io/semio/2/shacl#
 # semio Vocabulary
 # Version 2
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -14,30 +14,28 @@ se:
   sh:declare
     [
       sh:prefix "se" ;
-      sh:namespace "https://github.com/usalu/semio/releases/download/2/semio.ttl#"^^xsd:anyURI ;
+      sh:namespace "https://usalu.github.io/semio/2/shacl#"^^xsd:anyURI ;
     ] ;
   sh:suggestedShapesGraph <http://www.w3.org/ns/shacl-shacl#> ;
 .
 se:Archive
   a sh:NodeShape ;
-  sh:targetClass se:Archive ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:archiveDependency ;
+  sh:targetClass se:Archive ;
   sh:name "Archive"@en ;
   sh:description "An archive is a container for a bundle of related artifacts."@en ;
-  sh:targetObjectsOf se:archive ;
   sh:property
     [
-      sh:path se:archiveDependency ;
+      sh:path se:dependency ;
       sh:name "archive dependency"@en ;
       sh:description "Another archive that this archive depends on."@en ;
-      sh:nodeKind sh:IRI ;
+      sh:class se:Archive;
     ] ,
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the archive."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
@@ -49,15 +47,19 @@ se:Archive
     ] ,
     [
       sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "A type of the archive."@en ;
+      sh:class se:Type ;
     ] ,
     [
       sh:path se:formation ;
+      sh:name "formation"@en ;
+      sh:description "A formation of the archive."@en ;
+      sh:class se:Formation ;
     ] ;
 .
 se:Formation
   a sh:NodeShape ;
-  sh:targetClass se:Formation ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:formation ;
   sh:name "Formation"@en ;
   sh:description "A formation is like the assembly manual for a LEGO set."@en ;
   sh:property
@@ -65,8 +67,8 @@ se:Formation
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the formation."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
@@ -78,67 +80,81 @@ se:Formation
     ] ,
     [
       sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "A piece of the formation."@en ;
       sh:minCount 1 ;
     ] ,
     [
       sh:path se:attraction ;
+      sh:name "attraction"@en ;
+      sh:description "An attraction of the formation."@en ;
+      sh:class se:Attraction ;
     ] ;
 .
 se:Piece
   a sh:NodeShape ;
-  sh:targetClass se:Piece ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:piece ;
+  sh:targetClass se:Piece ;
   sh:name "Piece"@en ;
   sh:description "An piece is like a LEGO piece inside a set."@en ;
   sh:property
     [
       sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "The type of the piece."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:class se:Type ;
     ] ;
 .
 se:Attraction
   a sh:NodeShape ;
-  sh:targetClass se:Attraction ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:attraction ;
+  sh:targetClass se:Attraction ;
   sh:name "Attraction"@en ;
   sh:description "An attraction makes the attracted piece being pulled to the attracting piece."@en ;
   sh:property
     [
-      sh:path se:attractingSide ;
-      sh:class se:Side ;
+      sh:path se:attracting ;
+      sh:name "attracting side"@en ;
+      sh:description "The side of the attracting piece. This piece does not move."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:class se:Side ;
     ] ,
     [
-      sh:path se:attractedSide ;
-      sh:class se:Side ;
+      sh:path se:attracted ;
+      sh:name "attracted side"@en ;
+      sh:description "The side of the attracted piece. This piece does move."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:class se:Side ;
     ] ;
 .
 se:Side
   a sh:NodeShape ;
-  sh:targetClass se:Side ; # TODO: create pyshacl issue
+  sh:targetClass se:Side ;
   sh:name "Side"@en ;
-  sh:description "A side ."@en ;
+  sh:description "A side is a port of the type of a piece and the a piece."@en ;
   sh:property
     [
       sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "The piece of the side."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:class se:Piece ;
     ] ,
     [
       sh:path se:port ;
+      sh:name "port"@en ;
       sh:description "The port of the type of the piece of the side."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
+      sh:class se:Port ;
     ] ;
 .
 se:Type
   a sh:NodeShape ;
-  sh:targetClass se:Type ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:type ;
+  sh:targetClass se:Type ;
   sh:name "type"@en ;
   sh:description "A type is like a LEGO piece type. It has ports to connect with other types and it consits of many pieces of information in different formats. In CAD lingo a type is a block (definition)."@en ;
   sh:property
@@ -146,8 +162,8 @@ se:Type
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the type."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
@@ -160,34 +176,57 @@ se:Type
     [
       sh:path se:property ;
       sh:name "property"@en ;
-      sh:description "A property for the type."@en ;
+      sh:description "A property of the type."@en ;
       sh:or (
         [
           sh:class se:DecimalProperty ;
+          sh:name "decimal property"@en ;
+          sh:description "A decimal property of the type."@en ;
         ]
         [
           sh:class se:IntegerProperty ;
+          sh:name "integer property"@en ;
+          sh:description "A integer property of the type."@en ;
         ]
         [
           sh:class se:NaturalProperty ;
+          sh:name "natural property"@en ;
+          sh:description "A natural property of the type."@en ;
         ]
         [
           sh:class se:BooleanProperty ;
+          sh:name "boolean property"@en ;
+          sh:description "A boolean property of the type."@en ;
         ]
         [
           sh:class se:FuzzyProperty ;
+          sh:name "fuzzy property"@en ;
+          sh:description "A fuzzy property of the type."@en ;
         ]
         [
           sh:class se:ChoiceProperty ;
+          sh:name "choice property"@en ;
+          sh:description "A choice property of the type."@en ;
         ]
         [
           sh:class se:BlobProperty ;
+          sh:name "blob property"@en ;
+          sh:description "A blob property of the type."@en ;
+        ]
+        [
+          sh:class se:PointProperty ;
+          sh:name "point property"@en ;
+          sh:description "A point property of the type."@en ;
         ]
         [
           sh:class se:VectorProperty ;
+          sh:name "vector property"@en ;
+          sh:description "A vector property of the type."@en ;
         ]
         [
           sh:class se:PlaneProperty ;
+          sh:name "plane property"@en ;
+          sh:description "A plane property of the type."@en ;
         ]
       )
     ] ,
@@ -196,61 +235,129 @@ se:Type
       sh:name "port"@en ;
       sh:description "A port of the type."@en ;
       sh:minCount 1 ;
+      sh:class se:Port ;
     ] ;
 .
 se:Port
   a sh:NodeShape ;
-  sh:targetClass se:Port ; # TODO: create pyshacl issue
-  sh:targetObjectsOf se:port ;
+  sh:targetClass se:Port ;
   sh:name "port"@en ;
-  sh:description "An port is a 3d interface."@en ;
+  sh:description "A port is a 3d interface."@en ;
   sh:property
     [
+      sh:path se:plane ;
+      sh:name "plane"@en ;
+      sh:description "The plane of the port."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Plane ;
+    ] ,
+    [
       sh:path se:property ;
+      sh:name "property"@en ;
+      sh:description "A property for the port."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalProperty ;
+          sh:name "decimal property"@en ;
+          sh:description "A decimal property of the port."@en ;
+        ]
+        [
+          sh:class se:IntegerProperty ;
+          sh:name "integer property"@en ;
+          sh:description "A integer property of the port."@en ;
+        ]
+        [
+          sh:class se:NaturalProperty ;
+          sh:name "natural property"@en ;
+          sh:description "A natural property of the port."@en ;
+        ]
+        [
+          sh:class se:BooleanProperty ;
+          sh:name "boolean property"@en ;
+          sh:description "A boolean property of the port."@en ;
+        ]
+        [
+          sh:class se:FuzzyProperty ;
+          sh:name "fuzzy property"@en ;
+          sh:description "A fuzzy property of the port."@en ;
+        ]
+        [
+          sh:class se:ChoiceProperty ;
+          sh:name "choice property"@en ;
+          sh:description "A choice property of the port."@en ;
+        ]
+        [
+          sh:class se:BlobProperty ;
+          sh:name "blob property"@en ;
+          sh:description "A blob property of the port."@en ;
+        ]
+        [
+          sh:class se:PointProperty ;
+          sh:name "point property"@en ;
+          sh:description "A point property of the port."@en ;
+        ]
+        [
+          sh:class se:VectorProperty ;
+          sh:name "vector property"@en ;
+          sh:description "A vector property of the port."@en ;
+        ]
+        [
+          sh:class se:PlaneProperty ;
+          sh:name "plane property"@en ;
+          sh:description "A plane property of the port."@en ;
+        ]
+      )
     ] ;
 .
 se:DecimalProperty
   a sh:NodeShape ;
-  sh:targetClass se:DecimalProperty ; # TODO: create pyshacl issue
-  sh:name "decimal property"@en ;
-  sh:description "A decimal property is real number with floating point arithmetic."@en ;
+  sh:targetClass se:DecimalProperty ;
+  sh:name "decimal (number) property"@en ;
+  sh:description "A decimal (number) property is a property with a real number (floating point arithmetic and double precision) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the decimal (number) property."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "decimal (number) value"@en ;
+      sh:description "The decimal (number) value of the decimal (number) property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ,
     [
       sh:path se:unit ;
+      sh:name "unit"@en ;
+      sh:description "The unit of the decimal (number) property."@en ;
       sh:maxCount 1 ;
       sh:datatype xsd:string ; 
     ] ;
 .
 se:IntegerProperty
   a sh:NodeShape ;
-  sh:targetClass se:IntegerProperty ; # TODO: create pyshacl issue
-  sh:name "integer property"@en ;
-  sh:description "An integer property is a whole number without decimals."@en ;
+  sh:targetClass se:IntegerProperty ;
+  sh:name "integer (number) property"@en ;
+  sh:description "An integer (number) property is a property with a whole number (without decimals) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the integer (number) property."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "integer (number) value"@en ;
+      sh:description "The integer (number) value of the integer (number) property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:integer ;
@@ -258,20 +365,22 @@ se:IntegerProperty
 .
 se:NaturalProperty
   a sh:NodeShape ;
-  sh:targetClass se:NaturalProperty ; # TODO: create pyshacl issue
-  sh:name "natural property"@en ;
-  sh:description "A natural property is positive (=not zero or negative) integer (=no decimals) number."@en ;
+  sh:targetClass se:NaturalProperty ;
+  sh:name "natural (number) property"@en ;
+  sh:description "A natural (number) property is a property with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the natural (number) property."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "natural (number) value"@en ;
+      sh:description "The natural (number) value of the natural (number) property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:positiveInteger ; 
@@ -279,20 +388,22 @@ se:NaturalProperty
 .
 se:BooleanProperty
   a sh:NodeShape ;
-  sh:targetClass se:BooleanProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:BooleanProperty ;
   sh:name "boolean property"@en ;
-  sh:description "A boolean property is either true or false."@en ;
+  sh:description "A boolean property is property with a boolean (either true or false) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the boolean property."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "boolean value"@en ;
+      sh:description "The boolean value of the boolean property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:boolean ;
@@ -300,20 +411,22 @@ se:BooleanProperty
 .
 se:FuzzyProperty
   a sh:NodeShape ;
-  sh:targetClass se:FuzzyProperty ; # TODO: create pyshacl issue
-  sh:name "fuzzy property"@en ;
-  sh:description "A fuzzy (logic) property is a real number between 0 and 1."@en ;
+  sh:targetClass se:FuzzyProperty ;
+  sh:name "fuzzy (logic) property"@en ;
+  sh:description "A fuzzy (logic) property is a property with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
       sh:description "The name of the fuzzy (logic) property."@en ;
-      sh:datatype rdf:langString ;
       sh:minCount 1 ;
+      sh:datatype rdf:langString ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "fuzzy (logic) value"@en ;
+      sh:description "The fuzzy (logic) value of the fuzzy (logic) property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ;
@@ -323,20 +436,22 @@ se:FuzzyProperty
 .
 se:ChoiceProperty
   a sh:NodeShape ;
-  sh:targetClass se:ChoiceProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:ChoiceProperty ;
   sh:name "choice property"@en ;
-  sh:description "A choice property is a textual value which represents one choice from a known finite amount of possible choises."@en ;
+  sh:description "A choice property is a property with a textual value which represents one choice from a known finite amount of possible choises."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the natural number property."@en ;
+      sh:description "The name of the choice property."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
+      sh:name "choice value"@en ;
+      sh:description "The choice value of the choice property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype rdf:langString ;
@@ -346,22 +461,22 @@ se:ChoiceProperty
 .
 se:BlobProperty
   a sh:NodeShape ;
-  sh:targetClass se:BlobProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:BlobProperty ;
   sh:name "blob property"@en ;
-  sh:description "A binary large object (blob) property is any data that is stored somewhere else. Most likely it is not rdf."@en ;
+  sh:description "A binary large object (blob) property is a property with a blob value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the natural number property."@en ;
+      sh:description "The name of the blob property."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
     ] ,
     [
       sh:path se:value ;
-      se:name "value"@en ;
-      se:description "The blob value."@en ;
+      se:name "blob value"@en ;
+      se:description "The blob value of the blob property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Blob ;
@@ -369,9 +484,9 @@ se:BlobProperty
 .
 se:Blob
   a sh:NodeShape ;
-  sh:targetClass se:Blob ; # TODO: create pyshacl issue
+  sh:targetClass se:Blob ;
   sh:name "blob"@en ;
-  sh:description "A binary large object (blob) is an array of byte with metadata."@en ;
+  sh:description "A binary large object (blob) is an array of bytes with metadata in order to interpret the bytes."@en ;
   sh:property
     [
       sh:path se:url ;
@@ -430,56 +545,56 @@ se:Blob
       sh:maxCount 1 ;
     ] ;
 .
-
 se:PlaneProperty
   a sh:NodeShape ;
-  sh:targetClass se:PlaneGeometryProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:PlaneProperty ;
   sh:name "plane property"@en ;
-  sh:description "A plane geometry property is ."@en ;
+  sh:description "A plane property is a property with a plane (3d reference frame) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the decimal number property."@en ;
+      sh:description "The name of the plane property."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      se:name "plane value"@en ;
+      se:description "The plane value of the plane property."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Plane ;
     ] ;
 .
 se:Plane
   a sh:NodeShape ;
-  sh:targetClass se:PlaneGeometryProperty ; # TODO: create pyshacl issue
-  sh:name "plane property"@en ;
-  sh:description "A plane is ."@en ;
+  sh:targetClass se:Plane ;
+  sh:name "plane"@en ;
+  sh:description "A plane is a 3d reference frame defined by an origin point, a unitized x-axis vector and unitized y-axis vector."@en ;
   sh:property
     [
-      sh:path se:name ;
-      sh:name "name"@en ;
-      sh:description "The name of the decimal number property."@en ;
-      sh:datatype rdf:langString ;
-      sh:minCount 1 ;
-      sh:uniqueLang true ;
-    ] ,
-    [
       sh:path se:origin ;
+      sh:name "origin point"@en ;
+      sh:description "The origin point of the plane."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Point ; 
     ] ,
+    # TODO: check how to integrate unitizing heuristic (-1<=x,y,z<=1) or advanced shacl feature
     [
-      sh:path se:xAxis ;
+      sh:path se:x ;
+      sh:name "unitized x-axis vector"@en ;
+      sh:description "The unitized x-axis vector of the plane."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Vector ; 
     ] ,
     [
-      sh:path se:yAxis ;
-      sh:minCount 1 ;
-      sh:maxCount 1 ;
-      sh:class se:Vector ; 
-    ] ,
-    [
-      sh:path se:zAxis ;
+      sh:path se:y ;
+      sh:name "unitized y-axis vector"@en ;
+      sh:description "The unitized y-axis vector of the plane."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Vector ; 
@@ -487,7 +602,7 @@ se:Plane
 .
 se:VectorProperty
   a sh:NodeShape ;
-  sh:targetClass se:VectorProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:VectorProperty ;
   sh:name "vector property"@en ;
   sh:description "A vector property has a vector as a value."@en ;
   sh:property
@@ -501,6 +616,8 @@ se:VectorProperty
     ] ,
     [
       sh:path se:value ;
+      sh:name "vector value"@en ;
+      sh:description "The vector value of the vector property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Vector ; 
@@ -508,24 +625,30 @@ se:VectorProperty
 .
 se:Vector
   a sh:NodeShape ;
-  sh:targetClass se:Vector ; # TODO: create pyshacl issue
+  sh:targetClass se:Vector ;
   sh:name "vector"@en ;
   sh:description "A vector is a 3d vector of decimal numbers."@en ;
   sh:property
     [
       sh:path se:x ;
+      sh:name "x number"@en ;
+      sh:description "The first number (x) of the vector."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ,
     [
       sh:path se:y ;
+      sh:name "y number"@en ;
+      sh:description "The second number (y) of the vector."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ,
     [
       sh:path se:z ;
+      sh:name "z number"@en ;
+      sh:description "The third number (z) of the vector."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
@@ -533,7 +656,7 @@ se:Vector
 .
 se:PointProperty
   a sh:NodeShape ;
-  sh:targetClass se:PointProperty ; # TODO: create pyshacl issue
+  sh:targetClass se:PointProperty ;
   sh:name "point property"@en ;
   sh:description "A point property has a point as a value."@en ;
   sh:property
@@ -547,6 +670,8 @@ se:PointProperty
     ] ,
     [
       sh:path se:value ;
+      sh:name "point value"@en ;
+      sh:description "The point value of the point property."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Point ; 
@@ -554,26 +679,164 @@ se:PointProperty
 .
 se:Point
   a sh:NodeShape ;
-  sh:targetClass se:Point ; # TODO: create pyshacl issue
+  sh:targetClass se:Point ;
   sh:name "point"@en ;
   sh:description "A point is a 3d point of decimal numbers."@en ;
   sh:property
     [
       sh:path se:x ;
+      sh:name "x coordinate"@en ;
+      sh:description "The first coordinate (x) of the point."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ,
     [
       sh:path se:y ;
+      sh:name "y coordinate"@en ;
+      sh:description "The second coordinate (y) of the point."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ,
     [
       sh:path se:z ;
+      sh:name "z coordinate"@en ;
+      sh:description "The third coordinate (z) of the point."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
     ] ;
 .
+# Runtime
+# se:Transformation
+#   a sh:NodeShape ;
+#   sh:targetClass se:Transformation ;
+#   sh:name "transformation"@en ;
+#   sh:description "A transformation transformed one formation into another formation according to properties."
+#   sh:property
+#     [
+#       sh:path se:initial ;
+#       sh:name "initial formation"@en ;
+#       sh:description "The initial formation before the transformation."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Formation ; 
+#     ] ,
+#     [
+#       sh:path se:transformed ;
+#       sh:name "transformed formation"@en ;
+#       sh:description "The transformed formation after the transformation."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Formation ; 
+#     ] ,
+#     [
+#       sh:path se:parameter ;
+#       sh:name "parameter"@en ;
+#       sh:description "A parameter of the transformation."@en ;
+#       sh:or (
+#         [
+#           sh:class se:DecimalProperty ;
+#           sh:name "decimal property parameter"@en ;
+#           sh:description "A decimal property of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:IntegerProperty ;
+#           sh:name "integer property parameter"@en ;
+#           sh:description "A integer property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:NaturalProperty ;
+#           sh:name "natural property parameter"@en ;
+#           sh:description "A natural property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:BooleanProperty ;
+#           sh:name "boolean property parameter"@en ;
+#           sh:description "A boolean property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:FuzzyProperty ;
+#           sh:name "fuzzy property parameter"@en ;
+#           sh:description "A fuzzy property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:ChoiceProperty ;
+#           sh:name "choice property parameter"@en ;
+#           sh:description "A choice property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:BlobProperty ;
+#           sh:name "blob property parameter"@en ;
+#           sh:description "A blob property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:PointProperty ;
+#           sh:name "point property parameter"@en ;
+#           sh:description "A point property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:VectorProperty ;
+#           sh:name "vector property parameter"@en ;
+#           sh:description "A vector property parameter of the transformation."@en ;
+#         ]
+#         [
+#           sh:class se:PlaneProperty ;
+#           sh:name "plane property parameter"@en ;
+#           sh:description "A plane property parameter of the transformation."@en ;
+#         ]
+#       )
+#     ] ;
+# .
+# Avoid context if possible. See after implementation, if necissary.
+# se:Context
+#   a sh:NodeShape ;
+#   sh:targetClass se:Context ;
+#   sh:name "context"@en ;
+#   sh:description "A context allows to (re)create complex data structures from single values."
+#   sh:property
+#     [
+#       sh:path se:category ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ,
+#     [
+#       sh:path se:order ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ;
+# .
+# se:Enumeration
+#   a sh:NodeShape ;
+#   sh:targetClass se:Enumeration ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:ordering ;
+#       sh:minCount 1 ;
+#       sh:class se:Ordering; 
+#     ] ;
+# .
+# se:Ordering
+#   a sh:NodeShape ;
+#   sh:targetClass se:Map ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:category ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ,
+#     [
+#       sh:path se:integer ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:integer ; 
+#     ] ;
+# .
