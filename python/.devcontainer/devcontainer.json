@@ -23,14 +23,7 @@
 				"tamasfe.even-better-toml",
 				"mtxr.sqltools",
 				"mtxr.sqltools-driver-sqlite"
-			],
-			"settings": {
-				"python.defaultInterpreterPath": ".venv/bin/python",
-				"editor.defaultFormatter": "ms-python.black-formatter",
-				"editor.formatOnSave": true,
-				"sqltools.useNodeRuntime": true
-			}
-            }
+			]
 		},
 		"features": {
 			"ghcr.io/devcontainers/features/node:1": {}

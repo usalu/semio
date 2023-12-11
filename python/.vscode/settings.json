@@ -1,4 +1,8 @@
 {
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "sqltools.useNodeRuntime": true,
     "sqltools.connections": [
         {
             "previewLimit": 50,

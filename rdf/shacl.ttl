@@ -823,6 +823,27 @@ se:Context
 #     ] ;
 # .
 # Runtime
+se:InitializeArchiveCommand
+  a sh:NodeShape ;
+  sh:targetClass se:InitializeArchiveCommand ;
+  sh:name "initialize archive command"@en ;
+  sh:description "Initializes an archive in a directory. Uses the "@en ;
+  sh:property
+    [
+      sh:path se:archive ;
+      sh:name "archive"@en ;
+      sh:description "The archive to initialization command."@en ;
+      sh:maxCount 1 ;
+      sh:class se:Archive ; 
+    ] ,
+    [
+      sh:path se:directory ;
+      sh:name "directory"@en ;
+      sh:description "The directory to write the archive into. If none is provided then the current directory will be used."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:anyURI ; 
+    ] ;
+.
 # se:Transformation
 #   a sh:NodeShape ;
 #   sh:targetClass se:Transformation ;

@@ -1,0 +1,45 @@
+@startuml
+abstract class Command {
+    static bool isReadOnly
+    async execute()
+}
+
+abstract class ArchiveCommand {
+    async execute()
+}
+class InitializeArchiveCommand {
+    async execute()
+}
+
+abstract class ScriptCommand {
+    async execute()
+}
+class PrototypeScriptCommand {
+    async execute()
+}
+class ModificationScriptCommand {
+    async execute()
+}
+class ChoreographyScriptCommand {
+    async execute()
+}
+class TransformationScriptCommand {
+    async execute()
+}
+class SchemeScriptCommand {
+    async execute()
+}
+
+class NquadsCommandParser
+
+Command <|-- ArchiveCommand
+Command <|-- ScriptCommand
+
+ArchiveCommand <|-- InitializeArchiveCommand
+
+ScriptCommand <|-- PrototypeScriptCommand
+ScriptCommand <|-- ModificationScriptCommand
+ScriptCommand <|-- ChoreographyScriptCommand
+ScriptCommand <|-- TransformationScriptCommand
+ScriptCommand <|-- SchemeScriptCommand
+@enduml

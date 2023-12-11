@@ -9,14 +9,19 @@ repository = "https://github.com/usalu/semio"
 homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "~3.12"
 sqlalchemy = "^2.0.23"
+rdflib = "^7.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
+pyshacl = "^0.25.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
+
+[tool.poetry.group.build.dependencies]
+pyinstaller = "^6.2.0"
 
 [build-system]
 requires = ["poetry-core"]
