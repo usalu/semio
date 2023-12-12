@@ -11,6 +11,11 @@ homepage = "https://usalu.github.io/semio"
 [tool.poetry.dependencies]
 python = "^3.12"
 sqlalchemy = "^2.0.23"
+graphene = "^3.3"
+flask = "^3.0.0"
+graphql-server = { extras = ["flask"], version = "^3.0.0b7" }
+graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
+setuptools = "^69.0.2"                                                    # silent dependency of graphene-sqlalchemy because of import pkg_resources
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
@@ -21,3 +26,6 @@ black = "^23.11.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+semio = "semio:main"
