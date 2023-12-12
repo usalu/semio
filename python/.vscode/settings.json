@@ -1,10 +1,19 @@
 {
+    "sqltools.useNodeRuntime": true,
     "sqltools.connections": [
         {
             "previewLimit": 50,
             "driver": "SQLite",
+            "name": "semio",
+            "database": "C:\\git\\semio\\2.x\\python\\semio.db"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
             "name": "metabolism",
-            "database": "metabolism.db"
+            "database": "C:\\git\\semio\\2.x\\python\\metabolism.db"
         }
-    ]
+    ],
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "editor.formatOnSave": true
 }
