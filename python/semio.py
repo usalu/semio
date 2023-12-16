@@ -22,6 +22,7 @@ API for semio.
 
 from os import remove
 from os.path import exists
+from pathlib import Path
 from typing import Optional, List
 from enum import Enum
 from decimal import Decimal
@@ -51,20 +52,13 @@ from graphql_server.flask import GraphQLView
 
 URI_LENGTH_MAX = 1000
 NAME_LENGTH_MAX = 100
+SYMBOL_LENGTH_MAX = 1
 PROPERTY_DATATYPE_LENGTH_MAX = 100
 SCRIPT_URI_LENGTH_MAX = 1000
 SCRIPT_KIND_LENGTH_MAX = 100
 KIT_FILENAME = "kit.semio"
 
 # SQLAlchemy
-
-
-def getSession(directory):
-    if directory[-1] != "/":
-        directory += "/"
-    engine = create_engine("sqlite:///" + directory + KIT_FILENAME)
-    Session = scoped_session(sessionmaker(bind=engine))
-    return Session
 
 
 class Base(DeclarativeBase):
@@ -86,7 +80,7 @@ class Script(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     kind: Mapped[ScriptKind] = mapped_column(sqlalchemy.Enum(ScriptKind))
     url: Mapped[str] = mapped_column(String(SCRIPT_URI_LENGTH_MAX))
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
@@ -121,7 +115,6 @@ class Property(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
     datatype: Mapped[str] = mapped_column(String(PROPERTY_DATATYPE_LENGTH_MAX))
     value: Mapped[str] = mapped_column(Text())
     synthesis_script_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
@@ -145,6 +138,7 @@ class Port(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     origin_x: Mapped[Decimal] = mapped_column(Numeric())
     origin_y: Mapped[Decimal] = mapped_column(Numeric())
     origin_z: Mapped[Decimal] = mapped_column(Numeric())
@@ -183,13 +177,14 @@ class Type(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
     prototype_script_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
     prototype_script: Mapped[Optional[Script]] = relationship(
         Script, foreign_keys=[prototype_script_id]
     )
-    ports: Mapped[List[Port]] = relationship("Port", back_populates="type")
+    ports: Mapped[Optional[List[Port]]] = relationship("Port", back_populates="type")
     properties: Mapped[Optional[List[Property]]] = relationship(
         Property, back_populates="type", cascade="all, delete-orphan"
     )
@@ -202,6 +197,8 @@ class Piece(Base):
     __tablename__ = "piece"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
+    formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
     attractings: Mapped[Optional[List["Attraction"]]] = relationship(
         "Attraction",
         foreign_keys="[Attraction.attracting_piece_id]",
@@ -212,8 +209,6 @@ class Piece(Base):
         foreign_keys="[Attraction.attracted_piece_id]",
         back_populates="attracted_piece",
     )
-    formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
-    formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
 
     def __repr__(self) -> str:
         return f"Piece(id={self.id!r}, formation_id={self.formation_id!r})"
@@ -258,7 +253,7 @@ class Attraction(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracting_piece_type_port_id={self.attracting_piece_type_port_id!r}, attracted_piece_id={self.attracted_piece_id!r}, attracted_piece_type_port_id={self.attracted_piece_type_port_id!r}, formation_id={self.formation_id!r})"
+        return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
 
 
 class Formation(Base):
@@ -267,6 +262,7 @@ class Formation(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     pieces: Mapped[List[Piece]] = relationship(
         back_populates="formation", cascade="all, delete-orphan"
     )
@@ -301,6 +297,7 @@ class Kit(Base):
     uri: Mapped[str] = mapped_column(String(URI_LENGTH_MAX))
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[str] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     scripts: Mapped[Optional[List[Script]]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
@@ -313,6 +310,42 @@ class Kit(Base):
 
     def __repr__(self) -> str:
         return f"Kit(id={self.id!r}, name={self.name!r})"
+
+
+class DirectoryException(Exception):
+    def __init__(self, directory):
+        self.directory = directory
+
+
+class DirectoryDoesNotExistException(DirectoryException):
+    def __str__(self):
+        return "Directory does not exist: " + self.directory
+
+
+class DirectoryIsNotADirectoryException(DirectoryException):
+    def __str__(self):
+        return "Directory is not a directory: " + self.directory
+
+
+def sanitizeAndCheckAndAbsolutizeDirectory(directory):
+    directory = Path(directory)
+    if not directory.exists():
+        raise DirectoryDoesNotExistException(directory)
+    if not directory.is_dir():
+        raise DirectoryIsNotADirectoryException(directory)
+    return directory.resolve()
+
+
+def getLocalSession(directory):
+    engine = create_engine("sqlite:///" + directory + "/" + KIT_FILENAME)
+    Session = scoped_session(sessionmaker(bind=engine))
+    return Session
+
+
+def getLocalKit(directory):
+    session = getLocalSession(directory)
+    assert session.query(Kit).count() == 1
+    return session.query(Kit).first()
 
 
 # Graphene
@@ -373,22 +406,19 @@ class CharacterizationInput(InputObjectType):
 
 
 class ScriptInput(InputObjectType):
-    name = graphene.String(required=True)
-    explanation = graphene.String()
+    characterization = graphene.Field(CharacterizationInput)
     kind = graphene.String(required=True)
     url = graphene.String(required=True)
 
 
 class PropertyInput(InputObjectType):
-    name = graphene.String(required=True)
-    explanation = graphene.String()
+    name = graphene.Field(CharacterizationInput)
     datatype = graphene.String(required=True)
     value = graphene.String(required=True)
 
 
-class PortInput(InputObjectType):
-    name = graphene.String(required=True)
-    explanation = graphene.String()
+class PortBaseInput(InputObjectType):
+    characterization = graphene.Field(CharacterizationInput)
     origin_x = graphene.Decimal(required=True)
     origin_y = graphene.Decimal(required=True)
     origin_z = graphene.Decimal(required=True)
@@ -401,6 +431,10 @@ class PortInput(InputObjectType):
     z_axis_x = graphene.Decimal(required=True)
     z_axis_y = graphene.Decimal(required=True)
     z_axis_z = graphene.Decimal(required=True)
+
+
+class PortInput(InputObjectType):
+    base = graphene.Field(PortBaseInput)
     properties = graphene.List(PropertyInput)
 
 
@@ -415,57 +449,110 @@ class AttractionInput(InputObjectType):
     attracted_piece_type_port_id = graphene.Int(required=True)
 
 
-class FormationMetadataInput(InputObjectType):
-    name = graphene.String(required=True)
-    explanation = graphene.String()
+class FormationBaseInput(InputObjectType):
+    characterization = graphene.Field(CharacterizationInput)
     choreography_script_id = graphene.Int()
     transformation_script_id = graphene.Int()
 
 
 class FormationInput(InputObjectType):
-    metadata = graphene.Field(FormationMetadataInput)
+    base = graphene.Field(FormationBaseInput)
     pieces = graphene.List(PieceInput)
     attractions = graphene.List(AttractionInput)
 
 
-class TypeMetadataInput(InputObjectType):
-    name = graphene.String(required=True)
-    explanation = graphene.String()
+class TypeBaseInput(InputObjectType):
+    characterization = graphene.Field(CharacterizationInput)
     prototype_script_id = graphene.Int()
 
 
 class TypeInput(InputObjectType):
-    metadata = graphene.Field(TypeMetadataInput)
+    base = graphene.Field(TypeBaseInput)
     ports = graphene.List(PortInput)
     properties = graphene.List(PropertyInput)
 
 
-class KitMetadataInput(InputObjectType):
+class KitBaseInput(InputObjectType):
+    characterization = graphene.Field(CharacterizationInput)
     uri = graphene.String(required=True)
-    name = graphene.String(required=True)
-    explanation = graphene.String()
 
 
 class KitInput(InputObjectType):
-    metadata = graphene.Field(KitMetadataInput)
+    base = graphene.Field(KitBaseInput)
     scripts = graphene.List(ScriptInput)
     types = graphene.List(TypeInput)
     formations = graphene.List(FormationInput)
 
 
-class CreateKitMutation(Mutation):
+# graphene directory error handling classes
+
+
+class DirectoryError(graphene.Enum):
+    DOES_NOT_EXIST = "does_not_exist"
+    NO_PERMISSION = "no_permission"
+
+
+class LocalKitMutation(graphene.Union):
+    class Meta:
+        types = (KitNode, DirectoryError)
+
+
+class CreateLocalKitMutation(Mutation):
     class Arguments:
-        kit = KitInput(required=True)
         directory = graphene.String(required=True)
+        kitInput = KitInput(required=True)
 
-    Output = KitNode
+    Output = LocalKitMutation
 
-    def mutate(self, info, kit, directory):
-        session = getSession(directory)
-        kit = Kit(uri=kit.uri, name=kit.name, explanation=kit.explanation)
+    def mutate(self, info, directory, kitInput):
+        directory = sanitizeAndCheckAndAbsolutizeDirectory(directory)
+
+        engine = create_engine("sqlite:///" + directory + KIT_FILENAME)
+        Base.base.create_all(engine)
+        session = getLocalSession(directory)
+        kit = Kit(
+            uri=kitInput.uri, name=kitInput.name, explanation=kitInput.explanation
+        )
         session.add(kit)
         session.commit()
         return kit
+
+
+class UpdateLocalKitBaseMutation(Mutation):
+    class Arguments:
+        directory = graphene.String(required=True)
+        kitBaseInput = KitBaseInput(required=True)
+
+    Output = KitNode
+
+    def mutate(self, info, directory, kitBaseInput):
+        # try:
+        #     directory = sanitizeAndCheckDirectory(directory)
+        # except DirectoryException as directoryException:
+        #     if isinstance(directoryException, DirectoryDoesNotExistException):
+        #         return UpdateLocalKitBaseMutation(ok=False)
+        session = getLocalSession(directory)
+        kit = getLocalKit(directory)
+        if kitBaseInput.uri:
+            kit.uri = kitBaseInput.uri
+        if kitBaseInput.name:
+            kit.name = kitBaseInput.name
+        if kitBaseInput.explanation:
+            kit.explanation = kitBaseInput.explanation
+        session.commit()
+        return kit
+
+
+class DeleteLocalKitMutation(Mutation):
+    class Arguments:
+        directory = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+
+    def mutate(self, info, directory):
+        sanitizeDirectory(directory)
+        remove(directory + KIT_FILENAME)
+        return DeleteLocalKitMutation(ok=True)
 
 
 class UpdateMode(graphene.Enum):
@@ -473,50 +560,15 @@ class UpdateMode(graphene.Enum):
     REPLACE = "replace"
 
 
-class UpdateKitMetadataMutation(Mutation):
+class CreateLocalTypeMutation(Mutation):
     class Arguments:
-        id = graphene.Int(required=True)
         directory = graphene.String(required=True)
-
-    Output = KitNode
-
-    def mutate(self, info, id, directory, kitInput, mode=UpdateMode.MERGE):
-        session = getSession(directory)
-        kit = session.get(Kit, id)
-        if kitInput.uri:
-            kit.uri = kitInput.uri
-        if kitInput.name:
-            kit.name = kitInput.name
-        if kitInput.explanation:
-            kit.explanation = kitInput.explanation
-        session.commit()
-        return kit
-
-
-class DeleteKitMutation(Mutation):
-    class Arguments:
-        id = graphene.Int(required=True)
-
-    ok = graphene.Boolean()
-
-    def mutate(self, info, id, directory):
-        session = getSession(directory)
-        kit = session.get(Kit, id)
-        session.delete(kit)
-        session.commit()
-        return DeleteKitMutation(ok=True)
-
-
-class CreateTypeMutation(Mutation):
-    class Arguments:
-        kit_id = graphene.Int(required=True)
         type = TypeInput(required=True)
-        directory = graphene.String(required=True)
 
     Output = TypeNode
 
-    def mutate(self, info, kit_id, typeInput, directory):
-        session = getSession(directory)
+    def mutate(self, info, directory, typeInput):
+        session = getLocalSession(directory)
         type = Type(
             name=typeInput.name, explanation=typeInput.explanation, kit_id=kit_id
         )
@@ -525,23 +577,13 @@ class CreateTypeMutation(Mutation):
         return type
 
 
-class UpdateTypeMutation(Mutation):
+class UpdateTypeByNameMutation(Mutation):
     class Arguments:
-        id = graphene.Int(required=True)
-        type = TypeInput(required=True)
         directory = graphene.String(required=True)
+        name = graphene.String(required=True)
+        type = TypeInput(required=True)
 
     Output = TypeNode
-
-    def mutate(self, info, id, typeInput, directory):
-        session = getSession(directory)
-        type = session.get(Type, id)
-        if typeInput.name:
-            type.name = typeInput.name
-        if typeInput.explanation:
-            type.explanation = typeInput.explanation
-        session.commit()
-        return type
 
 
 class DeleteTypeMutation(Mutation):
@@ -551,7 +593,7 @@ class DeleteTypeMutation(Mutation):
     ok = graphene.Boolean()
 
     def mutate(self, info, id, directory):
-        session = getSession(directory)
+        session = getLocalSession(directory)
         type = session.get(Type, id)
         session.delete(type)
         session.commit()
@@ -591,7 +633,7 @@ def shutdown_session(exception=None):
 def initialize_database():
     if exists(SQLITE_PATH):
         remove(SQLITE_PATH)
-    Base.metadata.create_all(engine)
+    Base.base.create_all(engine)
     metabolism = Kit(
         uri="https://github.com/usalu/semio/tree/2.x/examples/metabolism",
         name="metabolism",
@@ -623,4 +665,4 @@ if __name__ == "__main__":
     # args = parser.parse_args()
     # main.run(args)
     # engine = create_engine("sqlite:///metabolism.db", echo=True)
-    # Base.metadata.create_all(engine)
+    # Base.base.create_all(engine)
