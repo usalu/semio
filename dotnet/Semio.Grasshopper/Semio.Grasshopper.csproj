@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Version>1.0</Version>
-    <Title>Semio.UI.Grasshopper</Title>
-    <Description>Description of Semio.UI.Grasshopper</Description>
+    <Title>Semio.Grasshopper</Title>
+    <Description>Description of Semio.Grasshopper</Description>
     <TargetExt>.gha</TargetExt>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -14,6 +14,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Semio\Semio.csproj" />
     <ProjectReference Include="..\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhino7\ConverterRhino7.csproj" />
   </ItemGroup>
 
