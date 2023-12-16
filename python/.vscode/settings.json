@@ -4,14 +4,14 @@
         {
             "previewLimit": 50,
             "driver": "SQLite",
-            "name": "semio",
-            "database": "C:\\git\\semio\\2.x\\python\\semio.db"
+            "name": "metabolism",
+            "database": "C:\\git\\semio\\2.x\\python\\metabolism.db"
         },
         {
             "previewLimit": 50,
             "driver": "SQLite",
-            "name": "metabolism",
-            "database": "C:\\git\\semio\\2.x\\python\\metabolism.db"
+            "database": "semio.db",
+            "name": "semio"
         }
     ],
     "python.defaultInterpreterPath": ".venv/bin/python",
