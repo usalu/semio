@@ -11,7 +11,7 @@
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-Grasshopper.svg" alt="Grasshopper"></a>
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-comming_soon(Python).svg" alt="Python"></a>
-    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-comming_soon(Sverchok).svg" alt="Sverchok"></a>
+    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-planning(Sverchok).svg" alt="Sverchok"></a>
     <br/>
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Python.svg" alt="Python"></a>
     <a href="<http://www.w3.org/2001/sw/wiki/RDF>"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Semantic_Web.svg" alt="Semantic Web"></a>
