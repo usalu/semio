@@ -15,5 +15,10 @@
         }
     ],
     "python.defaultInterpreterPath": ".venv/bin/python",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

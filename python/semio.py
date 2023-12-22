@@ -23,6 +23,7 @@ API for semio.
 from os import remove
 from os.path import exists
 from pathlib import Path
+from functools import lru_cache
 from typing import Optional, List
 from enum import Enum
 from decimal import Decimal
@@ -62,7 +63,6 @@ KIT_FILENAME = "kit.semio"
 
 
 class Base(DeclarativeBase):
-    # Query: QueryPropertyDescriptor = Session.query_property()
     pass
 
 
@@ -263,10 +263,10 @@ class Formation(Base):
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
-    pieces: Mapped[List[Piece]] = relationship(
+    pieces: Mapped[Optional[List[Piece]]] = relationship(
         back_populates="formation", cascade="all, delete-orphan"
     )
-    attractions: Mapped[List[Attraction]] = relationship(
+    attractions: Mapped[Optional[List[Attraction]]] = relationship(
         back_populates="formation", cascade="all, delete-orphan"
     )
     choreography_script_id: Mapped[Optional[int]] = mapped_column(
@@ -327,7 +327,7 @@ class DirectoryIsNotADirectoryException(DirectoryException):
         return "Directory is not a directory: " + self.directory
 
 
-def sanitizeAndCheckAndAbsolutizeDirectory(directory):
+def assertDirectory(directory):
     directory = Path(directory)
     if not directory.exists():
         raise DirectoryDoesNotExistException(directory)
@@ -336,16 +336,13 @@ def sanitizeAndCheckAndAbsolutizeDirectory(directory):
     return directory.resolve()
 
 
+@lru_cache(maxsize=100)
 def getLocalSession(directory):
-    engine = create_engine("sqlite:///" + directory + "/" + KIT_FILENAME)
-    Session = scoped_session(sessionmaker(bind=engine))
-    return Session
-
-
-def getLocalKit(directory):
-    session = getLocalSession(directory)
-    assert session.query(Kit).count() == 1
-    return session.query(Kit).first()
+    directory = assertDirectory(directory)
+    engine = create_engine("sqlite:///" + str(directory.joinpath(KIT_FILENAME)))
+    Base.metadata.create_all(engine)
+    # Delete instance of session factory
+    return sessionmaker(bind=engine)()
 
 
 # Graphene
@@ -392,11 +389,28 @@ class KitNode(SQLAlchemyObjectType):
 
 
 class Query(ObjectType):
-    kits = graphene.List(KitNode)
+    localScripts = graphene.List(ScriptNode, directory=graphene.String(required=True))
+    localTypes = graphene.List(TypeNode, directory=graphene.String(required=True))
+    localFormations = graphene.List(
+        FormationNode, directory=graphene.String(required=True)
+    )
+    localKit = graphene.Field(KitNode, directory=graphene.String(required=True))
 
-    def resolve_kits(self, info):
-        query = KitNode.get_query(info)
-        return query.all()
+    def resolve_localScripts(self, info, directory):
+        session = getLocalSession(directory)
+        return session.query(Script).all()
+
+    def resolve_localTypes(self, info, directory):
+        session = getLocalSession(directory)
+        return session.query(Type).all()
+
+    def resolve_localFormations(self, info, directory):
+        session = getLocalSession(directory)
+        return session.query(Formation).all()
+
+    def resolve_localKit(self, info, directory):
+        session = getLocalSession(directory)
+        return session.query(Kit).first()
 
 
 class CharacterizationInput(InputObjectType):
@@ -406,19 +420,19 @@ class CharacterizationInput(InputObjectType):
 
 
 class ScriptInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput)
+    characterization = graphene.Field(CharacterizationInput, required=True)
     kind = graphene.String(required=True)
     url = graphene.String(required=True)
 
 
 class PropertyInput(InputObjectType):
-    name = graphene.Field(CharacterizationInput)
+    name = graphene.String(required=True)
     datatype = graphene.String(required=True)
     value = graphene.String(required=True)
 
 
 class PortBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput)
+    characterization = graphene.Field(CharacterizationInput, required=True)
     origin_x = graphene.Decimal(required=True)
     origin_y = graphene.Decimal(required=True)
     origin_z = graphene.Decimal(required=True)
@@ -434,7 +448,7 @@ class PortBaseInput(InputObjectType):
 
 
 class PortInput(InputObjectType):
-    base = graphene.Field(PortBaseInput)
+    base = graphene.Field(PortBaseInput, required=True)
     properties = graphene.List(PropertyInput)
 
 
@@ -450,51 +464,235 @@ class AttractionInput(InputObjectType):
 
 
 class FormationBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput)
+    characterization = graphene.Field(CharacterizationInput, required=True)
     choreography_script_id = graphene.Int()
     transformation_script_id = graphene.Int()
 
 
 class FormationInput(InputObjectType):
-    base = graphene.Field(FormationBaseInput)
+    base = graphene.Field(FormationBaseInput, required=True)
     pieces = graphene.List(PieceInput)
     attractions = graphene.List(AttractionInput)
 
 
 class TypeBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput)
+    characterization = graphene.Field(CharacterizationInput, required=True)
     prototype_script_id = graphene.Int()
 
 
 class TypeInput(InputObjectType):
-    base = graphene.Field(TypeBaseInput)
+    base = graphene.Field(TypeBaseInput, required=True)
     ports = graphene.List(PortInput)
     properties = graphene.List(PropertyInput)
 
 
 class KitBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput)
+    characterization = graphene.Field(CharacterizationInput, required=True)
     uri = graphene.String(required=True)
 
 
 class KitInput(InputObjectType):
-    base = graphene.Field(KitBaseInput)
+    base = graphene.Field(KitBaseInput, required=True)
     scripts = graphene.List(ScriptInput)
     types = graphene.List(TypeInput)
     formations = graphene.List(FormationInput)
 
 
+def addScriptInputToKit(kit: Kit, scriptInput):
+    try:
+        explanation = scriptInput.characterization.explanation
+    except AttributeError:
+        explanation = None
+    try:
+        symbol = scriptInput.characterization.symbol
+    except AttributeError:
+        symbol = None
+    script = Script(
+        name=scriptInput.characterization.name,
+        explanation=explanation,
+        symbol=symbol,
+        kind=scriptInput.kind,
+        url=scriptInput.url,
+    )
+    kit.scripts.append(script)
+    return script
+
+
+def addPropertyInputToKit(kit: Kit, propertyInput: PropertyInput):
+    property = Property(
+        name=propertyInput.name,
+        datatype=propertyInput.datatype,
+        value=propertyInput.value,
+    )
+    kit.properties.append(property)
+    return property
+
+
+def addPortInputToKit(kit: Kit, portInput: PortInput):
+    try:
+        explanation = portInput.base.characterization.explanation
+    except AttributeError:
+        explanation = None
+    try:
+        symbol = portInput.base.characterization.symbol
+    except AttributeError:
+        symbol = None
+    port = Port(
+        name=portInput.base.characterization.name,
+        explanation=explanation,
+        symbol=symbol,
+        origin_x=portInput.base.origin_x,
+        origin_y=portInput.base.origin_y,
+        origin_z=portInput.base.origin_z,
+        x_axis_x=portInput.base.x_axis_x,
+        x_axis_y=portInput.base.x_axis_y,
+        x_axis_z=portInput.base.x_axis_z,
+        y_axis_x=portInput.base.y_axis_x,
+        y_axis_y=portInput.base.y_axis_y,
+        y_axis_z=portInput.base.y_axis_z,
+        z_axis_x=portInput.base.z_axis_x,
+        z_axis_y=portInput.base.z_axis_y,
+        z_axis_z=portInput.base.z_axis_z,
+    )
+    for propertyInput in portInput.properties or []:
+        property = addPropertyInputToKit(kit, propertyInput)
+        property.port = port
+    kit.ports.append(port)
+    return port
+
+
+def addTypeInputToKit(kit: Kit, typeInput: TypeInput):
+    try:
+        explanation = typeInput.base.characterization.explanation
+    except AttributeError:
+        explanation = None
+    try:
+        symbol = typeInput.base.characterization.symbol
+    except AttributeError:
+        symbol = None
+    type = Type(
+        name=typeInput.base.characterization.name,
+        explanation=explanation,
+        symbol=symbol,
+    )
+    for portInput in typeInput.ports or []:
+        port = addPortInputToKit(kit, portInput)
+        port.type = type
+    for propertyInput in typeInput.properties or []:
+        property = addPropertyInputToKit(kit, propertyInput)
+        property.type = type
+    kit.types.append(type)
+    return type
+
+
+def addPieceInputToKit(kit: Kit, pieceInput: PieceInput):
+    piece = Piece(type_id=pieceInput.type_id)
+    kit.pieces.append(piece)
+    return piece
+
+
+def addAttractionInputToKit(kit: Kit, attractionInput: AttractionInput):
+    attraction = Attraction(
+        attracting_piece_id=attractionInput.attracting_piece_id,
+        attracting_piece_type_port_id=attractionInput.attracting_piece_type_port_id,
+        attracted_piece_id=attractionInput.attracted_piece_id,
+        attracted_piece_type_port_id=attractionInput.attracted_piece_type_port_id,
+    )
+    kit.attractions.append(attraction)
+    return attraction
+
+
+def addFormationInputToKit(kit: Kit, formationInput: FormationInput):
+    try:
+        explanation = formationInput.base.characterization.explanation
+    except AttributeError:
+        explanation = None
+    try:
+        symbol = formationInput.base.characterization.symbol
+    except AttributeError:
+        symbol = None
+    formation = Formation(
+        name=formationInput.base.characterization.name,
+        explanation=explanation,
+        symbol=symbol,
+        choreography_script_id=formationInput.base.choreography_script_id,
+        transformation_script_id=formationInput.base.transformation_script_id,
+    )
+    for pieceInput in formationInput.pieces or []:
+        piece = addPieceInputToKit(kit, pieceInput)
+        piece.formation = formation
+    for attractionInput in formationInput.attractions or []:
+        attraction = addAttractionInputToKit(kit, attractionInput)
+        attraction.formation = formation
+    kit.formations.append(formation)
+    return formation
+
+
+def kitInputToKit(kitInput: KitInput):
+    try:
+        explanation = kitInput.base.characterization.explanation
+    except AttributeError:
+        explanation = None
+    try:
+        symbol = kitInput.base.characterization.symbol
+    except AttributeError:
+        symbol = None
+    kit = Kit(
+        uri=kitInput.base.uri,
+        name=kitInput.base.characterization.name,
+        explanation=explanation,
+        symbol=symbol,
+    )
+    for scriptInput in kitInput.scripts or []:
+        addScriptInputToKit(kit, scriptInput)
+    for typeInput in kitInput.types or []:
+        addTypeInputToKit(kit, typeInput)
+    for formationInput in kitInput.formations or []:
+        addFormationInputToKit(kit, formationInput)
+    return kit
+
+
 # graphene directory error handling classes
 
 
-class DirectoryError(graphene.Enum):
-    DOES_NOT_EXIST = "does_not_exist"
-    NO_PERMISSION = "no_permission"
+# class DirectoryError(graphene.Enum):
+#     DOES_NOT_EXIST = "does_not_exist"
+#     IS_NOT_A_DIRECTORY = "is_not_a_directory"
+#     NO_PERMISSION = "no_permission"
+#     ALREADY_EXISTS = "already_exists"
 
 
-class LocalKitMutation(graphene.Union):
+# class DirectoryErrorNode(ObjectType):
+#     directoryError = graphene.Field(DirectoryError, required=True)
+
+
+# TODO: Implement BaseMutation mechanism and use it for all local mutations
+# which have as first argument directory and return either the output or a
+# DirectoryError.
+# An example can be found here: https://github.com/graphql-python/graphene-django/blob/main/graphene_django/forms/mutation.py
+# class LocalMutation(Mutation):
+#     class Arguments:
+#         directory = graphene.String(required=True)
+
+
+class CreateLocalKitError(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_ALREADY_CONTAINS_A_KIT = "directory_already_contains_a_kit"
+    NO_PERMISSION_TO_CREATE_DIRECTORY = "no_permission_to_create_directory"
+    NO_PERMISSION_TO_CREATE_KIT = "no_permission_to_create_kit"
+
+
+class CreateLocalKitErrorNode(ObjectType):
+    error = graphene.Field(CreateLocalKitError, required=True)
+
+
+class CreateLocalKitMutationNodes(graphene.Union):
     class Meta:
-        types = (KitNode, DirectoryError)
+        types = (KitNode, CreateLocalKitErrorNode)
+
+
+deleted_engines = {}
 
 
 class CreateLocalKitMutation(Mutation):
@@ -502,17 +700,36 @@ class CreateLocalKitMutation(Mutation):
         directory = graphene.String(required=True)
         kitInput = KitInput(required=True)
 
-    Output = LocalKitMutation
+    Output = CreateLocalKitMutationNodes
 
     def mutate(self, info, directory, kitInput):
-        directory = sanitizeAndCheckAndAbsolutizeDirectory(directory)
+        directory = Path(directory)
+        if not directory.exists():
+            try:
+                directory.mkdir(parents=True)
+            except PermissionError:
+                return CreateLocalKitErrorNode(
+                    error=CreateLocalKitError.NO_PERMISSION_TO_CREATE_DIRECTORY
+                )
+            except OSError:
+                return CreateLocalKitErrorNode(
+                    error=CreateLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
+                )
 
-        engine = create_engine("sqlite:///" + directory + KIT_FILENAME)
-        Base.base.create_all(engine)
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if kitFile.exists():
+            return CreateLocalKitErrorNode(
+                error=CreateLocalKitError.DIRECTORY_ALREADY_CONTAINS_A_KIT
+            )
+
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in deleted_engines:
+            raise Exception(
+                "Can't create a new kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+
         session = getLocalSession(directory)
-        kit = Kit(
-            uri=kitInput.uri, name=kitInput.name, explanation=kitInput.explanation
-        )
+        kit = kitInputToKit(kitInput)
         session.add(kit)
         session.commit()
         return kit
@@ -521,97 +738,123 @@ class CreateLocalKitMutation(Mutation):
 class UpdateLocalKitBaseMutation(Mutation):
     class Arguments:
         directory = graphene.String(required=True)
-        kitBaseInput = KitBaseInput(required=True)
+        characterization = CharacterizationInput(required=True)
 
     Output = KitNode
 
-    def mutate(self, info, directory, kitBaseInput):
-        # try:
-        #     directory = sanitizeAndCheckDirectory(directory)
-        # except DirectoryException as directoryException:
-        #     if isinstance(directoryException, DirectoryDoesNotExistException):
-        #         return UpdateLocalKitBaseMutation(ok=False)
+    def mutate(self, info, directory, characterization):
         session = getLocalSession(directory)
-        kit = getLocalKit(directory)
-        if kitBaseInput.uri:
-            kit.uri = kitBaseInput.uri
-        if kitBaseInput.name:
-            kit.name = kitBaseInput.name
-        if kitBaseInput.explanation:
-            kit.explanation = kitBaseInput.explanation
+        kit = session.query(Kit).first()
+        try:
+            kit.name = characterization.name
+        except AttributeError:
+            pass
+        try:
+            kit.explanation = characterization.explanation
+        except AttributeError:
+            pass
+        try:
+            kit.symbol = characterization.symbol
+        except AttributeError:
+            pass
         session.commit()
         return kit
+
+
+class DeleteLocalKitError(graphene.Enum):
+    NO_ERROR = "no_error"
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_DELETE_KIT = "no_permission_to_delete_kit"
+
+
+class DeleteLocalKitErrorNode(ObjectType):
+    error = graphene.Field(DeleteLocalKitError, required=True)
 
 
 class DeleteLocalKitMutation(Mutation):
     class Arguments:
         directory = graphene.String(required=True)
 
-    ok = graphene.Boolean()
+    Output = DeleteLocalKitErrorNode
 
     def mutate(self, info, directory):
-        sanitizeDirectory(directory)
-        remove(directory + KIT_FILENAME)
-        return DeleteLocalKitMutation(ok=True)
+        directory = Path(directory)
+        if not directory.exists():
+            return DeleteLocalKitErrorNode(
+                error=DeleteLocalKitError.DIRECTORY_DOES_NOT_EXIST
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return DeleteLocalKitErrorNode(
+                error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT
+            )
+        kitFileFullPath = kitFile.resolve()
+        deleted_engines[kitFileFullPath] = True
+        try:
+            remove(kitFileFullPath)
+        except PermissionError:
+            return DeleteLocalKitErrorNode(
+                error=DeleteLocalKitError.NO_PERMISSION_TO_DELETE_KIT
+            )
+        return DeleteLocalKitErrorNode(error=DeleteLocalKitError.NO_ERROR)
 
 
-class UpdateMode(graphene.Enum):
-    MERGE = "merge"
-    REPLACE = "replace"
+class AddLocalTypeError(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_NO_PERMISSION = "directory_no_permission"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    TYPE_ALREADY_EXISTS = "type_already_exists"
 
 
-class CreateLocalTypeMutation(Mutation):
+class AddLocalTypeErrorNode(ObjectType):
+    error = graphene.Field(AddLocalTypeError, required=True)
+
+
+class AddLocalTypeMutationNodes(graphene.Union):
+    class Meta:
+        types = (TypeNode, AddLocalTypeErrorNode)
+
+
+class AddLocalTypeMutation(Mutation):
     class Arguments:
         directory = graphene.String(required=True)
-        type = TypeInput(required=True)
+        typeInput = TypeInput(required=True)
 
     Output = TypeNode
 
     def mutate(self, info, directory, typeInput):
+        directory = Path(directory)
+        if not directory.exists():
+            return AddLocalTypeErrorNode(
+                error=AddLocalTypeError.DIRECTORY_DOES_NOT_EXIST
+            )
+        if not directory.is_dir():
+            return AddLocalTypeErrorNode(
+                error=AddLocalTypeError.DIRECTORY_IS_NOT_A_DIRECTORY
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return AddLocalTypeErrorNode(error=AddLocalTypeError.DIRECTORY_HAS_NO_KIT)
+
         session = getLocalSession(directory)
-        type = Type(
-            name=typeInput.name, explanation=typeInput.explanation, kit_id=kit_id
-        )
-        session.add(type)
+        kit = session.query(Kit).first()
+        type = addTypeInputToKit(kit, typeInput)
         session.commit()
         return type
 
 
-class UpdateTypeByNameMutation(Mutation):
-    class Arguments:
-        directory = graphene.String(required=True)
-        name = graphene.String(required=True)
-        type = TypeInput(required=True)
-
-    Output = TypeNode
-
-
-class DeleteTypeMutation(Mutation):
-    class Arguments:
-        id = graphene.Int(required=True)
-
-    ok = graphene.Boolean()
-
-    def mutate(self, info, id, directory):
-        session = getLocalSession(directory)
-        type = session.get(Type, id)
-        session.delete(type)
-        session.commit()
-        return DeleteTypeMutation(ok=True)
-
-
 class Mutation(ObjectType):
-    create_kit = CreateKitMutation.Field()
-    update_kit = UpdateKitMutation.Field()
-    delete_kit = DeleteKitMutation.Field()
-    create_type = CreateTypeMutation.Field()
-    update_type = UpdateTypeMutation.Field()
-    delete_type = DeleteTypeMutation.Field()
+    createLocalKit = CreateLocalKitMutation.Field()
+    updateLocalKitBase = UpdateLocalKitBaseMutation.Field()
+    deleteLocalKit = DeleteLocalKitMutation.Field()
+    addLocalType = AddLocalTypeMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)
-with open("schema.graphql", "w") as f:
-    f.write(str(schema))
+# with open("schema.graphql", "w") as f:
+#     f.write(str(schema))
 
 app = Flask(__name__)
 app.add_url_rule(
@@ -620,49 +863,13 @@ app.add_url_rule(
         "graphql",
         schema=schema,
         graphiql=True,
-        get_context=lambda: {"session": Session},
     ),
 )
 
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    Session.remove()
-
-
-def initialize_database():
-    if exists(SQLITE_PATH):
-        remove(SQLITE_PATH)
-    Base.base.create_all(engine)
-    metabolism = Kit(
-        uri="https://github.com/usalu/semio/tree/2.x/examples/metabolism",
-        name="metabolism",
-        explanation="A kit for metabolistic architecture.",
-    )
-    Session.add(metabolism)
-    quadraticcapsuleshaft = Type(
-        name="quadraticcapsuleshaft",
-        explanation="A quadratic shaft with a central development (elevator at the core and stairs around it) to hold capsules.",
-        kit=metabolism,
-    )
-    Session.add(quadraticcapsuleshaft)
-    quadraticcapsuleshaft_length = Property(
-        name="length", datatype="decimal", value="6", type=quadraticcapsuleshaft
-    )
-    Session.add(quadraticcapsuleshaft_length)
-    Session.commit()
-
-
 def main():
-    initialize_database()
     app.run()
 
 
 if __name__ == "__main__":
     main()
-    # parser = ArgumentParser(description="Process some integers.")
-    # parser.add_argument("--argument", metavar="N", type=str)
-    # args = parser.parse_args()
-    # main.run(args)
-    # engine = create_engine("sqlite:///metabolism.db", echo=True)
-    # Base.base.create_all(engine)
