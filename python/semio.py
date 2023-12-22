@@ -51,11 +51,10 @@ from graphene_sqlalchemy import (
 from flask import Flask
 from graphql_server.flask import GraphQLView
 
-URI_LENGTH_MAX = 1000
+URL_LENGTH_MAX = 1000
 NAME_LENGTH_MAX = 100
 SYMBOL_LENGTH_MAX = 1
 PROPERTY_DATATYPE_LENGTH_MAX = 100
-SCRIPT_URI_LENGTH_MAX = 1000
 SCRIPT_KIND_LENGTH_MAX = 100
 KIT_FILENAME = "kit.semio"
 
@@ -82,7 +81,7 @@ class Script(Base):
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     kind: Mapped[ScriptKind] = mapped_column(sqlalchemy.Enum(ScriptKind))
-    url: Mapped[str] = mapped_column(String(SCRIPT_URI_LENGTH_MAX))
+    url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="scripts")
     synthesized_properties: Mapped[Optional[List["Property"]]] = relationship(
@@ -107,7 +106,7 @@ class Script(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Script(id={self.id!r}, name={self.name!r}, uri={self.uri!r}, kind={self.kind!r}, kit_id={self.kit_id!r})"
+        return f"Script(id={self.id!r}, name={self.name!r}, kind={self.kind!r}, kit_id={self.kit_id!r})"
 
 
 class Property(Base):
@@ -136,9 +135,6 @@ class Port(Base):
     __tablename__ = "port"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     origin_x: Mapped[Decimal] = mapped_column(Numeric())
     origin_y: Mapped[Decimal] = mapped_column(Numeric())
     origin_z: Mapped[Decimal] = mapped_column(Numeric())
@@ -190,7 +186,7 @@ class Type(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r})"
+        return f"Type(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
 
 
 class Piece(Base):
@@ -294,10 +290,10 @@ class Kit(Base):
     __tablename__ = "kit"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    uri: Mapped[str] = mapped_column(String(URI_LENGTH_MAX))
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[str] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
     scripts: Mapped[Optional[List[Script]]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
@@ -432,7 +428,6 @@ class PropertyInput(InputObjectType):
 
 
 class PortBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput, required=True)
     origin_x = graphene.Decimal(required=True)
     origin_y = graphene.Decimal(required=True)
     origin_z = graphene.Decimal(required=True)
@@ -488,7 +483,7 @@ class TypeInput(InputObjectType):
 
 class KitBaseInput(InputObjectType):
     characterization = graphene.Field(CharacterizationInput, required=True)
-    uri = graphene.String(required=True)
+    url = graphene.String(required=True)
 
 
 class KitInput(InputObjectType):
@@ -529,18 +524,7 @@ def addPropertyInputToKit(kit: Kit, propertyInput: PropertyInput):
 
 
 def addPortInputToKit(kit: Kit, portInput: PortInput):
-    try:
-        explanation = portInput.base.characterization.explanation
-    except AttributeError:
-        explanation = None
-    try:
-        symbol = portInput.base.characterization.symbol
-    except AttributeError:
-        symbol = None
     port = Port(
-        name=portInput.base.characterization.name,
-        explanation=explanation,
-        symbol=symbol,
         origin_x=portInput.base.origin_x,
         origin_y=portInput.base.origin_y,
         origin_z=portInput.base.origin_z,
@@ -638,7 +622,7 @@ def kitInputToKit(kitInput: KitInput):
     except AttributeError:
         symbol = None
     kit = Kit(
-        uri=kitInput.base.uri,
+        url=kitInput.base.url,
         name=kitInput.base.characterization.name,
         explanation=explanation,
         symbol=symbol,
