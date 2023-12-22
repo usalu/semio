@@ -12,70 +12,86 @@ contact:
 date-released: "2023-10-08"
 abstract: "semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be defined and freely combined via a generalized port mechanism."
 keywords:
+  - designing
+  - planning
+  - modelling
+  - building
+  - scripting
+  - programming
+  - rewriting
+  - transforming
+  - synthesis
   - architecture
-  - architectural
   - engineering
   - construction
-  - "urban design"
+  - urban
   - art
+  - semantic
+  - linked
   - generative
   - parametric
-  - "graph-based"
-  - graphs
-  - "port-based"
-  - ports
-  - "block-based"
-  - blocks
-  - "node-based"
-  - nodes
-  - "interface-based"
-  - interfaces
-  - "knowledge-based"
-  - knowledge
-  - "component-based"
-  - components
-  - "agent-based"
-  - agents
-  - "computer-based"
-  - "computer-aided"
-  - "design-oriented"
-  - concept
-  - conceptual
   - procedural
+  - visual
+  - cellular
+  - fuzzy
   - design
-  - synthesis
-  - patterns
-  - prototypes
-  - shape
+  - graph
+  - port
+  - block
+  - node
+  - interface
+  - knowledge
+  - component
+  - agent
+  - computer
+  - concept
+  - pattern
+  - information
+  - language
   - ontology
+  - prototype
+  - feature
   - grammar
+  - shape
   - l
   - system
-  - cellular
-  - automata
-  - designing
-  - building
-  - information
-  - modelling
-  - rewriting
-  - transformation
-  - scripting
-  - visual
-  - programming
-  - language
-  - fuzzy
-  - logic
-  - feature
   - skeleton
+  - logic
+  - automata
+  - based
+  - aided
+  - oriented
+  - cds # computer-based design synthesis
+  - dom # design-oriented model
+  - caad # computer aided architectural design
+  - cad # computer aided design
+  - bim # building information modelling
+  - aec # architecture engineering construction
   - dag # directed acyclic graph
   - "directed acyclic graph"
   - vpl # visual programming language
-  - cds # computer-based design synthesis
-  - aec # architecture engineering construction
-  - bim # building information modelling
-  - caad # computer aided architectural design
-  - cad # computer aided design
-  - dom # design-oriented model
+  - 3d
+# GitHub Topics (Max 20):
+# computer-based-design-synthesis
+# computer-aided-architectural-design
+# procedural-modeling
+# parametric-design
+# generative-design
+# port-based-thinking
+# component-based-design
+# design-prototypes
+# design-patterns
+# graph-rewriting
+# graph-transformation
+# building-information-modeling
+# architecture-engineering-construction
+# urban-planning
+# 3d
+# semantic-web
+# linked-data
+# grasshopper
+# sverchok
+# dynamo
 identifiers:
   - description: "The concept DOI of the work."
     type: doi
