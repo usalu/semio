@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2023-07-17T11:45:58.903Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="49Csu3KjKIpYXbgMUdU3" version="21.6.1" type="device">
+<mxfile host="Electron" modified="2023-07-10T15:57:07.910Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.5.0 Chrome/112.0.5615.204 Electron/24.5.1 Safari/537.36" etag="HyNNVp_N6hiWe6DzMtIu" version="21.5.0" type="device">
   <diagram name="Page-1" id="DfaM-wiBBWeSXnydS-ET">
-    <mxGraphModel dx="318" dy="312" grid="1" gridSize="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="989" dy="577" grid="1" gridSize="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -67,19 +67,19 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-215" value="" style="group;fillColor=none;" parent="1" vertex="1" connectable="0">
-          <mxGeometry x="321" y="193" width="90" height="65.5" as="geometry" />
+          <mxGeometry x="321" y="193" width="84" height="65.5" as="geometry" />
         </mxCell>
-        <mxCell id="pyTdxpyBmTztNzusO8cf-197" value="«&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;⛕&lt;/font&gt;,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;semio-manager&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=0;spacingLeft=3;container=0;fillColor=none;" parent="pyTdxpyBmTztNzusO8cf-215" vertex="1">
-          <mxGeometry width="90" height="65.5" as="geometry" />
+        <mxCell id="pyTdxpyBmTztNzusO8cf-197" value="«&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;⛕&lt;/font&gt;,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;manager&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=0;spacingLeft=3;container=0;fillColor=none;" parent="pyTdxpyBmTztNzusO8cf-215" vertex="1">
+          <mxGeometry width="84" height="65.5" as="geometry" />
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-198" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Casher&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="pyTdxpyBmTztNzusO8cf-215" vertex="1">
-          <mxGeometry x="2.142857142857143" y="35" width="50.357142857142854" height="29" as="geometry" />
+          <mxGeometry x="2" y="35" width="47" height="29" as="geometry" />
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-200" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;: ...&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="pyTdxpyBmTztNzusO8cf-215" vertex="1">
-          <mxGeometry x="54.642857142857146" y="35" width="33.214285714285715" height="29" as="geometry" />
+          <mxGeometry x="51" y="35" width="31" height="29" as="geometry" />
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-201" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" parent="pyTdxpyBmTztNzusO8cf-215" vertex="1">
-          <mxGeometry x="66.42857142857143" y="2" width="21.428571428571427" height="20" as="geometry">
+          <mxGeometry x="62" y="2" width="20" height="20" as="geometry">
             <mxPoint x="-27" y="7" as="offset" />
           </mxGeometry>
         </mxCell>
@@ -351,10 +351,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="pyTdxpyBmTztNzusO8cf-302" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.946;entryY=1.017;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;fillColor=none;" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-146" edge="1">
+        <mxCell id="pyTdxpyBmTztNzusO8cf-302" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.946;entryY=1.017;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=none;" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-146" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="456" y="242" />
+              <mxPoint x="456" y="227" />
               <mxPoint x="456" y="70" />
             </Array>
           </mxGeometry>
@@ -385,70 +385,53 @@
         <mxCell id="pyTdxpyBmTztNzusO8cf-308" value="&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;🗔:user interface&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;📕&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:library&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
           <mxGeometry x="306" y="367" width="101" height="39" as="geometry" />
         </mxCell>
+        <mxCell id="pyTdxpyBmTztNzusO8cf-309" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🚉&lt;/font&gt;:platform&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🔌&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:adapter&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
+          <mxGeometry x="976" y="943" width="76" height="39" as="geometry" />
+        </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-310" value="&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:server&lt;/font&gt;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;/div&gt;&lt;div style=&quot;border-color: var(--border-color);&quot;&gt;&lt;span style=&quot;border-color: var(--border-color); font-family: &amp;quot;Noto Emoji&amp;quot;;&quot;&gt;🤖&lt;/span&gt;&lt;font style=&quot;border-color: var(--border-color);&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:executable&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
           <mxGeometry x="105" y="367" width="89" height="39" as="geometry" />
         </mxCell>
         <mxCell id="pyTdxpyBmTztNzusO8cf-311" value="&lt;font style=&quot;&quot; face=&quot;Noto Emoji&quot;&gt;🔌&lt;/font&gt;&lt;font face=&quot;Roboto&quot;&gt;:adapter&lt;/font&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=Roboto&quot; face=&quot;Roboto&quot;&gt;:service&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontFamily=Helvetica;fontColor=default;" parent="1" vertex="1">
           <mxGeometry x="394" y="367" width="73" height="39" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-7" value="" style="group;fillColor=none;" parent="1" vertex="1" connectable="0">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-7" value="" style="group;fillColor=none;" vertex="1" connectable="0" parent="1">
           <mxGeometry x="259" y="91" width="94" height="98" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-8" value="«∃,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;semio-designer&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=0;spacingLeft=0;container=0;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-7" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-8" value="«∃,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;semio-designer&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=0;spacingLeft=0;container=0;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-7">
           <mxGeometry width="94" height="98" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-9" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-7" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-9" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-7">
           <mxGeometry x="72" y="2" width="20" height="20" as="geometry">
             <mxPoint x="-27" y="7" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-10" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Assembler&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-7" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-10" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Assembler&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-7">
           <mxGeometry x="2" y="67" width="67" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-11" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Layouter&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-7" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-11" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Layouter&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-7">
           <mxGeometry x="2" y="36" width="57" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-12" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;: ...&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-7" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-12" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;: ...&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-7">
           <mxGeometry x="61" y="36" width="31" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-13" value="" style="group" parent="1" vertex="1" connectable="0">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-13" value="" style="group" vertex="1" connectable="0" parent="1">
           <mxGeometry x="355" y="91" width="93" height="97" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-2" value="«&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;∃&lt;/font&gt;,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;semio-calculator&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=1;spacingLeft=0;container=0;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-2" value="«&lt;font style=&quot;border-color: var(--border-color);&quot; face=&quot;Noto Emoji&quot;&gt;∃&lt;/font&gt;,&lt;font face=&quot;Noto Emoji&quot;&gt;🖥️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;semio-calculator&lt;/b&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;align=left;verticalAlign=top;spacing=2;fontFamily=Roboto;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto;spacingTop=1;spacingLeft=0;container=0;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-13">
           <mxGeometry width="93" height="97" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-3" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Hasher&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-3" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Hasher&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-13">
           <mxGeometry x="2" y="35" width="47" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-4" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Rewriter&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-4" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;:Rewriter&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-13">
           <mxGeometry x="2" y="66" width="55" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-5" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;: ...&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-5" value="«&lt;font face=&quot;Noto Emoji&quot;&gt;🛎️&lt;/font&gt;»&lt;br&gt;&lt;b&gt;: ...&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-13">
           <mxGeometry x="51" y="35" width="31" height="29" as="geometry" />
         </mxCell>
-        <mxCell id="ea1j2bkc8s0OYxYyL4-c-6" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" parent="ea1j2bkc8s0OYxYyL4-c-13" vertex="1">
+        <mxCell id="ea1j2bkc8s0OYxYyL4-c-6" value="" style="shape=module;jettyWidth=8;jettyHeight=4;container=0;fillColor=none;" vertex="1" parent="ea1j2bkc8s0OYxYyL4-c-13">
           <mxGeometry x="71" y="2" width="20" height="20" as="geometry">
             <mxPoint x="-27" y="7" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="JB4bVpNzzD89UVgIc8EX-1" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.531;entryY=0.002;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=none;" edge="1" parent="1" source="ea1j2bkc8s0OYxYyL4-c-8" target="ea1j2bkc8s0OYxYyL4-c-2">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="258" y="105" as="sourcePoint" />
-            <mxPoint x="230" y="70" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="306" y="79" />
-              <mxPoint x="404" y="79" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="JB4bVpNzzD89UVgIc8EX-2" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;labelBackgroundColor=default;strokeColor=default;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=classic;endFill=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.884;entryY=1.003;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=none;" edge="1" parent="1" source="pyTdxpyBmTztNzusO8cf-197" target="pyTdxpyBmTztNzusO8cf-110">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="307" y="92" as="sourcePoint" />
-            <mxPoint x="405" y="92" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="426" y="209" />
-              <mxPoint x="428" y="209" />
-            </Array>
           </mxGeometry>
         </mxCell>
       </root>
