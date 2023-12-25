@@ -401,6 +401,48 @@ files = [
 ]
 
 [[package]]
+name = "marshmallow"
+version = "3.20.1"
+description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "marshmallow-3.20.1-py3-none-any.whl", hash = "sha256:684939db93e80ad3561392f47be0230743131560a41c5110684c16e21ade0a5c"},
+    {file = "marshmallow-3.20.1.tar.gz", hash = "sha256:5d2371bbe42000f2b3fb5eaa065224df7d8f8597bc19a1bbfa5bfe7fba8da889"},
+]
+
+[package.dependencies]
+packaging = ">=17.0"
+
+[package.extras]
+dev = ["flake8 (==6.0.0)", "flake8-bugbear (==23.7.10)", "mypy (==1.4.1)", "pre-commit (>=2.4,<4.0)", "pytest", "pytz", "simplejson", "tox"]
+docs = ["alabaster (==0.7.13)", "autodocsumm (==0.2.11)", "sphinx (==7.0.1)", "sphinx-issues (==3.0.1)", "sphinx-version-warning (==1.1.2)"]
+lint = ["flake8 (==6.0.0)", "flake8-bugbear (==23.7.10)", "mypy (==1.4.1)", "pre-commit (>=2.4,<4.0)"]
+tests = ["pytest", "pytz", "simplejson"]
+
+[[package]]
+name = "marshmallow-sqlalchemy"
+version = "0.29.0"
+description = "SQLAlchemy integration with the marshmallow (de)serialization library"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "marshmallow-sqlalchemy-0.29.0.tar.gz", hash = "sha256:3523a774390ef0c1c0f7c708a7519809c5396cf608720f14f55c36f74ff5bbec"},
+    {file = "marshmallow_sqlalchemy-0.29.0-py2.py3-none-any.whl", hash = "sha256:3cee0bf61ed10687c0a41448e1916649b28222334a02f7b937c39d1c69c18bee"},
+]
+
+[package.dependencies]
+marshmallow = ">=3.0.0"
+packaging = ">=21.3"
+SQLAlchemy = ">=1.4.40,<3.0"
+
+[package.extras]
+dev = ["flake8 (==6.0.0)", "flake8-bugbear (==23.2.13)", "pre-commit (==3.1.0)", "pytest", "pytest-lazy-fixture (>=0.6.2)", "tox"]
+docs = ["alabaster (==0.7.13)", "sphinx (==6.1.3)", "sphinx-issues (==3.0.1)"]
+lint = ["flake8 (==6.0.0)", "flake8-bugbear (==23.2.13)", "pre-commit (==3.1.0)"]
+tests = ["pytest", "pytest-lazy-fixture (>=0.6.2)"]
+
+[[package]]
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
@@ -644,4 +686,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "dec093521ee3058bc8bcb13f4f105890a6a201a45d35a171e26ec10cf17da9c0"
+content-hash = "f4bd097ce24587b0f9f6f71607ac54ce134848420134eaa1542588edbd86d1de"

@@ -228,5 +228,73 @@ namespace Semio
             var response = Client.SendQueryAsync<GetKitsResponse>(query).Result;
             return response.Data.Kits;
         }
+
+        public Kit GetKit(int id)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = @"
+                   query($id: Int!) {
+                       kit(id: $id) {
+                           id
+                           uri
+                           name
+                           explanation
+                           scripts {
+                               id
+                               name
+                               explanation
+                               kind
+                               url    
+                           }
+                           types {
+                               id
+                               name
+                               explanation
+                               ports {
+                                   id
+                                   name
+                                   explanation
+                                   originX
+                                   originY
+                                   originZ
+                                   xAxisX
+                                   xAxisY
+                                   xAxisZ
+                                   yAxisX
+                                   yAxisY
+                                   yAxisZ
+                                   zAxisX
+                                   zAxisY
+                                   zAxisZ
+                               }
+                           }
+                           formations {
+                               id
+                               name
+                               explanation
+                               pieces {
+                                   id
+                               }
+                               attractions {
+                                   attractingPieceId
+                                   attractingPieceTypePortId
+                                   attractedPieceId
+                                   attractedPieceTypePortId
+                               }
+                           }
+                       }
+                   }
+               ",
+                Variables = new {id}
+            };
+            var response = Client.SendQueryAsync<GetKitsResponse>(query).Result;
+            return response.Data.Kits[0];
+        }
+
+        public Kit GetLocalKit()
+        {
+            
+        }
     }
 }

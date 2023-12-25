@@ -39,6 +39,7 @@ from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
     QueryPropertyDescriptor,
+    Session,
 )
 import graphene
 from graphene import Schema, Mutation, ObjectType, InputObjectType, Field
@@ -291,7 +292,7 @@ class Kit(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[str] = mapped_column(Text())
+    explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
     scripts: Mapped[Optional[List[Script]]] = relationship(
@@ -309,7 +310,7 @@ class Kit(Base):
 
 
 class DirectoryException(Exception):
-    def __init__(self, directory):
+    def __init__(self, directory: String):
         self.directory = directory
 
 
@@ -323,7 +324,7 @@ class DirectoryIsNotADirectoryException(DirectoryException):
         return "Directory is not a directory: " + self.directory
 
 
-def assertDirectory(directory):
+def assertDirectory(directory: String) -> Path:
     directory = Path(directory)
     if not directory.exists():
         raise DirectoryDoesNotExistException(directory)
@@ -333,11 +334,11 @@ def assertDirectory(directory):
 
 
 @lru_cache(maxsize=100)
-def getLocalSession(directory):
+def getLocalSession(directory: String) -> Session:
     directory = assertDirectory(directory)
     engine = create_engine("sqlite:///" + str(directory.joinpath(KIT_FILENAME)))
     Base.metadata.create_all(engine)
-    # Delete instance of session factory
+    # Create instance of session factory
     return sessionmaker(bind=engine)()
 
 
@@ -347,41 +348,55 @@ def getLocalSession(directory):
 class ScriptNode(SQLAlchemyObjectType):
     class Meta:
         model = Script
+        exclude_fields = ("id", "kit_id")
 
 
 class PropertyNode(SQLAlchemyObjectType):
     class Meta:
         model = Property
+        exclude_fields = ("id", "synthesis_script_id", "type_id", "port_id")
 
 
 class PortNode(SQLAlchemyObjectType):
     class Meta:
         model = Port
+        exclude_fields = ("id", "type_id")
 
 
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
+        exclude_fields = ("id", "formation_id")
 
 
 class AttractionNode(SQLAlchemyObjectType):
     class Meta:
         model = Attraction
+        exclude_fields = (
+            "attracting_piece_id",
+            "attracting_piece_type_port_id",
+            "attracted_piece_id",
+            "attracted_piece_type_port_id",
+            "formation_id",
+        )
 
 
 class FormationNode(SQLAlchemyObjectType):
     class Meta:
         model = Formation
+        exclude_fields = ("id", "kit_id")
 
 
 class TypeNode(SQLAlchemyObjectType):
     class Meta:
         model = Type
+        exclude_fields = ("id", "kit_id")
 
 
 class KitNode(SQLAlchemyObjectType):
     class Meta:
         model = Kit
+        exclude_fields = ("id",)
 
 
 class Query(ObjectType):
@@ -392,19 +407,19 @@ class Query(ObjectType):
     )
     localKit = graphene.Field(KitNode, directory=graphene.String(required=True))
 
-    def resolve_localScripts(self, info, directory):
+    def resolve_localScripts(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Script).all()
 
-    def resolve_localTypes(self, info, directory):
+    def resolve_localTypes(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Type).all()
 
-    def resolve_localFormations(self, info, directory):
+    def resolve_localFormations(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Formation).all()
 
-    def resolve_localKit(self, info, directory):
+    def resolve_localKit(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Kit).first()
 
@@ -448,20 +463,31 @@ class PortInput(InputObjectType):
 
 
 class PieceInput(InputObjectType):
-    type_id = graphene.Int(required=True)
+    # Transient ID: Temporary ID to identify the piece in the formation
+    transient_id = graphene.String()
+    # ID Replacement: Instead of id use name to identify the type
+    type_name = graphene.String(required=True)
 
 
 class AttractionInput(InputObjectType):
-    attracting_piece_id = graphene.Int(required=True)
-    attracting_piece_type_port_id = graphene.Int(required=True)
-    attracted_piece_id = graphene.Int(required=True)
-    attracted_piece_type_port_id = graphene.Int(required=True)
+    # Transient ID
+    attracting_piece_transient_id = graphene.String(required=True)
+    # ID Replacement: Instead of a port id use properties to identify the port
+    attracting_piece_type_port_properties = graphene.List(
+        InputObjectType, required=True
+    )
+    # Transient ID
+    attracted_piece_transient_id = graphene.String(required=True)
+    # ID Replacement: Instead of a port id use properties to identify the port
+    attracted_piece_type_port_properties = graphene.List(required=True)
 
 
 class FormationBaseInput(InputObjectType):
     characterization = graphene.Field(CharacterizationInput, required=True)
-    choreography_script_id = graphene.Int()
-    transformation_script_id = graphene.Int()
+    # ID Replacement: Instead of id use name to identify the choreography script
+    choreography_script_name = graphene.String()
+    # ID Replacement: Instead of id use name to identify the transformation script
+    transformation_script_name = graphene.String()
 
 
 class FormationInput(InputObjectType):
@@ -472,7 +498,8 @@ class FormationInput(InputObjectType):
 
 class TypeBaseInput(InputObjectType):
     characterization = graphene.Field(CharacterizationInput, required=True)
-    prototype_script_id = graphene.Int()
+    # ID Replacement: Instead of id use name to identify the prototype script
+    prototype_script_name = graphene.String()
 
 
 class TypeInput(InputObjectType):
@@ -493,7 +520,65 @@ class KitInput(InputObjectType):
     formations = graphene.List(FormationInput)
 
 
-def addScriptInputToKit(kit: Kit, scriptInput):
+class NotFoundException(Exception):
+    def __init__(self, name: String):
+        self.name = name
+
+
+class ScriptNotFoundException(NotFoundException):
+    def __str__(self):
+        return "Script not found: " + self.name
+
+
+class PortNotFoundException(NotFoundException):
+    def __str__(self):
+        return "Port not found: " + self.name
+
+
+class TypeNotFoundException(NotFoundException):
+    def __str__(self):
+        return "Type not found: " + self.name
+
+
+class FormationNotFoundException(NotFoundException):
+    def __str__(self):
+        return "Formation not found: " + self.name
+
+
+def getScriptByName(session: Session, name: String) -> Script:
+    script = session.query(Script).filter_by(name=name).first()
+    if script is None:
+        raise ScriptNotFoundException(name)
+    return script
+
+
+def getTypeByName(session: Session, name: String) -> Type:
+    type = session.query(Type).filter_by(name=name).first()
+    if type is None:
+        raise TypeNotFoundException(name)
+    return type
+
+
+def getPortByProperties(session: Session, properties: List[PropertyInput]) -> Port:
+    port = (
+        session.query(Port)
+        .join(Port.properties)
+        .filter(Property.name.in_([property.name for property in properties]))
+        .first()
+    )
+    if port is None:
+        raise PortNotFoundException(properties)
+    return port
+
+
+def getFormationByName(session: Session, name: String) -> Formation:
+    formation = session.query(Formation).filter_by(name=name).first()
+    if formation is None:
+        raise FormationNotFoundException(name)
+    return formation
+
+
+def addScriptInputToSession(session: Session, scriptInput: ScriptInput):
     try:
         explanation = scriptInput.characterization.explanation
     except AttributeError:
@@ -509,21 +594,30 @@ def addScriptInputToKit(kit: Kit, scriptInput):
         kind=scriptInput.kind,
         url=scriptInput.url,
     )
-    kit.scripts.append(script)
+    session.add(script)
+    session.flush()
     return script
 
 
-def addPropertyInputToKit(kit: Kit, propertyInput: PropertyInput):
+def addPropertyInputToSession(session: Session, propertyInput: PropertyInput):
+    try:
+        synthesisScriptId = getScriptByName(
+            session, propertyInput.synthesis_script_name
+        ).id
+    except ScriptNotFoundException:
+        synthesisScriptId = None
     property = Property(
         name=propertyInput.name,
         datatype=propertyInput.datatype,
         value=propertyInput.value,
+        synthesis_script_id=synthesisScriptId,
     )
-    kit.properties.append(property)
+    session.add(property)
+    session.flush()
     return property
 
 
-def addPortInputToKit(kit: Kit, portInput: PortInput):
+def addPortInputToSession(session: Session, portInput: PortInput):
     port = Port(
         origin_x=portInput.base.origin_x,
         origin_y=portInput.base.origin_y,
@@ -539,13 +633,14 @@ def addPortInputToKit(kit: Kit, portInput: PortInput):
         z_axis_z=portInput.base.z_axis_z,
     )
     for propertyInput in portInput.properties or []:
-        property = addPropertyInputToKit(kit, propertyInput)
+        property = addPropertyInputToSession(session, propertyInput)
         property.port = port
-    kit.ports.append(port)
+    session.add(port)
+    session.flush()
     return port
 
 
-def addTypeInputToKit(kit: Kit, typeInput: TypeInput):
+def addTypeInputToSession(session: Session, typeInput: TypeInput):
     try:
         explanation = typeInput.base.characterization.explanation
     except AttributeError:
@@ -554,39 +649,60 @@ def addTypeInputToKit(kit: Kit, typeInput: TypeInput):
         symbol = typeInput.base.characterization.symbol
     except AttributeError:
         symbol = None
+    try:
+        prototypeScriptId = getScriptByName(
+            session, typeInput.base.prototype_script_name
+        ).id
+    except ScriptNotFoundException:
+        prototypeScriptId = None
     type = Type(
         name=typeInput.base.characterization.name,
         explanation=explanation,
         symbol=symbol,
+        prototype_script_id=prototypeScriptId,
     )
     for portInput in typeInput.ports or []:
-        port = addPortInputToKit(kit, portInput)
+        port = addPortInputToSession(session, portInput)
         port.type = type
     for propertyInput in typeInput.properties or []:
-        property = addPropertyInputToKit(kit, propertyInput)
+        property = addPropertyInputToSession(session, propertyInput)
         property.type = type
-    kit.types.append(type)
+    session.add(type)
+    session.flush()
     return type
 
 
-def addPieceInputToKit(kit: Kit, pieceInput: PieceInput):
-    piece = Piece(type_id=pieceInput.type_id)
-    kit.pieces.append(piece)
+def addPieceInputToSession(session: Session, pieceInput: PieceInput):
+    type = getTypeByName(session, pieceInput.type_name)
+    piece = Piece(type_id=type.id)
+    session.add(piece)
+    session.flush()
     return piece
 
 
-def addAttractionInputToKit(kit: Kit, attractionInput: AttractionInput):
-    attraction = Attraction(
-        attracting_piece_id=attractionInput.attracting_piece_id,
-        attracting_piece_type_port_id=attractionInput.attracting_piece_type_port_id,
-        attracted_piece_id=attractionInput.attracted_piece_id,
-        attracted_piece_type_port_id=attractionInput.attracted_piece_type_port_id,
+def addAttractionInputToSession(
+    session: Session, attractionInput: AttractionInput, transientIdToPiece: dict
+):
+    attractingPiece = transientIdToPiece[attractionInput.attracting_piece_transient_id]
+    attractedPiece = transientIdToPiece[attractionInput.attracted_piece_transient_id]
+    attractingPieceTypePort = getPortByProperties(
+        session, attractionInput.attracting_piece_type_port_properties
     )
-    kit.attractions.append(attraction)
+    attractedPieceTypePort = getPortByProperties(
+        session, attractionInput.attracted_piece_type_port_properties
+    )
+    attraction = Attraction(
+        attracting_piece_id=attractingPiece.id,
+        attracting_piece_type_port_id=attractingPieceTypePort.id,
+        attracted_piece_id=attractedPiece.id,
+        attracted_piece_type_port_id=attractedPieceTypePort.id,
+    )
+    session.add(attraction)
+    session.flush()
     return attraction
 
 
-def addFormationInputToKit(kit: Kit, formationInput: FormationInput):
+def addFormationInputToSession(session: Session, formationInput: FormationInput):
     try:
         explanation = formationInput.base.characterization.explanation
     except AttributeError:
@@ -595,24 +711,39 @@ def addFormationInputToKit(kit: Kit, formationInput: FormationInput):
         symbol = formationInput.base.characterization.symbol
     except AttributeError:
         symbol = None
+    try:
+        choreographyScript = getScriptByName(
+            session, formationInput.base.choreography_script_name
+        )
+    except ScriptNotFoundException:
+        choreographyScript = None
+    try:
+        transformationScript = getScriptByName(
+            session, formationInput.base.transformation_script_name
+        )
+    except ScriptNotFoundException:
+        transformationScript = None
     formation = Formation(
         name=formationInput.base.characterization.name,
         explanation=explanation,
         symbol=symbol,
-        choreography_script_id=formationInput.base.choreography_script_id,
-        transformation_script_id=formationInput.base.transformation_script_id,
+        choreography_script_id=choreographyScript.id,
+        transformation_script_id=transformationScript.id,
     )
+    transientIdToPiece = {}
     for pieceInput in formationInput.pieces or []:
-        piece = addPieceInputToKit(kit, pieceInput)
+        piece = addPieceInputToSession(Session, pieceInput)
         piece.formation = formation
+        transientIdToPiece[pieceInput.transient_id] = piece
     for attractionInput in formationInput.attractions or []:
-        attraction = addAttractionInputToKit(kit, attractionInput)
+        attraction = addAttractionInputToSession(session, attractionInput)
         attraction.formation = formation
-    kit.formations.append(formation)
+    session.add(formation)
+    session.flush()
     return formation
 
 
-def kitInputToKit(kitInput: KitInput):
+def addKitInputToSession(session: Session, kitInput: KitInput):
     try:
         explanation = kitInput.base.characterization.explanation
     except AttributeError:
@@ -627,12 +758,17 @@ def kitInputToKit(kitInput: KitInput):
         explanation=explanation,
         symbol=symbol,
     )
+    session.add(kit)
+    session.flush()
     for scriptInput in kitInput.scripts or []:
-        addScriptInputToKit(kit, scriptInput)
+        script = addScriptInputToSession(kit, scriptInput)
+        script.kit = kit
     for typeInput in kitInput.types or []:
-        addTypeInputToKit(kit, typeInput)
+        type = addTypeInputToKit(kit, typeInput)
+        type.kit = kit
     for formationInput in kitInput.formations or []:
-        addFormationInputToKit(kit, formationInput)
+        formation = addFormationInputToKit(kit, formationInput)
+        formation.kit = kit
     return kit
 
 
