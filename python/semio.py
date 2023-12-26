@@ -67,11 +67,11 @@ class Base(DeclarativeBase):
 
 
 class ScriptKind(Enum):
-    SYNTHESIS = "synthesis"
     PROTOTYPE = "prototype"
     MODIFICATION = "modification"
     CHOREOGRAPHY = "choreography"
     TRANSFORMATION = "transformation"
+    SYNTHESIS = "synthesis"
 
 
 class Script(Base):
@@ -85,11 +85,6 @@ class Script(Base):
     url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="scripts")
-    synthesized_properties: Mapped[Optional[List["Property"]]] = relationship(
-        "Property",
-        foreign_keys="[Property.synthesis_script_id]",
-        back_populates="synthesis_script",
-    )
     prototyped_types: Mapped[Optional[List["Type"]]] = relationship(
         "Type",
         foreign_keys="[Type.prototype_script_id]",
@@ -105,6 +100,11 @@ class Script(Base):
         foreign_keys="[Formation.transformation_script_id]",
         back_populates="transformation_script",
     )
+    synthesized_properties: Mapped[Optional[List["Property"]]] = relationship(
+        "Property",
+        foreign_keys="[Property.synthesis_script_id]",
+        back_populates="synthesis_script",
+    )
 
     def __repr__(self) -> str:
         return f"Script(id={self.id!r}, name={self.name!r}, kind={self.kind!r}, kit_id={self.kit_id!r})"
@@ -113,7 +113,7 @@ class Script(Base):
     # @property
     # def uri(self) -> str:
     #     return URI_SEPARATOR.join(
-    #         self.kit.uri, self.__tablename__, self.kind, self.name
+    #         (self.kit.uri, self.__tablename__, self.kind.value, self.name)
     #     )
 
 
@@ -144,7 +144,7 @@ class Property(Base):
         Script, foreign_keys=[synthesis_script_id]
     )
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"))
-    type: Mapped[Optional["Type"]] = relationship("Type", back_populates="properties")
+    type_: Mapped[Optional["Type"]] = relationship("Type", back_populates="properties")
     port_id: Mapped[Optional[int]] = mapped_column(ForeignKey("port.id"))
     port: Mapped[Optional["Port"]] = relationship("Port", back_populates="properties")
 
@@ -162,7 +162,7 @@ class Property(Base):
     # def uri(self) -> str:
     #     if self.type_id is not None:
     #         return URI_SEPARATOR.join(
-    #         self.type.uri, self.name
+    #         self.type_.uri, self.name
     #     )
     #     return URI_SEPARATOR.join(
     #         self.port.uri, self.name
@@ -186,7 +186,7 @@ class Port(Base):
     z_axis_y: Mapped[Decimal] = mapped_column(Numeric())
     z_axis_z: Mapped[Decimal] = mapped_column(Numeric())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
-    type: Mapped["Type"] = relationship("Type", back_populates="ports")
+    type_: Mapped["Type"] = relationship("Type", back_populates="ports")
     properties: Mapped[Optional[List[Property]]] = relationship(
         Property, back_populates="port", cascade="all, delete-orphan"
     )
@@ -205,7 +205,6 @@ class Port(Base):
         return f"Port(id={self.id!r}, name={self.name!r}, type_id={self.type_id!r})"
 
 
-# TODO: Rename type to type_ in order to avoid name clash with python type keyword
 class Type(Base):
     __tablename__ = "type"
 
@@ -213,15 +212,18 @@ class Type(Base):
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
-    kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
-    kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
     prototype_script_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
     prototype_script: Mapped[Optional[Script]] = relationship(
         Script, foreign_keys=[prototype_script_id]
     )
-    ports: Mapped[Optional[List[Port]]] = relationship("Port", back_populates="type")
+    kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
+    kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
+    ports: Mapped[Optional[List[Port]]] = relationship("Port", back_populates="type_")
     properties: Mapped[Optional[List[Property]]] = relationship(
-        Property, back_populates="type", cascade="all, delete-orphan"
+        Property, back_populates="type_", cascade="all, delete-orphan"
+    )
+    pieces: Mapped[Optional[List["Piece"]]] = relationship(
+        "Piece", back_populates="type_"
     )
 
     def __repr__(self) -> str:
@@ -232,6 +234,8 @@ class Piece(Base):
     __tablename__ = "piece"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
+    type_: Mapped["Type"] = relationship("Type", back_populates="pieces")
     formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
     attractings: Mapped[Optional[List["Attraction"]]] = relationship(
@@ -247,6 +251,10 @@ class Piece(Base):
 
     def __repr__(self) -> str:
         return f"Piece(id={self.id!r}, formation_id={self.formation_id!r})"
+
+    @property
+    def transient_id(self) -> str:
+        return str(self.id)
 
 
 class Attraction(Base):
@@ -346,6 +354,10 @@ class Kit(Base):
     def __repr__(self) -> str:
         return f"Kit(id={self.id!r}, name={self.name!r})"
 
+    @property
+    def uri(self) -> str:
+        return self.name
+
 
 class DirectoryException(Exception):
     def __init__(self, directory: String):
@@ -398,6 +410,12 @@ class ScriptNode(SQLAlchemyObjectType):
         model = Script
         exclude_fields = ("id", "kit_id")
 
+    uri = graphene.String()
+
+    @staticmethod
+    def resolve_uri(script: Script, info):
+        return script.uri
+
 
 class PropertyNode(SQLAlchemyObjectType):
     class Meta:
@@ -411,10 +429,16 @@ class PortNode(SQLAlchemyObjectType):
         exclude_fields = ("id", "type_id")
 
 
+class TypeNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Type
+        exclude_fields = ("id", "prototype_script_id", "kit_id")
+
+
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
-        exclude_fields = ("id", "formation_id")
+        exclude_fields = ("id", "type_id", "formation_id")
 
 
 class AttractionNode(SQLAlchemyObjectType):
@@ -432,13 +456,12 @@ class AttractionNode(SQLAlchemyObjectType):
 class FormationNode(SQLAlchemyObjectType):
     class Meta:
         model = Formation
-        exclude_fields = ("id", "kit_id")
-
-
-class TypeNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Type
-        exclude_fields = ("id", "kit_id")
+        exclude_fields = (
+            "id",
+            "choreography_script_id",
+            "transformation_script_id",
+            "kit_id",
+        )
 
 
 class KitNode(SQLAlchemyObjectType):
@@ -576,6 +599,31 @@ class ScriptNotFoundException(NotFoundException):
         return "Script not found: " + self.name
 
 
+class PrototypeScriptNotFoundException(ScriptNotFoundException):
+    def __str__(self):
+        return "Prototype script not found: " + self.name
+
+
+class ModificationScriptNotFoundException(ScriptNotFoundException):
+    def __str__(self):
+        return "Modification script not found: " + self.name
+
+
+class ChoreographyScriptNotFoundException(ScriptNotFoundException):
+    def __str__(self):
+        return "Choreography script not found: " + self.name
+
+
+class TransformationScriptNotFoundException(ScriptNotFoundException):
+    def __str__(self):
+        return "Transformation script not found: " + self.name
+
+
+class SynthesisScriptNotFoundException(ScriptNotFoundException):
+    def __str__(self):
+        return "Synthesis script not found: " + self.name
+
+
 class PortNotFoundException(NotFoundException):
     def __str__(self):
         return "Port not found: " + self.name
@@ -591,18 +639,48 @@ class FormationNotFoundException(NotFoundException):
         return "Formation not found: " + self.name
 
 
-def getScriptByName(session: Session, name: String) -> Script:
-    script = session.query(Script).filter_by(name=name).first()
+def getScriptByName(session: Session, kind: ScriptKind, name: String) -> Script:
+    script = session.query(Script).filter_by(kind=kind, name=name).first()
     if script is None:
-        raise ScriptNotFoundException(name)
+        match kind:
+            case ScriptKind.PROTOTYPE:
+                raise PrototypeScriptNotFoundException(name)
+            case ScriptKind.MODIFICATION:
+                raise ModificationScriptNotFoundException(name)
+            case ScriptKind.CHOREOGRAPHY:
+                raise ChoreographyScriptNotFoundException(name)
+            case ScriptKind.TRANSFORMATION:
+                raise TransformationScriptNotFoundException(name)
+            case ScriptKind.SYNTHESIS:
+                raise SynthesisScriptNotFoundException(name)
     return script
 
 
+def getPrototypeScriptByName(session: Session, name: String) -> Script:
+    return getScriptByName(session, ScriptKind.PROTOTYPE, name)
+
+
+def getModificationScriptByName(session: Session, name: String) -> Script:
+    return getScriptByName(session, ScriptKind.MODIFICATION, name)
+
+
+def getChoreographyScriptByName(session: Session, name: String) -> Script:
+    return getScriptByName(session, ScriptKind.CHOREOGRAPHY, name)
+
+
+def getTransformationScriptByName(session: Session, name: String) -> Script:
+    return getScriptByName(session, ScriptKind.TRANSFORMATION, name)
+
+
+def getSynthesisScriptByName(session: Session, name: String) -> Script:
+    return getScriptByName(session, ScriptKind.SYNTHESIS, name)
+
+
 def getTypeByName(session: Session, name: String) -> Type:
-    type = session.query(Type).filter_by(name=name).first()
-    if type is None:
+    type_ = session.query(Type).filter_by(name=name).first()
+    if type_ is None:
         raise TypeNotFoundException(name)
-    return type
+    return type_
 
 
 def getPortByProperties(session: Session, properties: List[PropertyInput]) -> Port:
@@ -652,7 +730,7 @@ def addPropertyInputToSession(
     session: Session, owner: Type | Port, propertyInput: PropertyInput
 ) -> Property:
     try:
-        synthesisScriptId = getScriptByName(
+        synthesisScriptId = getSynthesisScriptByName(
             session, propertyInput.synthesis_script_name
         ).id
     except ScriptNotFoundException:
@@ -678,7 +756,7 @@ def addPropertyInputToSession(
     return property
 
 
-def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
+def addPortInputToSession(session: Session, type_: Type, portInput: PortInput) -> Port:
     port = Port(
         origin_x=portInput.base.origin_x,
         origin_y=portInput.base.origin_y,
@@ -692,12 +770,12 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
         z_axis_x=portInput.base.z_axis_x,
         z_axis_y=portInput.base.z_axis_y,
         z_axis_z=portInput.base.z_axis_z,
-        type_id=type.id,
+        type_id=type_.id,
     )
-    for propertyInput in portInput.properties or []:
-        property = addPropertyInputToSession(session, port, propertyInput)
     session.add(port)
     session.flush()
+    for propertyInput in portInput.properties or []:
+        property = addPropertyInputToSession(session, port, propertyInput)
     return port
 
 
@@ -711,32 +789,32 @@ def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> T
     except AttributeError:
         symbol = None
     try:
-        prototypeScriptId = getScriptByName(
+        prototypeScriptId = getPrototypeScriptByName(
             session, typeInput.base.prototype_script_name
         ).id
-    except ScriptNotFoundException:
+    except PrototypeScriptNotFoundException:
         prototypeScriptId = None
-    type = Type(
+    type_ = Type(
         name=typeInput.base.characterization.name,
         explanation=explanation,
         symbol=symbol,
         prototype_script_id=prototypeScriptId,
         kit_id=kit.id,
     )
-    for portInput in typeInput.ports or []:
-        port = addPortInputToSession(session, type, portInput)
-    for propertyInput in typeInput.properties or []:
-        property = addPropertyInputToSession(session, type, propertyInput)
-    session.add(type)
+    session.add(type_)
     session.flush()
-    return type
+    for portInput in typeInput.ports or []:
+        port = addPortInputToSession(session, type_, portInput)
+    for propertyInput in typeInput.properties or []:
+        property = addPropertyInputToSession(session, type_, propertyInput)
+    return type_
 
 
 def addPieceInputToSession(
     session: Session, formation: Formation, pieceInput: PieceInput
 ) -> Piece:
-    type = getTypeByName(session, pieceInput.type_name)
-    piece = Piece(type_id=type.id, formation_id=formation.id)
+    type_ = getTypeByName(session, pieceInput.type_name)
+    piece = Piece(type_id=type_.id, formation_id=formation.id)
     session.add(piece)
     session.flush()
     return piece
@@ -780,25 +858,27 @@ def addFormationInputToSession(
     except AttributeError:
         symbol = None
     try:
-        choreographyScript = getScriptByName(
+        choreographyScriptId = getChoreographyScriptByName(
             session, formationInput.base.choreography_script_name
         )
-    except ScriptNotFoundException:
-        choreographyScript = None
+    except ChoreographyScriptNotFoundException:
+        choreographyScriptId = None
     try:
-        transformationScript = getScriptByName(
+        transformationScriptId = getTransformationScriptByName(
             session, formationInput.base.transformation_script_name
         )
-    except ScriptNotFoundException:
-        transformationScript = None
+    except TransformationScriptNotFoundException:
+        transformationScriptId = None
     formation = Formation(
         name=formationInput.base.characterization.name,
         explanation=explanation,
         symbol=symbol,
-        choreography_script_id=choreographyScript.id,
-        transformation_script_id=transformationScript.id,
+        choreography_script_id=choreographyScriptId,
+        transformation_script_id=transformationScriptId,
         kit_id=kit.id,
     )
+    session.add(formation)
+    session.flush()
     transientIdToPiece = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
@@ -807,8 +887,6 @@ def addFormationInputToSession(
         attraction = addAttractionInputToSession(
             session, formation, attractionInput, transientIdToPiece
         )
-    session.add(formation)
-    session.flush()
     return formation
 
 
@@ -832,7 +910,7 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
     for scriptInput in kitInput.scripts or []:
         script = addScriptInputToSession(session, kit, scriptInput)
     for typeInput in kitInput.types or []:
-        type = addTypeInputToSession(session, kit, typeInput)
+        type_ = addTypeInputToSession(session, kit, typeInput)
     for formationInput in kitInput.formations or []:
         formation = addFormationInputToSession(session, kit, formationInput)
     return kit
@@ -1019,10 +1097,10 @@ class CreateLocalKitMutation(graphene.Mutation):
 
 #         session = getLocalSession(directory)
 #         kit = session.query(Kit).first()
-#         type = addTypeInputToSession(session, typeInput)
-#         type.kit = kit
+#         type_ = addTypeInputToSession(session, typeInput)
+#         type_.kit = kit
 #         session.commit()
-#         return type
+#         return type_
 
 
 class Mutation(ObjectType):
