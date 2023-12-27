@@ -24,7 +24,7 @@ from os import remove
 from os.path import exists
 from pathlib import Path
 from functools import lru_cache
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 from decimal import Decimal
 from dataclasses import dataclass, field
@@ -42,7 +42,7 @@ from sqlalchemy.orm import (
     Session,
 )
 import graphene
-from graphene import Schema, Mutation, ObjectType, InputObjectType, Field
+from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
 from graphene.relay import Node
 from graphene_sqlalchemy import (
     SQLAlchemyObjectType,
@@ -53,7 +53,6 @@ from flask import Flask
 from graphql_server.flask import GraphQLView
 
 URL_LENGTH_MAX = 1000
-URI_SEPARATOR = "/"
 NAME_LENGTH_MAX = 100
 SYMBOL_LENGTH_MAX = 1
 SCRIPT_KIND_LENGTH_MAX = 100
@@ -67,11 +66,11 @@ class Base(DeclarativeBase):
 
 
 class ScriptKind(Enum):
-    PROTOTYPE = "prototype"
-    MODIFICATION = "modification"
-    CHOREOGRAPHY = "choreography"
-    TRANSFORMATION = "transformation"
-    SYNTHESIS = "synthesis"
+    PROTOTYPE = 1
+    MODIFICATION = 2
+    CHOREOGRAPHY = 3
+    TRANSFORMATION = 4
+    SYNTHESIS = 5
 
 
 class Script(Base):
@@ -85,51 +84,107 @@ class Script(Base):
     url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="scripts")
-    prototyped_types: Mapped[Optional[List["Type"]]] = relationship(
-        "Type",
-        foreign_keys="[Type.prototype_script_id]",
-        back_populates="prototype_script",
-    )
-    choreographed_formations: Mapped[Optional[List["Formation"]]] = relationship(
-        "Formation",
-        foreign_keys="[Formation.choreography_script_id]",
-        back_populates="choreography_script",
-    )
-    transformed_formations: Mapped[Optional[List["Formation"]]] = relationship(
-        "Formation",
-        foreign_keys="[Formation.transformation_script_id]",
-        back_populates="transformation_script",
-    )
-    synthesized_properties: Mapped[Optional[List["Property"]]] = relationship(
-        "Property",
-        foreign_keys="[Property.synthesis_script_id]",
-        back_populates="synthesis_script",
-    )
+
+    # No polymorphic identity because:
+    # https://docs.graphene-python.org/projects/sqlalchemy/en/latest/inheritance/
+    __mapper_args__ = {"polymorphic_on": "kind"}
 
     def __repr__(self) -> str:
         return f"Script(id={self.id!r}, name={self.name!r}, kind={self.kind!r}, kit_id={self.kit_id!r})"
 
-    # TODO: Implement URI mechanism for transient ids and knowledge graph ids
-    # @property
-    # def uri(self) -> str:
-    #     return URI_SEPARATOR.join(
-    #         (self.kit.uri, self.__tablename__, self.kind.value, self.name)
-    #     )
+
+class Prototype(Script):
+    types: Mapped[Optional[List["Type"]]] = relationship(
+        "Type",
+        foreign_keys="[Type.prototype_script_id]",
+        back_populates="prototype",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": ScriptKind.PROTOTYPE,
+    }
+
+    def __repr__(self) -> str:
+        return f"Prototype(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
+
+
+class Modification(Script):
+    types: Mapped[Optional[List["Type"]]] = relationship(
+        "Type",
+        foreign_keys="[Type.modification_script_id]",
+        back_populates="modification",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": ScriptKind.MODIFICATION,
+    }
+
+    def __repr__(self) -> str:
+        return (
+            f"Modification(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
+        )
+
+
+class Choreography(Script):
+    formations: Mapped[Optional[List["Formation"]]] = relationship(
+        "Formation",
+        foreign_keys="[Formation.choreography_script_id]",
+        back_populates="choreography",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": ScriptKind.CHOREOGRAPHY,
+    }
+
+    def __repr__(self) -> str:
+        return (
+            f"Choreography(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
+        )
+
+
+class Transformation(Script):
+    formations: Mapped[Optional[List["Formation"]]] = relationship(
+        "Formation",
+        foreign_keys="[Formation.transformation_script_id]",
+        back_populates="transformation",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": ScriptKind.TRANSFORMATION,
+    }
+
+    def __repr__(self) -> str:
+        return f"Transformation(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
+
+
+class Synthesis(Script):
+    properties: Mapped[Optional[List["Property"]]] = relationship(
+        "Property",
+        foreign_keys="[Property.synthesis_script_id]",
+        back_populates="synthesis",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": ScriptKind.SYNTHESIS,
+    }
+
+    def __repr__(self) -> str:
+        return f"Synthesis(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
 
 
 # TODO: Implement two level inheritance based on PropertyOwnerKind and PropertyDatatype
 # class PropertyOwnerKind(Enum):
-#     TYPE = "type"
-#     PORT = "port"
+#     TYPE = 1
+#     PORT = 2
 class PropertyDatatype(Enum):
-    DECIMAL = "decimal"
-    INTEGER = "integer"
-    NATURAL = "natural"
-    BOOLEAN = "boolean"
-    FUZZY = "fuzzy"
-    DESCRIPTION = "description"
-    CHOICE = "choice"
-    BLOB = "blob"
+    DECIMAL = 1
+    INTEGER = 2
+    NATURAL = 3
+    BOOLEAN = 4
+    FUZZY = 5
+    DESCRIPTION = 6
+    CHOICE = 7
+    BLOB = 8
 
 
 class Property(Base):
@@ -137,10 +192,12 @@ class Property(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    datatype: Mapped[str] = mapped_column(sqlalchemy.Enum(PropertyDatatype))
+    datatype: Mapped[PropertyDatatype] = mapped_column(
+        sqlalchemy.Enum(PropertyDatatype)
+    )
     value: Mapped[str] = mapped_column(Text())
     synthesis_script_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    synthesis_script: Mapped[Optional[Script]] = relationship(
+    synthesis: Mapped[Optional[Script]] = relationship(
         Script, foreign_keys=[synthesis_script_id]
     )
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"))
@@ -152,21 +209,6 @@ class Property(Base):
         if self.type_id is not None:
             return f"Property(id={self.id!r}, name={self.name!r}, datatype={self.datatype!r}, type_id={self.type_id!r})"
         return f"Property(id={self.id!r}, name={self.name!r}, datatype={self.datatype!r}, port_id={self.port_id!r})"
-
-    # __mapper_args__ = {
-    #     "polymorphic_identity": "property",
-    #     "polymorphic_on": "datatype",
-    # }
-
-    # @property
-    # def uri(self) -> str:
-    #     if self.type_id is not None:
-    #         return URI_SEPARATOR.join(
-    #         self.type_.uri, self.name
-    #     )
-    #     return URI_SEPARATOR.join(
-    #         self.port.uri, self.name
-    #     )
 
 
 class Port(Base):
@@ -213,8 +255,14 @@ class Type(Base):
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     prototype_script_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    prototype_script: Mapped[Optional[Script]] = relationship(
-        Script, foreign_keys=[prototype_script_id]
+    prototype: Mapped[Optional[Prototype]] = relationship(
+        Prototype, foreign_keys=[prototype_script_id]
+    )
+    modification_script_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("script.id")
+    )
+    modification: Mapped[Optional[Script]] = relationship(
+        Script, foreign_keys=[modification_script_id]
     )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
@@ -315,13 +363,13 @@ class Formation(Base):
     choreography_script_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("script.id")
     )
-    choreography_script: Mapped[Optional[Script]] = relationship(
+    choreography: Mapped[Optional[Script]] = relationship(
         Script, foreign_keys=[choreography_script_id]
     )
     transformation_script_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("script.id")
     )
-    transformation_script: Mapped[Optional[Script]] = relationship(
+    transformation: Mapped[Optional[Script]] = relationship(
         Script, foreign_keys=[transformation_script_id]
     )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
@@ -355,8 +403,24 @@ class Kit(Base):
         return f"Kit(id={self.id!r}, name={self.name!r})"
 
     @property
-    def uri(self) -> str:
-        return self.name
+    def prototypes(self) -> List[Prototype]:
+        return [script for script in self.scripts if isinstance(script, Prototype)]
+
+    @property
+    def modifications(self) -> List[Modification]:
+        return [script for script in self.scripts if isinstance(script, Modification)]
+
+    @property
+    def choreographies(self) -> List[Choreography]:
+        return [script for script in self.scripts if isinstance(script, Choreography)]
+
+    @property
+    def transformations(self) -> List[Transformation]:
+        return [script for script in self.scripts if isinstance(script, Transformation)]
+
+    @property
+    def syntheses(self) -> List[Synthesis]:
+        return [script for script in self.scripts if isinstance(script, Synthesis)]
 
 
 class DirectoryException(Exception):
@@ -397,24 +461,53 @@ def getLocalSession(directory: String) -> Session:
 # Possible interface for a unified ui
 # class Artifact(graphene.Interface):
 #     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
+#     name = NonNull(graphene.String)
 #     explanation = graphene.String()
 #     symbol = graphene.String()
 #     relatedTo = graphene.List(lambda: Artifact)
 
-ScriptKindEnum = graphene.Enum.from_enum(ScriptKind)
+# ScriptKindEnum = graphene.Enum.from_enum(ScriptKind)
 
 
-class ScriptNode(SQLAlchemyObjectType):
+class ScriptNode(SQLAlchemyInterface):
     class Meta:
         model = Script
         exclude_fields = ("id", "kit_id")
 
-    uri = graphene.String()
 
-    @staticmethod
-    def resolve_uri(script: Script, info):
-        return script.uri
+class PrototypeNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Prototype
+        interfaces = (ScriptNode,)
+        exclude_fields = ("id", "kit_id")
+
+
+class ModificationNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Modification
+        interfaces = (ScriptNode,)
+        exclude_fields = ("id", "kit_id")
+
+
+class ChoreographyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Choreography
+        interfaces = (ScriptNode,)
+        exclude_fields = ("id", "kit_id")
+
+
+class TransformationNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Transformation
+        interfaces = (ScriptNode,)
+        exclude_fields = ("id", "kit_id")
+
+
+class SynthesisNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Synthesis
+        interfaces = (ScriptNode,)
+        exclude_fields = ("id", "kit_id")
 
 
 class PropertyNode(SQLAlchemyObjectType):
@@ -438,7 +531,18 @@ class TypeNode(SQLAlchemyObjectType):
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
-        exclude_fields = ("id", "type_id", "formation_id")
+        exclude_fields = ("id", "type_", "type_id", "formation_id")
+
+    type = graphene.Field(TypeNode, name="type")
+    transient_id = graphene.String()
+
+    @staticmethod
+    def resolve_type(piece: Piece, info):
+        return piece.type_
+
+    @staticmethod
+    def resolve_transient_id(piece: Piece, info):
+        return piece.transient_id
 
 
 class AttractionNode(SQLAlchemyObjectType):
@@ -469,14 +573,38 @@ class KitNode(SQLAlchemyObjectType):
         model = Kit
         exclude_fields = ("id",)
 
+    prototypes = graphene.List(PrototypeNode)
+    modifications = graphene.List(ModificationNode)
+    choreographies = graphene.List(ChoreographyNode)
+    transformations = graphene.List(TransformationNode)
+    syntheses = graphene.List(SynthesisNode)
+
+    @staticmethod
+    def resolve_prototypes(kit: Kit, info):
+        return kit.prototypes
+
+    @staticmethod
+    def resolve_modifications(kit: Kit, info):
+        return kit.modifications
+
+    @staticmethod
+    def resolve_choreographies(kit: Kit, info):
+        return kit.choreographies
+
+    @staticmethod
+    def resolve_transformations(kit: Kit, info):
+        return kit.transformations
+
+    @staticmethod
+    def resolve_syntheses(kit: Kit, info):
+        return kit.syntheses
+
 
 class Query(ObjectType):
-    localScripts = graphene.List(ScriptNode, directory=graphene.String(required=True))
-    localTypes = graphene.List(TypeNode, directory=graphene.String(required=True))
-    localFormations = graphene.List(
-        FormationNode, directory=graphene.String(required=True)
-    )
-    localKit = graphene.Field(KitNode, directory=graphene.String(required=True))
+    localScripts = graphene.List(ScriptNode, directory=NonNull(graphene.String))
+    localTypes = graphene.List(TypeNode, directory=NonNull(graphene.String))
+    localFormations = graphene.List(FormationNode, directory=NonNull(graphene.String))
+    localKit = graphene.Field(KitNode, directory=NonNull(graphene.String))
 
     def resolve_localScripts(self, info, directory: graphene.String):
         session = getLocalSession(directory)
@@ -495,96 +623,137 @@ class Query(ObjectType):
         return session.query(Kit).first()
 
 
-class CharacterizationInput(InputObjectType):
-    name = graphene.String(required=True)
+class PrototypeInput(InputObjectType):
+    name = NonNull(graphene.String)
     explanation = graphene.String()
     symbol = graphene.String()
-
-
-class ScriptInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput, required=True)
-    kind = graphene.Field(ScriptKindEnum, required=True)
     url = graphene.String()
 
 
+class PrototypeIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
+class ModificationInput(InputObjectType):
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    url = graphene.String()
+
+
+class ModificationIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
+class ChoreographyInput(InputObjectType):
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    url = graphene.String()
+
+
+class ChoreographyIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
+class TransformationInput(InputObjectType):
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    url = graphene.String()
+
+
+class TransformationIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
+class SynthesisInput(InputObjectType):
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    url = graphene.String()
+
+
+class SynthesisIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
 class PropertyInput(InputObjectType):
-    name = graphene.String(required=True)
-    datatype = graphene.String(required=True)
-    value = graphene.String(required=True)
-
-
-class PortBaseInput(InputObjectType):
-    origin_x = graphene.Decimal(required=True)
-    origin_y = graphene.Decimal(required=True)
-    origin_z = graphene.Decimal(required=True)
-    x_axis_x = graphene.Decimal(required=True)
-    x_axis_y = graphene.Decimal(required=True)
-    x_axis_z = graphene.Decimal(required=True)
-    y_axis_x = graphene.Decimal(required=True)
-    y_axis_y = graphene.Decimal(required=True)
-    y_axis_z = graphene.Decimal(required=True)
-    z_axis_x = graphene.Decimal(required=True)
-    z_axis_y = graphene.Decimal(required=True)
-    z_axis_z = graphene.Decimal(required=True)
+    name = NonNull(graphene.String)
+    datatype = NonNull(graphene.String)
+    value = NonNull(graphene.String)
+    synthesis = SynthesisIdInput()
 
 
 class PortInput(InputObjectType):
-    base = graphene.Field(PortBaseInput, required=True)
+    origin_x = NonNull(graphene.Decimal)
+    origin_y = NonNull(graphene.Decimal)
+    origin_z = NonNull(graphene.Decimal)
+    x_axis_x = NonNull(graphene.Decimal)
+    x_axis_y = NonNull(graphene.Decimal)
+    x_axis_z = NonNull(graphene.Decimal)
+    y_axis_x = NonNull(graphene.Decimal)
+    y_axis_y = NonNull(graphene.Decimal)
+    y_axis_z = NonNull(graphene.Decimal)
+    z_axis_x = NonNull(graphene.Decimal)
+    z_axis_y = NonNull(graphene.Decimal)
+    z_axis_z = NonNull(graphene.Decimal)
     properties = graphene.List(PropertyInput)
 
 
-class PieceInput(InputObjectType):
-    # Transient ID: Temporary ID to identify the piece in the formation
-    transient_id = graphene.String()
-    # ID Replacement: Instead of id use name to identify the type
-    type_name = graphene.String(required=True)
-
-
-class AttractionInput(InputObjectType):
-    # Transient ID
-    attracting_piece_transient_id = graphene.String(required=True)
-    # ID Replacement: Instead of a port id use properties to identify the port
-    attracting_piece_type_port_properties = graphene.List(PropertyInput, required=True)
-    # Transient ID
-    attracted_piece_transient_id = graphene.String(required=True)
-    # ID Replacement: Instead of a port id use properties to identify the port
-    attracted_piece_type_port_properties = graphene.List(PropertyInput, required=True)
-
-
-class FormationBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput, required=True)
-    # ID Replacement: Instead of id use name to identify the choreography script
-    choreography_script_name = graphene.String()
-    # ID Replacement: Instead of id use name to identify the transformation script
-    transformation_script_name = graphene.String()
-
-
-class FormationInput(InputObjectType):
-    base = graphene.Field(FormationBaseInput, required=True)
-    pieces = graphene.List(PieceInput)
-    attractions = graphene.List(AttractionInput)
-
-
-class TypeBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput, required=True)
-    # ID Replacement: Instead of id use name to identify the prototype script
-    prototype_script_name = graphene.String()
+class PortIdInput(InputObjectType):
+    properties = graphene.List(PropertyInput)
 
 
 class TypeInput(InputObjectType):
-    base = graphene.Field(TypeBaseInput, required=True)
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    prototype = PrototypeIdInput()
     ports = graphene.List(PortInput)
     properties = graphene.List(PropertyInput)
 
 
-class KitBaseInput(InputObjectType):
-    characterization = graphene.Field(CharacterizationInput, required=True)
-    url = graphene.String()
+class TypeIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+
+
+class PieceInput(InputObjectType):
+    transient_id = graphene.String()
+    type = NonNull(TypeIdInput)
+
+
+class PieceIdInput(InputObjectType):
+    transient_id = NonNull(graphene.String)
+
+
+class AttractionInput(InputObjectType):
+    attracting_piece = NonNull(PieceIdInput)
+    attracting_piece_type_port = NonNull(PortIdInput)
+    attracted_piece = NonNull(PieceIdInput)
+    attracted_piece_type_port = NonNull(PortIdInput)
+
+
+class FormationInput(InputObjectType):
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    choreography = ChoreographyIdInput()
+    transformation = TransformationIdInput()
+    pieces = graphene.List(PieceInput)
+    attractions = graphene.List(AttractionInput)
 
 
 class KitInput(InputObjectType):
-    base = graphene.Field(KitBaseInput, required=True)
-    scripts = graphene.List(ScriptInput)
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    url = graphene.String()
+    prototypes = graphene.List(PrototypeInput)
+    modifications = graphene.List(ModificationInput)
+    choreographies = graphene.List(ChoreographyInput)
+    transformations = graphene.List(TransformationInput)
+    syntheses = graphene.List(SynthesisInput)
     types = graphene.List(TypeInput)
     formations = graphene.List(FormationInput)
 
@@ -703,21 +872,28 @@ def getFormationByName(session: Session, name: String) -> Formation:
 
 
 def addScriptInputToSession(
-    session: Session, kit: Kit, scriptInput: ScriptInput
+    session: Session,
+    kit: Kit,
+    kind: ScriptKind,
+    scriptInput: PrototypeInput
+    | ModificationInput
+    | ChoreographyInput
+    | TransformationInput
+    | SynthesisInput,
 ) -> Script:
     try:
-        explanation = scriptInput.characterization.explanation
+        explanation = scriptInput.explanation
     except AttributeError:
         explanation = None
     try:
-        symbol = scriptInput.characterization.symbol
+        symbol = scriptInput.symbol
     except AttributeError:
         symbol = None
     script = Script(
-        name=scriptInput.characterization.name,
+        name=scriptInput.name,
         explanation=explanation,
         symbol=symbol,
-        kind=scriptInput.kind,
+        kind=kind,
         url=scriptInput.url,
         kit_id=kit.id,
     )
@@ -726,14 +902,50 @@ def addScriptInputToSession(
     return script
 
 
+def addPrototypeInputToSession(
+    session: Session, kit: Kit, prototypeInput: PrototypeInput
+) -> Script:
+    return addScriptInputToSession(session, kit, ScriptKind.PROTOTYPE, prototypeInput)
+
+
+def addModificationInputToSession(
+    session: Session, kit: Kit, modificationInput: ModificationInput
+) -> Script:
+    return addScriptInputToSession(
+        session, kit, ScriptKind.MODIFICATION, modificationInput
+    )
+
+
+def addChoreographyInputToSession(
+    session: Session, kit: Kit, choreographyInput: ChoreographyInput
+) -> Script:
+    return addScriptInputToSession(
+        session, kit, ScriptKind.CHOREOGRAPHY, choreographyInput
+    )
+
+
+def addTransformationInputToSession(
+    session: Session, kit: Kit, transformationInput: TransformationInput
+) -> Script:
+    return addScriptInputToSession(
+        session, kit, ScriptKind.TRANSFORMATION, transformationInput
+    )
+
+
+def addSynthesisInputToSession(
+    session: Session, kit: Kit, synthesisInput: SynthesisInput
+) -> Script:
+    return addScriptInputToSession(session, kit, ScriptKind.SYNTHESIS, synthesisInput)
+
+
 def addPropertyInputToSession(
     session: Session, owner: Type | Port, propertyInput: PropertyInput
 ) -> Property:
     try:
         synthesisScriptId = getSynthesisScriptByName(
-            session, propertyInput.synthesis_script_name
+            session, propertyInput.synthesis.name
         ).id
-    except ScriptNotFoundException:
+    except (AttributeError, ScriptNotFoundException):
         synthesisScriptId = None
     if isinstance(owner, Type):
         typeId = owner.id
@@ -758,18 +970,18 @@ def addPropertyInputToSession(
 
 def addPortInputToSession(session: Session, type_: Type, portInput: PortInput) -> Port:
     port = Port(
-        origin_x=portInput.base.origin_x,
-        origin_y=portInput.base.origin_y,
-        origin_z=portInput.base.origin_z,
-        x_axis_x=portInput.base.x_axis_x,
-        x_axis_y=portInput.base.x_axis_y,
-        x_axis_z=portInput.base.x_axis_z,
-        y_axis_x=portInput.base.y_axis_x,
-        y_axis_y=portInput.base.y_axis_y,
-        y_axis_z=portInput.base.y_axis_z,
-        z_axis_x=portInput.base.z_axis_x,
-        z_axis_y=portInput.base.z_axis_y,
-        z_axis_z=portInput.base.z_axis_z,
+        origin_x=portInput.origin_x,
+        origin_y=portInput.origin_y,
+        origin_z=portInput.origin_z,
+        x_axis_x=portInput.x_axis_x,
+        x_axis_y=portInput.x_axis_y,
+        x_axis_z=portInput.x_axis_z,
+        y_axis_x=portInput.y_axis_x,
+        y_axis_y=portInput.y_axis_y,
+        y_axis_z=portInput.y_axis_z,
+        z_axis_x=portInput.z_axis_x,
+        z_axis_y=portInput.z_axis_y,
+        z_axis_z=portInput.z_axis_z,
         type_id=type_.id,
     )
     session.add(port)
@@ -781,21 +993,27 @@ def addPortInputToSession(session: Session, type_: Type, portInput: PortInput) -
 
 def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> Type:
     try:
-        explanation = typeInput.base.characterization.explanation
+        explanation = typeInput.explanation
     except AttributeError:
         explanation = None
     try:
-        symbol = typeInput.base.characterization.symbol
+        symbol = typeInput.symbol
     except AttributeError:
         symbol = None
     try:
         prototypeScriptId = getPrototypeScriptByName(
-            session, typeInput.base.prototype_script_name
+            session, typeInput.prototype.name
         ).id
-    except PrototypeScriptNotFoundException:
+    except (AttributeError, PrototypeScriptNotFoundException):
         prototypeScriptId = None
+    try:
+        modificationScriptId = getModificationScriptByName(
+            session, typeInput.modification.name
+        ).id
+    except (AttributeError, ModificationScriptNotFoundException):
+        modificationScriptId = None
     type_ = Type(
-        name=typeInput.base.characterization.name,
+        name=typeInput.name,
         explanation=explanation,
         symbol=symbol,
         prototype_script_id=prototypeScriptId,
@@ -813,7 +1031,7 @@ def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> T
 def addPieceInputToSession(
     session: Session, formation: Formation, pieceInput: PieceInput
 ) -> Piece:
-    type_ = getTypeByName(session, pieceInput.type_name)
+    type_ = getTypeByName(session, pieceInput.type.name)
     piece = Piece(type_id=type_.id, formation_id=formation.id)
     session.add(piece)
     session.flush()
@@ -826,13 +1044,13 @@ def addAttractionInputToSession(
     attractionInput: AttractionInput,
     transientIdToPiece: dict,
 ) -> Attraction:
-    attractingPiece = transientIdToPiece[attractionInput.attracting_piece_transient_id]
-    attractedPiece = transientIdToPiece[attractionInput.attracted_piece_transient_id]
+    attractingPiece = transientIdToPiece[attractionInput.attracting_piece.transient_id]
+    attractedPiece = transientIdToPiece[attractionInput.attracted_piece.transient_id]
     attractingPieceTypePort = getPortByProperties(
-        session, attractionInput.attracting_piece_type_port_properties
+        session, attractionInput.attracting_piece_type_port.properties
     )
     attractedPieceTypePort = getPortByProperties(
-        session, attractionInput.attracted_piece_type_port_properties
+        session, attractionInput.attracted_piece_type_port.properties
     )
     attraction = Attraction(
         attracting_piece_id=attractingPiece.id,
@@ -850,27 +1068,27 @@ def addFormationInputToSession(
     session: Session, kit: Kit, formationInput: FormationInput
 ):
     try:
-        explanation = formationInput.base.characterization.explanation
+        explanation = formationInput.explanation
     except AttributeError:
         explanation = None
     try:
-        symbol = formationInput.base.characterization.symbol
+        symbol = formationInput.symbol
     except AttributeError:
         symbol = None
     try:
         choreographyScriptId = getChoreographyScriptByName(
-            session, formationInput.base.choreography_script_name
-        )
-    except ChoreographyScriptNotFoundException:
+            session, formationInput.choreography.name
+        ).id
+    except (AttributeError, ChoreographyScriptNotFoundException):
         choreographyScriptId = None
     try:
         transformationScriptId = getTransformationScriptByName(
-            session, formationInput.base.transformation_script_name
-        )
-    except TransformationScriptNotFoundException:
+            session, formationInput.transformation.name
+        ).id
+    except (AttributeError, TransformationScriptNotFoundException):
         transformationScriptId = None
     formation = Formation(
-        name=formationInput.base.characterization.name,
+        name=formationInput.name,
         explanation=explanation,
         symbol=symbol,
         choreography_script_id=choreographyScriptId,
@@ -879,7 +1097,7 @@ def addFormationInputToSession(
     )
     session.add(formation)
     session.flush()
-    transientIdToPiece = {}
+    transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
         transientIdToPiece[pieceInput.transient_id] = piece
@@ -892,23 +1110,33 @@ def addFormationInputToSession(
 
 def addKitInputToSession(session: Session, kitInput: KitInput):
     try:
-        explanation = kitInput.base.characterization.explanation
+        explanation = kitInput.explanation
     except AttributeError:
         explanation = None
     try:
-        symbol = kitInput.base.characterization.symbol
+        symbol = kitInput.symbol
     except AttributeError:
         symbol = None
     kit = Kit(
-        url=kitInput.base.url,
-        name=kitInput.base.characterization.name,
+        url=kitInput.url,
+        name=kitInput.name,
         explanation=explanation,
         symbol=symbol,
     )
     session.add(kit)
     session.flush()
-    for scriptInput in kitInput.scripts or []:
-        script = addScriptInputToSession(session, kit, scriptInput)
+    for prototypeInput in kitInput.prototypes or []:
+        prototype = addPrototypeInputToSession(session, kit, prototypeInput)
+    for modificationInput in kitInput.modifications or []:
+        modification = addModificationInputToSession(session, kit, modificationInput)
+    for choreographyInput in kitInput.choreographies or []:
+        choreography = addChoreographyInputToSession(session, kit, choreographyInput)
+    for transformationInput in kitInput.transformations or []:
+        transformation = addTransformationInputToSession(
+            session, kit, transformationInput
+        )
+    for synthesisInput in kitInput.syntheses or []:
+        synthesis = addSynthesisInputToSession(session, kit, synthesisInput)
     for typeInput in kitInput.types or []:
         type_ = addTypeInputToSession(session, kit, typeInput)
     for formationInput in kitInput.formations or []:
@@ -936,7 +1164,7 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
 # An example can be found here: https://github.com/graphql-python/graphene-django/blob/main/graphene_django/forms/mutation.py
 # class LocalMutation(graphene.Mutation):
 #     class Arguments:
-#         directory = graphene.String(required=True)
+#         directory = NonNull(graphene.String)
 
 
 class CreateLocalKitError(graphene.Enum):
@@ -956,7 +1184,7 @@ disposed_engines = {}
 
 class CreateLocalKitMutation(graphene.Mutation):
     class Arguments:
-        directory = graphene.String(required=True)
+        directory = NonNull(graphene.String)
         kitInput = KitInput(required=True)
 
     kit = graphene.Field(lambda: KitNode)
@@ -996,7 +1224,7 @@ class CreateLocalKitMutation(graphene.Mutation):
 
 # class UpdateLocalKitBaseMutation(graphene.Mutation):
 #     class Arguments:
-#         directory = graphene.String(required=True)
+#         directory = NonNull(graphene.String)
 #         characterization = CharacterizationInput(required=True)
 
 #     Output = KitNode
@@ -1005,15 +1233,15 @@ class CreateLocalKitMutation(graphene.Mutation):
 #         session = getLocalSession(directory)
 #         kit = session.query(Kit).first()
 #         try:
-#             kit.name = characterization.name
+#             kit.name = name
 #         except AttributeError:
 #             pass
 #         try:
-#             kit.explanation = characterization.explanation
+#             kit.explanation = explanation
 #         except AttributeError:
 #             pass
 #         try:
-#             kit.symbol = characterization.symbol
+#             kit.symbol = symbol
 #         except AttributeError:
 #             pass
 #         session.commit()
@@ -1033,7 +1261,7 @@ class CreateLocalKitMutation(graphene.Mutation):
 
 # class DeleteLocalKitMutation(graphene.Mutation):
 #     class Arguments:
-#         directory = graphene.String(required=True)
+#         directory = NonNull(graphene.String)
 
 #     Output = DeleteLocalKitErrorNode
 
@@ -1078,7 +1306,7 @@ class CreateLocalKitMutation(graphene.Mutation):
 
 # class AddLocalTypeMutation(graphene.Mutation):
 #     class Arguments:
-#         directory = graphene.String(required=True)
+#         directory = NonNull(graphene.String)
 #         typeInput = TypeInput(required=True)
 
 #     Output = TypeNode
