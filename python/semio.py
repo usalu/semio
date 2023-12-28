@@ -20,6 +20,7 @@
 API for semio.
 """
 
+from os import remove
 from pathlib import Path
 from functools import lru_cache
 from typing import Optional, List, Dict, Protocol
@@ -49,6 +50,10 @@ NAME_LENGTH_MAX = 100
 SYMBOL_LENGTH_MAX = 1
 SCRIPT_KIND_LENGTH_MAX = 100
 KIT_FILENAME = "kit.semio"
+
+
+class SemioException(Exception):
+    pass
 
 
 # TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
@@ -637,17 +642,17 @@ class Kit(Base):
         return self.children + self.references + self.referencedBy
 
 
-class DirectoryException(Exception):
+class DirectoryError(SemioException):
     def __init__(self, directory: String):
         self.directory = directory
 
 
-class DirectoryDoesNotExistException(DirectoryException):
+class DirectoryDoesNotExist(DirectoryError):
     def __str__(self):
         return "Directory does not exist: " + self.directory
 
 
-class DirectoryIsNotADirectoryException(DirectoryException):
+class DirectoryIsNotADirectory(DirectoryError):
     def __str__(self):
         return "Directory is not a directory: " + self.directory
 
@@ -655,9 +660,9 @@ class DirectoryIsNotADirectoryException(DirectoryException):
 def assertDirectory(directory: String) -> Path:
     directory = Path(directory)
     if not directory.exists():
-        raise DirectoryDoesNotExistException(directory)
+        raise DirectoryDoesNotExist(directory)
     if not directory.is_dir():
-        raise DirectoryIsNotADirectoryException(directory)
+        raise DirectoryIsNotADirectory(directory)
     return directory.resolve()
 
 
@@ -684,23 +689,23 @@ class ArtifactNode(graphene.Interface):
     relatedTo = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
 
     @staticmethod
-    def resolve_parent(artifact: Prototype, info):
+    def resolve_parent(artifact: "ArtifactNode", info):
         return artifact.parent
 
     @staticmethod
-    def resolve_children(artifact: Prototype, info):
+    def resolve_children(artifact: "ArtifactNode", info):
         return artifact.children
 
     @staticmethod
-    def resolve_references(artifact: Prototype, info):
+    def resolve_references(artifact: "ArtifactNode", info):
         return artifact.references
 
     @staticmethod
-    def resolve_referencedBy(artifact: Prototype, info):
+    def resolve_referencedBy(artifact: "ArtifactNode", info):
         return artifact.referencedBy
 
     @staticmethod
-    def resolve_relatedTo(artifact: Prototype, info):
+    def resolve_relatedTo(artifact: "ArtifactNode", info):
         return artifact.relatedTo
 
 
@@ -855,43 +860,6 @@ class KitNode(SQLAlchemyObjectType):
         return kit.syntheses
 
 
-class Query(ObjectType):
-    localScripts = graphene.List(ScriptNode, directory=NonNull(graphene.String))
-    localTypes = graphene.List(TypeNode, directory=NonNull(graphene.String))
-    localFormations = graphene.List(FormationNode, directory=NonNull(graphene.String))
-    localArtifacts = graphene.List(ArtifactNode, directory=NonNull(graphene.String))
-    localKit = graphene.Field(KitNode, directory=NonNull(graphene.String))
-
-    def resolve_localScripts(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Script).all()
-
-    def resolve_localTypes(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Type).all()
-
-    def resolve_localFormations(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Formation).all()
-
-    def resolve_localArtifacts(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        artifacts = []
-        artifacts.extend(session.query(Prototype).all())
-        artifacts.extend(session.query(Modification).all())
-        artifacts.extend(session.query(Choreography).all())
-        artifacts.extend(session.query(Transformation).all())
-        artifacts.extend(session.query(Synthesis).all())
-        artifacts.extend(session.query(Type).all())
-        artifacts.extend(session.query(Formation).all())
-        artifacts.extend(session.query(Kit).all())
-        return artifacts
-
-    def resolve_localKit(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Kit).first()
-
-
 class PrototypeInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
@@ -1027,70 +995,247 @@ class KitInput(InputObjectType):
     formations = graphene.List(FormationInput)
 
 
-class NotFoundException(Exception):
-    def __init__(self, name: String):
+class SpecificationError(SemioException):
+    pass
+
+
+class NotFound(SpecificationError):
+    def __init__(self, id) -> None:
+        self.id = id
+
+    def __str__(self):
+        return f"{self.id} not found."
+
+
+class ArtifactNotFound(NotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
         self.name = name
 
-
-class ScriptNotFoundException(NotFoundException):
     def __str__(self):
-        return "Script not found: " + self.name
+        return f"Artifact({self.name}) not found."
 
 
-class PrototypeScriptNotFoundException(ScriptNotFoundException):
+class ScriptNotFound(NotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Prototype script not found: " + self.name
+        return f"Script({self.name}) not found."
 
 
-class ModificationScriptNotFoundException(ScriptNotFoundException):
+class PrototypeScriptNotFound(ScriptNotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Modification script not found: " + self.name
+        return f"Prototype({self.name}) not found."
 
 
-class ChoreographyScriptNotFoundException(ScriptNotFoundException):
+class ModificationScriptNotFound(ScriptNotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Choreography script not found: " + self.name
+        return f"Modification({self.name}) not found."
 
 
-class TransformationScriptNotFoundException(ScriptNotFoundException):
+class ChoreographyScriptNotFound(ScriptNotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Transformation script not found: " + self.name
+        return f"Choreography({self.name}) not found."
 
 
-class SynthesisScriptNotFoundException(ScriptNotFoundException):
+class TransformationScriptNotFound(ScriptNotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Synthesis script not found: " + self.name
+        return f"Transformation({self.name}) not found."
 
 
-class PortNotFoundException(NotFoundException):
+class SynthesisScriptNotFound(ScriptNotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Port not found: " + self.name
+        return f"Synthesis({self.name}) not found."
 
 
-class TypeNotFoundException(NotFoundException):
+class PortNotFound(NotFound):
+    def __init__(self, properties) -> None:
+        super().__init__(properties)
+        self.properties = properties
+
     def __str__(self):
-        return "Type not found: " + self.name
+        return f"Port({self.properties}) not found."
 
 
-class FormationNotFoundException(NotFoundException):
+class TypeNotFound(NotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
     def __str__(self):
-        return "Formation not found: " + self.name
+        return f"Type({self.name}) not found."
+
+
+class FormationNotFound(NotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
+    def __str__(self):
+        return f"Formation({self.name}) not found."
+
+
+class KitNotFound(NotFound):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.name = name
+
+    def __str__(self):
+        return f"Kit({self.name}) not found."
+
+
+class NoMainKit(KitNotFound):
+    def __init__(self) -> None:
+        super().__init__("main")
+
+    def __str__(self):
+        return f"Main kit not found."
+
+
+class AlreadyExists(SemioException):
+    def __init__(self, id, existing) -> None:
+        self.id = id
+        self.existing = existing
+
+    def __str__(self):
+        return f"{self.id} already exists: {str(self.existing)}"
+
+
+class ArtifactAlreadyExists(AlreadyExists):
+    def __init__(self, artifact) -> None:
+        super().__init__(artifact.name, artifact)
+        self.artifact = artifact
+
+    def __str__(self):
+        return f"Artifact ({self.artifact.name}) already exists: {str(self.artifact)}"
+
+
+class ScriptAlreadyExists(AlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script.name, script)
+        self.script = script
+
+    def __str__(self):
+        return f"Script ({self.script.name}) already exists: {str(self.script)}"
+
+
+class PrototypeScriptAlreadyExists(ScriptAlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script)
+        self.script = script
+
+    def __str__(self):
+        return f"Prototype ({self.script.name}) already exists: {str(self.script)}"
+
+
+class ModificationScriptAlreadyExists(ScriptAlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script)
+        self.script = script
+
+    def __str__(self):
+        return f"Modification ({self.script.name}) already exists: {str(self.script)}"
+
+
+class ChoreographyScriptAlreadyExists(ScriptAlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script)
+        self.script = script
+
+    def __str__(self):
+        return f"Choreography ({self.script.name}) already exists: {str(self.script)}"
+
+
+class TransformationScriptAlreadyExists(ScriptAlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script)
+        self.script = script
+
+    def __str__(self):
+        return f"Transformation ({self.script.name}) already exists: {str(self.script)}"
+
+
+class SynthesisScriptAlreadyExists(ScriptAlreadyExists):
+    def __init__(self, script) -> None:
+        super().__init__(script)
+        self.script = script
+
+    def __str__(self):
+        return f"Synthesis ({self.script.name}) already exists: {str(self.script)}"
+
+
+class TypeAlreadyExists(AlreadyExists):
+    def __init__(self, type) -> None:
+        super().__init__(type.name, type)
+        self.type = type
+
+    def __str__(self):
+        return f"Type ({self.type.name}) already exists: {str(self.type)}"
+
+
+class FormationAlreadyExists(AlreadyExists):
+    def __init__(self, formation) -> None:
+        super().__init__(formation.name, formation)
+        self.formation = formation
+
+    def __str__(self):
+        return (
+            f"Formation ({self.formation.name}) already exists: {str(self.formation)}"
+        )
+
+
+class KitAlreadyExists(AlreadyExists):
+    def __init__(self, kit) -> None:
+        super().__init__(kit.name, kit)
+        self.kit = kit
+
+    def __str__(self):
+        return f"Kit ({self.kit.name}) already exists: {str(self.kit)}"
+
+
+def getMainKit(session: Session) -> Kit:
+    kit = session.query(Kit).first()
+    if not kit:
+        raise NoMainKit()
+    return kit
 
 
 def getScriptByName(session: Session, kind: ScriptKind, name: String) -> Script:
     script = session.query(Script).filter_by(kind=kind, name=name).first()
-    if script is None:
+    if not script:
         match kind:
             case ScriptKind.PROTOTYPE:
-                raise PrototypeScriptNotFoundException(name)
+                raise PrototypeScriptNotFound(name)
             case ScriptKind.MODIFICATION:
-                raise ModificationScriptNotFoundException(name)
+                raise ModificationScriptNotFound(name)
             case ScriptKind.CHOREOGRAPHY:
-                raise ChoreographyScriptNotFoundException(name)
+                raise ChoreographyScriptNotFound(name)
             case ScriptKind.TRANSFORMATION:
-                raise TransformationScriptNotFoundException(name)
+                raise TransformationScriptNotFound(name)
             case ScriptKind.SYNTHESIS:
-                raise SynthesisScriptNotFoundException(name)
+                raise SynthesisScriptNotFound(name)
     return script
 
 
@@ -1117,7 +1262,7 @@ def getSynthesisScriptByName(session: Session, name: String) -> Script:
 def getTypeByName(session: Session, name: String) -> Type:
     type = session.query(Type).filter_by(name=name).first()
     if type is None:
-        raise TypeNotFoundException(name)
+        raise TypeNotFound(name)
     return type
 
 
@@ -1129,14 +1274,14 @@ def getPortByProperties(session: Session, properties: List[PropertyInput]) -> Po
         .first()
     )
     if port is None:
-        raise PortNotFoundException(properties)
+        raise PortNotFound(properties)
     return port
 
 
 def getFormationByName(session: Session, name: String) -> Formation:
     formation = session.query(Formation).filter_by(name=name).first()
     if formation is None:
-        raise FormationNotFoundException(name)
+        raise FormationNotFound(name)
     return formation
 
 
@@ -1149,72 +1294,99 @@ def addScriptInputToSession(
     | ChoreographyInput
     | TransformationInput
     | SynthesisInput,
+    replace: bool = False,
 ) -> Script:
+    script = session.query(Script).filter_by(kind=kind, name=scriptInput.name).first()
+    if script:
+        if replace:
+            session.delete(script)
+            script = None
+        else:
+            match kind:
+                case ScriptKind.PROTOTYPE:
+                    raise PrototypeScriptAlreadyExists(script)
+                case ScriptKind.MODIFICATION:
+                    raise ModificationScriptAlreadyExists(script)
+                case ScriptKind.CHOREOGRAPHY:
+                    raise ChoreographyScriptAlreadyExists(script)
+                case ScriptKind.TRANSFORMATION:
+                    raise TransformationScriptAlreadyExists(script)
+                case ScriptKind.SYNTHESIS:
+                    raise SynthesisScriptAlreadyExists(script)
+    if not script:
+        script = Script(name=scriptInput.name, kind=kind, kit_id=kit.id)
+        session.add(script)
+        session.flush()
     try:
-        explanation = scriptInput.explanation
+        script.explanation = scriptInput.explanation
     except AttributeError:
-        explanation = None
+        pass
     try:
-        symbol = scriptInput.symbol
+        script.symbol = scriptInput.symbol
     except AttributeError:
-        symbol = None
-    script = Script(
-        name=scriptInput.name,
-        explanation=explanation,
-        symbol=symbol,
-        kind=kind,
-        url=scriptInput.url,
-        kit_id=kit.id,
-    )
-    session.add(script)
-    session.flush()
+        pass
     return script
 
 
 def addPrototypeInputToSession(
-    session: Session, kit: Kit, prototypeInput: PrototypeInput
+    session: Session, kit: Kit, prototypeInput: PrototypeInput, replace: bool = False
 ) -> Script:
-    return addScriptInputToSession(session, kit, ScriptKind.PROTOTYPE, prototypeInput)
+    return addScriptInputToSession(
+        session, kit, ScriptKind.PROTOTYPE, prototypeInput, replace
+    )
 
 
 def addModificationInputToSession(
-    session: Session, kit: Kit, modificationInput: ModificationInput
+    session: Session,
+    kit: Kit,
+    modificationInput: ModificationInput,
+    replace: bool = False,
 ) -> Script:
     return addScriptInputToSession(
-        session, kit, ScriptKind.MODIFICATION, modificationInput
+        session, kit, ScriptKind.MODIFICATION, modificationInput, replace
     )
 
 
 def addChoreographyInputToSession(
-    session: Session, kit: Kit, choreographyInput: ChoreographyInput
+    session: Session,
+    kit: Kit,
+    choreographyInput: ChoreographyInput,
+    replace: bool = False,
 ) -> Script:
     return addScriptInputToSession(
-        session, kit, ScriptKind.CHOREOGRAPHY, choreographyInput
+        session, kit, ScriptKind.CHOREOGRAPHY, choreographyInput, replace
     )
 
 
 def addTransformationInputToSession(
-    session: Session, kit: Kit, transformationInput: TransformationInput
+    session: Session,
+    kit: Kit,
+    transformationInput: TransformationInput,
+    replace: bool = False,
 ) -> Script:
     return addScriptInputToSession(
-        session, kit, ScriptKind.TRANSFORMATION, transformationInput
+        session, kit, ScriptKind.TRANSFORMATION, transformationInput, replace
     )
 
 
 def addSynthesisInputToSession(
-    session: Session, kit: Kit, synthesisInput: SynthesisInput
+    session: Session, kit: Kit, synthesisInput: SynthesisInput, replace: bool = False
 ) -> Script:
-    return addScriptInputToSession(session, kit, ScriptKind.SYNTHESIS, synthesisInput)
+    return addScriptInputToSession(
+        session, kit, ScriptKind.SYNTHESIS, synthesisInput, replace
+    )
 
 
 def addPropertyInputToSession(
-    session: Session, owner: Type | Port, propertyInput: PropertyInput
+    session: Session,
+    owner: Type | Port,
+    propertyInput: PropertyInput,
 ) -> Property:
     try:
         synthesisScriptId = getSynthesisScriptByName(
             session, propertyInput.synthesis.name
         ).id
-    except (AttributeError, ScriptNotFoundException):
+    except (AttributeError, ScriptNotFound):
         synthesisScriptId = None
     if isinstance(owner, Type):
         typeId = owner.id
@@ -1260,36 +1432,33 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
     return port
 
 
-def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> Type:
+def addTypeInputToSession(
+    session: Session, kit: Kit, typeInput: TypeInput, replace: bool = False
+) -> Type:
+    type = session.query(Type).filter_by(name=typeInput.name).first()
+    if type:
+        if replace:
+            session.delete(type)
+        else:
+            raise TypeAlreadyExists(type)
+    if not type:
+        type = Type(name=typeInput.name, kit_id=kit.id)
+        session.add(type)
+        session.flush()
     try:
-        explanation = typeInput.explanation
+        type.explanation = typeInput.explanation
     except AttributeError:
-        explanation = None
+        pass
     try:
-        symbol = typeInput.symbol
+        type.symbol = typeInput.symbol
     except AttributeError:
-        symbol = None
+        pass
     try:
-        prototypeScriptId = getPrototypeScriptByName(
+        type.prototype_script_id = getPrototypeScriptByName(
             session, typeInput.prototype.name
         ).id
-    except (AttributeError, PrototypeScriptNotFoundException):
-        prototypeScriptId = None
-    try:
-        modificationScriptId = getModificationScriptByName(
-            session, typeInput.modification.name
-        ).id
-    except (AttributeError, ModificationScriptNotFoundException):
-        modificationScriptId = None
-    type = Type(
-        name=typeInput.name,
-        explanation=explanation,
-        symbol=symbol,
-        prototype_script_id=prototypeScriptId,
-        kit_id=kit.id,
-    )
-    session.add(type)
-    session.flush()
+    except AttributeError:
+        pass
     for portInput in typeInput.ports or []:
         port = addPortInputToSession(session, type, portInput)
     for propertyInput in typeInput.properties or []:
@@ -1334,38 +1503,42 @@ def addAttractionInputToSession(
 
 
 def addFormationInputToSession(
-    session: Session, kit: Kit, formationInput: FormationInput
+    session: Session, kit: Kit, formationInput: FormationInput, replace: bool = False
 ):
+    formation = session.query(Formation).filter_by(name=formationInput.name).first()
+    if formation:
+        if replace:
+            session.delete(formation)
+            formation = None
+        else:
+            raise FormationAlreadyExists(formation)
+    if not formation:
+        formation = Formation(
+            name=formationInput.name,
+            kit_id=kit.id,
+        )
+        session.add(formation)
+        session.flush()
     try:
-        explanation = formationInput.explanation
+        formation.explanation = formationInput.explanation
     except AttributeError:
-        explanation = None
+        pass
     try:
-        symbol = formationInput.symbol
+        formation.symbol = formationInput.symbol
     except AttributeError:
         symbol = None
     try:
-        choreographyScriptId = getChoreographyScriptByName(
+        formation.choreography_script_id = getChoreographyScriptByName(
             session, formationInput.choreography.name
         ).id
-    except (AttributeError, ChoreographyScriptNotFoundException):
-        choreographyScriptId = None
+    except AttributeError:
+        pass
     try:
-        transformationScriptId = getTransformationScriptByName(
+        formation.transformation_script_id = getTransformationScriptByName(
             session, formationInput.transformation.name
         ).id
-    except (AttributeError, TransformationScriptNotFoundException):
-        transformationScriptId = None
-    formation = Formation(
-        name=formationInput.name,
-        explanation=explanation,
-        symbol=symbol,
-        choreography_script_id=choreographyScriptId,
-        transformation_script_id=transformationScriptId,
-        kit_id=kit.id,
-    )
-    session.add(formation)
-    session.flush()
+    except AttributeError:
+        pass
     transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
@@ -1377,47 +1550,57 @@ def addFormationInputToSession(
     return formation
 
 
-def addKitInputToSession(session: Session, kitInput: KitInput):
+def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = False):
     try:
-        explanation = kitInput.explanation
-    except AttributeError:
-        explanation = None
+        kit = getMainKit(session)
+    except NoMainKit:
+        kit = Kit(
+            name=kitInput.name,
+        )
+        session.add(kit)
+        session.flush()
     try:
-        symbol = kitInput.symbol
+        kit.explanation = kitInput.explanation
     except AttributeError:
-        symbol = None
-    kit = Kit(
-        url=kitInput.url,
-        name=kitInput.name,
-        explanation=explanation,
-        symbol=symbol,
-    )
-    session.add(kit)
-    session.flush()
+        pass
+    try:
+        kit.symbol = kitInput.symbol
+    except AttributeError:
+        pass
     for prototypeInput in kitInput.prototypes or []:
-        prototype = addPrototypeInputToSession(session, kit, prototypeInput)
+        prototype = addPrototypeInputToSession(session, kit, prototypeInput, replace)
     for modificationInput in kitInput.modifications or []:
-        modification = addModificationInputToSession(session, kit, modificationInput)
+        modification = addModificationInputToSession(
+            session, kit, modificationInput, replace
+        )
     for choreographyInput in kitInput.choreographies or []:
-        choreography = addChoreographyInputToSession(session, kit, choreographyInput)
+        choreography = addChoreographyInputToSession(
+            session, kit, choreographyInput, replace
+        )
     for transformationInput in kitInput.transformations or []:
         transformation = addTransformationInputToSession(
-            session, kit, transformationInput
+            session, kit, transformationInput, replace
         )
     for synthesisInput in kitInput.syntheses or []:
-        synthesis = addSynthesisInputToSession(session, kit, synthesisInput)
+        synthesis = addSynthesisInputToSession(session, kit, synthesisInput, replace)
     for typeInput in kitInput.types or []:
-        type = addTypeInputToSession(session, kit, typeInput)
+        type = addTypeInputToSession(session, kit, typeInput, replace)
     for formationInput in kitInput.formations or []:
-        formation = addFormationInputToSession(session, kit, formationInput)
+        formation = addFormationInputToSession(session, kit, formationInput, replace)
     return kit
 
 
-class CreateLocalKitError(graphene.Enum):
+class CreateLocalKitErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_ALREADY_CONTAINS_A_KIT = "directory_already_contains_a_kit"
     NO_PERMISSION_TO_CREATE_DIRECTORY = "no_permission_to_create_directory"
     NO_PERMISSION_TO_CREATE_KIT = "no_permission_to_create_kit"
+    KIT_INPUT_IS_INVALID = "kit_input_is_invalid"
+
+
+class CreateLocalKitErrorNode(ObjectType):
+    code = NonNull(CreateLocalKitErrorCode)
+    message = graphene.String()
 
 
 disposed_engines = {}
@@ -1429,7 +1612,7 @@ class CreateLocalKitMutation(graphene.Mutation):
         kitInput = NonNull(KitInput)
 
     kit = Field(KitNode)
-    error = CreateLocalKitError()
+    error = Field(CreateLocalKitErrorNode)
 
     def mutate(self, info, directory, kitInput):
         directory = Path(directory)
@@ -1438,17 +1621,23 @@ class CreateLocalKitMutation(graphene.Mutation):
                 directory.mkdir(parents=True)
             except PermissionError:
                 return CreateLocalKitMutation(
-                    error=CreateLocalKitError.NO_PERMISSION_TO_CREATE_DIRECTORY
+                    error=CreateLocalKitErrorNode(
+                        code=CreateLocalKitErrorCode.NO_PERMISSION_TO_CREATE_DIRECTORY
+                    )
                 )
             except OSError:
                 return CreateLocalKitMutation(
-                    error=CreateLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
+                    error=CreateLocalKitErrorNode(
+                        code=CreateLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+                    )
                 )
 
         kitFile = directory.joinpath(KIT_FILENAME)
         if kitFile.exists():
             return CreateLocalKitMutation(
-                error=CreateLocalKitError.DIRECTORY_ALREADY_CONTAINS_A_KIT
+                error=CreateLocalKitErrorNode(
+                    code=CreateLocalKitErrorCode.DIRECTORY_ALREADY_CONTAINS_A_KIT
+                )
             )
 
         kitFileFullPath = kitFile.resolve()
@@ -1458,125 +1647,200 @@ class CreateLocalKitMutation(graphene.Mutation):
             )
 
         session = getLocalSession(directory)
-        kit = addKitInputToSession(session, kitInput)
+        try:
+            kit = addKitInputToSession(session, kitInput)
+        except SpecificationError as e:
+            session.rollback()
+            return CreateLocalKitMutation(
+                error=CreateLocalKitErrorNode(
+                    code=CreateLocalKitErrorCode.KIT_INPUT_IS_INVALID, message=str(e)
+                )
+            )
         session.commit()
         return CreateLocalKitMutation(kit=kit, error=None)
 
 
-# class UpdateLocalKitBaseMutation(graphene.Mutation):
-#     class Arguments:
-#         directory = NonNull(graphene.String)
-#         characterization = CharacterizationInput(required=True)
-
-#     Output = KitNode
-
-#     def mutate(self, info, directory, characterization):
-#         session = getLocalSession(directory)
-#         kit = session.query(Kit).first()
-#         try:
-#             kit.name = name
-#         except AttributeError:
-#             pass
-#         try:
-#             kit.explanation = explanation
-#         except AttributeError:
-#             pass
-#         try:
-#             kit.symbol = symbol
-#         except AttributeError:
-#             pass
-#         session.commit()
-#         return kit
+class UpdateMode(graphene.Enum):
+    REPLACE = "replace"
+    APPEND = "append"
 
 
-# class DeleteLocalKitError(graphene.Enum):
-#     NO_ERROR = "no_error"
-#     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
-#     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
-#     NO_PERMISSION_TO_DELETE_KIT = "no_permission_to_delete_kit"
+class UpdateLocalKitErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_UPDATE_KIT = "no_permission_to_update_kit"
+    ARTIFACT_ALREADY_EXISTS = "artifact_already_exists"
+    KIT_INPUT_IS_INVALID = "kit_input_is_invalid"
 
 
-# class DeleteLocalKitErrorNode(ObjectType):
-#     error = graphene.Field(DeleteLocalKitError, required=True)
+class UpdateLocalKitErrorNode(ObjectType):
+    code = NonNull(UpdateLocalKitErrorCode)
+    message = graphene.String()
 
 
-# class DeleteLocalKitMutation(graphene.Mutation):
-#     class Arguments:
-#         directory = NonNull(graphene.String)
+class UpdateLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+        kitInput = NonNull(KitInput)
+        mode = NonNull(UpdateMode, default_value=UpdateMode.REPLACE)
 
-#     Output = DeleteLocalKitErrorNode
+    kit = Field(KitNode)
+    error = Field(UpdateLocalKitErrorNode)
 
-#     def mutate(self, info, directory):
-#         directory = Path(directory)
-#         if not directory.exists():
-#             return DeleteLocalKitErrorNode(
-#                 error=DeleteLocalKitError.DIRECTORY_DOES_NOT_EXIST
-#             )
-#         kitFile = directory.joinpath(KIT_FILENAME)
-#         if not kitFile.exists():
-#             return DeleteLocalKitErrorNode(
-#                 error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT
-#             )
-#         kitFileFullPath = kitFile.resolve()
-#         disposed_engines[kitFileFullPath] = True
-#         try:
-#             remove(kitFileFullPath)
-#         except PermissionError:
-#             return DeleteLocalKitErrorNode(
-#                 error=DeleteLocalKitError.NO_PERMISSION_TO_DELETE_KIT
-#             )
-#         return DeleteLocalKitErrorNode(error=DeleteLocalKitError.NO_ERROR)
+    def mutate(self, info, directory, kitInput, mode):
+        directory = Path(directory)
+        if not directory.exists():
+            return UpdateLocalKitMutation(
+                error=UpdateLocalKitErrorNode(
+                    code=UpdateLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+                )
+            )
+        if not directory.is_dir():
+            return UpdateLocalKitMutation(
+                error=UpdateLocalKitErrorNode(
+                    code=UpdateLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+                )
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return UpdateLocalKitMutation(
+                error=UpdateLocalKitErrorNode(
+                    code=UpdateLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+                )
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            kit = addKitInputToSession(session, kitInput, mode == UpdateMode.REPLACE)
+        except SpecificationError as e:
+            session.rollback()
+            return UpdateLocalKitMutation(
+                error=UpdateLocalKitErrorNode(
+                    code=UpdateLocalKitErrorCode.KIT_INPUT_IS_INVALID, message=str(e)
+                )
+            )
+        except ArtifactAlreadyExists as e:
+            session.rollback()
+            return UpdateLocalKitMutation(
+                error=UpdateLocalKitErrorNode(
+                    code=UpdateLocalKitErrorCode.ARTIFACT_ALREADY_EXISTS,
+                    message=str(e),
+                )
+            )
+        session.commit()
+        return UpdateLocalKitMutation(kit=kit, error=None)
 
 
-# class AddLocalError(graphene.Enum):
-#     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
-#     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
-#     DIRECTORY_NO_PERMISSION = "directory_no_permission"
-#     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
-#     ALREADY_EXISTS = "already_exists"
+class DeleteLocalKitError(graphene.Enum):
+    NO_ERROR = "no_error"
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_DELETE_KIT = "no_permission_to_delete_kit"
 
 
-# class AddLocalTypeErrorNode(ObjectType):
-#     error = graphene.Field(AddLocalError, required=True)
+class DeleteLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+
+    error = DeleteLocalKitError()
+
+    def mutate(self, info, directory):
+        directory = Path(directory)
+        if not directory.exists():
+            return DeleteLocalKitError(
+                error=DeleteLocalKitError.DIRECTORY_DOES_NOT_EXIST
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return DeleteLocalKitError(error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT)
+        kitFileFullPath = kitFile.resolve()
+        disposed_engines[kitFileFullPath] = True
+        try:
+            remove(kitFileFullPath)
+        except PermissionError:
+            return DeleteLocalKitError(
+                error=DeleteLocalKitError.NO_PERMISSION_TO_DELETE_KIT
+            )
+        return DeleteLocalKitError(error=DeleteLocalKitError.NO_ERROR)
 
 
-# class AddLocalTypeMutationNodes(graphene.Union):
-#     class Meta:
-#         types = (TypeNode, AddLocalTypeErrorNode)
+class Query(ObjectType):
+    localScripts = graphene.List(ScriptNode, directory=NonNull(graphene.String))
+    localPrototypes = graphene.List(PrototypeNode, directory=NonNull(graphene.String))
+    localModifications = graphene.List(
+        ModificationNode, directory=NonNull(graphene.String)
+    )
+    localChoreographies = graphene.List(
+        ChoreographyNode, directory=NonNull(graphene.String)
+    )
+    localTransformations = graphene.List(
+        TransformationNode, directory=NonNull(graphene.String)
+    )
+    localSyntheses = graphene.List(SynthesisNode, directory=NonNull(graphene.String))
+    localTypes = graphene.List(TypeNode, directory=NonNull(graphene.String))
+    localFormations = graphene.List(FormationNode, directory=NonNull(graphene.String))
+    localArtifacts = graphene.List(ArtifactNode, directory=NonNull(graphene.String))
+    localKit = graphene.Field(KitNode, directory=NonNull(graphene.String))
 
+    def resolve_localScripts(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Script).all()
 
-# class AddLocalTypeMutation(graphene.Mutation):
-#     class Arguments:
-#         directory = NonNull(graphene.String)
-#         typeInput = TypeInput(required=True)
+    def resolve_localPrototypes(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Prototype).all()
 
-#     Output = TypeNode
+    def resolve_localModifications(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Modification).all()
 
-#     def mutate(self, info, directory, typeInput):
-#         directory = Path(directory)
-#         if not directory.exists():
-#             return AddLocalTypeErrorNode(error=AddLocalError.DIRECTORY_DOES_NOT_EXIST)
-#         if not directory.is_dir():
-#             return AddLocalTypeErrorNode(
-#                 error=AddLocalError.DIRECTORY_IS_NOT_A_DIRECTORY
-#             )
-#         kitFile = directory.joinpath(KIT_FILENAME)
-#         if not kitFile.exists():
-#             return AddLocalTypeErrorNode(error=AddLocalError.DIRECTORY_HAS_NO_KIT)
+    def resolve_localChoreographies(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Choreography).all()
 
-#         session = getLocalSession(directory)
-#         kit = session.query(Kit).first()
-#         type = addTypeInputToSession(session, typeInput)
-#         type.kit = kit
-#         session.commit()
-#         return type
+    def resolve_localTransformations(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Transformation).all()
+
+    def resolve_localSyntheses(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Synthesis).all()
+
+    def resolve_localTypes(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Type).all()
+
+    def resolve_localFormations(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return session.query(Formation).all()
+
+    def resolve_localArtifacts(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        artifacts = []
+        artifacts.extend(session.query(Prototype).all())
+        artifacts.extend(session.query(Modification).all())
+        artifacts.extend(session.query(Choreography).all())
+        artifacts.extend(session.query(Transformation).all())
+        artifacts.extend(session.query(Synthesis).all())
+        artifacts.extend(session.query(Type).all())
+        artifacts.extend(session.query(Formation).all())
+        artifacts.extend(session.query(Kit).all())
+        return artifacts
+
+    def resolve_localKit(self, info, directory: graphene.String):
+        session = getLocalSession(directory)
+        return getMainKit(session)
 
 
 class Mutation(ObjectType):
     createLocalKit = CreateLocalKitMutation.Field()
-    # updateLocalKitBase = UpdateLocalKitBaseMutation.Field()
-    # deleteLocalKit = DeleteLocalKitMutation.Field()
-    # addLocalType = AddLocalTypeMutation.Field()
+    updateLocalKit = UpdateLocalKitMutation.Field()
+    deleteLocalKit = DeleteLocalKitMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)
