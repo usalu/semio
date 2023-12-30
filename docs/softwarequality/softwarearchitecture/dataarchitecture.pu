@@ -1,0 +1,392 @@
+@startuml "data architecture"
+skinparam linetype ortho
+
+interface Artifact {
+    *name : string
+    explanation : string
+    symbol : string
+    ..
+    *created : datetime
+    *modified : datetime
+}
+
+interface Automatable {
+    script : Script
+}
+
+entity Kit {
+    *id : int <<generated>> 
+    ..
+    url : string
+}
+
+entity Script {
+    *id : int <<generated>> 
+    ..
+    url : string
+    ..
+    kit_id : int <<FK>>
+}
+
+entity PrototypeScript {
+}
+
+entity ModificationScript {
+}
+
+entity ChoreographyScript {
+}
+
+entity TransformationScript {
+}
+
+entity SynthesisScript {
+}
+
+abstract Generation{
+    *id : int <<generated>>
+    ..
+    *hash : string
+}
+
+entity PrototypeGeneration {
+    *prototype_id : int <<FK>>
+}
+
+abstract Plan {
+    *id : int <<generated>>
+    ..
+}
+
+entity PrototypePlan {
+    *prototype_generation_id : int <<FK>>
+}
+
+entity Prototype {
+}
+
+entity Modification {
+}
+
+entity Choreography {
+}
+
+entity Transformation {
+}
+
+entity Synthesis {
+}
+
+entity Type {
+    *id : int <<generated>>
+    ..
+    prototype_id : int <<FK>>
+    ..
+    modification_script_id : int <<FK>>
+    modified_type_id : int <<FK>>
+}
+
+entity Port {
+    *id : int <<generated>>
+    ..
+    type_id : int <<FK>>
+}
+
+abstract Property {
+    *id : int <<generated>>
+    ..
+    *name : string
+    *datatype : string
+    *value : string
+    ..
+    type_id : int <<FK>>
+    ..
+    port_id : int <<FK>>
+    ..
+    list_id : int <<FK>>
+    list_index : int
+    ..
+    set_id : int <<FK>>
+    ..
+    dictionary_id : int <<FK>>
+    dictionary_key : string
+    ..
+    tree_id : int <<FK>>
+    tree_parent_id : int <<FK>>
+    --
+    equals(property) : boolean
+}
+note right of Property
+    equals() compares the name, datatype and value.
+
+    Owner is either a port, a type or a container property.
+end note
+
+abstract ScalarProperty {
+}
+
+abstract NumberProperty {
+    add(number) : number
+    subtract(number) : number
+    multiply(number) : number
+    divide(number) : number
+}
+
+entity DecimalProperty {
+}
+
+entity IntegerProperty {
+}
+
+entity NaturalProperty {
+}
+
+abstract LogicProperty {
+    not() : LogicProperty
+    and(property) : LogicProperty
+    or(property) : LogicProperty
+}
+
+entity BooleanProperty {
+}
+
+entity FuzzyProperty {
+}
+
+abstract TextProperty {
+    fuzzy_compare(text) : number
+}
+
+entity DescriptionProperty {
+}
+
+entity ChoiceProperty {
+}
+
+abstract GeometryProperty {
+    transform(matrix) : Geometry
+}
+
+entity PointProperty {
+}
+
+entity VectorProperty {
+}
+
+entity PlaneProperty {
+}
+
+entity LineProperty {
+}
+
+entity CurveProperty {
+}
+
+entity SurfaceProperty {
+}
+
+entity BrepProperty {
+}
+
+entity MeshProperty {
+}
+
+abstract ContainerProperty {
+    contains(property) : boolean
+    size() : int
+    is_empty() : boolean
+    clear() : void
+}
+note left of ContainerProperty
+    A container has the hash of its items as its value.
+end note
+
+
+entity ListProperty {
+    insert(index, property) : void
+    remove(index) : void
+    get(index) : Property
+}
+
+entity SetProperty {
+    put(property) : void
+    take(name) : Property
+}
+
+entity DictionaryProperty {
+}
+
+entity TreeProperty {
+}
+
+abstract FileProperty {
+    save() : string
+}
+
+abstract ImageProperty {
+    invert() : Image
+}
+
+entity PngProperty {
+}
+
+entity JpgProperty {
+}
+
+abstract ThreeDProperty {
+    transform(matrix) : ThreeD
+}
+
+entity StlProperty {
+}
+
+entity ObjProperty {
+}
+
+entity GltfProperty {
+}
+
+entity GlbProperty {
+}
+
+entity RhinoProperty {
+}
+
+entity IfcProperty {
+}
+
+entity SpeckleProperty {
+}
+
+entity Formation {
+    *id : int <<generated>>
+    ..
+    choreography_id : int <<FK>>
+    ..
+    transformation_id : int <<FK>>
+    transformed_formation_id : int <<FK>>
+}
+
+' --
+
+Kit ||--o{ Script
+Kit ||--o{ Type
+Kit ||--o{ Formation
+
+' --
+
+Script <|-- PrototypeScript
+Script <|-- ModificationScript
+Script <|-- ChoreographyScript
+Script <|-- TransformationScript
+Script <|-- SynthesisScript
+
+' --
+
+Type ||--o{ Port
+Type ||--o{ Property
+Type }o--o| Prototype
+Type ||--o| PrototypeGeneration
+Type ||--o| ModificationGeneration
+Type <-- Type : modified_type_id
+
+' --
+
+Formation ||--o{ Piece
+Formation ||--o{ Attraction
+
+
+Port ||--o{ Property
+
+' --
+
+Property <|-- ScalarProperty
+Property <|-- ContainerProperty
+
+' --
+
+ScalarProperty <|-- NumberProperty
+ScalarProperty <|-- TextProperty
+ScalarProperty <|-- GeometryProperty
+ScalarProperty <|-- FileProperty
+
+ContainerProperty ||--o{ Property
+ContainerProperty <|-- ListProperty
+ContainerProperty <|-- SetProperty
+ContainerProperty <|-- DictionaryProperty
+ContainerProperty <|-- TreeProperty
+
+' --
+
+NumberProperty <|-- DecimalProperty
+NumberProperty <|-- IntegerProperty
+NumberProperty <|-- NaturalProperty
+NumberProperty <|-- BooleanProperty
+NumberProperty <|-- FuzzyProperty
+
+TextProperty <|-- DescriptionProperty
+TextProperty <|-- ChoiceProperty
+
+GeometryProperty <|-- PointProperty
+GeometryProperty <|-- VectorProperty
+GeometryProperty <|-- PlaneProperty
+GeometryProperty <|-- LineProperty
+GeometryProperty <|-- CurveProperty
+GeometryProperty <|-- SurfaceProperty
+GeometryProperty <|-- BrepProperty
+GeometryProperty <|-- MeshProperty
+
+FileProperty <|-- ImageProperty
+FileProperty <|-- ThreeDProperty
+
+' --
+
+ImageProperty <|-- PngProperty
+ImageProperty <|-- JpgProperty
+
+ThreeDProperty <|-- StlProperty
+ThreeDProperty <|-- ObjProperty
+ThreeDProperty <|-- GltfProperty
+ThreeDProperty <|-- GlbProperty
+ThreeDProperty <|-- RhinoProperty
+ThreeDProperty <|-- IfcProperty
+ThreeDProperty <|-- SpeckleProperty
+
+' --
+
+Generation <|-- PrototypeGeneration
+Generation <|-- ModificationGeneration
+Generation <|-- ChoreographyGeneration
+Generation <|-- TransformationGeneration
+Generation <|-- SynthesisGeneration
+
+Plan ||--o{ Property
+Plan <|-- PrototypePlan
+Plan <|-- ModificationPlan
+Plan <|-- ChoreographyPlan
+Plan <|-- TransformationPlan
+Plan <|-- SynthesisPlan
+
+PrototypeGeneration ||--|| PrototypePlan
+ModificationGeneration ||--|| ModificationPlan
+ChoreographyGeneration ||--|| ChoreographyPlan
+TransformationGeneration ||--|| TransformationPlan
+SynthesisGeneration ||--|| SynthesisPlan
+
+' --
+
+
+' --
+
+Artifact <|-- Kit
+Artifact <|-- Script
+Artifact <|-- Type
+Artifact <|-- Formation
+
+Automatable <|-- Prototype
+Automatable <|-- Modification
+Automatable <|-- Choreography
+Automatable <|-- Transformation
+Automatable <|-- Synthesis
+
+@enduml
