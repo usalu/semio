@@ -1,0 +1,171 @@
+{
+    "directory": "../examples/metabolistic",
+    "kit": {
+        "name": "metabolistic",
+        "explanation": "A metabolism clone",
+        "symbol": "🫀",
+        "prototypes": [
+            {
+                "name": "capsule",
+                "explanation": "A capsule with one door.",
+                "symbol": "🚪",
+                "scripts": [
+                    {
+                        "name": "box capsule",
+                        "explanation": "A box capsule.",
+                        "symbol": "📦",
+                        "url": "capsules/box_capsule.gh"
+                    },
+                    {
+                        "name": "boulee newton capsule",
+                        "explanation": "A round capsule.",
+                        "symbol": "💊",
+                        "url": "capsules/bouleenewtoncapsule.dyn"
+                    }
+                ],
+                "schema": {
+                    "properties": [
+                        {
+                            "name": "length",
+                            "explanation": "The length of the capsule.",
+                            "symbol": "📏",
+                            "datatype": "decimal"
+                        },
+                        {
+                            "name": "width",
+                            "explanation": "The width of the capsule.",
+                            "symbol": "↔️",
+                            "datatype": "decimal"
+                        },
+                        {
+                            "name": "height",
+                            "explanation": "The height of the capsule.",
+                            "symbol": "↕️",
+                            "datatype": "decimal"
+                        },
+                        {
+                            "name": "door",
+                            "explanation": "The door position of the capsule.",
+                            "symbol": "🚪",
+                            "datatype": "choice",
+                            "choices": [
+                                {
+                                    "name": "behind",
+                                    "symbol": "⬇️",
+                                    "default": true
+                                },
+                                {
+                                    "name": "right",
+                                    "symbol": "➡️"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "window",
+                            "explanation": "The window position of the capsule.",
+                            "symbol": "🪟",
+                            "datatype": "choice",
+                            "choices": [
+                                {
+                                    "name": "front",
+                                    "symbol": "⬆️",
+                                    "default": true
+                                },
+                                {
+                                    "name": "left",
+                                    "symbol": "⬅️"
+                                }
+                            ]   
+                        }
+                    ]
+                }
+            }
+        ],
+        "choreographies": [
+            {
+                "name": "capsule tower",
+                "explanation": "A tower of capsules.",
+                "symbol": "🗼",
+                "scripts": [
+                    {
+                        "name": "kurokawa capsule tower",
+                        "explanation": "A tower of capsules from Kishō Kurokawa.",
+                        "symbol": "👨",
+                        "url": "towers/kurokawa_capsule_tower.py"
+                    }
+                ],
+                "schema": {}
+            }
+        ],
+        "transformations": [
+            {
+                "name": "bridge",
+                "explanation": "Replace two capsules with a bridge.",
+                "symbol": "🌉",
+                "scripts": [
+                    {
+                        "url": "towers/bridges/bridge.cs"
+                    }
+                ],
+                "schema": {}
+            }
+        ],
+        "types": [
+            {
+                "name": "default box capsule",
+                "explanation": "The default box capsule.",
+                "symbol": "📦()",
+                "prototype": {
+                    "name": "capsule",
+                    "script": {
+                        "name": "box capsule",
+                        "plan": {
+                            "properties": [
+                                {
+                                    "name": "length",
+                                    "datatype": "decimal",
+                                    "value": 4.2
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "name": "special capsule",
+                "explanation": "A special capsule that is partially handcrafted.",
+                "prototype": {
+                    "name": "capsule"
+                }
+            }
+        ],
+        "formations": [
+            {
+                "name": "nakagin capsule tower",
+                "pieces": [
+                    {
+                        "transientId": "a",
+                        "type": {
+                            "name": "default capsule"
+                        }
+                    }
+                ],
+                "scheme": {},
+                "choreography": {
+                    "name": "capsule tower",
+                    "script": {
+                        "name": "capsule tower",
+                        "plan": {
+                            "properties": [
+                                {
+                                    "name": "height",
+                                    "value": 6.0
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
