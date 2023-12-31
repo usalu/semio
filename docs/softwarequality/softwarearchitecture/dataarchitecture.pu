@@ -80,7 +80,7 @@ entity Synthesis {
 entity Type {
     *id : int <<generated>>
     ..
-    prototype_id : int <<FK>>
+    *prototype_id : int <<FK>>
     ..
     modification_script_id : int <<FK>>
     modified_type_id : int <<FK>>

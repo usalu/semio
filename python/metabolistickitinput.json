@@ -23,61 +23,66 @@
                         "url": "capsules/bouleenewtoncapsule.dyn"
                     }
                 ],
-                "schema": {
-                    "properties": [
-                        {
-                            "name": "length",
-                            "explanation": "The length of the capsule.",
-                            "symbol": "📏",
-                            "datatype": "decimal"
-                        },
-                        {
-                            "name": "width",
-                            "explanation": "The width of the capsule.",
-                            "symbol": "↔️",
-                            "datatype": "decimal"
-                        },
-                        {
-                            "name": "height",
-                            "explanation": "The height of the capsule.",
-                            "symbol": "↕️",
-                            "datatype": "decimal"
-                        },
-                        {
-                            "name": "door",
-                            "explanation": "The door position of the capsule.",
-                            "symbol": "🚪",
-                            "datatype": "choice",
-                            "choices": [
-                                {
-                                    "name": "behind",
-                                    "symbol": "⬇️",
-                                    "default": true
-                                },
-                                {
-                                    "name": "right",
-                                    "symbol": "➡️"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "window",
-                            "explanation": "The window position of the capsule.",
-                            "symbol": "🪟",
-                            "datatype": "choice",
-                            "choices": [
-                                {
-                                    "name": "front",
-                                    "symbol": "⬆️",
-                                    "default": true
-                                },
-                                {
-                                    "name": "left",
-                                    "symbol": "⬅️"
-                                }
-                            ]   
-                        }
-                    ]
+                "script": {
+                    "schema": {
+                        "properties": [
+                            {
+                                "name": "length",
+                                "explanation": "The length of the capsule.",
+                                "symbol": "📏",
+                                "datatype": "decimal"
+                            },
+                            {
+                                "name": "width",
+                                "explanation": "The width of the capsule.",
+                                "symbol": "↔️",
+                                "datatype": "decimal"
+                            },
+                            {
+                                "name": "height",
+                                "explanation": "The height of the capsule.",
+                                "symbol": "↕️",
+                                "datatype": "decimal"
+                            },
+                            {
+                                "name": "door",
+                                "explanation": "The door position of the capsule.",
+                                "symbol": "🚪",
+                                "datatype": "choice",
+                                "choices": [
+                                    {
+                                        "name": "behind",
+                                        "symbol": "⬇️",
+                                        "default": true
+                                    },
+                                    {
+                                        "name": "right",
+                                        "symbol": "➡️"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "window",
+                                "explanation": "The window position of the capsule.",
+                                "symbol": "🪟",
+                                "datatype": "choice",
+                                "choices": [
+                                    {
+                                        "name": "front",
+                                        "symbol": "⬆️",
+                                        "default": true
+                                    },
+                                    {
+                                        "name": "left",
+                                        "symbol": "⬅️"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "ports": {
+                    "schema":{}
                 }
             }
         ],
@@ -104,39 +109,78 @@
                 "symbol": "🌉",
                 "scripts": [
                     {
+                        "name": "bridge",
                         "url": "towers/bridges/bridge.cs"
                     }
                 ],
-                "schema": {}
+                "schema": null
             }
         ],
         "types": [
+            {
+                "name": "cuboid building core shaft",
+                "explanation": "A cuboid building core shaft.",
+                "symbol": "🛗",
+                "prototype": {
+                    "name": "building core shaft"
+                },
+                "modifications": []
+            },
             {
                 "name": "default box capsule",
                 "explanation": "The default box capsule.",
                 "symbol": "📦()",
                 "prototype": {
-                    "name": "capsule",
                     "script": {
                         "name": "box capsule",
-                        "plan": {
-                            "properties": [
-                                {
-                                    "name": "length",
-                                    "datatype": "decimal",
-                                    "value": 4.2
-                                }
-                            ]
-                        }
+                        "plan": {}
                     }
-                }
+                },
+                "modifications": []
             },
             {
-                "name": "special capsule",
-                "explanation": "A special capsule that is partially handcrafted.",
+                "name": "mirrored default box capsule",
+                "explanation": "The mirrored default box capsule.",
+                "symbol": "📦_🪞",
                 "prototype": {
-                    "name": "capsule"
-                }
+                    "script": {
+                        "name": "box capsule",
+                        "plan": {}
+                    }
+                },
+                "modifications": [
+                    {
+                        "name": "mirror",
+                        "script": {
+                            "name": "mirror",
+                            "plan": {
+                                "properties": [
+                                    {
+                                        "name": "plane",
+                                        "datatype": "plane",
+                                        "value": {
+                                            "origin": {
+                                                "x": 0.0,
+                                                "y": 0.0,
+                                                "z": 0.0
+                                            },
+                                            "xAxis": {
+                                                "x": 0.0,
+                                                "y": 1.0,
+                                                "z": 0.0
+                                            },
+                                            "yAxis": {
+                                                "x": 0.0,
+                                                "y": 0.0,
+                                                "z": 1.0
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
             }
         ],
         "formations": [
@@ -146,7 +190,34 @@
                     {
                         "transientId": "a",
                         "type": {
-                            "name": "default capsule"
+                            "name": "default box capsule"
+                        }
+                    },
+                    {
+                        "transientId": "b",
+                        "type": {
+                            "name": "mirrored default box capsule"
+                        }
+                    }
+                ],
+                "attractions": [
+                    {
+                        "attractingPiece": {
+                            "transientId": "a",
+                            "type": {
+                                "port": {
+                                    "properties": [
+                                        {
+                                            "name": "door",
+                                            "datatype": "boolean",
+                                            "value": true
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "attractedPiece": {
+                            "transientId": "b"
                         }
                     }
                 ],
