@@ -175,11 +175,16 @@ class Property(Base):
     type: Mapped[Optional["Type"]] = relationship("Type", back_populates="properties")
     port_id: Mapped[Optional[int]] = mapped_column(ForeignKey("port.id"))
     port: Mapped[Optional["Port"]] = relationship("Port", back_populates="properties")
-    list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("property.id"))
+    list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("list_property.id"))
     list_index: Mapped[Optional[int]] = mapped_column(
         Integer(), CheckConstraint("list_index>=0")
     )
-    list = relationship("ListProperty", back_populates="properties", remote_side=[id])
+    list = relationship(
+        "ListProperty",
+        back_populates="properties",
+        # remote_side=[id],
+        foreign_keys=[list_id],
+    )
 
     __mapper_args__ = {"polymorphic_on": datatype, "polymorphic_abstract": True}
 
@@ -244,7 +249,7 @@ class Property(Base):
 
     @property
     def referenced_by(self) -> typing.List[Artifact]:
-        return [self.synthesis] if self.synthesis else []
+        return []
 
     @property
     def related_to(self) -> typing.List[Artifact]:
@@ -260,9 +265,10 @@ class NumberProperty(ScalarProperty):
 
 
 class DecimalProperty(NumberProperty):
-    # TODO: Remove nullable or enforce it in the database without
-    #  breaking the single table inheritance
-    decimal: Mapped[Optional[Numeric]] = mapped_column(Numeric())
+    __tablename__ = "decimal_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    decimal: Mapped[Numeric] = mapped_column(Numeric())
 
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.DECIMAL,
@@ -273,7 +279,11 @@ class DecimalProperty(NumberProperty):
 
 
 class IntegerProperty(NumberProperty):
-    integer: Mapped[Optional[int]] = mapped_column(Integer())
+    __tablename__ = "integer_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    integer: Mapped[int] = mapped_column(Integer())
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.INTEGER,
     }
@@ -283,13 +293,13 @@ class IntegerProperty(NumberProperty):
 
 
 class NaturalProperty(NumberProperty):
-    natural: Mapped[Optional[int]] = mapped_column(
-        Integer(), CheckConstraint("natural>=0")
-    )
+    __tablename__ = "natural_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    natural: Mapped[int] = mapped_column(Integer(), CheckConstraint("natural>=0"))
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.NATURAL,
     }
-    # constraint that value is positive
 
     def __repr__(self) -> str:
         return f"Natural(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
@@ -300,7 +310,11 @@ class LogicalProperty(ScalarProperty):
 
 
 class BooleanProperty(LogicalProperty):
-    boolean: Mapped[Optional[bool]] = mapped_column(Integer())
+    __tablename__ = "boolean_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    boolean: Mapped[bool] = mapped_column(Integer())
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.BOOLEAN,
     }
@@ -314,7 +328,11 @@ class TextProperty(ScalarProperty):
 
 
 class DescriptionProperty(TextProperty):
-    description: Mapped[Optional[str]] = mapped_column(Text())
+    __tablename__ = "description_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    description: Mapped[str] = mapped_column(Text())
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.DESCRIPTION,
     }
@@ -324,7 +342,11 @@ class DescriptionProperty(TextProperty):
 
 
 class ChoiceProperty(TextProperty):
-    choice: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    __tablename__ = "choice_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    choice: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.CHOICE,
     }
@@ -338,7 +360,11 @@ class GeometryProperty(ScalarProperty):
 
 
 class BrepProperty(GeometryProperty):
-    brep: Mapped[Optional[Brep]] = mapped_column(Text())
+    __tablename__ = "brep_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    brep: Mapped[Brep] = mapped_column(Text())
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.BREP,
     }
@@ -352,13 +378,19 @@ class ContainerProperty(Property):
 
 
 class ListProperty(ContainerProperty):
-    properties: Mapped[Optional[typing.List[Property]]] = relationship(
+    __tablename__ = "list_property"
+
+    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
+    properties: Mapped[typing.List[Property]] = relationship(
         Property,
         back_populates="list",
         cascade="all, delete-orphan",
+        foreign_keys=[Property.list_id],
     )
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.LIST,
+        "inherit_condition": (id == Property.id),
     }
 
     def __repr__(self) -> str:
@@ -525,7 +557,7 @@ class Piece(Base):
 
     @property
     def transient(self) -> TransientId:
-        return TransientId(str(self.id))
+        return TransientId(id=str(self.id))
 
     @property
     def parent(self) -> Artifact:
@@ -613,6 +645,13 @@ class Attraction(Base):
     )
     formation: Mapped["Formation"] = relationship(
         "Formation", back_populates="attractions"
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "attracting_piece_id != attracted_piece_id",
+            name="attracting_and_attracted_piece_not_equal_constraint",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -1017,7 +1056,7 @@ class ListPropertyNode(SQLAlchemyObjectType):
     # TODO: Make type JSON and add a recursive resolver
     # This way queries can be infinitely nested despite
     # the fact that GraphQL does not support recursive queries
-    list = graphene.List(lambda: PropertyNode)
+    list = NonNull(graphene.List(lambda: PropertyNode))
 
     @staticmethod
     def resolve_list(property: ListProperty, info):

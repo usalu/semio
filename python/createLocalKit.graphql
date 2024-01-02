@@ -8,31 +8,106 @@ query LocalKit($directory: String!) {
       types {
         name
         properties {
-            name
-            ... on DecimalPropertyNode{
-            	decimal
-          	}
-            ... on IntegerPropertyNode{
-              integer
+          name
+          ... on DecimalPropertyNode {
+            decimal
+          }
+          ... on IntegerPropertyNode {
+            integer
+          }
+          ... on NaturalPropertyNode {
+            natural
+          }
+          ... on BooleanPropertyNode {
+            boolean
+          }
+          ... on DescriptionPropertyNode {
+            description
+          }
+          ... on ChoicePropertyNode {
+            choice
+          }
+          ... on BrepPropertyNode {
+            brep
+          }
+          ... on ListPropertyNode {
+            list {
+              name
+              ... on DecimalPropertyNode {
+                decimal
+              }
+              ... on IntegerPropertyNode {
+                integer
+              }
+              ... on NaturalPropertyNode {
+                natural
+              }
+              ... on BooleanPropertyNode {
+                boolean
+              }
+              ... on DescriptionPropertyNode {
+                description
+              }
+              ... on ChoicePropertyNode {
+                choice
+              }
+              ... on BrepPropertyNode {
+                brep
+              }
+              ... on ListPropertyNode {
+                list {
+                  name
+                  ... on DecimalPropertyNode {
+                    decimal
+                  }
+                  ... on IntegerPropertyNode {
+                    integer
+                  }
+                  ... on NaturalPropertyNode {
+                    natural
+                  }
+                  ... on BooleanPropertyNode {
+                    boolean
+                  }
+                  ... on DescriptionPropertyNode {
+                    description
+                  }
+                  ... on ChoicePropertyNode {
+                    choice
+                  }
+                  ... on BrepPropertyNode {
+                    brep
+                  }
+                  ... on ListPropertyNode {
+                    list {
+                      name
+                      ... on DecimalPropertyNode {
+                        decimal
+                      }
+                      ... on IntegerPropertyNode {
+                        integer
+                      }
+                      ... on NaturalPropertyNode {
+                        natural
+                      }
+                      ... on BooleanPropertyNode {
+                        boolean
+                      }
+                      ... on DescriptionPropertyNode {
+                        description
+                      }
+                      ... on ChoicePropertyNode {
+                        choice
+                      }
+                      ... on BrepPropertyNode {
+                        brep
+                      }
+                    }
+                  }
+                }
+              }
             }
-            ... on NaturalPropertyNode{
-              natural
-            }
-            ... on BooleanPropertyNode{
-              boolean
-            }
-            ... on DescriptionPropertyNode{
-              description
-            }
-            ... on ChoicePropertyNode{
-              choice
-            }
-            ... on BrepPropertyNode{
-              brep
-            }
-            ... on ListPropertyNode{
-              list
-            }
+          }
         }
         ports {
           plane {
@@ -54,29 +129,104 @@ query LocalKit($directory: String!) {
           }
           properties {
             name
-          	... on DecimalPropertyNode{
-            	decimal
-          	}
-            ... on IntegerPropertyNode{
+            ... on DecimalPropertyNode {
+              decimal
+            }
+            ... on IntegerPropertyNode {
               integer
             }
-            ... on NaturalPropertyNode{
+            ... on NaturalPropertyNode {
               natural
             }
-            ... on BooleanPropertyNode{
+            ... on BooleanPropertyNode {
               boolean
             }
-            ... on DescriptionPropertyNode{
+            ... on DescriptionPropertyNode {
               description
             }
-            ... on ChoicePropertyNode{
+            ... on ChoicePropertyNode {
               choice
             }
-            ... on BrepPropertyNode{
+            ... on BrepPropertyNode {
               brep
             }
-            ... on ListPropertyNode{
-              list
+            ... on ListPropertyNode {
+              list {
+                name
+                ... on DecimalPropertyNode {
+                  decimal
+                }
+                ... on IntegerPropertyNode {
+                  integer
+                }
+                ... on NaturalPropertyNode {
+                  natural
+                }
+                ... on BooleanPropertyNode {
+                  boolean
+                }
+                ... on DescriptionPropertyNode {
+                  description
+                }
+                ... on ChoicePropertyNode {
+                  choice
+                }
+                ... on BrepPropertyNode {
+                  brep
+                }
+                ... on ListPropertyNode {
+                  list {
+                    name
+                    ... on DecimalPropertyNode {
+                      decimal
+                    }
+                    ... on IntegerPropertyNode {
+                      integer
+                    }
+                    ... on NaturalPropertyNode {
+                      natural
+                    }
+                    ... on BooleanPropertyNode {
+                      boolean
+                    }
+                    ... on DescriptionPropertyNode {
+                      description
+                    }
+                    ... on ChoicePropertyNode {
+                      choice
+                    }
+                    ... on BrepPropertyNode {
+                      brep
+                    }
+                    ... on ListPropertyNode {
+                      list {
+                        name
+                        ... on DecimalPropertyNode {
+                          decimal
+                        }
+                        ... on IntegerPropertyNode {
+                          integer
+                        }
+                        ... on NaturalPropertyNode {
+                          natural
+                        }
+                        ... on BooleanPropertyNode {
+                          boolean
+                        }
+                        ... on DescriptionPropertyNode {
+                          description
+                        }
+                        ... on ChoicePropertyNode {
+                          choice
+                        }
+                        ... on BrepPropertyNode {
+                          brep
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -86,77 +236,243 @@ query LocalKit($directory: String!) {
         explanation
         symbol
         pieces {
-          transientId
+          transient {
+            id
+          }
           type {
             name
           }
         }
         attractions {
-            attracting {
-                transientId
-                type {
-                    properties {
-                        ... on DecimalPropertyNode{
-                            decimal
-                        }
-                        ... on IntegerPropertyNode{
-                            integer
-                        }
-                        ... on NaturalPropertyNode{
-                            natural
-                        }
-                        ... on BooleanPropertyNode{
-                            boolean
-                        }
-                        ... on DescriptionPropertyNode{
-                            description
-                        }
-                        ... on ChoicePropertyNode{
-                            choice
-                        }
-                        ... on BrepPropertyNode{
-                            brep
-                        }
-                        ... on ListPropertyNode{
-                            list
-                        }
+          attracting {
+            piece {
+              transient {
+                id
+              }
+              type {
+                port {
+                  properties {
+                    name
+                    ... on DecimalPropertyNode {
+                      decimal
                     }
-                }
-            }
-            attracted {
-                transientId
-                type {
-                    properties {
-                        ... on DecimalPropertyNode{
-                            decimal
-                        }
-                        ... on IntegerPropertyNode{
-                            integer
-                        }
-                        ... on NaturalPropertyNode{
-                            natural
-                        }
-                        ... on BooleanPropertyNode{
-                            boolean
-                        }
-                        ... on DescriptionPropertyNode{
-                            description
-                        }
-                        ... on ChoicePropertyNode{
-                            choice
-                        }
-                        ... on BrepPropertyNode{
-                            brep
-                        }
-                        ... on ListPropertyNode{
-                            list
-                        }
+                    ... on IntegerPropertyNode {
+                      integer
                     }
+                    ... on NaturalPropertyNode {
+                      natural
+                    }
+                    ... on BooleanPropertyNode {
+                      boolean
+                    }
+                    ... on DescriptionPropertyNode {
+                      description
+                    }
+                    ... on ChoicePropertyNode {
+                      choice
+                    }
+                    ... on BrepPropertyNode {
+                      brep
+                    }
+                    ... on ListPropertyNode {
+                      list {
+                        name
+                        ... on DecimalPropertyNode {
+                          decimal
+                        }
+                        ... on IntegerPropertyNode {
+                          integer
+                        }
+                        ... on NaturalPropertyNode {
+                          natural
+                        }
+                        ... on BooleanPropertyNode {
+                          boolean
+                        }
+                        ... on DescriptionPropertyNode {
+                          description
+                        }
+                        ... on ChoicePropertyNode {
+                          choice
+                        }
+                        ... on BrepPropertyNode {
+                          brep
+                        }
+                        ... on ListPropertyNode {
+                          list {
+                            name
+                            ... on DecimalPropertyNode {
+                              decimal
+                            }
+                            ... on IntegerPropertyNode {
+                              integer
+                            }
+                            ... on NaturalPropertyNode {
+                              natural
+                            }
+                            ... on BooleanPropertyNode {
+                              boolean
+                            }
+                            ... on DescriptionPropertyNode {
+                              description
+                            }
+                            ... on ChoicePropertyNode {
+                              choice
+                            }
+                            ... on BrepPropertyNode {
+                              brep
+                            }
+                            ... on ListPropertyNode {
+                              list {
+                                name
+                                ... on DecimalPropertyNode {
+                                  decimal
+                                }
+                                ... on IntegerPropertyNode {
+                                  integer
+                                }
+                                ... on NaturalPropertyNode {
+                                  natural
+                                }
+                                ... on BooleanPropertyNode {
+                                  boolean
+                                }
+                                ... on DescriptionPropertyNode {
+                                  description
+                                }
+                                ... on ChoicePropertyNode {
+                                  choice
+                                }
+                                ... on BrepPropertyNode {
+                                  brep
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
+              }
             }
+          }
+          attracted {
+            piece {
+              transient {
+                id
+              }
+              type {
+                port {
+                  properties {
+                    name
+                    ... on DecimalPropertyNode {
+                      decimal
+                    }
+                    ... on IntegerPropertyNode {
+                      integer
+                    }
+                    ... on NaturalPropertyNode {
+                      natural
+                    }
+                    ... on BooleanPropertyNode {
+                      boolean
+                    }
+                    ... on DescriptionPropertyNode {
+                      description
+                    }
+                    ... on ChoicePropertyNode {
+                      choice
+                    }
+                    ... on BrepPropertyNode {
+                      brep
+                    }
+                    ... on ListPropertyNode {
+                      list {
+                        name
+                        ... on DecimalPropertyNode {
+                          decimal
+                        }
+                        ... on IntegerPropertyNode {
+                          integer
+                        }
+                        ... on NaturalPropertyNode {
+                          natural
+                        }
+                        ... on BooleanPropertyNode {
+                          boolean
+                        }
+                        ... on DescriptionPropertyNode {
+                          description
+                        }
+                        ... on ChoicePropertyNode {
+                          choice
+                        }
+                        ... on BrepPropertyNode {
+                          brep
+                        }
+                        ... on ListPropertyNode {
+                          list {
+                            name
+                            ... on DecimalPropertyNode {
+                              decimal
+                            }
+                            ... on IntegerPropertyNode {
+                              integer
+                            }
+                            ... on NaturalPropertyNode {
+                              natural
+                            }
+                            ... on BooleanPropertyNode {
+                              boolean
+                            }
+                            ... on DescriptionPropertyNode {
+                              description
+                            }
+                            ... on ChoicePropertyNode {
+                              choice
+                            }
+                            ... on BrepPropertyNode {
+                              brep
+                            }
+                            ... on ListPropertyNode {
+                              list {
+                                name
+                                ... on DecimalPropertyNode {
+                                  decimal
+                                }
+                                ... on IntegerPropertyNode {
+                                  integer
+                                }
+                                ... on NaturalPropertyNode {
+                                  natural
+                                }
+                                ... on BooleanPropertyNode {
+                                  boolean
+                                }
+                                ... on DescriptionPropertyNode {
+                                  description
+                                }
+                                ... on ChoicePropertyNode {
+                                  choice
+                                }
+                                ... on BrepPropertyNode {
+                                  brep
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
-    error 
+    error
   }
 }
