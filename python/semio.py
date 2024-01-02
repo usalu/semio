@@ -140,9 +140,6 @@ class Brep(BaseModel):
     pass
 
 
-# SQLAlchemy
-
-
 class Base(DeclarativeBase):
     pass
 
@@ -500,6 +497,10 @@ class Type(Base):
         return [self.parent] + self.children + self.references + self.referenced_by
 
 
+class TransientId(BaseModel):
+    id: str
+
+
 class Piece(Base):
     __tablename__ = "piece"
 
@@ -523,8 +524,8 @@ class Piece(Base):
         return f"Piece(id={self.id!r}, formation_id={self.formation_id!r})"
 
     @property
-    def transient_id(self) -> str:
-        return str(self.id)
+    def transient(self) -> TransientId:
+        return TransientId(str(self.id))
 
     @property
     def parent(self) -> Artifact:
@@ -547,12 +548,33 @@ class Piece(Base):
         return [self.parent] + self.children + self.references + self.referenced_by
 
 
+class PortTypePieceSide(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    properties: typing.List[Property]
+
+
+class TypePieceSide(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    port: PortTypePieceSide
+
+
+class PieceSide(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    transient: TransientId
+    type: TypePieceSide
+
+
 class Side(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    piece: Piece
-    port: Port
+    piece: PieceSide
 
 
 class Attraction(Base):
@@ -597,12 +619,30 @@ class Attraction(Base):
         return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
 
     @property
-    def attracting_side(self) -> Side:
-        return Side(piece=self.attracting_piece, port=self.attracting_piece_type_port)
+    def attracting(self) -> Side:
+        return Side(
+            piece=PieceSide(
+                transient=self.attracting_piece.transient,
+                type=TypePieceSide(
+                    port=PortTypePieceSide(
+                        properties=self.attracting_piece_type_port.properties
+                    )
+                ),
+            )
+        )
 
     @property
-    def attracted_side(self) -> Side:
-        return Side(piece=self.attracted_piece, port=self.attracted_piece_type_port)
+    def attracted(self) -> Side:
+        return Side(
+            piece=PieceSide(
+                transient=self.attracted_piece.transient,
+                type=TypePieceSide(
+                    port=PortTypePieceSide(
+                        properties=self.attracted_piece_type_port.properties
+                    )
+                ),
+            )
+        )
 
     @property
     def parent(self) -> Artifact:
@@ -742,9 +782,6 @@ def getLocalSession(directory: String) -> Session:
     Base.metadata.create_all(engine)
     # Create instance of session factory
     return sessionmaker(bind=engine)()
-
-
-# Graphene
 
 
 class ArtifactNode(graphene.Interface):
@@ -1040,53 +1077,94 @@ class TypeNode(SQLAlchemyObjectType):
         )
 
 
+class TransientIdNode(PydanticObjectType):
+    class Meta:
+        model = TransientId
+
+
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
         exclude_fields = ("id", "type_id", "formation_id")
 
-    transient_id = graphene.String()
+    transient = graphene.Field(NonNull(TransientIdNode))
 
     @staticmethod
     def resolve_transient(piece: Piece, info):
         return piece.transient
 
 
-# class PieceSideNode(ObjectType):
+class PortTypePieceSideNode(PydanticObjectType):
+    class Meta:
+        model = PortTypePieceSide
+        exclude_fields = ("properties",)
+
+    properties = graphene.List(PropertyNode)
+
+    @staticmethod
+    def resolve_properties(root, info):
+        return root.properties
 
 
-# class SideNode(PydanticObjectType):
-# class Meta:
-# model = Side
-# exclude_fields = ("piece","port")
-#
-# piece = graphene.Field(NonNull(PieceSideNode))
+class TypePieceSideNode(PydanticObjectType):
+    class Meta:
+        model = TypePieceSide
+        exclude_fields = ("port",)
+
+    port = graphene.Field(PortTypePieceSideNode)
+
+    @staticmethod
+    def resolve_port(root, info):
+        return root.port
 
 
-# TODO: Make node compatible with input nesting
+class PieceSideNode(PydanticObjectType):
+    class Meta:
+        model = PieceSide
+        exclude_fields = ("type",)
+
+    type = graphene.Field(TypePieceSideNode)
+
+    @staticmethod
+    def resolve_type(root, info):
+        return root.type
+
+
+class SideNode(PydanticObjectType):
+    class Meta:
+        model = Side
+        exclude_fields = ("piece",)
+
+    piece = graphene.Field(PieceSideNode)
+
+    @staticmethod
+    def resolve_piece(root, info):
+        return root.piece
+
+
 class AttractionNode(SQLAlchemyObjectType):
     class Meta:
         model = Attraction
         exclude_fields = (
             "attracting_piece_id",
-            # "attracting_piece",
+            "attracting_piece",
             "attracting_piece_type_port_id",
             "attracted_piece_id",
-            # "attracted_piece",
+            "attracted_piece",
             "attracted_piece_type_port_id",
             "formation_id",
         )
 
-    # attracting_side = graphene.Field(NonNull(SideNode))
-    # attracted_side = graphene.Field(NonNull(SideNode))
+    attracting = graphene.Field(NonNull(SideNode))
+    attracted = graphene.Field(NonNull(SideNode))
 
-    # @staticmethod
-    # def resolve_attracting_side(attraction: Attraction, info):
-    # return attraction.attracting_side
+    @staticmethod
+    def resolve_attracting(attraction: Attraction, info):
+        return attraction.attracting
 
-    # @staticmethod
-    # def resolve_attracted_side(attraction: Attraction, info):
-    # return attraction.attracted_side
+    @staticmethod
+    def resolve_attracted(attraction: Attraction, info):
+        return attraction.attracted
 
 
 class FormationNode(SQLAlchemyObjectType):
@@ -1195,12 +1273,12 @@ class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
 
 
-class TypePieceSideInput(InputObjectType):
-    port = NonNull(PortIdInput)
+class TransientIdInput(InputObjectType):
+    id = NonNull(graphene.String)
 
 
 class PieceInput(InputObjectType):
-    transient_id = NonNull(graphene.String)
+    transient = NonNull(TransientIdInput)
     type = NonNull(TypeIdInput)
 
 
@@ -1209,7 +1287,7 @@ class TypePieceSideInput(InputObjectType):
 
 
 class PieceSideInput(InputObjectType):
-    transient_id = NonNull(graphene.String)
+    transient = NonNull(TransientIdInput)
     type = NonNull(TypePieceSideInput)
 
 
@@ -1218,8 +1296,8 @@ class SideInput(InputObjectType):
 
 
 class AttractionInput(InputObjectType):
-    attracting_side = NonNull(SideInput)
-    attracted_side = NonNull(SideInput)
+    attracting = NonNull(SideInput)
+    attracted = NonNull(SideInput)
 
 
 class FormationInput(InputObjectType):
@@ -1554,16 +1632,16 @@ def addAttractionInputToSession(
 ) -> Attraction:
     try:
         attractingPiece = transientIdToPiece[
-            attractionInput.attracting.piece.transient_id
+            attractionInput.attracting.piece.transient.id
         ]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracting.piece.transient_id)
+        raise PieceNotFound(attractionInput.attracting.piece.transient.id)
     try:
         attractedPiece = transientIdToPiece[
-            attractionInput.attracted.piece.transient_id
+            attractionInput.attracted.piece.transient.id
         ]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracted.piece.transient_id)
+        raise PieceNotFound(attractionInput.attracted.piece.transient.id)
 
     attractingPieceTypePort = getPortByProperties(
         session, attractionInput.attracting.piece.type.port.properties
@@ -1611,7 +1689,7 @@ def addFormationInputToSession(
     transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
-        transientIdToPiece[pieceInput.transient_id] = piece
+        transientIdToPiece[pieceInput.transient.id] = piece
     for attractionInput in formationInput.attractions or []:
         attraction = addAttractionInputToSession(
             session, formation, attractionInput, transientIdToPiece

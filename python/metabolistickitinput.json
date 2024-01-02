@@ -139,19 +139,25 @@
                 "symbol": "🏯",
                 "pieces": [
                     {
-                        "transientId": "s",
+                        "transient": {
+                            "id": "s"
+                        },
                         "type": {
                             "name": "cuboid building core shaft"
                         }
                     },
                     {
-                        "transientId": "c1",
+                        "transient": {
+                            "id": "c1"
+                        },
                         "type": {
                             "name": "default box capsule"
                         }
                     },
                     {
-                        "transientId": "c2",
+                        "transient": {
+                            "id": "c2"
+                        },
                         "type": {
                             "name": "mirrored default box capsule"
                         }
@@ -161,7 +167,9 @@
                     {
                         "attracting": {
                             "piece": {
-                                "transientId": "s",
+                                "transient": {
+                                    "id": "s"
+                                },
                                 "type": {
                                     "port": {
                                         "properties": [
@@ -184,7 +192,9 @@
                         },
                         "attracted": {
                             "piece": {
-                                "transientId" :"c1",
+                                "transient": {
+                                    "id": "c1"
+                                },
                                 "type": {
                                     "port": {
                                         "properties": [

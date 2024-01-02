@@ -19,10 +19,7 @@ entity Kit {
 entity Type {
     *id : int <<generated>>
     ..
-    *prototype_id : int <<FK>>
-    ..
-    modification_script_id : int <<FK>>
-    modified_type_id : int <<FK>>
+    kit_id : int <<FK>>
 }
 
 entity Port {
@@ -36,7 +33,6 @@ abstract Property {
     ..
     *name : string
     *datatype : string
-    *value : string
     ..
     type_id : int <<FK>>
     ..
@@ -53,17 +49,27 @@ abstract Property {
     tree_id : int <<FK>>
     tree_parent_id : int <<FK>>
     --
+    value() : Any
     equals(property) : boolean
 }
-note right of Property
+note left of Property
+    Single table inheritance with datatype as discriminator.
     Owner is either a port, a type or a container property.
 end note
 
 abstract ScalarProperty {
+    scalar() : Any
+    ..
+    set(value) : void
+    unset() : void
+    is_set() : Boolean
 }
 
 abstract NumberProperty {
-    units : string
+    units : String
+    --
+    number() : Decimal
+    ..
     add(number) : number
     subtract(number) : number
     multiply(number) : number
@@ -71,65 +77,88 @@ abstract NumberProperty {
 }
 
 entity DecimalProperty {
+    decimal : Decimal
 }
 
 entity IntegerProperty {
+    integer : Integer
 }
 
 entity NaturalProperty {
+    natural : Integer
 }
 
 abstract LogicProperty {
+    logicalValue() : Decimal
+    ..
     not() : LogicProperty
     and(property) : LogicProperty
     or(property) : LogicProperty
 }
 
 entity BooleanProperty {
+    boolean : Boolean
 }
 
 entity FuzzyProperty {
+    fuzzy : Decimal
 }
 
 abstract TextProperty {
+    text() : String
+    ..
     fuzzy_compare(text) : number
 }
 
 entity DescriptionProperty {
+    description : String
 }
 
 entity ChoiceProperty {
+    choice : Choice
 }
 
 abstract GeometryProperty {
+    geometry() : Geometry
+    ..
     transform(matrix) : Geometry
 }
 
 entity PointProperty {
+    point : Point
 }
 
 entity VectorProperty {
+    vector : Vector
 }
 
 entity PlaneProperty {
+    plane : plane
 }
 
 entity LineProperty {
+    line : Line
 }
 
 entity CurveProperty {
+    curve : Curve
 }
 
 entity SurfaceProperty {
+    surface : Surface
 }
 
 entity BrepProperty {
+    brep : Brep
 }
 
 entity MeshProperty {
+    mesh : Mesh
 }
 
 abstract ContainerProperty {
+    container() : Container
+    ..
     contains(property) : boolean
     size() : int
     is_empty() : boolean
@@ -141,68 +170,109 @@ end note
 
 
 entity ListProperty {
+    list() : List<Property>
+    ..
     insert(index, property) : void
     remove(index) : void
     get(index) : Property
 }
 
 entity SetProperty {
+    set() : Set<string,Property>
+    ..
     put(property) : void
     take(name) : Property
 }
 
 entity DictionaryProperty {
+    dictionary() : Dictionary<string, Property>
+    ..
+    put(key, property) : void
+    take(key) : Property
 }
 
 entity TreeProperty {
+    tree() : Tree<Property>
+    ..
+    children() : List<TreeProperty>
 }
 
 abstract FileProperty {
+    file() : File
+    ..
     save() : string
 }
 
 abstract ImageProperty {
+    image() : Image
     invert() : Image
 }
 
 entity PngProperty {
+    png : Png
 }
 
 entity JpgProperty {
+    jpg : Jpg
 }
 
 abstract ThreeDProperty {
+    threeD() : ThreeD
+    ..
     transform(matrix) : ThreeD
 }
 
 entity StlProperty {
+    stl : Stl
 }
 
 entity ObjProperty {
+    obj : Obj
 }
 
 entity GltfProperty {
+    gltf : Gltf
 }
 
 entity GlbProperty {
+    glb : Glb
 }
 
 entity RhinoProperty {
+    rhino : Rhino
 }
 
 entity IfcProperty {
+    ifc : Ifc
 }
 
 entity SpeckleProperty {
+    speckle : Speckle
 }
 
 entity Formation {
     *id : int <<generated>>
     ..
-    choreography_id : int <<FK>>
+    kit_id : int <<FK>>
+}
+
+entity Piece{
+    *id : int <<generated>>
     ..
-    transformation_id : int <<FK>>
-    transformed_formation_id : int <<FK>>
+    type_id : int <<FK>>
+    ..
+    formation_id : int <<FK>>
+}
+
+entity Attraction {
+    *id : int <<generated>>
+    ..
+    attracting_piece_id : int <<FK>>
+    attracting_piece_type_port_id : int <<FK>>
+    attracted_piece_id : int <<FK>>
+    attracted_piece_type_port_id : int <<FK>>
+    ..
+    formation_id : int <<FK>>
 }
 
 ' --
@@ -224,6 +294,10 @@ Formation ||--o{ Attraction
 Port ||--o{ Property
 
 ' --
+
+Type --o Piece
+Piece --o Attraction
+Port --o Attraction
 
 Property <|-- ScalarProperty
 Property <|-- ContainerProperty
