@@ -10,71 +10,10 @@ interface Artifact {
     *modified : datetime
 }
 
-interface Automatable {
-    script : Script
-}
-
 entity Kit {
     *id : int <<generated>> 
     ..
     url : string
-}
-
-entity Script {
-    *id : int <<generated>> 
-    ..
-    url : string
-    ..
-    kit_id : int <<FK>>
-}
-
-entity PrototypeScript {
-}
-
-entity ModificationScript {
-}
-
-entity ChoreographyScript {
-}
-
-entity TransformationScript {
-}
-
-entity SynthesisScript {
-}
-
-abstract Generation{
-    *id : int <<generated>>
-    ..
-    *hash : string
-}
-
-entity PrototypeGeneration {
-    *prototype_id : int <<FK>>
-}
-
-abstract Plan {
-    *id : int <<generated>>
-    ..
-}
-
-entity PrototypePlan {
-    *prototype_generation_id : int <<FK>>
-}
-
-entity Prototype {
-}
-
-entity Modification {
-}
-
-entity Choreography {
-}
-
-entity Transformation {
-}
-
-entity Synthesis {
 }
 
 entity Type {
@@ -117,8 +56,6 @@ abstract Property {
     equals(property) : boolean
 }
 note right of Property
-    equals() compares the name, datatype and value.
-
     Owner is either a port, a type or a container property.
 end note
 
@@ -126,6 +63,7 @@ abstract ScalarProperty {
 }
 
 abstract NumberProperty {
+    units : string
     add(number) : number
     subtract(number) : number
     multiply(number) : number
@@ -197,8 +135,8 @@ abstract ContainerProperty {
     is_empty() : boolean
     clear() : void
 }
-note left of ContainerProperty
-    A container has the hash of its items as its value.
+note right of ContainerProperty
+    A container has null as its value.
 end note
 
 
@@ -269,26 +207,13 @@ entity Formation {
 
 ' --
 
-Kit ||--o{ Script
 Kit ||--o{ Type
 Kit ||--o{ Formation
 
 ' --
 
-Script <|-- PrototypeScript
-Script <|-- ModificationScript
-Script <|-- ChoreographyScript
-Script <|-- TransformationScript
-Script <|-- SynthesisScript
-
-' --
-
 Type ||--o{ Port
 Type ||--o{ Property
-Type }o--o| Prototype
-Type ||--o| PrototypeGeneration
-Type ||--o| ModificationGeneration
-Type <-- Type : modified_type_id
 
 ' --
 
@@ -309,6 +234,7 @@ ScalarProperty <|-- NumberProperty
 ScalarProperty <|-- TextProperty
 ScalarProperty <|-- GeometryProperty
 ScalarProperty <|-- FileProperty
+ScalarProperty <|-- LogicProperty
 
 ContainerProperty ||--o{ Property
 ContainerProperty <|-- ListProperty
@@ -321,8 +247,9 @@ ContainerProperty <|-- TreeProperty
 NumberProperty <|-- DecimalProperty
 NumberProperty <|-- IntegerProperty
 NumberProperty <|-- NaturalProperty
-NumberProperty <|-- BooleanProperty
-NumberProperty <|-- FuzzyProperty
+
+LogicProperty <|-- BooleanProperty
+LogicProperty <|-- FuzzyProperty
 
 TextProperty <|-- DescriptionProperty
 TextProperty <|-- ChoiceProperty
@@ -354,39 +281,8 @@ ThreeDProperty <|-- SpeckleProperty
 
 ' --
 
-Generation <|-- PrototypeGeneration
-Generation <|-- ModificationGeneration
-Generation <|-- ChoreographyGeneration
-Generation <|-- TransformationGeneration
-Generation <|-- SynthesisGeneration
-
-Plan ||--o{ Property
-Plan <|-- PrototypePlan
-Plan <|-- ModificationPlan
-Plan <|-- ChoreographyPlan
-Plan <|-- TransformationPlan
-Plan <|-- SynthesisPlan
-
-PrototypeGeneration ||--|| PrototypePlan
-ModificationGeneration ||--|| ModificationPlan
-ChoreographyGeneration ||--|| ChoreographyPlan
-TransformationGeneration ||--|| TransformationPlan
-SynthesisGeneration ||--|| SynthesisPlan
-
-' --
-
-
-' --
-
 Artifact <|-- Kit
-Artifact <|-- Script
 Artifact <|-- Type
 Artifact <|-- Formation
-
-Automatable <|-- Prototype
-Automatable <|-- Modification
-Automatable <|-- Choreography
-Automatable <|-- Transformation
-Automatable <|-- Synthesis
 
 @enduml

@@ -1,0 +1,162 @@
+query LocalKit($directory: String!) {
+  localKit(directory: $directory) {
+    kit {
+      name
+      explanation
+      symbol
+      url
+      types {
+        name
+        properties {
+            name
+            ... on DecimalPropertyNode{
+            	decimal
+          	}
+            ... on IntegerPropertyNode{
+              integer
+            }
+            ... on NaturalPropertyNode{
+              natural
+            }
+            ... on BooleanPropertyNode{
+              boolean
+            }
+            ... on DescriptionPropertyNode{
+              description
+            }
+            ... on ChoicePropertyNode{
+              choice
+            }
+            ... on BrepPropertyNode{
+              brep
+            }
+            ... on ListPropertyNode{
+              list
+            }
+        }
+        ports {
+          plane {
+            origin {
+              x
+              y
+              z
+            }
+            xAxis {
+              x
+              y
+              z
+            }
+            yAxis {
+              x
+              y
+              z
+            }
+          }
+          properties {
+            name
+          	... on DecimalPropertyNode{
+            	decimal
+          	}
+            ... on IntegerPropertyNode{
+              integer
+            }
+            ... on NaturalPropertyNode{
+              natural
+            }
+            ... on BooleanPropertyNode{
+              boolean
+            }
+            ... on DescriptionPropertyNode{
+              description
+            }
+            ... on ChoicePropertyNode{
+              choice
+            }
+            ... on BrepPropertyNode{
+              brep
+            }
+            ... on ListPropertyNode{
+              list
+            }
+          }
+        }
+      }
+      formations {
+        name
+        explanation
+        symbol
+        pieces {
+          transientId
+          type {
+            name
+          }
+        }
+        attractions {
+            attracting {
+                transientId
+                type {
+                    properties {
+                        ... on DecimalPropertyNode{
+                            decimal
+                        }
+                        ... on IntegerPropertyNode{
+                            integer
+                        }
+                        ... on NaturalPropertyNode{
+                            natural
+                        }
+                        ... on BooleanPropertyNode{
+                            boolean
+                        }
+                        ... on DescriptionPropertyNode{
+                            description
+                        }
+                        ... on ChoicePropertyNode{
+                            choice
+                        }
+                        ... on BrepPropertyNode{
+                            brep
+                        }
+                        ... on ListPropertyNode{
+                            list
+                        }
+                    }
+                }
+            }
+            attracted {
+                transientId
+                type {
+                    properties {
+                        ... on DecimalPropertyNode{
+                            decimal
+                        }
+                        ... on IntegerPropertyNode{
+                            integer
+                        }
+                        ... on NaturalPropertyNode{
+                            natural
+                        }
+                        ... on BooleanPropertyNode{
+                            boolean
+                        }
+                        ... on DescriptionPropertyNode{
+                            description
+                        }
+                        ... on ChoicePropertyNode{
+                            choice
+                        }
+                        ... on BrepPropertyNode{
+                            brep
+                        }
+                        ... on ListPropertyNode{
+                            list
+                        }
+                    }
+                }
+            }
+        }
+      }
+    }
+    error 
+  }
+}

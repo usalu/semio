@@ -17,6 +17,8 @@ graphql-server = { extras = ["flask"], version = "^3.0.0b7" }
 graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
 setuptools = "^69.0.2"                                                    # hidden dependency of graphene-sqlalchemy because of import pkg_resources
 marshmallow-sqlalchemy = "^0.29.0"
+pydantic = "^1"
+graphene-pydantic = "^0.4.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

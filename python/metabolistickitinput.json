@@ -4,181 +4,130 @@
         "name": "metabolistic",
         "explanation": "A metabolism clone",
         "symbol": "🫀",
-        "prototypes": [
-            {
-                "name": "capsule",
-                "explanation": "A capsule with one door.",
-                "symbol": "🚪",
-                "scripts": [
-                    {
-                        "name": "box capsule",
-                        "explanation": "A box capsule.",
-                        "symbol": "📦",
-                        "url": "capsules/box_capsule.gh"
-                    },
-                    {
-                        "name": "boulee newton capsule",
-                        "explanation": "A round capsule.",
-                        "symbol": "💊",
-                        "url": "capsules/bouleenewtoncapsule.dyn"
-                    }
-                ],
-                "script": {
-                    "schema": {
-                        "properties": [
-                            {
-                                "name": "length",
-                                "explanation": "The length of the capsule.",
-                                "symbol": "📏",
-                                "datatype": "decimal"
-                            },
-                            {
-                                "name": "width",
-                                "explanation": "The width of the capsule.",
-                                "symbol": "↔️",
-                                "datatype": "decimal"
-                            },
-                            {
-                                "name": "height",
-                                "explanation": "The height of the capsule.",
-                                "symbol": "↕️",
-                                "datatype": "decimal"
-                            },
-                            {
-                                "name": "door",
-                                "explanation": "The door position of the capsule.",
-                                "symbol": "🚪",
-                                "datatype": "choice",
-                                "choices": [
-                                    {
-                                        "name": "behind",
-                                        "symbol": "⬇️",
-                                        "default": true
-                                    },
-                                    {
-                                        "name": "right",
-                                        "symbol": "➡️"
-                                    }
-                                ]
-                            },
-                            {
-                                "name": "window",
-                                "explanation": "The window position of the capsule.",
-                                "symbol": "🪟",
-                                "datatype": "choice",
-                                "choices": [
-                                    {
-                                        "name": "front",
-                                        "symbol": "⬆️",
-                                        "default": true
-                                    },
-                                    {
-                                        "name": "left",
-                                        "symbol": "⬅️"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "ports": {
-                    "schema":{}
-                }
-            }
-        ],
-        "choreographies": [
-            {
-                "name": "capsule tower",
-                "explanation": "A tower of capsules.",
-                "symbol": "🗼",
-                "scripts": [
-                    {
-                        "name": "kurokawa capsule tower",
-                        "explanation": "A tower of capsules from Kishō Kurokawa.",
-                        "symbol": "👨",
-                        "url": "towers/kurokawa_capsule_tower.py"
-                    }
-                ],
-                "schema": {}
-            }
-        ],
-        "transformations": [
-            {
-                "name": "bridge",
-                "explanation": "Replace two capsules with a bridge.",
-                "symbol": "🌉",
-                "scripts": [
-                    {
-                        "name": "bridge",
-                        "url": "towers/bridges/bridge.cs"
-                    }
-                ],
-                "schema": null
-            }
-        ],
         "types": [
             {
                 "name": "cuboid building core shaft",
-                "explanation": "A cuboid building core shaft.",
+                "explanation": "A cuboid building core shaft with 10 storeys and a floor height of 3 meters.",
                 "symbol": "🛗",
-                "prototype": {
-                    "name": "building core shaft"
-                },
-                "modifications": []
+                "properties": [
+                    {
+                        "name": "floor height",
+                        "decimal": 3.0
+                    },
+                    {
+                        "name": "storeys",
+                        "natural": 10
+                    }
+                ],
+                "ports": [
+                    {
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "xAxis": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "yAxis": {
+                                "x": 0.0,
+                                "y": 1.0,
+                                "z": 0.0
+                            }
+                        },
+                        "properties": [
+                            {
+                                "name": "facade",
+                                "natural": 0
+                            },
+                            {
+                                "name": "floor",
+                                "natural": 1
+                            },
+                            {
+                                "name": "door",
+                                "natural": 0
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "default box capsule",
                 "explanation": "The default box capsule.",
                 "symbol": "📦()",
-                "prototype": {
-                    "script": {
-                        "name": "box capsule",
-                        "plan": {}
+                "properties": [
+                    {
+                        "name": "door",
+                        "choice": "behind"
                     }
-                },
-                "modifications": []
+                ],
+                "ports": [
+                    {
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "xAxis": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "yAxis": {
+                                "x": 0.0,
+                                "y": 1.0,
+                                "z": 0.0
+                            }
+                        },
+                        "properties": [
+                            {
+                                "name": "door",
+                                "boolean": true
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "mirrored default box capsule",
                 "explanation": "The mirrored default box capsule.",
                 "symbol": "📦_🪞",
-                "prototype": {
-                    "script": {
-                        "name": "box capsule",
-                        "plan": {}
-                    }
-                },
-                "modifications": [
+                "properties": [
                     {
-                        "name": "mirror",
-                        "script": {
-                            "name": "mirror",
-                            "plan": {
-                                "properties": [
-                                    {
-                                        "name": "plane",
-                                        "datatype": "plane",
-                                        "value": {
-                                            "origin": {
-                                                "x": 0.0,
-                                                "y": 0.0,
-                                                "z": 0.0
-                                            },
-                                            "xAxis": {
-                                                "x": 0.0,
-                                                "y": 1.0,
-                                                "z": 0.0
-                                            },
-                                            "yAxis": {
-                                                "x": 0.0,
-                                                "y": 0.0,
-                                                "z": 1.0
-                                            }
-                                        }
-                                    }
-                                ]
+                        "name": "door",
+                        "choice": "behind"
+                    }
+                ],
+                "ports": [
+                    {
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "xAxis": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "yAxis": {
+                                "x": 0.0,
+                                "y": 1.0,
+                                "z": 0.0
                             }
-                        }
+                        },
+                        "properties": [
+                            {
+                                "name": "door",
+                                "boolean": true
+                            }
+                        ]
                     }
                 ]
             }
@@ -186,15 +135,23 @@
         "formations": [
             {
                 "name": "nakagin capsule tower",
+                "explanation": "The Nakagin Capsule Tower.",
+                "symbol": "🏯",
                 "pieces": [
                     {
-                        "transientId": "a",
+                        "transientId": "s",
+                        "type": {
+                            "name": "cuboid building core shaft"
+                        }
+                    },
+                    {
+                        "transientId": "c1",
                         "type": {
                             "name": "default box capsule"
                         }
                     },
                     {
-                        "transientId": "b",
+                        "transientId": "c2",
                         "type": {
                             "name": "mirrored default box capsule"
                         }
@@ -202,40 +159,46 @@
                 ],
                 "attractions": [
                     {
-                        "attractingPiece": {
-                            "transientId": "a",
-                            "type": {
-                                "port": {
-                                    "properties": [
-                                        {
-                                            "name": "door",
-                                            "datatype": "boolean",
-                                            "value": true
-                                        }
-                                    ]
+                        "attracting": {
+                            "piece": {
+                                "transientId": "s",
+                                "type": {
+                                    "port": {
+                                        "properties": [
+                                            {
+                                                "name": "facade",
+                                                "natural": 0
+                                            },
+                                            {
+                                                "name": "floor",
+                                                "natural": 1
+                                            },
+                                            {
+                                                "name": "door",
+                                                "natural": 0
+                                            }
+                                        ]
+                                    }
                                 }
                             }
                         },
-                        "attractedPiece": {
-                            "transientId": "b"
-                        }
-                    }
-                ],
-                "scheme": {},
-                "choreography": {
-                    "name": "capsule tower",
-                    "script": {
-                        "name": "capsule tower",
-                        "plan": {
-                            "properties": [
-                                {
-                                    "name": "height",
-                                    "value": 6.0
+                        "attracted": {
+                            "piece": {
+                                "transientId" :"c1",
+                                "type": {
+                                    "port": {
+                                        "properties": [
+                                            {
+                                                "name": "door",
+                                                "boolean": true
+                                            }
+                                        ]
+                                    }
                                 }
-                            ]
+                            }
                         }
                     }
-                }
+                ]
             }
         ]
     }

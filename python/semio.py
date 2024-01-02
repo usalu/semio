@@ -25,13 +25,16 @@ from pathlib import Path
 from functools import lru_cache
 import typing
 from typing import Optional, Dict, Protocol
+from dataclasses import dataclass
 from enum import Enum
 import decimal
+from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy import (
     String,
     Text,
     Numeric,
+    Integer,
     ForeignKey,
     create_engine,
     UniqueConstraint,
@@ -42,6 +45,7 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
+    backref,
     sessionmaker,
     Session,
 )
@@ -51,13 +55,13 @@ from graphene_sqlalchemy import (
     SQLAlchemyObjectType,
     SQLAlchemyInterface,
 )
+from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
 from flask import Flask
 from graphql_server.flask import GraphQLView
 
-URL_LENGTH_MAX = 1000
 NAME_LENGTH_MAX = 100
 SYMBOL_LENGTH_MAX = 1
-SCRIPT_KIND_LENGTH_MAX = 100
+URL_LENGTH_MAX = 1000
 KIT_FILENAME = "kit.semio"
 
 
@@ -70,7 +74,15 @@ class InvalidDatabase(SemioException):
         self.message = message
 
     def __str__(self) -> str:
-        return self.message + "\n This should not happen. Please report this bug."
+        return self.message + "\n The database is invalid. Please report this bug."
+
+
+class InvalidBackend(SemioException):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message + "\n The backend is invalid. Please report this bug."
 
 
 # TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
@@ -105,6 +117,29 @@ class Artifact(Protocol):
         )
 
 
+class Point(BaseModel):
+    x: decimal.Decimal
+    y: decimal.Decimal
+    z: decimal.Decimal
+
+
+class Vector(BaseModel):
+    x: decimal.Decimal
+    y: decimal.Decimal
+    z: decimal.Decimal
+
+
+class Plane(BaseModel):
+    origin: Point
+    x_axis: Vector
+    y_axis: Vector
+
+
+# TODO inherit from speckle
+class Brep(BaseModel):
+    pass
+
+
 # SQLAlchemy
 
 
@@ -113,145 +148,16 @@ class Base(DeclarativeBase):
 
 
 # Open-Closed Principle violation
-class ScriptKind(Enum):
-    PROTOTYPE = 1
-    MODIFICATION = 2
-    CHOREOGRAPHY = 11
-    TRANSFORMATION = 12
-    SYNTHESIS = 21
-
-
-class Script(Base):
-    __tablename__ = "script"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
-    kind: Mapped[ScriptKind] = mapped_column(sqlalchemy.Enum(ScriptKind))
-
-    __mapper_args__ = {"polymorphic_on": kind, "polymorphic_abstract": True}
-
-    @property
-    def parent(self) -> Artifact:
-        return self.kit
-
-    @property
-    def children(self) -> typing.List[Artifact]:
-        return []
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return []
-
-    @property
-    def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
-
-
-class PrototypeScript(Script):
-    prototype_id: Mapped[Optional[int]] = mapped_column(ForeignKey("prototype.id"))
-    prototype: Mapped[Optional["Prototype"]] = relationship(
-        "Prototype", foreign_keys=[prototype_id]
-    )
-
-    __mapper_args__ = {"polymorphic_identity": ScriptKind.PROTOTYPE}
-
-    def __repr__(self) -> str:
-        return f"PrototypeScript(id={self.id!r}, name={self.name!r}, prototype_id={self.prototype_id!r})"
-
-    @property
-    def referenced_by(self) -> typing.List[Artifact]:
-        return [self.prototype] if self.prototype else []
-
-
-class Prototype(Base):
-    __tablename__ = "prototype"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    types: Mapped[Optional[typing.List["Type"]]] = relationship(
-        "Type",
-        foreign_keys="[Type.prototype_id]",
-        back_populates="prototype",
-    )
-
-    def __repr__(self) -> str:
-        return f"Prototype(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return self.types
-
-
-class Modification(Base):
-    types: Mapped[Optional[typing.List["Type"]]] = relationship(
-        "Type",
-        foreign_keys="[Type.modification_id]",
-        back_populates="modification",
-    )
-
-    def __repr__(self) -> str:
-        return (
-            f"Modification(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
-        )
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return self.types
-
-
-class Choreography(Base):
-    formations: Mapped[Optional[typing.List["Formation"]]] = relationship(
-        "Formation",
-        foreign_keys="[Formation.choreography_id]",
-        back_populates="choreography",
-    )
-
-    def __repr__(self) -> str:
-        return (
-            f"Choreography(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
-        )
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return self.formations
-
-
-class Transformation(Base):
-    formations: Mapped[Optional[typing.List["Formation"]]] = relationship(
-        "Formation",
-        foreign_keys="[Formation.transformation_id]",
-        back_populates="transformation",
-    )
-
-    def __repr__(self) -> str:
-        return f"Transformation(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return self.formations
-
-
-class Synthesis(Base):
-    properties: Mapped[Optional[typing.List["Property"]]] = relationship(
-        "Property",
-        foreign_keys="[Property.synthesis_id]",
-        back_populates="synthesis",
-    )
-
-    def __repr__(self) -> str:
-        return f"Synthesis(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
-
-    @property
-    def references(self) -> typing.List[Artifact]:
-        return self.properties
-
-
 class PropertyDatatype(Enum):
     # 001 - 099: numbers
     DECIMAL = 1
+    INTEGER = 2
+    NATURAL = 3
+    # 011 - 019: logical
+    BOOLEAN = 11
     # 101 - 199: text
     DESCRIPTION = 101
+    CHOICE = 102
     # 201 - 299: geometry
     BREP = 201
     # 1001 - 9999: files
@@ -268,17 +174,15 @@ class Property(Base):
     datatype: Mapped[PropertyDatatype] = mapped_column(
         sqlalchemy.Enum(PropertyDatatype)
     )
-    value: Mapped[str] = mapped_column(Text())
-    synthesis_id: Mapped[Optional[int]] = mapped_column(ForeignKey("synthesis.id"))
-    synthesis: Mapped[Optional[Synthesis]] = relationship(
-        Synthesis, foreign_keys=[synthesis_id]
-    )
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"))
     type: Mapped[Optional["Type"]] = relationship("Type", back_populates="properties")
     port_id: Mapped[Optional[int]] = mapped_column(ForeignKey("port.id"))
     port: Mapped[Optional["Port"]] = relationship("Port", back_populates="properties")
     list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("property.id"))
-    list_index: Mapped[Optional[int]] = mapped_column(CheckConstraint("list_index>=0"))
+    list_index: Mapped[Optional[int]] = mapped_column(
+        Integer(), CheckConstraint("list_index>=0")
+    )
+    list = relationship("ListProperty", back_populates="properties", remote_side=[id])
 
     __mapper_args__ = {"polymorphic_on": datatype, "polymorphic_abstract": True}
 
@@ -302,15 +206,6 @@ class Property(Base):
 
     def __repr__(self) -> str:
         return f"Property(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Property):
-            return NotImplemented
-        return (
-            self.name == self.name
-            and self.datatype == self.datatype
-            and self.value == self.value
-        )
 
     @property
     def owner_id(self) -> Artifact:
@@ -368,6 +263,10 @@ class NumberProperty(ScalarProperty):
 
 
 class DecimalProperty(NumberProperty):
+    # TODO: Remove nullable or enforce it in the database without
+    #  breaking the single table inheritance
+    decimal: Mapped[Optional[Numeric]] = mapped_column(Numeric())
+
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.DECIMAL,
     }
@@ -376,11 +275,49 @@ class DecimalProperty(NumberProperty):
         return f"Decimal(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
 
+class IntegerProperty(NumberProperty):
+    integer: Mapped[Optional[int]] = mapped_column(Integer())
+    __mapper_args__ = {
+        "polymorphic_identity": PropertyDatatype.INTEGER,
+    }
+
+    def __repr__(self) -> str:
+        return f"Integer(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+
+class NaturalProperty(NumberProperty):
+    natural: Mapped[Optional[int]] = mapped_column(
+        Integer(), CheckConstraint("natural>=0")
+    )
+    __mapper_args__ = {
+        "polymorphic_identity": PropertyDatatype.NATURAL,
+    }
+    # constraint that value is positive
+
+    def __repr__(self) -> str:
+        return f"Natural(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+
+class LogicalProperty(ScalarProperty):
+    __mapper_args__ = {"polymorphic_abstract": True}
+
+
+class BooleanProperty(LogicalProperty):
+    boolean: Mapped[Optional[bool]] = mapped_column(Integer())
+    __mapper_args__ = {
+        "polymorphic_identity": PropertyDatatype.BOOLEAN,
+    }
+
+    def __repr__(self) -> str:
+        return f"Boolean(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+
 class TextProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
 
 
 class DescriptionProperty(TextProperty):
+    description: Mapped[Optional[str]] = mapped_column(Text())
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.DESCRIPTION,
     }
@@ -389,11 +326,22 @@ class DescriptionProperty(TextProperty):
         return f"Description(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
 
+class ChoiceProperty(TextProperty):
+    choice: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    __mapper_args__ = {
+        "polymorphic_identity": PropertyDatatype.CHOICE,
+    }
+
+    def __repr__(self) -> str:
+        return f"Choice(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+
 class GeometryProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
 
 
 class BrepProperty(GeometryProperty):
+    brep: Mapped[Optional[Brep]] = mapped_column(Text())
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.BREP,
     }
@@ -402,17 +350,26 @@ class BrepProperty(GeometryProperty):
         return f"Brep(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
 
-class Container(Property):
+class ContainerProperty(Property):
     __mapper_args__ = {"polymorphic_abstract": True}
 
 
-class List(Container):
+class ListProperty(ContainerProperty):
+    properties: Mapped[Optional[typing.List[Property]]] = relationship(
+        Property,
+        back_populates="list",
+        cascade="all, delete-orphan",
+    )
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.LIST,
     }
 
     def __repr__(self) -> str:
-        return f"List(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"ListProperty(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    @property
+    def list(self) -> typing.List[Property]:
+        return self.properties.sort(key=lambda property: property.list_index)
 
 
 class Port(Base):
@@ -428,9 +385,6 @@ class Port(Base):
     y_axis_x: Mapped[decimal.Decimal] = mapped_column(Numeric())
     y_axis_y: Mapped[decimal.Decimal] = mapped_column(Numeric())
     y_axis_z: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    z_axis_x: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    z_axis_y: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    z_axis_z: Mapped[decimal.Decimal] = mapped_column(Numeric())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
     properties: Mapped[Optional[typing.List[Property]]] = relationship(
@@ -449,6 +403,38 @@ class Port(Base):
 
     def __repr__(self) -> str:
         return f"Port(id={self.id!r}, name={self.name!r}, type_id={self.type_id!r})"
+
+    @property
+    def plane(self) -> Plane:
+        return Plane(
+            origin=Point(
+                x=self.origin_x,
+                y=self.origin_y,
+                z=self.origin_z,
+            ),
+            x_axis=Vector(
+                x=self.x_axis_x,
+                y=self.x_axis_y,
+                z=self.x_axis_z,
+            ),
+            y_axis=Vector(
+                x=self.y_axis_x,
+                y=self.y_axis_y,
+                z=self.y_axis_z,
+            ),
+        )
+
+    @plane.setter
+    def plane(self, plane: Plane):
+        self.origin_x = plane.origin.x
+        self.origin_y = plane.origin.y
+        self.origin_z = plane.origin.z
+        self.x_axis_x = plane.x_axis.x
+        self.x_axis_y = plane.x_axis.y
+        self.x_axis_z = plane.x_axis.z
+        self.y_axis_x = plane.y_axis.x
+        self.y_axis_y = plane.y_axis.y
+        self.y_axis_z = plane.y_axis.z
 
     @property
     def parent(self) -> Artifact:
@@ -478,14 +464,6 @@ class Type(Base):
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
-    prototype_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    prototype: Mapped[Optional[Prototype]] = relationship(
-        Prototype, foreign_keys=[prototype_id]
-    )
-    modification_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    modification: Mapped[Optional[Script]] = relationship(
-        Script, foreign_keys=[modification_id]
-    )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
     ports: Mapped[Optional[typing.List[Port]]] = relationship(
@@ -515,11 +493,7 @@ class Type(Base):
 
     @property
     def referenced_by(self) -> typing.List[Artifact]:
-        return (
-            self.pieces
-            + ([self.prototype] if self.prototype else [])
-            + ([self.modification] if self.modification else [])
-        )
+        return []
 
     @property
     def related_to(self) -> typing.List[Artifact]:
@@ -573,6 +547,14 @@ class Piece(Base):
         return [self.parent] + self.children + self.references + self.referenced_by
 
 
+class Side(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    piece: Piece
+    port: Port
+
+
 class Attraction(Base):
     __tablename__ = "attraction"
 
@@ -615,6 +597,14 @@ class Attraction(Base):
         return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
 
     @property
+    def attracting_side(self) -> Side:
+        return Side(piece=self.attracting_piece, port=self.attracting_piece_type_port)
+
+    @property
+    def attracted_side(self) -> Side:
+        return Side(piece=self.attracted_piece, port=self.attracted_piece_type_port)
+
+    @property
     def parent(self) -> Artifact:
         return self.formation
 
@@ -653,14 +643,6 @@ class Formation(Base):
     attractions: Mapped[Optional[typing.List[Attraction]]] = relationship(
         back_populates="formation", cascade="all, delete-orphan"
     )
-    choreography_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    choreography: Mapped[Optional[Script]] = relationship(
-        Script, foreign_keys=[choreography_id]
-    )
-    transformation_id: Mapped[Optional[int]] = mapped_column(ForeignKey("script.id"))
-    transformation: Mapped[Optional[Script]] = relationship(
-        Script, foreign_keys=[transformation_id]
-    )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
 
@@ -683,9 +665,7 @@ class Formation(Base):
 
     @property
     def referenced_by(self) -> typing.List[Artifact]:
-        return ([self.choreography] if self.choreography else []) + (
-            [self.transformation] if self.transformation else []
-        )
+        return []
 
     @property
     def related_to(self) -> typing.List[Artifact]:
@@ -700,9 +680,6 @@ class Kit(Base):
     explanation: Mapped[Optional[str]] = mapped_column(Text())
     symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
     url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
-    scripts: Mapped[Optional[typing.List[Script]]] = relationship(
-        back_populates="kit", cascade="all, delete-orphan"
-    )
     types: Mapped[Optional[typing.List[Type]]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
@@ -712,26 +689,6 @@ class Kit(Base):
 
     def __repr__(self) -> str:
         return f"Kit(id={self.id!r}, name={self.name!r})"
-
-    @property
-    def prototypes(self) -> typing.List[Prototype]:
-        return [script for script in self.scripts if isinstance(script, Prototype)]
-
-    @property
-    def modifications(self) -> typing.List[Modification]:
-        return [script for script in self.scripts if isinstance(script, Modification)]
-
-    @property
-    def choreographies(self) -> typing.List[Choreography]:
-        return [script for script in self.scripts if isinstance(script, Choreography)]
-
-    @property
-    def transformations(self) -> typing.List[Transformation]:
-        return [script for script in self.scripts if isinstance(script, Transformation)]
-
-    @property
-    def syntheses(self) -> typing.List[Synthesis]:
-        return [script for script in self.scripts if isinstance(script, Synthesis)]
 
     @property
     def parent(self) -> Artifact:
@@ -795,10 +752,10 @@ class ArtifactNode(graphene.Interface):
     explanation = graphene.String()
     symbol = graphene.String()
     parent = graphene.Field(lambda: ArtifactNode)
-    children = NonNull(graphene.typing.List(NonNull(lambda: ArtifactNode)))
-    references = NonNull(graphene.typing.List(NonNull(lambda: ArtifactNode)))
-    referenced_by = NonNull(graphene.typing.List(NonNull(lambda: ArtifactNode)))
-    related_to = NonNull(graphene.typing.List(NonNull(lambda: ArtifactNode)))
+    children = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+    references = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+    referenced_by = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+    related_to = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
 
     @staticmethod
     def resolve_parent(artifact: "ArtifactNode", info):
@@ -821,74 +778,256 @@ class ArtifactNode(graphene.Interface):
         return artifact.related_to
 
 
-class ScriptNode(SQLAlchemyInterface):
-    class Meta:
-        model = Script
-        # Breaks GraphiQL:
-        # interfaces = (ArtifactNode,)
-        exclude_fields = ("id", "kit_id")
-
-
-class PrototypeNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Prototype
-        interfaces = (
-            ArtifactNode,
-            ScriptNode,
-        )
-        exclude_fields = ("id", "kit_id")
-
-
-class ModificationNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Modification
-        interfaces = (
-            ArtifactNode,
-            ScriptNode,
-        )
-        exclude_fields = ("id", "kit_id")
-
-
-class ChoreographyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Choreography
-        interfaces = (
-            ArtifactNode,
-            ScriptNode,
-        )
-        exclude_fields = ("id", "kit_id")
-
-
-class TransformationNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Transformation
-        interfaces = (
-            ArtifactNode,
-            ScriptNode,
-        )
-        exclude_fields = ("id", "kit_id")
-
-
-class SynthesisNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Synthesis
-        interfaces = (
-            ArtifactNode,
-            ScriptNode,
-        )
-        exclude_fields = ("id", "kit_id")
-
-
-class PropertyNode(SQLAlchemyObjectType):
+class PropertyNode(SQLAlchemyInterface):
     class Meta:
         model = Property
-        exclude_fields = ("id", "synthesis_id", "type_id", "port_id")
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+
+
+class DecimalPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = DecimalProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_decimal(property: DecimalProperty, info):
+        return property.decimal
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, DecimalProperty))
+
+
+class IntegerPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = IntegerProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_integer(property: IntegerProperty, info):
+        return property.integer
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, IntegerProperty))
+
+
+class NaturalPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = NaturalProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_natural(property: NaturalProperty, info):
+        return property.natural
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, NaturalProperty))
+
+
+class BooleanPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = BooleanProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_boolean(property: BooleanProperty, info):
+        return property.boolean
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, BooleanProperty))
+
+
+class DescriptionPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = DescriptionProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_description(property: DescriptionProperty, info):
+        return property.description
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, DescriptionProperty))
+
+
+class ChoicePropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = ChoiceProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_choice(property: ChoiceProperty, info):
+        return property.choice
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, ChoiceProperty))
+
+
+class BrepPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = BrepProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+        )
+        interfaces = (PropertyNode,)
+
+    @staticmethod
+    def resolve_brep(property: BrepProperty, info):
+        return property.brep
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, BrepProperty))
+
+
+class ListPropertyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = ListProperty
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+            "port_id",
+            "port",
+            "list_id",
+            "list_index",
+            "list",
+            "properties",
+        )
+        interfaces = (PropertyNode,)
+
+    # TODO: Make type JSON and add a recursive resolver
+    # This way queries can be infinitely nested despite
+    # the fact that GraphQL does not support recursive queries
+    list = graphene.List(lambda: PropertyNode)
+
+    @staticmethod
+    def resolve_list(property: ListProperty, info):
+        return property.list
+
+    @classmethod
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, ListProperty))
+
+
+class PointNode(PydanticObjectType):
+    class Meta:
+        model = Point
+
+
+class VectorNode(PydanticObjectType):
+    class Meta:
+        model = Vector
+
+
+class PlaneNode(PydanticObjectType):
+    class Meta:
+        model = Plane
 
 
 class PortNode(SQLAlchemyObjectType):
     class Meta:
         model = Port
-        exclude_fields = ("id", "type_id")
+        exclude_fields = (
+            "id",
+            "origin_x",
+            "origin_y",
+            "origin_z",
+            "x_axis_x",
+            "x_axis_y",
+            "x_axis_z",
+            "y_axis_x",
+            "y_axis_y",
+            "y_axis_z",
+            "type_id",
+        )
+
+    plane = graphene.Field(PlaneNode)
+
+    @staticmethod
+    def resolve_plane(port: Port, info):
+        return port.plane
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -897,8 +1036,6 @@ class TypeNode(SQLAlchemyObjectType):
         interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
-            "prototype_id",
-            "modification_id",
             "kit_id",
         )
 
@@ -911,20 +1048,45 @@ class PieceNode(SQLAlchemyObjectType):
     transient_id = graphene.String()
 
     @staticmethod
-    def resolve_transient_id(piece: Piece, info):
-        return piece.transient_id
+    def resolve_transient(piece: Piece, info):
+        return piece.transient
 
 
+# class PieceSideNode(ObjectType):
+
+
+# class SideNode(PydanticObjectType):
+# class Meta:
+# model = Side
+# exclude_fields = ("piece","port")
+#
+# piece = graphene.Field(NonNull(PieceSideNode))
+
+
+# TODO: Make node compatible with input nesting
 class AttractionNode(SQLAlchemyObjectType):
     class Meta:
         model = Attraction
         exclude_fields = (
             "attracting_piece_id",
+            # "attracting_piece",
             "attracting_piece_type_port_id",
             "attracted_piece_id",
+            # "attracted_piece",
             "attracted_piece_type_port_id",
             "formation_id",
         )
+
+    # attracting_side = graphene.Field(NonNull(SideNode))
+    # attracted_side = graphene.Field(NonNull(SideNode))
+
+    # @staticmethod
+    # def resolve_attracting_side(attraction: Attraction, info):
+    # return attraction.attracting_side
+
+    # @staticmethod
+    # def resolve_attracted_side(attraction: Attraction, info):
+    # return attraction.attracted_side
 
 
 class FormationNode(SQLAlchemyObjectType):
@@ -933,8 +1095,6 @@ class FormationNode(SQLAlchemyObjectType):
         interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
-            "choreography_id",
-            "transformation_id",
             "kit_id",
         )
 
@@ -945,152 +1105,129 @@ class KitNode(SQLAlchemyObjectType):
         interfaces = (ArtifactNode,)
         exclude_fields = ("id",)
 
-    prototypes = NonNull(graphene.typing.List(NonNull(PrototypeNode)))
-    modifications = NonNull(graphene.typing.List(NonNull(ModificationNode)))
-    choreographies = NonNull(graphene.typing.List(NonNull(ChoreographyNode)))
-    transformations = NonNull(graphene.typing.List(NonNull(TransformationNode)))
-    syntheses = NonNull(graphene.typing.List(NonNull(SynthesisNode)))
 
-    @staticmethod
-    def resolve_prototypes(kit: Kit, info):
-        return kit.prototypes
-
-    @staticmethod
-    def resolve_modifications(kit: Kit, info):
-        return kit.modifications
-
-    @staticmethod
-    def resolve_choreographies(kit: Kit, info):
-        return kit.choreographies
-
-    @staticmethod
-    def resolve_transformations(kit: Kit, info):
-        return kit.transformations
-
-    @staticmethod
-    def resolve_syntheses(kit: Kit, info):
-        return kit.syntheses
-
-
-class PrototypeInput(InputObjectType):
+class DecimalPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
-    url = graphene.String()
+    decimal = NonNull(graphene.Decimal)
 
 
-class PrototypeIdInput(InputObjectType):
+class IntegerPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
+    integer = NonNull(graphene.Int)
 
 
-class ModificationInput(InputObjectType):
+class NaturalPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
-    url = graphene.String()
+    natural = NonNull(graphene.Int)
 
 
-class ModificationIdInput(InputObjectType):
+class BooleanPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
+    boolean = NonNull(graphene.Boolean)
 
 
-class ChoreographyInput(InputObjectType):
+class DescriptionPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
-    url = graphene.String()
+    description = NonNull(graphene.String)
 
 
-class ChoreographyIdInput(InputObjectType):
+class ChoicePropertyInput(InputObjectType):
     name = NonNull(graphene.String)
+    choice = NonNull(graphene.String)
 
 
-class TransformationInput(InputObjectType):
+class BrepPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
-    url = graphene.String()
+    brep = NonNull(graphene.JSONString)
 
 
-class TransformationIdInput(InputObjectType):
+class ListPropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-
-
-class SynthesisInput(InputObjectType):
-    name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
-    url = graphene.String()
-
-
-class SynthesisIdInput(InputObjectType):
-    name = NonNull(graphene.String)
+    list = graphene.List(lambda: ListPropertyInput)
 
 
 class PropertyInput(InputObjectType):
     name = NonNull(graphene.String)
-    datatype = NonNull(graphene.String)
-    value = NonNull(graphene.String)
-    synthesis = SynthesisIdInput()
+    # oneOf
+    decimal = graphene.Decimal()
+    integer = graphene.Int()
+    natural = graphene.Int()
+    boolean = graphene.Boolean()
+    description = graphene.String()
+    choice = graphene.String()
+    brep = graphene.JSONString()
+    list = graphene.List(lambda: PropertyInput)
+
+
+class PointInput(PydanticInputObjectType):
+    class Meta:
+        model = Point
+
+
+class VectorInput(PydanticInputObjectType):
+    class Meta:
+        model = Vector
+
+
+class PlaneInput(PydanticInputObjectType):
+    class Meta:
+        model = Plane
 
 
 class PortInput(InputObjectType):
-    origin_x = NonNull(graphene.Decimal)
-    origin_y = NonNull(graphene.Decimal)
-    origin_z = NonNull(graphene.Decimal)
-    x_axis_x = NonNull(graphene.Decimal)
-    x_axis_y = NonNull(graphene.Decimal)
-    x_axis_z = NonNull(graphene.Decimal)
-    y_axis_x = NonNull(graphene.Decimal)
-    y_axis_y = NonNull(graphene.Decimal)
-    y_axis_z = NonNull(graphene.Decimal)
-    z_axis_x = NonNull(graphene.Decimal)
-    z_axis_y = NonNull(graphene.Decimal)
-    z_axis_z = NonNull(graphene.Decimal)
-    properties = graphene.typing.List(PropertyInput)
+    plane = NonNull(PlaneInput)
+    properties = NonNull(graphene.List(NonNull(PropertyInput)))
 
 
 class PortIdInput(InputObjectType):
-    properties = graphene.typing.List(PropertyInput)
+    properties = NonNull(graphene.List(NonNull(PropertyInput)))
 
 
 class TypeInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
     symbol = graphene.String()
-    prototype = PrototypeIdInput()
-    ports = graphene.typing.List(PortInput)
-    properties = graphene.typing.List(PropertyInput)
+    ports = NonNull(graphene.List(NonNull(PortInput)))
+    properties = graphene.List(PropertyInput)
 
 
 class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
 
 
+class TypePieceSideInput(InputObjectType):
+    port = NonNull(PortIdInput)
+
+
 class PieceInput(InputObjectType):
-    transient_id = graphene.String()
+    transient_id = NonNull(graphene.String)
     type = NonNull(TypeIdInput)
 
 
-class PieceIdInput(InputObjectType):
+class TypePieceSideInput(InputObjectType):
+    port = NonNull(PortIdInput)
+
+
+class PieceSideInput(InputObjectType):
     transient_id = NonNull(graphene.String)
+    type = NonNull(TypePieceSideInput)
+
+
+class SideInput(InputObjectType):
+    piece = NonNull(PieceSideInput)
 
 
 class AttractionInput(InputObjectType):
-    attracting_piece = NonNull(PieceIdInput)
-    attracting_piece_type_port = PortIdInput
-    attracted_piece = NonNull(PieceIdInput)
-    attracted_piece_type_port = PortIdInput
+    attracting_side = NonNull(SideInput)
+    attracted_side = NonNull(SideInput)
 
 
 class FormationInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
     symbol = graphene.String()
-    choreography = ChoreographyIdInput()
-    transformation = TransformationIdInput()
-    pieces = graphene.typing.List(PieceInput)
-    attractions = graphene.typing.List(AttractionInput)
+    pieces = NonNull(graphene.List(NonNull(PieceInput)))
+    attractions = NonNull(graphene.List(NonNull(AttractionInput)))
 
 
 class KitInput(InputObjectType):
@@ -1098,13 +1235,8 @@ class KitInput(InputObjectType):
     explanation = graphene.String()
     symbol = graphene.String()
     url = graphene.String()
-    prototypes = graphene.typing.List(PrototypeInput)
-    modifications = graphene.typing.List(ModificationInput)
-    choreographies = graphene.typing.List(ChoreographyInput)
-    transformations = graphene.typing.List(TransformationInput)
-    syntheses = graphene.typing.List(SynthesisInput)
-    types = graphene.typing.List(TypeInput)
-    formations = graphene.typing.List(FormationInput)
+    types = graphene.List(TypeInput)
+    formations = graphene.List(FormationInput)
 
 
 class SpecificationError(SemioException):
@@ -1128,60 +1260,6 @@ class ArtifactNotFound(NotFound):
         return f"Artifact({self.name}) not found."
 
 
-class ScriptNotFound(NotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Script({self.name}) not found."
-
-
-class PrototypeScriptNotFound(ScriptNotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Prototype({self.name}) not found."
-
-
-class ModificationScriptNotFound(ScriptNotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Modification({self.name}) not found."
-
-
-class ChoreographyScriptNotFound(ScriptNotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Choreography({self.name}) not found."
-
-
-class TransformationScriptNotFound(ScriptNotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Transformation({self.name}) not found."
-
-
-class SynthesisScriptNotFound(ScriptNotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Synthesis({self.name}) not found."
-
-
 class PortNotFound(NotFound):
     def __init__(self, properties) -> None:
         super().__init__(properties)
@@ -1198,6 +1276,15 @@ class TypeNotFound(NotFound):
 
     def __str__(self):
         return f"Type({self.name}) not found."
+
+
+class PieceNotFound(NotFound):
+    def __init__(self, transient_id) -> None:
+        super().__init__(transient_id)
+        self.transient_id = transient_id
+
+    def __str__(self):
+        return f"Piece({self.transient_id}) not found. Please check that the transient id is correct and that the piece is part of the formation."
 
 
 class FormationNotFound(NotFound):
@@ -1244,60 +1331,6 @@ class ArtifactAlreadyExists(AlreadyExists):
         return f"Artifact ({self.artifact.name}) already exists: {str(self.artifact)}"
 
 
-class ScriptAlreadyExists(AlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script.name, script)
-        self.script = script
-
-    def __str__(self):
-        return f"Script ({self.script.name}) already exists: {str(self.script)}"
-
-
-class PrototypeScriptAlreadyExists(ScriptAlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script)
-        self.script = script
-
-    def __str__(self):
-        return f"Prototype ({self.script.name}) already exists: {str(self.script)}"
-
-
-class ModificationScriptAlreadyExists(ScriptAlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script)
-        self.script = script
-
-    def __str__(self):
-        return f"Modification ({self.script.name}) already exists: {str(self.script)}"
-
-
-class ChoreographyScriptAlreadyExists(ScriptAlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script)
-        self.script = script
-
-    def __str__(self):
-        return f"Choreography ({self.script.name}) already exists: {str(self.script)}"
-
-
-class TransformationScriptAlreadyExists(ScriptAlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script)
-        self.script = script
-
-    def __str__(self):
-        return f"Transformation ({self.script.name}) already exists: {str(self.script)}"
-
-
-class SynthesisScriptAlreadyExists(ScriptAlreadyExists):
-    def __init__(self, script) -> None:
-        super().__init__(script)
-        self.script = script
-
-    def __str__(self):
-        return f"Synthesis ({self.script.name}) already exists: {str(self.script)}"
-
-
 class TypeAlreadyExists(AlreadyExists):
     def __init__(self, type) -> None:
         super().__init__(type.name, type)
@@ -1334,43 +1367,6 @@ def getMainKit(session: Session) -> Kit:
     return kit
 
 
-def getScriptByName(session: Session, kind: ScriptKind, name: String) -> Script:
-    script = session.query(Script).filter_by(kind=kind, name=name).first()
-    if not script:
-        match kind:
-            case ScriptKind.PROTOTYPE:
-                raise PrototypeScriptNotFound(name)
-            case ScriptKind.MODIFICATION:
-                raise ModificationScriptNotFound(name)
-            case ScriptKind.CHOREOGRAPHY:
-                raise ChoreographyScriptNotFound(name)
-            case ScriptKind.TRANSFORMATION:
-                raise TransformationScriptNotFound(name)
-            case ScriptKind.SYNTHESIS:
-                raise SynthesisScriptNotFound(name)
-    return script
-
-
-def getPrototypeScriptByName(session: Session, name: String) -> Script:
-    return getScriptByName(session, ScriptKind.PROTOTYPE, name)
-
-
-def getModificationScriptByName(session: Session, name: String) -> Script:
-    return getScriptByName(session, ScriptKind.MODIFICATION, name)
-
-
-def getChoreographyScriptByName(session: Session, name: String) -> Script:
-    return getScriptByName(session, ScriptKind.CHOREOGRAPHY, name)
-
-
-def getTransformationScriptByName(session: Session, name: String) -> Script:
-    return getScriptByName(session, ScriptKind.TRANSFORMATION, name)
-
-
-def getSynthesisScriptByName(session: Session, name: String) -> Script:
-    return getScriptByName(session, ScriptKind.SYNTHESIS, name)
-
-
 def getTypeByName(session: Session, name: String) -> Type:
     type = session.query(Type).filter_by(name=name).first()
     if type is None:
@@ -1400,125 +1396,93 @@ def getFormationByName(session: Session, name: String) -> Formation:
     return formation
 
 
-def addScriptInputToSession(
-    session: Session,
-    kit: Kit,
-    kind: ScriptKind,
-    scriptInput: PrototypeInput
-    | ModificationInput
-    | ChoreographyInput
-    | TransformationInput
-    | SynthesisInput,
-    replace: bool = False,
-) -> Script:
-    script = session.query(Script).filter_by(kind=kind, name=scriptInput.name).first()
-    if script:
-        if replace:
-            session.delete(script)
-            script = None
-        else:
-            match kind:
-                case ScriptKind.PROTOTYPE:
-                    raise PrototypeScriptAlreadyExists(script)
-                case ScriptKind.MODIFICATION:
-                    raise ModificationScriptAlreadyExists(script)
-                case ScriptKind.CHOREOGRAPHY:
-                    raise ChoreographyScriptAlreadyExists(script)
-                case ScriptKind.TRANSFORMATION:
-                    raise TransformationScriptAlreadyExists(script)
-                case ScriptKind.SYNTHESIS:
-                    raise SynthesisScriptAlreadyExists(script)
-    if not script:
-        script = Script(name=scriptInput.name, kind=kind, kit_id=kit.id)
-        session.add(script)
-        session.flush()
-    try:
-        script.explanation = scriptInput.explanation
-    except AttributeError:
-        pass
-    try:
-        script.symbol = scriptInput.symbol
-    except AttributeError:
-        pass
-    return script
-
-
-def addPrototypeInputToSession(
-    session: Session, kit: Kit, prototypeInput: PrototypeInput, replace: bool = False
-) -> Script:
-    return addScriptInputToSession(
-        session, kit, ScriptKind.PROTOTYPE, prototypeInput, replace
-    )
-
-
-def addModificationInputToSession(
-    session: Session,
-    kit: Kit,
-    modificationInput: ModificationInput,
-    replace: bool = False,
-) -> Script:
-    return addScriptInputToSession(
-        session, kit, ScriptKind.MODIFICATION, modificationInput, replace
-    )
-
-
-def addChoreographyInputToSession(
-    session: Session,
-    kit: Kit,
-    choreographyInput: ChoreographyInput,
-    replace: bool = False,
-) -> Script:
-    return addScriptInputToSession(
-        session, kit, ScriptKind.CHOREOGRAPHY, choreographyInput, replace
-    )
-
-
-def addTransformationInputToSession(
-    session: Session,
-    kit: Kit,
-    transformationInput: TransformationInput,
-    replace: bool = False,
-) -> Script:
-    return addScriptInputToSession(
-        session, kit, ScriptKind.TRANSFORMATION, transformationInput, replace
-    )
-
-
-def addSynthesisInputToSession(
-    session: Session, kit: Kit, synthesisInput: SynthesisInput, replace: bool = False
-) -> Script:
-    return addScriptInputToSession(
-        session, kit, ScriptKind.SYNTHESIS, synthesisInput, replace
-    )
-
-
 def addPropertyInputToSession(
     session: Session,
-    owner: Type | Port,
+    owner: Type | Port | ListProperty,
     propertyInput: PropertyInput,
 ) -> Property:
-    try:
-        synthesisScriptId = getSynthesisScriptByName(
-            session, propertyInput.synthesis.name
-        ).id
-    except (AttributeError, ScriptNotFound):
-        synthesisScriptId = None
     if isinstance(owner, Type):
-        typeId = owner.id
-        portId = None
+        type_id = owner.id
+        port_id = None
+        list_id = None
     elif isinstance(owner, Port):
-        typeId = None
-        portId = owner.id
+        type_id = None
+        port_id = owner.id
+        list_id = None
+    elif isinstance(owner, ListProperty):
+        type_id = None
+        port_id = None
+        list_id = owner.id
     else:
-        raise Exception("Unknown property owner")
-    property = Property(
-        name=propertyInput.name,
-        datatype=propertyInput.datatype,
-        value=propertyInput.value,
-        synthesis_id=synthesisScriptId,
-        type_id=typeId,
-        port_id=portId,
-    )
+        raise InvalidBackend(f"Unknown owner type: {type(owner)}")
+    if propertyInput.decimal is not None:
+        property = DecimalProperty(
+            name=propertyInput.name,
+            decimal=propertyInput.decimal,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.integer is not None:
+        property = IntegerProperty(
+            name=propertyInput.name,
+            integer=propertyInput.integer,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.natural is not None:
+        property = NaturalProperty(
+            name=propertyInput.name,
+            natural=propertyInput.natural,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.boolean is not None:
+        property = BooleanProperty(
+            name=propertyInput.name,
+            boolean=propertyInput.boolean,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.description is not None:
+        property = DescriptionProperty(
+            name=propertyInput.name,
+            description=propertyInput.description,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.choice is not None:
+        property = ChoiceProperty(
+            name=propertyInput.name,
+            choice=propertyInput.choice,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.brep is not None:
+        property = BrepProperty(
+            name=propertyInput.name,
+            brep=propertyInput.brep,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+    elif propertyInput.list is not None:
+        property = ListProperty(
+            name=propertyInput.name,
+            type_id=type_id,
+            port_id=port_id,
+            list_id=list_id,
+        )
+        for childPropertyInput in propertyInput.list or []:
+            addPropertyInputToSession(session, property, childPropertyInput)
+    else:
+        raise InvalidBackend("Unknown property type")
+
     session.add(property)
     session.flush()
     return property
@@ -1526,18 +1490,15 @@ def addPropertyInputToSession(
 
 def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
     port = Port(
-        origin_x=portInput.origin_x,
-        origin_y=portInput.origin_y,
-        origin_z=portInput.origin_z,
-        x_axis_x=portInput.x_axis_x,
-        x_axis_y=portInput.x_axis_y,
-        x_axis_z=portInput.x_axis_z,
-        y_axis_x=portInput.y_axis_x,
-        y_axis_y=portInput.y_axis_y,
-        y_axis_z=portInput.y_axis_z,
-        z_axis_x=portInput.z_axis_x,
-        z_axis_y=portInput.z_axis_y,
-        z_axis_z=portInput.z_axis_z,
+        origin_x=portInput.plane.origin.x,
+        origin_y=portInput.plane.origin.y,
+        origin_z=portInput.plane.origin.z,
+        x_axis_x=portInput.plane.x_axis.x,
+        x_axis_y=portInput.plane.x_axis.y,
+        x_axis_z=portInput.plane.x_axis.z,
+        y_axis_x=portInput.plane.y_axis.x,
+        y_axis_y=portInput.plane.y_axis.y,
+        y_axis_z=portInput.plane.y_axis.z,
         type_id=type.id,
     )
     session.add(port)
@@ -1568,12 +1529,6 @@ def addTypeInputToSession(
         type.symbol = typeInput.symbol
     except AttributeError:
         pass
-    try:
-        type.prototype_id = getPrototypeScriptByName(
-            session, typeInput.prototype.name
-        ).id
-    except AttributeError:
-        pass
     for portInput in typeInput.ports or []:
         port = addPortInputToSession(session, type, portInput)
     for propertyInput in typeInput.properties or []:
@@ -1597,19 +1552,24 @@ def addAttractionInputToSession(
     attractionInput: AttractionInput,
     transientIdToPiece: dict,
 ) -> Attraction:
-    attractingPiece = transientIdToPiece[attractionInput.attracting_piece.transient_id]
-    attractedPiece = transientIdToPiece[attractionInput.attracted_piece.transient_id]
+    try:
+        attractingPiece = transientIdToPiece[
+            attractionInput.attracting.piece.transient_id
+        ]
+    except KeyError:
+        raise PieceNotFound(attractionInput.attracting.piece.transient_id)
+    try:
+        attractedPiece = transientIdToPiece[
+            attractionInput.attracted.piece.transient_id
+        ]
+    except KeyError:
+        raise PieceNotFound(attractionInput.attracted.piece.transient_id)
+
     attractingPieceTypePort = getPortByProperties(
-        session,
-        attractionInput.attracting_piece_type_port.properties
-        if attractionInput.attracting_piece_type_port
-        else [],
+        session, attractionInput.attracting.piece.type.port.properties
     )
     attractedPieceTypePort = getPortByProperties(
-        session,
-        attractionInput.attracted_piece_type_port.properties
-        if attractionInput.attracted_piece_type_port
-        else [],
+        session, attractionInput.attracted.piece.type.port.properties
     )
     attraction = Attraction(
         attracting_piece_id=attractingPiece.id,
@@ -1648,18 +1608,6 @@ def addFormationInputToSession(
         formation.symbol = formationInput.symbol
     except AttributeError:
         symbol = None
-    try:
-        formation.choreography_id = getChoreographyScriptByName(
-            session, formationInput.choreography.name
-        ).id
-    except AttributeError:
-        pass
-    try:
-        formation.transformation_id = getTransformationScriptByName(
-            session, formationInput.transformation.name
-        ).id
-    except AttributeError:
-        pass
     transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
@@ -1688,22 +1636,6 @@ def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = F
         kit.symbol = kitInput.symbol
     except AttributeError:
         pass
-    for prototypeInput in kitInput.prototypes or []:
-        prototype = addPrototypeInputToSession(session, kit, prototypeInput, replace)
-    for modificationInput in kitInput.modifications or []:
-        modification = addModificationInputToSession(
-            session, kit, modificationInput, replace
-        )
-    for choreographyInput in kitInput.choreographies or []:
-        choreography = addChoreographyInputToSession(
-            session, kit, choreographyInput, replace
-        )
-    for transformationInput in kitInput.transformations or []:
-        transformation = addTransformationInputToSession(
-            session, kit, transformationInput, replace
-        )
-    for synthesisInput in kitInput.syntheses or []:
-        synthesis = addSynthesisInputToSession(session, kit, synthesisInput, replace)
     for typeInput in kitInput.types or []:
         type = addTypeInputToSession(session, kit, typeInput, replace)
     for formationInput in kitInput.formations or []:
@@ -1902,54 +1834,10 @@ class ReadLocalKitResponse(ObjectType):
 
 
 class Query(ObjectType):
-    localScripts = graphene.typing.List(ScriptNode, directory=NonNull(graphene.String))
-    localPrototypes = graphene.typing.List(
-        PrototypeNode, directory=NonNull(graphene.String)
-    )
-    localModifications = graphene.typing.List(
-        ModificationNode, directory=NonNull(graphene.String)
-    )
-    localChoreographies = graphene.typing.List(
-        ChoreographyNode, directory=NonNull(graphene.String)
-    )
-    localTransformations = graphene.typing.List(
-        TransformationNode, directory=NonNull(graphene.String)
-    )
-    localSyntheses = graphene.typing.List(
-        SynthesisNode, directory=NonNull(graphene.String)
-    )
-    localTypes = graphene.typing.List(TypeNode, directory=NonNull(graphene.String))
-    localFormations = graphene.typing.List(
-        FormationNode, directory=NonNull(graphene.String)
-    )
-    localArtifacts = graphene.typing.List(
-        ArtifactNode, directory=NonNull(graphene.String)
-    )
+    localTypes = graphene.List(TypeNode, directory=NonNull(graphene.String))
+    localFormations = graphene.List(FormationNode, directory=NonNull(graphene.String))
+    localArtifacts = graphene.List(ArtifactNode, directory=NonNull(graphene.String))
     localKit = graphene.Field(ReadLocalKitResponse, directory=NonNull(graphene.String))
-
-    def resolve_localScripts(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Script).all()
-
-    def resolve_localPrototypes(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Prototype).all()
-
-    def resolve_localModifications(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Modification).all()
-
-    def resolve_localChoreographies(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Choreography).all()
-
-    def resolve_localTransformations(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Transformation).all()
-
-    def resolve_localSyntheses(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Synthesis).all()
 
     def resolve_localTypes(self, info, directory: graphene.String):
         session = getLocalSession(directory)
@@ -1962,11 +1850,6 @@ class Query(ObjectType):
     def resolve_localArtifacts(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         artifacts = []
-        artifacts.extend(session.query(Prototype).all())
-        artifacts.extend(session.query(Modification).all())
-        artifacts.extend(session.query(Choreography).all())
-        artifacts.extend(session.query(Transformation).all())
-        artifacts.extend(session.query(Synthesis).all())
         artifacts.extend(session.query(Type).all())
         artifacts.extend(session.query(Formation).all())
         artifacts.extend(session.query(Kit).all())
@@ -2013,7 +1896,20 @@ class Mutation(ObjectType):
     deleteLocalKit = DeleteLocalKitMutation.Field()
 
 
-schema = Schema(query=Query, mutation=Mutation)
+schema = Schema(
+    query=Query,
+    mutation=Mutation,
+    types=[
+        DecimalPropertyNode,
+        IntegerPropertyNode,
+        NaturalPropertyNode,
+        BooleanPropertyNode,
+        DescriptionPropertyNode,
+        ChoicePropertyNode,
+        BrepPropertyNode,
+        ListPropertyNode,
+    ],
+)
 with open("schema.graphql", "w") as f:
     f.write(str(schema))
 
