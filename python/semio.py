@@ -20,6 +20,14 @@
 API for semio.
 """
 
+# TODO: Refactor Properties polymorphism to a cleaner solution.
+#       Try to mainly get rid of Open-Closed Principle violations.
+# TODO: Check if sqlmodel can replace SQLAlchemy:
+#       ✅Constraints
+#       ❔Polymorphism
+#       ❔graphene_sqlalchemy
+
+
 from os import remove
 from pathlib import Path
 from functools import lru_cache
@@ -28,6 +36,8 @@ from typing import Optional, Dict, Protocol
 from dataclasses import dataclass
 from enum import Enum
 import decimal
+from decimal import Decimal
+from hashlib import sha256
 from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy import (
@@ -63,6 +73,14 @@ NAME_LENGTH_MAX = 100
 SYMBOL_LENGTH_MAX = 1
 URL_LENGTH_MAX = 1000
 KIT_FILENAME = "kit.semio"
+
+
+def canonicalize_name(name: str) -> str:
+    return name.strip().lower().replace(" ", "_")
+
+
+def canonicalize_number(number: decimal.Decimal) -> str:
+    return format(number, ".6f")
 
 
 class SemioException(Exception):
@@ -117,26 +135,30 @@ class Artifact(Protocol):
         )
 
 
-class Point(BaseModel):
+class Geometry(BaseModel):
+    pass
+
+
+class Point(Geometry):
     x: decimal.Decimal
     y: decimal.Decimal
     z: decimal.Decimal
 
 
-class Vector(BaseModel):
+class Vector(Geometry):
     x: decimal.Decimal
     y: decimal.Decimal
     z: decimal.Decimal
 
 
-class Plane(BaseModel):
+class Plane(Geometry):
     origin: Point
     x_axis: Vector
     y_axis: Vector
 
 
 # TODO inherit from speckle
-class Brep(BaseModel):
+class Brep(Geometry):
     pass
 
 
@@ -144,7 +166,6 @@ class Base(DeclarativeBase):
     pass
 
 
-# Open-Closed Principle violation
 class PropertyDatatype(Enum):
     # 001 - 099: numbers
     DECIMAL = 1
@@ -188,7 +209,6 @@ class Property(Base):
 
     __mapper_args__ = {"polymorphic_on": datatype, "polymorphic_abstract": True}
 
-    # Open-Closed Principle violation
     __table_args__ = (
         CheckConstraint(
             "(type_id IS NOT NULL AND port_id IS NULL AND list_id IS NULL) OR "
@@ -208,6 +228,14 @@ class Property(Base):
 
     def __repr__(self) -> str:
         return f"Property(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Property):
+            return NotImplemented
+        return (
+            canonicalize_name(self.name) == canonicalize_name(other.name)
+            and self.value == other.value
+        )
 
     @property
     def owner_id(self) -> Artifact:
@@ -259,9 +287,24 @@ class Property(Base):
 class ScalarProperty(Property):
     __mapper_args__ = {"polymorphic_abstract": True}
 
+    @property
+    def value(self) -> str:
+        return str(self.scalar)
+
+    @property
+    def hash(self) -> str:
+        return sha256(self.value.encode()).hexdigest()
+
 
 class NumberProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
+
+    @property
+    def scalar(self) -> decimal.Decimal:
+        return decimal.Decimal(self.number)
+
+    def __str__(self) -> str:
+        return canonicalize_number(self.scalar)
 
 
 class DecimalProperty(NumberProperty):
@@ -277,6 +320,10 @@ class DecimalProperty(NumberProperty):
     def __repr__(self) -> str:
         return f"Decimal(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def number(self) -> Decimal:
+        return self.decimal
+
 
 class IntegerProperty(NumberProperty):
     __tablename__ = "integer_property"
@@ -291,6 +338,10 @@ class IntegerProperty(NumberProperty):
     def __repr__(self) -> str:
         return f"Integer(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def number(self) -> int:
+        return self.integer
+
 
 class NaturalProperty(NumberProperty):
     __tablename__ = "natural_property"
@@ -304,9 +355,20 @@ class NaturalProperty(NumberProperty):
     def __repr__(self) -> str:
         return f"Natural(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def number(self) -> int:
+        return self.natural
+
 
 class LogicalProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
+
+    @property
+    def scalar(self) -> decimal.Decimal:
+        return decimal.Decimal(self.logical)
+
+    def __str__(self) -> str:
+        return canonicalize_number(self.scalar)
 
 
 class BooleanProperty(LogicalProperty):
@@ -322,9 +384,17 @@ class BooleanProperty(LogicalProperty):
     def __repr__(self) -> str:
         return f"Boolean(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def logical(self) -> bool:
+        return self.boolean
+
 
 class TextProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
+
+    @property
+    def scalar(self) -> str:
+        return self.text
 
 
 class DescriptionProperty(TextProperty):
@@ -340,6 +410,10 @@ class DescriptionProperty(TextProperty):
     def __repr__(self) -> str:
         return f"Description(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def text(self) -> str:
+        return self.description
+
 
 class ChoiceProperty(TextProperty):
     __tablename__ = "choice_property"
@@ -354,9 +428,17 @@ class ChoiceProperty(TextProperty):
     def __repr__(self) -> str:
         return f"Choice(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def text(self) -> str:
+        return self.choice
+
 
 class GeometryProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
+
+    @property
+    def scalar(self) -> Geometry:
+        return self.geometry
 
 
 class BrepProperty(GeometryProperty):
@@ -372,9 +454,17 @@ class BrepProperty(GeometryProperty):
     def __repr__(self) -> str:
         return f"Brep(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
 
+    @property
+    def geometry(self) -> Brep:
+        return self.brep
+
 
 class ContainerProperty(Property):
     __mapper_args__ = {"polymorphic_abstract": True}
+
+    @property
+    def value(self) -> str:
+        return str(self.hash)
 
 
 class ListProperty(ContainerProperty):
@@ -398,7 +488,11 @@ class ListProperty(ContainerProperty):
 
     @property
     def list(self) -> typing.List[Property]:
-        return self.properties.sort(key=lambda property: property.list_index)
+        return sorted(self.properties, key=lambda property: property.list_index)
+
+    @property
+    def hash(self) -> str:
+        return sha256("\n".join([p.hash for p in self.list]).encode()).hexdigest()
 
 
 class Port(Base):
@@ -868,6 +962,17 @@ class PropertyNode(SQLAlchemyInterface):
             "list",
         )
 
+    datatype = NonNull(graphene.String)
+    value = NonNull(graphene.String)
+
+    @staticmethod
+    def resolve_datatype(property: Property, info):
+        return property.datatype.name.lower()
+
+    @staticmethod
+    def resolve_value(property: Property, info):
+        return property.value
+
 
 class DecimalPropertyNode(SQLAlchemyObjectType):
     class Meta:
@@ -1053,9 +1158,6 @@ class ListPropertyNode(SQLAlchemyObjectType):
         )
         interfaces = (PropertyNode,)
 
-    # TODO: Make type JSON and add a recursive resolver
-    # This way queries can be infinitely nested despite
-    # the fact that GraphQL does not support recursive queries
     list = NonNull(graphene.List(lambda: PropertyNode))
 
     @staticmethod
@@ -1477,6 +1579,52 @@ class KitAlreadyExists(AlreadyExists):
         return f"Kit ({self.kit.name}) already exists: {str(self.kit)}"
 
 
+def propertyInputToTransientPropertyForEquality(
+    propertyInput: PropertyInput,
+) -> Property:
+    if propertyInput.decimal is not None:
+        return DecimalProperty(
+            name=propertyInput.name,
+            decimal=propertyInput.decimal,
+        )
+    elif propertyInput.integer is not None:
+        return IntegerProperty(
+            name=propertyInput.name,
+            integer=propertyInput.integer,
+        )
+    elif propertyInput.natural is not None:
+        return NaturalProperty(
+            name=propertyInput.name,
+            natural=propertyInput.natural,
+        )
+    elif propertyInput.boolean is not None:
+        return BooleanProperty(
+            name=propertyInput.name,
+            boolean=propertyInput.boolean,
+        )
+    elif propertyInput.description is not None:
+        return DescriptionProperty(
+            name=propertyInput.name,
+            description=propertyInput.description,
+        )
+    elif propertyInput.choice is not None:
+        return ChoiceProperty(
+            name=propertyInput.name,
+            choice=propertyInput.choice,
+        )
+    elif propertyInput.brep is not None:
+        return BrepProperty(
+            name=propertyInput.name,
+            brep=propertyInput.brep,
+        )
+    elif propertyInput.list is not None:
+        return ListProperty(
+            name=propertyInput.name,
+        )
+    else:
+        raise InvalidBackend("Unknown property type")
+
+
 def getMainKit(session: Session) -> Kit:
     kit = session.query(Kit).first()
     if not kit:
@@ -1491,18 +1639,23 @@ def getTypeByName(session: Session, name: String) -> Type:
     return type
 
 
-# TODO: Fix this. Doesn't work. Need to implement proper comparison operators for properties.
 def getPortByProperties(
-    session: Session, properties: typing.List[PropertyInput]
+    session: Session, type: Type, propertyInputs: typing.List[PropertyInput]
 ) -> Port:
-    port = session.query(Port).join(Port.properties)
-    if len(properties) > 0:
-        port = port.filter(
-            Property.name.in_([property.name for property in properties])
-        )
-    port = port.first()
+    typePorts = session.query(Port).filter_by(type_id=type.id)
+    port = None
+    for typePort in typePorts:
+        if all(
+            [
+                propertyInputToTransientPropertyForEquality(property)
+                in typePort.properties
+                for property in propertyInputs
+            ]
+        ):
+            port = typePort
+            break
     if port is None:
-        raise PortNotFound(properties)
+        raise PortNotFound(propertyInputs)
     return port
 
 
@@ -1517,6 +1670,7 @@ def addPropertyInputToSession(
     session: Session,
     owner: Type | Port | ListProperty,
     propertyInput: PropertyInput,
+    listIndex=None,
 ) -> Property:
     if isinstance(owner, Type):
         type_id = owner.id
@@ -1539,7 +1693,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.integer is not None:
         property = IntegerProperty(
             name=propertyInput.name,
@@ -1547,7 +1704,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.natural is not None:
         property = NaturalProperty(
             name=propertyInput.name,
@@ -1555,7 +1715,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.boolean is not None:
         property = BooleanProperty(
             name=propertyInput.name,
@@ -1563,7 +1726,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.description is not None:
         property = DescriptionProperty(
             name=propertyInput.name,
@@ -1571,7 +1737,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.choice is not None:
         property = ChoiceProperty(
             name=propertyInput.name,
@@ -1579,7 +1748,10 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.brep is not None:
         property = BrepProperty(
             name=propertyInput.name,
@@ -1587,21 +1759,25 @@ def addPropertyInputToSession(
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
+        session.add(property)
+        session.flush()
     elif propertyInput.list is not None:
         property = ListProperty(
             name=propertyInput.name,
             type_id=type_id,
             port_id=port_id,
             list_id=list_id,
+            list_index=listIndex,
         )
-        for childPropertyInput in propertyInput.list or []:
-            addPropertyInputToSession(session, property, childPropertyInput)
+        session.add(property)
+        session.flush()
+        for i, childPropertyInput in enumerate(propertyInput.list) or []:
+            addPropertyInputToSession(session, property, childPropertyInput, i)
     else:
         raise InvalidBackend("Unknown property type")
 
-    session.add(property)
-    session.flush()
     return property
 
 
@@ -1681,12 +1857,15 @@ def addAttractionInputToSession(
         ]
     except KeyError:
         raise PieceNotFound(attractionInput.attracted.piece.transient.id)
-
     attractingPieceTypePort = getPortByProperties(
-        session, attractionInput.attracting.piece.type.port.properties
+        session,
+        getTypeByName(session, attractingPiece.type.name),
+        attractionInput.attracting.piece.type.port.properties,
     )
     attractedPieceTypePort = getPortByProperties(
-        session, attractionInput.attracted.piece.type.port.properties
+        session,
+        getTypeByName(session, attractedPiece.type.name),
+        attractionInput.attracted.piece.type.port.properties,
     )
     attraction = Attraction(
         attracting_piece_id=attractingPiece.id,

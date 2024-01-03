@@ -11,7 +11,8 @@
 				"njpwerner.autodocstring",
 				"tamasfe.even-better-toml",
 				"mtxr.sqltools",
-				"mtxr.sqltools-driver-sqlite"
+				"mtxr.sqltools-driver-sqlite",
+				"Gruntfuggly.todo-tree"
 			]
 		}
 	},

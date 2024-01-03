@@ -1,5 +1,5 @@
-mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
-  createLocalKit(directory: $directory, kitInput: $kit) {
+query LocalKit($directory: String!) {
+  localKit(directory: $directory) {
     kit {
       name
       explanation
