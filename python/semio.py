@@ -26,7 +26,7 @@ API for semio.
 #       ✅Constraints
 #       ❔Polymorphism
 #       ❔graphene_sqlalchemy
-
+# TODO: Uniformize naming.
 
 from os import remove
 from pathlib import Path
@@ -37,7 +37,6 @@ from dataclasses import dataclass
 from enum import Enum
 import decimal
 from decimal import Decimal
-from hashlib import sha256
 from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy import (
@@ -45,6 +44,7 @@ from sqlalchemy import (
     Text,
     Numeric,
     Integer,
+    Boolean,
     ForeignKey,
     create_engine,
     UniqueConstraint,
@@ -226,15 +226,12 @@ class Property(Base):
         ),
     )
 
-    def __repr__(self) -> str:
-        return f"Property(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Property):
             return NotImplemented
         return (
             canonicalize_name(self.name) == canonicalize_name(other.name)
-            and self.value == other.value
+            and self.hash == other.hash
         )
 
     @property
@@ -292,19 +289,16 @@ class ScalarProperty(Property):
         return str(self.scalar)
 
     @property
-    def hash(self) -> str:
-        return sha256(self.value.encode()).hexdigest()
+    def hash(self) -> int:
+        return hash(self.value)
 
 
 class NumberProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
 
     @property
-    def scalar(self) -> decimal.Decimal:
-        return decimal.Decimal(self.number)
-
-    def __str__(self) -> str:
-        return canonicalize_number(self.scalar)
+    def scalar(self) -> str:
+        return canonicalize_number(decimal.Decimal(self.number))
 
 
 class DecimalProperty(NumberProperty):
@@ -318,7 +312,10 @@ class DecimalProperty(NumberProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Decimal(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Decimal(id={self.id!r}, name={self.name!r}, value={self.decimal!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Decimal(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def number(self) -> Decimal:
@@ -336,7 +333,10 @@ class IntegerProperty(NumberProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Integer(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Integer(id={self.id!r}, name={self.name!r}, integer={self.integer!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Integer(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def number(self) -> int:
@@ -353,7 +353,10 @@ class NaturalProperty(NumberProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Natural(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Natural(id={self.id!r}, name={self.name!r}, natural={self.natural!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Natural(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def number(self) -> int:
@@ -364,25 +367,25 @@ class LogicalProperty(ScalarProperty):
     __mapper_args__ = {"polymorphic_abstract": True}
 
     @property
-    def scalar(self) -> decimal.Decimal:
-        return decimal.Decimal(self.logical)
-
-    def __str__(self) -> str:
-        return canonicalize_number(self.scalar)
+    def scalar(self) -> str:
+        return canonicalize_number(decimal.Decimal(self.logical))
 
 
 class BooleanProperty(LogicalProperty):
     __tablename__ = "boolean_property"
 
     id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    boolean: Mapped[bool] = mapped_column(Integer())
+    boolean: Mapped[bool] = mapped_column(Boolean())
 
     __mapper_args__ = {
         "polymorphic_identity": PropertyDatatype.BOOLEAN,
     }
 
     def __repr__(self) -> str:
-        return f"Boolean(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Boolean(id={self.id!r}, name={self.name!r}, boolean={self.boolean!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Boolean(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def logical(self) -> bool:
@@ -408,7 +411,10 @@ class DescriptionProperty(TextProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Description(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Description(id={self.id!r}, name={self.name!r}, description={self.description!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Description(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def text(self) -> str:
@@ -426,7 +432,10 @@ class ChoiceProperty(TextProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Choice(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Choice(id={self.id!r}, name={self.name!r}, choice={self.choice!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Choice(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def text(self) -> str:
@@ -452,7 +461,10 @@ class BrepProperty(GeometryProperty):
     }
 
     def __repr__(self) -> str:
-        return f"Brep(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Brep(id={self.id!r}, name={self.name!r}, brep={self.brep!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"Brep(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def geometry(self) -> Brep:
@@ -463,8 +475,8 @@ class ContainerProperty(Property):
     __mapper_args__ = {"polymorphic_abstract": True}
 
     @property
-    def value(self) -> str:
-        return str(self.hash)
+    def value(self) -> None:
+        return None
 
 
 class ListProperty(ContainerProperty):
@@ -484,15 +496,18 @@ class ListProperty(ContainerProperty):
     }
 
     def __repr__(self) -> str:
-        return f"ListProperty(id={self.id!r}, name={self.name!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"List(id={self.id!r}, name={self.name!r}, properties={self.properties!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+
+    def __str__(self) -> str:
+        return f"List(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
 
     @property
     def list(self) -> typing.List[Property]:
         return sorted(self.properties, key=lambda property: property.list_index)
 
     @property
-    def hash(self) -> str:
-        return sha256("\n".join([p.hash for p in self.list]).encode()).hexdigest()
+    def hash(self) -> int:
+        return hash([p.hash for p in self.list])
 
 
 class Port(Base):
@@ -525,7 +540,10 @@ class Port(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Port(id={self.id!r}, name={self.name!r}, type_id={self.type_id!r})"
+        return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, properties={self.properties!r})"
+
+    def __str__(self) -> str:
+        return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
 
     @property
     def plane(self) -> Plane:
@@ -590,7 +608,7 @@ class Type(Base):
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
     ports: Mapped[Optional[typing.List[Port]]] = relationship(
-        "Port", back_populates="type"
+        "Port", back_populates="type", cascade="all, delete-orphan"
     )
     properties: Mapped[Optional[typing.List[Property]]] = relationship(
         Property, back_populates="type", cascade="all, delete-orphan"
@@ -600,7 +618,7 @@ class Type(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r}, kit_id={self.kit_id!r})"
+        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, ports={self.ports!r}, properties={self.properties!r}, kit_id={self.kit_id!r})"
 
     @property
     def parent(self) -> Artifact:
@@ -647,7 +665,10 @@ class Piece(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, formation_id={self.formation_id!r})"
+        return f"Piece(id={self.id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
+
+    def __str__(self) -> str:
+        return f"Piece(id={str(self.id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
 
     @property
     def transient(self) -> TransientId:
@@ -674,18 +695,11 @@ class Piece(Base):
         return [self.parent] + self.children + self.references + self.referenced_by
 
 
-class PortTypePieceSide(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-
-    properties: typing.List[Property]
-
-
 class TypePieceSide(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    port: PortTypePieceSide
+    port: Port
 
 
 class PieceSide(BaseModel):
@@ -751,15 +765,16 @@ class Attraction(Base):
     def __repr__(self) -> str:
         return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
 
+    def __str__(self) -> str:
+        return f"Attraction(attracting_piece_id={str(self.attracting_piece_id)}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
+
     @property
     def attracting(self) -> Side:
         return Side(
             piece=PieceSide(
                 transient=self.attracting_piece.transient,
                 type=TypePieceSide(
-                    port=PortTypePieceSide(
-                        properties=self.attracting_piece_type_port.properties
-                    )
+                    port=self.attracting_piece_type_port,
                 ),
             )
         )
@@ -770,9 +785,7 @@ class Attraction(Base):
             piece=PieceSide(
                 transient=self.attracted_piece.transient,
                 type=TypePieceSide(
-                    port=PortTypePieceSide(
-                        properties=self.attracted_piece_type_port.properties
-                    )
+                    port=self.attracted_piece_type_port,
                 ),
             )
         )
@@ -820,9 +833,10 @@ class Formation(Base):
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
 
     def __repr__(self) -> str:
-        return (
-            f"Formation(id={self.id!r}, name = {self.name!r}, kit_id={self.kit_id!r})"
-        )
+        return f"Formation(id={self.id!r}, name = {self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, kit_id={self.kit_id!r})"
+
+    def __str__(self) -> str:
+        return f"Formation(id={str(self.id)}, name = {self.name}, kit_id={str(self.kit_id)})"
 
     @property
     def parent(self) -> Artifact:
@@ -861,7 +875,10 @@ class Kit(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Kit(id={self.id!r}, name={self.name!r})"
+        return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, symbol={self.symbol!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
+
+    def __str__(self) -> str:
+        return f"Kit(id={str(self.id)}, name={self.name})"
 
     @property
     def parent(self) -> Artifact:
@@ -963,7 +980,7 @@ class PropertyNode(SQLAlchemyInterface):
         )
 
     datatype = NonNull(graphene.String)
-    value = NonNull(graphene.String)
+    value = graphene.String()
 
     @staticmethod
     def resolve_datatype(property: Property, info):
@@ -1235,24 +1252,12 @@ class PieceNode(SQLAlchemyObjectType):
         return piece.transient
 
 
-class PortTypePieceSideNode(PydanticObjectType):
-    class Meta:
-        model = PortTypePieceSide
-        exclude_fields = ("properties",)
-
-    properties = graphene.List(PropertyNode)
-
-    @staticmethod
-    def resolve_properties(root, info):
-        return root.properties
-
-
 class TypePieceSideNode(PydanticObjectType):
     class Meta:
         model = TypePieceSide
         exclude_fields = ("port",)
 
-    port = graphene.Field(PortTypePieceSideNode)
+    port = graphene.Field(PortNode)
 
     @staticmethod
     def resolve_port(root, info):
@@ -1290,9 +1295,11 @@ class AttractionNode(SQLAlchemyObjectType):
             "attracting_piece_id",
             "attracting_piece",
             "attracting_piece_type_port_id",
+            "attracting_piece_type_port",
             "attracted_piece_id",
             "attracted_piece",
             "attracted_piece_type_port_id",
+            "attracted_piece_type_port",
             "formation_id",
         )
 
@@ -1378,6 +1385,18 @@ class PropertyInput(InputObjectType):
     list = graphene.List(lambda: PropertyInput)
 
 
+class ScalarPropertyInput(InputObjectType):
+    name = NonNull(graphene.String)
+    # oneOf
+    decimal = graphene.Decimal()
+    integer = graphene.Int()
+    natural = graphene.Int()
+    boolean = graphene.Boolean()
+    description = graphene.String()
+    choice = graphene.String()
+    brep = graphene.JSONString()
+
+
 class PointInput(PydanticInputObjectType):
     class Meta:
         model = Point
@@ -1395,11 +1414,11 @@ class PlaneInput(PydanticInputObjectType):
 
 class PortInput(InputObjectType):
     plane = NonNull(PlaneInput)
-    properties = NonNull(graphene.List(NonNull(PropertyInput)))
+    properties = NonNull(graphene.List(NonNull(ScalarPropertyInput)))
 
 
 class PortIdInput(InputObjectType):
-    properties = NonNull(graphene.List(NonNull(PropertyInput)))
+    properties = NonNull(graphene.List(NonNull(ScalarPropertyInput)))
 
 
 class TypeInput(InputObjectType):
@@ -1579,7 +1598,15 @@ class KitAlreadyExists(AlreadyExists):
         return f"Kit ({self.kit.name}) already exists: {str(self.kit)}"
 
 
-def propertyInputToTransientPropertyForEquality(
+class PortsCantHaveContainerProperty(SpecificationError):
+    def __init__(self, propertyInput) -> None:
+        self.propertyInput = propertyInput
+
+    def __str__(self):
+        return f"Ports can't have a container property: {str(self.propertyInput)}"
+
+
+def portPropertyInputToTransientPropertyForEquality(
     propertyInput: PropertyInput,
 ) -> Property:
     if propertyInput.decimal is not None:
@@ -1618,9 +1645,7 @@ def propertyInputToTransientPropertyForEquality(
             brep=propertyInput.brep,
         )
     elif propertyInput.list is not None:
-        return ListProperty(
-            name=propertyInput.name,
-        )
+        raise PortsCantHaveContainerProperty(propertyInput)
     else:
         raise InvalidBackend("Unknown property type")
 
@@ -1647,7 +1672,7 @@ def getPortByProperties(
     for typePort in typePorts:
         if all(
             [
-                propertyInputToTransientPropertyForEquality(property)
+                portPropertyInputToTransientPropertyForEquality(property)
                 in typePort.properties
                 for property in propertyInputs
             ]
@@ -2117,33 +2142,56 @@ class DeleteLocalKitMutation(graphene.Mutation):
         return DeleteLocalKitError()
 
 
-class ReadLocalKitError(graphene.Enum):
+class LoadLocalKitError(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_READ_KIT = "no_permission_to_read_kit"
 
 
-class ReadLocalKitResponse(ObjectType):
+class LoadLocalTypesResponse(ObjectType):
+    types = graphene.List(TypeNode)
+    error = Field(LoadLocalKitError)
+
+
+class LoadLocalFormationsResponse(ObjectType):
+    formations = graphene.List(FormationNode)
+    error = Field(LoadLocalKitError)
+
+
+class LoadLocalArtifactsResponse(ObjectType):
+    artifacts = graphene.List(ArtifactNode)
+    error = Field(LoadLocalKitError)
+
+
+class LoadLocalKitResponse(ObjectType):
     kit = Field(KitNode)
-    error = Field(ReadLocalKitError)
+    error = Field(LoadLocalKitError)
 
 
 class Query(ObjectType):
-    localTypes = graphene.List(TypeNode, directory=NonNull(graphene.String))
-    localFormations = graphene.List(FormationNode, directory=NonNull(graphene.String))
-    localArtifacts = graphene.List(ArtifactNode, directory=NonNull(graphene.String))
-    localKit = graphene.Field(ReadLocalKitResponse, directory=NonNull(graphene.String))
+    loadLocalTypes = graphene.Field(
+        LoadLocalTypesResponse, directory=NonNull(graphene.String)
+    )
+    loadLocalFormations = graphene.Field(
+        LoadLocalFormationsResponse, directory=NonNull(graphene.String)
+    )
+    loadLocalArtifacts = graphene.Field(
+        LoadLocalArtifactsResponse, directory=NonNull(graphene.String)
+    )
+    loadLocalKit = graphene.Field(
+        LoadLocalKitResponse, directory=NonNull(graphene.String)
+    )
 
-    def resolve_localTypes(self, info, directory: graphene.String):
+    def resolve_loadLocalTypes(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Type).all()
 
-    def resolve_localFormations(self, info, directory: graphene.String):
+    def resolve_loadLocalFormations(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         return session.query(Formation).all()
 
-    def resolve_localArtifacts(self, info, directory: graphene.String):
+    def resolve_loadLocalArtifacts(self, info, directory: graphene.String):
         session = getLocalSession(directory)
         artifacts = []
         artifacts.extend(session.query(Type).all())
@@ -2151,39 +2199,39 @@ class Query(ObjectType):
         artifacts.extend(session.query(Kit).all())
         return artifacts
 
-    def resolve_localKit(self, info, directory: graphene.String):
+    def resolve_loadLocalKit(self, info, directory: graphene.String):
         directory = Path(directory)
         if not directory.exists():
-            return ReadLocalKitResponse(
+            return LoadLocalKitResponse(
                 kit=None,
-                error=ReadLocalKitError(
-                    code=ReadLocalKitError.DIRECTORY_DOES_NOT_EXIST
+                error=LoadLocalKitError(
+                    code=LoadLocalKitError.DIRECTORY_DOES_NOT_EXIST
                 ),
             )
         if not directory.is_dir():
-            return ReadLocalKitResponse(
+            return LoadLocalKitResponse(
                 kit=None,
-                error=ReadLocalKitError(
-                    code=ReadLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
+                error=LoadLocalKitError(
+                    code=LoadLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
                 ),
             )
         try:
             session = getLocalSession(directory)
         except PermissionError:
-            return ReadLocalKitResponse(
+            return LoadLocalKitResponse(
                 kit=None,
-                error=ReadLocalKitError(
-                    code=ReadLocalKitError.NO_PERMISSION_TO_READ_KIT
+                error=LoadLocalKitError(
+                    code=LoadLocalKitError.NO_PERMISSION_TO_READ_KIT
                 ),
             )
         try:
             kit = getMainKit(session)
         except NoMainKit:
-            return ReadLocalKitResponse(
+            return LoadLocalKitResponse(
                 kit=None,
-                error=ReadLocalKitError(code=ReadLocalKitError.DIRECTORY_HAS_NO_KIT),
+                error=LoadLocalKitError(code=LoadLocalKitError.DIRECTORY_HAS_NO_KIT),
             )
-        return ReadLocalKitResponse(kit=kit, error=None)
+        return LoadLocalKitResponse(kit=kit, error=None)
 
 
 class Mutation(ObjectType):
