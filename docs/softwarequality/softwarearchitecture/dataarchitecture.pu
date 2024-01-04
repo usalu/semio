@@ -22,238 +22,74 @@ entity Type {
     kit_id : int <<FK>>
 }
 
+entity Representation {
+    *id : int <<generated>>
+    ..
+    platform: string
+    type_id : int <<FK>>
+}
+
 entity Port {
     *id : int <<generated>>
     ..
     type_id : int <<FK>>
 }
 
-abstract Property {
+abstract Quality {
     *id : int <<generated>>
     ..
     *name : string
-    *datatype : string
-    ..
-    type_id : int <<FK>>
+    *kind : string
+    *units : String
     ..
     port_id : int <<FK>>
-    ..
-    list_id : int <<FK>>
-    list_index : int
-    ..
-    set_id : int <<FK>>
-    ..
-    dictionary_id : int <<FK>>
-    dictionary_key : string
-    ..
-    tree_id : int <<FK>>
-    tree_parent_id : int <<FK>>
     --
     value() : Any
     equals(property) : boolean
 }
-note left of Property
-    Single table inheritance with datatype as discriminator.
-    Owner is either a port, a type or a container property.
-end note
-
-abstract ScalarProperty {
-    scalar() : Any
-    ..
-    set(value) : void
-    unset() : void
-    is_set() : Boolean
-}
-
-abstract NumberProperty {
-    units : String
-    --
-    number() : Decimal
-    ..
-    add(number) : number
-    subtract(number) : number
-    multiply(number) : number
-    divide(number) : number
-}
-
-entity DecimalProperty {
-    decimal : Decimal
-}
-
-entity IntegerProperty {
-    integer : Integer
-}
-
-entity NaturalProperty {
-    natural : Integer
-}
-
-abstract LogicProperty {
-    logicalValue() : Decimal
-    ..
-    not() : LogicProperty
-    and(property) : LogicProperty
-    or(property) : LogicProperty
-}
-
-entity BooleanProperty {
-    boolean : Boolean
-}
-
-entity FuzzyProperty {
-    fuzzy : Decimal
-}
-
-abstract TextProperty {
-    text() : String
-    ..
-    fuzzy_compare(text) : number
-}
-
-entity DescriptionProperty {
-    description : String
-}
-
-entity ChoiceProperty {
-    choice : Choice
-}
-
-abstract GeometryProperty {
-    geometry() : Geometry
-    ..
-    transform(matrix) : Geometry
-}
-
-entity PointProperty {
-    point : Point
-}
-
-entity VectorProperty {
-    vector : Vector
-}
-
-entity PlaneProperty {
-    plane : plane
-}
-
-entity LineProperty {
-    line : Line
-}
-
-entity CurveProperty {
-    curve : Curve
-}
-
-entity SurfaceProperty {
-    surface : Surface
-}
-
-entity BrepProperty {
-    brep : Brep
-}
-
-entity MeshProperty {
-    mesh : Mesh
-}
-
-abstract ContainerProperty {
-    container() : Container
-    ..
-    contains(property) : boolean
-    size() : int
-    is_empty() : boolean
-    clear() : void
-}
-note right of ContainerProperty
-    A container has null as its value.
+note left of Quality
+    Single table inheritance with kind as discriminator.
+    Every Implementation of Quality must have a way to convert units between each other.
 end note
 
 
-entity ListProperty {
-    list() : List<Property>
+entity CountQuality {
+    *count : integer
+}
+
+entity LengthQuality {
+    *length : number
+}
+
+entity AreaQuality {
+    *area : number
+}
+
+entity VolumeQuality {
+    *volume : number
+}
+
+entity WeightQuality {
+    *weight : number
+}
+
+entity TimeQuality {
+    *time : time
+}
+
+entity CostQuality {
+    *cost : number
+}
+
+entity ColorQuality {
+    *color : string
+}
+
+abstract Location {
+    *context : string
+    *specifier : string
     ..
-    insert(index, property) : void
-    remove(index) : void
-    get(index) : Property
-}
-
-entity SetProperty {
-    set() : Set<string,Property>
-    ..
-    put(property) : void
-    take(name) : Property
-}
-
-entity DictionaryProperty {
-    dictionary() : Dictionary<string, Property>
-    ..
-    put(key, property) : void
-    take(key) : Property
-}
-
-entity TreeProperty {
-    tree() : Tree<Property>
-    ..
-    children() : List<TreeProperty>
-}
-
-abstract FileProperty {
-    file() : File
-    ..
-    save() : string
-}
-
-abstract ImageProperty {
-    image() : Image
-    invert() : Image
-}
-
-entity PngProperty {
-    png : Png
-}
-
-entity JpgProperty {
-    jpg : Jpg
-}
-
-abstract ThreeDProperty {
-    threeD() : ThreeD
-    ..
-    transform(matrix) : ThreeD
-}
-
-entity StlProperty {
-    stl : Stl
-}
-
-entity ObjProperty {
-    obj : Obj
-}
-
-entity GltfProperty {
-    gltf : Gltf
-}
-
-entity GlbProperty {
-    glb : Glb
-}
-
-entity RhinoProperty {
-    rhino : Rhino
-}
-
-entity IfcProperty {
-    ifc : Ifc
-}
-
-entity SpeckleProperty {
-    speckle : Speckle
-}
-
-entity Formation {
-    *id : int <<generated>>
-    ..
-    kit_id : int <<FK>>
+    port_id : int <<FK>>
 }
 
 entity Piece{
@@ -275,88 +111,37 @@ entity Attraction {
     formation_id : int <<FK>>
 }
 
-' --
+entity Formation {
+    *id : int <<generated>>
+    ..
+    kit_id : int <<FK>>
+}
+
 
 Kit ||--o{ Type
 Kit ||--o{ Formation
-
-' --
-
+Representation }o--|| Type
 Type ||--o{ Port
-Type ||--o{ Property
-
-' --
-
+Type ||--o{ Quality
 Formation ||--o{ Piece
 Formation ||--o{ Attraction
+Port ||--o{  Location
+Type <-- Piece
+Piece <-- Attraction
+Port <-- Attraction
 
-
-Port ||--o{ Property
-
-' --
-
-Type --o Piece
-Piece --o Attraction
-Port --o Attraction
-
-Property <|-- ScalarProperty
-Property <|-- ContainerProperty
-
-' --
-
-ScalarProperty <|-- NumberProperty
-ScalarProperty <|-- TextProperty
-ScalarProperty <|-- GeometryProperty
-ScalarProperty <|-- FileProperty
-ScalarProperty <|-- LogicProperty
-
-ContainerProperty ||--o{ Property
-ContainerProperty <|-- ListProperty
-ContainerProperty <|-- SetProperty
-ContainerProperty <|-- DictionaryProperty
-ContainerProperty <|-- TreeProperty
-
-' --
-
-NumberProperty <|-- DecimalProperty
-NumberProperty <|-- IntegerProperty
-NumberProperty <|-- NaturalProperty
-
-LogicProperty <|-- BooleanProperty
-LogicProperty <|-- FuzzyProperty
-
-TextProperty <|-- DescriptionProperty
-TextProperty <|-- ChoiceProperty
-
-GeometryProperty <|-- PointProperty
-GeometryProperty <|-- VectorProperty
-GeometryProperty <|-- PlaneProperty
-GeometryProperty <|-- LineProperty
-GeometryProperty <|-- CurveProperty
-GeometryProperty <|-- SurfaceProperty
-GeometryProperty <|-- BrepProperty
-GeometryProperty <|-- MeshProperty
-
-FileProperty <|-- ImageProperty
-FileProperty <|-- ThreeDProperty
-
-' --
-
-ImageProperty <|-- PngProperty
-ImageProperty <|-- JpgProperty
-
-ThreeDProperty <|-- StlProperty
-ThreeDProperty <|-- ObjProperty
-ThreeDProperty <|-- GltfProperty
-ThreeDProperty <|-- GlbProperty
-ThreeDProperty <|-- RhinoProperty
-ThreeDProperty <|-- IfcProperty
-ThreeDProperty <|-- SpeckleProperty
-
-' --
+Quality <|-- LengthQuality
+Quality <|-- CountQuality
+Quality <|-- AreaQuality
+Quality <|-- VolumeQuality
+Quality <|-- WeightQuality
+Quality <|-- TimeQuality
+Quality <|-- CostQuality
+Quality <|-- ColorQuality
 
 Artifact <|-- Kit
 Artifact <|-- Type
 Artifact <|-- Formation
+
 
 @enduml
