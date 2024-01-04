@@ -27,6 +27,8 @@ API for semio.
 #       ❔Polymorphism
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
+# TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
+# TODO: Add specklepy for geometry (depends on pydantic>2).
 
 from os import remove
 from pathlib import Path
@@ -1267,25 +1269,11 @@ class TypePieceSideNode(PydanticObjectType):
 class PieceSideNode(PydanticObjectType):
     class Meta:
         model = PieceSide
-        exclude_fields = ("type",)
-
-    type = graphene.Field(TypePieceSideNode)
-
-    @staticmethod
-    def resolve_type(root, info):
-        return root.type
 
 
 class SideNode(PydanticObjectType):
     class Meta:
         model = Side
-        exclude_fields = ("piece",)
-
-    piece = graphene.Field(PieceSideNode)
-
-    @staticmethod
-    def resolve_piece(root, info):
-        return root.piece
 
 
 class AttractionNode(SQLAlchemyObjectType):
@@ -2254,8 +2242,12 @@ schema = Schema(
         ListPropertyNode,
     ],
 )
+
 with open("schema.graphql", "w") as f:
     f.write(str(schema))
+
+engine = create_engine("sqlite:///semio.db")
+Base.metadata.create_all(engine)
 
 app = Flask(__name__)
 app.add_url_rule(
