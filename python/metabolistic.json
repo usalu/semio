@@ -6,34 +6,85 @@
         "symbol": "🫀",
         "types": [
             {
-                "name": "cuboid building core shaft",
+                "name": "shaft",
                 "explanation": "A cuboid building core shaft with 10 storeys and a floor height of 3 meters.",
                 "symbol": "🛗",
-                "properties": [
+                "representations": [
+                    {
+                        "name": "geometry",
+                        "explanation": "Simple geometry in 1to100 level of detail.",
+                        "symbol": "👁️",
+                        "tags": [
+                            "simple"
+                        ],
+                        "lod": "1to100",
+                        "format": "3dm",
+                        "blob": "looooooooooong binary blob..."
+                    }
+                ],
+                "qualities": [
                     {
                         "name": "floor height",
-                        "decimal": 3
+                        "kind": "length",
+                        "value": "3",
+                        "unit": "m"
                     },
                     {
                         "name": "storeys",
-                        "natural": 10
+                        "kind": "count",
+                        "value": "10"
+                    }
+                ],
+                "ports": [
+                    {
+                        "plane": {
+                            "origin": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0
+                            },
+                            "xAxis": {
+                                "x": 1,
+                                "y": 0,
+                                "z": 0
+                            },
+                            "yAxis": {
+                                "x": 0,
+                                "y": 1,
+                                "z": 0
+                            }
+                        },
+                        "specifiers": [
+                            {
+                                "context": "facade",
+                                "group": "north"
+                            },
+                            {
+                                "context": "floor",
+                                "group": "1"
+                            },
+                            {
+                                "context": "door",
+                                "group": "0"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "capsule",
+                "explanation": "A capsule with the door in the back and window in the front.",
+                "symbol": "📦",
+                "qualities": [
+                    {
+                        "name": "door",
+                        "kind": "orientation",
+                        "value": "behind"
                     },
                     {
-                        "name": "entrances",
-                        "list": [
-                            {
-                                "name": "entrance1",
-                                "description": "this is entrance 1"
-                            },
-                            {
-                                "name": "entrance2",
-                                "description": "this is entrance 2"
-                            },
-                            {
-                                "name": "entrance3",
-                                "description": "this is entrance 3"
-                            }
-                        ]
+                        "name": "window",
+                        "kind": "orientation",
+                        "value": "front"
                     }
                 ],
                 "ports": [
@@ -55,31 +106,34 @@
                                 "z": 0
                             }
                         },
-                        "properties": [
+                        "specifiers": [
                             {
-                                "name": "facade",
-                                "natural": 0
-                            },
-                            {
-                                "name": "floor",
-                                "natural": 1
-                            },
-                            {
-                                "name": "door",
-                                "natural": 0
+                                "context": "doors",
+                                "group": "front"
                             }
                         ]
                     }
                 ]
             },
             {
-                "name": "default box capsule",
-                "explanation": "The default box capsule.",
-                "symbol": "📦()",
-                "properties": [
+                "name": "capsule",
+                "explanation": "A mirrored capsule with the door in the back and window in the front.",
+                "symbol": "📦^🪞",
+                "qualities": [
                     {
                         "name": "door",
-                        "choice": "behind"
+                        "kind": "orientation",
+                        "value": "behind"
+                    },
+                    {
+                        "name": "window",
+                        "kind": "orientation",
+                        "value": "front"
+                    },
+                    {
+                        "name": "mirrored",
+                        "kind": "boolean",
+                        "value": "true"
                     }
                 ],
                 "ports": [
@@ -101,48 +155,10 @@
                                 "z": 0
                             }
                         },
-                        "properties": [
+                        "specifiers": [
                             {
-                                "name": "door",
-                                "boolean": true
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "name": "mirrored default box capsule",
-                "explanation": "The mirrored default box capsule.",
-                "symbol": "📦_🪞",
-                "properties": [
-                    {
-                        "name": "door",
-                        "choice": "behind"
-                    }
-                ],
-                "ports": [
-                    {
-                        "plane": {
-                            "origin": {
-                                "x": 0,
-                                "y": 0,
-                                "z": 0
-                            },
-                            "xAxis": {
-                                "x": 1,
-                                "y": 0,
-                                "z": 0
-                            },
-                            "yAxis": {
-                                "x": 0,
-                                "y": 1,
-                                "z": 0
-                            }
-                        },
-                        "properties": [
-                            {
-                                "name": "door",
-                                "boolean": true
+                                "context": "doors",
+                                "group": "front"
                             }
                         ]
                     }
@@ -160,7 +176,20 @@
                             "id": "s"
                         },
                         "type": {
-                            "name": "cuboid building core shaft"
+                            "name": "shaft",
+                            "qualities": [
+                                {
+                                    "name": "floor height",
+                                    "kind": "length",
+                                    "value": "3",
+                                    "unit": "m"
+                                },
+                                {
+                                    "name": "storeys",
+                                    "kind": "count",
+                                    "value": "10"
+                                }
+                            ]
                         }
                     },
                     {
@@ -168,7 +197,19 @@
                             "id": "c1"
                         },
                         "type": {
-                            "name": "default box capsule"
+                            "name": "capsule",
+                            "qualities": [
+                                {
+                                    "name": "door",
+                                    "kind": "orientation",
+                                    "value": "behind"
+                                },
+                                {
+                                    "name": "window",
+                                    "kind": "orientation",
+                                    "value": "front"
+                                }
+                            ]
                         }
                     },
                     {
@@ -176,7 +217,24 @@
                             "id": "c2"
                         },
                         "type": {
-                            "name": "mirrored default box capsule"
+                            "name": "capsule",
+                            "qualities": [
+                                {
+                                    "name": "door",
+                                    "kind": "orientation",
+                                    "value": "behind"
+                                },
+                                {
+                                    "name": "window",
+                                    "kind": "orientation",
+                                    "value": "front"
+                                },
+                                {
+                                    "name": "mirrored",
+                                    "kind": "boolean",
+                                    "value": "true"
+                                }
+                            ]
                         }
                     }
                 ],
@@ -189,18 +247,18 @@
                                 },
                                 "type": {
                                     "port": {
-                                        "properties": [
+                                        "specifiers": [
                                             {
-                                                "name": "facade",
-                                                "natural": 0
+                                                "context": "facade",
+                                                "group": "north"
                                             },
                                             {
-                                                "name": "floor",
-                                                "natural": 1
+                                                "context": "floor",
+                                                "group": "1"
                                             },
                                             {
-                                                "name": "door",
-                                                "natural": 0
+                                                "context": "door",
+                                                "group": "0"
                                             }
                                         ]
                                     }
@@ -214,10 +272,10 @@
                                 },
                                 "type": {
                                     "port": {
-                                        "properties": [
+                                        "specifiers": [
                                             {
-                                                "name": "door",
-                                                "boolean": true
+                                                "context": "doors",
+                                                "group": "front"
                                             }
                                         ]
                                     }

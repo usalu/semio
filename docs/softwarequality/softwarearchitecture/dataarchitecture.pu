@@ -25,8 +25,17 @@ entity Type {
 entity Representation {
     *id : int <<generated>>
     ..
-    platform: string
+    format: string
+    lod: string
+    blob : blob
+    ..
     type_id : int <<FK>>
+}
+
+entity Tag {
+    *value : string <<PK>>
+    ..
+    representation_id : int <<PK,FK>>
 }
 
 entity Port {
@@ -36,60 +45,20 @@ entity Port {
 }
 
 abstract Quality {
-    *id : int <<generated>>
+    *name : string <<PK>>
+    *kind : string <<PK>>
+    *value : string
+    unit : String
     ..
-    *name : string
-    *kind : string
-    *units : String
+    type_id : int <<PK,FK>>
+}
+
+
+abstract Specifier {
+    *context : string <<PK>>
+    *group : string <<PK>>
     ..
-    port_id : int <<FK>>
-    --
-    value() : Any
-    equals(property) : boolean
-}
-note left of Quality
-    Single table inheritance with kind as discriminator.
-    Every Implementation of Quality must have a way to convert units between each other.
-end note
-
-
-entity CountQuality {
-    *count : integer
-}
-
-entity LengthQuality {
-    *length : number
-}
-
-entity AreaQuality {
-    *area : number
-}
-
-entity VolumeQuality {
-    *volume : number
-}
-
-entity WeightQuality {
-    *weight : number
-}
-
-entity TimeQuality {
-    *time : time
-}
-
-entity CostQuality {
-    *cost : number
-}
-
-entity ColorQuality {
-    *color : string
-}
-
-abstract Location {
-    *context : string
-    *specifier : string
-    ..
-    port_id : int <<FK>>
+    port_id : int <<PK,FK>>
 }
 
 entity Piece{
@@ -101,14 +70,12 @@ entity Piece{
 }
 
 entity Attraction {
-    *id : int <<generated>>
-    ..
-    attracting_piece_id : int <<FK>>
+    attracting_piece_id : int <<PK,FK>>
     attracting_piece_type_port_id : int <<FK>>
-    attracted_piece_id : int <<FK>>
+    attracted_piece_id : int <<PK,FK>>
     attracted_piece_type_port_id : int <<FK>>
     ..
-    formation_id : int <<FK>>
+    formation_id : int <<PK,FK>>
 }
 
 entity Formation {
@@ -120,28 +87,21 @@ entity Formation {
 
 Kit ||--o{ Type
 Kit ||--o{ Formation
+Tag }o--|| Representation
 Representation }o--|| Type
 Type ||--o{ Port
 Type ||--o{ Quality
 Formation ||--o{ Piece
 Formation ||--o{ Attraction
-Port ||--o{  Location
+Port ||--o{  Specifier
 Type <-- Piece
 Piece <-- Attraction
 Port <-- Attraction
 
-Quality <|-- LengthQuality
-Quality <|-- CountQuality
-Quality <|-- AreaQuality
-Quality <|-- VolumeQuality
-Quality <|-- WeightQuality
-Quality <|-- TimeQuality
-Quality <|-- CostQuality
-Quality <|-- ColorQuality
-
 Artifact <|-- Kit
 Artifact <|-- Type
 Artifact <|-- Formation
+Artifact <|-- Representation
 
 
 @enduml
