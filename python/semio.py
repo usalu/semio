@@ -20,15 +20,14 @@
 API for semio.
 """
 
-# TODO: Refactor Properties polymorphism to a cleaner solution.
-#       Try to mainly get rid of Open-Closed Principle violations.
 # TODO: Check if sqlmodel can replace SQLAlchemy:
 #       ✅Constraints
 #       ❔Polymorphism
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Add specklepy for geometry (depends on pydantic>2).
+# TODO: Artifact implements hierarchy but even non-artifacts implement hierarchy.
+#       Think about new term with clearer semantics.
 
 from os import remove
 from pathlib import Path
@@ -39,12 +38,14 @@ from dataclasses import dataclass
 from enum import Enum
 import decimal
 from decimal import Decimal
+from pint import UnitRegistry
 from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy import (
     String,
     Text,
     Numeric,
+    LargeBinary,
     Integer,
     Boolean,
     ForeignKey,
@@ -76,13 +77,15 @@ SYMBOL_LENGTH_MAX = 1
 URL_LENGTH_MAX = 1000
 KIT_FILENAME = "kit.semio"
 
+ureg = UnitRegistry()
+
 
 def canonicalize_name(name: str) -> str:
     return name.strip().lower().replace(" ", "_")
 
 
-def canonicalize_number(number: decimal.Decimal) -> str:
-    return format(number, ".6f")
+def canonicalize_number(number: Decimal) -> Decimal:
+    return number.quantize(Decimal("0.000001"))
 
 
 class SemioException(Exception):
@@ -137,134 +140,51 @@ class Artifact(Protocol):
         )
 
 
-class Geometry(BaseModel):
-    pass
+class Point(BaseModel):
+    x: Decimal
+    y: Decimal
+    z: Decimal
 
 
-class Point(Geometry):
-    x: decimal.Decimal
-    y: decimal.Decimal
-    z: decimal.Decimal
+class Vector(BaseModel):
+    x: Decimal
+    y: Decimal
+    z: Decimal
 
 
-class Vector(Geometry):
-    x: decimal.Decimal
-    y: decimal.Decimal
-    z: decimal.Decimal
-
-
-class Plane(Geometry):
+class Plane(BaseModel):
     origin: Point
     x_axis: Vector
     y_axis: Vector
-
-
-# TODO inherit from speckle
-class Brep(Geometry):
-    pass
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class PropertyDatatype(Enum):
-    # 001 - 099: numbers
-    DECIMAL = 1
-    INTEGER = 2
-    NATURAL = 3
-    # 011 - 019: logical
-    BOOLEAN = 11
-    # 101 - 199: text
-    DESCRIPTION = 101
-    CHOICE = 102
-    # 201 - 299: geometry
-    BREP = 201
-    # 1001 - 9999: files
-    GLTF = 1001
-    # 10001 - 10099: containers
-    LIST = 10001
-
-
-class Property(Base):
-    __tablename__ = "property"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    datatype: Mapped[PropertyDatatype] = mapped_column(
-        sqlalchemy.Enum(PropertyDatatype)
+class Tag(Base):
+    __tablename__ = "tag"
+    value: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    representation_id: Mapped[int] = mapped_column(
+        ForeignKey("representation.id"), primary_key=True
     )
-    type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"))
-    type: Mapped[Optional["Type"]] = relationship("Type", back_populates="properties")
-    port_id: Mapped[Optional[int]] = mapped_column(ForeignKey("port.id"))
-    port: Mapped[Optional["Port"]] = relationship("Port", back_populates="properties")
-    list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("list_property.id"))
-    list_index: Mapped[Optional[int]] = mapped_column(
-        Integer(), CheckConstraint("list_index>=0")
-    )
-    list = relationship(
-        "ListProperty",
-        back_populates="properties",
-        # remote_side=[id],
-        foreign_keys=[list_id],
+    representation: Mapped["Representation"] = relationship(
+        "Representation", back_populates="tags"
     )
 
-    __mapper_args__ = {"polymorphic_on": datatype, "polymorphic_abstract": True}
-
-    __table_args__ = (
-        CheckConstraint(
-            "(type_id IS NOT NULL AND port_id IS NULL AND list_id IS NULL) OR "
-            "(type_id IS NULL AND port_id IS NOT NULL AND list_id IS NULL) OR "
-            "(type_id IS NULL AND port_id IS NULL AND list_id IS NOT NULL)",
-            name="owner_present_and_unique_constraint",
-        ),
-        CheckConstraint(
-            "(list_id IS NOT NULL AND list_index IS NOT NULL) OR "
-            "(list_id IS NULL AND list_index IS NULL)",
-            name="list_index_present_per_list_constraint",
-        ),
-        UniqueConstraint(
-            "list_id", "list_index", name="list_index_unique_per_list_constraint"
-        ),
-    )
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Property):
-            return NotImplemented
+    def __repr__(self) -> str:
         return (
-            canonicalize_name(self.name) == canonicalize_name(other.name)
-            and self.hash == other.hash
+            f"Tag(value={self.value!r}, representation_id={self.representation_id!r})"
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"Tag(value={self.value}, representation_id={str(self.representation_id)})"
         )
 
     @property
-    def owner_id(self) -> Artifact:
-        if self.type_id is not None:
-            return self.type_id
-        if self.port_id is not None:
-            return self.port_id
-        if self.list_id is not None:
-            return self.list_id
-        raise InvalidDatabase(f"Property{self!r} has no owner.")
-
-    @property
-    def owner_kind_name(self) -> str:
-        if self.type_id is not None:
-            return "type"
-        if self.port_id is not None:
-            return "port"
-        if self.list_id is not None:
-            return "list"
-        raise InvalidDatabase(f"Property{self!r} has no owner.")
-
-    @property
     def parent(self) -> Artifact:
-        if self.type_id is not None:
-            return self.type
-        if self.port_id is not None:
-            return self.port
-        if self.list_id is not None:
-            return self.list
-        raise InvalidDatabase(f"Property{self!r} has no owner.")
+        return self.representation
 
     @property
     def children(self) -> typing.List[Artifact]:
@@ -280,255 +200,104 @@ class Property(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
-
-
-class ScalarProperty(Property):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def value(self) -> str:
-        return str(self.scalar)
-
-    @property
-    def hash(self) -> int:
-        return hash(self.value)
-
-
-class NumberProperty(ScalarProperty):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def scalar(self) -> str:
-        return canonicalize_number(decimal.Decimal(self.number))
-
-
-class DecimalProperty(NumberProperty):
-    __tablename__ = "decimal_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    decimal: Mapped[Numeric] = mapped_column(Numeric())
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.DECIMAL,
-    }
-
-    def __repr__(self) -> str:
-        return f"Decimal(id={self.id!r}, name={self.name!r}, value={self.decimal!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Decimal(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def number(self) -> Decimal:
-        return self.decimal
-
-
-class IntegerProperty(NumberProperty):
-    __tablename__ = "integer_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    integer: Mapped[int] = mapped_column(Integer())
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.INTEGER,
-    }
-
-    def __repr__(self) -> str:
-        return f"Integer(id={self.id!r}, name={self.name!r}, integer={self.integer!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Integer(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def number(self) -> int:
-        return self.integer
-
-
-class NaturalProperty(NumberProperty):
-    __tablename__ = "natural_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    natural: Mapped[int] = mapped_column(Integer(), CheckConstraint("natural>=0"))
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.NATURAL,
-    }
-
-    def __repr__(self) -> str:
-        return f"Natural(id={self.id!r}, name={self.name!r}, natural={self.natural!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Natural(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def number(self) -> int:
-        return self.natural
-
-
-class LogicalProperty(ScalarProperty):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def scalar(self) -> str:
-        return canonicalize_number(decimal.Decimal(self.logical))
-
-
-class BooleanProperty(LogicalProperty):
-    __tablename__ = "boolean_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    boolean: Mapped[bool] = mapped_column(Boolean())
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.BOOLEAN,
-    }
-
-    def __repr__(self) -> str:
-        return f"Boolean(id={self.id!r}, name={self.name!r}, boolean={self.boolean!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Boolean(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def logical(self) -> bool:
-        return self.boolean
-
-
-class TextProperty(ScalarProperty):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def scalar(self) -> str:
-        return self.text
-
-
-class DescriptionProperty(TextProperty):
-    __tablename__ = "description_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    description: Mapped[str] = mapped_column(Text())
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.DESCRIPTION,
-    }
-
-    def __repr__(self) -> str:
-        return f"Description(id={self.id!r}, name={self.name!r}, description={self.description!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Description(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def text(self) -> str:
-        return self.description
-
-
-class ChoiceProperty(TextProperty):
-    __tablename__ = "choice_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    choice: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.CHOICE,
-    }
-
-    def __repr__(self) -> str:
-        return f"Choice(id={self.id!r}, name={self.name!r}, choice={self.choice!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Choice(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def text(self) -> str:
-        return self.choice
-
-
-class GeometryProperty(ScalarProperty):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def scalar(self) -> Geometry:
-        return self.geometry
-
-
-class BrepProperty(GeometryProperty):
-    __tablename__ = "brep_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    brep: Mapped[Brep] = mapped_column(Text())
-
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.BREP,
-    }
-
-    def __repr__(self) -> str:
-        return f"Brep(id={self.id!r}, name={self.name!r}, brep={self.brep!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
-
-    def __str__(self) -> str:
-        return f"Brep(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
-
-    @property
-    def geometry(self) -> Brep:
-        return self.brep
-
-
-class ContainerProperty(Property):
-    __mapper_args__ = {"polymorphic_abstract": True}
-
-    @property
-    def value(self) -> None:
-        return None
-
-
-class ListProperty(ContainerProperty):
-    __tablename__ = "list_property"
-
-    id: Mapped[int] = mapped_column(ForeignKey("property.id"), primary_key=True)
-    properties: Mapped[typing.List[Property]] = relationship(
-        Property,
-        back_populates="list",
-        cascade="all, delete-orphan",
-        foreign_keys=[Property.list_id],
+        return [self.parent]
+
+
+class Representation(Base):
+    __tablename__ = "representation"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    explanation: Mapped[Optional[str]] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    # level of detail
+    lod: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    format: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    blob: Mapped[str] = mapped_column(LargeBinary())
+    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
+    type: Mapped["Type"] = relationship("Type", back_populates="representations")
+    tags: Mapped[Optional[typing.List[Tag]]] = relationship(
+        Tag, back_populates="representation", cascade="all, delete-orphan"
     )
 
-    __mapper_args__ = {
-        "polymorphic_identity": PropertyDatatype.LIST,
-        "inherit_condition": (id == Property.id),
-    }
-
     def __repr__(self) -> str:
-        return f"List(id={self.id!r}, name={self.name!r}, properties={self.properties!r}, {self.owner_kind_name!r}_id={self.owner_id!r})"
+        return f"Representation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, lod={self.lod!r}, format={self.format!r}, blob={self.blob!r}, type_id={self.type_id!r}, tags={self.tags!r})"
 
     def __str__(self) -> str:
-        return f"List(id={str(self.id)}, name={self.name}, {self.owner_kind_name}_id={str(self.owner_id)})"
+        return f"Representation(id={str(self.id)}, type_id={str(self.type_id)})"
 
     @property
-    def list(self) -> typing.List[Property]:
-        return sorted(self.properties, key=lambda property: property.list_index)
+    def parent(self) -> Artifact:
+        return self.type
 
     @property
-    def hash(self) -> int:
-        return hash([p.hash for p in self.list])
+    def children(self) -> typing.List[Artifact]:
+        return self.tags
+
+    @property
+    def references(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def referenced_by(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def related_to(self) -> typing.List[Artifact]:
+        return [self.parent] + self.children
+
+
+class Specifier(Base):
+    __tablename__ = "location"
+
+    context: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    group: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    port_id: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
+    port: Mapped["Port"] = relationship("Port", back_populates="specifiers")
+
+    def __repr__(self) -> str:
+        return f"Specifier(context={self.context!r}, group={self.group!r}, port_id={self.port_id!r})"
+
+    def __str__(self) -> str:
+        return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
+
+    @property
+    def parent(self) -> Artifact:
+        return self.port
+
+    @property
+    def children(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def references(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def referenced_by(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def related_to(self) -> typing.List[Artifact]:
+        return [self.parent]
 
 
 class Port(Base):
     __tablename__ = "port"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    origin_x: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    origin_y: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    origin_z: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    x_axis_x: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    x_axis_y: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    x_axis_z: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    y_axis_x: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    y_axis_y: Mapped[decimal.Decimal] = mapped_column(Numeric())
-    y_axis_z: Mapped[decimal.Decimal] = mapped_column(Numeric())
+    origin_x: Mapped[Decimal] = mapped_column(Numeric())
+    origin_y: Mapped[Decimal] = mapped_column(Numeric())
+    origin_z: Mapped[Decimal] = mapped_column(Numeric())
+    x_axis_x: Mapped[Decimal] = mapped_column(Numeric())
+    x_axis_y: Mapped[Decimal] = mapped_column(Numeric())
+    x_axis_z: Mapped[Decimal] = mapped_column(Numeric())
+    y_axis_x: Mapped[Decimal] = mapped_column(Numeric())
+    y_axis_y: Mapped[Decimal] = mapped_column(Numeric())
+    y_axis_z: Mapped[Decimal] = mapped_column(Numeric())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
-    properties: Mapped[Optional[typing.List[Property]]] = relationship(
-        Property, back_populates="port", cascade="all, delete-orphan"
+    specifiers: Mapped[typing.List[Specifier]] = relationship(
+        Specifier, back_populates="port", cascade="all, delete-orphan"
     )
     attractings: Mapped[Optional[typing.List["Attraction"]]] = relationship(
         "Attraction",
@@ -542,7 +311,7 @@ class Port(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, properties={self.properties!r})"
+        return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
         return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
@@ -585,7 +354,7 @@ class Port(Base):
 
     @property
     def children(self) -> typing.List[Artifact]:
-        return self.properties
+        return self.qualities
 
     @property
     def references(self) -> typing.List[Artifact]:
@@ -597,38 +366,44 @@ class Port(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
+        return [self.parent] + self.children + self.referenced_by
 
 
-class Type(Base):
-    __tablename__ = "type"
+class Quality(Base):
+    __tablename__ = "quality"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
-    kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
-    kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
-    ports: Mapped[Optional[typing.List[Port]]] = relationship(
-        "Port", back_populates="type", cascade="all, delete-orphan"
-    )
-    properties: Mapped[Optional[typing.List[Property]]] = relationship(
-        Property, back_populates="type", cascade="all, delete-orphan"
-    )
-    pieces: Mapped[Optional[typing.List["Piece"]]] = relationship(
-        "Piece", back_populates="type"
-    )
+    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    value: Mapped[str] = mapped_column(Text())
+    unit: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"), primary_key=True)
+    type: Mapped["Type"] = relationship("Type", back_populates="qualities")
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Quality):
+            return NotImplemented
+        if self.name == other.name:
+            if self.unit == other.unit:
+                return self.value == other.value
+            # TODO: use pint to compare values with different units
+            raise NotImplementedError(
+                "Comparing values with different units is not implemented yet."
+            )
+
+        return False
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, ports={self.ports!r}, properties={self.properties!r}, kit_id={self.kit_id!r})"
+        return f"Quality(name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r})"
+
+    def __str__(self) -> str:
+        return f"Quality(name={self.name}, type_id={str(self.type_id)})"
 
     @property
     def parent(self) -> Artifact:
-        return self.kit
+        return self.type
 
     @property
     def children(self) -> typing.List[Artifact]:
-        return self.ports + self.properties
+        return []
 
     @property
     def references(self) -> typing.List[Artifact]:
@@ -640,7 +415,56 @@ class Type(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
+        return [self.parent]
+
+
+class Type(Base):
+    __tablename__ = "type"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    explanation: Mapped[Optional[str]] = mapped_column(Text())
+    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
+    kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
+    representations: Mapped[typing.List[Representation]] = relationship(
+        Representation, back_populates="type", cascade="all, delete-orphan"
+    )
+    ports: Mapped[typing.List[Port]] = relationship(
+        "Port", back_populates="type", cascade="all, delete-orphan"
+    )
+    qualities: Mapped[Optional[typing.List[Quality]]] = relationship(
+        Quality, back_populates="type", cascade="all, delete-orphan"
+    )
+    pieces: Mapped[Optional[typing.List["Piece"]]] = relationship(
+        "Piece", back_populates="type"
+    )
+
+    def __repr__(self) -> str:
+        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
+
+    def __str__(self) -> str:
+        return f"Type(id={str(self.id)}, name={self.name}, kit_id={str(self.kit_id)})"
+
+    @property
+    def parent(self) -> Artifact:
+        return self.kit
+
+    @property
+    def children(self) -> typing.List[Artifact]:
+        return self.representations + self.ports + self.qualities
+
+    @property
+    def references(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def referenced_by(self) -> typing.List[Artifact]:
+        return []
+
+    @property
+    def related_to(self) -> typing.List[Artifact]:
+        return [self.parent] + self.children
 
 
 class TransientId(BaseModel):
@@ -667,7 +491,7 @@ class Piece(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
+        return f"Piece(id={self.id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
         return f"Piece(id={str(self.id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
@@ -694,7 +518,7 @@ class Piece(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
+        return [self.parent] + self.references + self.referenced_by
 
 
 class TypePieceSide(BaseModel):
@@ -728,9 +552,7 @@ class Attraction(Base):
     attracting_piece: Mapped[Piece] = relationship(
         Piece, foreign_keys=[attracting_piece_id], back_populates="attractings"
     )
-    attracting_piece_type_port_id = mapped_column(
-        ForeignKey("port.id"), primary_key=True
-    )
+    attracting_piece_type_port_id = mapped_column(ForeignKey("port.id"))
     attracting_piece_type_port: Mapped[Port] = relationship(
         Port,
         foreign_keys=[attracting_piece_type_port_id],
@@ -742,9 +564,7 @@ class Attraction(Base):
     attracted_piece: Mapped[Piece] = relationship(
         Piece, foreign_keys=[attracted_piece_id], back_populates="attracteds"
     )
-    attracted_piece_type_port_id = mapped_column(
-        ForeignKey("port.id"), primary_key=True
-    )
+    attracted_piece_type_port_id = mapped_column(ForeignKey("port.id"))
     attracted_piece_type_port: Mapped[Port] = relationship(
         Port,
         foreign_keys=[attracted_piece_type_port_id],
@@ -765,10 +585,10 @@ class Attraction(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
+        return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracting_piece_type_port_id={self.attracting_piece_type_port_id!r}, attracted_piece_id={self.attracted_piece_id!r}, attracted_piece_type_port_id={self.attracted_piece_type_port_id!r}, formation_id={self.formation_id!r})"
 
     def __str__(self) -> str:
-        return f"Attraction(attracting_piece_id={str(self.attracting_piece_id)}, attracted_piece_id={self.attracted_piece_id!r}, formation_id={self.formation_id!r})"
+        return f"Attraction(attracting_piece_id={str(self.attracting_piece_id)}, attracted_piece_id={str(self.attracted_piece_id)}, formation_id={str(self.formation_id)})"
 
     @property
     def attracting(self) -> Side:
@@ -815,7 +635,7 @@ class Attraction(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
+        return [self.parent] + self.references
 
 
 class Formation(Base):
@@ -858,7 +678,7 @@ class Formation(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children + self.references + self.referenced_by
+        return [self.parent] + self.children
 
 
 class Kit(Base):
@@ -888,7 +708,7 @@ class Kit(Base):
 
     @property
     def children(self) -> typing.List[Artifact]:
-        return self.scripts + self.types + self.formations
+        return self.types + self.formations
 
     @property
     def references(self) -> typing.List[Artifact]:
@@ -900,7 +720,7 @@ class Kit(Base):
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return self.children + self.references + self.referenced_by
+        return self.children
 
 
 class DirectoryError(SemioException):
@@ -937,6 +757,9 @@ def getLocalSession(directory: String) -> Session:
 
 
 class ArtifactNode(graphene.Interface):
+    class Meta:
+        name = "Artifact"
+
     name = NonNull(graphene.String)
     explanation = graphene.String()
     symbol = graphene.String()
@@ -967,245 +790,46 @@ class ArtifactNode(graphene.Interface):
         return artifact.related_to
 
 
-class PropertyNode(SQLAlchemyInterface):
+class TagNode(SQLAlchemyObjectType):
     class Meta:
-        model = Property
+        model = Tag
+        name = "Tag"
+        exclude_fields = ("representation_id",)
+
+
+class RepresentationNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Representation
+        name = "Representation"
+        interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
             "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
         )
-
-    datatype = NonNull(graphene.String)
-    value = graphene.String()
-
-    @staticmethod
-    def resolve_datatype(property: Property, info):
-        return property.datatype.name.lower()
-
-    @staticmethod
-    def resolve_value(property: Property, info):
-        return property.value
-
-
-class DecimalPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = DecimalProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_decimal(property: DecimalProperty, info):
-        return property.decimal
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, DecimalProperty))
-
-
-class IntegerPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = IntegerProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_integer(property: IntegerProperty, info):
-        return property.integer
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, IntegerProperty))
-
-
-class NaturalPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = NaturalProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_natural(property: NaturalProperty, info):
-        return property.natural
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, NaturalProperty))
-
-
-class BooleanPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = BooleanProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_boolean(property: BooleanProperty, info):
-        return property.boolean
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, BooleanProperty))
-
-
-class DescriptionPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = DescriptionProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_description(property: DescriptionProperty, info):
-        return property.description
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, DescriptionProperty))
-
-
-class ChoicePropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = ChoiceProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_choice(property: ChoiceProperty, info):
-        return property.choice
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, ChoiceProperty))
-
-
-class BrepPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = BrepProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-        )
-        interfaces = (PropertyNode,)
-
-    @staticmethod
-    def resolve_brep(property: BrepProperty, info):
-        return property.brep
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, BrepProperty))
-
-
-class ListPropertyNode(SQLAlchemyObjectType):
-    class Meta:
-        model = ListProperty
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-            "port_id",
-            "port",
-            "list_id",
-            "list_index",
-            "list",
-            "properties",
-        )
-        interfaces = (PropertyNode,)
-
-    list = NonNull(graphene.List(lambda: PropertyNode))
-
-    @staticmethod
-    def resolve_list(property: ListProperty, info):
-        return property.list
-
-    @classmethod
-    def is_type_of(cls, root, info):
-        return isinstance(root, (cls, ListProperty))
 
 
 class PointNode(PydanticObjectType):
     class Meta:
         model = Point
+        name = "Point"
 
 
 class VectorNode(PydanticObjectType):
     class Meta:
         model = Vector
+        name = "Vector"
 
 
 class PlaneNode(PydanticObjectType):
     class Meta:
         model = Plane
+        name = "Plane"
 
 
 class PortNode(SQLAlchemyObjectType):
     class Meta:
         model = Port
+        name = "Port"
         exclude_fields = (
             "id",
             "origin_x",
@@ -1227,9 +851,21 @@ class PortNode(SQLAlchemyObjectType):
         return port.plane
 
 
+class QualityNode(SQLAlchemyInterface):
+    class Meta:
+        model = Quality
+        name = "Quality"
+        exclude_fields = (
+            "id",
+            "type_id",
+            "type",
+        )
+
+
 class TypeNode(SQLAlchemyObjectType):
     class Meta:
         model = Type
+        name = "Type"
         interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
@@ -1240,11 +876,13 @@ class TypeNode(SQLAlchemyObjectType):
 class TransientIdNode(PydanticObjectType):
     class Meta:
         model = TransientId
+        name = "TransientId"
 
 
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
+        name = "Piece"
         exclude_fields = ("id", "type_id", "formation_id")
 
     transient = graphene.Field(NonNull(TransientIdNode))
@@ -1257,6 +895,7 @@ class PieceNode(SQLAlchemyObjectType):
 class TypePieceSideNode(PydanticObjectType):
     class Meta:
         model = TypePieceSide
+        name = "TypePieceSide"
         exclude_fields = ("port",)
 
     port = graphene.Field(PortNode)
@@ -1268,17 +907,20 @@ class TypePieceSideNode(PydanticObjectType):
 
 class PieceSideNode(PydanticObjectType):
     class Meta:
+        name = "PieceSide"
         model = PieceSide
 
 
 class SideNode(PydanticObjectType):
     class Meta:
+        name = "Side"
         model = Side
 
 
 class AttractionNode(SQLAlchemyObjectType):
     class Meta:
         model = Attraction
+        name = "Attraction"
         exclude_fields = (
             "attracting_piece_id",
             "attracting_piece",
@@ -1306,6 +948,7 @@ class AttractionNode(SQLAlchemyObjectType):
 class FormationNode(SQLAlchemyObjectType):
     class Meta:
         model = Formation
+        name = "Formation"
         interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
@@ -1316,73 +959,28 @@ class FormationNode(SQLAlchemyObjectType):
 class KitNode(SQLAlchemyObjectType):
     class Meta:
         model = Kit
+        name = "Kit"
         interfaces = (ArtifactNode,)
         exclude_fields = ("id",)
 
 
-class DecimalPropertyInput(InputObjectType):
+class TagInput(InputObjectType):
+    value = NonNull(graphene.String)
+
+
+class RepresentationInput(InputObjectType):
     name = NonNull(graphene.String)
-    decimal = NonNull(graphene.Decimal)
+    explanation = graphene.String()
+    symbol = graphene.String()
+    lod = graphene.String()
+    format = NonNull(graphene.String)
+    blob = NonNull(graphene.String)
+    tags = graphene.List(TagInput)
 
 
-class IntegerPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    integer = NonNull(graphene.Int)
-
-
-class NaturalPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    natural = NonNull(graphene.Int)
-
-
-class BooleanPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    boolean = NonNull(graphene.Boolean)
-
-
-class DescriptionPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    description = NonNull(graphene.String)
-
-
-class ChoicePropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    choice = NonNull(graphene.String)
-
-
-class BrepPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    brep = NonNull(graphene.JSONString)
-
-
-class ListPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    list = graphene.List(lambda: ListPropertyInput)
-
-
-class PropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    # oneOf
-    decimal = graphene.Decimal()
-    integer = graphene.Int()
-    natural = graphene.Int()
-    boolean = graphene.Boolean()
-    description = graphene.String()
-    choice = graphene.String()
-    brep = graphene.JSONString()
-    list = graphene.List(lambda: PropertyInput)
-
-
-class ScalarPropertyInput(InputObjectType):
-    name = NonNull(graphene.String)
-    # oneOf
-    decimal = graphene.Decimal()
-    integer = graphene.Int()
-    natural = graphene.Int()
-    boolean = graphene.Boolean()
-    description = graphene.String()
-    choice = graphene.String()
-    brep = graphene.JSONString()
+class SpecifierInput(InputObjectType):
+    context = NonNull(graphene.String)
+    group = NonNull(graphene.String)
 
 
 class PointInput(PydanticInputObjectType):
@@ -1402,23 +1000,31 @@ class PlaneInput(PydanticInputObjectType):
 
 class PortInput(InputObjectType):
     plane = NonNull(PlaneInput)
-    properties = NonNull(graphene.List(NonNull(ScalarPropertyInput)))
+    specifiers = NonNull(graphene.List(NonNull(SpecifierInput)))
 
 
 class PortIdInput(InputObjectType):
-    properties = NonNull(graphene.List(NonNull(ScalarPropertyInput)))
+    specifiers = NonNull(graphene.List(NonNull(SpecifierInput)))
+
+
+class QualityInput(InputObjectType):
+    name = NonNull(graphene.String)
+    value = NonNull(graphene.String)
+    unit = graphene.String()
 
 
 class TypeInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
     symbol = graphene.String()
+    representations = NonNull(graphene.List(NonNull(RepresentationInput)))
     ports = NonNull(graphene.List(NonNull(PortInput)))
-    properties = graphene.List(PropertyInput)
+    qualities = graphene.List(QualityInput)
 
 
 class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
+    qualities = graphene.List(QualityInput)
 
 
 class TransientIdInput(InputObjectType):
@@ -1487,12 +1093,12 @@ class ArtifactNotFound(NotFound):
 
 
 class PortNotFound(NotFound):
-    def __init__(self, properties) -> None:
-        super().__init__(properties)
-        self.properties = properties
+    def __init__(self, qualities) -> None:
+        super().__init__(qualities)
+        self.qualities = qualities
 
     def __str__(self):
-        return f"Port({self.properties}) not found."
+        return f"Port({self.qualities}) not found."
 
 
 class TypeNotFound(NotFound):
@@ -1586,58 +1192,6 @@ class KitAlreadyExists(AlreadyExists):
         return f"Kit ({self.kit.name}) already exists: {str(self.kit)}"
 
 
-class PortsCantHaveContainerProperty(SpecificationError):
-    def __init__(self, propertyInput) -> None:
-        self.propertyInput = propertyInput
-
-    def __str__(self):
-        return f"Ports can't have a container property: {str(self.propertyInput)}"
-
-
-def portPropertyInputToTransientPropertyForEquality(
-    propertyInput: PropertyInput,
-) -> Property:
-    if propertyInput.decimal is not None:
-        return DecimalProperty(
-            name=propertyInput.name,
-            decimal=propertyInput.decimal,
-        )
-    elif propertyInput.integer is not None:
-        return IntegerProperty(
-            name=propertyInput.name,
-            integer=propertyInput.integer,
-        )
-    elif propertyInput.natural is not None:
-        return NaturalProperty(
-            name=propertyInput.name,
-            natural=propertyInput.natural,
-        )
-    elif propertyInput.boolean is not None:
-        return BooleanProperty(
-            name=propertyInput.name,
-            boolean=propertyInput.boolean,
-        )
-    elif propertyInput.description is not None:
-        return DescriptionProperty(
-            name=propertyInput.name,
-            description=propertyInput.description,
-        )
-    elif propertyInput.choice is not None:
-        return ChoiceProperty(
-            name=propertyInput.name,
-            choice=propertyInput.choice,
-        )
-    elif propertyInput.brep is not None:
-        return BrepProperty(
-            name=propertyInput.name,
-            brep=propertyInput.brep,
-        )
-    elif propertyInput.list is not None:
-        raise PortsCantHaveContainerProperty(propertyInput)
-    else:
-        raise InvalidBackend("Unknown property type")
-
-
 def getMainKit(session: Session) -> Kit:
     kit = session.query(Kit).first()
     if not kit:
@@ -1645,30 +1199,35 @@ def getMainKit(session: Session) -> Kit:
     return kit
 
 
-def getTypeByName(session: Session, name: String) -> Type:
-    type = session.query(Type).filter_by(name=name).first()
+# TODO: Implement
+def getTypeByNameAndQualities(
+    session: Session, name: String, qualityInputs: typing.List[QualityInput]
+) -> Type:
+    raise NotImplementedError("getTypeByNameAndQualities not implemented yet.")
     if type is None:
         raise TypeNotFound(name)
     return type
 
 
-def getPortByProperties(
-    session: Session, type: Type, propertyInputs: typing.List[PropertyInput]
+# TODO: Implement
+def getPortBySpecifiers(
+    session: Session, type: Type, specifierInputs: typing.List[SpecifierInput]
 ) -> Port:
     typePorts = session.query(Port).filter_by(type_id=type.id)
     port = None
-    for typePort in typePorts:
-        if all(
-            [
-                portPropertyInputToTransientPropertyForEquality(property)
-                in typePort.properties
-                for property in propertyInputs
-            ]
-        ):
-            port = typePort
-            break
+    raise NotImplementedError("getPortBySpecifiers not implemented yet.")
+    # for typePort in typePorts:
+    #     if all(
+    #         [
+    #             portQualityInputToTransientQualityForEquality(quality)
+    #             in typePort.qualities
+    #             for quality in qualityInputs
+    #         ]
+    #     ):
+    #         port = typePort
+    #         break
     if port is None:
-        raise PortNotFound(propertyInputs)
+        raise PortNotFound(qualityInputs)
     return port
 
 
@@ -1679,119 +1238,57 @@ def getFormationByName(session: Session, name: String) -> Formation:
     return formation
 
 
-def addPropertyInputToSession(
-    session: Session,
-    owner: Type | Port | ListProperty,
-    propertyInput: PropertyInput,
-    listIndex=None,
-) -> Property:
-    if isinstance(owner, Type):
-        type_id = owner.id
-        port_id = None
-        list_id = None
-    elif isinstance(owner, Port):
-        type_id = None
-        port_id = owner.id
-        list_id = None
-    elif isinstance(owner, ListProperty):
-        type_id = None
-        port_id = None
-        list_id = owner.id
-    else:
-        raise InvalidBackend(f"Unknown owner type: {type(owner)}")
-    if propertyInput.decimal is not None:
-        property = DecimalProperty(
-            name=propertyInput.name,
-            decimal=propertyInput.decimal,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.integer is not None:
-        property = IntegerProperty(
-            name=propertyInput.name,
-            integer=propertyInput.integer,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.natural is not None:
-        property = NaturalProperty(
-            name=propertyInput.name,
-            natural=propertyInput.natural,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.boolean is not None:
-        property = BooleanProperty(
-            name=propertyInput.name,
-            boolean=propertyInput.boolean,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.description is not None:
-        property = DescriptionProperty(
-            name=propertyInput.name,
-            description=propertyInput.description,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.choice is not None:
-        property = ChoiceProperty(
-            name=propertyInput.name,
-            choice=propertyInput.choice,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.brep is not None:
-        property = BrepProperty(
-            name=propertyInput.name,
-            brep=propertyInput.brep,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-    elif propertyInput.list is not None:
-        property = ListProperty(
-            name=propertyInput.name,
-            type_id=type_id,
-            port_id=port_id,
-            list_id=list_id,
-            list_index=listIndex,
-        )
-        session.add(property)
-        session.flush()
-        for i, childPropertyInput in enumerate(propertyInput.list) or []:
-            addPropertyInputToSession(session, property, childPropertyInput, i)
-    else:
-        raise InvalidBackend("Unknown property type")
+def addTagInputToSession(
+    session: Session, representation: Representation, tagInput: TagInput
+) -> Tag:
+    tag = Tag(
+        value=tagInput.value,
+        representation_id=representation.id,
+    )
+    session.add(tag)
+    session.flush()
+    return tag
 
-    return property
+
+def addRepresentationInputToSession(
+    session: Session, type: Type, representationInput: RepresentationInput
+) -> Representation:
+    representation = Representation(
+        name=representationInput.name,
+        format=representationInput.format,
+        blob=representationInput.blob,
+        type_id=type.id,
+    )
+    try:
+        representation.explanation = representationInput.explanation
+    except AttributeError:
+        pass
+    try:
+        representation.symbol = representationInput.symbol
+    except AttributeError:
+        pass
+    try:
+        representation.lod = representationInput.lod
+    except AttributeError:
+        pass
+    session.add(representation)
+    session.flush()
+    for tagInput in representationInput.tags or []:
+        tag = addTagInputToSession(session, representation, tagInput)
+    return representation
+
+
+def addSpecifierInputToSession(
+    session: Session, port: Port, specifierInput: SpecifierInput
+) -> Specifier:
+    specifier = Specifier(
+        context=specifierInput.context,
+        group=specifierInput.group,
+        port_id=port.id,
+    )
+    session.add(specifier)
+    session.flush()
+    return specifier
 
 
 def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
@@ -1809,9 +1306,28 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
     )
     session.add(port)
     session.flush()
-    for propertyInput in portInput.properties or []:
-        property = addPropertyInputToSession(session, port, propertyInput)
+    for specifierInput in portInput.specifiers or []:
+        specifier = addSpecifierInputToSession(session, port, specifierInput)
     return port
+
+
+def addQualityInputToSession(
+    session: Session,
+    type: Type,
+    qualityInput: QualityInput,
+) -> Quality:
+    quality = Quality(
+        name=qualityInput.name,
+        value=qualityInput.value,
+        type_id=type.id,
+    )
+    try:
+        quality.unit = qualityInput.unit
+    except AttributeError:
+        pass
+    session.add(quality)
+    session.flush()
+    return quality
 
 
 def addTypeInputToSession(
@@ -1835,17 +1351,20 @@ def addTypeInputToSession(
         type.symbol = typeInput.symbol
     except AttributeError:
         pass
+    session.flush()
     for portInput in typeInput.ports or []:
         port = addPortInputToSession(session, type, portInput)
-    for propertyInput in typeInput.properties or []:
-        property = addPropertyInputToSession(session, type, propertyInput)
+    for qualityInput in typeInput.qualities or []:
+        quality = addQualityInputToSession(session, type, qualityInput)
     return type
 
 
 def addPieceInputToSession(
     session: Session, formation: Formation, pieceInput: PieceInput
 ) -> Piece:
-    type = getTypeByName(session, pieceInput.type.name)
+    type = getTypeByNameAndQualities(
+        session, pieceInput.type.name, pieceInput.type.qualities
+    )
     piece = Piece(type_id=type.id, formation_id=formation.id)
     session.add(piece)
     session.flush()
@@ -1870,15 +1389,15 @@ def addAttractionInputToSession(
         ]
     except KeyError:
         raise PieceNotFound(attractionInput.attracted.piece.transient.id)
-    attractingPieceTypePort = getPortByProperties(
+    attractingPieceTypePort = getPortBySpecifiers(
         session,
-        getTypeByName(session, attractingPiece.type.name),
-        attractionInput.attracting.piece.type.port.properties,
+        attractingPiece.type,
+        attractionInput.attracting.piece.type.port.specifiers,
     )
-    attractedPieceTypePort = getPortByProperties(
+    attractedPieceTypePort = getPortBySpecifiers(
         session,
-        getTypeByName(session, attractedPiece.type.name),
-        attractionInput.attracted.piece.type.port.properties,
+        attractedPiece.type,
+        attractionInput.attracted.piece.type.port.specifiers,
     )
     attraction = Attraction(
         attracting_piece_id=attractingPiece.id,
@@ -1921,6 +1440,7 @@ def addFormationInputToSession(
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
         transientIdToPiece[pieceInput.transient.id] = piece
+
     for attractionInput in formationInput.attractions or []:
         attraction = addAttractionInputToSession(
             session, formation, attractionInput, transientIdToPiece
@@ -1945,6 +1465,11 @@ def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = F
         kit.symbol = kitInput.symbol
     except AttributeError:
         pass
+    try:
+        kit.url = kitInput.url
+    except AttributeError:
+        pass
+    session.flush()
     for typeInput in kitInput.types or []:
         type = addTypeInputToSession(session, kit, typeInput, replace)
     for formationInput in kitInput.formations or []:
@@ -2231,16 +1756,6 @@ class Mutation(ObjectType):
 schema = Schema(
     query=Query,
     mutation=Mutation,
-    types=[
-        DecimalPropertyNode,
-        IntegerPropertyNode,
-        NaturalPropertyNode,
-        BooleanPropertyNode,
-        DescriptionPropertyNode,
-        ChoicePropertyNode,
-        BrepPropertyNode,
-        ListPropertyNode,
-    ],
 )
 
 with open("schema.graphql", "w") as f:

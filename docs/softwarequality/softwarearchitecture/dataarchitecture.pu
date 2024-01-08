@@ -46,7 +46,6 @@ entity Port {
 
 abstract Quality {
     *name : string <<PK>>
-    *kind : string <<PK>>
     *value : string
     unit : String
     ..
@@ -56,7 +55,7 @@ abstract Quality {
 
 abstract Specifier {
     *context : string <<PK>>
-    *group : string <<PK>>
+    *group : string
     ..
     port_id : int <<PK,FK>>
 }
@@ -85,11 +84,11 @@ entity Formation {
 }
 
 
-Kit ||--o{ Type
+Kit ||--|{ Type
 Kit ||--o{ Formation
 Tag }o--|| Representation
-Representation }o--|| Type
-Type ||--o{ Port
+Representation }|--|| Type
+Type ||--|{ Port
 Type ||--o{ Quality
 Formation ||--o{ Piece
 Formation ||--o{ Attraction

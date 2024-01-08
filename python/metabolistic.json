@@ -25,13 +25,11 @@
                 "qualities": [
                     {
                         "name": "floor height",
-                        "kind": "length",
                         "value": "3",
                         "unit": "m"
                     },
                     {
                         "name": "storeys",
-                        "kind": "count",
                         "value": "10"
                     }
                 ],
@@ -78,12 +76,10 @@
                 "qualities": [
                     {
                         "name": "door",
-                        "kind": "orientation",
                         "value": "behind"
                     },
                     {
                         "name": "window",
-                        "kind": "orientation",
                         "value": "front"
                     }
                 ],
@@ -122,17 +118,14 @@
                 "qualities": [
                     {
                         "name": "door",
-                        "kind": "orientation",
                         "value": "behind"
                     },
                     {
                         "name": "window",
-                        "kind": "orientation",
                         "value": "front"
                     },
                     {
                         "name": "mirrored",
-                        "kind": "boolean",
                         "value": "true"
                     }
                 ],
@@ -180,13 +173,11 @@
                             "qualities": [
                                 {
                                     "name": "floor height",
-                                    "kind": "length",
                                     "value": "3",
                                     "unit": "m"
                                 },
                                 {
                                     "name": "storeys",
-                                    "kind": "count",
                                     "value": "10"
                                 }
                             ]
@@ -201,12 +192,10 @@
                             "qualities": [
                                 {
                                     "name": "door",
-                                    "kind": "orientation",
                                     "value": "behind"
                                 },
                                 {
                                     "name": "window",
-                                    "kind": "orientation",
                                     "value": "front"
                                 }
                             ]
@@ -221,17 +210,14 @@
                             "qualities": [
                                 {
                                     "name": "door",
-                                    "kind": "orientation",
                                     "value": "behind"
                                 },
                                 {
                                     "name": "window",
-                                    "kind": "orientation",
                                     "value": "front"
                                 },
                                 {
                                     "name": "mirrored",
-                                    "kind": "boolean",
                                     "value": "true"
                                 }
                             ]

@@ -7,32 +7,6 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
       url
       types {
         name
-        properties {
-          name
-          datatype
-          value
-          ... on ListPropertyNode {
-            list {
-              name
-              datatype
-              value
-              ... on ListPropertyNode {
-                list {
-                  name
-                  datatype
-                  value
-                  ... on ListPropertyNode {
-                    list {
-                      name
-                      datatype
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
         ports {
           plane {
             origin {
@@ -49,32 +23,6 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               x
               y
               z
-            }
-          }
-          properties {
-            name
-            datatype
-            value
-            ... on ListPropertyNode {
-              list {
-                name
-                datatype
-                value
-                ... on ListPropertyNode {
-                  list {
-                    name
-                    datatype
-                    value
-                    ... on ListPropertyNode {
-                      list {
-                        name
-                        datatype
-                        value
-                      }
-                    }
-                  }
-                }
-              }
             }
           }
         }
@@ -99,11 +47,6 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               }
               type {
                 port {
-                  properties {
-                    name
-                    datatype
-                    value
-                  }
                 }
               }
             }
@@ -115,10 +58,6 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               }
               type {
                 port {
-                  properties {
-                    name
-                    datatype
-                    value
                   }
                 }
               }
