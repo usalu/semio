@@ -3,34 +3,19 @@
     "kit": {
         "name": "metabolistic",
         "explanation": "A metabolism clone",
-        "symbol": "🫀",
+        "icon": "🫀",
         "types": [
             {
                 "name": "shaft",
                 "explanation": "A cuboid building core shaft with 10 storeys and a floor height of 3 meters.",
-                "symbol": "🛗",
+                "icon": "🛗",
                 "representations": [
                     {
-                        "name": "geometry",
-                        "explanation": "Simple geometry in 1to100 level of detail.",
-                        "symbol": "👁️",
+                        "url": "shaft/geometry.3dm",
+                        "lod": "1to100",
                         "tags": [
                             "simple"
-                        ],
-                        "lod": "1to100",
-                        "format": "3dm",
-                        "blob": "looooooooooong binary blob..."
-                    }
-                ],
-                "qualities": [
-                    {
-                        "name": "floor height",
-                        "value": "3",
-                        "unit": "m"
-                    },
-                    {
-                        "name": "storeys",
-                        "value": "10"
+                        ]
                     }
                 ],
                 "ports": [
@@ -67,20 +52,30 @@
                             }
                         ]
                     }
+                ],
+                "qualities": [
+                    {
+                        "name": "floor height",
+                        "value": "3",
+                        "unit": "m"
+                    },
+                    {
+                        "name": "storeys",
+                        "value": "10"
+                    }
                 ]
             },
             {
                 "name": "capsule",
                 "explanation": "A capsule with the door in the back and window in the front.",
-                "symbol": "📦",
-                "qualities": [
+                "icon": "📦",
+                "representations": [
                     {
-                        "name": "door",
-                        "value": "behind"
-                    },
-                    {
-                        "name": "window",
-                        "value": "front"
+                        "url": "capsules/standard/geometry.3dm",
+                        "lod": "1to100",
+                        "tags": [
+                            "simple"
+                        ]
                     }
                 ],
                 "ports": [
@@ -109,12 +104,58 @@
                             }
                         ]
                     }
+                ],
+                "qualities": [
+                    {
+                        "name": "door",
+                        "value": "behind"
+                    },
+                    {
+                        "name": "window",
+                        "value": "front"
+                    }
                 ]
             },
             {
                 "name": "capsule",
                 "explanation": "A mirrored capsule with the door in the back and window in the front.",
-                "symbol": "📦^🪞",
+                "icon": "📦^🪞",
+                "representations": [
+                    {
+                        "url": "capsules/mirrored/geometry.3dm",
+                        "lod": "1to100",
+                        "tags": [
+                            "simple"
+                        ]
+                    }
+                ],
+                "ports": [
+                    {
+                        "plane": {
+                            "origin": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0
+                            },
+                            "xAxis": {
+                                "x": 1,
+                                "y": 0,
+                                "z": 0
+                            },
+                            "yAxis": {
+                                "x": 0,
+                                "y": 1,
+                                "z": 0
+                            }
+                        },
+                        "specifiers": [
+                            {
+                                "context": "doors",
+                                "group": "front"
+                            }
+                        ]
+                    }
+                ],
                 "qualities": [
                     {
                         "name": "door",
@@ -128,33 +169,6 @@
                         "name": "mirrored",
                         "value": "true"
                     }
-                ],
-                "ports": [
-                    {
-                        "plane": {
-                            "origin": {
-                                "x": 0,
-                                "y": 0,
-                                "z": 0
-                            },
-                            "xAxis": {
-                                "x": 1,
-                                "y": 0,
-                                "z": 0
-                            },
-                            "yAxis": {
-                                "x": 0,
-                                "y": 1,
-                                "z": 0
-                            }
-                        },
-                        "specifiers": [
-                            {
-                                "context": "doors",
-                                "group": "front"
-                            }
-                        ]
-                    }
                 ]
             }
         ],
@@ -162,7 +176,7 @@
             {
                 "name": "nakagin capsule tower",
                 "explanation": "The Nakagin Capsule Tower.",
-                "symbol": "🏯",
+                "icon": "🏯",
                 "pieces": [
                     {
                         "transient": {

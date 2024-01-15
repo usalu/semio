@@ -1,0 +1,92 @@
+@startuml "data architecture"
+skinparam linetype ortho
+
+interface Artifact {
+    name : string
+    explanation : string
+    icon : string
+}
+
+class Kit {
+    url : string
+}
+
+class Type {
+}
+
+class Representation{
+    url : string
+    lod : string
+    tags: string[]
+    format() : string
+}
+
+class Point {
+    x : float
+    y : float
+    z : float
+}
+
+class Vector {
+    x : float
+    y : float
+    z : float
+}
+
+class Plane {
+    origin : Point
+    x_axis : Vector
+    y_axis : Vector
+}
+
+class Port {
+}
+
+class Quality {
+    name : string
+    value : string
+    unit : String
+}
+
+class Specifier {
+    context : string
+    group : string
+}
+
+class Piece{
+}
+
+class Attraction {
+    attracting : Side
+    attracted : Side
+}
+
+class Side {
+}
+
+class Formation {
+}
+
+
+Kit *-- Type
+Kit *-- Formation
+Representation --* Type
+Type *-- Port
+Type *-- Quality
+Formation *-- Piece
+Formation *-- Attraction
+Attraction *-- Side
+Port *--  Specifier
+Plane --* Port
+Point --*  Plane
+Plane *-- Vector
+Type <-- Piece
+Piece <-- Side
+Port <-- Side
+
+Artifact <|-- Kit
+Artifact <|-- Type
+Artifact <|-- Formation
+
+
+@enduml

@@ -38,6 +38,8 @@ from dataclasses import dataclass
 from enum import Enum
 import decimal
 from decimal import Decimal
+from datetime import datetime
+from urllib.parse import urlparse
 from pint import UnitRegistry
 from pydantic import BaseModel
 import sqlalchemy
@@ -46,12 +48,14 @@ from sqlalchemy import (
     Text,
     Numeric,
     LargeBinary,
+    DateTime,
     Integer,
     Boolean,
     ForeignKey,
     create_engine,
     UniqueConstraint,
     CheckConstraint,
+    and_,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -61,6 +65,7 @@ from sqlalchemy.orm import (
     backref,
     sessionmaker,
     Session,
+    validates,
 )
 import graphene
 from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
@@ -73,7 +78,6 @@ from flask import Flask
 from graphql_server.flask import GraphQLView
 
 NAME_LENGTH_MAX = 100
-SYMBOL_LENGTH_MAX = 1
 URL_LENGTH_MAX = 1000
 KIT_FILENAME = "kit.semio"
 
@@ -90,6 +94,18 @@ def canonicalize_number(number: Decimal) -> Decimal:
 
 class SemioException(Exception):
     pass
+
+
+class SpecificationError(SemioException):
+    pass
+
+
+class InvalidURL(ValueError, SpecificationError):
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+    def __str__(self) -> str:
+        return f"{self.url} is not a valid URL."
 
 
 class InvalidDatabase(SemioException):
@@ -112,7 +128,7 @@ class InvalidBackend(SemioException):
 class Artifact(Protocol):
     name: str
     explanation: str
-    symbol: str
+    icon: str
 
     @property
     def parent(self):
@@ -164,12 +180,11 @@ class Base(DeclarativeBase):
 
 class Tag(Base):
     __tablename__ = "tag"
+
     value: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
-    representation_id: Mapped[int] = mapped_column(
-        ForeignKey("representation.id"), primary_key=True
-    )
+    representation_id: Mapped[int] = mapped_column(ForeignKey("representation.id"))
     representation: Mapped["Representation"] = relationship(
-        "Representation", back_populates="tags"
+        "Representation", back_populates="_tags"
     )
 
     def __repr__(self) -> str:
@@ -206,24 +221,35 @@ class Tag(Base):
 class Representation(Base):
     __tablename__ = "representation"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
     # level of detail
     lod: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
-    format: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    blob: Mapped[str] = mapped_column(LargeBinary())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="representations")
-    tags: Mapped[Optional[typing.List[Tag]]] = relationship(
+    _tags: Mapped[Optional[typing.List[Tag]]] = relationship(
         Tag, back_populates="representation", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
-        return f"Representation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, lod={self.lod!r}, format={self.format!r}, blob={self.blob!r}, type_id={self.type_id!r}, tags={self.tags!r})"
+        return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, type_id={self.type_id!r}, tags={self.tags!r})"
 
     def __str__(self) -> str:
         return f"Representation(id={str(self.id)}, type_id={str(self.type_id)})"
+
+    @validates("url")
+    def validate_url(self, key, url):
+        parsed = urlparse(url)
+        if not parsed.path:
+            raise InvalidURL(url)
+        return url
+
+    @property
+    def tags(self) -> typing.List[str]:
+        return [tag.value for tag in self._tags]
+
+    @tags.setter
+    def tags(self, tags: typing.List[str]):
+        self._tags = [Tag(value=tag) for tag in tags]
 
     @property
     def parent(self) -> Artifact:
@@ -247,7 +273,7 @@ class Representation(Base):
 
 
 class Specifier(Base):
-    __tablename__ = "location"
+    __tablename__ = "specifier"
 
     context: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
     group: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
@@ -354,7 +380,7 @@ class Port(Base):
 
     @property
     def children(self) -> typing.List[Artifact]:
-        return self.qualities
+        return self.specifiers
 
     @property
     def references(self) -> typing.List[Artifact]:
@@ -424,7 +450,13 @@ class Type(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    icon: Mapped[Optional[str]] = mapped_column(Text())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), default=datetime.utcnow, nullable=False
+    )
+    modified_at: Mapped[datetime] = mapped_column(
+        DateTime(), onupdate=datetime.utcnow, nullable=False
+    )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
     representations: Mapped[typing.List[Representation]] = relationship(
@@ -441,7 +473,7 @@ class Type(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
+        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
 
     def __str__(self) -> str:
         return f"Type(id={str(self.id)}, name={self.name}, kit_id={str(self.kit_id)})"
@@ -460,14 +492,14 @@ class Type(Base):
 
     @property
     def referenced_by(self) -> typing.List[Artifact]:
-        return []
+        return [self.pieces]
 
     @property
     def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children
+        return [self.parent] + self.children + self.referenced_by
 
 
-class TransientId(BaseModel):
+class Transient(BaseModel):
     id: str
 
 
@@ -497,8 +529,8 @@ class Piece(Base):
         return f"Piece(id={str(self.id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
 
     @property
-    def transient(self) -> TransientId:
-        return TransientId(id=str(self.id))
+    def transient(self) -> Transient:
+        return Transient(id=str(self.id))
 
     @property
     def parent(self) -> Artifact:
@@ -532,7 +564,7 @@ class PieceSide(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    transient: TransientId
+    transient: Transient
     type: TypePieceSide
 
 
@@ -644,7 +676,13 @@ class Formation(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    icon: Mapped[Optional[str]] = mapped_column(Text())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), default=datetime.utcnow, nullable=False
+    )
+    modified_at: Mapped[datetime] = mapped_column(
+        DateTime(), onupdate=datetime.utcnow, nullable=False
+    )
     pieces: Mapped[Optional[typing.List[Piece]]] = relationship(
         back_populates="formation", cascade="all, delete-orphan"
     )
@@ -655,7 +693,7 @@ class Formation(Base):
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
 
     def __repr__(self) -> str:
-        return f"Formation(id={self.id!r}, name = {self.name!r}, explanation={self.explanation!r}, symbol={self.symbol!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, kit_id={self.kit_id!r})"
+        return f"Formation(id={self.id!r}, name = {self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, kit_id={self.kit_id!r})"
 
     def __str__(self) -> str:
         return f"Formation(id={str(self.id)}, name = {self.name}, kit_id={str(self.kit_id)})"
@@ -687,7 +725,13 @@ class Kit(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     explanation: Mapped[Optional[str]] = mapped_column(Text())
-    symbol: Mapped[Optional[str]] = mapped_column(String(SYMBOL_LENGTH_MAX))
+    icon: Mapped[Optional[str]] = mapped_column(Text())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), default=datetime.utcnow, nullable=False
+    )
+    modified_at: Mapped[datetime] = mapped_column(
+        DateTime(), onupdate=datetime.utcnow, nullable=False
+    )
     url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
     types: Mapped[Optional[typing.List[Type]]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
@@ -697,7 +741,7 @@ class Kit(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, symbol={self.symbol!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
+        return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
 
     def __str__(self) -> str:
         return f"Kit(id={str(self.id)}, name={self.name})"
@@ -762,7 +806,7 @@ class ArtifactNode(graphene.Interface):
 
     name = NonNull(graphene.String)
     explanation = graphene.String()
-    symbol = graphene.String()
+    icon = graphene.String()
     parent = graphene.Field(lambda: ArtifactNode)
     children = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
     references = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
@@ -790,22 +834,21 @@ class ArtifactNode(graphene.Interface):
         return artifact.related_to
 
 
-class TagNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Tag
-        name = "Tag"
-        exclude_fields = ("representation_id",)
-
-
 class RepresentationNode(SQLAlchemyObjectType):
     class Meta:
         model = Representation
         name = "Representation"
-        interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
+            "_tags",
             "type_id",
         )
+
+    tags = graphene.List(graphene.String)
+
+    @staticmethod
+    def resolve_tags(representation: Representation, info):
+        return representation.tags
 
 
 class PointNode(PydanticObjectType):
@@ -818,6 +861,13 @@ class VectorNode(PydanticObjectType):
     class Meta:
         model = Vector
         name = "Vector"
+
+
+class SpecifierNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Specifier
+        name = "Specifier"
+        exclude_fields = ("port_id",)
 
 
 class PlaneNode(PydanticObjectType):
@@ -851,15 +901,11 @@ class PortNode(SQLAlchemyObjectType):
         return port.plane
 
 
-class QualityNode(SQLAlchemyInterface):
+class QualityNode(SQLAlchemyObjectType):
     class Meta:
         model = Quality
         name = "Quality"
-        exclude_fields = (
-            "id",
-            "type_id",
-            "type",
-        )
+        exclude_fields = ("type_id",)
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -873,10 +919,10 @@ class TypeNode(SQLAlchemyObjectType):
         )
 
 
-class TransientIdNode(PydanticObjectType):
+class TransientNode(PydanticObjectType):
     class Meta:
-        model = TransientId
-        name = "TransientId"
+        model = Transient
+        name = "Transient"
 
 
 class PieceNode(SQLAlchemyObjectType):
@@ -885,7 +931,7 @@ class PieceNode(SQLAlchemyObjectType):
         name = "Piece"
         exclude_fields = ("id", "type_id", "formation_id")
 
-    transient = graphene.Field(NonNull(TransientIdNode))
+    transient = graphene.Field(NonNull(TransientNode))
 
     @staticmethod
     def resolve_transient(piece: Piece, info):
@@ -964,18 +1010,10 @@ class KitNode(SQLAlchemyObjectType):
         exclude_fields = ("id",)
 
 
-class TagInput(InputObjectType):
-    value = NonNull(graphene.String)
-
-
 class RepresentationInput(InputObjectType):
-    name = NonNull(graphene.String)
-    explanation = graphene.String()
-    symbol = graphene.String()
+    url = NonNull(graphene.String)
     lod = graphene.String()
-    format = NonNull(graphene.String)
-    blob = NonNull(graphene.String)
-    tags = graphene.List(TagInput)
+    tags = NonNull(graphene.List(NonNull(graphene.String)))
 
 
 class SpecifierInput(InputObjectType):
@@ -1016,7 +1054,7 @@ class QualityInput(InputObjectType):
 class TypeInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
-    symbol = graphene.String()
+    icon = graphene.String()
     representations = NonNull(graphene.List(NonNull(RepresentationInput)))
     ports = NonNull(graphene.List(NonNull(PortInput)))
     qualities = graphene.List(QualityInput)
@@ -1027,12 +1065,12 @@ class TypeIdInput(InputObjectType):
     qualities = graphene.List(QualityInput)
 
 
-class TransientIdInput(InputObjectType):
+class TransientInput(InputObjectType):
     id = NonNull(graphene.String)
 
 
 class PieceInput(InputObjectType):
-    transient = NonNull(TransientIdInput)
+    transient = NonNull(TransientInput)
     type = NonNull(TypeIdInput)
 
 
@@ -1041,7 +1079,7 @@ class TypePieceSideInput(InputObjectType):
 
 
 class PieceSideInput(InputObjectType):
-    transient = NonNull(TransientIdInput)
+    transient = NonNull(TransientInput)
     type = NonNull(TypePieceSideInput)
 
 
@@ -1057,7 +1095,7 @@ class AttractionInput(InputObjectType):
 class FormationInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
-    symbol = graphene.String()
+    icon = graphene.String()
     pieces = NonNull(graphene.List(NonNull(PieceInput)))
     attractions = NonNull(graphene.List(NonNull(AttractionInput)))
 
@@ -1065,14 +1103,10 @@ class FormationInput(InputObjectType):
 class KitInput(InputObjectType):
     name = NonNull(graphene.String)
     explanation = graphene.String()
-    symbol = graphene.String()
+    icon = graphene.String()
     url = graphene.String()
     types = graphene.List(TypeInput)
     formations = graphene.List(FormationInput)
-
-
-class SpecificationError(SemioException):
-    pass
 
 
 class NotFound(SpecificationError):
@@ -1081,15 +1115,6 @@ class NotFound(SpecificationError):
 
     def __str__(self):
         return f"{self.id} not found."
-
-
-class ArtifactNotFound(NotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name)
-        self.name = name
-
-    def __str__(self):
-        return f"Artifact({self.name}) not found."
 
 
 class PortNotFound(NotFound):
@@ -1102,12 +1127,15 @@ class PortNotFound(NotFound):
 
 
 class TypeNotFound(NotFound):
-    def __init__(self, name) -> None:
+    def __init__(self, name, qualityInputs) -> None:
         super().__init__(name)
         self.name = name
+        self.qualityInputs = qualityInputs
 
     def __str__(self):
-        return f"Type({self.name}) not found."
+        return (
+            f"Type({self.name}) with qualitiyInputs: {self.qualityInputs!r}) not found."
+        )
 
 
 class PieceNotFound(NotFound):
@@ -1199,22 +1227,37 @@ def getMainKit(session: Session) -> Kit:
     return kit
 
 
-# TODO: Implement
+def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Quality:
+    return Quality(
+        name=qualityInput.name,
+        value=qualityInput.value,
+        unit=qualityInput.unit,
+    )
+
+
+# TODO: Make this work
 def getTypeByNameAndQualities(
     session: Session, name: String, qualityInputs: typing.List[QualityInput]
 ) -> Type:
-    raise NotImplementedError("getTypeByNameAndQualities not implemented yet.")
-    if type is None:
-        raise TypeNotFound(name)
-    return type
+    types = session.query(Type).filter(
+        Type.name == name,
+        and_(
+            Type.qualities.contains(qualityInputToTransientQualityForEquality(quality))
+            for quality in qualityInputs or []
+        ),
+    )
+    if types.count() > 1:
+        types = types.filter(Type.qualities.count() == len(qualityInputs))
+    if types.count() > 1:
+        raise TypeNotFound(name, qualityInputs)
+    return types.first()
+    # return type
 
 
 # TODO: Implement
 def getPortBySpecifiers(
     session: Session, type: Type, specifierInputs: typing.List[SpecifierInput]
 ) -> Port:
-    typePorts = session.query(Port).filter_by(type_id=type.id)
-    port = None
     raise NotImplementedError("getPortBySpecifiers not implemented yet.")
     # for typePort in typePorts:
     #     if all(
@@ -1226,28 +1269,9 @@ def getPortBySpecifiers(
     #     ):
     #         port = typePort
     #         break
-    if port is None:
-        raise PortNotFound(qualityInputs)
-    return port
-
-
-def getFormationByName(session: Session, name: String) -> Formation:
-    formation = session.query(Formation).filter_by(name=name).first()
-    if formation is None:
-        raise FormationNotFound(name)
-    return formation
-
-
-def addTagInputToSession(
-    session: Session, representation: Representation, tagInput: TagInput
-) -> Tag:
-    tag = Tag(
-        value=tagInput.value,
-        representation_id=representation.id,
-    )
-    session.add(tag)
-    session.flush()
-    return tag
+    # if port is None:
+    #     raise PortNotFound(qualityInputs)
+    # return port
 
 
 def addRepresentationInputToSession(
@@ -1264,7 +1288,7 @@ def addRepresentationInputToSession(
     except AttributeError:
         pass
     try:
-        representation.symbol = representationInput.symbol
+        representation.icon = representationInput.icon
     except AttributeError:
         pass
     try:
@@ -1274,7 +1298,12 @@ def addRepresentationInputToSession(
     session.add(representation)
     session.flush()
     for tagInput in representationInput.tags or []:
-        tag = addTagInputToSession(session, representation, tagInput)
+        tag = Tag(
+            value=tagInput.value,
+            representation_id=representation.id,
+        )
+        session.add(tag)
+        session.flush()
     return representation
 
 
@@ -1330,10 +1359,11 @@ def addQualityInputToSession(
     return quality
 
 
+# TODO: Make this work
 def addTypeInputToSession(
     session: Session, kit: Kit, typeInput: TypeInput, replace: bool = False
 ) -> Type:
-    type = session.query(Type).filter_by(name=typeInput.name).first()
+    type = getTypeByNameAndQualities(session, typeInput.name, typeInput.qualities)
     if type:
         if replace:
             session.delete(type)
@@ -1348,7 +1378,7 @@ def addTypeInputToSession(
     except AttributeError:
         pass
     try:
-        type.symbol = typeInput.symbol
+        type.icon = typeInput.icon
     except AttributeError:
         pass
     session.flush()
@@ -1433,9 +1463,9 @@ def addFormationInputToSession(
     except AttributeError:
         pass
     try:
-        formation.symbol = formationInput.symbol
+        formation.icon = formationInput.icon
     except AttributeError:
-        symbol = None
+        icon = None
     transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
@@ -1462,7 +1492,7 @@ def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = F
     except AttributeError:
         pass
     try:
-        kit.symbol = kitInput.symbol
+        kit.icon = kitInput.icon
     except AttributeError:
         pass
     try:

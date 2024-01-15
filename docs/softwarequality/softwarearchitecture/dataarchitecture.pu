@@ -4,10 +4,10 @@ skinparam linetype ortho
 interface Artifact {
     *name : string
     explanation : string
-    symbol : string
+    icon : string
     ..
-    *created : datetime
-    *modified : datetime
+    *created_at : datetime
+    *modified_at : datetime
 }
 
 entity Kit {
@@ -25,9 +25,8 @@ entity Type {
 entity Representation {
     *id : int <<generated>>
     ..
-    format: string
-    lod: string
-    blob : blob
+    url : string
+    lod : string
     ..
     type_id : int <<FK>>
 }
@@ -41,10 +40,20 @@ entity Tag {
 entity Port {
     *id : int <<generated>>
     ..
+    origin_x : float
+    origin_y : float
+    origin_z : float
+    x_axis_x : float
+    x_axis_y : float
+    x_axis_z : float
+    y_axis_x : float
+    y_axis_y : float
+    y_axis_z : float
+    ..
     type_id : int <<FK>>
 }
 
-abstract Quality {
+entity Quality {
     *name : string <<PK>>
     *value : string
     unit : String
@@ -53,7 +62,7 @@ abstract Quality {
 }
 
 
-abstract Specifier {
+entity Specifier {
     *context : string <<PK>>
     *group : string
     ..
@@ -100,7 +109,6 @@ Port <-- Attraction
 Artifact <|-- Kit
 Artifact <|-- Type
 Artifact <|-- Formation
-Artifact <|-- Representation
 
 
 @enduml

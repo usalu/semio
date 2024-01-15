@@ -1,0 +1,92 @@
+kit : !{
+    name : !string
+    explanation : ?string
+    icon : ?string
+    url : ?string
+    types : +[
+        name : !string
+        representations : +[
+            url : !string
+            lod : ?string
+            tags : *[string]
+        ]
+        ports : +[
+            plane : !{
+                origin : !{
+                    x : float!
+                    y : float!
+                    z : float!
+                }
+                xAxis : !{
+                    x : float!
+                    y : float!
+                    z : float!
+                }
+                yAxis : !{
+                    x : float!
+                    y : float!
+                    z : float!
+                }
+            }
+            specifiers : +[
+                context : !string
+                group : !string
+            ]
+        ]
+        qualities : +[
+            name : !string
+            value : !string
+            unit : ?string
+        ]
+    ]
+    formations : *[
+        name : !string
+        explanation : ?string
+        icon : ?string
+        pieces : ![
+            transient : !{
+                id : !string
+            }
+            type : !{
+                name : !string
+                qualities : +[
+                    name : !string
+                    value : !string
+                    unit : ?string
+                ]
+            }
+        ]
+        attractions : +[
+            attracting : !{
+                piece : !{
+                    transient : !{
+                        id : !string
+                    }
+                    type : !{
+                        port : !{
+                            specifiers : +[
+                                context : !string
+                                group : !string
+                            ]
+                        }
+                    }
+                }
+            }
+            attracted : !{
+                piece : !{
+                    transient : !{
+                        id : !string
+                    }
+                    type : !{
+                        port : !{
+                            specifiers : +[
+                                context : !string
+                                group : !string
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    ]
+}
