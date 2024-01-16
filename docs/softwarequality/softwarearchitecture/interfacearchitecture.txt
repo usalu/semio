@@ -88,5 +88,10 @@ kit : !{
                 }
             }
         ]
+        qualities : +[
+                    name : !string
+                    value : !string
+                    unit : ?string
+                ]
     ]
 }

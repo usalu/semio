@@ -90,7 +90,16 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
             }
           }
         }
+        qualities{
+          name
+          value
+          unit
+        }
       }
+    }
+    error{
+      code
+      message
     }
   }
 }

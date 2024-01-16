@@ -1,37 +1,16 @@
 query LocalKit($directory: String!) {
-  localKit(directory: $directory) {
+  loadLocalKit(directory: $directory) {
     kit {
       name
       explanation
-      symbol
+      icon
       url
       types {
         name
-        properties {
-          name
-          datatype
-          value
-          ... on ListPropertyNode {
-            list {
-              name
-              datatype
-              value
-              ... on ListPropertyNode {
-                list {
-                  name
-                  datatype
-                  value
-                  ... on ListPropertyNode {
-                    list {
-                      name
-                      datatype
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }
+        representations {
+          url
+          lod
+          tags
         }
         ports {
           plane {
@@ -51,44 +30,32 @@ query LocalKit($directory: String!) {
               z
             }
           }
-          properties {
-            name
-            datatype
-            value
-            ... on ListPropertyNode {
-              list {
-                name
-                datatype
-                value
-                ... on ListPropertyNode {
-                  list {
-                    name
-                    datatype
-                    value
-                    ... on ListPropertyNode {
-                      list {
-                        name
-                        datatype
-                        value
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          specifiers {
+            context
+            group
           }
+        }
+        qualities {
+          name
+          value
+          unit
         }
       }
       formations {
         name
         explanation
-        symbol
+        icon
         pieces {
           transient {
             id
           }
           type {
             name
+            qualities {
+              name
+              value
+              unit
+            }
           }
         }
         attractions {
@@ -99,10 +66,9 @@ query LocalKit($directory: String!) {
               }
               type {
                 port {
-                  properties {
-                    name
-                    datatype
-                    value
+                  specifiers {
+                    context
+                    group
                   }
                 }
               }
@@ -115,15 +81,19 @@ query LocalKit($directory: String!) {
               }
               type {
                 port {
-                  properties {
-                    name
-                    datatype
-                    value
+                  specifiers {
+                    group
+                    context
                   }
                 }
               }
             }
           }
+        }
+        qualities{
+          name
+          value
+          unit
         }
       }
     }

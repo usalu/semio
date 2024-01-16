@@ -75,6 +75,7 @@ Type *-- Port
 Type *-- Quality
 Formation *-- Piece
 Formation *-- Attraction
+Formation *-- Quality
 Attraction *-- Side
 Port *--  Specifier
 Plane --* Port

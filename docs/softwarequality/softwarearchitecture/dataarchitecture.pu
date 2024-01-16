@@ -25,7 +25,7 @@ entity Type {
 entity Representation {
     *id : int <<generated>>
     ..
-    url : string
+    *url : string
     lod : string
     ..
     type_id : int <<FK>>
@@ -54,11 +54,14 @@ entity Port {
 }
 
 entity Quality {
-    *name : string <<PK>>
+    *id : int <<generated>>
+    ..
+    *name : string
     *value : string
     unit : String
     ..
-    type_id : int <<PK,FK>>
+    type_id : int <<FK>>
+    formation_id : int <<FK>>
 }
 
 
@@ -101,6 +104,7 @@ Type ||--|{ Port
 Type ||--o{ Quality
 Formation ||--o{ Piece
 Formation ||--o{ Attraction
+Formation ||--o{ Quality
 Port ||--o{  Specifier
 Type <-- Piece
 Piece <-- Attraction

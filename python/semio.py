@@ -4,17 +4,17 @@
 # Copyright (C) 2023 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# any later version.
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
+# GNU Affero General Public License for more details.
 
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 API for semio.
@@ -26,34 +26,25 @@ API for semio.
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Artifact implements hierarchy but even non-artifacts implement hierarchy.
-#       Think about new term with clearer semantics.
+# TODO: Check if @staticmethod can be removed in graphene resolvers because implicit.
+
 
 from os import remove
 from pathlib import Path
 from functools import lru_cache
-import typing
-from typing import Optional, Dict, Protocol
-from dataclasses import dataclass
-from enum import Enum
-import decimal
+from typing import Optional, Dict, Protocol, List, Union
 from decimal import Decimal
 from datetime import datetime
 from urllib.parse import urlparse
 from pint import UnitRegistry
 from pydantic import BaseModel
-import sqlalchemy
 from sqlalchemy import (
     String,
     Text,
     Numeric,
-    LargeBinary,
     DateTime,
-    Integer,
-    Boolean,
     ForeignKey,
     create_engine,
-    UniqueConstraint,
     CheckConstraint,
     and_,
 )
@@ -62,7 +53,6 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
-    backref,
     sessionmaker,
     Session,
     validates,
@@ -71,7 +61,6 @@ import graphene
 from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
 from graphene_sqlalchemy import (
     SQLAlchemyObjectType,
-    SQLAlchemyInterface,
 )
 from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
 from flask import Flask
@@ -124,36 +113,38 @@ class InvalidBackend(SemioException):
         return self.message + "\n The backend is invalid. Please report this bug."
 
 
-# TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
 class Artifact(Protocol):
-    name: str
-    explanation: str
-    icon: str
+    @property
+    def parent(self) -> Union["Artifact", None]:
+        return None
 
     @property
-    def parent(self):
-        pass
+    def children(self) -> List["Artifact"]:
+        return []
 
     @property
-    def children(self):
-        pass
+    def references(self) -> List["Artifact"]:
+        return []
 
     @property
-    def references(self):
-        pass
+    def referenced_by(self) -> List["Artifact"]:
+        return []
 
     @property
-    def referenced_by(self):
-        pass
-
-    @property
-    def related_to(self):
-        (
+    def related_to(self) -> List["Artifact"]:
+        return (
             ([self.parent] if self.parent else [])
             + self.children
             + self.references
             + self.referenced_by
         )
+
+
+# TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
+class Document(Artifact):
+    name: str
+    explanation: str
+    icon: str
 
 
 class Point(BaseModel):
@@ -202,19 +193,19 @@ class Tag(Base):
         return self.representation
 
     @property
-    def children(self) -> typing.List[Artifact]:
+    def children(self) -> List[Artifact]:
         return []
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent]
 
 
@@ -226,7 +217,7 @@ class Representation(Base):
     lod: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="representations")
-    _tags: Mapped[Optional[typing.List[Tag]]] = relationship(
+    _tags: Mapped[List[Tag]] = relationship(
         Tag, back_populates="representation", cascade="all, delete-orphan"
     )
 
@@ -237,18 +228,18 @@ class Representation(Base):
         return f"Representation(id={str(self.id)}, type_id={str(self.type_id)})"
 
     @validates("url")
-    def validate_url(self, key, url):
+    def validate_url(self, key: str, url: str):
         parsed = urlparse(url)
         if not parsed.path:
             raise InvalidURL(url)
         return url
 
     @property
-    def tags(self) -> typing.List[str]:
-        return [tag.value for tag in self._tags]
+    def tags(self) -> List[str]:
+        return [tag.value for tag in self._tags or []]
 
     @tags.setter
-    def tags(self, tags: typing.List[str]):
+    def tags(self, tags: List[str]):
         self._tags = [Tag(value=tag) for tag in tags]
 
     @property
@@ -256,20 +247,20 @@ class Representation(Base):
         return self.type
 
     @property
-    def children(self) -> typing.List[Artifact]:
-        return self.tags
+    def children(self) -> List[Artifact]:
+        return self._tags  # type: ignore
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
-        return [self.parent] + self.children
+    def related_to(self) -> List[Artifact]:
+        return [self.parent] + self.children if self.children else []
 
 
 class Specifier(Base):
@@ -286,24 +277,32 @@ class Specifier(Base):
     def __str__(self) -> str:
         return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Specifier):
+            return NotImplemented
+        return self.context == other.context and self.group == other.group
+
+    def __hash__(self) -> int:
+        return hash((self.context, self.group))
+
     @property
     def parent(self) -> Artifact:
         return self.port
 
     @property
-    def children(self) -> typing.List[Artifact]:
+    def children(self) -> List[Artifact]:
         return []
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent]
 
 
@@ -322,15 +321,15 @@ class Port(Base):
     y_axis_z: Mapped[Decimal] = mapped_column(Numeric())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
-    specifiers: Mapped[typing.List[Specifier]] = relationship(
+    specifiers: Mapped[List[Specifier]] = relationship(
         Specifier, back_populates="port", cascade="all, delete-orphan"
     )
-    attractings: Mapped[Optional[typing.List["Attraction"]]] = relationship(
+    attractings: Mapped[List["Attraction"]] = relationship(
         "Attraction",
         foreign_keys="[Attraction.attracting_piece_type_port_id]",
         back_populates="attracting_piece_type_port",
     )
-    attracteds: Mapped[Optional[typing.List["Attraction"]]] = relationship(
+    attracteds: Mapped[List["Attraction"]] = relationship(
         "Attraction",
         foreign_keys="[Attraction.attracted_piece_type_port_id]",
         back_populates="attracted_piece_type_port",
@@ -379,30 +378,44 @@ class Port(Base):
         return self.type
 
     @property
-    def children(self) -> typing.List[Artifact]:
-        return self.specifiers
+    def children(self) -> List[Artifact]:
+        return self.specifiers  # type: ignore
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
-        return self.attractings + self.attracteds
+    def referenced_by(self) -> List[Artifact]:
+        return self.attractings + self.attracteds  # type: ignore
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent] + self.children + self.referenced_by
 
 
 class Quality(Base):
     __tablename__ = "quality"
 
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     value: Mapped[str] = mapped_column(Text())
     unit: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
-    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"), primary_key=True)
+    type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"), nullable=True)
     type: Mapped["Type"] = relationship("Type", back_populates="qualities")
+    formation_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("formation.id"), nullable=True
+    )
+    formation: Mapped["Formation"] = relationship(
+        "Formation", back_populates="qualities"
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "type_id IS NOT NULL AND formation_id IS NULL OR type_id IS NULL AND formation_id IS NOT NULL",
+            name="type_or_formation_owner_constraint",
+        ),
+    )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Quality):
@@ -417,30 +430,34 @@ class Quality(Base):
 
         return False
 
+    def __hash__(self) -> int:
+        # TODO: Implement unit normalization for consistent hashing
+        return hash((self.name, self.value, self.unit))
+
     def __repr__(self) -> str:
-        return f"Quality(name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r})"
+        return f"Quality(name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
 
     def __str__(self) -> str:
-        return f"Quality(name={self.name}, type_id={str(self.type_id)})"
+        return f"Quality(name={self.name}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
 
     @property
     def parent(self) -> Artifact:
-        return self.type
+        return self.type if self.type_id else self.formation
 
     @property
-    def children(self) -> typing.List[Artifact]:
+    def children(self) -> List[Artifact]:
         return []
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent]
 
 
@@ -455,47 +472,45 @@ class Type(Base):
         DateTime(), default=datetime.utcnow, nullable=False
     )
     modified_at: Mapped[datetime] = mapped_column(
-        DateTime(), onupdate=datetime.utcnow, nullable=False
+        DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
-    representations: Mapped[typing.List[Representation]] = relationship(
+    representations: Mapped[List[Representation]] = relationship(
         Representation, back_populates="type", cascade="all, delete-orphan"
     )
-    ports: Mapped[typing.List[Port]] = relationship(
+    ports: Mapped[List[Port]] = relationship(
         "Port", back_populates="type", cascade="all, delete-orphan"
     )
-    qualities: Mapped[Optional[typing.List[Quality]]] = relationship(
+    qualities: Mapped[List[Quality]] = relationship(
         Quality, back_populates="type", cascade="all, delete-orphan"
     )
-    pieces: Mapped[Optional[typing.List["Piece"]]] = relationship(
-        "Piece", back_populates="type"
-    )
+    pieces: Mapped[List["Piece"]] = relationship("Piece", back_populates="type")
 
     def __repr__(self) -> str:
         return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
 
     def __str__(self) -> str:
-        return f"Type(id={str(self.id)}, name={self.name}, kit_id={str(self.kit_id)})"
+        return f"Type(id={str(self.id)}, kit_id={str(self.kit_id)})"
 
     @property
     def parent(self) -> Artifact:
         return self.kit
 
     @property
-    def children(self) -> typing.List[Artifact]:
-        return self.representations + self.ports + self.qualities
+    def children(self) -> List[Artifact]:
+        return self.representations + self.ports + self.qualities  # type: ignore
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
-        return [self.pieces]
+    def referenced_by(self) -> List[Artifact]:
+        return [self.pieces]  # type: ignore
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent] + self.children + self.referenced_by
 
 
@@ -511,12 +526,12 @@ class Piece(Base):
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
     formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
-    attractings: Mapped[Optional[typing.List["Attraction"]]] = relationship(
+    attractings: Mapped[List["Attraction"]] = relationship(
         "Attraction",
         foreign_keys="[Attraction.attracting_piece_id]",
         back_populates="attracting_piece",
     )
-    attracteds: Mapped[Optional[typing.List["Attraction"]]] = relationship(
+    attracteds: Mapped[List["Attraction"]] = relationship(
         "Attraction",
         foreign_keys="[Attraction.attracted_piece_id]",
         back_populates="attracted_piece",
@@ -526,7 +541,7 @@ class Piece(Base):
         return f"Piece(id={self.id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
-        return f"Piece(id={str(self.id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
+        return f"Piece(id={str(self.id)}, formation_id={str(self.formation_id)})"
 
     @property
     def transient(self) -> Transient:
@@ -537,19 +552,19 @@ class Piece(Base):
         return self.formation
 
     @property
-    def children(self) -> typing.List[Artifact]:
+    def children(self) -> List[Artifact]:
         return []
 
     @property
-    def references(self) -> typing.List[Artifact]:
-        return self.type
+    def references(self) -> List[Artifact]:
+        return self.type  # type: ignore
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
-        return self.attractings + self.attracteds
+    def referenced_by(self) -> List[Artifact]:
+        return self.attractings + self.attracteds  # type: ignore
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent] + self.references + self.referenced_by
 
 
@@ -649,11 +664,11 @@ class Attraction(Base):
         return self.formation
 
     @property
-    def children(self) -> typing.List[Artifact]:
+    def children(self) -> List[Artifact]:
         return []
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return [
             self.attracting_piece,
             self.attracted_piece,
@@ -662,11 +677,11 @@ class Attraction(Base):
         ]
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent] + self.references
 
 
@@ -681,41 +696,44 @@ class Formation(Base):
         DateTime(), default=datetime.utcnow, nullable=False
     )
     modified_at: Mapped[datetime] = mapped_column(
-        DateTime(), onupdate=datetime.utcnow, nullable=False
-    )
-    pieces: Mapped[Optional[typing.List[Piece]]] = relationship(
-        back_populates="formation", cascade="all, delete-orphan"
-    )
-    attractions: Mapped[Optional[typing.List[Attraction]]] = relationship(
-        back_populates="formation", cascade="all, delete-orphan"
+        DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
+    pieces: Mapped[List[Piece]] = relationship(
+        back_populates="formation", cascade="all, delete-orphan"
+    )
+    attractions: Mapped[List[Attraction]] = relationship(
+        back_populates="formation", cascade="all, delete-orphan"
+    )
+    qualities: Mapped[List[Quality]] = relationship(
+        Quality, back_populates="formation", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
-        return f"Formation(id={self.id!r}, name = {self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, kit_id={self.kit_id!r})"
+        return f"Formation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, qualities={self.qualities!r})"
 
     def __str__(self) -> str:
-        return f"Formation(id={str(self.id)}, name = {self.name}, kit_id={str(self.kit_id)})"
+        return f"Formation(id={str(self.id)}, kit_id={str(self.kit_id)})"
 
     @property
     def parent(self) -> Artifact:
         return self.kit
 
     @property
-    def children(self) -> typing.List[Artifact]:
-        return self.pieces + self.attractions
+    def children(self) -> List[Artifact]:
+        return self.pieces + self.attractions  # type: ignore
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return [self.parent] + self.children
 
 
@@ -730,13 +748,13 @@ class Kit(Base):
         DateTime(), default=datetime.utcnow, nullable=False
     )
     modified_at: Mapped[datetime] = mapped_column(
-        DateTime(), onupdate=datetime.utcnow, nullable=False
+        DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
     url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
-    types: Mapped[Optional[typing.List[Type]]] = relationship(
+    types: Mapped[List[Type]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
-    formations: Mapped[Optional[typing.List[Formation]]] = relationship(
+    formations: Mapped[List[Formation]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
 
@@ -744,57 +762,58 @@ class Kit(Base):
         return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
 
     def __str__(self) -> str:
-        return f"Kit(id={str(self.id)}, name={self.name})"
+        return f"Kit(id={str(self.id)})"
 
     @property
-    def parent(self) -> Artifact:
+    def parent(self) -> None:
         return None
 
     @property
-    def children(self) -> typing.List[Artifact]:
-        return self.types + self.formations
+    def children(self) -> List[Artifact]:
+        return self.types + self.formations  # type: ignore
 
     @property
-    def references(self) -> typing.List[Artifact]:
+    def references(self) -> List[Artifact]:
         return []
 
     @property
-    def referenced_by(self) -> typing.List[Artifact]:
+    def referenced_by(self) -> List[Artifact]:
         return []
 
     @property
-    def related_to(self) -> typing.List[Artifact]:
+    def related_to(self) -> List[Artifact]:
         return self.children
 
 
 class DirectoryError(SemioException):
-    def __init__(self, directory: String):
+    def __init__(self, directory: str):
         self.directory = directory
 
 
 class DirectoryDoesNotExist(DirectoryError):
-    def __str__(self):
+    def __str__(self) -> str:
         return "Directory does not exist: " + self.directory
 
 
 class DirectoryIsNotADirectory(DirectoryError):
-    def __str__(self):
+    def __str__(self) -> str:
         return "Directory is not a directory: " + self.directory
 
 
-def assertDirectory(directory: String) -> Path:
-    directory = Path(directory)
+def assertDirectory(directory: Union[Path, str]) -> Path:
+    if isinstance(directory, str):
+        directory = Path(directory)
     if not directory.exists():
-        raise DirectoryDoesNotExist(directory)
+        raise DirectoryDoesNotExist(directory)  # type: ignore
     if not directory.is_dir():
-        raise DirectoryIsNotADirectory(directory)
+        raise DirectoryIsNotADirectory(directory)  # type: ignore
     return directory.resolve()
 
 
 @lru_cache(maxsize=100)
-def getLocalSession(directory: String) -> Session:
-    directory = assertDirectory(directory)
-    engine = create_engine("sqlite:///" + str(directory.joinpath(KIT_FILENAME)))
+def getLocalSession(directory: str) -> Session:
+    directory_path = assertDirectory(directory)
+    engine = create_engine("sqlite:///" + str(directory_path.joinpath(KIT_FILENAME)))
     Base.metadata.create_all(engine)
     # Create instance of session factory
     return sessionmaker(bind=engine)()
@@ -905,7 +924,7 @@ class QualityNode(SQLAlchemyObjectType):
     class Meta:
         model = Quality
         name = "Quality"
-        exclude_fields = ("type_id",)
+        exclude_fields = ("type_id", "formation_id")
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -1098,6 +1117,7 @@ class FormationInput(InputObjectType):
     icon = graphene.String()
     pieces = NonNull(graphene.List(NonNull(PieceInput)))
     attractions = NonNull(graphene.List(NonNull(AttractionInput)))
+    qualities = graphene.List(QualityInput)
 
 
 class KitInput(InputObjectType):
@@ -1127,15 +1147,24 @@ class PortNotFound(NotFound):
 
 
 class TypeNotFound(NotFound):
-    def __init__(self, name, qualityInputs) -> None:
+    def __init__(self, name) -> None:
         super().__init__(name)
         self.name = name
-        self.qualityInputs = qualityInputs
 
     def __str__(self):
-        return (
-            f"Type({self.name}) with qualitiyInputs: {self.qualityInputs!r}) not found."
-        )
+        return f"Type({self.name}) not found."
+
+
+class QualitiesDontMatchType(TypeNotFound):
+    def __init__(
+        self, name, qualityInputs: List[QualityInput], types: List[Type]
+    ) -> None:
+        super().__init__(name)
+        self.qualityInputs = qualityInputs
+        self.types = types
+
+    def __str__(self):
+        return f"Qualities ({self.qualityInputs}) don't match any type with name {self.name}: {str(self.types)}"
 
 
 class PieceNotFound(NotFound):
@@ -1235,43 +1264,48 @@ def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Qua
     )
 
 
-# TODO: Make this work
-def getTypeByNameAndQualities(
-    session: Session, name: String, qualityInputs: typing.List[QualityInput]
-) -> Type:
-    types = session.query(Type).filter(
-        Type.name == name,
-        and_(
-            Type.qualities.contains(qualityInputToTransientQualityForEquality(quality))
-            for quality in qualityInputs or []
-        ),
+def specifierInputToTransientSpecifierForEquality(
+    specifierInput: SpecifierInput,
+) -> Specifier:
+    return Specifier(
+        context=specifierInput.context,
+        group=specifierInput.group,
     )
-    if types.count() > 1:
-        types = types.filter(Type.qualities.count() == len(qualityInputs))
-    if types.count() > 1:
-        raise TypeNotFound(name, qualityInputs)
-    return types.first()
-    # return type
 
 
-# TODO: Implement
+def getTypeByNameAndQualities(
+    session: Session, name: String, qualityInputs: List[QualityInput]
+) -> Type:
+    typesWithSameName = session.query(Type).filter_by(name=name)
+    if typesWithSameName.count() < 1:
+        raise TypeNotFound(name)
+    typesWithSameName = typesWithSameName.all()
+    qualities = [
+        qualityInputToTransientQualityForEquality(qualityInput)
+        for qualityInput in qualityInputs
+    ]
+    typesWithSameQualities = [
+        type for type in typesWithSameName if set(type.qualities) == set(qualities)
+    ]
+    if len(typesWithSameQualities) != 1:
+        raise QualitiesDontMatchType(name, qualityInputs, typesWithSameQualities)
+    return typesWithSameQualities[0]
+
+
 def getPortBySpecifiers(
-    session: Session, type: Type, specifierInputs: typing.List[SpecifierInput]
+    session: Session, type: Type, specifierInputs: List[SpecifierInput]
 ) -> Port:
-    raise NotImplementedError("getPortBySpecifiers not implemented yet.")
-    # for typePort in typePorts:
-    #     if all(
-    #         [
-    #             portQualityInputToTransientQualityForEquality(quality)
-    #             in typePort.qualities
-    #             for quality in qualityInputs
-    #         ]
-    #     ):
-    #         port = typePort
-    #         break
-    # if port is None:
-    #     raise PortNotFound(qualityInputs)
-    # return port
+    ports = session.query(Port).filter_by(type_id=type.id)
+    specifiers = [
+        specifierInputToTransientSpecifierForEquality(specifierInput)
+        for specifierInput in specifierInputs
+    ]
+    portsWithSameSpecifier = [
+        port for port in ports if set(port.specifiers) == set(specifiers)
+    ]
+    if len(portsWithSameSpecifier) != 1:
+        raise PortNotFound(type, specifierInputs)
+    return portsWithSameSpecifier[0]
 
 
 def addRepresentationInputToSession(
@@ -1342,13 +1376,16 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
 
 def addQualityInputToSession(
     session: Session,
-    type: Type,
+    owner: Type | Formation,
     qualityInput: QualityInput,
 ) -> Quality:
+    typeId = owner.id if isinstance(owner, Type) else None
+    formationId = owner.id if isinstance(owner, Formation) else None
     quality = Quality(
         name=qualityInput.name,
         value=qualityInput.value,
-        type_id=type.id,
+        type_id=typeId,
+        formation_id=formationId,
     )
     try:
         quality.unit = qualityInput.unit
@@ -1359,11 +1396,13 @@ def addQualityInputToSession(
     return quality
 
 
-# TODO: Make this work
 def addTypeInputToSession(
     session: Session, kit: Kit, typeInput: TypeInput, replace: bool = False
 ) -> Type:
-    type = getTypeByNameAndQualities(session, typeInput.name, typeInput.qualities)
+    try:
+        type = getTypeByNameAndQualities(session, typeInput.name, typeInput.qualities)
+    except TypeNotFound:
+        type = None
     if type:
         if replace:
             session.delete(type)
@@ -1475,6 +1514,8 @@ def addFormationInputToSession(
         attraction = addAttractionInputToSession(
             session, formation, attractionInput, transientIdToPiece
         )
+    for qualityInput in formationInput.qualities or []:
+        quality = addQualityInputToSession(session, formation, qualityInput)
     return formation
 
 
