@@ -26,6 +26,7 @@ API for semio.
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
+# TODO: Check if NonNull(graphene.List(NonNull(...))) can be replaced by graphene.List(NonNull(...)) for optional lists.
 
 
 from os import remove
@@ -57,6 +58,7 @@ from sqlalchemy.orm import (
     Session,
     validates,
 )
+from sqlalchemy.exc import IntegrityError
 import graphene
 from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
 from graphene_sqlalchemy import (
@@ -881,7 +883,7 @@ class RepresentationNode(SQLAlchemyObjectType):
             "type_id",
         )
 
-    tags = graphene.List(graphene.String)
+    tags = NonNull(graphene.List(NonNull(graphene.String)))
 
     def resolve_tags(representation: Representation, info):
         return representation.tags
@@ -1088,12 +1090,12 @@ class TypeInput(InputObjectType):
     icon = graphene.String()
     representations = NonNull(graphene.List(NonNull(RepresentationInput)))
     ports = NonNull(graphene.List(NonNull(PortInput)))
-    qualities = graphene.List(QualityInput)
+    qualities = NonNull(graphene.List(NonNull(QualityInput)))
 
 
 class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
-    qualities = graphene.List(QualityInput)
+    qualities = NonNull(graphene.List(NonNull(QualityInput)))
 
 
 class TransientInput(InputObjectType):
@@ -1129,18 +1131,28 @@ class FormationInput(InputObjectType):
     icon = graphene.String()
     pieces = NonNull(graphene.List(NonNull(PieceInput)))
     attractions = NonNull(graphene.List(NonNull(AttractionInput)))
-    qualities = graphene.List(QualityInput)
+    qualities = NonNull(graphene.List(NonNull(QualityInput)))
+
+
+class FormationIdInput(InputObjectType):
+    name = NonNull(graphene.String)
+    qualities = NonNull(graphene.List(NonNull(QualityInput)))
 
 
 class KitInput(InputObjectType):
-    # NonNull but in order to reuse for update
-    # it can't be enforced
+    name = NonNull(graphene.String)
+    explanation = graphene.String()
+    icon = graphene.String()
+    url = graphene.String()
+    types = NonNull(graphene.List(NonNull(TypeInput)))
+    formations = NonNull(graphene.List(NonNull(FormationInput)))
+
+
+class KitMetadataInput(InputObjectType):
     name = graphene.String()
     explanation = graphene.String()
     icon = graphene.String()
     url = graphene.String()
-    types = graphene.List(TypeInput)
-    formations = graphene.List(FormationInput)
 
 
 class NotFound(SpecificationError):
@@ -1632,6 +1644,27 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
     return kit
 
 
+def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
+    kit = getMainKit(session)
+    try:
+        kit.name = kitMetadata.name
+    except AttributeError:
+        pass
+    try:
+        kit.explanation = kitMetadata.explanation
+    except AttributeError:
+        pass
+    try:
+        kit.icon = kitMetadata.icon
+    except AttributeError:
+        pass
+    try:
+        kit.url = kitMetadata.url
+    except AttributeError:
+        pass
+    return kit
+
+
 class CreateLocalKitErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_ALREADY_CONTAINS_A_KIT = "directory_already_contains_a_kit"
@@ -1699,50 +1732,48 @@ class CreateLocalKitMutation(graphene.Mutation):
                 )
             )
         session.commit()
-        return CreateLocalKitMutation(kit=kit, error=None)
+        return CreateLocalKitMutation(kit=kit)
 
 
-class UpdateLocalKitErrorCode(graphene.Enum):
+class UpdateLocalKitMetadataErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_UPDATE_KIT = "no_permission_to_update_kit"
-    DOCUMENT_ALREADY_EXISTS = "document_already_exists"
-    KIT_INPUT_IS_INVALID = "kit_input_is_invalid"
 
 
-class UpdateLocalKitErrorNode(ObjectType):
-    code = NonNull(UpdateLocalKitErrorCode)
+class UpdateLocalKitMetadataErrorNode(ObjectType):
+    code = NonNull(UpdateLocalKitMetadataErrorCode)
     message = graphene.String()
 
 
-class UpdateLocalKitMutation(graphene.Mutation):
+class UpdateLocalKitMetadataMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
-        kitInput = NonNull(KitInput)
+        kitMetadata = NonNull(KitMetadataInput)
 
     kit = Field(KitNode)
-    error = Field(UpdateLocalKitErrorNode)
+    error = Field(UpdateLocalKitMetadataErrorNode)
 
-    def mutate(self, info, directory, kitInput, mode):
+    def mutate(self, info, directory, kitMetadata, mode):
         directory = Path(directory)
         if not directory.exists():
-            return UpdateLocalKitMutation(
-                error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+            return UpdateLocalKitMetadataMutation(
+                error=UpdateLocalKitMetadataErrorNode(
+                    code=UpdateLocalKitMetadataErrorCode.DIRECTORY_DOES_NOT_EXIST
                 )
             )
         if not directory.is_dir():
-            return UpdateLocalKitMutation(
-                error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+            return UpdateLocalKitMetadataMutation(
+                error=UpdateLocalKitMetadataErrorNode(
+                    code=UpdateLocalKitMetadataErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
         kitFile = directory.joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return UpdateLocalKitMutation(
-                error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+            return UpdateLocalKitMetadataMutation(
+                error=UpdateLocalKitMetadataErrorNode(
+                    code=UpdateLocalKitMetadataErrorCode.DIRECTORY_HAS_NO_KIT
                 )
             )
         kitFileFullPath = kitFile.resolve()
@@ -1752,24 +1783,25 @@ class UpdateLocalKitMutation(graphene.Mutation):
             )
         session = getLocalSession(directory)
         try:
-            kit = addKitInputToSession(session, kitInput)
+            kit = updateKitMetadataInSession(session, kitMetadata)
         except SpecificationError as e:
             session.rollback()
-            return UpdateLocalKitMutation(
-                error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.KIT_INPUT_IS_INVALID, message=str(e)
+            return UpdateLocalKitMetadataMutation(
+                error=UpdateLocalKitMetadataErrorNode(
+                    code=UpdateLocalKitMetadataErrorCode.KIT_INPUT_IS_INVALID,
+                    message=str(e),
                 )
             )
         except DocumentAlreadyExists as e:
             session.rollback()
-            return UpdateLocalKitMutation(
-                error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.DOCUMENT_ALREADY_EXISTS,
+            return UpdateLocalKitMetadataMutation(
+                error=UpdateLocalKitMetadataErrorNode(
+                    code=UpdateLocalKitMetadataErrorCode.DOCUMENT_ALREADY_EXISTS,
                     message=str(e),
                 )
             )
         session.commit()
-        return UpdateLocalKitMutation(kit=kit, error=None)
+        return UpdateLocalKitMetadataMutation(kit=kit)
 
 
 class DeleteLocalKitError(graphene.Enum):
@@ -1802,6 +1834,275 @@ class DeleteLocalKitMutation(graphene.Mutation):
                 error=DeleteLocalKitError.NO_PERMISSION_TO_DELETE_KIT
             )
         return DeleteLocalKitError()
+
+
+class AddTypeToLocalKitErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
+    TYPE_INPUT_IS_INVALID = "type_input_is_invalid"
+
+
+class AddTypeToLocalKitErrorNode(ObjectType):
+    code = NonNull(AddTypeToLocalKitErrorCode)
+    message = graphene.String()
+
+
+class AddTypeToLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+        typeInput = NonNull(TypeInput)
+
+    type = Field(TypeNode)
+    error = Field(AddTypeToLocalKitErrorNode)
+
+    def mutate(self, info, directory, typeInput):
+        directory = Path(directory)
+        if not directory.exists():
+            return AddTypeToLocalKitMutation(
+                error=AddTypeToLocalKitErrorNode(
+                    code=AddTypeToLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+                )
+            )
+        if not directory.is_dir():
+            return AddTypeToLocalKitMutation(
+                error=AddTypeToLocalKitErrorNode(
+                    code=AddTypeToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+                )
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return AddTypeToLocalKitMutation(
+                error=AddTypeToLocalKitErrorNode(
+                    code=AddTypeToLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+                )
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            kit = getMainKit(session)
+        except NoMainKit:
+            raise Exception("Main kit not found.")
+        try:
+            type = addTypeInputToSession(session, kit, typeInput)
+        except SpecificationError as e:
+            session.rollback()
+            return AddTypeToLocalKitMutation(
+                error=AddTypeToLocalKitErrorNode(
+                    code=AddTypeToLocalKitErrorCode.TYPE_INPUT_IS_INVALID,
+                    message=str(e),
+                )
+            )
+        session.commit()
+        return AddTypeToLocalKitMutation(type=type)
+
+
+class RemoveTypeFromLocalKitErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
+    TYPE_DOES_NOT_EXIST = "type_does_not_exist"
+    FORMATION_DEPENDS_ON_TYPE = "formation_depends_on_type"
+
+
+class RemoveTypeFromLocalKitErrorNode(ObjectType):
+    code = NonNull(RemoveTypeFromLocalKitErrorCode)
+    message = graphene.String()
+
+
+class RemoveTypeFromLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+        typeId = NonNull(TypeIdInput)
+
+    error = Field(RemoveTypeFromLocalKitErrorNode)
+
+    def mutate(self, info, directory, typeId):
+        directory = Path(directory)
+        if not directory.exists():
+            return RemoveTypeFromLocalKitMutation(
+                error=RemoveTypeFromLocalKitErrorNode(
+                    code=RemoveTypeFromLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+                ),
+            )
+        if not directory.is_dir():
+            return RemoveTypeFromLocalKitMutation(
+                error=RemoveTypeFromLocalKitErrorNode(
+                    code=RemoveTypeFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
+                )
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return RemoveTypeFromLocalKitMutation(
+                error=RemoveTypeFromLocalKitErrorNode(
+                    code=RemoveTypeFromLocalKitErrorCode.DIRECTORY_HAS_NO_KIT,
+                )
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            kit = getMainKit(session)
+        except NoMainKit:
+            raise Exception("Main kit not found.")
+        try:
+            type = getTypeByNameAndQualities(session, typeId.name, typeId.qualities)
+        except TypeNotFound:
+            return RemoveTypeFromLocalKitMutation(
+                error=RemoveTypeFromLocalKitErrorNode(
+                    code=RemoveTypeFromLocalKitErrorCode.TYPE_DOES_NOT_EXIST
+                ),
+            )
+        if type.pieces:
+            return RemoveTypeFromLocalKitMutation(
+                error=RemoveTypeFromLocalKitErrorNode(
+                    code=RemoveTypeFromLocalKitErrorCode.FORMATION_DEPENDS_ON_TYPE
+                ),
+            )
+        session.delete(type)
+        session.commit()
+        return RemoveTypeFromLocalKitMutation()
+
+
+class AddFormationToLocalKitErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
+    FORMATION_INPUT_IS_INVALID = "formation_input_is_invalid"
+
+
+class AddFormationToLocalKitErrorNode(ObjectType):
+    code = NonNull(AddFormationToLocalKitErrorCode)
+    message = graphene.String()
+
+
+class AddFormationToLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+        formationInput = NonNull(FormationInput)
+
+    formation = Field(FormationNode)
+    error = Field(AddFormationToLocalKitErrorNode)
+
+    def mutate(self, info, directory, formationInput):
+        directory = Path(directory)
+        if not directory.exists():
+            return AddFormationToLocalKitMutation(
+                error=AddFormationToLocalKitErrorNode(
+                    code=AddFormationToLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+                )
+            )
+        if not directory.is_dir():
+            return AddFormationToLocalKitMutation(
+                error=AddFormationToLocalKitErrorNode(
+                    code=AddFormationToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+                )
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return AddFormationToLocalKitMutation(
+                error=AddFormationToLocalKitErrorNode(
+                    code=AddFormationToLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+                )
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            kit = getMainKit(session)
+        except NoMainKit:
+            raise Exception("Main kit not found.")
+        try:
+            formation = addFormationInputToSession(session, kit, formationInput)
+        except SpecificationError as e:
+            session.rollback()
+            return AddFormationToLocalKitMutation(
+                error=AddFormationToLocalKitErrorNode(
+                    code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+                    message=str(e),
+                )
+            )
+        session.commit()
+        return AddFormationToLocalKitMutation(formation=formation)
+
+
+class RemoveFormationFromLocalKitErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
+    FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
+
+
+class RemoveFormationFromLocalKitErrorNode(ObjectType):
+    code = NonNull(RemoveFormationFromLocalKitErrorCode)
+    message = graphene.String()
+
+
+class RemoveFormationFromLocalKitMutation(graphene.Mutation):
+    class Arguments:
+        directory = NonNull(graphene.String)
+        formationId = NonNull(FormationIdInput)
+
+    error = Field(RemoveFormationFromLocalKitErrorNode)
+
+    def mutate(self, info, directory, formationId):
+        directory = Path(directory)
+        if not directory.exists():
+            return RemoveFormationFromLocalKitMutation(
+                error=RemoveFormationFromLocalKitErrorNode(
+                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST,
+                )
+            )
+        if not directory.is_dir():
+            return RemoveFormationFromLocalKitMutation(
+                error=RemoveFormationFromLocalKitErrorNode(
+                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
+                )
+            )
+        kitFile = directory.joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return RemoveFormationFromLocalKitMutation(
+                error=RemoveFormationFromLocalKitErrorNode(
+                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+                ),
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            kit = getMainKit(session)
+        except NoMainKit:
+            raise Exception("Main kit not found.")
+        try:
+            formation = getFormationByNameAndQualities(
+                session, formationId.name, formationId.qualities
+            )
+        except FormationNotFound:
+            return RemoveFormationFromLocalKitMutation(
+                error=RemoveFormationFromLocalKitErrorNode(
+                    code=RemoveFormationFromLocalKitErrorCode.FORMATION_DOES_NOT_EXIST
+                ),
+            )
+        session.delete(formation)
+        session.commit()
+        return RemoveFormationFromLocalKitMutation()
 
 
 class LoadLocalKitError(graphene.Enum):
@@ -1844,8 +2145,12 @@ class Query(ObjectType):
 
 class Mutation(ObjectType):
     createLocalKit = CreateLocalKitMutation.Field()
-    updateLocalKit = UpdateLocalKitMutation.Field()
+    updateLocalKitMetadata = UpdateLocalKitMetadataMutation.Field()
     deleteLocalKit = DeleteLocalKitMutation.Field()
+    addTypeToLocalKit = AddTypeToLocalKitMutation.Field()
+    removeTypeFromLocalKit = RemoveTypeFromLocalKitMutation.Field()
+    addFormationToLocalKit = AddFormationToLocalKitMutation.Field()
+    removeFormationFromLocalKit = RemoveFormationFromLocalKitMutation.Field()
 
 
 schema = Schema(
