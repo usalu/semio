@@ -26,14 +26,12 @@ API for semio.
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Check if @staticmethod can be removed in graphene resolvers because implicit.
 
 
 from os import remove
 from pathlib import Path
 from functools import lru_cache
 from typing import Optional, Dict, Protocol, List, Union
-from decimal import Decimal
 from datetime import datetime
 from urllib.parse import urlparse
 from pint import UnitRegistry
@@ -41,12 +39,14 @@ from pydantic import BaseModel
 from sqlalchemy import (
     String,
     Text,
-    Numeric,
+    Float,
     DateTime,
     ForeignKey,
     create_engine,
     CheckConstraint,
+    UniqueConstraint,
     and_,
+    event,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -71,14 +71,6 @@ URL_LENGTH_MAX = 1000
 KIT_FILENAME = "kit.semio"
 
 ureg = UnitRegistry()
-
-
-def canonicalize_name(name: str) -> str:
-    return name.strip().lower().replace(" ", "_")
-
-
-def canonicalize_number(number: Decimal) -> Decimal:
-    return number.quantize(Decimal("0.000001"))
 
 
 class SemioException(Exception):
@@ -148,15 +140,15 @@ class Document(Artifact):
 
 
 class Point(BaseModel):
-    x: Decimal
-    y: Decimal
-    z: Decimal
+    x: float
+    y: float
+    z: float
 
 
 class Vector(BaseModel):
-    x: Decimal
-    y: Decimal
-    z: Decimal
+    x: float
+    y: float
+    z: float
 
 
 class Plane(BaseModel):
@@ -220,6 +212,8 @@ class Representation(Base):
     _tags: Mapped[List[Tag]] = relationship(
         Tag, back_populates="representation", cascade="all, delete-orphan"
     )
+
+    __table_args__ = (UniqueConstraint("type_id", "url"),)
 
     def __repr__(self) -> str:
         return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, type_id={self.type_id!r}, tags={self.tags!r})"
@@ -310,15 +304,15 @@ class Port(Base):
     __tablename__ = "port"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    origin_x: Mapped[Decimal] = mapped_column(Numeric())
-    origin_y: Mapped[Decimal] = mapped_column(Numeric())
-    origin_z: Mapped[Decimal] = mapped_column(Numeric())
-    x_axis_x: Mapped[Decimal] = mapped_column(Numeric())
-    x_axis_y: Mapped[Decimal] = mapped_column(Numeric())
-    x_axis_z: Mapped[Decimal] = mapped_column(Numeric())
-    y_axis_x: Mapped[Decimal] = mapped_column(Numeric())
-    y_axis_y: Mapped[Decimal] = mapped_column(Numeric())
-    y_axis_z: Mapped[Decimal] = mapped_column(Numeric())
+    origin_x: Mapped[float] = mapped_column(Float())
+    origin_y: Mapped[float] = mapped_column(Float())
+    origin_z: Mapped[float] = mapped_column(Float())
+    x_axis_x: Mapped[float] = mapped_column(Float())
+    x_axis_y: Mapped[float] = mapped_column(Float())
+    x_axis_z: Mapped[float] = mapped_column(Float())
+    y_axis_x: Mapped[float] = mapped_column(Float())
+    y_axis_y: Mapped[float] = mapped_column(Float())
+    y_axis_z: Mapped[float] = mapped_column(Float())
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
     specifiers: Mapped[List[Specifier]] = relationship(
@@ -512,6 +506,16 @@ class Type(Base):
     @property
     def related_to(self) -> List[Artifact]:
         return [self.parent] + self.children + self.referenced_by
+
+
+@event.listens_for(Representation, "after_update")
+def receive_after_update(mapper, connection, target):
+    target.type.modified_at = datetime.utcnow()
+
+
+@event.listens_for(Port, "after_update")
+def receive_after_update(mapper, connection, target):
+    target.type.modified_at = datetime.utcnow()
 
 
 class Transient(BaseModel):
@@ -737,6 +741,25 @@ class Formation(Base):
         return [self.parent] + self.children
 
 
+@event.listens_for(Piece, "after_update")
+def receive_after_update(mapper, connection, target):
+    target.formation.modified_at = datetime.utcnow()
+
+
+@event.listens_for(Attraction, "after_update")
+def receive_after_update(mapper, connection, target):
+    target.formation.modified_at = datetime.utcnow()
+
+
+# Both Type and Formation can own qualities
+@event.listens_for(Quality, "after_update")
+def receive_after_update(mapper, connection, target):
+    if target.type_id:
+        target.type.modified_at = datetime.utcnow()
+    else:
+        target.formation.modified_at = datetime.utcnow()
+
+
 class Kit(Base):
     __tablename__ = "kit"
 
@@ -832,23 +855,18 @@ class ArtifactNode(graphene.Interface):
     referenced_by = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
     related_to = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
 
-    @staticmethod
     def resolve_parent(artifact: "ArtifactNode", info):
         return artifact.parent
 
-    @staticmethod
     def resolve_children(artifact: "ArtifactNode", info):
         return artifact.children
 
-    @staticmethod
     def resolve_references(artifact: "ArtifactNode", info):
         return artifact.references
 
-    @staticmethod
     def resolve_referenced_by(artifact: "ArtifactNode", info):
         return artifact.referenced_by
 
-    @staticmethod
     def resolve_related_to(artifact: "ArtifactNode", info):
         return artifact.related_to
 
@@ -865,7 +883,6 @@ class RepresentationNode(SQLAlchemyObjectType):
 
     tags = graphene.List(graphene.String)
 
-    @staticmethod
     def resolve_tags(representation: Representation, info):
         return representation.tags
 
@@ -915,7 +932,6 @@ class PortNode(SQLAlchemyObjectType):
 
     plane = graphene.Field(PlaneNode)
 
-    @staticmethod
     def resolve_plane(port: Port, info):
         return port.plane
 
@@ -952,7 +968,6 @@ class PieceNode(SQLAlchemyObjectType):
 
     transient = graphene.Field(NonNull(TransientNode))
 
-    @staticmethod
     def resolve_transient(piece: Piece, info):
         return piece.transient
 
@@ -965,7 +980,6 @@ class TypePieceSideNode(PydanticObjectType):
 
     port = graphene.Field(PortNode)
 
-    @staticmethod
     def resolve_port(root, info):
         return root.port
 
@@ -1001,11 +1015,9 @@ class AttractionNode(SQLAlchemyObjectType):
     attracting = graphene.Field(NonNull(SideNode))
     attracted = graphene.Field(NonNull(SideNode))
 
-    @staticmethod
     def resolve_attracting(attraction: Attraction, info):
         return attraction.attracting
 
-    @staticmethod
     def resolve_attracted(attraction: Attraction, info):
         return attraction.attracted
 
@@ -1121,7 +1133,9 @@ class FormationInput(InputObjectType):
 
 
 class KitInput(InputObjectType):
-    name = NonNull(graphene.String)
+    # NonNull but in order to reuse for update
+    # it can't be enforced
+    name = graphene.String()
     explanation = graphene.String()
     icon = graphene.String()
     url = graphene.String()
@@ -1135,6 +1149,16 @@ class NotFound(SpecificationError):
 
     def __str__(self):
         return f"{self.id} not found."
+
+
+class RepresentationNotFound(NotFound):
+    def __init__(self, type, url) -> None:
+        super().__init__(url)
+        self.type = type
+        self.url = url
+
+    def __str__(self):
+        return f"Representation({self.url}) not found for type: {str(self.type)}"
 
 
 class PortNotFound(NotFound):
@@ -1185,6 +1209,18 @@ class FormationNotFound(NotFound):
         return f"Formation({self.name}) not found."
 
 
+class QualitiesDontMatchFormation(FormationNotFound):
+    def __init__(
+        self, name, qualityInputs: List[QualityInput], formations: List[Formation]
+    ) -> None:
+        super().__init__(name)
+        self.qualityInputs = qualityInputs
+        self.formations = formations
+
+    def __str__(self):
+        return f"Qualities ({self.qualityInputs}) don't match any formation with name {self.name}: {str(self.formations)}"
+
+
 class KitNotFound(NotFound):
     def __init__(self, name) -> None:
         super().__init__(name)
@@ -1208,30 +1244,48 @@ class AlreadyExists(SemioException):
         self.existing = existing
 
     def __str__(self):
-        return f"{self.id} already exists: {str(self.existing)}"
+        return f"{self.id!r} already exists: {str(self.existing)}"
 
 
-class ArtifactAlreadyExists(AlreadyExists):
-    def __init__(self, artifact) -> None:
-        super().__init__(artifact.name, artifact)
-        self.artifact = artifact
+class RepresentationAlreadyExists(AlreadyExists):
+    def __init__(self, representation) -> None:
+        super().__init__(representation.url, representation)
+        self.representation = representation
 
     def __str__(self):
-        return f"Artifact ({self.artifact.name}) already exists: {str(self.artifact)}"
+        return f"Representation with url: {self.representation.url!r} already exists: {str(self.representation)}"
 
 
-class TypeAlreadyExists(AlreadyExists):
+class PortAlreadyExists(AlreadyExists):
+    def __init__(self, port) -> None:
+        super().__init__(port.specifiers, port)
+        self.port = port
+
+    def __str__(self):
+        return f"Port with specifiers: {self.port.specifiers!r} already exists: {str(self.port)}"
+
+
+class DocumentAlreadyExists(AlreadyExists):
+    def __init__(self, document) -> None:
+        super().__init__(document.name, document)
+        self.document = document
+
+    def __str__(self):
+        return f"Document ({self.document.name}) already exists: {str(self.document)}"
+
+
+class TypeAlreadyExists(DocumentAlreadyExists):
     def __init__(self, type) -> None:
-        super().__init__(type.name, type)
+        super().__init__(type)
         self.type = type
 
     def __str__(self):
         return f"Type ({self.type.name}) already exists: {str(self.type)}"
 
 
-class FormationAlreadyExists(AlreadyExists):
+class FormationAlreadyExists(DocumentAlreadyExists):
     def __init__(self, formation) -> None:
-        super().__init__(formation.name, formation)
+        super().__init__(formation)
         self.formation = formation
 
     def __str__(self):
@@ -1240,9 +1294,9 @@ class FormationAlreadyExists(AlreadyExists):
         )
 
 
-class KitAlreadyExists(AlreadyExists):
+class KitAlreadyExists(DocumentAlreadyExists):
     def __init__(self, kit) -> None:
-        super().__init__(kit.name, kit)
+        super().__init__(kit)
         self.kit = kit
 
     def __str__(self):
@@ -1273,6 +1327,19 @@ def specifierInputToTransientSpecifierForEquality(
     )
 
 
+def getRepresentationByUrl(session: Session, type: Type, url: str) -> Representation:
+    representationsWithSameUrl = session.query(Representation).filter_by(url=url)
+    match representationsWithSameUrl.count():
+        case 0:
+            raise RepresentationNotFound(type, url)
+        case 1:
+            return representationsWithSameUrl.first()
+        case _:
+            raise InvalidDatabase(
+                f"Found multiple representations {representationsWithSameUrl.all()!r} for {str(type)} and url: {url}"
+            )
+
+
 def getTypeByNameAndQualities(
     session: Session, name: String, qualityInputs: List[QualityInput]
 ) -> Type:
@@ -1292,8 +1359,31 @@ def getTypeByNameAndQualities(
     return typesWithSameQualities[0]
 
 
+def getFormationByNameAndQualities(
+    session: Session, name: String, qualityInputs: List[QualityInput]
+) -> Formation:
+    formationsWithSameName = session.query(Formation).filter_by(name=name)
+    if formationsWithSameName.count() < 1:
+        raise FormationNotFound(name)
+    formationsWithSameName = formationsWithSameName.all()
+    qualities = [
+        qualityInputToTransientQualityForEquality(qualityInput)
+        for qualityInput in qualityInputs
+    ]
+    formationsWithSameQualities = [
+        formation
+        for formation in formationsWithSameName
+        if set(formation.qualities) == set(qualities)
+    ]
+    if len(formationsWithSameQualities) != 1:
+        raise QualitiesDontMatchFormation(
+            name, qualityInputs, formationsWithSameQualities
+        )
+    return formationsWithSameQualities[0]
+
+
 def getPortBySpecifiers(
-    session: Session, type: Type, specifierInputs: List[SpecifierInput]
+    session: Session, type: Formation, specifierInputs: List[SpecifierInput]
 ) -> Port:
     ports = session.query(Port).filter_by(type_id=type.id)
     specifiers = [
@@ -1304,27 +1394,24 @@ def getPortBySpecifiers(
         port for port in ports if set(port.specifiers) == set(specifiers)
     ]
     if len(portsWithSameSpecifier) != 1:
-        raise PortNotFound(type, specifierInputs)
+        raise PortNotFound(specifierInputs)
     return portsWithSameSpecifier[0]
 
 
 def addRepresentationInputToSession(
-    session: Session, type: Type, representationInput: RepresentationInput
+    session: Session,
+    type: Type,
+    representationInput: RepresentationInput,
 ) -> Representation:
+    try:
+        representation = getRepresentationByUrl(session, type, representationInput.url)
+        raise RepresentationAlreadyExists(representation)
+    except RepresentationNotFound:
+        pass
     representation = Representation(
-        name=representationInput.name,
-        format=representationInput.format,
-        blob=representationInput.blob,
+        url=representationInput.url,
         type_id=type.id,
     )
-    try:
-        representation.explanation = representationInput.explanation
-    except AttributeError:
-        pass
-    try:
-        representation.icon = representationInput.icon
-    except AttributeError:
-        pass
     try:
         representation.lod = representationInput.lod
     except AttributeError:
@@ -1355,6 +1442,11 @@ def addSpecifierInputToSession(
 
 
 def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
+    try:
+        existingPort = getPortBySpecifiers(session, type, portInput.specifiers)
+        raise PortAlreadyExists(existingPort)
+    except PortNotFound:
+        pass
     port = Port(
         origin_x=portInput.plane.origin.x,
         origin_y=portInput.plane.origin.y,
@@ -1396,22 +1488,15 @@ def addQualityInputToSession(
     return quality
 
 
-def addTypeInputToSession(
-    session: Session, kit: Kit, typeInput: TypeInput, replace: bool = False
-) -> Type:
+def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> Type:
     try:
-        type = getTypeByNameAndQualities(session, typeInput.name, typeInput.qualities)
+        existingType = getTypeByNameAndQualities(
+            session, typeInput.name, typeInput.qualities
+        )
+        raise TypeAlreadyExists(existingType)
     except TypeNotFound:
-        type = None
-    if type:
-        if replace:
-            session.delete(type)
-        else:
-            raise TypeAlreadyExists(type)
-    if not type:
-        type = Type(name=typeInput.name, kit_id=kit.id)
-        session.add(type)
-        session.flush()
+        pass
+    type = Type(name=typeInput.name, kit_id=kit.id)
     try:
         type.explanation = typeInput.explanation
     except AttributeError:
@@ -1420,6 +1505,7 @@ def addTypeInputToSession(
         type.icon = typeInput.icon
     except AttributeError:
         pass
+    session.add(type)
     session.flush()
     for portInput in typeInput.ports or []:
         port = addPortInputToSession(session, type, portInput)
@@ -1481,22 +1567,19 @@ def addAttractionInputToSession(
 
 
 def addFormationInputToSession(
-    session: Session, kit: Kit, formationInput: FormationInput, replace: bool = False
+    session: Session, kit: Kit, formationInput: FormationInput
 ):
-    formation = session.query(Formation).filter_by(name=formationInput.name).first()
-    if formation:
-        if replace:
-            session.delete(formation)
-            formation = None
-        else:
-            raise FormationAlreadyExists(formation)
-    if not formation:
-        formation = Formation(
-            name=formationInput.name,
-            kit_id=kit.id,
+    try:
+        existingFormation = getFormationByNameAndQualities(
+            session, formationInput.name, formationInput.qualities
         )
-        session.add(formation)
-        session.flush()
+        raise FormationAlreadyExists(existingFormation)
+    except FormationNotFound:
+        pass
+    formation = Formation(
+        name=formationInput.name,
+        kit_id=kit.id,
+    )
     try:
         formation.explanation = formationInput.explanation
     except AttributeError:
@@ -1504,7 +1587,9 @@ def addFormationInputToSession(
     try:
         formation.icon = formationInput.icon
     except AttributeError:
-        icon = None
+        pass
+    session.add(formation)
+    session.flush()
     transientIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
@@ -1519,15 +1604,13 @@ def addFormationInputToSession(
     return formation
 
 
-def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = False):
+def addKitInputToSession(session: Session, kitInput: KitInput):
     try:
         kit = getMainKit(session)
     except NoMainKit:
         kit = Kit(
             name=kitInput.name,
         )
-        session.add(kit)
-        session.flush()
     try:
         kit.explanation = kitInput.explanation
     except AttributeError:
@@ -1540,11 +1623,12 @@ def addKitInputToSession(session: Session, kitInput: KitInput, replace: bool = F
         kit.url = kitInput.url
     except AttributeError:
         pass
+    session.add(kit)
     session.flush()
     for typeInput in kitInput.types or []:
-        type = addTypeInputToSession(session, kit, typeInput, replace)
+        type = addTypeInputToSession(session, kit, typeInput)
     for formationInput in kitInput.formations or []:
-        formation = addFormationInputToSession(session, kit, formationInput, replace)
+        formation = addFormationInputToSession(session, kit, formationInput)
     return kit
 
 
@@ -1618,17 +1702,12 @@ class CreateLocalKitMutation(graphene.Mutation):
         return CreateLocalKitMutation(kit=kit, error=None)
 
 
-class UpdateMode(graphene.Enum):
-    REPLACE = "replace"
-    APPEND = "append"
-
-
 class UpdateLocalKitErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_UPDATE_KIT = "no_permission_to_update_kit"
-    ARTIFACT_ALREADY_EXISTS = "artifact_already_exists"
+    DOCUMENT_ALREADY_EXISTS = "document_already_exists"
     KIT_INPUT_IS_INVALID = "kit_input_is_invalid"
 
 
@@ -1641,7 +1720,6 @@ class UpdateLocalKitMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
         kitInput = NonNull(KitInput)
-        mode = NonNull(UpdateMode, default_value=UpdateMode.REPLACE)
 
     kit = Field(KitNode)
     error = Field(UpdateLocalKitErrorNode)
@@ -1674,7 +1752,7 @@ class UpdateLocalKitMutation(graphene.Mutation):
             )
         session = getLocalSession(directory)
         try:
-            kit = addKitInputToSession(session, kitInput, mode == UpdateMode.REPLACE)
+            kit = addKitInputToSession(session, kitInput)
         except SpecificationError as e:
             session.rollback()
             return UpdateLocalKitMutation(
@@ -1682,11 +1760,11 @@ class UpdateLocalKitMutation(graphene.Mutation):
                     code=UpdateLocalKitErrorCode.KIT_INPUT_IS_INVALID, message=str(e)
                 )
             )
-        except ArtifactAlreadyExists as e:
+        except DocumentAlreadyExists as e:
             session.rollback()
             return UpdateLocalKitMutation(
                 error=UpdateLocalKitErrorNode(
-                    code=UpdateLocalKitErrorCode.ARTIFACT_ALREADY_EXISTS,
+                    code=UpdateLocalKitErrorCode.DOCUMENT_ALREADY_EXISTS,
                     message=str(e),
                 )
             )
@@ -1733,89 +1811,35 @@ class LoadLocalKitError(graphene.Enum):
     NO_PERMISSION_TO_READ_KIT = "no_permission_to_read_kit"
 
 
-class LoadLocalTypesResponse(ObjectType):
-    types = graphene.List(TypeNode)
-    error = Field(LoadLocalKitError)
-
-
-class LoadLocalFormationsResponse(ObjectType):
-    formations = graphene.List(FormationNode)
-    error = Field(LoadLocalKitError)
-
-
-class LoadLocalArtifactsResponse(ObjectType):
-    artifacts = graphene.List(ArtifactNode)
-    error = Field(LoadLocalKitError)
-
-
 class LoadLocalKitResponse(ObjectType):
     kit = Field(KitNode)
     error = Field(LoadLocalKitError)
 
 
 class Query(ObjectType):
-    loadLocalTypes = graphene.Field(
-        LoadLocalTypesResponse, directory=NonNull(graphene.String)
-    )
-    loadLocalFormations = graphene.Field(
-        LoadLocalFormationsResponse, directory=NonNull(graphene.String)
-    )
-    loadLocalArtifacts = graphene.Field(
-        LoadLocalArtifactsResponse, directory=NonNull(graphene.String)
-    )
-    loadLocalKit = graphene.Field(
-        LoadLocalKitResponse, directory=NonNull(graphene.String)
-    )
-
-    def resolve_loadLocalTypes(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Type).all()
-
-    def resolve_loadLocalFormations(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        return session.query(Formation).all()
-
-    def resolve_loadLocalArtifacts(self, info, directory: graphene.String):
-        session = getLocalSession(directory)
-        artifacts = []
-        artifacts.extend(session.query(Type).all())
-        artifacts.extend(session.query(Formation).all())
-        artifacts.extend(session.query(Kit).all())
-        return artifacts
+    loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
         directory = Path(directory)
         if not directory.exists():
             return LoadLocalKitResponse(
-                kit=None,
-                error=LoadLocalKitError(
-                    code=LoadLocalKitError.DIRECTORY_DOES_NOT_EXIST
-                ),
+                error=LoadLocalKitError.DIRECTORY_DOES_NOT_EXIST
             )
         if not directory.is_dir():
             return LoadLocalKitResponse(
-                kit=None,
-                error=LoadLocalKitError(
-                    code=LoadLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
-                ),
+                error=LoadLocalKitError.DIRECTORY_IS_NOT_A_DIRECTORY
             )
         try:
             session = getLocalSession(directory)
         except PermissionError:
             return LoadLocalKitResponse(
-                kit=None,
-                error=LoadLocalKitError(
-                    code=LoadLocalKitError.NO_PERMISSION_TO_READ_KIT
-                ),
+                error=LoadLocalKitError.NO_PERMISSION_TO_READ_KIT
             )
         try:
             kit = getMainKit(session)
         except NoMainKit:
-            return LoadLocalKitResponse(
-                kit=None,
-                error=LoadLocalKitError(code=LoadLocalKitError.DIRECTORY_HAS_NO_KIT),
-            )
-        return LoadLocalKitResponse(kit=kit, error=None)
+            return LoadLocalKitResponse(error=LoadLocalKitError.DIRECTORY_HAS_NO_KIT)
+        return LoadLocalKitResponse(kit=kit)
 
 
 class Mutation(ObjectType):

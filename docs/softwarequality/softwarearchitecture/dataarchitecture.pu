@@ -1,7 +1,7 @@
 @startuml "data architecture"
 skinparam linetype ortho
 
-interface Artifact {
+interface Document {
     *name : string
     explanation : string
     icon : string
@@ -110,9 +110,9 @@ Type <-- Piece
 Piece <-- Attraction
 Port <-- Attraction
 
-Artifact <|-- Kit
-Artifact <|-- Type
-Artifact <|-- Formation
+Document <|-- Kit
+Document <|-- Type
+Document <|-- Formation
 
 
 @enduml
