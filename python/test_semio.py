@@ -155,7 +155,7 @@ deleteLocalKitMutation = """mutation DeleteLocalKit($directory: String!){
 }"""
 
 
-def test_kit_crud(tmp_path):
+def integration_test_graphql_kit_crud(tmp_path):
     client = Client(schema)
     name = "metabolistic"
     explanation = "A metabolism clone"
@@ -389,7 +389,8 @@ def test_kit_crud(tmp_path):
         }
     }
     removeShaftResponse = client.execute(
-        removeLocalKitMutation, variables={"directory": str(tmp_path), "type": shaftId}
+        removeTypeFromLocalKitMutation,
+        variables={"directory": str(tmp_path), "type": shaftId},
     )
     assert removeShaftResponse == {
         "data": {

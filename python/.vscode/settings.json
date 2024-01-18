@@ -8,11 +8,21 @@
             "name": "metabolistic"
         }
     ],
-    "python.defaultInterpreterPath": ".venv/bin/python",
     "editor.formatOnSave": true,
-    "python.testing.pytestArgs": [
-        "."
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python": {
+        "defaultInterpreterPath": ".venv/bin/python",
+        "analysis": {
+            "typeCheckingMode": "none",
+            "diagnosticSeverityOverrides": {
+                "reportMissingTypeStubs": "none"
+            }
+        },
+        "testing": {
+            "pytestEnabled": true,
+            "unittestEnabled": false,
+            "pytestArgs": [
+                "."
+            ]
+        },
+    },
 }

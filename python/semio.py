@@ -520,14 +520,11 @@ def receive_after_update(mapper, connection, target):
     target.type.modified_at = datetime.utcnow()
 
 
-class Transient(BaseModel):
-    id: str
-
-
 class Piece(Base):
     __tablename__ = "piece"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    local_id: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
     formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
@@ -548,10 +545,6 @@ class Piece(Base):
 
     def __str__(self) -> str:
         return f"Piece(id={str(self.id)}, formation_id={str(self.formation_id)})"
-
-    @property
-    def transient(self) -> Transient:
-        return Transient(id=str(self.id))
 
     @property
     def parent(self) -> Artifact:
@@ -585,7 +578,7 @@ class PieceSide(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    transient: Transient
+    id: str
     type: TypePieceSide
 
 
@@ -647,7 +640,7 @@ class Attraction(Base):
     def attracting(self) -> Side:
         return Side(
             piece=PieceSide(
-                transient=self.attracting_piece.transient,
+                id=self.attracting_piece.id,
                 type=TypePieceSide(
                     port=self.attracting_piece_type_port,
                 ),
@@ -658,7 +651,7 @@ class Attraction(Base):
     def attracted(self) -> Side:
         return Side(
             piece=PieceSide(
-                transient=self.attracted_piece.transient,
+                id=self.attracted_piece.id,
                 type=TypePieceSide(
                     port=self.attracted_piece_type_port,
                 ),
@@ -956,22 +949,16 @@ class TypeNode(SQLAlchemyObjectType):
         )
 
 
-class TransientNode(PydanticObjectType):
-    class Meta:
-        model = Transient
-        name = "Transient"
-
-
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
         name = "Piece"
-        exclude_fields = ("id", "type_id", "formation_id")
+        exclude_fields = ("id", "local_id", "type_id", "formation_id")
 
-    transient = graphene.Field(NonNull(TransientNode))
+    id = graphene.Field(NonNull(graphene.String))
 
-    def resolve_transient(piece: Piece, info):
-        return piece.transient
+    def resolve_id(piece: Piece, info):
+        return piece.local_id
 
 
 class TypePieceSideNode(PydanticObjectType):
@@ -1098,12 +1085,8 @@ class TypeIdInput(InputObjectType):
     qualities = NonNull(graphene.List(NonNull(QualityInput)))
 
 
-class TransientInput(InputObjectType):
-    id = NonNull(graphene.String)
-
-
 class PieceInput(InputObjectType):
-    transient = NonNull(TransientInput)
+    id = NonNull(graphene.String)
     type = NonNull(TypeIdInput)
 
 
@@ -1112,7 +1095,7 @@ class TypePieceSideInput(InputObjectType):
 
 
 class PieceSideInput(InputObjectType):
-    transient = NonNull(TransientInput)
+    id = NonNull(graphene.String)
     type = NonNull(TypePieceSideInput)
 
 
@@ -1204,12 +1187,12 @@ class QualitiesDontMatchType(TypeNotFound):
 
 
 class PieceNotFound(NotFound):
-    def __init__(self, transient_id) -> None:
-        super().__init__(transient_id)
-        self.transient_id = transient_id
+    def __init__(self, local_id) -> None:
+        super().__init__(local_id)
+        self.local_id = local_id
 
     def __str__(self):
-        return f"Piece({self.transient_id}) not found. Please check that the transient id is correct and that the piece is part of the formation."
+        return f"Piece({self.local_id}) not found. Please check that the local id is correct and that the piece is part of the formation."
 
 
 class FormationNotFound(NotFound):
@@ -1532,7 +1515,7 @@ def addPieceInputToSession(
     type = getTypeByNameAndQualities(
         session, pieceInput.type.name, pieceInput.type.qualities
     )
-    piece = Piece(type_id=type.id, formation_id=formation.id)
+    piece = Piece(local_id=pieceInput.id, type_id=type.id, formation_id=formation.id)
     session.add(piece)
     session.flush()
     return piece
@@ -1542,20 +1525,16 @@ def addAttractionInputToSession(
     session: Session,
     formation: Formation,
     attractionInput: AttractionInput,
-    transientIdToPiece: dict,
+    localIdToPiece: dict,
 ) -> Attraction:
     try:
-        attractingPiece = transientIdToPiece[
-            attractionInput.attracting.piece.transient.id
-        ]
+        attractingPiece = localIdToPiece[attractionInput.attracting.piece.id]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracting.piece.transient.id)
+        raise PieceNotFound(attractionInput.attracting.piece.id)
     try:
-        attractedPiece = transientIdToPiece[
-            attractionInput.attracted.piece.transient.id
-        ]
+        attractedPiece = localIdToPiece[attractionInput.attracted.piece.id]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracted.piece.transient.id)
+        raise PieceNotFound(attractionInput.attracted.piece.id)
     attractingPieceTypePort = getPortBySpecifiers(
         session,
         attractingPiece.type,
@@ -1602,14 +1581,14 @@ def addFormationInputToSession(
         pass
     session.add(formation)
     session.flush()
-    transientIdToPiece: Dict[str, Piece] = {}
+    localIdToPiece: Dict[str, Piece] = {}
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
-        transientIdToPiece[pieceInput.transient.id] = piece
+        localIdToPiece[pieceInput.id] = piece
 
     for attractionInput in formationInput.attractions or []:
         attraction = addAttractionInputToSession(
-            session, formation, attractionInput, transientIdToPiece
+            session, formation, attractionInput, localIdToPiece
         )
     for qualityInput in formationInput.qualities or []:
         quality = addQualityInputToSession(session, formation, qualityInput)
@@ -2158,10 +2137,10 @@ schema = Schema(
     mutation=Mutation,
 )
 
-with open("schema.graphql", "w") as f:
+with open("debug/schema.graphql", "w") as f:
     f.write(str(schema))
 
-engine = create_engine("sqlite:///semio.db")
+engine = create_engine("sqlite:///debug/semio.db")
 Base.metadata.create_all(engine)
 
 app = Flask(__name__)

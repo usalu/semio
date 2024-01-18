@@ -75,6 +75,7 @@ entity Specifier {
 entity Piece{
     *id : int <<generated>>
     ..
+    local_id: string
     type_id : int <<FK>>
     ..
     formation_id : int <<FK>>

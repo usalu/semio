@@ -44,9 +44,7 @@ kit : !{
         explanation : ?string
         icon : ?string
         pieces : ![
-            transient : !{
-                id : !string
-            }
+            id : !string
             type : !{
                 name : !string
                 qualities : +[
@@ -59,9 +57,7 @@ kit : !{
         attractions : +[
             attracting : !{
                 piece : !{
-                    transient : !{
-                        id : !string
-                    }
+                    id : !string
                     type : !{
                         port : !{
                             specifiers : +[
@@ -74,9 +70,7 @@ kit : !{
             }
             attracted : !{
                 piece : !{
-                    transient : !{
-                        id : !string
-                    }
+                    id : !string
                     type : !{
                         port : !{
                             specifiers : +[
