@@ -15,7 +15,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\Semio\Semio.csproj" />
-    <ProjectReference Include="..\speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhino7\ConverterRhino7.csproj" />
   </ItemGroup>
 
 </Project>

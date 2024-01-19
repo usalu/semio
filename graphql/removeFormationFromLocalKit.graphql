@@ -1,0 +1,8 @@
+mutation RemoveFormationFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+  removeFormationFromLocalKit(directory: $directory, formationId: $formation) {
+    error {
+      code
+      message
+    }
+  }
+}

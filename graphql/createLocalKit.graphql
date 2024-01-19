@@ -1,0 +1,99 @@
+mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
+  createLocalKit(directory: $directory, kitInput: $kit) {
+    kit {
+      name
+      explanation
+      icon
+      url
+      types {
+        name
+        representations {
+          url
+          lod
+          tags
+        }
+        ports {
+          plane {
+            origin {
+              x
+              y
+              z
+            }
+            xAxis {
+              x
+              y
+              z
+            }
+            yAxis {
+              x
+              y
+              z
+            }
+          }
+          specifiers {
+            context
+            group
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+      formations {
+        name
+        explanation
+        icon
+        pieces {
+          id
+          type {
+            name
+            qualities {
+              name
+              value
+              unit
+            }
+          }
+        }
+        attractions {
+          attracting {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    context
+                    group
+                  }
+                }
+              }
+            }
+          }
+          attracted {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    group
+                    context
+                  }
+                }
+              }
+            }
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+    }
+    error {
+      code
+      message
+    }
+  }
+}

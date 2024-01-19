@@ -41,9 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Semio.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GraphQL.Client">
@@ -52,6 +56,25 @@
     <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft">
       <Version>6.0.2</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\addTypeToLocalKit.graphql" />
+    <None Include="Resources\createLocalKit.graphql" />
+    <None Include="Resources\deleteLocalKit.graphql" />
+    <None Include="Resources\loadLocalKit.graphql" />
+    <None Include="Resources\removeFormationFromLocalKit.graphql" />
+    <None Include="Resources\removeTypeFromLocalKit.graphql" />
+    <None Include="Resources\schema.graphql" />
+    <None Include="Resources\updateLocalKitMetadata.graphql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

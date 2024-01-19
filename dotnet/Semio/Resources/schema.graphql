@@ -1,0 +1,396 @@
+type Query {
+  loadLocalKit(directory: String!): LoadLocalKitResponse
+}
+
+type LoadLocalKitResponse {
+  kit: Kit
+  error: LoadLocalKitError
+}
+
+type Kit implements Artifact {
+  name: String!
+  explanation: String
+  icon: String
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  url: String
+  types: [Type!]!
+  formations: [Formation!]!
+  parent: Artifact
+  children: [Artifact!]!
+  references: [Artifact!]!
+  referencedBy: [Artifact!]!
+  relatedTo: [Artifact!]!
+}
+
+interface Artifact {
+  name: String!
+  explanation: String
+  icon: String
+  parent: Artifact
+  children: [Artifact!]!
+  references: [Artifact!]!
+  referencedBy: [Artifact!]!
+  relatedTo: [Artifact!]!
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+type Type implements Artifact {
+  name: String!
+  explanation: String
+  icon: String
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  kit: Kit
+  representations: [Representation!]!
+  ports: [Port!]!
+  qualities: [Quality!]!
+  pieces: [Piece!]!
+  parent: Artifact
+  children: [Artifact!]!
+  references: [Artifact!]!
+  referencedBy: [Artifact!]!
+  relatedTo: [Artifact!]!
+}
+
+type Representation {
+  url: String!
+  lod: String
+  type: Type
+  tags: [String!]!
+}
+
+type Port {
+  type: Type
+  specifiers: [Specifier!]!
+  attractings: [Attraction!]!
+  attracteds: [Attraction!]!
+  plane: Plane
+}
+
+type Specifier {
+  context: String!
+  group: String!
+  port: Port
+}
+
+type Attraction {
+  formation: Formation
+  attracting: Side!
+  attracted: Side!
+}
+
+type Formation implements Artifact {
+  name: String!
+  explanation: String
+  icon: String
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  kit: Kit
+  pieces: [Piece!]!
+  attractions: [Attraction!]!
+  qualities: [Quality!]!
+  parent: Artifact
+  children: [Artifact!]!
+  references: [Artifact!]!
+  referencedBy: [Artifact!]!
+  relatedTo: [Artifact!]!
+}
+
+type Piece {
+  type: Type
+  formation: Formation
+  attractings: [Attraction!]!
+  attracteds: [Attraction!]!
+  id: String!
+}
+
+type Quality {
+  name: String!
+  value: String!
+  unit: String
+  type: Type
+  formation: Formation
+}
+
+type Side {
+  piece: PieceSide!
+}
+
+type PieceSide {
+  id: String!
+  type: TypePieceSide!
+}
+
+type TypePieceSide {
+  port: Port
+}
+
+type Plane {
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
+}
+
+type Point {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Vector {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+enum LoadLocalKitError {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_READ_KIT
+}
+
+type Mutation {
+  createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
+  updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
+  deleteLocalKit(directory: String!): DeleteLocalKitMutation
+  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
+  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
+  addFormationToLocalKit(directory: String!, formationInput: FormationInput!): AddFormationToLocalKitMutation
+  removeFormationFromLocalKit(directory: String!, formationId: FormationIdInput!): RemoveFormationFromLocalKitMutation
+}
+
+type CreateLocalKitMutation {
+  kit: Kit
+  error: CreateLocalKitErrorNode
+}
+
+type CreateLocalKitErrorNode {
+  code: CreateLocalKitErrorCode!
+  message: String
+}
+
+enum CreateLocalKitErrorCode {
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_ALREADY_CONTAINS_A_KIT
+  NO_PERMISSION_TO_CREATE_DIRECTORY
+  NO_PERMISSION_TO_CREATE_KIT
+  KIT_INPUT_IS_INVALID
+}
+
+input KitInput {
+  name: String!
+  explanation: String
+  icon: String
+  url: String
+  types: [TypeInput!]!
+  formations: [FormationInput!]!
+}
+
+input TypeInput {
+  name: String!
+  explanation: String
+  icon: String
+  representations: [RepresentationInput!]!
+  ports: [PortInput!]!
+  qualities: [QualityInput!]!
+}
+
+input RepresentationInput {
+  url: String!
+  lod: String
+  tags: [String!]!
+}
+
+input PortInput {
+  plane: PlaneInput!
+  specifiers: [SpecifierInput!]!
+}
+
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
+
+input PointInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input VectorInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input SpecifierInput {
+  context: String!
+  group: String!
+}
+
+input QualityInput {
+  name: String!
+  value: String!
+  unit: String
+}
+
+input FormationInput {
+  name: String!
+  explanation: String
+  icon: String
+  pieces: [PieceInput!]!
+  attractions: [AttractionInput!]!
+  qualities: [QualityInput!]!
+}
+
+input PieceInput {
+  id: String!
+  type: TypeIdInput!
+}
+
+input TypeIdInput {
+  name: String!
+  qualities: [QualityInput!]!
+}
+
+input AttractionInput {
+  attracting: SideInput!
+  attracted: SideInput!
+}
+
+input SideInput {
+  piece: PieceSideInput!
+}
+
+input PieceSideInput {
+  id: String!
+  type: TypePieceSideInput!
+}
+
+input TypePieceSideInput {
+  port: PortIdInput!
+}
+
+input PortIdInput {
+  specifiers: [SpecifierInput!]!
+}
+
+type UpdateLocalKitMetadataMutation {
+  kit: Kit
+  error: UpdateLocalKitMetadataErrorNode
+}
+
+type UpdateLocalKitMetadataErrorNode {
+  code: UpdateLocalKitMetadataErrorCode!
+  message: String
+}
+
+enum UpdateLocalKitMetadataErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_UPDATE_KIT
+  KIT_METADATA_IS_INVALID
+}
+
+input KitMetadataInput {
+  name: String
+  explanation: String
+  icon: String
+  url: String
+}
+
+type DeleteLocalKitMutation {
+  error: DeleteLocalKitError
+}
+
+enum DeleteLocalKitError {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_DELETE_KIT
+}
+
+type AddTypeToLocalKitMutation {
+  type: Type
+  error: AddTypeToLocalKitErrorNode
+}
+
+type AddTypeToLocalKitErrorNode {
+  code: AddTypeToLocalKitErrorCode!
+  message: String
+}
+
+enum AddTypeToLocalKitErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_MODIFY_KIT
+  TYPE_INPUT_IS_INVALID
+}
+
+type RemoveTypeFromLocalKitMutation {
+  error: RemoveTypeFromLocalKitErrorNode
+}
+
+type RemoveTypeFromLocalKitErrorNode {
+  code: RemoveTypeFromLocalKitErrorCode!
+  message: String
+}
+
+enum RemoveTypeFromLocalKitErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_MODIFY_KIT
+  TYPE_DOES_NOT_EXIST
+  FORMATION_DEPENDS_ON_TYPE
+}
+
+type AddFormationToLocalKitMutation {
+  formation: Formation
+  error: AddFormationToLocalKitErrorNode
+}
+
+type AddFormationToLocalKitErrorNode {
+  code: AddFormationToLocalKitErrorCode!
+  message: String
+}
+
+enum AddFormationToLocalKitErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_MODIFY_KIT
+  FORMATION_INPUT_IS_INVALID
+}
+
+type RemoveFormationFromLocalKitMutation {
+  error: RemoveFormationFromLocalKitErrorNode
+}
+
+type RemoveFormationFromLocalKitErrorNode {
+  code: RemoveFormationFromLocalKitErrorCode!
+  message: String
+}
+
+enum RemoveFormationFromLocalKitErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_MODIFY_KIT
+  FORMATION_DOES_NOT_EXIST
+}
+
+input FormationIdInput {
+  name: String!
+  qualities: [QualityInput!]!
+}

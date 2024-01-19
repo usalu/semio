@@ -1,0 +1,44 @@
+mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
+  addTypeToLocalKit(directory: $directory, typeInput: $type) {
+    type {
+      name
+      representations {
+        url
+        lod
+        tags
+      }
+      ports {
+        plane {
+          origin {
+            x
+            y
+            z
+          }
+          xAxis {
+            x
+            y
+            z
+          }
+          yAxis {
+            x
+            y
+            z
+          }
+        }
+        specifiers {
+          context
+          group
+        }
+      }
+      qualities {
+        name
+        value
+        unit
+      }
+    }
+    error {
+      code
+      message
+    }
+  }
+}

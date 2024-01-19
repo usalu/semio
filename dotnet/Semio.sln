@@ -5,8 +5,6 @@ VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "Semio.Grasshopper\Semio.Grasshopper.csproj", "{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterRhino7", "speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhino7\ConverterRhino7.csproj", "{220F7EC8-100A-4B19-91AD-2197DEE52528}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio", "Semio\Semio.csproj", "{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{220F7EC8-100A-4B19-91AD-2197DEE52528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{220F7EC8-100A-4B19-91AD-2197DEE52528}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{220F7EC8-100A-4B19-91AD-2197DEE52528}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{220F7EC8-100A-4B19-91AD-2197DEE52528}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,8 +27,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19AD715B-FD6A-4121-A0D4-8C911545F8B0}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		speckle-sharp\Objects\Converters\ConverterRhinoGh\ConverterRhinoGhShared\ConverterRhinoGhShared.projitems*{220f7ec8-100a-4b19-91ad-2197dee52528}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

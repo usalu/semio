@@ -70,7 +70,8 @@ from graphql_server.flask import GraphQLView
 
 NAME_LENGTH_MAX = 100
 URL_LENGTH_MAX = 1000
-KIT_FILENAME = "kit.semio"
+KIT_FOLDERNAME = ".semio"
+KIT_FILENAME = "kit.sqlite3"
 
 ureg = UnitRegistry()
 
@@ -139,24 +140,6 @@ class Document(Artifact):
     name: str
     explanation: str
     icon: str
-
-
-class Point(BaseModel):
-    x: float
-    y: float
-    z: float
-
-
-class Vector(BaseModel):
-    x: float
-    y: float
-    z: float
-
-
-class Plane(BaseModel):
-    origin: Point
-    x_axis: Vector
-    y_axis: Vector
 
 
 class Base(DeclarativeBase):
@@ -300,6 +283,24 @@ class Specifier(Base):
     @property
     def related_to(self) -> List[Artifact]:
         return [self.parent]
+
+
+class Point(BaseModel):
+    x: float
+    y: float
+    z: float
+
+
+class Vector(BaseModel):
+    x: float
+    y: float
+    z: float
+
+
+class Plane(BaseModel):
+    origin: Point
+    x_axis: Vector
+    y_axis: Vector
 
 
 class Port(Base):
@@ -831,7 +832,10 @@ def assertDirectory(directory: Union[Path, str]) -> Path:
 @lru_cache(maxsize=100)
 def getLocalSession(directory: str) -> Session:
     directory_path = assertDirectory(directory)
-    engine = create_engine("sqlite:///" + str(directory_path.joinpath(KIT_FILENAME)))
+    engine = create_engine(
+        "sqlite:///"
+        + str(directory_path.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME))
+    )
     Base.metadata.create_all(engine)
     # Create instance of session factory
     return sessionmaker(bind=engine)()
@@ -935,7 +939,7 @@ class QualityNode(SQLAlchemyObjectType):
     class Meta:
         model = Quality
         name = "Quality"
-        exclude_fields = ("type_id", "formation_id")
+        exclude_fields = ("id", "type_id", "formation_id")
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -1685,14 +1689,15 @@ class CreateLocalKitMutation(graphene.Mutation):
                         code=CreateLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                     )
                 )
-
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if kitFile.exists():
             return CreateLocalKitMutation(
                 error=CreateLocalKitErrorNode(
                     code=CreateLocalKitErrorCode.DIRECTORY_ALREADY_CONTAINS_A_KIT
                 )
             )
+        else:
+            kitFile.parent.mkdir(parents=True, exist_ok=True)
 
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
@@ -1719,6 +1724,7 @@ class UpdateLocalKitMetadataErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_UPDATE_KIT = "no_permission_to_update_kit"
+    KIT_METADATA_IS_INVALID = "kit_metadata_is_invalid"
 
 
 class UpdateLocalKitMetadataErrorNode(ObjectType):
@@ -1729,12 +1735,12 @@ class UpdateLocalKitMetadataErrorNode(ObjectType):
 class UpdateLocalKitMetadataMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
-        kitMetadata = NonNull(KitMetadataInput)
+        kitMetadataInput = NonNull(KitMetadataInput)
 
     kit = Field(KitNode)
     error = Field(UpdateLocalKitMetadataErrorNode)
 
-    def mutate(self, info, directory, kitMetadata, mode):
+    def mutate(self, info, directory, kitMetadataInput, mode):
         directory = Path(directory)
         if not directory.exists():
             return UpdateLocalKitMetadataMutation(
@@ -1748,7 +1754,7 @@ class UpdateLocalKitMetadataMutation(graphene.Mutation):
                     code=UpdateLocalKitMetadataErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return UpdateLocalKitMetadataMutation(
                 error=UpdateLocalKitMetadataErrorNode(
@@ -1762,20 +1768,12 @@ class UpdateLocalKitMetadataMutation(graphene.Mutation):
             )
         session = getLocalSession(directory)
         try:
-            kit = updateKitMetadataInSession(session, kitMetadata)
+            kit = updateKitMetadataInSession(session, kitMetadataInput)
         except SpecificationError as e:
             session.rollback()
             return UpdateLocalKitMetadataMutation(
                 error=UpdateLocalKitMetadataErrorNode(
-                    code=UpdateLocalKitMetadataErrorCode.KIT_INPUT_IS_INVALID,
-                    message=str(e),
-                )
-            )
-        except DocumentAlreadyExists as e:
-            session.rollback()
-            return UpdateLocalKitMetadataMutation(
-                error=UpdateLocalKitMetadataErrorNode(
-                    code=UpdateLocalKitMetadataErrorCode.DOCUMENT_ALREADY_EXISTS,
+                    code=UpdateLocalKitMetadataErrorCode.KIT_METADATA_IS_INVALID,
                     message=str(e),
                 )
             )
@@ -1801,7 +1799,7 @@ class DeleteLocalKitMutation(graphene.Mutation):
             return DeleteLocalKitError(
                 error=DeleteLocalKitError.DIRECTORY_DOES_NOT_EXIST
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return DeleteLocalKitError(error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT)
         kitFileFullPath = kitFile.resolve()
@@ -1850,7 +1848,7 @@ class AddTypeToLocalKitMutation(graphene.Mutation):
                     code=AddTypeToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return AddTypeToLocalKitMutation(
                 error=AddTypeToLocalKitErrorNode(
@@ -1916,7 +1914,7 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
                     code=RemoveTypeFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
                 )
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return RemoveTypeFromLocalKitMutation(
                 error=RemoveTypeFromLocalKitErrorNode(
@@ -1987,7 +1985,7 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
                     code=AddFormationToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return AddFormationToLocalKitMutation(
                 error=AddFormationToLocalKitErrorNode(
@@ -2052,7 +2050,7 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
                     code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
                 )
             )
-        kitFile = directory.joinpath(KIT_FILENAME)
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
             return RemoveFormationFromLocalKitMutation(
                 error=RemoveFormationFromLocalKitErrorNode(
@@ -2137,12 +2135,6 @@ schema = Schema(
     mutation=Mutation,
 )
 
-with open("debug/schema.graphql", "w") as f:
-    f.write(str(schema))
-
-engine = create_engine("sqlite:///debug/semio.db")
-Base.metadata.create_all(engine)
-
 app = Flask(__name__)
 app.add_url_rule(
     "/graphql",
@@ -2152,6 +2144,12 @@ app.add_url_rule(
         graphiql=True,
     ),
 )
+if app.debug:
+    with open("../graphql/schema.graphql", "w") as f:
+        f.write(str(schema))
+
+    engine = create_engine("sqlite:///debug/semio.db")
+    Base.metadata.create_all(engine)
 
 
 def main():

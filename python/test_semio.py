@@ -2,165 +2,24 @@ from graphene.test import Client
 
 from semio import schema
 
-typeQuery = """{
-        name
-        representations {
-          url
-          lod
-          tags
-        }
-        ports {
-          plane {
-            origin {
-              x
-              y
-              z
-            }
-            xAxis {
-              x
-              y
-              z
-            }
-            yAxis {
-              x
-              y
-              z
-            }
-          }
-          specifiers {
-            context
-            group
-          }
-        }
-        qualities {
-          name
-          value
-          unit
-        }"""
-
-formationQuery = """{
-      name
-      explanation
-      icon
-      pieces {
-        transient {
-          id
-        }
-        type {
-          name
-          qualities {
-            name
-            value
-            unit
-          }
-        }
-      }
-      attractions {
-        attracting {
-          piece {
-            transient {
-              id
-            }
-            type {
-              port {
-                specifiers {
-                  context
-                  group
-                }
-              }
-            }
-          }
-        }
-        attracted {
-          piece {
-            transient {
-              id
-            }
-            type {
-              port {
-                specifiers {
-                  group
-                  context
-                }
-              }
-            }
-          }
-        }
-      }
-      qualities {
-        name
-        value
-        unit
-      }
-    }"""
-
-kitQuery = (
-    """{
-      name
-      explanation
-      icon
-      url
-      types """
-    + typeQuery
-    + """
-      formations """
-    + formationQuery
-    + """
-    }"""
-)
-
-createLocalKitMutation = (
-    """mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
-  createLocalKit(directory: $directory, kitInput: $kit) {
-    kit """
-    + kitQuery
-    + """
-    error{
-      code
-      message
-    }
-  }
-}"""
-)
-
-addTypeToLocalKitMutation = (
-    """mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
-  addTypeToLocalKit(directory: $directory, typeInput: $type) {
-    type """
-    + typeQuery
-    + """
-    error {
-      code
-      message
-    }
-  }
-}"""
-)
-
-removeTypeFromLocalKitMutation = """mutation RemoveTypeFromLocalKit($directory: String!, $type: TypeIdInput!) {
-  removeTypeFromLocalKit(directory: $directory, typeId: $type) {
-    error {
-      code
-      message
-    }
-  }
-}"""
-
-deleteLocalKitMutation = """mutation DeleteLocalKit($directory: String!){
-  deleteLocalKit(
-    directory:$directory,
-  ){
-    error
-  }
-}"""
+schema = open("../graphql/schema.graphql", "r").read()
+createLocalKit = open("../graphql/createLocalKit.graphql", "r").read()
+updateLocalKitMetdata = open("../graphql/updateLocalKitMetdata.graphql", "r").read()
+deleteLocalKit = open("../graphql/deleteLocalKit.graphql", "r").read()
+addTypeToLocalKit = open("../graphql/addTypeToLocalKit.graphql", "r").read()
+removeTypeFromLocalKit = open("../graphql/removeTypeFromLocalKit.graphql", "r").read()
+addFormationToLocalKit = open("../graphql/addFormationToLocalKit.graphql", "r").read()
+removeFormationFromLocalKit = open(
+    "../graphql/removeFormationFromLocalKit.graphql", "r"
+).read()
 
 
 def integration_test_graphql_kit_crud(tmp_path):
     client = Client(schema)
-    name = "metabolistic"
-    explanation = "A metabolism clone"
+    name = "metabolism"
+    explanation = "For metabolistic architecture."
     icon = "🫀"
-    url = "https://github.com/usalu/semio/tree/main/examples/metabolic"
+    url = "https://github.com/usalu/semio/tree/main/examples/metabolism"
     base = {
         "name": "base",
         "explanation": "A base with a public entrance and two towers that are on top of it.",
@@ -377,7 +236,7 @@ def integration_test_graphql_kit_crud(tmp_path):
         "formations": [nakaginCapsuleTower],
     }
     createResponse = client.execute(
-        createLocalKitMutation, variables={"directory": str(tmp_path), "kit": kit}
+        createLocalKit, variables={"directory": str(tmp_path), "kit": kit}
     )
     assert createResponse == {
         "data": {
@@ -389,7 +248,7 @@ def integration_test_graphql_kit_crud(tmp_path):
         }
     }
     removeShaftResponse = client.execute(
-        removeTypeFromLocalKitMutation,
+        removeTypeFromLocalKit,
         variables={"directory": str(tmp_path), "type": shaftId},
     )
     assert removeShaftResponse == {
@@ -401,7 +260,7 @@ def integration_test_graphql_kit_crud(tmp_path):
         }
     }
     addBaseResponse = client.execute(
-        addTypeToLocalKitMutation,
+        addTypeToLocalKit,
         variables={"directory": str(tmp_path), "type": base},
     )
     assert addBaseResponse == {

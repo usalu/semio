@@ -1,0 +1,14 @@
+mutation UpdateLocalKitMetadata($directory: String!, $kit: KitMetadataInput!) {
+  updateLocalKitMetadata(directory: $directory, kitMetadataInput: $kit) {
+    kit {
+      name
+      explanation
+      icon
+      url
+    }
+    error {
+      code
+      message
+    }
+  }
+}

@@ -1,0 +1,98 @@
+query LoadLocalKit($directory: String!) {
+  loadLocalKit(directory: $directory) {
+    kit {
+      name
+      explanation
+      icon
+      url
+      types {
+        name
+        explanation
+        icon
+        representations {
+          url
+          lod
+          tags
+        }
+        ports {
+          plane {
+            origin {
+              x
+              y
+              z
+            }
+            xAxis {
+              x
+              y
+              z
+            }
+            yAxis {
+              x
+              y
+              z
+            }
+          }
+          specifiers {
+            context
+            group
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+      formations {
+        name
+        explanation
+        icon
+        pieces {
+          id
+          type {
+            name
+            qualities {
+              name
+              value
+              unit
+            }
+          }
+        }
+        attractions {
+          attracting {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    context
+                    group
+                  }
+                }
+              }
+            }
+          }
+          attracted {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    group
+                    context
+                  }
+                }
+              }
+            }
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+    }
+    error
+  }
+}
