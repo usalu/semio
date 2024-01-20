@@ -19,7 +19,8 @@
 """
 API for semio.
 """
-
+# TODO: IMPORTANT: Finish refactoring Error handling by only exposing client__str__ and not __str__.
+#       Write better error messages.
 # TODO: Check if sqlmodel can replace SQLAlchemy:
 #       ✅Constraints
 #       ❔Polymorphism
@@ -27,7 +28,7 @@ API for semio.
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Check if NonNull(graphene.List(NonNull(...))) can be replaced by graphene.List(NonNull(...)) for optional lists.
-
+# TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
 
 from os import remove
 from pathlib import Path
@@ -134,6 +135,13 @@ class Artifact(Protocol):
             + self.referenced_by
         )
 
+    def client__str__(self) -> str:
+        ...
+
+
+def list_client__str__(list) -> str:
+    return f"[{', '.join([i.client__str__() for i in list])}]"
+
 
 # TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
 class Document(Artifact):
@@ -150,10 +158,20 @@ class Tag(Base):
     __tablename__ = "tag"
 
     value: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
-    representation_id: Mapped[int] = mapped_column(ForeignKey("representation.id"))
+    representation_id: Mapped[int] = mapped_column(
+        ForeignKey("representation.id"), primary_key=True
+    )
     representation: Mapped["Representation"] = relationship(
         "Representation", back_populates="_tags"
     )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tag):
+            return NotImplemented
+        return self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash(self.value)
 
     def __repr__(self) -> str:
         return (
@@ -164,6 +182,9 @@ class Tag(Base):
         return (
             f"Tag(value={self.value}, representation_id={str(self.representation_id)})"
         )
+
+    def client__str__(self) -> str:
+        return f"Tag(value={self.value})"
 
     @property
     def parent(self) -> Artifact:
@@ -200,11 +221,22 @@ class Representation(Base):
 
     __table_args__ = (UniqueConstraint("type_id", "url"),)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Representation):
+            return NotImplemented
+        return self.url == other.url
+
+    def __hash__(self) -> int:
+        return hash(self.url)
+
     def __repr__(self) -> str:
         return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, type_id={self.type_id!r}, tags={self.tags!r})"
 
     def __str__(self) -> str:
         return f"Representation(id={str(self.id)}, type_id={str(self.type_id)})"
+
+    def client__str__(self) -> str:
+        return f"Representation(url={self.url})"
 
     @validates("url")
     def validate_url(self, key: str, url: str):
@@ -250,12 +282,6 @@ class Specifier(Base):
     port_id: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
     port: Mapped["Port"] = relationship("Port", back_populates="specifiers")
 
-    def __repr__(self) -> str:
-        return f"Specifier(context={self.context!r}, group={self.group!r}, port_id={self.port_id!r})"
-
-    def __str__(self) -> str:
-        return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Specifier):
             return NotImplemented
@@ -263,6 +289,15 @@ class Specifier(Base):
 
     def __hash__(self) -> int:
         return hash((self.context, self.group))
+
+    def __repr__(self) -> str:
+        return f"Specifier(context={self.context!r}, group={self.group!r}, port_id={self.port_id!r})"
+
+    def __str__(self) -> str:
+        return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
+
+    def client__str__(self) -> str:
+        return f"Specifier(context={self.context})"
 
     @property
     def parent(self) -> Artifact:
@@ -332,11 +367,22 @@ class Port(Base):
         back_populates="attracted_piece_type_port",
     )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Port):
+            return NotImplemented
+        return set(self.qualities) == set(other.qualities)
+
+    def __hash__(self) -> int:
+        return hash(set(self.qualities))
+
     def __repr__(self) -> str:
         return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
         return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
+
+    def client__str__(self) -> str:
+        return f"Port(specifiers={list_client__str__(self.specifiers)}])"
 
     @property
     def plane(self) -> Plane:
@@ -412,6 +458,7 @@ class Quality(Base):
             "type_id IS NOT NULL AND formation_id IS NULL OR type_id IS NULL AND formation_id IS NOT NULL",
             name="type_or_formation_owner_constraint",
         ),
+        UniqueConstraint("name", "type_id", "formation_id"),
     )
 
     def __eq__(self, other: object) -> bool:
@@ -432,10 +479,13 @@ class Quality(Base):
         return hash((self.name, self.value, self.unit))
 
     def __repr__(self) -> str:
-        return f"Quality(name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
+        return f"Quality(id={self.id}, name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
 
     def __str__(self) -> str:
-        return f"Quality(name={self.name}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
+        return f"Quality(id={self.id}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
+
+    def client__str__(self) -> str:
+        return f"Quality(name={self.name})"
 
     @property
     def parent(self) -> Artifact:
@@ -484,11 +534,24 @@ class Type(Base):
     )
     pieces: Mapped[List["Piece"]] = relationship("Piece", back_populates="type")
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Type):
+            return NotImplemented
+        return self.name == other.name and set(self.qualities) == set(other.qualities)
+
+    def __hash__(self) -> int:
+        return hash((self.name, set(self.qualities)))
+
     def __repr__(self) -> str:
         return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
 
     def __str__(self) -> str:
         return f"Type(id={str(self.id)}, kit_id={str(self.kit_id)})"
+
+    def client__str__(self) -> str:
+        return (
+            f"Type(name={self.name}, qualities={list_client__str__(self.qualities)}])"
+        )
 
     @property
     def parent(self) -> Artifact:
@@ -541,11 +604,24 @@ class Piece(Base):
         back_populates="attracted_piece",
     )
 
+    __table_args__ = (UniqueConstraint("local_id", "formation_id"),)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Piece):
+            return NotImplemented
+        return self.local_id == other.local_id
+
+    def __hash__(self) -> int:
+        return hash(self.local_id)
+
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
+        return f"Piece(id={self.id!r}, local_id={self.local_id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
-        return f"Piece(id={str(self.id)}, formation_id={str(self.formation_id)})"
+        return f"Piece(id={str(self.id)}, local_id={str(self.local_id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
+
+    def client__str__(self) -> str:
+        return f"Piece(id={self.local_id})"
 
     @property
     def parent(self) -> Artifact:
@@ -631,17 +707,31 @@ class Attraction(Base):
         ),
     )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attraction):
+            return NotImplemented
+        return (
+            self.attracting_piece == other.attracting_piece
+            and self.attracted_piece == other.attracted_piece
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.attracting_piece, self.attracted_piece))
+
     def __repr__(self) -> str:
         return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracting_piece_type_port_id={self.attracting_piece_type_port_id!r}, attracted_piece_id={self.attracted_piece_id!r}, attracted_piece_type_port_id={self.attracted_piece_type_port_id!r}, formation_id={self.formation_id!r})"
 
     def __str__(self) -> str:
         return f"Attraction(attracting_piece_id={str(self.attracting_piece_id)}, attracted_piece_id={str(self.attracted_piece_id)}, formation_id={str(self.formation_id)})"
 
+    def client__str__(self) -> str:
+        return f"Attraction(attracting_piece_id={self.attracting.piece.id}, attracted_piece_id={self.attracted.piece.id})"
+
     @property
     def attracting(self) -> Side:
         return Side(
             piece=PieceSide(
-                id=self.attracting_piece.id,
+                id=self.attracting_piece.local_id,
                 type=TypePieceSide(
                     port=self.attracting_piece_type_port,
                 ),
@@ -652,7 +742,7 @@ class Attraction(Base):
     def attracted(self) -> Side:
         return Side(
             piece=PieceSide(
-                id=self.attracted_piece.id,
+                id=self.attracted_piece.local_id,
                 type=TypePieceSide(
                     port=self.attracted_piece_type_port,
                 ),
@@ -710,11 +800,22 @@ class Formation(Base):
         Quality, back_populates="formation", cascade="all, delete-orphan"
     )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Formation):
+            return NotImplemented
+        return self.name == other.name and set(self.qualities) == set(other.qualities)
+
+    def __hash__(self) -> int:
+        return hash((self.name, set(self.qualities)))
+
     def __repr__(self) -> str:
         return f"Formation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, qualities={self.qualities!r})"
 
     def __str__(self) -> str:
         return f"Formation(id={str(self.id)}, kit_id={str(self.kit_id)})"
+
+    def client__str__(self) -> str:
+        return f"Formation(name={self.name}, qualities={list_client__str__(self.qualities)}])"
 
     @property
     def parent(self) -> Artifact:
@@ -777,11 +878,22 @@ class Kit(Base):
         back_populates="kit", cascade="all, delete-orphan"
     )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Kit):
+            return NotImplemented
+        return self.name == other.name
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __repr__(self) -> str:
         return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
 
     def __str__(self) -> str:
         return f"Kit(id={str(self.id)})"
+
+    def client__str__(self) -> str:
+        return f"Kit(name={self.name})"
 
     @property
     def parent(self) -> None:
@@ -834,7 +946,8 @@ def getLocalSession(directory: str) -> Session:
     directory_path = assertDirectory(directory)
     engine = create_engine(
         "sqlite:///"
-        + str(directory_path.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME))
+        + str(directory_path.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)),
+        # echo=True,
     )
     Base.metadata.create_all(engine)
     # Create instance of session factory
@@ -1237,7 +1350,7 @@ class NoMainKit(KitNotFound):
         return f"Main kit not found."
 
 
-class AlreadyExists(SemioException):
+class AlreadyExists(SpecificationError):
     def __init__(self, id, existing) -> None:
         self.id = id
         self.existing = existing
@@ -1419,7 +1532,7 @@ def addRepresentationInputToSession(
     session.flush()
     for tagInput in representationInput.tags or []:
         tag = Tag(
-            value=tagInput.value,
+            value=tagInput,
             representation_id=representation.id,
         )
         session.add(tag)

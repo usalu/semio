@@ -61,6 +61,36 @@ namespace Semio.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
+        ///  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
+        ///    formations {
+        ///        name
+        ///        explanation
+        ///        icon
+        ///        pieces {
+        ///          id
+        ///          type {
+        ///            name
+        ///            qualities {
+        ///              name
+        ///              value
+        ///              unit
+        ///            }
+        ///          }
+        ///        }
+        ///        attractions {
+        ///          attracting {
+        ///            piece {
+        ///              id
+        ///   [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string addFormationToLocalKit {
+            get {
+                return ResourceManager.GetString("addFormationToLocalKit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
         ///  addTypeToLocalKit(directory: $directory, typeInput: $type) {
         ///    type {

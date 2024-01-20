@@ -4,8 +4,8 @@
         {
             "previewLimit": 50,
             "driver": "SQLite",
-            "database": "../examples/metabolistic/kit.semio",
-            "name": "metabolistic"
+            "database": "../examples/metabolism/.semio/kit.sqlite3",
+            "name": "metabolism"
         }
     ],
     "editor.formatOnSave": true,

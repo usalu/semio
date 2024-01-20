@@ -169,10 +169,10 @@ type Mutation {
 
 type CreateLocalKitMutation {
   kit: Kit
-  error: CreateLocalKitErrorNode
+  error: CreateLocalKitError
 }
 
-type CreateLocalKitErrorNode {
+type CreateLocalKitError {
   code: CreateLocalKitErrorCode!
   message: String
 }
@@ -286,10 +286,10 @@ input PortIdInput {
 
 type UpdateLocalKitMetadataMutation {
   kit: Kit
-  error: UpdateLocalKitMetadataErrorNode
+  error: UpdateLocalKitMetadataError
 }
 
-type UpdateLocalKitMetadataErrorNode {
+type UpdateLocalKitMetadataError {
   code: UpdateLocalKitMetadataErrorCode!
   message: String
 }
@@ -321,10 +321,10 @@ enum DeleteLocalKitError {
 
 type AddTypeToLocalKitMutation {
   type: Type
-  error: AddTypeToLocalKitErrorNode
+  error: AddTypeToLocalKitError
 }
 
-type AddTypeToLocalKitErrorNode {
+type AddTypeToLocalKitError {
   code: AddTypeToLocalKitErrorCode!
   message: String
 }
@@ -338,10 +338,10 @@ enum AddTypeToLocalKitErrorCode {
 }
 
 type RemoveTypeFromLocalKitMutation {
-  error: RemoveTypeFromLocalKitErrorNode
+  error: RemoveTypeFromLocalKitError
 }
 
-type RemoveTypeFromLocalKitErrorNode {
+type RemoveTypeFromLocalKitError {
   code: RemoveTypeFromLocalKitErrorCode!
   message: String
 }
@@ -357,10 +357,10 @@ enum RemoveTypeFromLocalKitErrorCode {
 
 type AddFormationToLocalKitMutation {
   formation: Formation
-  error: AddFormationToLocalKitErrorNode
+  error: AddFormationToLocalKitError
 }
 
-type AddFormationToLocalKitErrorNode {
+type AddFormationToLocalKitError {
   code: AddFormationToLocalKitErrorCode!
   message: String
 }
@@ -374,10 +374,10 @@ enum AddFormationToLocalKitErrorCode {
 }
 
 type RemoveFormationFromLocalKitMutation {
-  error: RemoveFormationFromLocalKitErrorNode
+  error: RemoveFormationFromLocalKitError
 }
 
-type RemoveFormationFromLocalKitErrorNode {
+type RemoveFormationFromLocalKitError {
   code: RemoveFormationFromLocalKitErrorCode!
   message: String
 }

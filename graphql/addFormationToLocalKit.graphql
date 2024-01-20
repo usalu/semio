@@ -1,0 +1,58 @@
+mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
+  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
+    formations {
+        name
+        explanation
+        icon
+        pieces {
+          id
+          type {
+            name
+            qualities {
+              name
+              value
+              unit
+            }
+          }
+        }
+        attractions {
+          attracting {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    context
+                    group
+                  }
+                }
+              }
+            }
+          }
+          attracted {
+            piece {
+              id
+              type {
+                port {
+                  specifiers {
+                    group
+                    context
+                  }
+                }
+              }
+            }
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+    }
+    error {
+      code
+      message
+    }
+  }
+}
