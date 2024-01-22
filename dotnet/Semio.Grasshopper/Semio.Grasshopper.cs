@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
@@ -201,6 +202,18 @@ public class RepresentationGoo : GH_Goo<Representation>
     {
         return Value.ToString();
     }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Representation",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Representation").Deserialize<Representation>();
+        return base.Read(reader);
+    }
 }
 
 public class SpecifierGoo : GH_Goo<Specifier>
@@ -227,6 +240,18 @@ public class SpecifierGoo : GH_Goo<Specifier>
     public override string ToString()
     {
         return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Specifier",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Specifier").Deserialize<Specifier>();
+        return base.Read(reader);
     }
 }
 
@@ -319,6 +344,18 @@ public class PortGoo : GH_Goo<Port>
 
         return false;
     }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Port",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Port").Deserialize<Port>();
+        return base.Read(reader);
+    }
 }
 
 public class QualityGoo : GH_Goo<Quality>
@@ -345,6 +382,18 @@ public class QualityGoo : GH_Goo<Quality>
     public override string ToString()
     {
         return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Quality",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Quality").Deserialize<Quality>();
+        return base.Read(reader);
     }
 }
 
@@ -373,6 +422,18 @@ public class TypeGoo : GH_Goo<Type>
     {
         return Value.ToString();
     }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Type",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Type").Deserialize<Type>();
+        return base.Read(reader);
+    }
 }
 
 public class PieceGoo : GH_Goo<Piece>
@@ -399,6 +460,18 @@ public class PieceGoo : GH_Goo<Piece>
     public override string ToString()
     {
         return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Piece",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Piece").Deserialize<Piece>();
+        return base.Read(reader);
     }
 }
 
@@ -427,6 +500,18 @@ public class SideGoo : GH_Goo<Side>
     {
         return Value.ToString();
     }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Side",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Side").Deserialize<Side>();
+        return base.Read(reader);
+    }
 }
 
 public class AttractionGoo : GH_Goo<Attraction>
@@ -453,6 +538,18 @@ public class AttractionGoo : GH_Goo<Attraction>
     public override string ToString()
     {
         return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Attraction",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Attraction").Deserialize<Attraction>();
+        return base.Read(reader);
     }
 }
 
@@ -482,6 +579,18 @@ public class FormationGoo : GH_Goo<Formation>
     {
         return Value.ToString();
     }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Formation",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Formation").Deserialize<Formation>();
+        return base.Read(reader);
+    }
 }
 
 public class KitGoo : GH_Goo<Kit>
@@ -509,6 +618,18 @@ public class KitGoo : GH_Goo<Kit>
     public override string ToString()
     {
         return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Kit",Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Kit").Deserialize<Kit>();
+        return base.Read(reader);
     }
 }
 
@@ -732,7 +853,7 @@ public abstract class SemioComponent : GH_Component
 public class RepresentationComponent : SemioComponent
 {
     public RepresentationComponent()
-        : base("~Representation", "~Rep",
+        : base("Model Representation", "~Rep",
             "Construct, deconstruct or modify a representation.",
             "semio", "Modelling")
     {
@@ -796,7 +917,7 @@ public class RepresentationComponent : SemioComponent
 public class SpecifierComponent : SemioComponent
 {
     public SpecifierComponent()
-        : base("~Specifier", "~Spc",
+        : base("Model Specifier", "~Spc",
             "Construct, deconstruct or modify a specifier.",
             "semio", "Modelling")
     {
@@ -848,7 +969,7 @@ public class SpecifierComponent : SemioComponent
 public class PortComponent : SemioComponent
 {
     public PortComponent()
-        : base("~Port", "~Por",
+        : base("Model Port", "~Por",
             "Construct, deconstruct or modify a port.",
             "semio", "Modelling")
     {
@@ -873,7 +994,7 @@ public class PortComponent : SemioComponent
         pManager.AddParameter(new PortParam(), "Port", "Po",
             "Constructed or modified port.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
-        pManager.AddParameter(new SpecifierParam(), "Specifiers", "Sp+", "Specifiers of the port.",
+        pManager.AddParameter(new SpecifierParam(), "Specifiers", "Sp+", "Specifiers to identify the port.",
             GH_ParamAccess.list);
     }
 
@@ -905,7 +1026,7 @@ public class PortComponent : SemioComponent
 public class QualityComponent : SemioComponent
 {
     public QualityComponent()
-        : base("~Quality", "~Qlt",
+        : base("Model Quality", "~Qlt",
             "Construct, deconstruct or modify a quality.",
             "semio", "Modelling")
     {
@@ -965,7 +1086,7 @@ public class QualityComponent : SemioComponent
 public class TypeComponent : SemioComponent
 {
     public TypeComponent()
-        : base("~Type", "~Typ",
+        : base("Model Type", "~Typ",
             "Construct, deconstruct or modify a type.",
             "semio", "Modelling")
     {
@@ -989,7 +1110,7 @@ public class TypeComponent : SemioComponent
         pManager[4].Optional = true;
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
         pManager[5].Optional = true;
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. They can be further used to distinguish types with the same name.",
             GH_ParamAccess.list);
         pManager[6].Optional = true;
     }
@@ -1054,7 +1175,7 @@ public class TypeComponent : SemioComponent
 public class PieceComponent : SemioComponent
 {
     public PieceComponent()
-        : base("~Piece", "~Pce",
+        : base("Model Piece", "~Pce",
             "Construct, deconstruct or modify a piece.",
             "semio", "Modelling")
     {
@@ -1072,7 +1193,7 @@ public class PieceComponent : SemioComponent
         pManager.AddTextParameter("TypeName", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddParameter(new QualityParam(), "TypeQualities", "TyQl*",
-            "Optional qualities of the type of the piece.", GH_ParamAccess.list);
+            "If there is more than one type with the same name use qualities to precisely identify the type.", GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1116,7 +1237,7 @@ public class PieceComponent : SemioComponent
 public class SideComponent : SemioComponent
 {
     public SideComponent()
-        : base("~Side", "~Sde",
+        : base("Model Side", "~Sde",
             "Construct, deconstruct or modify a side.",
             "semio", "Modelling")
     {
@@ -1132,7 +1253,7 @@ public class SideComponent : SemioComponent
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddParameter(new SpecifierParam(), "Piece Type Port Specifiers", "PcTyPoSp+",
-            "Specifiers of the port of the type of the piece of the side.", GH_ParamAccess.list);
+            "Specifiers to identify the port of the type of the piece of the side.", GH_ParamAccess.list);
         pManager[2].Optional = true;
     }
 
@@ -1142,7 +1263,7 @@ public class SideComponent : SemioComponent
             "Constructed or modified side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
         pManager.AddParameter(new SpecifierParam(), "Piece Type Port Specifiers", "PcTyPoSp+",
-            "Specifiers of the port of the type of the piece of the side.", GH_ParamAccess.list);
+            "Specifiers to identify the port of type of the piece of the side.", GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1171,7 +1292,7 @@ public class SideComponent : SemioComponent
 public class AttractionComponent : SemioComponent
 {
     public AttractionComponent()
-        : base("~Attraction", "~Atr",
+        : base("Model Attraction", "~Atr",
             "Construct, deconstruct or modify an attraction.",
             "semio", "Modelling")
     {
@@ -1223,7 +1344,7 @@ public class AttractionComponent : SemioComponent
 public class FormationComponent : SemioComponent
 {
     public FormationComponent()
-        : base("~Formation", "~For",
+        : base("Model Formation", "~For",
             "Construct, deconstruct or modify a formation.",
             "semio", "Modelling")
     {
@@ -1247,6 +1368,9 @@ public class FormationComponent : SemioComponent
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
         pManager[5].Optional = true;
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. They can be further used to distinguish formations with the same name.",
+            GH_ParamAccess.list);
+        pManager[6].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1259,6 +1383,8 @@ public class FormationComponent : SemioComponent
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation.",
+            GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1269,6 +1395,7 @@ public class FormationComponent : SemioComponent
         var icon = "";
         var pieceGoos = new List<PieceGoo>();
         var attractionGoos = new List<AttractionGoo>();
+        var qualityGoos = new List<QualityGoo>();
 
         DA.GetData(0, ref formationGoo);
         DA.GetData(1, ref name);
@@ -1276,6 +1403,7 @@ public class FormationComponent : SemioComponent
         DA.GetData(3, ref icon);
         DA.GetDataList(4, pieceGoos);
         DA.GetDataList(5, attractionGoos);
+        DA.GetDataList(6, qualityGoos);
 
         if (name != "") formationGoo.Value.Name = name;
 
@@ -1287,12 +1415,15 @@ public class FormationComponent : SemioComponent
 
         if (attractionGoos.Count > 0) formationGoo.Value.Attractions = attractionGoos.Select(a => a.Value).ToList();
 
+        if (qualityGoos.Count > 0) formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
+
         DA.SetData(0, formationGoo);
         DA.SetData(1, formationGoo.Value.Name);
         DA.SetData(2, formationGoo.Value.Explanation);
         DA.SetData(3, formationGoo.Value.Icon);
         DA.SetDataList(4, formationGoo.Value.Pieces?.Select(p => new PieceGoo(p.DeepClone())));
         DA.SetDataList(5, formationGoo.Value.Attractions?.Select(a => new AttractionGoo(a.DeepClone())));
+        DA.SetDataList(6, formationGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
     }
 
     protected override Bitmap Icon => Resources.formation_modify_24x24;
@@ -1303,7 +1434,7 @@ public class LoadKitComponent : SemioComponent
 {
     public LoadKitComponent()
         : base("Load Kit", "/Kit",
-            "",
+            "Load a kit.",
             "semio", "Loading/Saving")
     {
     }
@@ -1412,29 +1543,77 @@ public class CreateKitComponent : SemioComponent
         if (!DA.GetData(6, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(7, ref run);
 
-        if (run)
+        if (!run) { DA.SetData(0, false); return; }
+        var kit = new Kit()
         {
-            var kit = new Kit()
-            {
-                Name = name,
-                Explanation = explanation,
-                Icon = icon,
-                Url = url,
-                Types = typeGoos.Select(t => t.Value).ToList(),
-                Formations = formationGoos.Select(f => f.Value).ToList()
-            };
+            Name = name,
+            Explanation = explanation,
+            Icon = icon,
+            Url = url,
+            Types = typeGoos.Select(t => t.Value).ToList(),
+            Formations = formationGoos.Select(f => f.Value).ToList()
+        };
 
-            var response = new Api().CreateLocalKit(path, kit);
-            if (response.Error != null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-                DA.SetData(0, false);
-            }
-            else DA.SetData(0, true); 
+        var response = new Api().CreateLocalKit(path, kit);
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            DA.SetData(0, false);
+            return;
         }
+
+        DA.SetData(0, true);
     }
 
     protected override Bitmap Icon => Resources.kit_create_24x24;
+}
+
+public class DeleteKitComponent : SemioComponent
+{
+    public DeleteKitComponent()
+        : base("Delete Kit", "-Kit",
+            "Delete a kit.",
+            "semio", "Loading/Saving")
+    {
+    }
+
+    public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Directory", "D?",
+                       "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+                                  GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Run", "R", "Delete the kit.", GH_ParamAccess.item, false);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddBooleanParameter("Success", "Sc", "True if the kit was deleted.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var path = "";
+        var run = false;
+
+        DA.GetData(0, ref path);
+        DA.GetData(1, ref run);
+
+        if (!run) { DA.SetData(0, false); return; }
+        
+        var response = new Api().DeleteLocalKit(path);
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.ToString());
+            DA.SetData(0, false);
+            return;
+        }
+        DA.SetData(0, true);
+        
+    }
+
+    protected override Bitmap Icon => Resources.kit_delete_24x24;
 }
 
 #region Adding
@@ -1476,16 +1655,17 @@ public class AddTypeComponent : SemioComponent
         if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
-        if (run)
+        if (!run) { DA.SetData(0, false); return; }
+    
+        var response = new Api().AddTypeToLocalKit(path, typeGoo.Value);
+        if (response.Error != null)
         {
-            var response = new Api().AddTypeToLocalKit(path, typeGoo.Value);
-            if (response.Error != null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-                DA.SetData(0, false);
-            }
-            else DA.SetData(0, true);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            DA.SetData(0, false);
+            return;
         }
+        DA.SetData(0, true);
+
     }
 
     protected override Bitmap Icon => Resources.type_add_24x24;
@@ -1528,16 +1708,15 @@ public class AddFormationComponent : SemioComponent
         if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
-        if (run)
+        if (!run) { DA.SetData(0, false); return; }
+
+        var response = new Api().AddFormationToLocalKit(path, formationGoo.Value);
+        if (response.Error != null)
         {
-            var response = new Api().AddFormationToLocalKit(path, formationGoo.Value);
-            if (response.Error != null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-                DA.SetData(0, false);
-            }
-            else DA.SetData(0, true);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            DA.SetData(0, false);
         }
+        else DA.SetData(0, true);
     }
 
     protected override Bitmap Icon => Resources.formation_add_24x24;
@@ -1560,7 +1739,7 @@ public class RemoveTypeComponent : SemioComponent
     {
         pManager.AddTextParameter( "Type Name", "TyNa",
                                   "Name of the type to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(),"Type Qualities","TyQl*","Optional qualities of the type to remove from the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new QualityParam(),"Type Qualities","TyQl*", "If there is more than one type with the same name use qualities to precisely identify the type.", GH_ParamAccess.list);
         pManager.AddTextParameter("Directory", "D?",
                        "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
                                   GH_ParamAccess.item);
@@ -1586,23 +1765,79 @@ public class RemoveTypeComponent : SemioComponent
         if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
-        if (run)
-        {
-            var response = new Api().RemoveTypeFromLocalKit(path, new TypeId()
+        if (!run) { DA.SetData(0, false); return; }
+        var response = new Api().RemoveTypeFromLocalKit(path, new TypeId()
             {
                 Name = typeName,
                 Qualities = typeQualityGoos.Select(q => q.Value).ToList()
             });
-            if (response.Error != null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-                DA.SetData(0, false);
-            }
-            else DA.SetData(0, true);
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            DA.SetData(0, false);
         }
+        else DA.SetData(0, true);
     }
 
     protected override Bitmap Icon => Resources.type_remove_24x24;
+}
+
+public class RemoveFormationComponent : SemioComponent
+{
+    public RemoveFormationComponent()
+        : base("Remove Formation", "-For",
+            "Remove a formation from a kit.",
+            "semio", "Loading/Saving")
+    {
+    }
+
+    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Formation Name", "FoNa",
+                                             "Name of the formation to remove from the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Formation Qualities", "FoQl*", "If there is more than one formation with the same name use qualities to precisely identify the formation.", GH_ParamAccess.list);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Directory", "D?",
+                                  "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+                                                                   GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddBooleanParameter("Run", "R", "Remove the formation from the kit.", GH_ParamAccess.item, false);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was removed from the kit.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var formationName = "";
+        var formationQualityGoos = new List<QualityGoo>();
+        var path = "";
+        var run = false;
+
+        DA.GetData(0, ref formationName);
+        DA.GetDataList(1, formationQualityGoos);
+        if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
+        DA.GetData(3, ref run);
+
+        if (!run) { DA.SetData(0, false); return; }
+        var response = new Api().RemoveFormationFromLocalKit(path, new FormationId()
+        {
+            Name = formationName,
+            Qualities = formationQualityGoos.Select(q => q.Value).ToList()
+        });
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            DA.SetData(0, false);
+        }
+        else DA.SetData(0, true);
+    }
+
+    protected override Bitmap Icon => Resources.formation_remove_24x24;
 }
 #endregion
 #region Serialize
@@ -1637,7 +1872,7 @@ public class SerializeQualityComponent : SemioComponent
         DA.GetData(0, ref qualityGoo);
         DA.GetData(1, ref run);
 
-        if (run)
+        if (run) 
         {
             var text = qualityGoo.Value.Serialize();
 

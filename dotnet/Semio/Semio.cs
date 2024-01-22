@@ -982,22 +982,16 @@ public class UpdateLocalKitMetadataResponseContainer
     public UpdateLocalKitMetadataResponse UpdateLocalKitMetadata { get; set; }
 }
 
-public enum DeleteLocalKitErrorCode
+public enum DeleteLocalKitError
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_HAS_NO_KIT,
     NO_PERMISSION_TO_DELETE_KIT
 }
 
-public class DeleteLocalKitError
-{
-    public DeleteLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
 public class DeleteLocalKitResponse
 {
-    public DeleteLocalKitError Error { get; set; }
+    public DeleteLocalKitError? Error { get; set; }
 }
 
 public class DeleteLocalKitResponseContainer

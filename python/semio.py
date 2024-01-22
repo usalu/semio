@@ -1506,7 +1506,7 @@ def getPortBySpecifiers(
         port for port in ports if set(port.specifiers) == set(specifiers)
     ]
     if len(portsWithSameSpecifier) != 1:
-        raise PortNotFound(specifierInputs)
+        raise PortNotFound(specifiers)
     return portsWithSameSpecifier[0]
 
 
@@ -1619,6 +1619,10 @@ def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> T
         pass
     session.add(type)
     session.flush()
+    for representationInput in typeInput.representations or []:
+        representation = addRepresentationInputToSession(
+            session, type, representationInput
+        )
     for portInput in typeInput.ports or []:
         port = addPortInputToSession(session, type, portInput)
     for qualityInput in typeInput.qualities or []:
@@ -1770,6 +1774,9 @@ class CreateLocalKitErrorCode(graphene.Enum):
 
 
 class CreateLocalKitErrorNode(ObjectType):
+    class Meta:
+        name = "CreateLocalKitError"
+
     code = NonNull(CreateLocalKitErrorCode)
     message = graphene.String()
 
@@ -1841,6 +1848,9 @@ class UpdateLocalKitMetadataErrorCode(graphene.Enum):
 
 
 class UpdateLocalKitMetadataErrorNode(ObjectType):
+    class Meta:
+        name = "UpdateLocalKitMetadataError"
+
     code = NonNull(UpdateLocalKitMetadataErrorCode)
     message = graphene.String()
 
@@ -1904,26 +1914,28 @@ class DeleteLocalKitMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
 
-    error = DeleteLocalKitError()
+    error = Field(DeleteLocalKitError)
 
     def mutate(self, info, directory):
         directory = Path(directory)
         if not directory.exists():
-            return DeleteLocalKitError(
+            return DeleteLocalKitMutation(
                 error=DeleteLocalKitError.DIRECTORY_DOES_NOT_EXIST
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return DeleteLocalKitError(error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT)
+            return DeleteLocalKitMutation(
+                error=DeleteLocalKitError.DIRECTORY_HAS_NO_KIT
+            )
         kitFileFullPath = kitFile.resolve()
         disposed_engines[kitFileFullPath] = True
         try:
             remove(kitFileFullPath)
         except PermissionError:
-            return DeleteLocalKitError(
+            return DeleteLocalKitMutation(
                 error=DeleteLocalKitError.NO_PERMISSION_TO_DELETE_KIT
             )
-        return DeleteLocalKitError()
+        return DeleteLocalKitMutation()
 
 
 class AddTypeToLocalKitErrorCode(graphene.Enum):
@@ -1935,6 +1947,9 @@ class AddTypeToLocalKitErrorCode(graphene.Enum):
 
 
 class AddTypeToLocalKitErrorNode(ObjectType):
+    class Meta:
+        name = "AddTypeToLocalKitError"
+
     code = NonNull(AddTypeToLocalKitErrorCode)
     message = graphene.String()
 
@@ -2002,6 +2017,9 @@ class RemoveTypeFromLocalKitErrorCode(graphene.Enum):
 
 
 class RemoveTypeFromLocalKitErrorNode(ObjectType):
+    class Meta:
+        name = "RemoveTypeFromLocalKitError"
+
     code = NonNull(RemoveTypeFromLocalKitErrorCode)
     message = graphene.String()
 
@@ -2072,6 +2090,9 @@ class AddFormationToLocalKitErrorCode(graphene.Enum):
 
 
 class AddFormationToLocalKitErrorNode(ObjectType):
+    class Meta:
+        name = "AddFormationToLocalKitError"
+
     code = NonNull(AddFormationToLocalKitErrorCode)
     message = graphene.String()
 
@@ -2138,6 +2159,9 @@ class RemoveFormationFromLocalKitErrorCode(graphene.Enum):
 
 
 class RemoveFormationFromLocalKitErrorNode(ObjectType):
+    class Meta:
+        name = "RemoveFormationFromLocalKitError"
+
     code = NonNull(RemoveFormationFromLocalKitErrorCode)
     message = graphene.String()
 
