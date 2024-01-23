@@ -7,6 +7,8 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
       url
       types {
         name
+        explanation
+        icon
         representations {
           url
           lod

@@ -17,9 +17,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-API for semio.
+semio server.
 """
-# TODO: IMPORTANT: Finish refactoring Error handling by only exposing client__str__ and not __str__.
+# TODO: Refactoring Error handling by only exposing client__str__ and not __str__.
 #       Write better error messages.
 # TODO: Check if sqlmodel can replace SQLAlchemy:
 #       ✅Constraints
@@ -167,7 +167,7 @@ class Tag(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Tag):
-            return NotImplemented
+            raise NotImplementedError()
         return self.value == other.value
 
     def __hash__(self) -> int:
@@ -223,7 +223,7 @@ class Representation(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Representation):
-            return NotImplemented
+            raise NotImplementedError()
         return self.url == other.url
 
     def __hash__(self) -> int:
@@ -284,7 +284,7 @@ class Specifier(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Specifier):
-            return NotImplemented
+            raise NotImplementedError()
         return self.context == other.context and self.group == other.group
 
     def __hash__(self) -> int:
@@ -369,7 +369,7 @@ class Port(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Port):
-            return NotImplemented
+            raise NotImplementedError()
         return set(self.qualities) == set(other.qualities)
 
     def __hash__(self) -> int:
@@ -463,7 +463,7 @@ class Quality(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Quality):
-            return NotImplemented
+            raise NotImplementedError()
         if self.name == other.name:
             if self.unit == other.unit:
                 return self.value == other.value
@@ -536,7 +536,7 @@ class Type(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Type):
-            return NotImplemented
+            raise NotImplementedError()
         return self.name == other.name and set(self.qualities) == set(other.qualities)
 
     def __hash__(self) -> int:
@@ -608,7 +608,7 @@ class Piece(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Piece):
-            return NotImplemented
+            raise NotImplementedError()
         return self.local_id == other.local_id
 
     def __hash__(self) -> int:
@@ -709,7 +709,7 @@ class Attraction(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Attraction):
-            return NotImplemented
+            raise NotImplementedError()
         return (
             self.attracting_piece == other.attracting_piece
             and self.attracted_piece == other.attracted_piece
@@ -802,7 +802,7 @@ class Formation(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Formation):
-            return NotImplemented
+            raise NotImplementedError()
         return self.name == other.name and set(self.qualities) == set(other.qualities)
 
     def __hash__(self) -> int:
@@ -880,7 +880,7 @@ class Kit(Base):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Kit):
-            return NotImplemented
+            raise NotImplementedError()
         return self.name == other.name
 
     def __hash__(self) -> int:
@@ -2231,8 +2231,19 @@ class LoadLocalKitResponse(ObjectType):
     error = Field(LoadLocalKitError)
 
 
+# TODO: Implement
+class LocalFormationToSceneGraphResponse(ObjectType):
+    pass
+
+
 class Query(ObjectType):
     loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
+    # localFormationToSceneGraph = Field(
+    #     directory=NonNull(graphene.String),
+    #     formationId=NonNull(FormationIdInput),
+    #     lods=graphene.List(NonNull(graphene.String)),
+    #     tags=graphene.List(NonNull(graphene.String)),
+    # )
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
         directory = Path(directory)

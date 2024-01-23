@@ -9,20 +9,11 @@
         }
     ],
     "editor.formatOnSave": true,
-    "python": {
-        "defaultInterpreterPath": ".venv/bin/python",
-        "analysis": {
-            "typeCheckingMode": "none",
-            "diagnosticSeverityOverrides": {
-                "reportMissingTypeStubs": "none"
-            }
-        },
-        "testing": {
-            "pytestEnabled": true,
-            "unittestEnabled": false,
-            "pytestArgs": [
-                "."
-            ]
-        },
-    },
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.analysis.typeCheckingMode": "off",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "."
+    ],
 }

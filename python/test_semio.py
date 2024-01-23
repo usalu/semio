@@ -1,10 +1,10 @@
+from pytest import mark
 from graphene.test import Client
-
+from deepdiff import DeepDiff, Delta
 from semio import schema
 
-schema = open("../graphql/schema.graphql", "r").read()
 createLocalKit = open("../graphql/createLocalKit.graphql", "r").read()
-updateLocalKitMetdata = open("../graphql/updateLocalKitMetdata.graphql", "r").read()
+updateLocalKitMetadata = open("../graphql/updateLocalKitMetadata.graphql", "r").read()
 deleteLocalKit = open("../graphql/deleteLocalKit.graphql", "r").read()
 addTypeToLocalKit = open("../graphql/addTypeToLocalKit.graphql", "r").read()
 removeTypeFromLocalKit = open("../graphql/removeTypeFromLocalKit.graphql", "r").read()
@@ -14,7 +14,8 @@ removeFormationFromLocalKit = open(
 ).read()
 
 
-def integration_test_graphql_kit_crud(tmp_path):
+@mark.timeout(120)
+def test_integration_graphql_kit_crud(tmp_path):
     client = Client(schema)
     name = "metabolism"
     explanation = "For metabolistic architecture."
@@ -30,9 +31,9 @@ def integration_test_graphql_kit_crud(tmp_path):
         "ports": [
             {
                 "plane": {
-                    "origin": {"x": 0, "y": 0, "z": 0},
-                    "xAxis": {"x": 1, "y": 0, "z": 0},
-                    "yAxis": {"x": 0, "y": 1, "z": 0},
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
                 "specifiers": [
                     {"context": "tower", "group": "left"},
@@ -40,9 +41,9 @@ def integration_test_graphql_kit_crud(tmp_path):
             },
             {
                 "plane": {
-                    "origin": {"x": 0, "y": 0, "z": 0},
-                    "xAxis": {"x": 1, "y": 0, "z": 0},
-                    "yAxis": {"x": 0, "y": 1, "z": 0},
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
                 "specifiers": [
                     {"context": "tower", "group": "right"},
@@ -69,9 +70,9 @@ def integration_test_graphql_kit_crud(tmp_path):
         "ports": [
             {
                 "plane": {
-                    "origin": {"x": 0, "y": 0, "z": 0},
-                    "xAxis": {"x": 1, "y": 0, "z": 0},
-                    "yAxis": {"x": 0, "y": 1, "z": 0},
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
                 "specifiers": [
                     {"context": "facade", "group": "north"},
@@ -106,9 +107,9 @@ def integration_test_graphql_kit_crud(tmp_path):
         "ports": [
             {
                 "plane": {
-                    "origin": {"x": 0, "y": 0, "z": 0},
-                    "xAxis": {"x": 1, "y": 0, "z": 0},
-                    "yAxis": {"x": 0, "y": 1, "z": 0},
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
                 "specifiers": [{"context": "doors", "group": "front"}],
             }
@@ -139,9 +140,9 @@ def integration_test_graphql_kit_crud(tmp_path):
         "ports": [
             {
                 "plane": {
-                    "origin": {"x": 0, "y": 0, "z": 0},
-                    "xAxis": {"x": 1, "y": 0, "z": 0},
-                    "yAxis": {"x": 0, "y": 1, "z": 0},
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
                 "specifiers": [{"context": "doors", "group": "front"}],
             }
@@ -167,33 +168,33 @@ def integration_test_graphql_kit_crud(tmp_path):
         "icon": "🏯",
         "pieces": [
             {
-                "transient": {"id": "s"},
+                "id": "s",
                 "type": {
                     "name": "shaft",
                     "qualities": [
                         {"name": "floor height", "value": "3", "unit": "m"},
-                        {"name": "storeys", "value": "10"},
+                        {"name": "storeys", "value": "10", "unit": None},
                     ],
                 },
             },
             {
-                "transient": {"id": "c1"},
+                "id": "c1",
                 "type": {
                     "name": "capsule",
                     "qualities": [
-                        {"name": "door", "value": "behind"},
-                        {"name": "window", "value": "front"},
+                        {"name": "door", "value": "behind", "unit": None},
+                        {"name": "window", "value": "front", "unit": None},
                     ],
                 },
             },
             {
-                "transient": {"id": "c2"},
+                "id": "c2",
                 "type": {
                     "name": "capsule",
                     "qualities": [
-                        {"name": "door", "value": "behind"},
-                        {"name": "window", "value": "front"},
-                        {"name": "mirrored", "value": "true"},
+                        {"name": "door", "value": "behind", "unit": None},
+                        {"name": "window", "value": "front", "unit": None},
+                        {"name": "mirrored", "value": "true", "unit": None},
                     ],
                 },
             },
@@ -202,7 +203,7 @@ def integration_test_graphql_kit_crud(tmp_path):
             {
                 "attracting": {
                     "piece": {
-                        "transient": {"id": "s"},
+                        "id": "s",
                         "type": {
                             "port": {
                                 "specifiers": [
@@ -216,7 +217,7 @@ def integration_test_graphql_kit_crud(tmp_path):
                 },
                 "attracted": {
                     "piece": {
-                        "transient": {"id": "c1"},
+                        "id": "c1",
                         "type": {
                             "port": {
                                 "specifiers": [{"context": "doors", "group": "front"}]
@@ -226,44 +227,49 @@ def integration_test_graphql_kit_crud(tmp_path):
                 },
             }
         ],
-        "qualities": [{"name": "storeys", "value": "12"}],
+        "qualities": [{"name": "storeys", "value": "12", "unit": None}],
     }
     kit = {
         "name": name,
         "explanation": explanation,
         "icon": icon,
+        "url": url,
         "types": types,
         "formations": [nakaginCapsuleTower],
     }
     createResponse = client.execute(
         createLocalKit, variables={"directory": str(tmp_path), "kit": kit}
     )
-    assert createResponse == {
+    createResponseExpected = {
         "data": {
             "createLocalKit": {
                 "kit": kit,
                 "error": None,
-            },
-            "errors": None,
+            }
         }
     }
+    createResponseDiff = DeepDiff(createResponse, createResponseExpected)
+    assert not createResponseDiff, f"Response difference: {createResponseDiff}"
     removeShaftResponse = client.execute(
         removeTypeFromLocalKit,
         variables={"directory": str(tmp_path), "type": shaftId},
     )
-    assert removeShaftResponse == {
+    removeShaftResponseExpected = {
         "data": {
             "removeTypeFromLocalKit": {
-                "kit": None,
                 "error": {"code": "FORMATION_DEPENDS_ON_TYPE", "message": None},
             }
         }
     }
+    removeShaftResponseDiff = DeepDiff(removeShaftResponse, removeShaftResponseExpected)
+    assert (
+        not removeShaftResponseDiff
+    ), f"Response difference: {removeShaftResponseDiff}"
     addBaseResponse = client.execute(
         addTypeToLocalKit,
         variables={"directory": str(tmp_path), "type": base},
     )
-    assert addBaseResponse == {
+    addBaseResponseExpected = {
         "data": {
             "addTypeToLocalKit": {
                 "type": base,
@@ -271,3 +277,5 @@ def integration_test_graphql_kit_crud(tmp_path):
             }
         }
     }
+    addBaseResponseDiff = DeepDiff(addBaseResponse, addBaseResponseExpected)
+    assert not addBaseResponseDiff, f"Response difference: {addBaseResponseDiff}"

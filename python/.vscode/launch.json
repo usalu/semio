@@ -14,7 +14,19 @@
                 "--no-debugger",
                 "--no-reload"
             ],
-            "jinja": true,
+            "jinja": false,
+            "justMyCode": true
+        },
+        {
+            "name": "Python: pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "--cov-report",
+                "html",
+                "--cov"
+            ],
             "justMyCode": true
         }
     ]

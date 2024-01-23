@@ -23,6 +23,9 @@ pint = "^0.23"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
+pytest-timeout = "^2.2.0"
+deepdiff = "^6.7.1"
+pytest-cov = "^4.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
@@ -33,3 +36,38 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 semio = "semio:main"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__",
+    "def __str__",
+    "def client__str__",
+
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise InvalidDatabase",
+    "raise InvalidBackend",
+
+    "if __name__ == .__main__.:",
+
+    "@(abc\\.)?abstractmethod",
+]
+
+ignore_errors = true
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    isolated_build = true
+
+    [testenv]
+    skip_install = true
+    allowlist_externals = poetry
+    commands_pre =
+        poetry install
+    commands =
+        poetry run pytest --cov --cov-report coverage_html_report --import-mode importlib
+"""
