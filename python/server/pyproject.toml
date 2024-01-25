@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "semio"
+name = "semio-server"
 version = "2.0.0"
-description = "Next gen design tool. Collaborativ, scalable and cross-platform. Promised."
+description = "Server for collaborativ, scalable and cross-platform design tool: semio"
 authors = ["Ueli Saluz <usaluz@posteo.de>"]
 maintainers = ["Ueli Saluz <usaluz@posteo.de>"]
 license = "LGPL-3.0-or-later"
@@ -16,7 +16,6 @@ flask = "^3.0.0"
 graphql-server = { extras = ["flask"], version = "^3.0.0b7" }
 graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
 setuptools = "^69.0.2"                                                    # hidden dependency of graphene-sqlalchemy because of import pkg_resources
-marshmallow-sqlalchemy = "^0.29.0"
 pydantic = "^1"
 graphene-pydantic = "^0.4.2"
 pint = "^0.23"
@@ -35,7 +34,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-semio = "semio:main"
+server = "server:main"
 
 [tool.coverage.run]
 branch = true
@@ -66,8 +65,6 @@ legacy_tox_ini = """
     [testenv]
     skip_install = true
     allowlist_externals = poetry
-    commands_pre =
-        poetry install
-    commands =
-        poetry run pytest --cov --cov-report coverage_html_report --import-mode importlib
+    commands_pre = poetry install
+    commands = tests.sh
 """
