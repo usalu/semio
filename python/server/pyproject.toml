@@ -19,6 +19,7 @@ setuptools = "^69.0.2"                                                    # hidd
 pydantic = "^1"
 graphene-pydantic = "^0.4.2"
 pint = "^0.23"
+networkx = "^3.2.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

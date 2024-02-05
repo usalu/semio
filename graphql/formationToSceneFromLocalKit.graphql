@@ -1,0 +1,43 @@
+query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+  formationToSceneFromLocalKit(
+    directory: $directory
+    formationIdInput: $formation
+  ) {
+    scene {
+      objects {
+        piece {
+          id
+          type {
+            representations {
+              url
+              lod
+              tags
+            }
+          }
+        }
+        plane {
+          origin {
+            x
+            y
+            z
+          }
+          xAxis {
+            x
+            y
+            z
+          }
+          yAxis {
+            x
+            y
+            z
+          }
+        }
+        parent {
+          piece {
+            id
+          }
+        }
+      }
+    }
+  }
+}

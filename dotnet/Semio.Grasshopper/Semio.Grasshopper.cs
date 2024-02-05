@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
@@ -134,6 +135,18 @@ namespace Semio.Grasshopper;
 
 #endregion
 
+#region Utility
+
+public static class Utility
+{
+    public static bool IsPathFullyQualified(string path)
+    {
+        return Path.GetFullPath(path) == path;
+    }
+}
+
+#endregion
+
 #region Converters
 
 public static class RhinoConverter
@@ -176,6 +189,7 @@ public static class RhinoConverter
 #endregion
 
 #region Goos
+
 public class RepresentationGoo : GH_Goo<Representation>
 {
     // TODO: Implement casts with string
@@ -205,7 +219,7 @@ public class RepresentationGoo : GH_Goo<Representation>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Representation",Value.Serialize());
+        writer.SetString("Representation", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -244,7 +258,7 @@ public class SpecifierGoo : GH_Goo<Specifier>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Specifier",Value.Serialize());
+        writer.SetString("Specifier", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -347,7 +361,7 @@ public class PortGoo : GH_Goo<Port>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Port",Value.Serialize());
+        writer.SetString("Port", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -386,7 +400,7 @@ public class QualityGoo : GH_Goo<Quality>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Quality",Value.Serialize());
+        writer.SetString("Quality", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -425,7 +439,7 @@ public class TypeGoo : GH_Goo<Type>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Type",Value.Serialize());
+        writer.SetString("Type", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -464,7 +478,7 @@ public class PieceGoo : GH_Goo<Piece>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Piece",Value.Serialize());
+        writer.SetString("Piece", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -503,7 +517,7 @@ public class SideGoo : GH_Goo<Side>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Side",Value.Serialize());
+        writer.SetString("Side", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -542,7 +556,7 @@ public class AttractionGoo : GH_Goo<Attraction>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Attraction",Value.Serialize());
+        writer.SetString("Attraction", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -582,7 +596,7 @@ public class FormationGoo : GH_Goo<Formation>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Formation",Value.Serialize());
+        writer.SetString("Formation", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -622,7 +636,7 @@ public class KitGoo : GH_Goo<Kit>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Kit",Value.Serialize());
+        writer.SetString("Kit", Value.Serialize());
         return base.Write(writer);
     }
 
@@ -643,7 +657,6 @@ public abstract class SemioPersistentParam<T> : GH_PersistentParam<T> where T : 
         string subcategory) : base(name, nickname, description, category, subcategory)
     {
     }
-
 }
 
 public class RepresentationParam : SemioPersistentParam<RepresentationGoo>
@@ -654,6 +667,8 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo>
 
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
 
+    protected override Bitmap Icon => Resources.representation_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref RepresentationGoo value)
     {
         throw new NotImplementedException();
@@ -663,9 +678,6 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.representation_24x24;
-
 }
 
 public class SpecifierParam : SemioPersistentParam<SpecifierGoo>
@@ -676,6 +688,8 @@ public class SpecifierParam : SemioPersistentParam<SpecifierGoo>
 
     public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
 
+    protected override Bitmap Icon => Resources.specifier_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref SpecifierGoo value)
     {
         throw new NotImplementedException();
@@ -685,8 +699,6 @@ public class SpecifierParam : SemioPersistentParam<SpecifierGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.specifier_24x24;
 }
 
 public class PortParam : SemioPersistentParam<PortGoo>
@@ -697,6 +709,8 @@ public class PortParam : SemioPersistentParam<PortGoo>
 
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 
+    protected override Bitmap Icon => Resources.port_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref PortGoo value)
     {
         throw new NotImplementedException();
@@ -706,8 +720,6 @@ public class PortParam : SemioPersistentParam<PortGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.port_24x24;
 }
 
 public class QualityParam : SemioPersistentParam<QualityGoo>
@@ -718,6 +730,8 @@ public class QualityParam : SemioPersistentParam<QualityGoo>
 
     public override Guid ComponentGuid => new("F2F6F2F9-7F0E-4F0F-9F0C-7F6F6F6F6F6F");
 
+    protected override Bitmap Icon => Resources.quality_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref QualityGoo value)
     {
         throw new NotImplementedException();
@@ -727,8 +741,6 @@ public class QualityParam : SemioPersistentParam<QualityGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.quality_24x24;
 }
 
 public class TypeParam : SemioPersistentParam<TypeGoo>
@@ -739,6 +751,8 @@ public class TypeParam : SemioPersistentParam<TypeGoo>
 
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 
+    protected override Bitmap Icon => Resources.type_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref TypeGoo value)
     {
         throw new NotImplementedException();
@@ -748,8 +762,6 @@ public class TypeParam : SemioPersistentParam<TypeGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.type_24x24;
 }
 
 public class PieceParam : SemioPersistentParam<PieceGoo>
@@ -760,6 +772,8 @@ public class PieceParam : SemioPersistentParam<PieceGoo>
 
     public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
 
+    protected override Bitmap Icon => Resources.piece_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref PieceGoo value)
     {
         throw new NotImplementedException();
@@ -769,8 +783,6 @@ public class PieceParam : SemioPersistentParam<PieceGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.piece_24x24;
 }
 
 public class SideParam : SemioPersistentParam<SideGoo>
@@ -781,6 +793,8 @@ public class SideParam : SemioPersistentParam<SideGoo>
 
     public override Guid ComponentGuid => new("4FDE465D-39AB-41C7-AF82-252F1F7C80B9");
 
+    protected override Bitmap Icon => Resources.side_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref SideGoo value)
     {
         throw new NotImplementedException();
@@ -790,8 +804,6 @@ public class SideParam : SemioPersistentParam<SideGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.side_24x24;
 }
 
 public class AttractionParam : SemioPersistentParam<AttractionGoo>
@@ -802,6 +814,8 @@ public class AttractionParam : SemioPersistentParam<AttractionGoo>
 
     public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
 
+    protected override Bitmap Icon => Resources.attraction_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref AttractionGoo value)
     {
         throw new NotImplementedException();
@@ -811,8 +825,6 @@ public class AttractionParam : SemioPersistentParam<AttractionGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.attraction_24x24;
 }
 
 public class FormationParam : SemioPersistentParam<FormationGoo>
@@ -823,6 +835,8 @@ public class FormationParam : SemioPersistentParam<FormationGoo>
 
     public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
 
+    protected override Bitmap Icon => Resources.formation_24x24;
+
     protected override GH_GetterResult Prompt_Singular(ref FormationGoo value)
     {
         throw new NotImplementedException();
@@ -832,8 +846,6 @@ public class FormationParam : SemioPersistentParam<FormationGoo>
     {
         throw new NotImplementedException();
     }
-
-    protected override Bitmap Icon => Resources.formation_24x24;
 }
 
 #endregion
@@ -848,8 +860,8 @@ public abstract class SemioComponent : GH_Component
     }
 }
 
-
 #region Modelling
+
 public class RepresentationComponent : SemioComponent
 {
     public RepresentationComponent()
@@ -860,6 +872,8 @@ public class RepresentationComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+
+    protected override Bitmap Icon => Resources.representation_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -910,8 +924,6 @@ public class RepresentationComponent : SemioComponent
         DA.SetData(2, representationGoo.Value.Lod);
         DA.SetDataList(3, representationGoo.Value.Tags);
     }
-
-    protected override Bitmap Icon => Resources.representation_modify_24x24;
 }
 
 public class SpecifierComponent : SemioComponent
@@ -924,6 +936,8 @@ public class SpecifierComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
+
+    protected override Bitmap Icon => Resources.specifier_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -962,8 +976,6 @@ public class SpecifierComponent : SemioComponent
         DA.SetData(1, specifierGoo.Value.Context);
         DA.SetData(2, specifierGoo.Value.Group);
     }
-
-    protected override Bitmap Icon => Resources.specifier_modify_24x24;
 }
 
 public class PortComponent : SemioComponent
@@ -976,6 +988,8 @@ public class PortComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+
+    protected override Bitmap Icon => Resources.port_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1019,8 +1033,6 @@ public class PortComponent : SemioComponent
         DA.SetDataList(2, portGoo.Value.Specifiers?.Select(s => new SpecifierGoo(s.DeepClone()
         )));
     }
-
-    protected override Bitmap Icon => Resources.port_modify_24x24;
 }
 
 public class QualityComponent : SemioComponent
@@ -1033,6 +1045,8 @@ public class QualityComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+
+    protected override Bitmap Icon => Resources.quality_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1079,8 +1093,6 @@ public class QualityComponent : SemioComponent
         DA.SetData(2, qualityGoo.Value.Value);
         DA.SetData(3, qualityGoo.Value.Unit);
     }
-
-    protected override Bitmap Icon => Resources.quality_modify_24x24;
 }
 
 public class TypeComponent : SemioComponent
@@ -1093,6 +1105,8 @@ public class TypeComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+
+    protected override Bitmap Icon => Resources.type_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1110,7 +1124,8 @@ public class TypeComponent : SemioComponent
         pManager[4].Optional = true;
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
         pManager[5].Optional = true;
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. They can be further used to distinguish types with the same name.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+            "Optional qualities of the type. They can be further used to distinguish types with the same name.",
             GH_ParamAccess.list);
         pManager[6].Optional = true;
     }
@@ -1168,8 +1183,6 @@ public class TypeComponent : SemioComponent
         DA.SetDataList(5, typeGoo.Value.Ports?.Select(p => new PortGoo(p.DeepClone())));
         DA.SetDataList(6, typeGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
     }
-
-    protected override Bitmap Icon => Resources.type_modify_24x24;
 }
 
 public class PieceComponent : SemioComponent
@@ -1183,6 +1196,8 @@ public class PieceComponent : SemioComponent
 
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
 
+    protected override Bitmap Icon => Resources.piece_modify_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new PieceParam(), "Piece", "Pc?",
@@ -1193,7 +1208,8 @@ public class PieceComponent : SemioComponent
         pManager.AddTextParameter("TypeName", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddParameter(new QualityParam(), "TypeQualities", "TyQl*",
-            "If there is more than one type with the same name use qualities to precisely identify the type.", GH_ParamAccess.list);
+            "If there is more than one type with the same name use qualities to precisely identify the type.",
+            GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1230,8 +1246,6 @@ public class PieceComponent : SemioComponent
         DA.SetData(2, pieceGoo.Value.Type?.Name);
         DA.SetDataList(3, pieceGoo.Value.Type?.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
     }
-
-    protected override Bitmap Icon => Resources.piece_modify_24x24;
 }
 
 public class SideComponent : SemioComponent
@@ -1244,6 +1258,8 @@ public class SideComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("AE68EB0B-01D6-458E-870E-346E7C9823B5");
+
+    protected override Bitmap Icon => Resources.side_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1285,8 +1301,6 @@ public class SideComponent : SemioComponent
         DA.SetData(1, sideGoo.Value.Piece?.Id);
         DA.SetDataList(2, sideGoo.Value.Piece?.Type.Port.Specifiers?.Select(s => new SpecifierGoo(s.DeepClone())));
     }
-
-    protected override Bitmap Icon => Resources.side_modify_24x24;
 }
 
 public class AttractionComponent : SemioComponent
@@ -1299,6 +1313,8 @@ public class AttractionComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+
+    protected override Bitmap Icon => Resources.attraction_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1337,8 +1353,6 @@ public class AttractionComponent : SemioComponent
         DA.SetData(1, new SideGoo(attractionGoo.Value.Attracting.DeepClone()));
         DA.SetData(2, new SideGoo(attractionGoo.Value.Attracted.DeepClone()));
     }
-
-    protected override Bitmap Icon => Resources.attraction_modify_24x24;
 }
 
 public class FormationComponent : SemioComponent
@@ -1351,6 +1365,8 @@ public class FormationComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
+
+    protected override Bitmap Icon => Resources.formation_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1368,7 +1384,8 @@ public class FormationComponent : SemioComponent
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
         pManager[5].Optional = true;
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. They can be further used to distinguish formations with the same name.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+            "Optional qualities of the formation. They can be further used to distinguish formations with the same name.",
             GH_ParamAccess.list);
         pManager[6].Optional = true;
     }
@@ -1425,11 +1442,12 @@ public class FormationComponent : SemioComponent
         DA.SetDataList(5, formationGoo.Value.Attractions?.Select(a => new AttractionGoo(a.DeepClone())));
         DA.SetDataList(6, formationGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
     }
-
-    protected override Bitmap Icon => Resources.formation_modify_24x24;
 }
+
 #endregion
+
 #region Loading/Saving
+
 public class LoadKitComponent : SemioComponent
 {
     public LoadKitComponent()
@@ -1440,6 +1458,8 @@ public class LoadKitComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
+
+    protected override Bitmap Icon => Resources.kit_load_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1472,6 +1492,12 @@ public class LoadKitComponent : SemioComponent
 
         if (run)
         {
+            //if (!Utility.IsPathFullyQualified(path))
+            //{
+            //    var currentDirectory = Path.GetDirectoryName(OnPingDocument().FilePath);
+            //    path = Path.Combine(currentDirectory, path);
+            //}
+
             var kit = new Api().LoadLocalKit(path);
 
             DA.SetData(0, kit.Name);
@@ -1482,8 +1508,6 @@ public class LoadKitComponent : SemioComponent
             DA.SetDataList(5, kit.Formations?.Select(f => new FormationGoo(f.DeepClone())));
         }
     }
-
-    protected override Bitmap Icon => Resources.kit_load_24x24;
 }
 
 public class CreateKitComponent : SemioComponent
@@ -1496,6 +1520,8 @@ public class CreateKitComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
+
+    protected override Bitmap Icon => Resources.kit_create_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1543,8 +1569,13 @@ public class CreateKitComponent : SemioComponent
         if (!DA.GetData(6, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(7, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
-        var kit = new Kit()
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
+
+        var kit = new Kit
         {
             Name = name,
             Explanation = explanation,
@@ -1564,8 +1595,6 @@ public class CreateKitComponent : SemioComponent
 
         DA.SetData(0, true);
     }
-
-    protected override Bitmap Icon => Resources.kit_create_24x24;
 }
 
 public class DeleteKitComponent : SemioComponent
@@ -1579,11 +1608,13 @@ public class DeleteKitComponent : SemioComponent
 
     public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
 
+    protected override Bitmap Icon => Resources.kit_delete_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Directory", "D?",
-                       "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-                                  GH_ParamAccess.item);
+            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+            GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "Delete the kit.", GH_ParamAccess.item, false);
     }
 
@@ -1600,8 +1631,12 @@ public class DeleteKitComponent : SemioComponent
         DA.GetData(0, ref path);
         DA.GetData(1, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
-        
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
+
         var response = new Api().DeleteLocalKit(path);
         if (response.Error != null)
         {
@@ -1609,11 +1644,9 @@ public class DeleteKitComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
-        DA.SetData(0, true);
-        
-    }
 
-    protected override Bitmap Icon => Resources.kit_delete_24x24;
+        DA.SetData(0, true);
+    }
 }
 
 #region Adding
@@ -1629,10 +1662,12 @@ public class AddTypeComponent : SemioComponent
 
     public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
 
+    protected override Bitmap Icon => Resources.type_add_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new TypeParam(), "Type", "Ty",
-                       "Type to add to the kit.", GH_ParamAccess.item);
+            "Type to add to the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Directory", "D?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
@@ -1655,8 +1690,12 @@ public class AddTypeComponent : SemioComponent
         if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
-    
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
+
         var response = new Api().AddTypeToLocalKit(path, typeGoo.Value);
         if (response.Error != null)
         {
@@ -1664,11 +1703,9 @@ public class AddTypeComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
+
         DA.SetData(0, true);
-
     }
-
-    protected override Bitmap Icon => Resources.type_add_24x24;
 }
 
 public class AddFormationComponent : SemioComponent
@@ -1682,20 +1719,23 @@ public class AddFormationComponent : SemioComponent
 
     public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
 
+    protected override Bitmap Icon => Resources.formation_add_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-                                  "Formation to add to the kit.", GH_ParamAccess.item);
+            "Formation to add to the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Directory", "D?",
-                       "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-                                  GH_ParamAccess.item);
+            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+            GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Add the formation to the kit.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was added to the kit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was added to the kit.",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1708,7 +1748,11 @@ public class AddFormationComponent : SemioComponent
         if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
 
         var response = new Api().AddFormationToLocalKit(path, formationGoo.Value);
         if (response.Error != null)
@@ -1716,12 +1760,15 @@ public class AddFormationComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
         }
-        else DA.SetData(0, true);
+        else
+        {
+            DA.SetData(0, true);
+        }
     }
-
-    protected override Bitmap Icon => Resources.formation_add_24x24;
 }
+
 #endregion
+
 #region Removing
 
 public class RemoveTypeComponent : SemioComponent
@@ -1735,21 +1782,26 @@ public class RemoveTypeComponent : SemioComponent
 
     public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
 
+    protected override Bitmap Icon => Resources.type_remove_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter( "Type Name", "TyNa",
-                                  "Name of the type to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(),"Type Qualities","TyQl*", "If there is more than one type with the same name use qualities to precisely identify the type.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Type Name", "TyNa",
+            "Name of the type to remove from the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Type Qualities", "TyQl*",
+            "If there is more than one type with the same name use qualities to precisely identify the type.",
+            GH_ParamAccess.list);
         pManager.AddTextParameter("Directory", "D?",
-                       "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-                                  GH_ParamAccess.item);
+            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+            GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Remove the type from the kit.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the type was removed from the kit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the type was removed from the kit.",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1765,21 +1817,27 @@ public class RemoveTypeComponent : SemioComponent
         if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
-        var response = new Api().RemoveTypeFromLocalKit(path, new TypeId()
-            {
-                Name = typeName,
-                Qualities = typeQualityGoos.Select(q => q.Value).ToList()
-            });
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
+
+        var response = new Api().RemoveTypeFromLocalKit(path, new TypeId
+        {
+            Name = typeName,
+            Qualities = typeQualityGoos.Select(q => q.Value).ToList()
+        });
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
         }
-        else DA.SetData(0, true);
+        else
+        {
+            DA.SetData(0, true);
+        }
     }
-
-    protected override Bitmap Icon => Resources.type_remove_24x24;
 }
 
 public class RemoveFormationComponent : SemioComponent
@@ -1793,22 +1851,27 @@ public class RemoveFormationComponent : SemioComponent
 
     public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
 
+    protected override Bitmap Icon => Resources.formation_remove_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Formation Name", "FoNa",
-                                             "Name of the formation to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Formation Qualities", "FoQl*", "If there is more than one formation with the same name use qualities to precisely identify the formation.", GH_ParamAccess.list);
+            "Name of the formation to remove from the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Formation Qualities", "FoQl*",
+            "If there is more than one formation with the same name use qualities to precisely identify the formation.",
+            GH_ParamAccess.list);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "D?",
-                                  "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-                                                                   GH_ParamAccess.item);
+            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+            GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Remove the formation from the kit.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was removed from the kit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was removed from the kit.",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1823,8 +1886,13 @@ public class RemoveFormationComponent : SemioComponent
         if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
-        if (!run) { DA.SetData(0, false); return; }
-        var response = new Api().RemoveFormationFromLocalKit(path, new FormationId()
+        if (!run)
+        {
+            DA.SetData(0, false);
+            return;
+        }
+
+        var response = new Api().RemoveFormationFromLocalKit(path, new FormationId
         {
             Name = formationName,
             Qualities = formationQualityGoos.Select(q => q.Value).ToList()
@@ -1834,13 +1902,17 @@ public class RemoveFormationComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
         }
-        else DA.SetData(0, true);
+        else
+        {
+            DA.SetData(0, true);
+        }
     }
-
-    protected override Bitmap Icon => Resources.formation_remove_24x24;
 }
+
 #endregion
+
 #region Serialize
+
 public class SerializeQualityComponent : SemioComponent
 {
     public SerializeQualityComponent()
@@ -1852,10 +1924,12 @@ public class SerializeQualityComponent : SemioComponent
 
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
 
+    protected override Bitmap Icon => Resources.quality_serialize_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new QualityParam(), "Quality", "Ql",
-                       "Quality to serialize.", GH_ParamAccess.item);
+            "Quality to serialize.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "Serialize the quality.", GH_ParamAccess.item, false);
     }
 
@@ -1872,15 +1946,15 @@ public class SerializeQualityComponent : SemioComponent
         DA.GetData(0, ref qualityGoo);
         DA.GetData(1, ref run);
 
-        if (run) 
+        if (run)
         {
             var text = qualityGoo.Value.Serialize();
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            var base64Text = Convert.ToBase64String(textBytes);
 
-            DA.SetData(0, text);
+            DA.SetData(0, base64Text);
         }
     }
-
-    protected override Bitmap Icon => Resources.quality_serialize_24x24;
 }
 
 public class SerializeTypeComponent : SemioComponent
@@ -1893,6 +1967,8 @@ public class SerializeTypeComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+
+    protected override Bitmap Icon => Resources.type_serialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1917,12 +1993,12 @@ public class SerializeTypeComponent : SemioComponent
         if (run)
         {
             var text = typeGoo.Value.Serialize();
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            var base64Text = Convert.ToBase64String(textBytes);
 
-            DA.SetData(0, text);
+            DA.SetData(0, base64Text);
         }
     }
-
-    protected override Bitmap Icon => Resources.type_serialize_24x24;
 }
 
 public class SerializeFormationComponent : SemioComponent
@@ -1935,6 +2011,8 @@ public class SerializeFormationComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
+
+    protected override Bitmap Icon => Resources.formation_serialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1959,15 +2037,18 @@ public class SerializeFormationComponent : SemioComponent
         if (run)
         {
             var text = formationGoo.Value.Serialize();
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            var base64Text = Convert.ToBase64String(textBytes);
 
-            DA.SetData(0, text);
+            DA.SetData(0, base64Text);
         }
     }
-
-    protected override Bitmap Icon => Resources.formation_serialize_24x24;
 }
+
 #endregion
+
 #region Deserialize
+
 public class DeserializeQualityComponent : SemioComponent
 {
     public DeserializeQualityComponent()
@@ -1979,6 +2060,8 @@ public class DeserializeQualityComponent : SemioComponent
 
     public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
 
+    protected override Bitmap Icon => Resources.quality_deserialize_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
@@ -1988,27 +2071,29 @@ public class DeserializeQualityComponent : SemioComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new QualityParam(), "Quality", "Ql",
-                       "Deserialized quality.", GH_ParamAccess.item);
+            "Deserialized quality.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var text = "";
+        var base64Text = "";
         var run = false;
 
-        DA.GetData(0, ref text);
+        DA.GetData(0, ref base64Text);
         DA.GetData(1, ref run);
 
         if (run)
         {
+            var textBytes = Convert.FromBase64String(base64Text);
+            var text = Encoding.UTF8.GetString(textBytes);
+
             var quality = text.Deserialize<Quality>();
 
             DA.SetData(0, new QualityGoo(quality));
         }
     }
-
-    protected override Bitmap Icon => Resources.quality_deserialize_24x24;
 }
+
 public class DeserializeTypeComponent : SemioComponent
 {
     public DeserializeTypeComponent()
@@ -2019,6 +2104,8 @@ public class DeserializeTypeComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
+
+    protected override Bitmap Icon => Resources.type_deserialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -2034,21 +2121,22 @@ public class DeserializeTypeComponent : SemioComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var text = "";
+        var base64Text = "";
         var run = false;
 
-        DA.GetData(0, ref text);
+        DA.GetData(0, ref base64Text);
         DA.GetData(1, ref run);
 
         if (run)
         {
+            var textBytes = Convert.FromBase64String(base64Text);
+            var text = Encoding.UTF8.GetString(textBytes);
+
             var type = text.Deserialize<Type>();
 
             DA.SetData(0, new TypeGoo(type));
         }
     }
-
-    protected override Bitmap Icon => Resources.type_deserialize_24x24;
 }
 
 public class DeserializeFormationComponent : SemioComponent
@@ -2061,6 +2149,8 @@ public class DeserializeFormationComponent : SemioComponent
     }
 
     public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
+
+    protected override Bitmap Icon => Resources.formation_deserialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -2076,22 +2166,26 @@ public class DeserializeFormationComponent : SemioComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var text = "";
+        var base64Text = "";
         var run = false;
 
-        DA.GetData(0, ref text);
+        DA.GetData(0, ref base64Text);
         DA.GetData(1, ref run);
 
         if (run)
         {
+            var textBytes = Convert.FromBase64String(base64Text);
+            var text = Encoding.UTF8.GetString(textBytes);
+
             var formation = text.Deserialize<Formation>();
 
             DA.SetData(0, new FormationGoo(formation));
         }
     }
-
-    protected override Bitmap Icon => Resources.formation_deserialize_24x24;
 }
+
 #endregion
+
 #endregion
+
 #endregion
