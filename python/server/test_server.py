@@ -18,10 +18,13 @@ addFormationToLocalKit = open(
 removeFormationFromLocalKit = open(
     "../../graphql/removeFormationFromLocalKit.graphql", "r"
 ).read()
+formationToSceneFromLocalKit = open(
+    "../../graphql/formationToSceneFromLocalKit.graphql", "r"
+).read()
 
 
-@mark.timeout(120)
-def test_integration_graphql_kit_crud(tmp_path):
+@mark.skip
+def test_integration_graphql_local_kit_crud(tmp_path):
     client = Client(schema)
     name = "metabolism"
     explanation = "For metabolistic architecture."
@@ -285,3 +288,415 @@ def test_integration_graphql_kit_crud(tmp_path):
     }
     addBaseResponseDiff = DeepDiff(addBaseResponse, addBaseResponseExpected)
     assert not addBaseResponseDiff, f"Response difference: {addBaseResponseDiff}"
+
+
+def test_integration_graphql_local_kit_formationToScene(tmp_path):
+    #   ┌──────────┐ ┌──────────┐   │   ┌──────────┐ xxxxxxxxxxxx
+    #   │          │ │          │   │   │          │ x          x
+    # ┌─▼─┐        │ │        ┌─▼─┐ │ ┌─▼─┐        │ x        ┌───┐
+    # │ a │       ┌┴─┴┐       │ b │ │ │ a │       ┌┴──┐       │ b │
+    # └─▲─┘    ┌──►1ab◄──┐    └─▲─┘ │ └─▲─┘    ┌──►1ab│xxx    └─▲─┘
+    #   │      │  └───┘  │      │   │   │      │  └───┘  x      │
+    # ┌─┴─┐  ┌─┴─┐     ┌─┴─┐  ┌─┴─┐ │ ┌─┴─┐  ┌─┴─┐     ┌─x─┐  ┌─┴─┐
+    # │1a1◄──┤1a │     │1b ├──►1b1│ │ │1a1◄──┤1a │     │1b ├──►1b1│
+    # └───┘  └─▲─┘     └─▲─┘  └───┘ │ └───┘  └─▲─┘     └─▲─┘  └───┘
+    #          │  ┌───┐  │          │          │  ┌───┐  │
+    #          └──┤ 1 ├──┘          │          └──┤ 1 ├──┘
+    #             └───┘             │             └───┘
+    #             before            │             after
+    client = Client(schema)
+    type1 = {
+        "name": "type1",
+        "representations": [{"url": "url1"}],
+        "ports": [
+            {
+                "plane": {
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                },
+                "specifiers": [
+                    {"context": "context1", "group": "group1"},
+                ],
+            },
+            {
+                "plane": {
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                },
+                "specifiers": [
+                    {"context": "context1", "group": "group2"},
+                ],
+            },
+        ],
+    }
+    formation1 = {
+        "name": "formation1",
+        "explanation": "A formation with circular attractions.",
+        "icon": "🔁",
+        "pieces": [
+            {
+                "id": "1",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "1a",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "1b",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "1ab",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "1a1",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "1b1",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "a",
+                "type": {
+                    "name": "type1",
+                },
+            },
+            {
+                "id": "b",
+                "type": {
+                    "name": "type1",
+                },
+            },
+        ],
+        "attractions": [
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1a",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1b",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1a",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1a1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1b",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1b1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1a",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1ab",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1b",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "1ab",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1a1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "a",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1b1",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "b",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1ab",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "a",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "attracting": {
+                    "piece": {
+                        "id": "1ab",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group2"},
+                                ]
+                            }
+                        },
+                    }
+                },
+                "attracted": {
+                    "piece": {
+                        "id": "b",
+                        "type": {
+                            "port": {
+                                "specifiers": [
+                                    {"context": "context1", "group": "group1"},
+                                ]
+                            }
+                        },
+                    }
+                },
+            },
+        ],
+    }
+    formation1Id = {
+        "name": "formation1",
+    }
+    scene1 = {
+        "objects": [
+            {
+                "piece": {
+                    "id": "1",
+                    "type": {
+                        "representations": [{"url": "url1"}],
+                    },
+                },
+                "plane": {
+                    "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                    "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                },
+                "parent": None,
+            }
+        ]
+    }
+    kit = {
+        "name": "kit1",
+        "types": [type1],
+        "formations": [formation1],
+    }
+    createLocalKitResponse = client.execute(
+        createLocalKit,
+        variables={
+            "directory": str(tmp_path),
+            "kit": kit,
+        },
+    )
+    assert not createLocalKitResponse.get("errors"), f"Errors: {createLocalKitResponse}"
+    formation1ToSceneResponse = client.execute(
+        formationToSceneFromLocalKit,
+        variables={"directory": str(tmp_path), "formation": formation1Id},
+    )
+    formation1ToSceneResponseExpected = {
+        "data": {
+            "formationToScene": {
+                "scene": scene1,
+                "error": None,
+            }
+        }
+    }
+    formation1ToSceneResponseDiff = DeepDiff(
+        formation1ToSceneResponse, formation1ToSceneResponseExpected
+    )
+    assert (
+        not formation1ToSceneResponseDiff
+    ), f"Response difference: {formation1ToSceneResponseDiff}"

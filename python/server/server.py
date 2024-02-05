@@ -27,15 +27,16 @@ semio server.
 #       ❔graphene_sqlalchemy
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Check if NonNull(graphene.List(NonNull(...))) can be replaced by graphene.List(NonNull(...)) for optional lists.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
 
+from collections import deque
 from os import remove
 from pathlib import Path
 from functools import lru_cache
 from typing import Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
+from networkx import DiGraph, Graph, bfs_tree, edge_bfs
 from pint import UnitRegistry
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -325,17 +326,140 @@ class Point(BaseModel):
     y: float
     z: float
 
+    def transform(self, transform: "Transform") -> "Point":
+        return Point(
+            x=transform.m00 * self.x
+            + transform.m01 * self.y
+            + transform.m02 * self.z
+            + transform.m30,
+            y=transform.m10 * self.x
+            + transform.m11 * self.y
+            + transform.m12 * self.z
+            + transform.m31,
+            z=transform.m20 * self.x
+            + transform.m21 * self.y
+            + transform.m22 * self.z
+            + transform.m32,
+        )
+
 
 class Vector(BaseModel):
     x: float
     y: float
     z: float
 
+    def transform(self, transform: "Transform") -> "Vector":
+        return Vector(
+            x=transform.m00 * self.x + transform.m01 * self.y + transform.m02 * self.z,
+            y=transform.m10 * self.x + transform.m11 * self.y + transform.m12 * self.z,
+            z=transform.m20 * self.x + transform.m21 * self.y + transform.m22 * self.z,
+        )
+
 
 class Plane(BaseModel):
     origin: Point
     x_axis: Vector
     y_axis: Vector
+
+    @property
+    def normal(self) -> Vector:
+        return Vector(
+            x=self.x_axis.y * self.y_axis.z - self.x_axis.z * self.y_axis.y,
+            y=self.x_axis.z * self.y_axis.x - self.x_axis.x * self.y_axis.z,
+            z=self.x_axis.x * self.y_axis.y - self.x_axis.y * self.y_axis.x,
+        )
+
+    def transform(self, transform: "Transform") -> "Plane":
+        return Plane(
+            origin=self.origin.transform(transform),
+            x_axis=self.x_axis.transform(transform),
+            y_axis=self.y_axis.transform(transform),
+        )
+
+    def toTransform(self) -> "Transform":
+        return Transform.fromPlane(self)
+
+    @staticmethod
+    def XY() -> "Plane":
+        return Plane(
+            origin=Point(x=0, y=0, z=0),
+            x_axis=Vector(x=1, y=0, z=0),
+            y_axis=Vector(x=0, y=1, z=0),
+        )
+
+
+class Transform(BaseModel):
+    m00: float
+    m01: float
+    m02: float
+    m10: float
+    m11: float
+    m12: float
+    m20: float
+    m21: float
+    m22: float
+    m30: float
+    m31: float
+    m32: float
+
+    def compose(self, other: "Transform") -> "Transform":
+        return Transform(
+            m00=self.m00 * other.m00 + self.m01 * other.m10 + self.m02 * other.m20,
+            m01=self.m00 * other.m01 + self.m01 * other.m11 + self.m02 * other.m21,
+            m02=self.m00 * other.m02 + self.m01 * other.m12 + self.m02 * other.m22,
+            m10=self.m10 * other.m00 + self.m11 * other.m10 + self.m12 * other.m20,
+            m11=self.m10 * other.m01 + self.m11 * other.m11 + self.m12 * other.m21,
+            m12=self.m10 * other.m02 + self.m11 * other.m12 + self.m12 * other.m22,
+            m20=self.m20 * other.m00 + self.m21 * other.m10 + self.m22 * other.m20,
+            m21=self.m20 * other.m01 + self.m21 * other.m11 + self.m22 * other.m21,
+            m22=self.m20 * other.m02 + self.m21 * other.m12 + self.m22 * other.m22,
+            m30=self.m30 * other.m00
+            + self.m31 * other.m10
+            + self.m32 * other.m20
+            + other.m30,
+            m31=self.m30 * other.m01
+            + self.m31 * other.m11
+            + self.m32 * other.m21
+            + other.m31,
+            m32=self.m30 * other.m02
+            + self.m31 * other.m12
+            + self.m32 * other.m22
+            + other.m32,
+        )
+
+    @staticmethod
+    def identity() -> "Transform":
+        return Transform(
+            m00=1,
+            m01=0,
+            m02=0,
+            m10=0,
+            m11=1,
+            m12=0,
+            m20=0,
+            m21=0,
+            m22=1,
+            m30=0,
+            m31=0,
+            m32=0,
+        )
+
+    @staticmethod
+    def fromPlane(plane: Plane) -> "Transform":
+        return Transform(
+            m00=plane.x_axis.x,
+            m01=plane.x_axis.y,
+            m02=plane.x_axis.z,
+            m10=plane.y_axis.x,
+            m11=plane.y_axis.y,
+            m12=plane.y_axis.z,
+            m20=plane.normal.x,
+            m21=plane.normal.y,
+            m22=plane.normal.z,
+            m30=plane.origin.x,
+            m31=plane.origin.y,
+            m32=plane.origin.z,
+        )
 
 
 class Port(Base):
@@ -775,6 +899,9 @@ class Attraction(Base):
         return [self.parent] + self.references
 
 
+# TODO: Add complex validation before insert with networkx such as:
+#       - only one root
+#       - one connected component.
 class Formation(Base):
     __tablename__ = "formation"
 
@@ -855,6 +982,28 @@ def receive_after_update(mapper, connection, target):
         target.type.modified_at = datetime.utcnow()
     else:
         target.formation.modified_at = datetime.utcnow()
+
+
+class Hierarchy(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    piece: Piece
+    transform: Transform
+    children: Optional[List["Hierarchy"]]
+
+
+class Object(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    piece: Piece
+    plane: Plane
+    parent: Optional["Object"]
+
+
+class Scene(BaseModel):
+    objects: List[Object]
 
 
 class Kit(Base):
@@ -1139,6 +1288,32 @@ class FormationNode(SQLAlchemyObjectType):
         )
 
 
+class ObjectNode(PydanticObjectType):
+    class Meta:
+        model = Object
+        name = "Object"
+        exclude_fields = ("piece", "plane", "parent")
+
+    piece = graphene.Field(PieceNode)
+    plane = graphene.Field(PlaneNode)
+    parent = graphene.Field(lambda: ObjectNode)
+
+    def resolve_piece(root, info):
+        return root.piece
+
+    def resolve_plane(root, info):
+        return root.plane
+
+    def resolve_parent(root, info):
+        return root.parent
+
+
+class SceneNode(PydanticObjectType):
+    class Meta:
+        model = Scene
+        name = "Scene"
+
+
 class KitNode(SQLAlchemyObjectType):
     class Meta:
         model = Kit
@@ -1150,7 +1325,7 @@ class KitNode(SQLAlchemyObjectType):
 class RepresentationInput(InputObjectType):
     url = NonNull(graphene.String)
     lod = graphene.String()
-    tags = NonNull(graphene.List(NonNull(graphene.String)))
+    tags = graphene.List(NonNull(graphene.String))
 
 
 class SpecifierInput(InputObjectType):
@@ -1175,11 +1350,11 @@ class PlaneInput(PydanticInputObjectType):
 
 class PortInput(InputObjectType):
     plane = NonNull(PlaneInput)
-    specifiers = NonNull(graphene.List(NonNull(SpecifierInput)))
+    specifiers = graphene.List(NonNull(SpecifierInput))
 
 
 class PortIdInput(InputObjectType):
-    specifiers = NonNull(graphene.List(NonNull(SpecifierInput)))
+    specifiers = graphene.List(NonNull(SpecifierInput))
 
 
 class QualityInput(InputObjectType):
@@ -1194,12 +1369,12 @@ class TypeInput(InputObjectType):
     icon = graphene.String()
     representations = NonNull(graphene.List(NonNull(RepresentationInput)))
     ports = NonNull(graphene.List(NonNull(PortInput)))
-    qualities = NonNull(graphene.List(NonNull(QualityInput)))
+    qualities = graphene.List(NonNull(QualityInput))
 
 
 class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
-    qualities = NonNull(graphene.List(NonNull(QualityInput)))
+    qualities = graphene.List(NonNull(QualityInput))
 
 
 class PieceInput(InputObjectType):
@@ -1231,12 +1406,12 @@ class FormationInput(InputObjectType):
     icon = graphene.String()
     pieces = NonNull(graphene.List(NonNull(PieceInput)))
     attractions = NonNull(graphene.List(NonNull(AttractionInput)))
-    qualities = NonNull(graphene.List(NonNull(QualityInput)))
+    qualities = graphene.List(NonNull(QualityInput))
 
 
 class FormationIdInput(InputObjectType):
     name = NonNull(graphene.String)
-    qualities = NonNull(graphene.List(NonNull(QualityInput)))
+    qualities = graphene.List(NonNull(QualityInput))
 
 
 class KitInput(InputObjectType):
@@ -1244,8 +1419,8 @@ class KitInput(InputObjectType):
     explanation = graphene.String()
     icon = graphene.String()
     url = graphene.String()
-    types = NonNull(graphene.List(NonNull(TypeInput)))
-    formations = NonNull(graphene.List(NonNull(FormationInput)))
+    types = graphene.List(NonNull(TypeInput))
+    formations = graphene.List(NonNull(FormationInput))
 
 
 class KitMetadataInput(InputObjectType):
@@ -1303,6 +1478,11 @@ class QualitiesDontMatchType(TypeNotFound):
         return f"Qualities ({self.qualityInputs}) don't match any type with name {self.name}: {str(self.types)}"
 
 
+class TooLittleQualitiesToMatchExcactlyType(QualitiesDontMatchType):
+    def __str__(self):
+        return f"Too little qualities ({self.qualityInputs}) to match exactly one type name {self.name}: {str(self.types)}"
+
+
 class PieceNotFound(NotFound):
     def __init__(self, local_id) -> None:
         super().__init__(local_id)
@@ -1331,6 +1511,11 @@ class QualitiesDontMatchFormation(FormationNotFound):
 
     def __str__(self):
         return f"Qualities ({self.qualityInputs}) don't match any formation with name {self.name}: {str(self.formations)}"
+
+
+class TooLittleQualitiesToMatchExcactlyFormation(QualitiesDontMatchFormation):
+    def __str__(self):
+        return f"Too little qualities ({self.qualityInputs}) to match exactly one formation name {self.name}: {str(self.formations)}"
 
 
 class KitNotFound(NotFound):
@@ -1459,15 +1644,36 @@ def getTypeByNameAndQualities(
     if typesWithSameName.count() < 1:
         raise TypeNotFound(name)
     typesWithSameName = typesWithSameName.all()
-    qualities = [
-        qualityInputToTransientQualityForEquality(qualityInput)
-        for qualityInput in qualityInputs
-    ]
+    qualities = (
+        [
+            qualityInputToTransientQualityForEquality(qualityInput)
+            for qualityInput in qualityInputs
+        ]
+        if qualityInputs
+        else []
+    )
     typesWithSameQualities = [
-        type for type in typesWithSameName if set(type.qualities) == set(qualities)
+        type
+        for type in typesWithSameName
+        if set(qualities).issubset(set(type.qualities))
     ]
-    if len(typesWithSameQualities) != 1:
-        raise QualitiesDontMatchType(name, qualityInputs, typesWithSameQualities)
+    if len(typesWithSameQualities) < 1:
+        raise QualitiesDontMatchType(name, qualityInputs, typesWithSameName)
+    elif len(typesWithSameQualities) > 1:
+        typesWithExactSameQualities = [
+            type
+            for type in typesWithSameQualities
+            if set(type.qualities) == set(qualities)
+        ]
+        if len(typesWithExactSameQualities) < 1:
+            raise TooLittleQualitiesToMatchExcactlyType(
+                name, qualityInputs, typesWithSameQualities
+            )
+        elif len(typesWithExactSameQualities) > 1:
+            raise InvalidDatabase(
+                f"Found multiple types {typesWithExactSameQualities!r} for {name} and same qualities: {qualities}"
+            )
+        return typesWithExactSameQualities[0]
     return typesWithSameQualities[0]
 
 
@@ -1478,19 +1684,36 @@ def getFormationByNameAndQualities(
     if formationsWithSameName.count() < 1:
         raise FormationNotFound(name)
     formationsWithSameName = formationsWithSameName.all()
-    qualities = [
-        qualityInputToTransientQualityForEquality(qualityInput)
-        for qualityInput in qualityInputs
-    ]
+    qualities = (
+        [
+            qualityInputToTransientQualityForEquality(qualityInput)
+            for qualityInput in qualityInputs
+        ]
+        if qualityInputs
+        else []
+    )
     formationsWithSameQualities = [
         formation
         for formation in formationsWithSameName
-        if set(formation.qualities) == set(qualities)
+        if set(qualities).issubset(set(formation.qualities))
     ]
-    if len(formationsWithSameQualities) != 1:
-        raise QualitiesDontMatchFormation(
-            name, qualityInputs, formationsWithSameQualities
-        )
+    if len(formationsWithSameQualities) < 1:
+        raise QualitiesDontMatchFormation(name, qualityInputs, formationsWithSameName)
+    elif len(formationsWithSameQualities) > 1:
+        formationsWithExactSameQualities = [
+            formation
+            for formation in formationsWithSameQualities
+            if set(formation.qualities) == set(qualities)
+        ]
+        if len(formationsWithExactSameQualities) < 1:
+            raise TooLittleQualitiesToMatchExcactlyFormation(
+                name, qualityInputs, formationsWithSameQualities
+            )
+        elif len(formationsWithExactSameQualities) > 1:
+            raise InvalidDatabase(
+                f"Found multiple formations {formationsWithExactSameQualities!r} for {name} and same qualities: {qualities}"
+            )
+        return formationsWithExactSameQualities[0]
     return formationsWithSameQualities[0]
 
 
@@ -1763,6 +1986,73 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     except AttributeError:
         pass
     return kit
+
+
+def hierarchyFromFormationInSession(
+    session: Session, formation: Formation
+) -> Hierarchy:
+    nodes = list((piece.local_id, {"piece": piece}) for piece in formation.pieces)
+    edges = (
+        (
+            attraction.attracting.piece.id,
+            attraction.attracted.piece.id,
+            {"attraction": attraction},
+        )
+        for attraction in formation.attractions
+    )
+    G = DiGraph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+    root = [node for node, degree in G.in_degree() if degree == 0][0]
+    rootHierarchy = Hierarchy(
+        piece=G.nodes[root]["piece"], transform=Transform.identity(), children=[]
+    )
+    G.nodes[root]["hierarchy"] = rootHierarchy
+    for parent, child in bfs_tree(G, source=root).edges():
+        parentTransform = G[parent][child][
+            "attraction"
+        ].attracting.piece.type.port.plane.toTransform()
+        childTransform = G[parent][child][
+            "attraction"
+        ].attracted.piece.type.port.plane.toTransform()
+        transform = parentTransform.compose(childTransform)
+        hierarchy = Hierarchy(
+            piece=G.nodes[child]["piece"], transform=transform, children=[]
+        )
+        G.nodes[child]["hierarchy"] = hierarchy
+        G.nodes[parent]["hierarchy"].children.append(hierarchy)
+    return rootHierarchy
+
+
+def addObjectsToSceneInSession(
+    session: Session,
+    scene: "Scene",
+    parent: Object,
+    hierarchy: Hierarchy,
+    plane: Plane,
+) -> None:
+    plane = plane.transform(hierarchy.transform)
+    object = Object(
+        piece=hierarchy.piece,
+        plane=plane,
+        parent=parent,
+    )
+    scene.objects.append(object)
+    for child in hierarchy.children:
+        addObjectsToSceneInSession(session, scene, object, child, plane)
+
+
+def sessionFromFormation(
+    session: Session, formationIdInput: FormationIdInput
+) -> "Scene":
+    formation = getFormationByNameAndQualities(
+        session, formationIdInput.name, formationIdInput.qualities
+    )
+    hierarchy = hierarchyFromFormationInSession(session, formation)
+    plane = Plane.XY()
+    scene = Scene(objects=[])
+    addObjectsToSceneInSession(session, scene, None, hierarchy, plane)
+    return scene
 
 
 class CreateLocalKitErrorCode(graphene.Enum):
@@ -2231,19 +2521,34 @@ class LoadLocalKitResponse(ObjectType):
     error = Field(LoadLocalKitError)
 
 
-# TODO: Implement
-class LocalFormationToSceneGraphResponse(ObjectType):
-    pass
+class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
+    DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
+    DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
+    DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
+    NO_PERMISSION_TO_READ_KIT = "no_permission_to_read_kit"
+    FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
+
+
+class FormationToSceneFromLocalKitResponseErrorNode(ObjectType):
+    class Meta:
+        name = "RemoveFormationFromLocalKitError"
+
+    code = NonNull(FormationToSceneFromLocalKitResponseErrorCode)
+    message = graphene.String()
+
+
+class FormationToSceneFromLocalKitResponse(ObjectType):
+    scene = Field(SceneNode)
+    error = Field(FormationToSceneFromLocalKitResponseErrorNode)
 
 
 class Query(ObjectType):
     loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
-    # localFormationToSceneGraph = Field(
-    #     directory=NonNull(graphene.String),
-    #     formationId=NonNull(FormationIdInput),
-    #     lods=graphene.List(NonNull(graphene.String)),
-    #     tags=graphene.List(NonNull(graphene.String)),
-    # )
+    formationToSceneFromLocalKit = Field(
+        FormationToSceneFromLocalKitResponse,
+        directory=NonNull(graphene.String),
+        formationIdInput=NonNull(FormationIdInput),
+    )
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
         directory = Path(directory)
@@ -2266,6 +2571,43 @@ class Query(ObjectType):
         except NoMainKit:
             return LoadLocalKitResponse(error=LoadLocalKitError.DIRECTORY_HAS_NO_KIT)
         return LoadLocalKitResponse(kit=kit)
+
+    def resolve_formationToSceneFromLocalKit(self, info, directory, formationIdInput):
+        directory = Path(directory)
+        if not directory.exists():
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
+                )
+            )
+        if not directory.is_dir():
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+                )
+            )
+        kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
+        if not kitFile.exists():
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
+                )
+            )
+        kitFileFullPath = kitFile.resolve()
+        if kitFileFullPath in disposed_engines:
+            raise Exception(
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+            )
+        session = getLocalSession(directory)
+        try:
+            scene = sessionFromFormation(session, formationIdInput)
+        except FormationNotFound:
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
+                )
+            )
+        return FormationToSceneFromLocalKitResponse(scene=scene)
 
 
 class Mutation(ObjectType):

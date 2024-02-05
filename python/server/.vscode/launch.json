@@ -22,11 +22,7 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "args": [
-                "--cov-report",
-                "html",
-                "--cov"
-            ],
+            "args": [],
             "justMyCode": true
         }
     ]

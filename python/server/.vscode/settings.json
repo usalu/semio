@@ -13,7 +13,10 @@
     "python.analysis.typeCheckingMode": "off",
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-        "."
-    ],
+    // "python.testing.pytestArgs": [
+    //     "--cov",
+    //     "--cov-config=pyproject.toml",
+    //     "--cov-report html",
+    //     "--import-mode importlib"
+    // ],
 }

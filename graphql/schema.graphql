@@ -1,5 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
+  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -157,6 +158,45 @@ enum LoadLocalKitError {
   NO_PERMISSION_TO_READ_KIT
 }
 
+type FormationToSceneFromLocalKitResponse {
+  scene: Scene
+  error: RemoveFormationFromLocalKitError
+}
+
+type Scene {
+  objects: [Object]!
+}
+
+type Object {
+  piece: Piece
+  plane: Plane
+  parent: Object
+}
+
+type RemoveFormationFromLocalKitError {
+  code: FormationToSceneFromLocalKitResponseErrorCode!
+  message: String
+}
+
+enum FormationToSceneFromLocalKitResponseErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_READ_KIT
+  FORMATION_DOES_NOT_EXIST
+}
+
+input FormationIdInput {
+  name: String!
+  qualities: [QualityInput!]!
+}
+
+input QualityInput {
+  name: String!
+  value: String!
+  unit: String
+}
+
 type Mutation {
   createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
   updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
@@ -235,12 +275,6 @@ input VectorInput {
 input SpecifierInput {
   context: String!
   group: String!
-}
-
-input QualityInput {
-  name: String!
-  value: String!
-  unit: String
 }
 
 input FormationInput {
@@ -375,22 +409,4 @@ enum AddFormationToLocalKitErrorCode {
 
 type RemoveFormationFromLocalKitMutation {
   error: RemoveFormationFromLocalKitError
-}
-
-type RemoveFormationFromLocalKitError {
-  code: RemoveFormationFromLocalKitErrorCode!
-  message: String
-}
-
-enum RemoveFormationFromLocalKitErrorCode {
-  DIRECTORY_DOES_NOT_EXIST
-  DIRECTORY_IS_NOT_A_DIRECTORY
-  DIRECTORY_HAS_NO_KIT
-  NO_PERMISSION_TO_MODIFY_KIT
-  FORMATION_DOES_NOT_EXIST
-}
-
-input FormationIdInput {
-  name: String!
-  qualities: [QualityInput!]!
 }

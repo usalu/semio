@@ -20,15 +20,20 @@
 semio script.
 """
 
-from typing import Union
+from typing import Union, List
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from fastapi import FastAPI
+from uvicorn import run
+
+SEMIO_HOST_HOST = "0.0.0.0"
+SEMIO_HOST_PORT = 8000
+
 
 class Representation(BaseModel):
     url: str
     lod: str
-    tags: list[str]
+    tags: List[str]
 
 
 class Specifier(BaseModel):
@@ -56,11 +61,11 @@ class Plane(BaseModel):
 
 class Port(BaseModel):
     plane: Plane
-    specifiers: list[Specifier]
+    specifiers: List[Specifier]
 
 
 class PortId(BaseModel):
-    specifiers: list[Specifier]
+    specifiers: List[Specifier]
 
 
 class Quality(BaseModel):
@@ -73,14 +78,14 @@ class Type(BaseModel):
     name: str
     explanation: str
     icon: str
-    representations: list[Representation]
-    ports: list[Port]
-    qualities: list[Quality]
+    representations: List[Representation]
+    ports: List[Port]
+    qualities: List[Quality]
 
 
 class TypeId(BaseModel):
     name: str
-    qualities: list[Quality]
+    qualities: List[Quality]
 
 
 class Piece(BaseModel):
@@ -110,14 +115,14 @@ class Formation(BaseModel):
     name: str
     explanation: str
     icon: str
-    pieces: list[Piece]
-    attractions: list[Attraction]
-    qualities: list[Quality]
+    pieces: List[Piece]
+    attractions: List[Attraction]
+    qualities: List[Quality]
 
 
 class FormationId(BaseModel):
     name: str
-    qualities: list[Quality]
+    qualities: List[Quality]
 
 
 class Kit(BaseModel):
@@ -125,8 +130,8 @@ class Kit(BaseModel):
     explanation: str
     icon: str
     url: str
-    types: list[Type]
-    formations: list[Formation]
+    types: List[Type]
+    formations: List[Formation]
 
 
 class Parameter(BaseModel):
@@ -134,34 +139,77 @@ class Parameter(BaseModel):
     value: str
 
 
-class Script(ABC,BaseModel):
+class Script(ABC):
     name: str
     explanation: str
     icon: str
-    parameters: list[Parameter]
+    parameters: List[Parameter]
 
 
-class Prototype(Script):
-    pass
-
-class Modification(Script):
-    pass
-
-class Choreography(Script):
-    pass
+class Prototype(Script, ABC):
+    @abstractmethod
+    def prototype(self, parameters: List[Parameter]) -> Type:
+        pass
 
 
-class Hoster(FastAPI):
-    def __init__(self,):
-        super().__init__()
-
-hoster = Hoster()
-
-@hoster.get("/")
-def read_root():
-    return {"scripts":"A description of the scripts available."}
+class Modification(Script, ABC):
+    @staticmethod
+    @abstractmethod
+    def modify(type: Type, parameters: List[Parameter]) -> Type:
+        pass
 
 
-@hoster.post("/transform/{name}")
-def transformations(name:str ,formation: Formation, parameters: list[Parameter]) -> Formation:
-    return {"formation": formation}
+class Choreography(Script, ABC):
+    @staticmethod
+    @abstractmethod
+    def choreograph(parameters: List[Parameter]) -> Formation:
+        pass
+
+
+class Transformation(Script, ABC):
+    @staticmethod
+    @abstractmethod
+    def transform(formation: Formation, parameters: List[Parameter]) -> Formation:
+        pass
+
+
+class Synthesis(Script, ABC):
+    @staticmethod
+    @abstractmethod
+    def synthesize(formation: Formation, parameters: List[Parameter]) -> Quality:
+        pass
+
+
+class Host(FastAPI):
+    def __init__(
+        self,
+        prototypes: List[Prototype] = [],
+        modifications: List[Modification] = [],
+        choreographies: List[Choreography] = [],
+        transformations: List[Transformation] = [],
+        syntheses: List[Synthesis] = [],
+    ):
+        super().__init__(separate_input_output_schemas=False)
+
+        self.add_api_route("/", self.read_root, methods=["GET"])
+        self.add_api_route("/transform/{name}", self.transform, methods=["POST"])
+
+        self.prototypes = prototypes
+        self.modifications = modifications
+        self.choreographies = choreographies
+        self.transformations = transformations
+        self.syntheses = syntheses
+
+    def read_root(self):
+        return {"scripts": "A description of the scripts available."}
+
+    def transform(
+        self, name: str, formation: Formation, parameters: List[Parameter]
+    ) -> Formation:
+        formation = [p for p in self.transformations if p.name == name][0].transform(
+            formation, parameters
+        )
+        return {"formation": formation}
+
+    def run(self):
+        run(self, host=SEMIO_HOST_HOST, port=SEMIO_HOST_PORT)

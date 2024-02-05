@@ -1,12 +1,20 @@
 {
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: FastAPI",
             "type": "python",
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "script:app",
+                "semio:hoster",
                 "--reload"
             ],
             "jinja": false,
@@ -23,6 +31,6 @@
                 "--cov"
             ],
             "justMyCode": true
-        }
+        },
     ]
 }
