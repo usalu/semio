@@ -1,16 +1,22 @@
 from pytest import mark
 from graphene.test import Client
 from deepdiff import DeepDiff, Delta
-from semio import schema
+from server import schema
 
-createLocalKit = open("../graphql/createLocalKit.graphql", "r").read()
-updateLocalKitMetadata = open("../graphql/updateLocalKitMetadata.graphql", "r").read()
-deleteLocalKit = open("../graphql/deleteLocalKit.graphql", "r").read()
-addTypeToLocalKit = open("../graphql/addTypeToLocalKit.graphql", "r").read()
-removeTypeFromLocalKit = open("../graphql/removeTypeFromLocalKit.graphql", "r").read()
-addFormationToLocalKit = open("../graphql/addFormationToLocalKit.graphql", "r").read()
+createLocalKit = open("../../graphql/createLocalKit.graphql", "r").read()
+updateLocalKitMetadata = open(
+    "../../graphql/updateLocalKitMetadata.graphql", "r"
+).read()
+deleteLocalKit = open("../../graphql/deleteLocalKit.graphql", "r").read()
+addTypeToLocalKit = open("../../graphql/addTypeToLocalKit.graphql", "r").read()
+removeTypeFromLocalKit = open(
+    "../../graphql/removeTypeFromLocalKit.graphql", "r"
+).read()
+addFormationToLocalKit = open(
+    "../../graphql/addFormationToLocalKit.graphql", "r"
+).read()
 removeFormationFromLocalKit = open(
-    "../graphql/removeFormationFromLocalKit.graphql", "r"
+    "../../graphql/removeFormationFromLocalKit.graphql", "r"
 ).read()
 
 

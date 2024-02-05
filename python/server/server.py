@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# semio
-# Copyright (C) 2023 Ueli Saluz
+# semio server.
+# Copyright (C) 2024 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -2293,7 +2293,7 @@ app.add_url_rule(
     ),
 )
 if app.debug:
-    with open("../graphql/schema.graphql", "w") as f:
+    with open("../../graphql/schema.graphql", "w") as f:
         f.write(str(schema))
 
     engine = create_engine("sqlite:///debug/semio.db")
