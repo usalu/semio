@@ -160,7 +160,7 @@ enum LoadLocalKitError {
 
 type FormationToSceneFromLocalKitResponse {
   scene: Scene
-  error: RemoveFormationFromLocalKitError
+  error: FormationToSceneFromLocalKitResponseError
 }
 
 type Scene {
@@ -173,7 +173,7 @@ type Object {
   parent: Object
 }
 
-type RemoveFormationFromLocalKitError {
+type FormationToSceneFromLocalKitResponseError {
   code: FormationToSceneFromLocalKitResponseErrorCode!
   message: String
 }
@@ -188,7 +188,7 @@ enum FormationToSceneFromLocalKitResponseErrorCode {
 
 input FormationIdInput {
   name: String!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input QualityInput {
@@ -230,8 +230,8 @@ input KitInput {
   explanation: String
   icon: String
   url: String
-  types: [TypeInput!]!
-  formations: [FormationInput!]!
+  types: [TypeInput!]
+  formations: [FormationInput!]
 }
 
 input TypeInput {
@@ -240,18 +240,18 @@ input TypeInput {
   icon: String
   representations: [RepresentationInput!]!
   ports: [PortInput!]!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input RepresentationInput {
   url: String!
   lod: String
-  tags: [String!]!
+  tags: [String!]
 }
 
 input PortInput {
   plane: PlaneInput!
-  specifiers: [SpecifierInput!]!
+  specifiers: [SpecifierInput!]
 }
 
 input PlaneInput {
@@ -283,7 +283,7 @@ input FormationInput {
   icon: String
   pieces: [PieceInput!]!
   attractions: [AttractionInput!]!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input PieceInput {
@@ -293,7 +293,7 @@ input PieceInput {
 
 input TypeIdInput {
   name: String!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input AttractionInput {
@@ -315,7 +315,7 @@ input TypePieceSideInput {
 }
 
 input PortIdInput {
-  specifiers: [SpecifierInput!]!
+  specifiers: [SpecifierInput!]
 }
 
 type UpdateLocalKitMetadataMutation {
@@ -409,4 +409,17 @@ enum AddFormationToLocalKitErrorCode {
 
 type RemoveFormationFromLocalKitMutation {
   error: RemoveFormationFromLocalKitError
+}
+
+type RemoveFormationFromLocalKitError {
+  code: RemoveFormationFromLocalKitErrorCode!
+  message: String
+}
+
+enum RemoveFormationFromLocalKitErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_MODIFY_KIT
+  FORMATION_DOES_NOT_EXIST
 }

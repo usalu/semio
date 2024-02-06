@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -73,6 +75,7 @@
     <None Include="Resources\addTypeToLocalKit.graphql" />
     <None Include="Resources\createLocalKit.graphql" />
     <None Include="Resources\deleteLocalKit.graphql" />
+    <None Include="Resources\formationToSceneFromLocalKit.graphql" />
     <None Include="Resources\loadLocalKit.graphql" />
     <None Include="Resources\removeFormationFromLocalKit.graphql" />
     <None Include="Resources\removeTypeFromLocalKit.graphql" />

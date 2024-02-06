@@ -607,6 +607,45 @@ public class FormationGoo : GH_Goo<Formation>
     }
 }
 
+public class SceneGoo : GH_Goo<Scene>
+{
+    public SceneGoo()
+    {
+        Value = new Scene();
+    }
+
+    public SceneGoo(Scene scene)
+    {
+        Value = scene;
+    }
+
+    public override bool IsValid { get; }
+    public override string TypeName => "Scene";
+    public override string TypeDescription { get; }
+
+    public override IGH_Goo Duplicate()
+    {
+        return new SceneGoo(Value.DeepClone());
+    }
+
+    public override string ToString()
+    {
+        return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("Scene", Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("Scene").Deserialize<Scene>();
+        return base.Read(reader);
+    }
+}
+
 public class KitGoo : GH_Goo<Kit>
 {
     public KitGoo()
@@ -848,6 +887,27 @@ public class FormationParam : SemioPersistentParam<FormationGoo>
     }
 }
 
+public class SceneParam : SemioPersistentParam<SceneGoo>
+{
+    public SceneParam() : base("Scene", "Sn", "", "semio", "Params")
+    {
+    }
+
+    public override Guid ComponentGuid => new("7E26A3C8-4F95-485D-8288-63DC9C44E9A4");
+
+    protected override Bitmap Icon => Resources.scene_24x24;
+
+    protected override GH_GetterResult Prompt_Singular(ref SceneGoo value)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override GH_GetterResult Prompt_Plural(ref List<SceneGoo> values)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 #endregion
 
 #region Components
@@ -921,7 +981,8 @@ public class RepresentationComponent : SemioComponent
 
         DA.SetData(0, representationGoo);
         DA.SetData(1, representationGoo.Value.Url);
-        DA.SetData(2, representationGoo.Value.Lod);
+        if (representationGoo.Value.Lod != null)
+            DA.SetData(2, representationGoo.Value.Lod);
         DA.SetDataList(3, representationGoo.Value.Tags);
     }
 }
@@ -1029,9 +1090,10 @@ public class PortComponent : SemioComponent
         if (specifierGoos.Count > 0) portGoo.Value.Specifiers = specifierGoos.Select(s => s.Value).ToList();
 
         DA.SetData(0, portGoo);
-        DA.SetData(1, portGoo.Value.Plane != null ? portGoo.Value.Plane.convert() : null);
-        DA.SetDataList(2, portGoo.Value.Specifiers?.Select(s => new SpecifierGoo(s.DeepClone()
-        )));
+        DA.SetData(1, portGoo.Value.Plane?.convert());
+        if (portGoo.Value.Specifiers != null)
+            DA.SetDataList(2, portGoo.Value.Specifiers.Select(s => new SpecifierGoo(s.DeepClone()
+            )));
     }
 }
 
@@ -1091,7 +1153,8 @@ public class QualityComponent : SemioComponent
         DA.SetData(0, qualityGoo);
         DA.SetData(1, qualityGoo.Value.Name);
         DA.SetData(2, qualityGoo.Value.Value);
-        DA.SetData(3, qualityGoo.Value.Unit);
+        if (qualityGoo.Value.Unit != null)
+            DA.SetData(3, qualityGoo.Value.Unit);
     }
 }
 
@@ -1177,11 +1240,16 @@ public class TypeComponent : SemioComponent
 
         DA.SetData(0, typeGoo);
         DA.SetData(1, typeGoo.Value.Name);
-        DA.SetData(2, typeGoo.Value.Explanation);
-        DA.SetData(3, typeGoo.Value.Icon);
-        DA.SetDataList(4, typeGoo.Value.Representations?.Select(r => new RepresentationGoo(r.DeepClone())));
-        DA.SetDataList(5, typeGoo.Value.Ports?.Select(p => new PortGoo(p.DeepClone())));
-        DA.SetDataList(6, typeGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
+        if (typeGoo.Value.Explanation != null)
+            DA.SetData(2, typeGoo.Value.Explanation);
+        if (typeGoo.Value.Icon != null)
+            DA.SetData(3, typeGoo.Value.Icon);
+        if (typeGoo.Value.Representations != null)
+            DA.SetDataList(4, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
+        if (typeGoo.Value.Ports != null)
+            DA.SetDataList(5, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
+        if (typeGoo.Value.Qualities != null)
+            DA.SetDataList(6, typeGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
     }
 }
 
@@ -1237,14 +1305,21 @@ public class PieceComponent : SemioComponent
 
         if (id != "") pieceGoo.Value.Id = id;
 
-        if (typeName != "") pieceGoo.Value.Type.Name = typeName;
+        if (typeName != "")
+        {
+            if (pieceGoo.Value.Type == null)
+                pieceGoo.Value.Type = new TypeId { Name = typeName };
+            else
+                pieceGoo.Value.Type.Name = typeName;
+        }
 
         if (typeQualityGoos.Count > 0) pieceGoo.Value.Type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
 
         DA.SetData(0, pieceGoo);
         DA.SetData(1, pieceGoo.Value.Id);
         DA.SetData(2, pieceGoo.Value.Type?.Name);
-        DA.SetDataList(3, pieceGoo.Value.Type?.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
+        if (pieceGoo.Value.Type?.Qualities != null)
+            DA.SetDataList(3, pieceGoo.Value.Type.Qualities.Select(q => new QualityGoo(q.DeepClone())));
     }
 }
 
@@ -1292,14 +1367,36 @@ public class SideComponent : SemioComponent
         DA.GetData(1, ref pieceId);
         DA.GetDataList(2, specifierGoos);
 
-        if (pieceId != "") sideGoo.Value.Piece.Id = pieceId;
+        if (pieceId != "")
+        {
+            if (sideGoo.Value.Piece == null)
+                sideGoo.Value.Piece = new PieceSide { Id = pieceId };
+            else
+                sideGoo.Value.Piece.Id = pieceId;
+        }
 
         if (specifierGoos.Count > 0)
-            sideGoo.Value.Piece.Type.Port.Specifiers = specifierGoos.Select(s => s.Value).ToList();
+        {
+            if (sideGoo.Value.Piece == null)
+                sideGoo.Value.Piece = new PieceSide
+                {
+                    Type = new TypePieceSide
+                        { Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() } }
+                };
+            else if (sideGoo.Value.Piece.Type == null)
+                sideGoo.Value.Piece.Type = new TypePieceSide
+                    { Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() } };
+            else if (sideGoo.Value.Piece.Type.Port == null)
+                sideGoo.Value.Piece.Type.Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() };
+            else
+                sideGoo.Value.Piece.Type.Port.Specifiers = specifierGoos.Select(s => s.Value).ToList();
+        }
 
         DA.SetData(0, sideGoo);
-        DA.SetData(1, sideGoo.Value.Piece?.Id);
-        DA.SetDataList(2, sideGoo.Value.Piece?.Type.Port.Specifiers?.Select(s => new SpecifierGoo(s.DeepClone())));
+        if (sideGoo.Value.Piece != null)
+            DA.SetData(1, sideGoo.Value.Piece.Id);
+        if (sideGoo.Value.Piece?.Type?.Port?.Specifiers != null)
+            DA.SetDataList(2, sideGoo.Value.Piece.Type.Port.Specifiers.Select(s => new SpecifierGoo(s.DeepClone())));
     }
 }
 
@@ -1350,8 +1447,10 @@ public class AttractionComponent : SemioComponent
         if (DA.GetData(2, ref attractedSideGoo)) attractionGoo.Value.Attracted = attractedSideGoo.Value;
 
         DA.SetData(0, attractionGoo);
-        DA.SetData(1, new SideGoo(attractionGoo.Value.Attracting.DeepClone()));
-        DA.SetData(2, new SideGoo(attractionGoo.Value.Attracted.DeepClone()));
+        if (attractionGoo.Value.Attracting != null)
+            DA.SetData(1, new SideGoo(attractionGoo.Value.Attracting.DeepClone()));
+        if (attractionGoo.Value.Attracted != null)
+            DA.SetData(2, new SideGoo(attractionGoo.Value.Attracted?.DeepClone()));
     }
 }
 
@@ -1436,11 +1535,16 @@ public class FormationComponent : SemioComponent
 
         DA.SetData(0, formationGoo);
         DA.SetData(1, formationGoo.Value.Name);
-        DA.SetData(2, formationGoo.Value.Explanation);
-        DA.SetData(3, formationGoo.Value.Icon);
-        DA.SetDataList(4, formationGoo.Value.Pieces?.Select(p => new PieceGoo(p.DeepClone())));
-        DA.SetDataList(5, formationGoo.Value.Attractions?.Select(a => new AttractionGoo(a.DeepClone())));
-        DA.SetDataList(6, formationGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone())));
+        if (formationGoo.Value.Explanation != null)
+            DA.SetData(2, formationGoo.Value.Explanation);
+        if (formationGoo.Value.Icon != null)
+            DA.SetData(3, formationGoo.Value.Icon);
+        if (formationGoo.Value.Pieces != null)
+            DA.SetDataList(4, formationGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
+        if (formationGoo.Value.Attractions != null)
+            DA.SetDataList(5, formationGoo.Value.Attractions.Select(a => new AttractionGoo(a.DeepClone())));
+        if (formationGoo.Value.Qualities != null)
+            DA.SetDataList(6, formationGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
     }
 }
 
@@ -1463,7 +1567,7 @@ public class LoadKitComponent : SemioComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Directory", "D?",
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "Load the kit.", GH_ParamAccess.item, false);
@@ -1612,7 +1716,7 @@ public class DeleteKitComponent : SemioComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Directory", "D?",
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "Delete the kit.", GH_ParamAccess.item, false);
@@ -1668,7 +1772,7 @@ public class AddTypeComponent : SemioComponent
     {
         pManager.AddParameter(new TypeParam(), "Type", "Ty",
             "Type to add to the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Directory", "D?",
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
@@ -1725,7 +1829,7 @@ public class AddFormationComponent : SemioComponent
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
             "Formation to add to the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Directory", "D?",
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
@@ -1791,7 +1895,8 @@ public class RemoveTypeComponent : SemioComponent
         pManager.AddParameter(new QualityParam(), "Type Qualities", "TyQl*",
             "If there is more than one type with the same name use qualities to precisely identify the type.",
             GH_ParamAccess.list);
-        pManager.AddTextParameter("Directory", "D?",
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
@@ -1822,12 +1927,12 @@ public class RemoveTypeComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
-
-        var response = new Api().RemoveTypeFromLocalKit(path, new TypeId
+        var type = new TypeId
         {
             Name = typeName,
-            Qualities = typeQualityGoos.Select(q => q.Value).ToList()
-        });
+        };
+        if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
+        var response = new Api().RemoveTypeFromLocalKit(path,type);
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -1861,7 +1966,7 @@ public class RemoveFormationComponent : SemioComponent
             "If there is more than one formation with the same name use qualities to precisely identify the formation.",
             GH_ParamAccess.list);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Directory", "D?",
+        pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
@@ -1891,12 +1996,12 @@ public class RemoveFormationComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
-
-        var response = new Api().RemoveFormationFromLocalKit(path, new FormationId
+        var formation = new FormationId
         {
             Name = formationName,
-            Qualities = formationQualityGoos.Select(q => q.Value).ToList()
-        });
+        };
+        if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
+        var response = new Api().RemoveFormationFromLocalKit(path, formation);
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -1910,6 +2015,10 @@ public class RemoveFormationComponent : SemioComponent
 }
 
 #endregion
+
+#endregion
+
+#region Scripting
 
 #region Serialize
 
@@ -2185,6 +2294,136 @@ public class DeserializeFormationComponent : SemioComponent
 }
 
 #endregion
+
+#endregion
+
+#region Viewing
+
+public class GetSceneComponent : SemioComponent
+{
+    public GetSceneComponent()
+        : base("GetScene", "!Scn",
+            "Get a scene from a formation.",
+            "semio", "Viewing")
+    {
+    }
+
+    public override Guid ComponentGuid => new("55F3BF32-3B4D-4355-BFAD-F3CA3847FC94");
+
+    protected override Bitmap Icon => Resources.scene_get_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Formation Name", "FoNa",
+            "Name of formation to convert to a scene.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formation Qualities", "FoQl*", "Optional qualities to identify the formation.",
+            GH_ParamAccess.list);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Directory", "Di?",
+            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+            GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddBooleanParameter("Run", "R", "Convert the formation to a scene.", GH_ParamAccess.item, false);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new SceneParam(), "Scene", "Sc", "Scene.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var formationName = "";
+        var formationQualityGoos = new List<QualityGoo>();
+        var path = "";
+        var run = false;
+
+        DA.GetData(0, ref formationName);
+        DA.GetDataList(1, formationQualityGoos);
+        if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
+        DA.GetData(3, ref run);
+
+        if (!run) return;
+
+        var response = new Api().FormationToSceneFromLocalKit(path, new FormationId
+        {
+            Name = formationName,
+            Qualities = formationQualityGoos.Select(q => q.Value).ToList()
+        });
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+            return;
+        }
+
+        DA.SetData(0, new SceneGoo(response.Scene));
+    }
+}
+public class FilterSceneComponent : SemioComponent
+{
+    public FilterSceneComponent()
+        : base("FilterScene", "|Scn",
+            "Filter a scene.",
+            "semio", "Viewing")
+    {
+    }
+
+    public override Guid ComponentGuid => new("232796C0-5ADF-47FF-9FC4-058CB7003C5A");
+
+    protected override Bitmap Icon => Resources.scene_filter_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+            "Scene to filter.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Level of Details", "LD*", "Optional level of details of the representations in the scene.",
+            GH_ParamAccess.list);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.", GH_ParamAccess.list);
+        pManager[2].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+",
+            "Representation of the objects of the scene.", GH_ParamAccess.list);
+        pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Pieces Ids", "PcId+",
+            "Ids of the pieces from the formation that correspond to the objects of the scene.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
+            "Ids of the parent pieces from the formation that correspond to the objects of the scene.",
+            GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var sceneGoo = new SceneGoo();
+        var lods = new List<string>();
+        var tags = new List<string>();
+
+        DA.GetData(0, ref sceneGoo);
+        DA.GetDataList(1, lods);
+        DA.GetDataList(2, tags);
+
+        // filter the representations of the scene
+        // if lods are used, only the representations with the specified lods are returned
+        // if tags are used, each representations must have at least one of the specified tags
+        var representations = sceneGoo.Value.Objects
+            .Select(o => o.Piece.Type.Representations
+                .First(r => r.Lod == null ? lods.Count == 0 :
+                    lods.Contains(r.Lod) &&
+                    r.Tags == null ? tags.Count == 0 : r.Tags.Any(t => tags.Contains(t)))).ToList();
+        var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
+        var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
+        var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
+
+        DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
+        DA.SetDataList(1, planes.Select(p=>p.convert()));
+        DA.SetDataList(2, piecesIds);
+        DA.SetDataList(3, parentsPiecesIds);
+
+    }
+}
 
 #endregion
 

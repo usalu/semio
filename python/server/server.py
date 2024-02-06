@@ -2531,7 +2531,7 @@ class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
 
 class FormationToSceneFromLocalKitResponseErrorNode(ObjectType):
     class Meta:
-        name = "RemoveFormationFromLocalKitError"
+        name = "FormationToSceneFromLocalKitResponseError"
 
     code = NonNull(FormationToSceneFromLocalKitResponseErrorCode)
     message = graphene.String()

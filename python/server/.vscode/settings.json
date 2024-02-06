@@ -6,6 +6,12 @@
             "driver": "SQLite",
             "database": "../../examples/metabolism/.semio/kit.sqlite3",
             "name": "metabolism"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "test",
+            "database": "../../examples/kit1/.semio/kit.sqlite3"
         }
     ],
     "editor.formatOnSave": true,

@@ -12,37 +12,37 @@ using Semio.Properties;
 
 #region Copilot
 
-//    type Query
-//    {
-//        loadLocalKit(directory: String!): LoadLocalKitResponse
-//    }
+//type Query
+//{
+//loadLocalKit(directory: String!): LoadLocalKitResponse
+//  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+//}
 
-//    type LoadLocalKitResponse
-//    {
-//        kit: Kit
-//      error: LoadLocalKitError
-//    }
+//type LoadLocalKitResponse
+//{
+//kit: Kit
+//  error: LoadLocalKitError
+//}
 
-//    type Kit implements Artifact
-//    {
-//        name: String!
+//type Kit implements Artifact {
+//  name: String!
 //  explanation: String
-//      icon: String
-//      createdAt: DateTime!
+//  icon: String
+//  createdAt: DateTime!
 //  modifiedAt: DateTime!
 //  url: String
-//      types: [Type!]!
+//  types: [Type!]!
 //  formations: [Formation!]!
 //  parent: Artifact
-//      children: [Artifact!]!
+//  children: [Artifact!]!
 //  references: [Artifact!]!
 //  referencedBy: [Artifact!]!
 //  relatedTo: [Artifact!]!
 //}
 
-//    interface Artifact
-//    {
-//        name: String!
+//interface Artifact
+//{
+//    name: String!
 //  explanation: String
 //  icon: String
 //  parent: Artifact
@@ -59,9 +59,8 @@ using Semio.Properties;
 //"""
 //scalar DateTime
 
-//type Type implements Artifact
-//    {
-//        name: String!
+//type Type implements Artifact {
+//  name: String!
 //  explanation: String
 //  icon: String
 //  createdAt: DateTime!
@@ -78,394 +77,410 @@ using Semio.Properties;
 //  relatedTo: [Artifact!]!
 //}
 
-//    type Representation
-//    {
-//        url: String!
+//type Representation
+//{
+//    url: String!
 //  lod: String
-//      type: Type
-//      tags: [String!]!
+//  type: Type
+//  tags: [String!]!
 //}
 
-//    type Port
-//    {
-//        type: Type
-//      specifiers: [Specifier!]!
+//type Port
+//{
+//    type: Type
+//  specifiers: [Specifier!]!
 //  attractings: [Attraction!]!
 //  attracteds: [Attraction!]!
 //  plane: Plane
-//    }
+//}
 
-//    type Specifier
-//    {
-//        context: String!
+//type Specifier
+//{
+//    context: String!
 //  group: String!
 //  port: Port
-//    }
+//}
 
-//    type Attraction
-//    {
-//        formation: Formation
-//      attracting: Side!
+//type Attraction
+//{
+//    formation: Formation
+//  attracting: Side!
 //  attracted: Side!
 //}
 
-//    type Formation implements Artifact
-//    {
-//        name: String!
+//type Formation implements Artifact {
+//  name: String!
 //  explanation: String
-//      icon: String
-//      createdAt: DateTime!
+//  icon: String
+//  createdAt: DateTime!
 //  modifiedAt: DateTime!
 //  kit: Kit
-//      pieces: [Piece!]!
+//  pieces: [Piece!]!
 //  attractions: [Attraction!]!
 //  qualities: [Quality!]!
 //  parent: Artifact
-//      children: [Artifact!]!
+//  children: [Artifact!]!
 //  references: [Artifact!]!
 //  referencedBy: [Artifact!]!
 //  relatedTo: [Artifact!]!
 //}
 
-//    type Piece
-//    {
-//        type: Type
-//      formation: Formation
-//      attractings: [Attraction!]!
+//type Piece
+//{
+//    type: Type
+//  formation: Formation
+//  attractings: [Attraction!]!
 //  attracteds: [Attraction!]!
 //  id: String!
 //}
 
-//    type Quality
-//    {
-//        name: String!
+//type Quality
+//{
+//    name: String!
 //  value: String!
 //  unit: String
-//      type: Type
-//      formation: Formation
-//    }
-
-//    type Side
-//    {
-//        piece: PieceSide!
+//  type: Type
+//  formation: Formation
 //}
 
-//    type PieceSide
-//    {
-//        id: String!
+//type Side
+//{
+//    piece: PieceSide!
+//}
+
+//type PieceSide
+//{
+//    id: String!
 //  type: TypePieceSide!
 //}
 
-//    type TypePieceSide
-//    {
-//        port: Port
-//    }
+//type TypePieceSide
+//{
+//    port: Port
+//}
 
-//    type Plane
-//    {
-//        origin: Point!
+//type Plane
+//{
+//    origin: Point!
 //  xAxis: Vector!
 //  yAxis: Vector!
 //}
 
-//    type Point
-//    {
-//        x: Float!
+//type Point
+//{
+//    x: Float!
 //  y: Float!
 //  z: Float!
 //}
 
-//    type Vector
-//    {
-//        x: Float!
+//type Vector
+//{
+//    x: Float!
 //  y: Float!
 //  z: Float!
 //}
 
-//    enum LoadLocalKitError
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_READ_KIT
-//    }
+//enum LoadLocalKitError
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_READ_KIT
+//}
+//type FormationToSceneFromLocalKitResponse
+//{
+//    scene: Scene
+//    error: FormationToSceneFromLocalKitResponseError
+//}
 
-//    type Mutation
-//    {
-//        createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
-//      updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
-//      deleteLocalKit(directory: String!): DeleteLocalKitMutation
-//      addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
-//      removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
-//      addFormationToLocalKit(directory: String!, formationInput: FormationInput!): AddFormationToLocalKitMutation
-//      removeFormationFromLocalKit(directory: String!, formationId: FormationIdInput!): RemoveFormationFromLocalKitMutation
-//    }
+//type Scene
+//{
+//    objects: [Object]!
+//}
 
-//    type CreateLocalKitMutation
-//    {
-//        kit: Kit
-//      error: CreateLocalKitError
-//    }
+//type Object
+//{
+//    piece: Piece
+//    plane: Plane
+//    parent: Object
+//}
 
-//    type CreateLocalKitError
-//    {
-//        code: CreateLocalKitErrorCode!
+//type FormationToSceneFromLocalKitResponseError
+//{
+//    code: FormationToSceneFromLocalKitResponseErrorCode!
+//    message: String
+//}
+
+//enum FormationToSceneFromLocalKitResponseErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_READ_KIT
+//  FORMATION_DOES_NOT_EXIST
+//}
+
+//input FormationIdInput
+//{
+//    name: String!
+//  qualities: [QualityInput!]
+//}
+
+//input QualityInput
+//{
+//    name: String!
+//  value: String!
+//  unit: String
+//}
+
+//type Mutation
+//{
+//    createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
+//  updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
+//  deleteLocalKit(directory: String!): DeleteLocalKitMutation
+//  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
+//  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
+//  addFormationToLocalKit(directory: String!, formationInput: FormationInput!): AddFormationToLocalKitMutation
+//  removeFormationFromLocalKit(directory: String!, formationId: FormationIdInput!): RemoveFormationFromLocalKitMutation
+//}
+
+//type CreateLocalKitMutation
+//{
+//    kit: Kit
+//  error: CreateLocalKitError
+//}
+
+//type CreateLocalKitError
+//{
+//    code: CreateLocalKitErrorCode!
 //  message: String
-//    }
-
-//    enum CreateLocalKitErrorCode
-//    {
-//        DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_ALREADY_CONTAINS_A_KIT
-//      NO_PERMISSION_TO_CREATE_DIRECTORY
-//      NO_PERMISSION_TO_CREATE_KIT
-//      KIT_INPUT_IS_INVALID
-//    }
-
-//    input KitInput
-//    {
-//        name: String!
-//  explanation: String
-//      icon: String
-//      url: String
-//      types: [TypeInput!]!
-//  formations: [FormationInput!]!
 //}
 
-//    input TypeInput
-//    {
-//        name: String!
+//enum CreateLocalKitErrorCode
+//{
+//    DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_ALREADY_CONTAINS_A_KIT
+//  NO_PERMISSION_TO_CREATE_DIRECTORY
+//  NO_PERMISSION_TO_CREATE_KIT
+//  KIT_INPUT_IS_INVALID
+//}
+
+//input KitInput
+//{
+//    name: String!
 //  explanation: String
-//      icon: String
-//      representations: [RepresentationInput!]!
+//  icon: String
+//  url: String
+//  types: [TypeInput!]
+//    formations: [FormationInput!]
+//}
+
+//input TypeInput
+//{
+//    name: String!
+//  explanation: String
+//  icon: String
+//  representations: [RepresentationInput!]!
 //  ports: [PortInput!]!
-//  qualities: [QualityInput!]!
+//  qualities: [QualityInput!]
 //}
 
-//    input RepresentationInput
-//    {
-//        url: String!
+//input RepresentationInput
+//{
+//    url: String!
 //  lod: String
-//      tags: [String!]!
+//  tags: [String!]
 //}
 
-//    input PortInput
-//    {
-//        plane: PlaneInput!
-//  specifiers: [SpecifierInput!]!
+//input PortInput
+//{
+//    plane: PlaneInput!
+//  specifiers: [SpecifierInput!]
 //}
 
-//    input PlaneInput
-//    {
-//        origin: PointInput!
+//input PlaneInput
+//{
+//    origin: PointInput!
 //  xAxis: VectorInput!
 //  yAxis: VectorInput!
 //}
 
-//    input PointInput
-//    {
-//        x: Float!
+//input PointInput
+//{
+//    x: Float!
 //  y: Float!
 //  z: Float!
 //}
 
-//    input VectorInput
-//    {
-//        x: Float!
+//input VectorInput
+//{
+//    x: Float!
 //  y: Float!
 //  z: Float!
 //}
 
-//    input SpecifierInput
-//    {
-//        context: String!
+//input SpecifierInput
+//{
+//    context: String!
 //  group: String!
 //}
 
-//    input QualityInput
-//    {
-//        name: String!
-//  value: String!
-//  unit: String
-//    }
-
-//    input FormationInput
-//    {
-//        name: String!
+//input FormationInput
+//{
+//    name: String!
 //  explanation: String
-//      icon: String
-//      pieces: [PieceInput!]!
+//  icon: String
+//  pieces: [PieceInput!]!
 //  attractions: [AttractionInput!]!
-//  qualities: [QualityInput!]!
+//  qualities: [QualityInput!]
 //}
 
-//    input PieceInput
-//    {
-//        id: String!
+//input PieceInput
+//{
+//    id: String!
 //  type: TypeIdInput!
 //}
 
-//    input TypeIdInput
-//    {
-//        name: String!
-//  qualities: [QualityInput!]!
+//input TypeIdInput
+//{
+//    name: String!
+//  qualities: [QualityInput!]
 //}
 
-//    input AttractionInput
-//    {
-//        attracting: SideInput!
+//input AttractionInput
+//{
+//    attracting: SideInput!
 //  attracted: SideInput!
 //}
 
-//    input SideInput
-//    {
-//        piece: PieceSideInput!
+//input SideInput
+//{
+//    piece: PieceSideInput!
 //}
 
-//    input PieceSideInput
-//    {
-//        id: String!
+//input PieceSideInput
+//{
+//    id: String!
 //  type: TypePieceSideInput!
 //}
 
-//    input TypePieceSideInput
-//    {
-//        port: PortIdInput!
+//input TypePieceSideInput
+//{
+//    port: PortIdInput!
 //}
 
-//    input PortIdInput
-//    {
-//        specifiers: [SpecifierInput!]!
+//input PortIdInput
+//{
+//    specifiers: [SpecifierInput!]
 //}
 
-//    type UpdateLocalKitMetadataMutation
-//    {
-//        kit: Kit
-//      error: UpdateLocalKitMetadataError
-//    }
+//type UpdateLocalKitMetadataMutation
+//{
+//    kit: Kit
+//  error: UpdateLocalKitMetadataError
+//}
 
-//    type UpdateLocalKitMetadataError
-//    {
-//        code: UpdateLocalKitMetadataErrorCode!
+//type UpdateLocalKitMetadataError
+//{
+//    code: UpdateLocalKitMetadataErrorCode!
 //  message: String
-//    }
+//}
 
-//    enum UpdateLocalKitMetadataErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_UPDATE_KIT
-//      KIT_METADATA_IS_INVALID
-//    }
+//enum UpdateLocalKitMetadataErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_UPDATE_KIT
+//  KIT_METADATA_IS_INVALID
+//}
 
-//    input KitMetadataInput
-//    {
-//        name: String
-//      explanation: String
-//      icon: String
-//      url: String
-//    }
+//input KitMetadataInput
+//{
+//    name: String
+//  explanation: String
+//  icon: String
+//  url: String
+//}
 
-//    type DeleteLocalKitMutation
-//    {
-//        error: DeleteLocalKitError
-//    }
+//type DeleteLocalKitMutation
+//{
+//    error: DeleteLocalKitError
+//}
 
-//    enum DeleteLocalKitError
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_DELETE_KIT
-//    }
+//enum DeleteLocalKitError
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_DELETE_KIT
+//}
 
-//    type AddTypeToLocalKitMutation
-//    {
-//        type: Type
-//      error: AddTypeToLocalKitError
-//    }
+//type AddTypeToLocalKitMutation
+//{
+//    type: Type
+//  error: AddTypeToLocalKitError
+//}
 
-//    type AddTypeToLocalKitError
-//    {
-//        code: AddTypeToLocalKitErrorCode!
+//type AddTypeToLocalKitError
+//{
+//    code: AddTypeToLocalKitErrorCode!
 //  message: String
-//    }
+//}
 
-//    enum AddTypeToLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_MODIFY_KIT
-//      TYPE_INPUT_IS_INVALID
-//    }
+//enum AddTypeToLocalKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_MODIFY_KIT
+//  TYPE_INPUT_IS_INVALID
+//}
 
-//    type RemoveTypeFromLocalKitMutation
-//    {
-//        error: RemoveTypeFromLocalKitError
-//    }
+//type RemoveTypeFromLocalKitMutation
+//{
+//    error: RemoveTypeFromLocalKitError
+//}
 
-//    type RemoveTypeFromLocalKitError
-//    {
-//        code: RemoveTypeFromLocalKitErrorCode!
+//type RemoveTypeFromLocalKitError
+//{
+//    code: RemoveTypeFromLocalKitErrorCode!
 //  message: String
-//    }
+//}
 
-//    enum RemoveTypeFromLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_MODIFY_KIT
-//      TYPE_DOES_NOT_EXIST
-//      FORMATION_DEPENDS_ON_TYPE
-//    }
+//enum RemoveTypeFromLocalKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_MODIFY_KIT
+//  TYPE_DOES_NOT_EXIST
+//  FORMATION_DEPENDS_ON_TYPE
+//}
 
-//    type AddFormationToLocalKitMutation
-//    {
-//        formation: Formation
-//      error: AddFormationToLocalKitError
-//    }
+//type AddFormationToLocalKitMutation
+//{
+//    formation: Formation
+//  error: AddFormationToLocalKitError
+//}
 
-//    type AddFormationToLocalKitError
-//    {
-//        code: AddFormationToLocalKitErrorCode!
+//type AddFormationToLocalKitError
+//{
+//    code: AddFormationToLocalKitErrorCode!
 //  message: String
-//    }
+//}
 
-//    enum AddFormationToLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_MODIFY_KIT
-//      FORMATION_INPUT_IS_INVALID
-//    }
+//enum AddFormationToLocalKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_MODIFY_KIT
+//  FORMATION_INPUT_IS_INVALID
+//}
 
-//    type RemoveFormationFromLocalKitMutation
-//    {
-//        error: RemoveFormationFromLocalKitError
-//    }
-
-//    type RemoveFormationFromLocalKitError
-//    {
-//        code: RemoveFormationFromLocalKitErrorCode!
-//  message: String
-//    }
-
-//    enum RemoveFormationFromLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST
-//      DIRECTORY_IS_NOT_A_DIRECTORY
-//      DIRECTORY_HAS_NO_KIT
-//      NO_PERMISSION_TO_MODIFY_KIT
-//      FORMATION_DOES_NOT_EXIST
-//    }
-
-//    input FormationIdInput
-//    {
-//        name: String!
-//  qualities: [QualityInput!]!
+//type RemoveFormationFromLocalKitMutation
+//{
+//    error: RemoveFormationFromLocalKitError
 //}
 
 #endregion
@@ -480,17 +495,18 @@ public interface IDeepCloneable<T>
 public class Representation : IDeepCloneable<Representation>
 {
     public string Url { get; set; }
-    public string Lod { get; set; }
-    public List<string> Tags { get; set; }
+    public string? Lod { get; set; }
+    public List<string>? Tags { get; set; }
 
     public Representation DeepClone()
     {
-        return new Representation
+        var representation = new Representation
         {
-            Url = Url,
-            Lod = Lod,
-            Tags = new List<string>(Tags)
+            Url = Url
         };
+        if (Lod != null) representation.Lod = Lod;
+        if (Tags != null) representation.Tags = new List<string>(Tags);
+        return representation;
     }
 
     public override string ToString()
@@ -628,16 +644,17 @@ public class Quality : IDeepCloneable<Quality>
 {
     public string Name { get; set; }
     public string Value { get; set; }
-    public string Unit { get; set; }
+    public string? Unit { get; set; }
 
     public Quality DeepClone()
     {
-        return new Quality
+        var quality = new Quality
         {
             Name = Name,
-            Value = Value,
-            Unit = Unit
+            Value = Value
         };
+        if (Unit != null) quality.Unit = Unit;
+        return quality;
     }
 
     public override string ToString()
@@ -649,23 +666,25 @@ public class Quality : IDeepCloneable<Quality>
 public class Type : IDeepCloneable<Type>
 {
     public string Name { get; set; }
-    public string Explanation { get; set; }
-    public string Icon { get; set; }
+    public string? Explanation { get; set; }
+    public string? Icon { get; set; }
     public List<Representation> Representations { get; set; }
     public List<Port> Ports { get; set; }
     public List<Quality> Qualities { get; set; }
 
     public Type DeepClone()
     {
-        return new Type
+        var type = new Type
         {
             Name = Name,
-            Explanation = Explanation,
-            Icon = Icon,
             Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
             Ports = new List<Port>(Ports.Select(p => p.DeepClone())),
             Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
+        if (Explanation != null) type.Explanation = Explanation;
+
+        if (Icon != null) type.Icon = Icon;
+        return type;
     }
 
     public override string ToString()
@@ -677,15 +696,16 @@ public class Type : IDeepCloneable<Type>
 public class TypeId : IDeepCloneable<TypeId>
 {
     public string Name { get; set; }
-    public List<Quality> Qualities { get; set; }
+    public List<Quality>? Qualities { get; set; }
 
     public TypeId DeepClone()
     {
-        return new TypeId
+        var typeId = new TypeId
         {
             Name = Name,
-            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
+        if (Qualities != null) typeId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
+        return typeId;
     }
 
     public override string ToString()
@@ -787,30 +807,32 @@ public class Attraction : IDeepCloneable<Attraction>
 
     public override string ToString()
     {
-        return $"Attraction({GetHashCode()})";
+        return $"Attraction(Attracting(Piece: {Attracting.Piece.Id}), Attracted(Piece: {Attracted.Piece.Id}))";
     }
 }
 
 public class Formation : IDeepCloneable<Formation>
 {
     public string Name { get; set; }
-    public string Explanation { get; set; }
-    public string Icon { get; set; }
+    public string? Explanation { get; set; }
+    public string? Icon { get; set; }
     public List<Piece> Pieces { get; set; }
     public List<Attraction> Attractions { get; set; }
-    public List<Quality> Qualities { get; set; }
+    public List<Quality>? Qualities { get; set; }
 
     public Formation DeepClone()
     {
-        return new Formation
+        var formation = new Formation
         {
             Name = Name,
-            Explanation = Explanation,
-            Icon = Icon,
             Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
             Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone())),
-            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
+        if (Explanation != null) formation.Explanation = Explanation;
+
+        if (Icon != null) formation.Icon = Icon;
+        if (Qualities != null) formation.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
+        return formation;
     }
 
     public override string ToString()
@@ -822,15 +844,16 @@ public class Formation : IDeepCloneable<Formation>
 public class FormationId : IDeepCloneable<FormationId>
 {
     public string Name { get; set; }
-    public List<Quality> Qualities { get; set; }
+    public List<Quality>? Qualities { get; set; }
 
     public FormationId DeepClone()
     {
-        return new FormationId
+        var formationId = new FormationId
         {
             Name = Name,
-            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
+        if (Qualities != null) formationId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
+        return formationId;
     }
 
     public override string ToString()
@@ -839,26 +862,126 @@ public class FormationId : IDeepCloneable<FormationId>
     }
 }
 
+public class TypePieceObject : IDeepCloneable<TypePieceObject>
+{
+    public List<Representation> Representations { get; set; }
+
+    public TypePieceObject DeepClone()
+    {
+        return new TypePieceObject
+        {
+            Representations = new List<Representation>(Representations.Select(f => f.DeepClone()))
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"TypePieceObject({GetHashCode()})";
+    }
+}
+
+public class PieceObject : IDeepCloneable<PieceObject>
+{
+    public string Id { get; set; }
+    public TypePieceObject Type { get; set; }
+
+    public PieceObject DeepClone()
+    {
+        return new PieceObject
+        {
+            Id = Id,
+            Type = Type.DeepClone()
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"PieceObject(Id: {Id})";
+    }
+}
+
+public class ParentObject : IDeepCloneable<ParentObject>
+{
+    public Piece Piece { get; set; }
+
+    public ParentObject DeepClone()
+    {
+        return new ParentObject
+        {
+            Piece = Piece.DeepClone()
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"ParentObject({GetHashCode()})";
+    }
+}
+
+public class Object : IDeepCloneable<Object>
+{
+    public PieceObject Piece { get; set; }
+    public Plane Plane { get; set; }
+
+    public ParentObject Parent { get; set; }
+
+    public Object DeepClone()
+    {
+        return new Object
+        {
+            Piece = Piece.DeepClone(),
+            Plane = Plane.DeepClone(),
+            Parent = Parent.DeepClone()
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"Object({GetHashCode()})";
+    }
+}
+
+public class Scene : IDeepCloneable<Scene>
+{
+    public List<Object> Objects { get; set; }
+
+    public Scene DeepClone()
+    {
+        return new Scene
+        {
+            Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"Scene({GetHashCode()})";
+    }
+}
+
 public class Kit : IDeepCloneable<Kit>
 {
     public string Name { get; set; }
-    public string Explanation { get; set; }
-    public string Icon { get; set; }
-    public string Url { get; set; }
+    public string? Explanation { get; set; }
+    public string? Icon { get; set; }
+    public string? Url { get; set; }
     public List<Type> Types { get; set; }
     public List<Formation> Formations { get; set; }
 
     public Kit DeepClone()
     {
-        return new Kit
+        var kit = new Kit
         {
             Name = Name,
-            Explanation = Explanation,
-            Icon = Icon,
-            Url = Url,
             Types = new List<Type>(Types.Select(t => t.DeepClone())),
             Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
         };
+        if (Explanation != null) kit.Explanation = Explanation;
+
+        if (Icon != null) kit.Icon = Icon;
+
+        if (Url != null) kit.Url = Url;
+        return kit;
     }
 
     public override string ToString()
@@ -869,20 +992,22 @@ public class Kit : IDeepCloneable<Kit>
 
 public class KitMetadata : IDeepCloneable<KitMetadata>
 {
-    public string Name { get; set; }
-    public string Explanation { get; set; }
-    public string Icon { get; set; }
-    public string Url { get; set; }
+    public string? Name { get; set; }
+    public string? Explanation { get; set; }
+    public string? Icon { get; set; }
+    public string? Url { get; set; }
 
     public KitMetadata DeepClone()
     {
-        return new KitMetadata
-        {
-            Name = Name,
-            Explanation = Explanation,
-            Icon = Icon,
-            Url = Url
-        };
+        var kitMetadata = new KitMetadata();
+        if (Name != null) kitMetadata.Name = Name;
+
+        if (Explanation != null) kitMetadata.Explanation = Explanation;
+
+        if (Icon != null) kitMetadata.Icon = Icon;
+
+        if (Url != null) kitMetadata.Url = Url;
+        return kitMetadata;
     }
 
     public override string ToString()
@@ -1102,7 +1227,31 @@ public class RemoveFormationFromLocalKitResponseContainer
     public RemoveFormationFromLocalKitResponse RemoveFormationFromLocalKit { get; set; }
 }
 
+public enum FormationToSceneFromLocalKitResponseErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_READ_KIT,
+    FORMATION_DOES_NOT_EXIST
+}
 
+public class FormationToSceneFromLocalKitResponseError
+{
+    public FormationToSceneFromLocalKitResponseErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
+
+public class FormationToSceneFromLocalKitResponse
+{
+    public Scene Scene { get; set; }
+    public FormationToSceneFromLocalKitResponseError Error { get; set; }
+}
+
+public class FormationToSceneFromLocalKitResponseContainer
+{
+    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit { get; set; }
+}
 
 public class Api : ICloneable
 {
@@ -1231,6 +1380,17 @@ public class Api : ICloneable
         return response.Data.RemoveFormationFromLocalKit;
     }
 
+    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit(string directory, FormationId formation)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.formationToSceneFromLocalKit,
+            OperationName = "FormationToSceneFromLocalKit",
+            Variables = new { directory, formation }
+        };
+        var response = Client.SendQueryAsync<FormationToSceneFromLocalKitResponseContainer>(query).Result;
+        return response.Data.FormationToSceneFromLocalKit;
+    }
 }
 
 #endregion

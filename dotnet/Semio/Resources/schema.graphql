@@ -1,5 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
+  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -157,6 +158,45 @@ enum LoadLocalKitError {
   NO_PERMISSION_TO_READ_KIT
 }
 
+type FormationToSceneFromLocalKitResponse {
+  scene: Scene
+  error: FormationToSceneFromLocalKitResponseError
+}
+
+type Scene {
+  objects: [Object]!
+}
+
+type Object {
+  piece: Piece
+  plane: Plane
+  parent: Object
+}
+
+type FormationToSceneFromLocalKitResponseError {
+  code: FormationToSceneFromLocalKitResponseErrorCode!
+  message: String
+}
+
+enum FormationToSceneFromLocalKitResponseErrorCode {
+  DIRECTORY_DOES_NOT_EXIST
+  DIRECTORY_IS_NOT_A_DIRECTORY
+  DIRECTORY_HAS_NO_KIT
+  NO_PERMISSION_TO_READ_KIT
+  FORMATION_DOES_NOT_EXIST
+}
+
+input FormationIdInput {
+  name: String!
+  qualities: [QualityInput!]
+}
+
+input QualityInput {
+  name: String!
+  value: String!
+  unit: String
+}
+
 type Mutation {
   createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
   updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
@@ -169,10 +209,10 @@ type Mutation {
 
 type CreateLocalKitMutation {
   kit: Kit
-  error: CreateLocalKitErrorNode
+  error: CreateLocalKitError
 }
 
-type CreateLocalKitErrorNode {
+type CreateLocalKitError {
   code: CreateLocalKitErrorCode!
   message: String
 }
@@ -190,8 +230,8 @@ input KitInput {
   explanation: String
   icon: String
   url: String
-  types: [TypeInput!]!
-  formations: [FormationInput!]!
+  types: [TypeInput!]
+  formations: [FormationInput!]
 }
 
 input TypeInput {
@@ -200,18 +240,18 @@ input TypeInput {
   icon: String
   representations: [RepresentationInput!]!
   ports: [PortInput!]!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input RepresentationInput {
   url: String!
   lod: String
-  tags: [String!]!
+  tags: [String!]
 }
 
 input PortInput {
   plane: PlaneInput!
-  specifiers: [SpecifierInput!]!
+  specifiers: [SpecifierInput!]
 }
 
 input PlaneInput {
@@ -237,19 +277,13 @@ input SpecifierInput {
   group: String!
 }
 
-input QualityInput {
-  name: String!
-  value: String!
-  unit: String
-}
-
 input FormationInput {
   name: String!
   explanation: String
   icon: String
   pieces: [PieceInput!]!
   attractions: [AttractionInput!]!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input PieceInput {
@@ -259,7 +293,7 @@ input PieceInput {
 
 input TypeIdInput {
   name: String!
-  qualities: [QualityInput!]!
+  qualities: [QualityInput!]
 }
 
 input AttractionInput {
@@ -281,15 +315,15 @@ input TypePieceSideInput {
 }
 
 input PortIdInput {
-  specifiers: [SpecifierInput!]!
+  specifiers: [SpecifierInput!]
 }
 
 type UpdateLocalKitMetadataMutation {
   kit: Kit
-  error: UpdateLocalKitMetadataErrorNode
+  error: UpdateLocalKitMetadataError
 }
 
-type UpdateLocalKitMetadataErrorNode {
+type UpdateLocalKitMetadataError {
   code: UpdateLocalKitMetadataErrorCode!
   message: String
 }
@@ -321,10 +355,10 @@ enum DeleteLocalKitError {
 
 type AddTypeToLocalKitMutation {
   type: Type
-  error: AddTypeToLocalKitErrorNode
+  error: AddTypeToLocalKitError
 }
 
-type AddTypeToLocalKitErrorNode {
+type AddTypeToLocalKitError {
   code: AddTypeToLocalKitErrorCode!
   message: String
 }
@@ -338,10 +372,10 @@ enum AddTypeToLocalKitErrorCode {
 }
 
 type RemoveTypeFromLocalKitMutation {
-  error: RemoveTypeFromLocalKitErrorNode
+  error: RemoveTypeFromLocalKitError
 }
 
-type RemoveTypeFromLocalKitErrorNode {
+type RemoveTypeFromLocalKitError {
   code: RemoveTypeFromLocalKitErrorCode!
   message: String
 }
@@ -357,10 +391,10 @@ enum RemoveTypeFromLocalKitErrorCode {
 
 type AddFormationToLocalKitMutation {
   formation: Formation
-  error: AddFormationToLocalKitErrorNode
+  error: AddFormationToLocalKitError
 }
 
-type AddFormationToLocalKitErrorNode {
+type AddFormationToLocalKitError {
   code: AddFormationToLocalKitErrorCode!
   message: String
 }
@@ -374,10 +408,10 @@ enum AddFormationToLocalKitErrorCode {
 }
 
 type RemoveFormationFromLocalKitMutation {
-  error: RemoveFormationFromLocalKitErrorNode
+  error: RemoveFormationFromLocalKitError
 }
 
-type RemoveFormationFromLocalKitErrorNode {
+type RemoveFormationFromLocalKitError {
   code: RemoveFormationFromLocalKitErrorCode!
   message: String
 }
@@ -388,9 +422,4 @@ enum RemoveFormationFromLocalKitErrorCode {
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
   FORMATION_DOES_NOT_EXIST
-}
-
-input FormationIdInput {
-  name: String!
-  qualities: [QualityInput!]!
 }

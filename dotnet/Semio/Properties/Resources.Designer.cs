@@ -63,26 +63,27 @@ namespace Semio.Properties {
         /// <summary>
         ///   Looks up a localized string similar to mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
         ///  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
-        ///    formations {
-        ///        name
-        ///        explanation
-        ///        icon
-        ///        pieces {
-        ///          id
-        ///          type {
+        ///    formation {
+        ///      name
+        ///      explanation
+        ///      icon
+        ///      pieces {
+        ///        id
+        ///        type {
+        ///          name
+        ///          qualities {
         ///            name
-        ///            qualities {
-        ///              name
-        ///              value
-        ///              unit
-        ///            }
+        ///            value
+        ///            unit
         ///          }
         ///        }
-        ///        attractions {
-        ///          attracting {
-        ///            piece {
-        ///              id
-        ///   [rest of string was truncated]&quot;;.
+        ///      }
+        ///      attractions {
+        ///        attracting {
+        ///          piece {
+        ///            id
+        ///            type {
+        ///              port  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string addFormationToLocalKit {
             get {
@@ -95,6 +96,8 @@ namespace Semio.Properties {
         ///  addTypeToLocalKit(directory: $directory, typeInput: $type) {
         ///    type {
         ///      name
+        ///      explanation
+        ///      icon
         ///      representations {
         ///        url
         ///        lod
@@ -115,10 +118,7 @@ namespace Semio.Properties {
         ///          yAxis {
         ///            x
         ///            y
-        ///            z
-        ///          }
-        ///        }
-        ///      [rest of string was truncated]&quot;;.
+        ///            z [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string addTypeToLocalKit {
             get {
@@ -136,6 +136,8 @@ namespace Semio.Properties {
         ///      url
         ///      types {
         ///        name
+        ///        explanation
+        ///        icon
         ///        representations {
         ///          url
         ///          lod
@@ -150,9 +152,7 @@ namespace Semio.Properties {
         ///            }
         ///            xAxis {
         ///              x
-        ///              y
-        ///              z
-        ///            }        /// [rest of string was truncated]&quot;;.
+        ///              [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string createLocalKit {
             get {
@@ -170,6 +170,39 @@ namespace Semio.Properties {
         internal static string deleteLocalKit {
             get {
                 return ResourceManager.GetString("deleteLocalKit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+        ///  formationToSceneFromLocalKit(
+        ///    directory: $directory
+        ///    formationIdInput: $formation
+        ///  ) {
+        ///    scene {
+        ///      objects {
+        ///        piece {
+        ///          id
+        ///          type {
+        ///            representations {
+        ///              url
+        ///              lod
+        ///              tags
+        ///            }
+        ///          }
+        ///        }
+        ///        plane {
+        ///          origin {
+        ///            x
+        ///            y
+        ///            z
+        ///          }
+        ///          xAxis {
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string formationToSceneFromLocalKit {
+            get {
+                return ResourceManager.GetString("formationToSceneFromLocalKit", resourceCulture);
             }
         }
         
@@ -246,6 +279,7 @@ namespace Semio.Properties {
         /// <summary>
         ///   Looks up a localized string similar to type Query {
         ///  loadLocalKit(directory: String!): LoadLocalKitResponse
+        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
         ///}
         ///
         ///type LoadLocalKitResponse {
@@ -264,14 +298,7 @@ namespace Semio.Properties {
         ///  formations: [Formation!]!
         ///  parent: Artifact
         ///  children: [Artifact!]!
-        ///  references: [Artifact!]!
-        ///  referencedBy: [Artifact!]!
-        ///  relatedTo: [Artifact!]!
-        ///}
-        ///
-        ///interface Artifact {
-        ///  name: String!
-        ///  explanation [rest of string was truncated]&quot;;.
+        ///  referen [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string schema {
             get {
