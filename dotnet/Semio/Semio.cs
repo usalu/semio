@@ -484,7 +484,24 @@ using Semio.Properties;
 //}
 
 #endregion
+#region Utility
 
+public static class Generator
+{
+    public static string GenerateRandomId(int seed)
+    {
+        var adjectives = Resources.adjectives.Deserialize<List<string>>();
+        var animals = Resources.animals.Deserialize<List<string>>();
+        var random = new Random(seed);
+        var adjective = adjectives[random.Next(adjectives.Count)];
+        var animal = animals[random.Next(animals.Count)];
+        var number = random.Next(0, 999);
+        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
+        animal = char.ToUpper(animal[0]) + animal.Substring(1);
+        return $"{adjective}{animal}{number}";
+    }
+}
+#endregion
 #region Models
 
 public interface IDeepCloneable<T>

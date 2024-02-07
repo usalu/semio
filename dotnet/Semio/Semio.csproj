@@ -73,6 +73,8 @@
   <ItemGroup>
     <None Include="Resources\addFormationToLocalKit.graphql" />
     <None Include="Resources\addTypeToLocalKit.graphql" />
+    <None Include="Resources\adjectives.json" />
+    <None Include="Resources\animals.json" />
     <None Include="Resources\createLocalKit.graphql" />
     <None Include="Resources\deleteLocalKit.graphql" />
     <None Include="Resources\formationToSceneFromLocalKit.graphql" />

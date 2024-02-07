@@ -11,7 +11,9 @@ using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
 
 namespace Semio.Grasshopper;
+
 // TODO: Add toplevel scanning for kits wherever a directory is given
+
 #region Copilot
 
 //public class Representation
@@ -1298,8 +1300,15 @@ public class PieceComponent : SemioComponent
         var typeName = "";
         var typeQualityGoos = new List<QualityGoo>();
 
-        DA.GetData(0, ref pieceGoo);
-        DA.GetData(1, ref id);
+        if (!DA.GetData(0, ref pieceGoo))
+        {
+            if (!DA.GetData(1, ref id))
+            {
+                // TODO: Use hash of branch path + list index + instance guid in order to work with collections
+                id = Generator.GenerateRandomId(BitConverter.ToInt32(InstanceGuid.ToByteArray(),0));
+            }
+        }
+        else DA.GetData(1, ref id);
         DA.GetData(2, ref typeName);
         DA.GetDataList(3, typeQualityGoos);
 
@@ -1592,7 +1601,11 @@ public class LoadKitComponent : SemioComponent
         var path = "";
         var run = false;
 
-        if (!DA.GetData(0, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(0, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
+
         DA.GetData(1, ref run);
 
         if (run)
@@ -1728,7 +1741,10 @@ public class DeleteKitComponent : SemioComponent
         var path = "";
         var run = false;
 
-        if (!DA.GetData(0, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(0, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(1, ref run);
 
         if (!run)
@@ -1787,7 +1803,10 @@ public class AddTypeComponent : SemioComponent
         var run = false;
 
         DA.GetData(0, ref typeGoo);
-        if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(1, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
         if (!run)
@@ -1845,7 +1864,10 @@ public class AddFormationComponent : SemioComponent
         var run = false;
 
         DA.GetData(0, ref formationGoo);
-        if (!DA.GetData(1, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(1, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
 
         if (!run)
@@ -1914,7 +1936,10 @@ public class RemoveTypeComponent : SemioComponent
 
         DA.GetData(0, ref typeName);
         DA.GetDataList(1, typeQualityGoos);
-        if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(2, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
         if (!run)
@@ -1984,7 +2009,10 @@ public class RemoveFormationComponent : SemioComponent
 
         DA.GetData(0, ref formationName);
         DA.GetDataList(1, formationQualityGoos);
-        if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(2, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
         if (!run)
@@ -2050,7 +2078,6 @@ public class EncodeTextComponent : SemioComponent
         var base64Text = Convert.ToBase64String(textBytes);
 
         DA.SetData(0, base64Text);
-        
     }
 }
 
@@ -2089,6 +2116,7 @@ public class DecodeTextComponent : SemioComponent
         DA.SetData(0, text);
     }
 }
+
 #region Serialize
 
 public class SerializeQualityComponent : SemioComponent
@@ -2121,13 +2149,12 @@ public class SerializeQualityComponent : SemioComponent
         var qualityGoo = new QualityGoo();
 
         DA.GetData(0, ref qualityGoo);
-  
+
         var text = qualityGoo.Value.Serialize();
         var textBytes = Encoding.UTF8.GetBytes(text);
         var base64Text = Convert.ToBase64String(textBytes);
 
         DA.SetData(0, base64Text);
-        
     }
 }
 
@@ -2221,7 +2248,7 @@ public class SerializeSceneComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-                       "Scene to serialize.", GH_ParamAccess.item);
+            "Scene to serialize.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2382,7 +2409,7 @@ public class DeserializeSceneComponent : SemioComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-                       "Deserialized scene.", GH_ParamAccess.item);
+            "Deserialized scene.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2446,7 +2473,10 @@ public class GetSceneComponent : SemioComponent
 
         DA.GetData(0, ref formationName);
         DA.GetDataList(1, formationQualityGoos);
-        if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(2, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 
         if (!run) return;
@@ -2461,8 +2491,8 @@ public class GetSceneComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             return;
         }
-        else
-            DA.SetData(0, new SceneGoo(response.Scene));
+
+        DA.SetData(0, new SceneGoo(response.Scene));
     }
 }
 
@@ -2490,6 +2520,9 @@ public class FilterSceneComponent : SemioComponent
         pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[2].Optional = true;
+        pManager.AddTextParameter("Formats", "Ft*", "Optional formats of the representations in the scene.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2509,19 +2542,36 @@ public class FilterSceneComponent : SemioComponent
         var sceneGoo = new SceneGoo();
         var lods = new List<string>();
         var tags = new List<string>();
+        var formats = new List<string>();
 
         DA.GetData(0, ref sceneGoo);
         DA.GetDataList(1, lods);
         DA.GetDataList(2, tags);
+        DA.GetDataList(3, formats);
 
         // filter the representations of the scene
         // if lods are used, only the representations with the specified lods are returned
         // if tags are used, each representations must have at least one of the specified tags
+        // if formats are used, only the representations with the specified formats are returned
         var representations = sceneGoo.Value.Objects
             .Select(o => o.Piece.Type.Representations
-                .First(r => r.Lod == null ? lods.Count == 0 :
-                    lods.Contains(r.Lod) &&
-                    r.Tags == null ? tags.Count == 0 : r.Tags.Any(t => tags.Contains(t)))).ToList();
+                .First(r =>
+                {
+                    if (lods.Count > 0)
+                        if (!lods.Contains(r.Lod))
+                            return false;
+                    if (tags.Count > 0)
+                    {
+                        if (r.Tags == null)
+                            return false;
+                        if (!r.Tags.Any(t => tags.Contains(t)))
+                            return false;
+                    }
+                    if (formats.Count > 0)
+                        if (!formats.Contains(Path.GetExtension(r.Url)))
+                            return false;
+                    return true;
+                })).ToList();
         var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
         var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
         var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();

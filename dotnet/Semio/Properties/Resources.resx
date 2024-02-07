@@ -124,6 +124,12 @@
   <data name="addTypeToLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\addTypeToLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="adjectives" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\adjectives.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="animals" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\animals.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="createLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\createLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>

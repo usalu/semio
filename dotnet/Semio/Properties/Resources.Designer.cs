@@ -127,6 +127,24 @@ namespace Semio.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [&quot;cowardly&quot;, &quot;xylographic&quot;, &quot;dynamic&quot;, &quot;xenophobic&quot;, &quot;distant&quot;, &quot;lost&quot;, &quot;quick&quot;, &quot;zippy&quot;, &quot;trim&quot;, &quot;living&quot;, &quot;eager&quot;, &quot;infantile&quot;, &quot;worn&quot;, &quot;live&quot;, &quot;knowing&quot;, &quot;next&quot;, &quot;zesty&quot;, &quot;utter&quot;, &quot;rusty&quot;, &quot;formal&quot;, &quot;quizzical&quot;, &quot;knobby&quot;, &quot;little&quot;, &quot;amazing&quot;, &quot;vigilant&quot;, &quot;primary&quot;, &quot;meaty&quot;, &quot;phony&quot;, &quot;quixotic&quot;, &quot;mute&quot;, &quot;young&quot;, &quot;jolly&quot;, &quot;key&quot;, &quot;positive&quot;, &quot;miniature&quot;, &quot;mild&quot;, &quot;winged&quot;, &quot;cheerful&quot;, &quot;flashy&quot;, &quot;habitual&quot;, &quot;oceanic&quot;, &quot;alike&quot;, &quot;knotty&quot;, &quot;holistic&quot;, &quot;xylophonic&quot;, &quot;generous&quot;, &quot;quarterly&quot;, &quot;yielding&quot;, &quot;aquatic&quot;, [rest of string wa....
+        /// </summary>
+        internal static string adjectives {
+            get {
+                return ResourceManager.GetString("adjectives", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [&quot;cowbird&quot;, &quot;kite&quot;, &quot;hoopoe&quot;, &quot;vulture&quot;, &quot;whapuku&quot;, &quot;yearling&quot;, &quot;narwhal&quot;, &quot;nandu&quot;, &quot;cassowary&quot;, &quot;cooter&quot;, &quot;iguana&quot;, &quot;spoonbill&quot;, &quot;waterstrider&quot;, &quot;davidstiger&quot;, &quot;erne&quot;, &quot;shark&quot;, &quot;pachyderm&quot;, &quot;diplodocus&quot;, &quot;jerboa&quot;, &quot;invisiblerail&quot;, &quot;dipper&quot;, &quot;tick&quot;, &quot;junco&quot;, &quot;frenchbulldog&quot;, &quot;nightingale&quot;, &quot;moa&quot;, &quot;cutworm&quot;, &quot;goosefish&quot;, &quot;bullfrog&quot;, &quot;urutu&quot;, &quot;jay&quot;, &quot;nightjar&quot;, &quot;zander&quot;, &quot;redhead&quot;, &quot;rockrat&quot;, &quot;bittern&quot;, &quot;coqui&quot;, &quot;tilefish&quot;, &quot;xantus&quot;, &quot;woodborer&quot;, &quot;xeme&quot;, &quot;nyala&quot;, &quot;guanaco&quot;, &quot;foxhound&quot;, &quot;jabiru&quot;, &quot;aurochs&quot;, &quot;k [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string animals {
+            get {
+                return ResourceManager.GetString("animals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
         ///  createLocalKit(directory: $directory, kitInput: $kit) {
         ///    kit {
