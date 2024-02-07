@@ -11,7 +11,7 @@ using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
 
 namespace Semio.Grasshopper;
-
+// TODO: Add toplevel scanning for kits wherever a directory is given
 #region Copilot
 
 //public class Representation
@@ -1570,6 +1570,7 @@ public class LoadKitComponent : SemioComponent
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
+        pManager[0].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Load the kit.", GH_ParamAccess.item, false);
     }
 
@@ -1591,17 +1592,11 @@ public class LoadKitComponent : SemioComponent
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref path);
+        if (!DA.GetData(0, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(1, ref run);
 
         if (run)
         {
-            //if (!Utility.IsPathFullyQualified(path))
-            //{
-            //    var currentDirectory = Path.GetDirectoryName(OnPingDocument().FilePath);
-            //    path = Path.Combine(currentDirectory, path);
-            //}
-
             var kit = new Api().LoadLocalKit(path);
 
             DA.SetData(0, kit.Name);
@@ -1719,6 +1714,7 @@ public class DeleteKitComponent : SemioComponent
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
+        pManager[0].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Delete the kit.", GH_ParamAccess.item, false);
     }
 
@@ -1732,7 +1728,7 @@ public class DeleteKitComponent : SemioComponent
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref path);
+        if (!DA.GetData(0, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(1, ref run);
 
         if (!run)
@@ -1918,7 +1914,6 @@ public class RemoveTypeComponent : SemioComponent
 
         DA.GetData(0, ref typeName);
         DA.GetDataList(1, typeQualityGoos);
-        // TODO: Add toplevel scanning for kit
         if (!DA.GetData(2, ref path)) path = Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
 

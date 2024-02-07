@@ -2656,8 +2656,8 @@ if app.debug:
     with open("../../graphql/schema.graphql", "w") as f:
         f.write(str(schema))
 
-    engine = create_engine("sqlite:///debug/semio.db")
-    Base.metadata.create_all(engine)
+    metadata_engine = create_engine("sqlite:///debug/semio.db")
+    Base.metadata.create_all(metadata_engine)
 
 
 def main():

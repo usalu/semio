@@ -9,7 +9,7 @@ repository = "https://github.com/usalu/semio"
 homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 sqlalchemy = "^2.0.23"
 graphene = "^3.3"
 flask = "^3.0.0"
@@ -35,7 +35,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-server = "server:main"
+server = "server:main" #doesn't work. Use instead: poetry run python server.py
 
 [tool.coverage.run]
 branch = true
