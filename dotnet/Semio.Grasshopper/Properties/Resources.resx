@@ -124,6 +124,12 @@
   <data name="attraction_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\attraction_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="decode_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\decode_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="encode_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\encode_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="formation_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\formation_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -187,11 +193,17 @@
   <data name="scene_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scene_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="scene_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\scene_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="scene_filter_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scene_filter_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="scene_get_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scene_get_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="scene_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\scene_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="semio_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\semio_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

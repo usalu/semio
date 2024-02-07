@@ -39,5 +39,9 @@ query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdI
         }
       }
     }
+    error{
+      code
+      message
+    }
   }
 }

@@ -20,10 +20,10 @@ pydantic = "^1"
 graphene-pydantic = "^0.4.2"
 pint = "^0.23"
 networkx = "^3.2.1"
+pytransform3d = "^3.5.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
-pytest-timeout = "^2.2.0"
 deepdiff = "^6.7.1"
 pytest-cov = "^4.1.0"
 
@@ -45,6 +45,7 @@ exclude_also = [
     "def __repr__",
     "def __str__",
     "def client__str__",
+    "def list_client__str__",
 
     "raise AssertionError",
     "raise NotImplementedError",
@@ -52,6 +53,8 @@ exclude_also = [
     "raise InvalidBackend",
 
     "if __name__ == .__main__.:",
+    "def main():",
+    "if app.debug:",
 
     "@(abc\\.)?abstractmethod",
 ]

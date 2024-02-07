@@ -83,6 +83,26 @@ namespace Semio.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap decode_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("decode_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap encode_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("encode_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap formation_24x24 {
             get {
                 object obj = ResourceManager.GetObject("formation_24x24", resourceCulture);
@@ -293,6 +313,16 @@ namespace Semio.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap scene_deserialize_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("scene_deserialize_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap scene_filter_24x24 {
             get {
                 object obj = ResourceManager.GetObject("scene_filter_24x24", resourceCulture);
@@ -306,6 +336,16 @@ namespace Semio.Grasshopper.Properties {
         internal static System.Drawing.Bitmap scene_get_24x24 {
             get {
                 object obj = ResourceManager.GetObject("scene_get_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap scene_serialize_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("scene_serialize_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

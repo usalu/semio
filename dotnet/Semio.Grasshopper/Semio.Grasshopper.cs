@@ -1927,12 +1927,13 @@ public class RemoveTypeComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
+
         var type = new TypeId
         {
-            Name = typeName,
+            Name = typeName
         };
         if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
-        var response = new Api().RemoveTypeFromLocalKit(path,type);
+        var response = new Api().RemoveTypeFromLocalKit(path, type);
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -1996,9 +1997,10 @@ public class RemoveFormationComponent : SemioComponent
             DA.SetData(0, false);
             return;
         }
+
         var formation = new FormationId
         {
-            Name = formationName,
+            Name = formationName
         };
         if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveFormationFromLocalKit(path, formation);
@@ -2020,6 +2022,78 @@ public class RemoveFormationComponent : SemioComponent
 
 #region Scripting
 
+public class EncodeTextComponent : SemioComponent
+{
+    public EncodeTextComponent()
+        : base("Encode Text", ">Txt",
+            "Encode a text.",
+            "semio", "Scripting")
+    {
+    }
+
+    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
+
+    protected override Bitmap Icon => Resources.encode_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+
+        DA.GetData(0, ref text);
+
+        var textBytes = Encoding.UTF8.GetBytes(text);
+        var base64Text = Convert.ToBase64String(textBytes);
+
+        DA.SetData(0, base64Text);
+        
+    }
+}
+
+public class DecodeTextComponent : SemioComponent
+{
+    public DecodeTextComponent()
+        : base("Decode Text", "<Txt",
+            "Decode a text.",
+            "semio", "Scripting")
+    {
+    }
+
+    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
+
+    protected override Bitmap Icon => Resources.decode_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text to decode.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Decoded text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var base64Text = "";
+
+        DA.GetData(0, ref base64Text);
+
+        var textBytes = Convert.FromBase64String(base64Text);
+        var text = Encoding.UTF8.GetString(textBytes);
+
+        DA.SetData(0, text);
+    }
+}
 #region Serialize
 
 public class SerializeQualityComponent : SemioComponent
@@ -2050,19 +2124,15 @@ public class SerializeQualityComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var qualityGoo = new QualityGoo();
-        var run = false;
 
         DA.GetData(0, ref qualityGoo);
-        DA.GetData(1, ref run);
+  
+        var text = qualityGoo.Value.Serialize();
+        var textBytes = Encoding.UTF8.GetBytes(text);
+        var base64Text = Convert.ToBase64String(textBytes);
 
-        if (run)
-        {
-            var text = qualityGoo.Value.Serialize();
-            var textBytes = Encoding.UTF8.GetBytes(text);
-            var base64Text = Convert.ToBase64String(textBytes);
-
-            DA.SetData(0, base64Text);
-        }
+        DA.SetData(0, base64Text);
+        
     }
 }
 
@@ -2083,7 +2153,6 @@ public class SerializeTypeComponent : SemioComponent
     {
         pManager.AddParameter(new TypeParam(), "Type", "Ty",
             "Type to serialize.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Serialize the type.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2094,19 +2163,13 @@ public class SerializeTypeComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var typeGoo = new TypeGoo();
-        var run = false;
 
         DA.GetData(0, ref typeGoo);
-        DA.GetData(1, ref run);
+        var text = typeGoo.Value.Serialize();
+        var textBytes = Encoding.UTF8.GetBytes(text);
+        var base64Text = Convert.ToBase64String(textBytes);
 
-        if (run)
-        {
-            var text = typeGoo.Value.Serialize();
-            var textBytes = Encoding.UTF8.GetBytes(text);
-            var base64Text = Convert.ToBase64String(textBytes);
-
-            DA.SetData(0, base64Text);
-        }
+        DA.SetData(0, base64Text);
     }
 }
 
@@ -2127,7 +2190,6 @@ public class SerializeFormationComponent : SemioComponent
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
             "Formation to serialize.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Serialize the formation.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2138,19 +2200,50 @@ public class SerializeFormationComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var formationGoo = new FormationGoo();
-        var run = false;
 
         DA.GetData(0, ref formationGoo);
-        DA.GetData(1, ref run);
+        var text = formationGoo.Value.Serialize();
+        var textBytes = Encoding.UTF8.GetBytes(text);
+        var base64Text = Convert.ToBase64String(textBytes);
 
-        if (run)
-        {
-            var text = formationGoo.Value.Serialize();
-            var textBytes = Encoding.UTF8.GetBytes(text);
-            var base64Text = Convert.ToBase64String(textBytes);
+        DA.SetData(0, base64Text);
+    }
+}
 
-            DA.SetData(0, base64Text);
-        }
+public class SerializeSceneComponent : SemioComponent
+{
+    public SerializeSceneComponent()
+        : base("Serialize Scene", ">Scn",
+            "Serialize a scene.",
+            "semio", "Scripting")
+    {
+    }
+
+    public override Guid ComponentGuid => new("2470CB4D-FC4A-4DCE-92BF-EDA281B36609");
+
+    protected override Bitmap Icon => Resources.scene_serialize_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+                       "Scene to serialize.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var sceneGoo = new SceneGoo();
+
+        DA.GetData(0, ref sceneGoo);
+        var text = sceneGoo.Value.Serialize();
+        var textBytes = Encoding.UTF8.GetBytes(text);
+        var base64Text = Convert.ToBase64String(textBytes);
+
+        DA.SetData(0, base64Text);
     }
 }
 
@@ -2174,7 +2267,6 @@ public class DeserializeQualityComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Deserialize the quality.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2186,20 +2278,15 @@ public class DeserializeQualityComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var base64Text = "";
-        var run = false;
 
         DA.GetData(0, ref base64Text);
-        DA.GetData(1, ref run);
 
-        if (run)
-        {
-            var textBytes = Convert.FromBase64String(base64Text);
-            var text = Encoding.UTF8.GetString(textBytes);
+        var textBytes = Convert.FromBase64String(base64Text);
+        var text = Encoding.UTF8.GetString(textBytes);
 
-            var quality = text.Deserialize<Quality>();
+        var quality = text.Deserialize<Quality>();
 
-            DA.SetData(0, new QualityGoo(quality));
-        }
+        DA.SetData(0, new QualityGoo(quality));
     }
 }
 
@@ -2219,7 +2306,6 @@ public class DeserializeTypeComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text of serialized type.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Deserialize the type.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2231,20 +2317,14 @@ public class DeserializeTypeComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var base64Text = "";
-        var run = false;
 
         DA.GetData(0, ref base64Text);
-        DA.GetData(1, ref run);
+        var textBytes = Convert.FromBase64String(base64Text);
+        var text = Encoding.UTF8.GetString(textBytes);
 
-        if (run)
-        {
-            var textBytes = Convert.FromBase64String(base64Text);
-            var text = Encoding.UTF8.GetString(textBytes);
+        var type = text.Deserialize<Type>();
 
-            var type = text.Deserialize<Type>();
-
-            DA.SetData(0, new TypeGoo(type));
-        }
+        DA.SetData(0, new TypeGoo(type));
     }
 }
 
@@ -2264,7 +2344,6 @@ public class DeserializeFormationComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text of serialized formation.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Deserialize the formation.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2276,20 +2355,52 @@ public class DeserializeFormationComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var base64Text = "";
-        var run = false;
 
         DA.GetData(0, ref base64Text);
-        DA.GetData(1, ref run);
+        var textBytes = Convert.FromBase64String(base64Text);
+        var text = Encoding.UTF8.GetString(textBytes);
 
-        if (run)
-        {
-            var textBytes = Convert.FromBase64String(base64Text);
-            var text = Encoding.UTF8.GetString(textBytes);
+        var formation = text.Deserialize<Formation>();
 
-            var formation = text.Deserialize<Formation>();
+        DA.SetData(0, new FormationGoo(formation));
+    }
+}
 
-            DA.SetData(0, new FormationGoo(formation));
-        }
+public class DeserializeSceneComponent : SemioComponent
+{
+    public DeserializeSceneComponent()
+        : base("Deserialize Scene", "<Scn",
+            "Deserialize a scene.",
+            "semio", "Scripting")
+    {
+    }
+
+    public override Guid ComponentGuid => new("9A9AF239-6019-43E6-A3E1-59838BD5400B");
+
+    protected override Bitmap Icon => Resources.scene_deserialize_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+                       "Deserialized scene.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var base64Text = "";
+
+        DA.GetData(0, ref base64Text);
+        var textBytes = Convert.FromBase64String(base64Text);
+        var text = Encoding.UTF8.GetString(textBytes);
+
+        var scene = text.Deserialize<Scene>();
+
+        DA.SetData(0, new SceneGoo(scene));
     }
 }
 
@@ -2355,10 +2466,11 @@ public class GetSceneComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             return;
         }
-
-        DA.SetData(0, new SceneGoo(response.Scene));
+        else
+            DA.SetData(0, new SceneGoo(response.Scene));
     }
 }
+
 public class FilterSceneComponent : SemioComponent
 {
     public FilterSceneComponent()
@@ -2376,10 +2488,12 @@ public class FilterSceneComponent : SemioComponent
     {
         pManager.AddParameter(new SceneParam(), "Scene", "Sc",
             "Scene to filter.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Level of Details", "LD*", "Optional level of details of the representations in the scene.",
+        pManager.AddTextParameter("Level of Details", "LD*",
+            "Optional level of details of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
+            GH_ParamAccess.list);
         pManager[2].Optional = true;
     }
 
@@ -2418,10 +2532,9 @@ public class FilterSceneComponent : SemioComponent
         var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
 
         DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
-        DA.SetDataList(1, planes.Select(p=>p.convert()));
+        DA.SetDataList(1, planes.Select(p => p.convert()));
         DA.SetDataList(2, piecesIds);
         DA.SetDataList(3, parentsPiecesIds);
-
     }
 }
 

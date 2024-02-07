@@ -33,9 +33,17 @@ from collections import deque
 from os import remove
 from pathlib import Path
 from functools import lru_cache
-from typing import Optional, Dict, Protocol, List, Union
+from typing import Any, Callable, Generator, Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
+from numpy import ndarray
+from pytransform3d.transformations import (
+    concat,
+    transform,
+    invert_transform,
+    vector_to_point,
+    transform_from,
+)
 from networkx import DiGraph, Graph, bfs_tree, edge_bfs
 from pint import UnitRegistry
 from pydantic import BaseModel
@@ -166,13 +174,13 @@ class Tag(Base):
         "Representation", back_populates="_tags"
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Tag):
-            raise NotImplementedError()
-        return self.value == other.value
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Tag):
+    #         raise NotImplementedError()
+    #     return self.value == other.value
 
-    def __hash__(self) -> int:
-        return hash(self.value)
+    # def __hash__(self) -> int:
+    #     return hash(self.value)
 
     def __repr__(self) -> str:
         return (
@@ -187,25 +195,25 @@ class Tag(Base):
     def client__str__(self) -> str:
         return f"Tag(value={self.value})"
 
-    @property
-    def parent(self) -> Artifact:
-        return self.representation
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.representation
 
-    @property
-    def children(self) -> List[Artifact]:
-        return []
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent]
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent]
 
 
 class Representation(Base):
@@ -222,13 +230,13 @@ class Representation(Base):
 
     __table_args__ = (UniqueConstraint("type_id", "url"),)
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Representation):
-            raise NotImplementedError()
-        return self.url == other.url
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Representation):
+    #         raise NotImplementedError()
+    #     return self.url == other.url
 
-    def __hash__(self) -> int:
-        return hash(self.url)
+    # def __hash__(self) -> int:
+    #     return hash(self.url)
 
     def __repr__(self) -> str:
         return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, type_id={self.type_id!r}, tags={self.tags!r})"
@@ -254,25 +262,25 @@ class Representation(Base):
     def tags(self, tags: List[str]):
         self._tags = [Tag(value=tag) for tag in tags]
 
-    @property
-    def parent(self) -> Artifact:
-        return self.type
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.type
 
-    @property
-    def children(self) -> List[Artifact]:
-        return self._tags  # type: ignore
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return self._tags  # type: ignore
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.children if self.children else []
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.children if self.children else []
 
 
 class Specifier(Base):
@@ -300,25 +308,25 @@ class Specifier(Base):
     def client__str__(self) -> str:
         return f"Specifier(context={self.context})"
 
-    @property
-    def parent(self) -> Artifact:
-        return self.port
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.port
 
-    @property
-    def children(self) -> List[Artifact]:
-        return []
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent]
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent]
 
 
 class Point(BaseModel):
@@ -326,21 +334,8 @@ class Point(BaseModel):
     y: float
     z: float
 
-    def transform(self, transform: "Transform") -> "Point":
-        return Point(
-            x=transform.m00 * self.x
-            + transform.m01 * self.y
-            + transform.m02 * self.z
-            + transform.m30,
-            y=transform.m10 * self.x
-            + transform.m11 * self.y
-            + transform.m12 * self.z
-            + transform.m31,
-            z=transform.m20 * self.x
-            + transform.m21 * self.y
-            + transform.m22 * self.z
-            + transform.m32,
-        )
+    # def transform(self, transform: "Transform") -> "Point":
+    #     return Transform.transformPoint(transform, self)
 
 
 class Vector(BaseModel):
@@ -348,12 +343,8 @@ class Vector(BaseModel):
     y: float
     z: float
 
-    def transform(self, transform: "Transform") -> "Vector":
-        return Vector(
-            x=transform.m00 * self.x + transform.m01 * self.y + transform.m02 * self.z,
-            y=transform.m10 * self.x + transform.m11 * self.y + transform.m12 * self.z,
-            z=transform.m20 * self.x + transform.m21 * self.y + transform.m22 * self.z,
-        )
+    # def transform(self, transform: "Transform") -> "Vector":
+    #     return Transform.transformVector(transform, self)
 
 
 class Plane(BaseModel):
@@ -370,11 +361,7 @@ class Plane(BaseModel):
         )
 
     def transform(self, transform: "Transform") -> "Plane":
-        return Plane(
-            origin=self.origin.transform(transform),
-            x_axis=self.x_axis.transform(transform),
-            y_axis=self.y_axis.transform(transform),
-        )
+        return Transform.transformPlane(transform, self)
 
     def toTransform(self) -> "Transform":
         return Transform.fromPlane(self)
@@ -389,76 +376,105 @@ class Plane(BaseModel):
 
 
 class Transform(BaseModel):
-    m00: float
-    m01: float
-    m02: float
-    m10: float
-    m11: float
-    m12: float
-    m20: float
-    m21: float
-    m22: float
-    m30: float
-    m31: float
-    m32: float
+    class Config:
+        arbitrary_types_allowed = True
 
-    def compose(self, other: "Transform") -> "Transform":
-        return Transform(
-            m00=self.m00 * other.m00 + self.m01 * other.m10 + self.m02 * other.m20,
-            m01=self.m00 * other.m01 + self.m01 * other.m11 + self.m02 * other.m21,
-            m02=self.m00 * other.m02 + self.m01 * other.m12 + self.m02 * other.m22,
-            m10=self.m10 * other.m00 + self.m11 * other.m10 + self.m12 * other.m20,
-            m11=self.m10 * other.m01 + self.m11 * other.m11 + self.m12 * other.m21,
-            m12=self.m10 * other.m02 + self.m11 * other.m12 + self.m12 * other.m22,
-            m20=self.m20 * other.m00 + self.m21 * other.m10 + self.m22 * other.m20,
-            m21=self.m20 * other.m01 + self.m21 * other.m11 + self.m22 * other.m21,
-            m22=self.m20 * other.m02 + self.m21 * other.m12 + self.m22 * other.m22,
-            m30=self.m30 * other.m00
-            + self.m31 * other.m10
-            + self.m32 * other.m20
-            + other.m30,
-            m31=self.m30 * other.m01
-            + self.m31 * other.m11
-            + self.m32 * other.m21
-            + other.m31,
-            m32=self.m30 * other.m02
-            + self.m31 * other.m12
-            + self.m32 * other.m22
-            + other.m32,
-        )
+    # An indirect import of numpy, just for type hinting. Really?
+    matrix: ndarray
+
+    def __str__(self) -> str:
+        return f"Transform(Rotation={self.rotation}, Translation={self.translation})"
+
+    @property
+    def rotation(self) -> ndarray:
+        return self.matrix[:3, :3]
+
+    @property
+    def translation(self) -> ndarray:
+        return self.matrix[:3, 3]
+
+    def after(self, before: "Transform") -> "Transform":
+        """Apply this transform after another transform.
+
+        Args:
+            before (Transform): Transform to apply before this transform.
+
+        Returns:
+            Transform: New transform.
+        """
+        return Transform(matrix=concat(before.matrix, self.matrix))
+
+    def invert(self) -> "Transform":
+        return Transform(matrix=invert_transform(self.matrix))
+
+    # def transformPoint(self, point: Point) -> Point:
+    #     transformedPoint = transform(
+    #         self.matrix, vector_to_point([point.x, point.y, point.z])
+    #     )
+    #     return Point(
+    #         x=transformedPoint[0], y=transformedPoint[1], z=transformedPoint[2]
+    #     )
+
+    # def transformVector(self, vector: Vector) -> Vector:
+    #     transformedVector = transform(
+    #         self.matrix, vector_to_point([vector.x, vector.y, vector.z])
+    #     )
+    #     return Vector(
+    #         x=transformedVector[0], y=transformedVector[1], z=transformedVector[2]
+    #     )
+
+    def transformPlane(self, plane: Plane) -> Plane:
+        planeTransform = Transform.fromPlane(plane)
+        planeTransformed = planeTransform.after(self)
+        return Transform.toPlane(planeTransformed.round())
+
+    def round(self, decimals: int = 6) -> "Transform":
+        return Transform(matrix=self.matrix.round(decimals=decimals))
 
     @staticmethod
     def identity() -> "Transform":
         return Transform(
-            m00=1,
-            m01=0,
-            m02=0,
-            m10=0,
-            m11=1,
-            m12=0,
-            m20=0,
-            m21=0,
-            m22=1,
-            m30=0,
-            m31=0,
-            m32=0,
+            matrix=transform_from(
+                [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                ],
+                [0, 0, 0],
+            )
         )
 
     @staticmethod
     def fromPlane(plane: Plane) -> "Transform":
         return Transform(
-            m00=plane.x_axis.x,
-            m01=plane.x_axis.y,
-            m02=plane.x_axis.z,
-            m10=plane.y_axis.x,
-            m11=plane.y_axis.y,
-            m12=plane.y_axis.z,
-            m20=plane.normal.x,
-            m21=plane.normal.y,
-            m22=plane.normal.z,
-            m30=plane.origin.x,
-            m31=plane.origin.y,
-            m32=plane.origin.z,
+            matrix=transform_from(
+                [
+                    [plane.x_axis.x, plane.y_axis.x, plane.normal.x],
+                    [plane.x_axis.y, plane.y_axis.y, plane.normal.y],
+                    [plane.x_axis.z, plane.y_axis.z, plane.normal.z],
+                ],
+                [plane.origin.x, plane.origin.y, plane.origin.z],
+            )
+        )
+
+    @staticmethod
+    def toPlane(transform: "Transform") -> Plane:
+        return Plane(
+            origin=Point(
+                x=transform.translation[0],
+                y=transform.translation[1],
+                z=transform.translation[2],
+            ),
+            x_axis=Vector(
+                x=transform.rotation[0, 0],
+                y=transform.rotation[1, 0],
+                z=transform.rotation[2, 0],
+            ),
+            y_axis=Vector(
+                x=transform.rotation[0, 1],
+                y=transform.rotation[1, 1],
+                z=transform.rotation[2, 1],
+            ),
         )
 
 
@@ -491,13 +507,13 @@ class Port(Base):
         back_populates="attracted_piece_type_port",
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Port):
-            raise NotImplementedError()
-        return set(self.qualities) == set(other.qualities)
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Port):
+    #         raise NotImplementedError()
+    #     return set(self.qualities) == set(other.qualities)
 
-    def __hash__(self) -> int:
-        return hash(set(self.qualities))
+    # def __hash__(self) -> int:
+    #     return hash(set(self.qualities))
 
     def __repr__(self) -> str:
         return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
@@ -528,37 +544,37 @@ class Port(Base):
             ),
         )
 
-    @plane.setter
-    def plane(self, plane: Plane):
-        self.origin_x = plane.origin.x
-        self.origin_y = plane.origin.y
-        self.origin_z = plane.origin.z
-        self.x_axis_x = plane.x_axis.x
-        self.x_axis_y = plane.x_axis.y
-        self.x_axis_z = plane.x_axis.z
-        self.y_axis_x = plane.y_axis.x
-        self.y_axis_y = plane.y_axis.y
-        self.y_axis_z = plane.y_axis.z
+    # @plane.setter
+    # def plane(self, plane: Plane):
+    #     self.origin_x = plane.origin.x
+    #     self.origin_y = plane.origin.y
+    #     self.origin_z = plane.origin.z
+    #     self.x_axis_x = plane.x_axis.x
+    #     self.x_axis_y = plane.x_axis.y
+    #     self.x_axis_z = plane.x_axis.z
+    #     self.y_axis_x = plane.y_axis.x
+    #     self.y_axis_y = plane.y_axis.y
+    #     self.y_axis_z = plane.y_axis.z
 
-    @property
-    def parent(self) -> Artifact:
-        return self.type
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.type
 
-    @property
-    def children(self) -> List[Artifact]:
-        return self.specifiers  # type: ignore
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return self.specifiers  # type: ignore
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return self.attractings + self.attracteds  # type: ignore
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return self.attractings + self.attracteds  # type: ignore
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.children + self.referenced_by
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.children + self.referenced_by
 
 
 class Quality(Base):
@@ -611,25 +627,25 @@ class Quality(Base):
     def client__str__(self) -> str:
         return f"Quality(name={self.name})"
 
-    @property
-    def parent(self) -> Artifact:
-        return self.type if self.type_id else self.formation
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.type if self.type_id else self.formation
 
-    @property
-    def children(self) -> List[Artifact]:
-        return []
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent]
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent]
 
 
 class Type(Base):
@@ -658,13 +674,13 @@ class Type(Base):
     )
     pieces: Mapped[List["Piece"]] = relationship("Piece", back_populates="type")
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Type):
-            raise NotImplementedError()
-        return self.name == other.name and set(self.qualities) == set(other.qualities)
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Type):
+    #         raise NotImplementedError()
+    #     return self.name == other.name and set(self.qualities) == set(other.qualities)
 
-    def __hash__(self) -> int:
-        return hash((self.name, set(self.qualities)))
+    # def __hash__(self) -> int:
+    #     return hash((self.name, set(self.qualities)))
 
     def __repr__(self) -> str:
         return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
@@ -677,25 +693,25 @@ class Type(Base):
             f"Type(name={self.name}, qualities={list_client__str__(self.qualities)}])"
         )
 
-    @property
-    def parent(self) -> Artifact:
-        return self.kit
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.kit
 
-    @property
-    def children(self) -> List[Artifact]:
-        return self.representations + self.ports + self.qualities  # type: ignore
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return self.representations + self.ports + self.qualities  # type: ignore
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return [self.pieces]  # type: ignore
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return [self.pieces]  # type: ignore
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.children + self.referenced_by
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.children + self.referenced_by
 
 
 @event.listens_for(Representation, "after_update")
@@ -730,13 +746,13 @@ class Piece(Base):
 
     __table_args__ = (UniqueConstraint("local_id", "formation_id"),)
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Piece):
-            raise NotImplementedError()
-        return self.local_id == other.local_id
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Piece):
+    #         raise NotImplementedError()
+    #     return self.local_id == other.local_id
 
-    def __hash__(self) -> int:
-        return hash(self.local_id)
+    # def __hash__(self) -> int:
+    #     return hash(self.local_id)
 
     def __repr__(self) -> str:
         return f"Piece(id={self.id!r}, local_id={self.local_id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
@@ -747,25 +763,25 @@ class Piece(Base):
     def client__str__(self) -> str:
         return f"Piece(id={self.local_id})"
 
-    @property
-    def parent(self) -> Artifact:
-        return self.formation
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.formation
 
-    @property
-    def children(self) -> List[Artifact]:
-        return []
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def references(self) -> List[Artifact]:
-        return self.type  # type: ignore
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return self.type  # type: ignore
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return self.attractings + self.attracteds  # type: ignore
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return self.attractings + self.attracteds  # type: ignore
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.references + self.referenced_by
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.references + self.referenced_by
 
 
 class TypePieceSide(BaseModel):
@@ -831,16 +847,16 @@ class Attraction(Base):
         ),
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Attraction):
-            raise NotImplementedError()
-        return (
-            self.attracting_piece == other.attracting_piece
-            and self.attracted_piece == other.attracted_piece
-        )
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Attraction):
+    #         raise NotImplementedError()
+    #     return (
+    #         self.attracting_piece == other.attracting_piece
+    #         and self.attracted_piece == other.attracted_piece
+    #     )
 
-    def __hash__(self) -> int:
-        return hash((self.attracting_piece, self.attracted_piece))
+    # def __hash__(self) -> int:
+    #     return hash((self.attracting_piece, self.attracted_piece))
 
     def __repr__(self) -> str:
         return f"Attraction(attracting_piece_id={self.attracting_piece_id!r}, attracting_piece_type_port_id={self.attracting_piece_type_port_id!r}, attracted_piece_id={self.attracted_piece_id!r}, attracted_piece_type_port_id={self.attracted_piece_type_port_id!r}, formation_id={self.formation_id!r})"
@@ -873,30 +889,30 @@ class Attraction(Base):
             )
         )
 
-    @property
-    def parent(self) -> Artifact:
-        return self.formation
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.formation
 
-    @property
-    def children(self) -> List[Artifact]:
-        return []
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def references(self) -> List[Artifact]:
-        return [
-            self.attracting_piece,
-            self.attracted_piece,
-            self.attracting_piece_type_port,
-            self.attracted_piece_type_port,
-        ]
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return [
+    #         self.attracting_piece,
+    #         self.attracted_piece,
+    #         self.attracting_piece_type_port,
+    #         self.attracted_piece_type_port,
+    #     ]
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.references
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.references
 
 
 # TODO: Add complex validation before insert with networkx such as:
@@ -927,13 +943,13 @@ class Formation(Base):
         Quality, back_populates="formation", cascade="all, delete-orphan"
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Formation):
-            raise NotImplementedError()
-        return self.name == other.name and set(self.qualities) == set(other.qualities)
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Formation):
+    #         raise NotImplementedError()
+    #     return self.name == other.name and set(self.qualities) == set(other.qualities)
 
-    def __hash__(self) -> int:
-        return hash((self.name, set(self.qualities)))
+    # def __hash__(self) -> int:
+    #     return hash((self.name, set(self.qualities)))
 
     def __repr__(self) -> str:
         return f"Formation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, qualities={self.qualities!r})"
@@ -944,25 +960,25 @@ class Formation(Base):
     def client__str__(self) -> str:
         return f"Formation(name={self.name}, qualities={list_client__str__(self.qualities)}])"
 
-    @property
-    def parent(self) -> Artifact:
-        return self.kit
+    # @property
+    # def parent(self) -> Artifact:
+    #     return self.kit
 
-    @property
-    def children(self) -> List[Artifact]:
-        return self.pieces + self.attractions  # type: ignore
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return self.pieces + self.attractions  # type: ignore
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return [self.parent] + self.children
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return [self.parent] + self.children
 
 
 @event.listens_for(Piece, "after_update")
@@ -1027,13 +1043,13 @@ class Kit(Base):
         back_populates="kit", cascade="all, delete-orphan"
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Kit):
-            raise NotImplementedError()
-        return self.name == other.name
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Kit):
+    #         raise NotImplementedError()
+    #     return self.name == other.name
 
-    def __hash__(self) -> int:
-        return hash(self.name)
+    # def __hash__(self) -> int:
+    #     return hash(self.name)
 
     def __repr__(self) -> str:
         return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
@@ -1044,25 +1060,25 @@ class Kit(Base):
     def client__str__(self) -> str:
         return f"Kit(name={self.name})"
 
-    @property
-    def parent(self) -> None:
-        return None
+    # @property
+    # def parent(self) -> None:
+    #     return None
 
-    @property
-    def children(self) -> List[Artifact]:
-        return self.types + self.formations  # type: ignore
+    # @property
+    # def children(self) -> List[Artifact]:
+    #     return self.types + self.formations  # type: ignore
 
-    @property
-    def references(self) -> List[Artifact]:
-        return []
+    # @property
+    # def references(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def referenced_by(self) -> List[Artifact]:
-        return []
+    # @property
+    # def referenced_by(self) -> List[Artifact]:
+    #     return []
 
-    @property
-    def related_to(self) -> List[Artifact]:
-        return self.children
+    # @property
+    # def related_to(self) -> List[Artifact]:
+    #     return self.children
 
 
 class DirectoryError(SemioException):
@@ -1103,33 +1119,33 @@ def getLocalSession(directory: str) -> Session:
     return sessionmaker(bind=engine)()
 
 
-class ArtifactNode(graphene.Interface):
-    class Meta:
-        name = "Artifact"
+# class DocumentNode(graphene.Interface):
+#     class Meta:
+#         name = "Document"
 
-    name = NonNull(graphene.String)
-    explanation = graphene.String()
-    icon = graphene.String()
-    parent = graphene.Field(lambda: ArtifactNode)
-    children = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
-    references = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
-    referenced_by = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
-    related_to = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+#     name = NonNull(graphene.String)
+#     explanation = graphene.String()
+#     icon = graphene.String()
+#     parent = graphene.Field(lambda: DocumentNode)
+#     children = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
+#     references = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
+#     referenced_by = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
+#     related_to = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
 
-    def resolve_parent(artifact: "ArtifactNode", info):
-        return artifact.parent
+#     def resolve_parent(artifact: "DocumentNode", info):
+#         return artifact.parent
 
-    def resolve_children(artifact: "ArtifactNode", info):
-        return artifact.children
+#     def resolve_children(artifact: "DocumentNode", info):
+#         return artifact.children
 
-    def resolve_references(artifact: "ArtifactNode", info):
-        return artifact.references
+#     def resolve_references(artifact: "DocumentNode", info):
+#         return artifact.references
 
-    def resolve_referenced_by(artifact: "ArtifactNode", info):
-        return artifact.referenced_by
+#     def resolve_referenced_by(artifact: "DocumentNode", info):
+#         return artifact.referenced_by
 
-    def resolve_related_to(artifact: "ArtifactNode", info):
-        return artifact.related_to
+#     def resolve_related_to(artifact: "DocumentNode", info):
+#         return artifact.related_to
 
 
 class RepresentationNode(SQLAlchemyObjectType):
@@ -1208,7 +1224,7 @@ class TypeNode(SQLAlchemyObjectType):
     class Meta:
         model = Type
         name = "Type"
-        interfaces = (ArtifactNode,)
+        # interfaces = (DocumentNode,)
         exclude_fields = (
             "id",
             "kit_id",
@@ -1281,7 +1297,7 @@ class FormationNode(SQLAlchemyObjectType):
     class Meta:
         model = Formation
         name = "Formation"
-        interfaces = (ArtifactNode,)
+        # interfaces = (DocumentNode,)
         exclude_fields = (
             "id",
             "kit_id",
@@ -1318,7 +1334,7 @@ class KitNode(SQLAlchemyObjectType):
     class Meta:
         model = Kit
         name = "Kit"
-        interfaces = (ArtifactNode,)
+        # interfaces = (DocumentNode,)
         exclude_fields = ("id",)
 
 
@@ -2012,10 +2028,12 @@ def hierarchyFromFormationInSession(
         parentTransform = G[parent][child][
             "attraction"
         ].attracting.piece.type.port.plane.toTransform()
-        childTransform = G[parent][child][
-            "attraction"
-        ].attracted.piece.type.port.plane.toTransform()
-        transform = parentTransform.compose(childTransform)
+        childTransform = (
+            G[parent][child]["attraction"]
+            .attracted.piece.type.port.plane.toTransform()
+            .invert()
+        )
+        transform = parentTransform.after(childTransform)
         hierarchy = Hierarchy(
             piece=G.nodes[child]["piece"], transform=transform, children=[]
         )
@@ -2031,18 +2049,18 @@ def addObjectsToSceneInSession(
     hierarchy: Hierarchy,
     plane: Plane,
 ) -> None:
-    plane = plane.transform(hierarchy.transform)
+    transformedPlane = plane.transform(hierarchy.transform)
     object = Object(
         piece=hierarchy.piece,
-        plane=plane,
+        plane=transformedPlane,
         parent=parent,
     )
     scene.objects.append(object)
     for child in hierarchy.children:
-        addObjectsToSceneInSession(session, scene, object, child, plane)
+        addObjectsToSceneInSession(session, scene, object, child, transformedPlane)
 
 
-def sessionFromFormation(
+def sceneFromFormationInSession(
     session: Session, formationIdInput: FormationIdInput
 ) -> "Scene":
     formation = getFormationByNameAndQualities(
@@ -2600,7 +2618,7 @@ class Query(ObjectType):
             )
         session = getLocalSession(directory)
         try:
-            scene = sessionFromFormation(session, formationIdInput)
+            scene = sceneFromFormationInSession(session, formationIdInput)
         except FormationNotFound:
             return FormationToSceneFromLocalKitResponse(
                 error=FormationToSceneFromLocalKitResponseErrorNode(

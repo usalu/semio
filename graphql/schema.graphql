@@ -8,7 +8,7 @@ type LoadLocalKitResponse {
   error: LoadLocalKitError
 }
 
-type Kit implements Artifact {
+type Kit {
   name: String!
   explanation: String
   icon: String
@@ -17,22 +17,6 @@ type Kit implements Artifact {
   url: String
   types: [Type!]!
   formations: [Formation!]!
-  parent: Artifact
-  children: [Artifact!]!
-  references: [Artifact!]!
-  referencedBy: [Artifact!]!
-  relatedTo: [Artifact!]!
-}
-
-interface Artifact {
-  name: String!
-  explanation: String
-  icon: String
-  parent: Artifact
-  children: [Artifact!]!
-  references: [Artifact!]!
-  referencedBy: [Artifact!]!
-  relatedTo: [Artifact!]!
 }
 
 """
@@ -42,7 +26,7 @@ value as specified by
 """
 scalar DateTime
 
-type Type implements Artifact {
+type Type {
   name: String!
   explanation: String
   icon: String
@@ -53,11 +37,6 @@ type Type implements Artifact {
   ports: [Port!]!
   qualities: [Quality!]!
   pieces: [Piece!]!
-  parent: Artifact
-  children: [Artifact!]!
-  references: [Artifact!]!
-  referencedBy: [Artifact!]!
-  relatedTo: [Artifact!]!
 }
 
 type Representation {
@@ -87,7 +66,7 @@ type Attraction {
   attracted: Side!
 }
 
-type Formation implements Artifact {
+type Formation {
   name: String!
   explanation: String
   icon: String
@@ -97,11 +76,6 @@ type Formation implements Artifact {
   pieces: [Piece!]!
   attractions: [Attraction!]!
   qualities: [Quality!]!
-  parent: Artifact
-  children: [Artifact!]!
-  references: [Artifact!]!
-  referencedBy: [Artifact!]!
-  relatedTo: [Artifact!]!
 }
 
 type Piece {

@@ -670,7 +670,7 @@ public class Type : IDeepCloneable<Type>
     public string? Icon { get; set; }
     public List<Representation> Representations { get; set; }
     public List<Port> Ports { get; set; }
-    public List<Quality> Qualities { get; set; }
+    public List<Quality>? Qualities { get; set; }
 
     public Type DeepClone()
     {
@@ -679,11 +679,10 @@ public class Type : IDeepCloneable<Type>
             Name = Name,
             Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
             Ports = new List<Port>(Ports.Select(p => p.DeepClone())),
-            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
         if (Explanation != null) type.Explanation = Explanation;
-
         if (Icon != null) type.Icon = Icon;
+        if (Qualities != null) type.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
         return type;
     }
 
@@ -731,6 +730,24 @@ public class Piece : IDeepCloneable<Piece>
     public override string ToString()
     {
         return $"Piece(Id: {Id})";
+    }
+}
+
+public class PieceId : IDeepCloneable<PieceId>
+{
+    public string Id { get; set; }
+
+    public PieceId DeepClone()
+    {
+        return new PieceId
+        {
+            Id = Id
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"PieceId(Id: {Id})";
     }
 }
 
@@ -900,9 +917,10 @@ public class PieceObject : IDeepCloneable<PieceObject>
     }
 }
 
+
 public class ParentObject : IDeepCloneable<ParentObject>
 {
-    public Piece Piece { get; set; }
+    public PieceId Piece { get; set; }
 
     public ParentObject DeepClone()
     {
@@ -923,16 +941,17 @@ public class Object : IDeepCloneable<Object>
     public PieceObject Piece { get; set; }
     public Plane Plane { get; set; }
 
-    public ParentObject Parent { get; set; }
+    public ParentObject? Parent { get; set; }
 
     public Object DeepClone()
     {
-        return new Object
+        var obj = new Object
         {
             Piece = Piece.DeepClone(),
-            Plane = Plane.DeepClone(),
-            Parent = Parent.DeepClone()
+            Plane = Plane.DeepClone()
         };
+        if (Parent != null) obj.Parent = Parent.DeepClone();
+        return obj;
     }
 
     public override string ToString()
