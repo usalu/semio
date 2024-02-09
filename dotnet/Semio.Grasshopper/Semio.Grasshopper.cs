@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using GH_IO.Serialization;
 using Grasshopper.Kernel;
@@ -13,6 +14,11 @@ using Semio.Grasshopper.Properties;
 namespace Semio.Grasshopper;
 
 // TODO: Add toplevel scanning for kits wherever a directory is given
+// Maybe extension function for components. The repeated code looks something like this:
+// if (!DA.GetData(_, ref path))
+//      path = OnPingDocument().IsFilePathDefined
+//          ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//          : Directory.GetCurrentDirectory();
 
 #region Copilot
 
@@ -141,6 +147,9 @@ namespace Semio.Grasshopper;
 
 public static class Utility
 {
+    public static string ServerErrorMessage =>
+        "The server seems to have a problem with this.\nTry to restart the server and try it again and if it happens again please report this on GitHub:\n https://github.com/usalu/semio";
+
     public static bool IsPathFullyQualified(string path)
     {
         return Path.GetFullPath(path) == path;
@@ -870,7 +879,7 @@ public class AttractionParam : SemioPersistentParam<AttractionGoo>
 
 public class FormationParam : SemioPersistentParam<FormationGoo>
 {
-    public FormationParam() : base("Formation", "F", "", "semio", "Params")
+    public FormationParam() : base("Formation", "Fo", "", "semio", "Params")
     {
     }
 
@@ -981,7 +990,7 @@ public class RepresentationComponent : SemioComponent
 
         if (tags.Count > 0) representationGoo.Value.Tags = tags;
 
-        DA.SetData(0, representationGoo);
+        DA.SetData(0, representationGoo.Duplicate());
         DA.SetData(1, representationGoo.Value.Url);
         if (representationGoo.Value.Lod != null)
             DA.SetData(2, representationGoo.Value.Lod);
@@ -1035,7 +1044,7 @@ public class SpecifierComponent : SemioComponent
 
         if (group != "") specifierGoo.Value.Group = group;
 
-        DA.SetData(0, specifierGoo);
+        DA.SetData(0, specifierGoo.Duplicate());
         DA.SetData(1, specifierGoo.Value.Context);
         DA.SetData(2, specifierGoo.Value.Group);
     }
@@ -1083,15 +1092,13 @@ public class PortComponent : SemioComponent
         var specifierGoos = new List<SpecifierGoo>();
 
         DA.GetData(0, ref portGoo);
-        if (DA.GetData(1, ref planeGeo)) planeInput = true;
-        DA.GetDataList(2, specifierGoos);
-
-        if (planeInput)
+        if (DA.GetData(1, ref planeGeo))
             portGoo.Value.Plane = planeGeo.convert();
+        DA.GetDataList(2, specifierGoos);
 
         if (specifierGoos.Count > 0) portGoo.Value.Specifiers = specifierGoos.Select(s => s.Value).ToList();
 
-        DA.SetData(0, portGoo);
+        DA.SetData(0, portGoo.Duplicate());
         DA.SetData(1, portGoo.Value.Plane?.convert());
         if (portGoo.Value.Specifiers != null)
             DA.SetDataList(2, portGoo.Value.Specifiers.Select(s => new SpecifierGoo(s.DeepClone()
@@ -1152,7 +1159,7 @@ public class QualityComponent : SemioComponent
 
         if (unit != "") qualityGoo.Value.Unit = unit;
 
-        DA.SetData(0, qualityGoo);
+        DA.SetData(0, qualityGoo.Duplicate());
         DA.SetData(1, qualityGoo.Value.Name);
         DA.SetData(2, qualityGoo.Value.Value);
         if (qualityGoo.Value.Unit != null)
@@ -1240,7 +1247,7 @@ public class TypeComponent : SemioComponent
 
         if (qualityGoos.Count > 0) typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
-        DA.SetData(0, typeGoo);
+        DA.SetData(0, typeGoo.Duplicate());
         DA.SetData(1, typeGoo.Value.Name);
         if (typeGoo.Value.Explanation != null)
             DA.SetData(2, typeGoo.Value.Explanation);
@@ -1273,7 +1280,9 @@ public class PieceComponent : SemioComponent
         pManager.AddParameter(new PieceParam(), "Piece", "Pc?",
             "Optional piece to deconstruct or modify.", GH_ParamAccess.item);
         pManager[0].Optional = true;
-        pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id",
+            "Id of the piece. If none is provided then a newly generated one will be produced. \nWARNING: The generated id only works if this component constructs one piece.\nFor multiple pieces use the Random Id component.",
+            GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("TypeName", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
@@ -1300,21 +1309,13 @@ public class PieceComponent : SemioComponent
         var typeName = "";
         var typeQualityGoos = new List<QualityGoo>();
 
-        if (!DA.GetData(0, ref pieceGoo))
-        {
-            if (!DA.GetData(1, ref id))
-            {
-                // TODO: Use hash of branch path + list index + instance guid in order to work with collections
-                id = Generator.GenerateRandomId(BitConverter.ToInt32(InstanceGuid.ToByteArray(),0));
-            }
-        }
-        else DA.GetData(1, ref id);
-        DA.GetData(2, ref typeName);
-        DA.GetDataList(3, typeQualityGoos);
-
-        if (id != "") pieceGoo.Value.Id = id;
-
-        if (typeName != "")
+        var existingPiece = DA.GetData(0, ref pieceGoo);
+        if (DA.GetData(1, ref id))
+            pieceGoo.Value.Id = id;
+        else if (!existingPiece)
+                pieceGoo.Value.Id = Generator.GenerateRandomId(BitConverter.ToInt32(InstanceGuid.ToByteArray(), 0));
+        
+        if (DA.GetData(2, ref typeName))
         {
             if (pieceGoo.Value.Type == null)
                 pieceGoo.Value.Type = new TypeId { Name = typeName };
@@ -1322,9 +1323,10 @@ public class PieceComponent : SemioComponent
                 pieceGoo.Value.Type.Name = typeName;
         }
 
-        if (typeQualityGoos.Count > 0) pieceGoo.Value.Type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
+        if (DA.GetDataList(3, typeQualityGoos))
+            pieceGoo.Value.Type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
 
-        DA.SetData(0, pieceGoo);
+        DA.SetData(0, pieceGoo.Duplicate());
         DA.SetData(1, pieceGoo.Value.Id);
         DA.SetData(2, pieceGoo.Value.Type?.Name);
         if (pieceGoo.Value.Type?.Qualities != null)
@@ -1401,7 +1403,7 @@ public class SideComponent : SemioComponent
                 sideGoo.Value.Piece.Type.Port.Specifiers = specifierGoos.Select(s => s.Value).ToList();
         }
 
-        DA.SetData(0, sideGoo);
+        DA.SetData(0, sideGoo.Duplicate());
         if (sideGoo.Value.Piece != null)
             DA.SetData(1, sideGoo.Value.Piece.Id);
         if (sideGoo.Value.Piece?.Type?.Port?.Specifiers != null)
@@ -1455,7 +1457,7 @@ public class AttractionComponent : SemioComponent
         if (DA.GetData(1, ref attractingSideGoo)) attractionGoo.Value.Attracting = attractingSideGoo.Value;
         if (DA.GetData(2, ref attractedSideGoo)) attractionGoo.Value.Attracted = attractedSideGoo.Value;
 
-        DA.SetData(0, attractionGoo);
+        DA.SetData(0, attractionGoo.Duplicate());
         if (attractionGoo.Value.Attracting != null)
             DA.SetData(1, new SideGoo(attractionGoo.Value.Attracting.DeepClone()));
         if (attractionGoo.Value.Attracted != null)
@@ -1542,7 +1544,7 @@ public class FormationComponent : SemioComponent
 
         if (qualityGoos.Count > 0) formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
-        DA.SetData(0, formationGoo);
+        DA.SetData(0, formationGoo.Duplicate());
         DA.SetData(1, formationGoo.Value.Name);
         if (formationGoo.Value.Explanation != null)
             DA.SetData(2, formationGoo.Value.Explanation);
@@ -1554,6 +1556,61 @@ public class FormationComponent : SemioComponent
             DA.SetDataList(5, formationGoo.Value.Attractions.Select(a => new AttractionGoo(a.DeepClone())));
         if (formationGoo.Value.Qualities != null)
             DA.SetDataList(6, formationGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+    }
+}
+
+public class RandomIdsComponent : SemioComponent
+{
+    public RandomIdsComponent()
+        : base("Random Ids", "%Ids",
+            "Generate random ids.",
+            "semio", "Modelling")
+    {
+    }
+
+    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
+
+    protected override Bitmap Icon => Resources.id_random_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
+        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
+        pManager.AddBooleanParameter("Unique Component", "UC",
+            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var count = 0;
+        var seed = 0;
+        var unique = true;
+
+        DA.GetData(0, ref count);
+        DA.GetData(1, ref seed);
+        DA.GetData(2, ref unique);
+
+        var ids = new List<string>();
+
+        for (var i = 0; i < count; i++)
+        {
+            var hashString = seed + ";" + i;
+            if (unique)
+                hashString += ";" + InstanceGuid;
+            using (var md5 = MD5.Create())
+            {
+                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
+                var id = Generator.GenerateRandomId(BitConverter.ToInt32(hash, 0));
+                ids.Add(id);
+            }
+        }
+
+        DA.SetDataList(0, ids);
     }
 }
 
@@ -1610,7 +1667,20 @@ public class LoadKitComponent : SemioComponent
 
         if (run)
         {
-            var kit = new Api().LoadLocalKit(path);
+            var response = new Api().LoadLocalKit(path);
+            if (response == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+                return;
+            }
+
+            if (response.Error != null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error);
+                return;
+            }
+
+            var kit = response.Kit;
 
             DA.SetData(0, kit.Name);
             DA.SetData(1, kit.Explanation);
@@ -1678,7 +1748,10 @@ public class CreateKitComponent : SemioComponent
         DA.GetData(3, ref url);
         DA.GetDataList(4, typeGoos);
         DA.GetDataList(5, formationGoos);
-        if (!DA.GetData(6, ref path)) path = Directory.GetCurrentDirectory();
+        if (!DA.GetData(6, ref path))
+            path = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
         DA.GetData(7, ref run);
 
         if (!run)
@@ -1698,6 +1771,13 @@ public class CreateKitComponent : SemioComponent
         };
 
         var response = new Api().CreateLocalKit(path, kit);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
+
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -1754,6 +1834,12 @@ public class DeleteKitComponent : SemioComponent
         }
 
         var response = new Api().DeleteLocalKit(path);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.ToString());
@@ -1816,6 +1902,13 @@ public class AddTypeComponent : SemioComponent
         }
 
         var response = new Api().AddTypeToLocalKit(path, typeGoo.Value);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
+  
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -1877,15 +1970,21 @@ public class AddFormationComponent : SemioComponent
         }
 
         var response = new Api().AddFormationToLocalKit(path, formationGoo.Value);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
+            return;
         }
-        else
-        {
-            DA.SetData(0, true);
-        }
+
+        DA.SetData(0, true);
+        
     }
 }
 
@@ -1954,15 +2053,20 @@ public class RemoveTypeComponent : SemioComponent
         };
         if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveTypeFromLocalKit(path, type);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
+            return;
         }
-        else
-        {
-            DA.SetData(0, true);
-        }
+ 
+        DA.SetData(0, true);
     }
 }
 
@@ -2027,15 +2131,19 @@ public class RemoveFormationComponent : SemioComponent
         };
         if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveFormationFromLocalKit(path, formation);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            DA.SetData(0, false);
+            return;
+        }
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
             DA.SetData(0, false);
+            return;
         }
-        else
-        {
-            DA.SetData(0, true);
-        }
+        DA.SetData(0, true);
     }
 }
 
@@ -2486,6 +2594,11 @@ public class GetSceneComponent : SemioComponent
             Name = formationName,
             Qualities = formationQualityGoos.Select(q => q.Value).ToList()
         });
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            return;
+        }
         if (response.Error != null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
@@ -2567,6 +2680,7 @@ public class FilterSceneComponent : SemioComponent
                         if (!r.Tags.Any(t => tags.Contains(t)))
                             return false;
                     }
+
                     if (formats.Count > 0)
                         if (!formats.Contains(Path.GetExtension(r.Url)))
                             return false;

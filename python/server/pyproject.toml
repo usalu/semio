@@ -72,3 +72,6 @@ legacy_tox_ini = """
     commands_pre = poetry install
     commands = tests.sh
 """
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"

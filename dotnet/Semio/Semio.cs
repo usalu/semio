@@ -9,6 +9,7 @@ using Newtonsoft.Json.Serialization;
 using Semio.Properties;
 
 // TODO: Replace GetHashcode() with a proper hash function
+// TODO: Add logging mechanism to all API calls if they fail
 
 #region Copilot
 
@@ -484,6 +485,7 @@ using Semio.Properties;
 //}
 
 #endregion
+
 #region Utility
 
 public static class Generator
@@ -501,7 +503,9 @@ public static class Generator
         return $"{adjective}{animal}{number}";
     }
 }
+
 #endregion
+
 #region Models
 
 public interface IDeepCloneable<T>
@@ -695,7 +699,7 @@ public class Type : IDeepCloneable<Type>
         {
             Name = Name,
             Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
-            Ports = new List<Port>(Ports.Select(p => p.DeepClone())),
+            Ports = new List<Port>(Ports.Select(p => p.DeepClone()))
         };
         if (Explanation != null) type.Explanation = Explanation;
         if (Icon != null) type.Icon = Icon;
@@ -718,7 +722,7 @@ public class TypeId : IDeepCloneable<TypeId>
     {
         var typeId = new TypeId
         {
-            Name = Name,
+            Name = Name
         };
         if (Qualities != null) typeId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
         return typeId;
@@ -860,7 +864,7 @@ public class Formation : IDeepCloneable<Formation>
         {
             Name = Name,
             Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
-            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone())),
+            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone()))
         };
         if (Explanation != null) formation.Explanation = Explanation;
 
@@ -884,7 +888,7 @@ public class FormationId : IDeepCloneable<FormationId>
     {
         var formationId = new FormationId
         {
-            Name = Name,
+            Name = Name
         };
         if (Qualities != null) formationId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
         return formationId;
@@ -1082,8 +1086,8 @@ public static class Deserializer
 
 public class LoadLocalKitResponse
 {
-    public Kit Kit { get; set; }
-    public string Error { get; set; }
+    public Kit? Kit { get; set; }
+    public string? Error { get; set; }
 }
 
 public class LoadLocalKitResponseContainer
@@ -1108,8 +1112,8 @@ public class CreateLocalKitError
 
 public class CreateLocalKitResponse
 {
-    public Kit Kit { get; set; }
-    public CreateLocalKitError Error { get; set; }
+    public Kit? Kit { get; set; }
+    public CreateLocalKitError? Error { get; set; }
 }
 
 public class CreateLocalKitResponseContainer
@@ -1134,8 +1138,8 @@ public class UpdateLocalKitMetadataError
 
 public class UpdateLocalKitMetadataResponse
 {
-    public Kit Kit { get; set; }
-    public UpdateLocalKitMetadataError Error { get; set; }
+    public KitMetadata? Kit { get; set; }
+    public UpdateLocalKitMetadataError? Error { get; set; }
 }
 
 public class UpdateLocalKitMetadataResponseContainer
@@ -1177,8 +1181,8 @@ public class AddTypeToLocalKitError
 
 public class AddTypeToLocalKitResponse
 {
-    public Type Type { get; set; }
-    public AddTypeToLocalKitError Error { get; set; }
+    public Type? Type { get; set; }
+    public AddTypeToLocalKitError? Error { get; set; }
 }
 
 public class AddTypeToLocalKitResponseContainer
@@ -1204,7 +1208,7 @@ public class RemoveTypeFromLocalKitError
 
 public class RemoveTypeFromLocalKitResponse
 {
-    public RemoveTypeFromLocalKitError Error { get; set; }
+    public RemoveTypeFromLocalKitError? Error { get; set; }
 }
 
 public class RemoveTypeFromLocalKitResponseContainer
@@ -1229,8 +1233,8 @@ public class AddFormationToLocalKitError
 
 public class AddFormationToLocalKitResponse
 {
-    public Formation Formation { get; set; }
-    public AddFormationToLocalKitError Error { get; set; }
+    public Formation? Formation { get; set; }
+    public AddFormationToLocalKitError? Error { get; set; }
 }
 
 public class AddFormationToLocalKitResponseContainer
@@ -1255,7 +1259,7 @@ public class RemoveFormationFromLocalKitError
 
 public class RemoveFormationFromLocalKitResponse
 {
-    public RemoveFormationFromLocalKitError Error { get; set; }
+    public RemoveFormationFromLocalKitError? Error { get; set; }
 }
 
 public class RemoveFormationFromLocalKitResponseContainer
@@ -1280,8 +1284,8 @@ public class FormationToSceneFromLocalKitResponseError
 
 public class FormationToSceneFromLocalKitResponse
 {
-    public Scene Scene { get; set; }
-    public FormationToSceneFromLocalKitResponseError Error { get; set; }
+    public Scene? Scene { get; set; }
+    public FormationToSceneFromLocalKitResponseError? Error { get; set; }
 }
 
 public class FormationToSceneFromLocalKitResponseContainer
@@ -1320,7 +1324,7 @@ public class Api : ICloneable
         return $"Api(Endpoint: {Endpoint}, Token: {Token})";
     }
 
-    public Kit LoadLocalKit(string directory)
+    public LoadLocalKitResponse? LoadLocalKit(string directory)
     {
         var query = new GraphQLRequest
         {
@@ -1329,10 +1333,11 @@ public class Api : ICloneable
             Variables = new { directory }
         };
         var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
-        return response.Data.LoadLocalKit.Kit;
+        if (response.Errors != null) return null;
+        return response.Data.LoadLocalKit;
     }
 
-    public CreateLocalKitResponse CreateLocalKit(string directory, Kit kit)
+    public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
     {
         var query = new GraphQLRequest
         {
@@ -1341,10 +1346,11 @@ public class Api : ICloneable
             Variables = new { directory, kit }
         };
         var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.CreateLocalKit;
     }
 
-    public UpdateLocalKitMetadataResponse UpdateLocalKitMetadata(string directory, KitMetadata kit)
+    public UpdateLocalKitMetadataResponse? UpdateLocalKitMetadata(string directory, KitMetadata kit)
     {
         var query = new GraphQLRequest
         {
@@ -1353,10 +1359,11 @@ public class Api : ICloneable
             Variables = new { directory, kit }
         };
         var response = Client.SendQueryAsync<UpdateLocalKitMetadataResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.UpdateLocalKitMetadata;
     }
 
-    public DeleteLocalKitResponse DeleteLocalKit(string directory)
+    public DeleteLocalKitResponse? DeleteLocalKit(string directory)
     {
         var query = new GraphQLRequest
         {
@@ -1365,10 +1372,11 @@ public class Api : ICloneable
             Variables = new { directory }
         };
         var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.DeleteLocalKit;
     }
 
-    public AddTypeToLocalKitResponse AddTypeToLocalKit(string directory, Type type)
+    public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
     {
         var query = new GraphQLRequest
         {
@@ -1377,10 +1385,11 @@ public class Api : ICloneable
             Variables = new { directory, type }
         };
         var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.AddTypeToLocalKit;
     }
 
-    public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit(string directory, TypeId type)
+    public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
     {
         var query = new GraphQLRequest
         {
@@ -1389,10 +1398,11 @@ public class Api : ICloneable
             Variables = new { directory, type }
         };
         var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.RemoveTypeFromLocalKit;
     }
 
-    public AddFormationToLocalKitResponse AddFormationToLocalKit(string directory, Formation formation)
+    public AddFormationToLocalKitResponse? AddFormationToLocalKit(string directory, Formation formation)
     {
         var query = new GraphQLRequest
         {
@@ -1401,10 +1411,11 @@ public class Api : ICloneable
             Variables = new { directory, formation }
         };
         var response = Client.SendQueryAsync<AddFormationToLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.AddFormationToLocalKit;
     }
 
-    public RemoveFormationFromLocalKitResponse RemoveFormationFromLocalKit(string directory, FormationId formation)
+    public RemoveFormationFromLocalKitResponse? RemoveFormationFromLocalKit(string directory, FormationId formation)
     {
         var query = new GraphQLRequest
         {
@@ -1413,10 +1424,11 @@ public class Api : ICloneable
             Variables = new { directory, formation }
         };
         var response = Client.SendQueryAsync<RemoveFormationFromLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.RemoveFormationFromLocalKit;
     }
 
-    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit(string directory, FormationId formation)
+    public FormationToSceneFromLocalKitResponse? FormationToSceneFromLocalKit(string directory, FormationId formation)
     {
         var query = new GraphQLRequest
         {
@@ -1425,6 +1437,7 @@ public class Api : ICloneable
             Variables = new { directory, formation }
         };
         var response = Client.SendQueryAsync<FormationToSceneFromLocalKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
         return response.Data.FormationToSceneFromLocalKit;
     }
 }

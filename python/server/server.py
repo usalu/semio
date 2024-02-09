@@ -1472,7 +1472,6 @@ class PortNotFound(NotFound):
     def __str__(self):
         return f"Port({self.qualities}) not found."
 
-
 class TypeNotFound(NotFound):
     def __init__(self, name) -> None:
         super().__init__(name)
@@ -1491,22 +1490,33 @@ class QualitiesDontMatchType(TypeNotFound):
         self.types = types
 
     def __str__(self):
-        return f"Qualities ({self.qualityInputs}) don't match any type with name {self.name}: {str(self.types)}"
+        return f"Qualities({self.qualityInputs}) don't match any type with name {self.name}: {list_client__str__(self.types)}"
 
 
 class TooLittleQualitiesToMatchExcactlyType(QualitiesDontMatchType):
     def __str__(self):
-        return f"Too little qualities ({self.qualityInputs}) to match exactly one type name {self.name}: {str(self.types)}"
+        return f"Too little qualities ({self.qualityInputs}) to match exactly one type name {self.name}: {list_client__str__(self.types)}"
 
 
 class PieceNotFound(NotFound):
-    def __init__(self, local_id) -> None:
+    def __init__(self, formation, local_id) -> None:
         super().__init__(local_id)
+        self.formation = formation
         self.local_id = local_id
 
     def __str__(self):
-        return f"Piece({self.local_id}) not found. Please check that the local id is correct and that the piece is part of the formation."
+        return f"Piece({self.local_id}) not found. Please check that the local id is correct and that the piece is part of the formation {str(self.formation)}"
 
+
+class AttractionNotFound(NotFound):
+    def __init__(self, formation, attracting, attracted) -> None:
+        super().__init__((attracting, attracted))
+        self.formation = formation
+        self.attracting = attracting
+        self.attracted = attracted
+
+    def __str__(self):
+        return f"Attraction with attracting piece id ({self.attracting}) and attracted piece id ({self.attracted}) not found in formation {str(self.formation)}"
 
 class FormationNotFound(NotFound):
     def __init__(self, name) -> None:
@@ -1577,6 +1587,14 @@ class PortAlreadyExists(AlreadyExists):
     def __str__(self):
         return f"Port with specifiers: {self.port.specifiers!r} already exists: {str(self.port)}"
 
+
+class AttractionAlreadyExists(AlreadyExists):
+    def __init__(self, attraction: Attraction, existingAttraction: Attraction) -> None:
+        super().__init__((attraction.attracting.piece.id,attraction.attracted.piece.id), existingAttraction)
+        self.attraction = attraction
+
+    def __str__(self):
+        return f"Attraction with attracting piece id ({self.attraction.attracting.piece.id}) and attracted piece id ({self.attraction.attracted.piece.id}) already exists: {self.existing.client__str__()}"
 
 class DocumentAlreadyExists(AlreadyExists):
     def __init__(self, document) -> None:
@@ -1749,6 +1767,18 @@ def getPortBySpecifiers(
     return portsWithSameSpecifier[0]
 
 
+def getAttractionByPieceIds(
+    session: Session, formation: Formation, attractingPieceId: str, attractedPieceId: str
+) -> Attraction:
+    attraction = session.query(Attraction).filter_by(
+        attracting_piece_id=attractingPieceId,
+        attracted_piece_id=attractedPieceId,
+        formation_id=formation.id,
+    ).first()
+    if not attraction:
+        raise AttractionNotFound(attractingPieceId, attractedPieceId, formation)
+    return attraction
+
 def addRepresentationInputToSession(
     session: Session,
     type: Type,
@@ -1888,13 +1918,26 @@ def addAttractionInputToSession(
     localIdToPiece: dict,
 ) -> Attraction:
     try:
+        # TODO: Somehow the flushing of the other attractions works but you can't query for them.
+        # When I try to look for an existing attraction it finds none but when adding it,
+        # it raises a proper IntegrityError
+        existingAttraction = getAttractionByPieceIds(
+            session,
+            formation,
+            attractionInput.attracting.piece.id,
+            attractionInput.attracted.piece.id,
+        )
+        raise AttractionAlreadyExists(attractionInput, existingAttraction)
+    except AttractionNotFound:
+        pass
+    try:
         attractingPiece = localIdToPiece[attractionInput.attracting.piece.id]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracting.piece.id)
+        raise PieceNotFound(formation, attractionInput.attracting.piece.id)
     try:
         attractedPiece = localIdToPiece[attractionInput.attracted.piece.id]
     except KeyError:
-        raise PieceNotFound(attractionInput.attracted.piece.id)
+        raise PieceNotFound(formation, attractionInput.attracted.piece.id)
     attractingPieceTypePort = getPortBySpecifiers(
         session,
         attractingPiece.type,
@@ -1945,7 +1988,6 @@ def addFormationInputToSession(
     for pieceInput in formationInput.pieces or []:
         piece = addPieceInputToSession(session, formation, pieceInput)
         localIdToPiece[pieceInput.id] = piece
-
     for attractionInput in formationInput.attractions or []:
         attraction = addAttractionInputToSession(
             session, formation, attractionInput, localIdToPiece
@@ -2452,6 +2494,14 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
                 error=AddFormationToLocalKitErrorNode(
                     code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
                     message=str(e),
+                )
+            )
+        except IntegrityError as e:
+            session.rollback()
+            return AddFormationToLocalKitMutation(
+                error=AddFormationToLocalKitErrorNode(
+                    code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+                    message=str("Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical explanation of what is wrong: " + str(e)),
                 )
             )
         session.commit()
