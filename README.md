@@ -11,7 +11,7 @@
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-Grasshopper.svg" alt="Grasshopper"></a>
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-comming_soon(Python).svg" alt="Python"></a>
-    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-planning(Sverchok).svg" alt="Sverchok"></a>
+    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-planned(Sverchok).svg" alt="Sverchok"></a>
     <br/>
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Python.svg" alt="Python"></a>
     <br/>
@@ -56,7 +56,11 @@ semio consists of two parts: a server which runs locally ([portable windows prog
 ## Installation
 
 The local server needs no installation. Just unpack the folder and run it. When it runs, you should see a system tray icon.
+
 ![System Tray](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/systemtray.png)
+
+> NOTE: It doesn't run? `semio.exe` might be blocked by Windows, or a custom Firewall because the binary is not signed yet. Otherwise if you receive an error message about a missing file, module, package or folder, then it is most likely that some files were not correctly unzipped. Reasons for this can be too the paths,  synchronized folders, etc. Try unzipping it in a flat folder like C:\ and copy it to the target destination afterwards.
+
 
 The Grasshopper plugin can be installed over the Rhino Package Manager.
 1. Open Rhino Package Manger
@@ -68,15 +72,17 @@ The Grasshopper plugin can be installed over the Rhino Package Manager.
 
 That's it!
 
-> NOTE: The first time you will use semio, the Windows Firewall will ask you to allow internet access for `semio.exe`. This is because the semio backend is a graphql server which communicates over a port to the frontent. semio will by default **<ins>not</ins>** access the internet because be started. If you want to host the backend somewhere else you **<ins>can</ins>** but that requires a Rhino.Compute license, an active server and configuration in the client.
-
 ## Examples
 
 You can download the examples from the [release](https://github.com/usalu/semio/releases/download/2.0/examples.zip).
 
 
-
 ### Nakagin Capsule Tower
+
+### Requirements
+- Rhino model units need to be set to `Meter`.
+
+
 At least in semio, the iconic capsule tower(s) will keep on existing!
 ![Nakagin Capsule Tower](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/grasshopper.gif)
 
