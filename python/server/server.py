@@ -29,9 +29,12 @@ semio server.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
 
+import sys
+import logging # for uvicorn in pyinstaller
 from collections import deque
 from os import remove
 from pathlib import Path
+from multiprocessing import Process, freeze_support
 from functools import lru_cache
 from typing import Any, Callable, Generator, Optional, Dict, Protocol, List, Union
 from datetime import datetime
@@ -75,13 +78,22 @@ from graphene_sqlalchemy import (
     SQLAlchemyObjectType,
 )
 from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
-from flask import Flask
-from graphql_server.flask import GraphQLView
+from uvicorn import run
+from starlette.applications import Starlette
+from starlette_graphene3 import GraphQLApp, make_graphiql_handler
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+import platformdirs # for pyinstaller
+
+logging.basicConfig(level=logging.INFO) # for uvicorn in pyinstaller
 
 NAME_LENGTH_MAX = 100
 URL_LENGTH_MAX = 1000
 KIT_FOLDERNAME = ".semio"
 KIT_FILENAME = "kit.sqlite3"
+HOST = "127.0.0.1"
+PORT = 5052
 
 ureg = UnitRegistry()
 
@@ -2693,26 +2705,66 @@ schema = Schema(
     mutation=Mutation,
 )
 
-app = Flask(__name__)
-app.add_url_rule(
-    "/graphql",
-    view_func=GraphQLView.as_view(
-        "graphql",
-        schema=schema,
-        graphiql=True,
-    ),
-)
-if app.debug:
+server = Starlette()
+server.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
+
+if server.debug:
     with open("../../graphql/schema.graphql", "w") as f:
         f.write(str(schema))
 
     metadata_engine = create_engine("sqlite:///debug/semio.db")
     Base.metadata.create_all(metadata_engine)
 
+def start_server():
+    run(server, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
 
-def main():
-    app.run()
-
+def restart_server():
+    ui_instance = QApplication.instance()
+    server_process = ui_instance.server_process
+    if server_process.is_alive():
+        server_process.terminate()
+    ui_instance.server_process = Process(target=start_server)
+    ui_instance.server_process.start()
 
 if __name__ == "__main__":
-    main()
+    freeze_support()
+
+    ui = QApplication(sys.argv) 
+    ui.setQuitOnLastWindowClosed(False) 
+
+    import sys
+    import os
+
+    # Frozen with PyInstaller
+    if getattr(sys, 'frozen', False):
+        basedir = sys._MEIPASS
+    else:
+        basedir = "../.."
+
+    icon = QIcon()
+    icon.addFile(os.path.join(basedir, "icons/semio_16x16.png"), QSize(16,16))
+    icon.addFile(os.path.join(basedir, "icons/semio_32x32.png"), QSize(32,32))
+    icon.addFile(os.path.join(basedir, "icons/semio_48x48.png"), QSize(48,48))
+    icon.addFile(os.path.join(basedir, "icons/semio_128x128.png"), QSize(128,128))
+    icon.addFile(os.path.join(basedir, "icons/semio_256x256.png"), QSize(256,256))
+    
+    tray = QSystemTrayIcon() 
+    tray.setIcon(icon) 
+    tray.setVisible(True) 
+    
+    menu = QMenu() 
+    restart = QAction("Restart")
+    restart.triggered.connect(restart_server)
+    menu.addAction(restart) 
+    
+    quit = QAction("Quit") 
+    # kill server and quit ui
+    quit.triggered.connect(lambda: ui.server_process.terminate() or ui.quit())
+    menu.addAction(quit) 
+    
+    tray.setContextMenu(menu)
+
+    ui.server_process = Process(target=start_server)
+    ui.server_process.start()
+
+    sys.exit(ui.exec())

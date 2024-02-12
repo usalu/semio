@@ -8,7 +8,7 @@ namespace Semio.Grasshopper;
 
 public class Semio_GrasshopperInfo : GH_AssemblyInfo
 {
-    public override string Name => "Semio.Grasshopper";
+    public override string Name => "semio";
     public override Bitmap Icon => Resources.semio_24x24;
     public override Bitmap AssemblyIcon => Resources.semio_24x24;
     public override string Description => "Grasshopper user interface for semio.";

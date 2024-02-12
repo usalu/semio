@@ -1297,7 +1297,7 @@ public class Api : ICloneable
 {
     public Api()
     {
-        Endpoint = "http://127.0.0.1:5000/graphql";
+        Endpoint = "http://127.0.0.1:5052/graphql";
         Token = "";
         Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
     }
