@@ -6,7 +6,7 @@
     </picture>
     <br/>
     <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/doizenodo.svg" alt="Cite"></a>
-    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/latestrealease.svg" alt="Latest Release"></a>
+    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/latestrelease.svg" alt="Latest Release"></a>
     <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/licenseagplv3.svg" alt="AGPLv3 License"></a>
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uigrasshopper.svg" alt="Grasshopper"></a>
@@ -16,11 +16,8 @@
     <!-- <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedsverchok.svg" alt="Sverchok"></a>
     <br/> -->
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbypython.svg" alt="Python"></a>
-    <br/>
     <a href="https://graphql.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbygraphql.svg" alt="GraphQL"></a>
-    <br/>
     <a href="https://www.qt.io/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbyqt.svg" alt="Qt"></a>
-    <br/>
     <br/>
     <i>Collaborative, scalable and cross-platform designing.</i>
 </p>
