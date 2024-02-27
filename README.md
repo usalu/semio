@@ -5,18 +5,19 @@
         <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main/logo/logo-horizontal.svg">
     </picture>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/doi-zenodo.svg" alt="Latest Release"></a>
-    <a href="https://github.com/usalu/semio/"><img src="https://img.shields.io/github/v/release/usalu/semio?style=flat-square&color=ff344f" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/license-AGPL_v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/doizenodo.svg" alt="Cite"></a>
+    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/latestrelease.svg" alt="Latest Release"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/licenseagplv3.svg" alt="AGPLv3 License"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-Grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-comming_soon(Python).svg" alt="Python"></a>
-    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/platform-planning(Sverchok).svg" alt="Sverchok"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uigrasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.rhino3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedrhino.svg" alt="Rhino"></a>
+    <a href="https://www.autodesk.de/products/revit/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedrevit.svg" alt="Revit"></a>
     <br/>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Python.svg" alt="Python"></a>
-    <a href="<http://www.w3.org/2001/sw/wiki/RDF>"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Semantic_Web.svg" alt="Semantic Web"></a>
-    <a href="https://speckle.systems/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/powered_by-Speckle.svg" alt="Speckle Systems"></a>
-    <br/>
+    <!-- <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedsverchok.svg" alt="Sverchok"></a>
+    <br/> -->
+    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbypython.svg" alt="Python"></a>
+    <a href="https://graphql.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbygraphql.svg" alt="GraphQL"></a>
+    <a href="https://www.qt.io/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/poweredbyqt.svg" alt="Qt"></a>
     <br/>
     <i>Collaborative, scalable and cross-platform designing.</i>
 </p>
@@ -26,14 +27,14 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/artifacts-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/artifacts.svg">
-        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/artifacts.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/artifacts-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/artifacts.svg">
+        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/artifacts.svg">
     </picture>
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/computation-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/computation.svg">
-        <img alt="Capsule Tower Computation" src="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/computation.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/computation-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/computation.svg">
+        <img alt="Capsule Tower Computation" src="https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/computation.svg">
     </picture>
 </p>
 
@@ -45,56 +46,55 @@ You want to <emoji>✏️</emoji> the next <emoji>🏛️🏘️🏢🏭🏫🏨
     <img alt="Analogies" src="https://raw.githubusercontent.com/usalu/semio/main/docs/conceptual/analogies.svg">
 </picture>
 
-semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of a linked data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be defined and freely combined via a generalized port mechanism.
+semio is an open ecosystem for component-based design of architecture. The decomposition of a design by a graph enables a collaborative, scalable and cross-platform design process. Instead of 3D-blobs, proprietary or documentary file formats from which it is difficult to extract individual parts, the heart of semio consists of an open data model. All components can be easily shared, searched and reused. Unlike existing data models, not every design is squeezed into a handful of standard types such as floors, walls or windows. Instead, individual, complex and flexible types can be defined and freely combined via a generalized port mechanism.
 
 # Getting started
 
 ## Requirements
 - Windows
-- Rhino 7
-- Hops package from the Rhino Package Manger
+- Rhino 7 or greater
 
-> NOTE: Hops (in reality Rhino.Compute) needs certain runtimes which are not by default installed. The developers probably didn't notice because every one had Visual Studio already installed. You can fix this by installing [Visual Studio](https://visualstudio.microsoft.com/) and install .NET for desktop development.
-![Visual Studio .NET](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/visual-studio-dotnet.png)
-To check if Hops is running correctly, you can uncheck the checkbox "Hide 
-Compute.Compute Console Window". Make sure that "Launch Local Rhino.Compute at Start" checkbox is checked.
-![Show Compute Option](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/show-compute.png)
-When you restart Rhino and start Grasshopper a window like this should appear for Rhino.Compute:
-![Compute](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/compute.png)
-If Rhino.Compute still doesn't run, then try cloning the official [Rhino.Compute Git Repository](https://github.com/mcneel/compute.rhino3d) and open `src/compute.sln` in Visual Studio and agree on downloading the missing packages.
+semio consists of two parts: a server which runs locally ([portable windows program](https://github.com/usalu/semio/releases/download/2.0/semio.zip)) and a Grasshopper user-interface.
 
 ## Installation
-![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/rhinopackage.gif)
+
+The local server needs no installation. Just unpack the folder and run it. When it runs, you should see a system tray icon.
+
+![System Tray](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/systemtray.png)
+
+> NOTE: It doesn't run? `semio.exe` might be blocked by Windows, or a custom Firewall because the binary is not signed yet. Otherwise if you receive an error message about a missing file, module, package or folder, then it is most likely that some files were not correctly unzipped. Reasons for this can be too long paths, synchronized folders, etc. Try unzipping it in a flat folder like C:\ and copy it to the target destination afterwards.
+
+
+The Grasshopper plugin can be installed over the Rhino Package Manager.
 1. Open Rhino Package Manger
 1. Search for semio
 1. Install the latest version
 1. Restart Rhino
 
-That's it!
+![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/rhinopackage.gif)
 
-> NOTE: The first time you will use semio, the Windows Firewall will ask you to allow internet access for
-`restproxy.exe` and `semio.exe`. This is because the semio backend is a microservice architecture which communicates over several ports. semio will by default **<ins>not</ins>** access the internet because a local server will be started. If you want to host the backend somewhere else you **<ins>can</ins>** but that requires a Rhino.Compute license, an active server and configuration in the client.
+That's it!
 
 ## Examples
 
-You can download the examples from the [release](https://github.com/usalu/semio/releases/download/1.0/examples.zip).
+You can download the examples from the [release](https://github.com/usalu/semio/releases/download/2.0/examples.zip).
 
-> NOTE: When you open an example, then semio will automatically start. Make sure to wait a second until you see a command line program like this: ![semio cli](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/semiocli.png)
-
-### Hello World
-Now you can lay out your first design!
-![Hello World](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/helloworld/grasshopper.gif)
 
 ### Nakagin Capsule Tower
-At least in semio, the iconic capsule tower(s) will keep on existing!
-![Nakagin Capsule Tower](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/grasshopper.gif)
 
-Ever wanted to change the capsules with one click?
-![Nakagin Capsule Tower](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/capsuletower/grasshopper-variant.gif)
+### Requirements
+- Rhino model units need to be set to `Meter`.
+
+
+At least in semio, the iconic capsule tower(s) will keep on existing!
+![Nakagin Capsule Tower](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/grasshopper.gif)
+
+Ever wanted to change the capsules or the shaft with one click? While having different level of details?
+![Nakagin Capsule Tower Variants](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/variants.png)
 
 # How does semio work?
 
->NOTE: This only applies (and not to full extent) to v1. We are working on a complete rewrite with a totally different metamodel, system architecture and software architecture. Short: Almost everything will change... but many more exciting features will come! Such as a persistance layer for easy sharing design components. A shared type no longer needs a runtime but parameters and geometry are persisted.
+>NOTE: This is outdated. Version 2 was a complete rewrite. It is way better now!
 
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main/docs/softwarequality/systemarchitecture/componentsdiagram-dark.svg">
@@ -129,9 +129,6 @@ Here is a brief overview over the process:
 Currently there is one UI for Grasshopper.
 ![Menu ribbon](https://raw.githubusercontent.com/usalu/semio/main/docs/adapters/grasshopper/ribbon.png)
 
-## Extensions
-
-Currently there is one extension for Grasshopper that makes it possible to turn Grasshopper scripts into semio scripts.
 
 # Contribution
 

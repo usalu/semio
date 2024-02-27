@@ -22,7 +22,7 @@ graphene-pydantic = "^0.4.2"
 pint = "^0.23"
 networkx = "^3.2.1"
 pytransform3d = "^3.5.0"
-pyqt6 = "^6.6.1"
+pyside6 = "^6.6.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
