@@ -10,7 +10,7 @@
     <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/licenseagplv3.svg" alt="AGPLv3 License"></a>
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uigrasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedrhino.svg" alt="Rhino"></a>
+    <a href="https://www.rhino3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedrhino.svg" alt="Rhino"></a>
     <a href="https://www.autodesk.de/products/revit/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedrevit.svg" alt="Revit"></a>
     <br/>
     <!-- <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/main/docs/badges/uiplannedsverchok.svg" alt="Sverchok"></a>
@@ -62,7 +62,7 @@ The local server needs no installation. Just unpack the folder and run it. When 
 
 ![System Tray](https://raw.githubusercontent.com/usalu/semio/main/docs/installation/systemtray.png)
 
-> NOTE: It doesn't run? `semio.exe` might be blocked by Windows, or a custom Firewall because the binary is not signed yet. Otherwise if you receive an error message about a missing file, module, package or folder, then it is most likely that some files were not correctly unzipped. Reasons for this can be too the paths,  synchronized folders, etc. Try unzipping it in a flat folder like C:\ and copy it to the target destination afterwards.
+> NOTE: It doesn't run? `semio.exe` might be blocked by Windows, or a custom Firewall because the binary is not signed yet. Otherwise if you receive an error message about a missing file, module, package or folder, then it is most likely that some files were not correctly unzipped. Reasons for this can be too long paths, synchronized folders, etc. Try unzipping it in a flat folder like C:\ and copy it to the target destination afterwards.
 
 
 The Grasshopper plugin can be installed over the Rhino Package Manager.

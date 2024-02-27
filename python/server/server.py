@@ -29,8 +29,9 @@ semio server.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
 
+import os
 import sys
-import logging # for uvicorn in pyinstaller
+import logging  # for uvicorn in pyinstaller
 from collections import deque
 from os import remove
 from pathlib import Path
@@ -81,12 +82,31 @@ from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
 from uvicorn import run
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler
-from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QIcon, QAction
-from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
-import platformdirs # for pyinstaller
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QSystemTrayIcon,
+    QMenu,
+)
+from PySide6.QtCore import QSize, Property, QObject, QPropertyAnimation, Signal
+from PySide6.QtGui import (
+    QColor,
+    QIcon,
+    QAction,
+    QGuiApplication,
+    QMatrix4x4,
+    QQuaternion,
+    QVector3D,
+)
+from PySide6.Qt3DCore import Qt3DCore
+from PySide6.Qt3DExtras import Qt3DExtras
+from PySide6.Qt3DExtras import Qt3DExtras
+from PySide6.Qt3DRender import Qt3DRender
+import platformdirs  # for pyinstaller
 
-logging.basicConfig(level=logging.INFO) # for uvicorn in pyinstaller
+logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
 NAME_LENGTH_MAX = 100
 URL_LENGTH_MAX = 1000
@@ -156,8 +176,7 @@ class Artifact(Protocol):
             + self.referenced_by
         )
 
-    def client__str__(self) -> str:
-        ...
+    def client__str__(self) -> str: ...
 
 
 def list_client__str__(list) -> str:
@@ -205,7 +224,7 @@ class Tag(Base):
         )
 
     def client__str__(self) -> str:
-        return f"Tag(value={self.value})"
+        return f"{self.value}"
 
     # @property
     # def parent(self) -> Artifact:
@@ -257,7 +276,7 @@ class Representation(Base):
         return f"Representation(id={str(self.id)}, type_id={str(self.type_id)})"
 
     def client__str__(self) -> str:
-        return f"Representation(url={self.url})"
+        return f"Representation(url={self.url}, tags={list_client__str__(self.tags)})"
 
     @validates("url")
     def validate_url(self, key: str, url: str):
@@ -318,7 +337,7 @@ class Specifier(Base):
         return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
 
     def client__str__(self) -> str:
-        return f"Specifier(context={self.context})"
+        return f"Specifier(context={self.context}, group={self.group})"
 
     # @property
     # def parent(self) -> Artifact:
@@ -534,7 +553,7 @@ class Port(Base):
         return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
 
     def client__str__(self) -> str:
-        return f"Port(specifiers={list_client__str__(self.specifiers)}])"
+        return f"Port(specifiers={list_client__str__(self.specifiers)})"
 
     @property
     def plane(self) -> Plane:
@@ -637,7 +656,7 @@ class Quality(Base):
         return f"Quality(id={self.id}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
 
     def client__str__(self) -> str:
-        return f"Quality(name={self.name})"
+        return f"Quality(name={self.name}, value={self.value}, unit={self.unit})"
 
     # @property
     # def parent(self) -> Artifact:
@@ -695,15 +714,13 @@ class Type(Base):
     #     return hash((self.name, set(self.qualities)))
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
+        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, unit={self.unit!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
 
     def __str__(self) -> str:
         return f"Type(id={str(self.id)}, kit_id={str(self.kit_id)})"
 
     def client__str__(self) -> str:
-        return (
-            f"Type(name={self.name}, qualities={list_client__str__(self.qualities)}])"
-        )
+        return f"Type(name={self.name}, qualities={list_client__str__(self.qualities)})"
 
     # @property
     # def parent(self) -> Artifact:
@@ -970,7 +987,7 @@ class Formation(Base):
         return f"Formation(id={str(self.id)}, kit_id={str(self.kit_id)})"
 
     def client__str__(self) -> str:
-        return f"Formation(name={self.name}, qualities={list_client__str__(self.qualities)}])"
+        return f"Formation(name={self.name}, qualities={list_client__str__(self.qualities)})"
 
     # @property
     # def parent(self) -> Artifact:
@@ -1484,6 +1501,7 @@ class PortNotFound(NotFound):
     def __str__(self):
         return f"Port({self.qualities}) not found."
 
+
 class TypeNotFound(NotFound):
     def __init__(self, name) -> None:
         super().__init__(name)
@@ -1529,6 +1547,7 @@ class AttractionNotFound(NotFound):
 
     def __str__(self):
         return f"Attraction with attracting piece id ({self.attracting}) and attracted piece id ({self.attracted}) not found in formation {str(self.formation)}"
+
 
 class FormationNotFound(NotFound):
     def __init__(self, name) -> None:
@@ -1602,11 +1621,15 @@ class PortAlreadyExists(AlreadyExists):
 
 class AttractionAlreadyExists(AlreadyExists):
     def __init__(self, attraction: Attraction, existingAttraction: Attraction) -> None:
-        super().__init__((attraction.attracting.piece.id,attraction.attracted.piece.id), existingAttraction)
+        super().__init__(
+            (attraction.attracting.piece.id, attraction.attracted.piece.id),
+            existingAttraction,
+        )
         self.attraction = attraction
 
     def __str__(self):
         return f"Attraction with attracting piece id ({self.attraction.attracting.piece.id}) and attracted piece id ({self.attraction.attracted.piece.id}) already exists: {self.existing.client__str__()}"
+
 
 class DocumentAlreadyExists(AlreadyExists):
     def __init__(self, document) -> None:
@@ -1780,16 +1803,24 @@ def getPortBySpecifiers(
 
 
 def getAttractionByPieceIds(
-    session: Session, formation: Formation, attractingPieceId: str, attractedPieceId: str
+    session: Session,
+    formation: Formation,
+    attractingPieceId: str,
+    attractedPieceId: str,
 ) -> Attraction:
-    attraction = session.query(Attraction).filter_by(
-        attracting_piece_id=attractingPieceId,
-        attracted_piece_id=attractedPieceId,
-        formation_id=formation.id,
-    ).first()
+    attraction = (
+        session.query(Attraction)
+        .filter_by(
+            attracting_piece_id=attractingPieceId,
+            attracted_piece_id=attractedPieceId,
+            formation_id=formation.id,
+        )
+        .first()
+    )
     if not attraction:
         raise AttractionNotFound(attractingPieceId, attractedPieceId, formation)
     return attraction
+
 
 def addRepresentationInputToSession(
     session: Session,
@@ -2513,7 +2544,10 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
             return AddFormationToLocalKitMutation(
                 error=AddFormationToLocalKitErrorNode(
                     code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
-                    message=str("Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical explanation of what is wrong: " + str(e)),
+                    message=str(
+                        "Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical explanation of what is wrong: "
+                        + str(e)
+                    ),
                 )
             )
         session.commit()
@@ -2715,8 +2749,17 @@ if server.debug:
     metadata_engine = create_engine("sqlite:///debug/semio.db")
     Base.metadata.create_all(metadata_engine)
 
+
 def start_server():
-    run(server, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
+    run(
+        server,
+        host=HOST,
+        port=PORT,
+        log_level="info",
+        access_log=False,
+        log_config=None,
+    )
+
 
 def restart_server():
     ui_instance = QApplication.instance()
@@ -2726,42 +2769,98 @@ def restart_server():
     ui_instance.server_process = Process(target=start_server)
     ui_instance.server_process.start()
 
+
+class FormationEditor3dWindow(Qt3DExtras.Qt3DWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Camera
+        self.camera().lens().setPerspectiveProjection(45, 16 / 9, 0.1, 1000)
+        self.camera().setPosition(QVector3D(0, 0, 40))
+        self.camera().setViewCenter(QVector3D(0, 0, 0))
+
+        # For camera controls
+        self.createScene()
+        self.camController = Qt3DExtras.QOrbitCameraController(self.rootEntity)
+        self.camController.setLinearSpeed(50)
+        self.camController.setLookSpeed(180)
+        self.camController.setCamera(self.camera())
+
+        self.setRootEntity(self.rootEntity)
+
+    def createScene(self):
+        self.rootEntity = Qt3DCore.QEntity()
+        self.material = Qt3DExtras.QPhongMaterial(self.rootEntity)
+
+        gridGeometry = Qt3DRender.QGeometryRenderer()
+        geometry = Qt3DCore.QGeometry(gridGeometry)
+        lines = [
+            QVector3D(-100, 0, 0),
+            QVector3D(100, 0, 0),
+            QVector3D(0, -100, 0),
+            QVector3D(0, 100, 0),
+        ]
+
+        gridMaterial = Qt3DExtras.QPhongMaterial()
+        gridMaterial.setAmbient(QColor(255, 255, 255))
+        gridEntity = Qt3DCore.QEntity(self.rootEntity)
+        gridEntity.addComponent(gridGeometry)
+        gridEntity.addComponent(gridMaterial)
+
+        # Torus
+        self.torusEntity = Qt3DCore.QEntity(self.rootEntity)
+        self.torusMesh = Qt3DExtras.QTorusMesh()
+        self.torusMesh.setRadius(5)
+        self.torusMesh.setMinorRadius(1)
+        self.torusMesh.setRings(100)
+        self.torusMesh.setSlices(20)
+
+        self.torusTransform = Qt3DCore.QTransform()
+        self.torusTransform.setScale3D(QVector3D(1.5, 1, 0.5))
+        self.torusTransform.setRotation(
+            QQuaternion.fromAxisAndAngle(QVector3D(1, 0, 0), 45)
+        )
+
+        self.torusEntity.addComponent(self.torusMesh)
+        self.torusEntity.addComponent(self.torusTransform)
+        self.torusEntity.addComponent(self.material)
+
+
 if __name__ == "__main__":
     freeze_support()
 
-    ui = QApplication(sys.argv) 
-    ui.setQuitOnLastWindowClosed(False) 
-
-    import sys
-    import os
+    ui = QApplication(sys.argv)
+    ui.setQuitOnLastWindowClosed(False)
+    view = FormationEditor3dWindow()
+    view.show()
 
     # Frozen with PyInstaller
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
         basedir = "../.."
 
     icon = QIcon()
-    icon.addFile(os.path.join(basedir, "icons/semio_16x16.png"), QSize(16,16))
-    icon.addFile(os.path.join(basedir, "icons/semio_32x32.png"), QSize(32,32))
-    icon.addFile(os.path.join(basedir, "icons/semio_48x48.png"), QSize(48,48))
-    icon.addFile(os.path.join(basedir, "icons/semio_128x128.png"), QSize(128,128))
-    icon.addFile(os.path.join(basedir, "icons/semio_256x256.png"), QSize(256,256))
-    
-    tray = QSystemTrayIcon() 
-    tray.setIcon(icon) 
-    tray.setVisible(True) 
-    
-    menu = QMenu() 
+    icon.addFile(os.path.join(basedir, "icons/semio_16x16.png"), QSize(16, 16))
+    icon.addFile(os.path.join(basedir, "icons/semio_32x32.png"), QSize(32, 32))
+    icon.addFile(os.path.join(basedir, "icons/semio_48x48.png"), QSize(48, 48))
+    icon.addFile(os.path.join(basedir, "icons/semio_128x128.png"), QSize(128, 128))
+    icon.addFile(os.path.join(basedir, "icons/semio_256x256.png"), QSize(256, 256))
+
+    tray = QSystemTrayIcon()
+    tray.setIcon(icon)
+    tray.setVisible(True)
+
+    menu = QMenu()
     restart = QAction("Restart")
     restart.triggered.connect(restart_server)
-    menu.addAction(restart) 
-    
-    quit = QAction("Quit") 
+    menu.addAction(restart)
+
+    quit = QAction("Quit")
     # kill server and quit ui
     quit.triggered.connect(lambda: ui.server_process.terminate() or ui.quit())
-    menu.addAction(quit) 
-    
+    menu.addAction(quit)
+
     tray.setContextMenu(menu)
 
     ui.server_process = Process(target=start_server)
