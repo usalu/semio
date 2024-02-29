@@ -134,7 +134,7 @@ $button-size: 31px;
 
         .graph-controls {
             position: absolute;
-            bottom: 30px;
+            bottom: 15px;
             left: 15px;
             display: grid;
             grid-template-columns: auto auto auto;
@@ -144,8 +144,9 @@ $button-size: 31px;
 
             >.slider-wrapper {
                 background-color: $dark-color;
-                color: $primary-color;
-                border: solid 1px $secondary-color;
+                color: $secondary-color;
+                // border: solid 1px $secondary-color;
+                border: none;
                 padding: 6.5px;
                 border-radius: 2px;
 
@@ -155,34 +156,22 @@ $button-size: 31px;
                 }
 
                 >.slider {
-                    position: relative;
-                    margin-left: 4px;
+                    // position: relative;
+                    // margin-left: 4px;
                     margin-right: 4px;
                     cursor: pointer;
                     vertical-align: middle;
-
-                    &::-webkit-slider-runnable-track {
-                        background: $tertiary-color;
-                    }
-
-                    &::-moz-range-track {
-                        background: $tertiary-color;
-                    }
-
-                    &::-webkit-slider-thumb {
-                        background: $tertiary-color;
-                    }
-
-                    &::-moz-range-thumb {
-                        background: $tertiary-color;
+                   
+                    &:hover {
                     }
                 }
             }
 
             .slider-button {
                 background-color: $dark-color;
-                fill: $primary-color;
-                border: solid 1px $tertiary-color;
+                fill: $secondary-color;
+                // border: solid 1px $secondary-color;
+                border: none;
                 outline: none;
                 width: $button-size;
                 height: $button-size;
