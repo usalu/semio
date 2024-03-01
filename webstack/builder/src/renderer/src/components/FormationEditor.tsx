@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { useState, useEffect, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import {
     GraphView, // required
     Edge, // optional
@@ -13,6 +13,7 @@ import {
 } from 'react-digraph'
 import { get } from 'http';
 import Generator from '@renderer/utils';
+import { Kit } from '@renderer/semio';
 
 enum IconKind {
     Text,
@@ -122,10 +123,24 @@ const sample  = {
     ]
 }
 
-const FormationEditor = () => {
+interface FormationEditorProps {
+}
+
+const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
     const [graph, setGraph] = useState(sample);
     const [selected, setSelected] = useState<SelectionT | null>(null);
-
+    const graphViewRef = useRef(null);
+  
+    const zoomToFit = () => {
+      if (graphViewRef.current) {
+        console.log('zoom to fit from formation editor')
+        graphViewRef.current.handleZoomToFit();
+      }
+    }
+  
+    useImperativeHandle(ref, () => ({
+      zoomToFit,
+    }));
 
     const onSelect = (selected: SelectionT, event?: any): void => {
         setSelected(selected);
@@ -146,6 +161,7 @@ const FormationEditor = () => {
             ...graph,
             nodes: [...graph.nodes, newNode]
         });
+
     }
 
     const onUpdateNode = (node: INode, updatedNodes?: Map<string, INode> | null, updatedNodePosition?: IPoint) : void | Promise<any> =>  {
@@ -273,7 +289,7 @@ const FormationEditor = () => {
             }
         }>
             <GraphView
-                // ref="GraphView"
+                ref={graphViewRef}
                 nodeKey={NODE_KEY}
                 nodes={nodes}
                 edges={edges}
@@ -302,6 +318,7 @@ const FormationEditor = () => {
             ></GraphView>
         </div>
     );
-}
+});
 
+FormationEditor.displayName = 'FormationEditor';
 export default FormationEditor

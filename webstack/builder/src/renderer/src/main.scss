@@ -3,27 +3,88 @@
     src: url('./assets/fonts/anta-regular.ttf') format('truetype');
 }
 
+$primary-color: #ff344f;
+$secondary-color: #34d1bf;
+$tertiary-color: #fa9500;
+$dark-color: #002430;
+$light-color: #f7f3e3;
+$button-size: 31px;
+
 body {
     margin: 0;
 }
 
 text {
+    font-family: "Anta", sans-serif
+}
+
+.kbar-positioner, .kbar-positioner * {
     font-family: "Anta", sans-serif;
 }
 
-$primary-color: #ff344f;
-$secondary-color: #34d1bf;
-$tertiary-color: #fa9500;
-$dark-color: #0a2e36;
-$light-color: #f7f3e3;
-$background-color: #0a2e36;
-$button-size: 31px;
+.kbar-positioner{
+    backdrop-filter: blur(3px);
+
+    .animator {
+        width: 35rem;
+
+        .search{
+            background: $light-color;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            
+            &::placeholder {
+                color: $dark-color;
+            }
+
+            &:focus {
+                outline: none;
+                background: $primary-color;
+
+                &::placeholder {
+                    color: $light-color;
+                    opacity: 1;
+                }
+            }
+
+            &::selection {
+                background: $secondary-color;
+            }
+        }
+
+        .results{
+            background: $light-color;
+            opacity: 0.75;
+            border-radius: 4px;
+            color: $dark-color;
+            &.active {
+                background: $primary-color;
+            }
+        }
+
+        .item{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: $light-color;
+
+            &.active {
+                background: $primary-color;
+
+            }
+        }
+    }
+}
 
 #formation-editor {
     .view-wrapper {
         display: flex;
         box-shadow: none;
-        background: $background-color;
+        background: $dark-color;
         transition: opacity 0.167s;
         opacity: 1;
         outline: none;
@@ -44,7 +105,7 @@ $button-size: 31px;
                     stroke: $light-color;
                     fill: $dark-color;
                     filter: url(#dropshadow);
-                    stroke-width: 0.5px;
+                    stroke-width: 2px;
                     cursor: pointer;
                     user-select: none;
 
@@ -53,7 +114,7 @@ $button-size: 31px;
                     }
 
                     &.selected {
-                        color: $dark-color;
+                        color: $light-color;
                         stroke: $primary-color;
                         stroke-width: 1px;
                         fill: $primary-color;

@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, IpcMainEvent, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -49,8 +49,18 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.on('select-directory', (ipcEvent: IpcMainEvent) => {
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then(result => {
+      if (!result.canceled) {
+        ipcEvent.reply('directory-selected', result.filePaths[0]);
+      }
+    }).catch(err => {
+      console.error(err);
+    });
+  });
 
   createWindow()
 
