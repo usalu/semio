@@ -1,4 +1,4 @@
-appId: com.github.usalu.semio-builder
+appId: com.usalu.semio-builder
 productName: 'semio builder'
 directories:
   buildResources: build
@@ -12,7 +12,12 @@ files:
 asarUnpack:
   - resources/**
 win:
+  target:
+    - portable
+  icon: build/semio.ico
   executableName: semio-builder
+  certificateSubjectName: null
+  certificateSha1: null
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

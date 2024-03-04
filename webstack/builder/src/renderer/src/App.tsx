@@ -11,7 +11,7 @@ function App(): JSX.Element {
         {
             id: 'open-kit',
             name: 'Open Kit',
-            shortcut: ['o'],
+            shortcut: ['$mod+o'],
             keywords: 'new',
             section: 'Files',
             perform: () => {
@@ -25,7 +25,7 @@ function App(): JSX.Element {
         {
             id: 'reload-kit',
             name: 'Reload Kit',
-            shortcut: ['r'],
+            shortcut: ['$mod+r'],
             keywords: 'update',
             section: 'Files',
             perform: () => {}
@@ -33,7 +33,7 @@ function App(): JSX.Element {
         {
             id: 'zoom-to-fit',
             name: 'Zoom to Fit',
-            shortcut: ['z'],
+            shortcut: ['$mod+t'],
             keywords: 'formation',
             section: 'Navigation',
             perform: () => {
