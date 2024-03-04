@@ -1,6 +1,16 @@
 import React from 'react'
 import { ActionId, ActionImpl } from 'kbar'
 
+function tinyKeyStringToHuman(string: string): string {
+    return string
+        .split('+')
+        .map((key) => {
+            if (key === '$mod') return 'Ctrl'
+            return key
+        })
+        .join(' + ')
+}
+
 const ResultItem = React.forwardRef(
     (
         {
@@ -47,7 +57,7 @@ const ResultItem = React.forwardRef(
                 {action.shortcut?.length ? (
                     <div className="shortcut">
                         {action.shortcut.map((sc) => (
-                            <kbd key={sc}>{sc}</kbd>
+                            <kbd key={sc}>{tinyKeyStringToHuman(sc)}</kbd>
                         ))}
                     </div>
                 ) : null}

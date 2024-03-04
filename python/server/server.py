@@ -32,23 +32,20 @@ semio server.
 import os
 import sys
 import logging  # for uvicorn in pyinstaller
-from collections import deque
 from os import remove
 from pathlib import Path
 from multiprocessing import Process, freeze_support
 from functools import lru_cache
-from typing import Any, Callable, Generator, Optional, Dict, Protocol, List, Union
+from typing import Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
 from numpy import ndarray
 from pytransform3d.transformations import (
     concat,
-    transform,
     invert_transform,
-    vector_to_point,
     transform_from,
 )
-from networkx import DiGraph, Graph, bfs_tree, edge_bfs
+from networkx import DiGraph, bfs_tree
 from pint import UnitRegistry
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -60,7 +57,6 @@ from sqlalchemy import (
     create_engine,
     CheckConstraint,
     UniqueConstraint,
-    and_,
     event,
 )
 from sqlalchemy.orm import (
@@ -84,27 +80,14 @@ from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler
 from PySide6.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
     QSystemTrayIcon,
     QMenu,
 )
-from PySide6.QtCore import QSize, Property, QObject, QPropertyAnimation, Signal
+from PySide6.QtCore import QSize
 from PySide6.QtGui import (
-    QColor,
     QIcon,
     QAction,
-    QGuiApplication,
-    QMatrix4x4,
-    QQuaternion,
-    QVector3D,
 )
-from PySide6.Qt3DCore import Qt3DCore
-from PySide6.Qt3DExtras import Qt3DExtras
-from PySide6.Qt3DExtras import Qt3DExtras
-from PySide6.Qt3DRender import Qt3DRender
-import platformdirs  # for pyinstaller
 
 logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
@@ -2770,71 +2753,13 @@ def restart_server():
     ui_instance.server_process.start()
 
 
-class FormationEditor3dWindow(Qt3DExtras.Qt3DWindow):
-    def __init__(self):
-        super().__init__()
-
-        # Camera
-        self.camera().lens().setPerspectiveProjection(45, 16 / 9, 0.1, 1000)
-        self.camera().setPosition(QVector3D(0, 0, 40))
-        self.camera().setViewCenter(QVector3D(0, 0, 0))
-
-        # For camera controls
-        self.createScene()
-        self.camController = Qt3DExtras.QOrbitCameraController(self.rootEntity)
-        self.camController.setLinearSpeed(50)
-        self.camController.setLookSpeed(180)
-        self.camController.setCamera(self.camera())
-
-        self.setRootEntity(self.rootEntity)
-
-    def createScene(self):
-        self.rootEntity = Qt3DCore.QEntity()
-        self.material = Qt3DExtras.QPhongMaterial(self.rootEntity)
-
-        gridGeometry = Qt3DRender.QGeometryRenderer()
-        geometry = Qt3DCore.QGeometry(gridGeometry)
-        lines = [
-            QVector3D(-100, 0, 0),
-            QVector3D(100, 0, 0),
-            QVector3D(0, -100, 0),
-            QVector3D(0, 100, 0),
-        ]
-
-        gridMaterial = Qt3DExtras.QPhongMaterial()
-        gridMaterial.setAmbient(QColor(255, 255, 255))
-        gridEntity = Qt3DCore.QEntity(self.rootEntity)
-        gridEntity.addComponent(gridGeometry)
-        gridEntity.addComponent(gridMaterial)
-
-        # Torus
-        self.torusEntity = Qt3DCore.QEntity(self.rootEntity)
-        self.torusMesh = Qt3DExtras.QTorusMesh()
-        self.torusMesh.setRadius(5)
-        self.torusMesh.setMinorRadius(1)
-        self.torusMesh.setRings(100)
-        self.torusMesh.setSlices(20)
-
-        self.torusTransform = Qt3DCore.QTransform()
-        self.torusTransform.setScale3D(QVector3D(1.5, 1, 0.5))
-        self.torusTransform.setRotation(
-            QQuaternion.fromAxisAndAngle(QVector3D(1, 0, 0), 45)
-        )
-
-        self.torusEntity.addComponent(self.torusMesh)
-        self.torusEntity.addComponent(self.torusTransform)
-        self.torusEntity.addComponent(self.material)
-
-
 if __name__ == "__main__":
     freeze_support()
 
     ui = QApplication(sys.argv)
     ui.setQuitOnLastWindowClosed(False)
-    view = FormationEditor3dWindow()
-    view.show()
 
-    # Frozen with PyInstaller
+    # final location of assests when bundeled with PyInstaller
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
