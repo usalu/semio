@@ -1,0 +1,57 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@font-face {
+    font-family: 'Anta';
+    src: url('./assets/fonts/anta-regular.ttf') format('truetype');
+}
+
+#formation-editor {
+    
+    .view-wrapper {
+        @apply bg-dark;
+        .arrow {
+            @apply fill-light ;
+        }
+    }
+
+    .node {
+        .shape {
+            @apply fill-light stroke-2;
+
+            >use.node {
+                @apply hover:stroke-primary stroke-dark;
+
+                &.selected {
+                    @apply fill-primary stroke-2;
+                }
+
+                &.hovered {
+                    @apply stroke-primary stroke-2;
+                }
+            }
+        }
+
+        .node-text {
+            @apply fill-dark stroke-none;
+
+            &.selected {
+                @apply fill-light;
+            }
+        }
+    }
+
+    .edge {
+        @apply fill-light stroke-light stroke-2;
+
+        .edge-text {
+            @apply fill-light;
+        }
+
+        &.selected {
+            @apply stroke-primary;
+        }
+
+    }
+}
