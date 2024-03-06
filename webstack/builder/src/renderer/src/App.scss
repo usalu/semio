@@ -14,22 +14,24 @@
         .arrow {
             @apply fill-light ;
         }
+
     }
 
     .node {
         .shape {
-            @apply fill-light stroke-2;
+            @apply fill-light;
 
             >use.node {
-                @apply hover:stroke-primary stroke-dark;
+                @apply fill-light stroke-none;
 
                 &.selected {
-                    @apply fill-primary stroke-2;
+                    @apply fill-primary;
                 }
-
-                &.hovered {
-                    @apply stroke-primary stroke-2;
-                }
+                // no hovered stroke-primary because it's unreliable
+                // when the mouse leaves over an edge then the hover state is not removed
+                // &.hovered {
+                //     @apply stroke-primary stroke-2;
+                // }
             }
         }
 
