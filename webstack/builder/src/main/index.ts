@@ -19,7 +19,7 @@ function createWindow(): void {
     })
 
     // Disable the default menu
-    mainWindow.setMenu(null);
+    // mainWindow.setMenu(null);
 
     mainWindow.on('ready-to-show', () => {
         mainWindow.show()

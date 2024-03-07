@@ -3,8 +3,19 @@
 @import 'tailwindcss/utilities';
 
 @font-face {
+    font-family: 'Noto Emoji';
+    src: url('./assets/fonts/noto-emoji.ttf') format('truetype');
+    // only emojis
+    unicode-range: '1F300-1F5FF', '1F600-1F64F', '1F680-1F6FF', '1F900-1F9FF', '2190-21FF';
+}
+
+@font-face {
     font-family: 'Anta';
     src: url('./assets/fonts/anta-regular.ttf') format('truetype');
+}
+
+* {
+    box-shadow: none !important;
 }
 
 #formation-editor {
