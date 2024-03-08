@@ -30,8 +30,12 @@ import { KBarResults, useMatches } from 'kbar'
 import { ActionId, ActionImpl } from 'kbar'
 import {
     Avatar,
+    Breadcrumb,
     ConfigProvider,
     GetProp,
+    Layout,
+    Menu,
+    MenuProps,
     Modal,
     Space,
     Switch,
@@ -51,6 +55,9 @@ import {
     ProFormText
 } from '@ant-design/pro-components'
 import enUS from 'antd/lib/calendar/locale/en_US'
+import { Header, Content } from 'antd/es/layout/layout'
+import Sider from 'antd/es/layout/Sider'
+import React from 'react'
 
 class SeededRandom {
     private seed: number
@@ -3573,7 +3580,8 @@ const sample: IDraft = {
 
 interface FormationEditorProps {
     className?: string
-    onPieceEdit: (piece: PieceInput) => PieceInput
+    piece: PieceInput
+    onPieceEdit: (piece: PieceInput) => Promise<PieceInput>
     onAttractionEdit: (attraction: AttractionInput) => AttractionInput
 }
 
@@ -3631,21 +3639,22 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
                 (node) => node.id === newSelection?.nodes?.keys().next().value
             )
             if (selectedNode.type === 'piece') {
-                const piece = props.onPieceEdit(selectedNode.piece)
-                if (piece) {
-                    setGraph({
-                        ...graph,
-                        nodes: graph.nodes.map((node) => {
-                            if (node.id === selectedNode.id) {
-                                return {
-                                    ...node,
-                                    piece
+                props.onPieceEdit(selectedNode.piece).then((updatedPiece) => {
+                    if (updatedPiece) {
+                        setGraph({
+                            ...graph,
+                            nodes: graph.nodes.map((node) => {
+                                if (node.id === selectedNode.id) {
+                                    return {
+                                        ...node,
+                                        updatedPiece
+                                    }
                                 }
-                            }
-                            return node
+                                return node
+                            })
                         })
-                    })
-                }
+                    }
+                })
             }
             return
         }
@@ -3885,7 +3894,7 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
     const EdgeTypes = GraphConfig.EdgeTypes
 
     return (
-        <div id="formation-editor" className={props.className + ' h-screen w-screen'}>
+        <div id="formation-editor" className={props.className}>
             <GraphView
                 ref={graphViewRef}
                 nodeKey={NODE_KEY}
@@ -4021,6 +4030,8 @@ function App(): JSX.Element {
     const [kit, setKit] = useState<Kit | null>(null)
     const [isPieceEditorOpen, setIsPieceEditorOpen] = useState(false)
     const [piece, setPiece] = useState<PieceInput | null>(null)
+    const [newPieceTypeName, setNewPieceTypeName] = useState<string>()
+    const [newPieceTypeQualityNames, setNewPieceTypeQualityNames] = useState<string[]>()
     const [isAttractionEditorOpen, setIsAttractionEditorOpen] = useState(false)
     const [Attraction, setAttraction] = useState<AttractionInput | null>(null)
     const selectDirectoryIpcHandle = (): void =>
@@ -4084,19 +4095,20 @@ function App(): JSX.Element {
         setIsPieceEditorOpen(true)
     }
 
-    const savePieceEditor = (piece: PieceInput) => {
-        setPiece(piece)
-        setIsPieceEditorOpen(false)
-    }
-
     const handleCancelPiece = () => {
         setIsPieceEditorOpen(false)
     }
 
-    const onPieceEdit = (piece: PieceInput): PieceInput => {
-        setPiece(piece)
-        showPieceEditor()
-        return piece
+    const onPieceEdit = (piece: PieceInput): Promise<PieceInput> => {
+        return new Promise((resolve) => {
+            setPiece(piece);
+            setNewPieceTypeName(piece.type.name);
+            setNewPieceTypeQualityNames(piece.type.qualities.map((quality) => quality.name));
+            showPieceEditor();
+    
+            // Wait for the next tick of the event loop to ensure that the state updates have been committed
+            setTimeout(() => resolve(piece), 0);
+        });
     }
 
     const showAttractionEditor = () => {
@@ -4121,129 +4133,118 @@ function App(): JSX.Element {
         return !isPieceEditorOpen && !isAttractionEditorOpen
     }
 
-    // const mockdata = [
-    //     {
-    //         name: 'entrance',
-    //         value: 'back',
-    //         unit: null
-    //     },
-    //     {
-    //         name: 'view',
-    //         value: 'side'
-    //     },
-    //     {
-    //         name: 'mirrored',
-    //         value: 'true'
-    //     },
-    //     {
-    //         name: 'length',
-    //         value: '420',
-    //         unit: 'cm'
-    //     }
-    // ]
-
-    // const originTargetNames = ['view']
-
-    const [targetNames, setTargetNames] = useState<string[]>()
-
-    const onChange = (nextTargetNames: string[], direction: string, moveNames: string[]) => {
-        setTargetNames(nextTargetNames)
+    const onNewPieceTypeQualitiesChange = (nextNewQualityNames: string[], direction: string, moveNames: string[]) => {
+        setNewPieceTypeQualityNames(nextNewQualityNames)
     }
 
     return (
-        <ConfigProvider
-            locale={enUS}
-            theme={{
-                algorithm: [theme.darkAlgorithm],
-                token: {
-                    colorPrimary: '#ff344f',
-                    colorBgBase: '#002430',
-                    colorTextBase: '#f7f3e3',
-                    colorError: '#a60009',
-                    colorWarning: '#fccf05',
-                    colorInfo: '#dbbea1',
-                    colorSuccess: '#7eb77f',
-                    colorInfoHover: '#ff344f',
-                    colorBgSpotlight: '#ff344f',
-                    fontFamily: 'Anta, sans-serif',
-                    boxShadow: 'none',
-                    boxShadowSecondary: 'none',
-                    boxShadowTertiary: 'none',
-                    wireframe: false
-                }
-            }}
-        >
-            <KBarProvider actions={actions}>
-                <div className="font-sans bg-light dark:bg-dark">
+        <div className="h-screen w-screen">
+            <ConfigProvider
+                locale={enUS}
+                theme={{
+                    algorithm: [theme.darkAlgorithm],
+                    token: {
+                        colorPrimary: '#ff344f',
+                        colorBgBase: '#002430',
+                        colorTextBase: '#f7f3e3',
+                        colorError: '#a60009',
+                        colorWarning: '#fccf05',
+                        colorInfo: '#dbbea1',
+                        colorSuccess: '#7eb77f',
+                        colorInfoHover: '#ff344f',
+                        colorBgSpotlight: '#ff344f',
+                        fontFamily: 'Anta, sans-serif',
+                        boxShadow: 'none',
+                        boxShadowSecondary: 'none',
+                        boxShadowTertiary: 'none',
+                        wireframe: false
+                    }
+                }}
+            >
+                <KBarProvider actions={actions}>
+                <div className="relative font-sans bg-light dark:bg-dark flex flex-col h-full">
                     <CommandBar />
                     <FormationEditor
-                        className={isEditorActive() ? '' : 'blur-sm'}
+                        className={`flex-grow ${isEditorActive() ? '' : 'blur-sm'}`}
                         ref={formationEditorRef}
+                        piece={piece}
                         onPieceEdit={onPieceEdit}
                         onAttractionEdit={onAttractionEdit}
                     />
                 </div>
-                <ModalForm<{ piece: PieceInput }>
-                    title="Type"
-                    open={isPieceEditorOpen}
-                    autoFocusFirstInput
-                    modalProps={{
-                        destroyOnClose: true,
-                        onCancel: handleCancelPiece
-                    }}
-                    onFinish={async (values) => {
-                        savePieceEditor(piece)
-                        return true
-                    }}
-                    submitter={{
-                        searchConfig: {
-                            submitText: 'Save',
-                            resetText: 'Cancel'
-                        },
-                        resetButtonProps: {
-                            onClick: handleCancelPiece
-                        }
-                    }}
-                >
-                    <ProFormSelect
-                        // request={async () => [
-                        //     { value: 'capsule', label: 'capsule' },
-                        //     { value: 'shaft', label: 'shaft' }
-                        // ]}
-                        options={[
-                            { value: 'capsule', label: 'capsule' },
-                            { value: 'shaft', label: 'shaft' }
-                          ]}
-                        name="name"
-                        label="Name"
-                        placeholder="Please select a type"
-                    />
-                    <QualityTransfer
-                        dataSource={piece?.type?.qualities || []}
-                        targetKeys={piece?.type?.qualities?.map((quality) => quality.name) || []}
-                        onChange={onChange}
-                        filterOption={(inputValue, item) =>
-                            item.name.indexOf(inputValue) !== -1 ||
-                            item.value.indexOf(inputValue) !== -1 ||
-                            (item.unit && item.unit.indexOf(inputValue) !== -1)
-                        }
-                        showSearch={true}
-                        disabled={false}
-                    />
-                </ModalForm>
-                <Modal
-                    title="Attraction Editor"
-                    open={isAttractionEditorOpen}
-                    onOk={handleSaveAttraction}
-                    onCancel={handleCancelAttraction}
-                >
-                    <p>
-                        Edit port type specifiers here... Can you imagine a threejs viewer where you
-                        can pick your port without knowing any specifiers?😱
-                    </p>
-                </Modal>
-            </KBarProvider>
-        </ConfigProvider>
+                    <ModalForm
+                        title="Type"
+                        open={isPieceEditorOpen}
+                        autoFocusFirstInput
+                        modalProps={{
+                            destroyOnClose: true,
+                            onCancel: handleCancelPiece
+                        }}
+                        onFinish={async (values) => {
+                            // new piece has the the type name values.name and the qualities
+                            // from the transfer component
+                            const newPiece = {
+                                id: piece?.id,
+                                type: {
+                                    name: values.name,
+                                    qualities: values.qualities
+                                }
+                            }
+                            setPiece(newPiece)
+                            setNewPieceTypeName(newPiece.type.name)
+                            setNewPieceTypeQualityNames(newPiece.type.qualities.map((quality) => quality.name))
+                            setIsPieceEditorOpen(false)
+                            return true
+                        }}
+                        submitter={{
+                            searchConfig: {
+                                submitText: 'Save',
+                                resetText: 'Cancel'
+                            },
+                            resetButtonProps: {
+                                onClick: handleCancelPiece
+                            }
+                        }}
+                    >
+                        <ProFormSelect
+                            initialValue={newPieceTypeName}
+                            options={[
+                                { value: 'capsule', label: 'capsule' },
+                                { value: 'shaft', label: 'shaft' }
+                            ]}
+                            name="name"
+                            label="Name"
+                            placeholder="Please select a type"
+                        />
+                        <ProForm.Item name="qualities">
+                            <QualityTransfer
+                                dataSource={piece?.type?.qualities || []}
+                                targetKeys={newPieceTypeQualityNames || []}
+                                onChange={onNewPieceTypeQualitiesChange}
+                                filterOption={(inputValue, item) =>
+                                    item.name.indexOf(inputValue) !== -1 ||
+                                    item.value.indexOf(inputValue) !== -1 ||
+                                    (item.unit && item.unit.indexOf(inputValue) !== -1)
+                                }
+                                showSearch={true}
+                                disabled={false}
+                            />
+                        </ProForm.Item>
+                    </ModalForm>
+                    <Modal
+                        title="Attraction Editor"
+                        open={isAttractionEditorOpen}
+                        onOk={handleSaveAttraction}
+                        onCancel={handleCancelAttraction}
+                    >
+                        <p>
+                            Edit port type specifiers here... Can you imagine a threejs viewer where you
+                            can pick your port without knowing any specifiers?😱
+                        </p>
+                    </Modal>
+                </KBarProvider>
+            </ConfigProvider>
+        </div>
     )
 }
 export default App
