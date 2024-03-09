@@ -1,8 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, IpcMainEvent, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, IpcMainEvent, dialog, IpcMainInvokeEvent } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { writeFile } from 'fs'
+import { readFileSync, writeFile } from 'fs'
+import { c } from 'vite/dist/node/types.d-AKzkD8vd'
 
 function createWindow(): void {
     // Create the browser window.
@@ -53,25 +54,20 @@ app.whenReady().then(() => {
         optimizer.watchWindowShortcuts(window)
     })
 
-    ipcMain.on('select-directory', (ipcEvent: IpcMainEvent) => {
-        dialog
-            .showOpenDialog({
-                properties: ['openDirectory']
-            })
-            .then((result) => {
-                if (!result.canceled) {
-                    ipcEvent.reply('directory-selected', result.filePaths[0])
-                }
-            })
-            .catch((err) => {
-                console.error(err)
-            })
-    })
+    ipcMain.handle('open-kit', async () => {
+        const directory = await dialog.showOpenDialog({
+            properties: ['openDirectory']
+        });
+        // TODO: call local graphql server
+        return ""
 
-    ipcMain.on(
+
+    });
+
+    ipcMain.handle(
         'save-draft',
-        (ipcEvent: IpcMainEvent, draftJson: string, defaultName: string = 'formation') => {
-            dialog
+        (event: IpcMainInvokeEvent, draftJson: string, defaultName: string = 'formation') => {
+            return dialog
                 .showSaveDialog({
                     title: 'Save Draft',
                     defaultPath: defaultName + '.draft',
@@ -79,20 +75,24 @@ app.whenReady().then(() => {
                 })
                 .then((result) => {
                     if (!result.canceled && result.filePath) {
-                        writeFile(result.filePath, draftJson, (err) => {
-                            if (err) {
-                                console.error(err)
-                            } else {
-                                ipcEvent.reply('draft-saved', result.filePath)
-                            }
-                        })
+                        return new Promise((resolve, reject) => {
+                            writeFile(result.filePath, draftJson, (err) => {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve(result.filePath);
+                                }
+                            });
+                        });
                     }
-                })
-                .catch((err) => {
-                    console.error(err)
-                })
+                });
         }
-    )
+    );
+
+    ipcMain.handle('get-file-buffer', async (event, filePath) => {
+        const data = readFileSync(filePath);
+        return data;
+    });
 
     createWindow()
 

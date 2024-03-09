@@ -25,6 +25,7 @@
     "@ant-design/pro-components": "^2.6.49",
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
+    "@react-three/drei": "^9.101.0",
     "@react-three/fiber": "^8.15.19",
     "antd": "^5.15.0",
     "electron-updater": "^6.1.7",
