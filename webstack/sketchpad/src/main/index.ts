@@ -1,4 +1,12 @@
-import { app, shell, BrowserWindow, ipcMain, IpcMainEvent, dialog, IpcMainInvokeEvent } from 'electron'
+import {
+    app,
+    shell,
+    BrowserWindow,
+    ipcMain,
+    IpcMainEvent,
+    dialog,
+    IpcMainInvokeEvent
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -57,42 +65,56 @@ app.whenReady().then(() => {
     ipcMain.handle('open-kit', async () => {
         const directory = await dialog.showOpenDialog({
             properties: ['openDirectory']
-        });
+        })
         // TODO: call local graphql server
-        return ""
+        return null
+    })
 
+    ipcMain.handle('reload-kit', async () => {
+        // TODO: implement
+        return null
+    })
 
-    });
-
-    ipcMain.handle(
-        'save-draft',
-        (event: IpcMainInvokeEvent, draftJson: string, defaultName: string = 'formation') => {
-            return dialog
-                .showSaveDialog({
-                    title: 'Save Draft',
-                    defaultPath: defaultName + '.draft',
-                    filters: [{ name: 'DRAFT', extensions: ['draft'] }]
-                })
-                .then((result) => {
-                    if (!result.canceled && result.filePath) {
-                        return new Promise((resolve, reject) => {
-                            writeFile(result.filePath, draftJson, (err) => {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    resolve(result.filePath);
-                                }
-                            });
-                        });
-                    }
-                });
+    ipcMain.handle('open-draft', async (event: IpcMainInvokeEvent) => {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            defaultPath: 'formation.draft',
+            filters: [{ name: 'DRAFT', extensions: ['draft'] }]
+        })
+        if (!result.canceled && result.filePaths.length > 0) {
+            const filePath = result.filePaths[0]
+            const data = readFileSync(filePath)
+            return data.toString()
         }
-    );
+        return ''
+    })
+
+    ipcMain.handle('save-draft', (event: IpcMainInvokeEvent, draftJson: string) => {
+        return dialog
+            .showSaveDialog({
+                title: 'Save Draft',
+                defaultPath: 'formation.draft',
+                filters: [{ name: 'DRAFT', extensions: ['draft'] }]
+            })
+            .then((result) => {
+                if (!result.canceled && result.filePath) {
+                    return new Promise((resolve, reject) => {
+                        writeFile(result.filePath, draftJson, (err) => {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                resolve(result.filePath)
+                            }
+                        })
+                    })
+                }
+            })
+    })
 
     ipcMain.handle('get-file-buffer', async (event, filePath) => {
-        const data = readFileSync(filePath);
-        return data;
-    });
+        const data = readFileSync(filePath)
+        return data
+    })
 
     createWindow()
 

@@ -1,119 +1,175 @@
 @startuml "data architecture"
 skinparam linetype ortho
 
-interface Document {
+interface Artifact {
     *name : string
-    explanation : string
-    icon : string
+    *description : string
+    *icon : string
     ..
     *created_at : datetime
-    *modified_at : datetime
+    *last_update_at : datetime
 }
+note right of Artifact
+    description is optional
+    (can be set to "").
+    icon is optional
+    (can be set to "").
+    icon in data:uri format.
+end note
 
 entity Kit {
-    *id : int <<generated>> 
-    ..
-    url : string
-}
-
-entity Type {
-    *id : int <<generated>>
-    ..
-    kit_id : int <<FK>>
-}
-
-entity Representation {
-    *id : int <<generated>>
+    *id : int <<PK,generated>> 
     ..
     *url : string
-    lod : string
-    ..
-    type_id : int <<FK>>
 }
+note right of Kit
+    url is unique.
+    url is optional
+    (can be set to "").
+end note
+
+entity Type {
+    *id : int <<PK,generated>>
+    ..
+    *variant : string
+    *unit : string
+    ..
+    *kit_id : int <<FK>>
+}
+note left of Type
+    name and variant are unique.
+    variant = "" means default.
+end note
+
+entity Representation {
+    *id : int <<PK,generated>>
+    ..
+    *url : string
+    *lod : string
+    ..
+    *type_id : int <<FK>>
+}
+note left of Representation
+    url is unique.
+    lod="" means default.
+end note
 
 entity Tag {
     *value : string <<PK>>
     ..
-    representation_id : int <<PK,FK>>
+    *representation_id : int <<PK,FK>>
 }
 
 entity Port {
-    *id : int <<generated>>
+    *id : int <<PK,generated>>
     ..
-    origin_x : float
-    origin_y : float
-    origin_z : float
-    x_axis_x : float
-    x_axis_y : float
-    x_axis_z : float
-    y_axis_x : float
-    y_axis_y : float
-    y_axis_z : float
+    *plane_origin_x : float
+    *plane_origin_y : float
+    *plane_origin_z : float
     ..
-    type_id : int <<FK>>
+    *plane_x_axis_x : float
+    *plane_x_axis_y : float
+    *plane_x_axis_z : float
+    ..
+    *plane_y_axis_x : float
+    *plane_y_axis_y : float
+    *plane_y_axis_z : float
+    ..
+    *type_id : int <<FK>>
 }
 
 entity Quality {
-    *id : int <<generated>>
+    *id : int <<PK,generated>>
     ..
     *name : string
     *value : string
-    unit : String
+    *unit : string
     ..
     type_id : int <<FK>>
     formation_id : int <<FK>>
 }
+note bottom of Quality
+    Either type_id or formation_id
+    must be set.
+    unit is optional
+    (can be set to "").
+end note
 
 
 entity Specifier {
     *context : string <<PK>>
     *group : string
     ..
-    port_id : int <<PK,FK>>
+    *port_id : int <<PK,FK>>
 }
 
 entity Piece{
-    *id : int <<generated>>
+    *id : int <<PK,generated>>
     ..
-    local_id: string
-    type_id : int <<FK>>
+    *local_id: string
+    *type_id : int <<FK>>
     ..
-    formation_id : int <<FK>>
+    shape_plane_origin_x : float
+    shape_plane_origin_y : float
+    shape_plane_origin_z : float
+    ..
+    shape_plane_x_axis_x : float
+    shape_plane_x_axis_y : float
+    shape_plane_x_axis_z : float
+    ..
+    shape_plane_y_axis_x : float
+    shape_plane_y_axis_y : float
+    shape_plane_y_axis_z : float
+    ..
+    *sketch_point_x : float
+    *sketch_point_y : float
+    ..
+    *formation_id : int <<FK>>
 }
+note right of Piece
+    plane can only be set
+    when piece is root.
+end note
 
 entity Attraction {
-    attracting_piece_id : int <<PK,FK>>
-    attracting_piece_type_port_id : int <<FK>>
-    attracted_piece_id : int <<PK,FK>>
-    attracted_piece_type_port_id : int <<FK>>
+    *attracting_piece_id : int <<PK,FK>>
+    *attracting_piece_type_port_id : int <<FK>>
     ..
-    formation_id : int <<PK,FK>>
+    *attracted_piece_id : int <<PK,FK>>
+    *attracted_piece_type_port_id : int <<FK>>
+    ..
+    *formation_id : int <<FK>>
 }
 
 entity Formation {
-    *id : int <<generated>>
+    *id : int <<PK,generated>>
     ..
-    kit_id : int <<FK>>
+    *variant : string
+    *unit : string
+    ..
+    *kit_id : int <<FK>>
 }
+note right of Formation
+    name and variant are unique.
+    variant = "" means default.
+end note
 
-
-Kit ||--|{ Type
-Kit ||--o{ Formation
+Kit ||--|{ Formation
+Kit ||--|{ Type 
 Tag }o--|| Representation
 Representation }|--|| Type
 Type ||--|{ Port
 Type ||--o{ Quality
-Formation ||--o{ Piece
+Formation ||--|{ Piece
 Formation ||--o{ Attraction
 Formation ||--o{ Quality
-Port ||--o{  Specifier
+Port ||--|{  Specifier
 Type <-- Piece
 Piece <-- Attraction
 Port <-- Attraction
 
-Document <|-- Kit
-Document <|-- Type
-Document <|-- Formation
-
+Artifact <|-- Kit
+Artifact <|-- Formation
+Artifact <|-- Type
 
 @enduml

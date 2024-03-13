@@ -33,59 +33,62 @@ kit : !{
                 group : !string
             ]
         ]
-        qualities : +[
+        qualities : *[
             name : !string
             value : !string
             unit : ?string
         ]
     ]
-    formations : *[
+    designs : +[
         name : !string
         explanation : ?string
         icon : ?string
-        pieces : ![
-            id : !string
-            type : !{
+        formations : *[
+            
+            pieces : ![
+                id : !string
+                type : !{
+                    name : !string
+                    qualities : +[
+                        name : !string
+                        value : !string
+                        unit : ?string
+                    ]
+                }
+            ]
+            attractions : +[
+                attracting : !{
+                    piece : !{
+                        id : !string
+                        type : !{
+                            port : !{
+                                specifiers : +[
+                                    context : !string
+                                    group : !string
+                                ]
+                            }
+                        }
+                    }
+                }
+                attracted : !{
+                    piece : !{
+                        id : !string
+                        type : !{
+                            port : !{
+                                specifiers : +[
+                                    context : !string
+                                    group : !string
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+            qualities : *[
                 name : !string
-                qualities : +[
-                    name : !string
-                    value : !string
-                    unit : ?string
-                ]
-            }
+                value : !string
+                unit : ?string
+            ]
         ]
-        attractions : +[
-            attracting : !{
-                piece : !{
-                    id : !string
-                    type : !{
-                        port : !{
-                            specifiers : +[
-                                context : !string
-                                group : !string
-                            ]
-                        }
-                    }
-                }
-            }
-            attracted : !{
-                piece : !{
-                    id : !string
-                    type : !{
-                        port : !{
-                            specifiers : +[
-                                context : !string
-                                group : !string
-                            ]
-                        }
-                    }
-                }
-            }
-        ]
-        qualities : +[
-                    name : !string
-                    value : !string
-                    unit : ?string
-                ]
     ]
 }

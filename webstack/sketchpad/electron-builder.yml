@@ -1,5 +1,5 @@
-appId: com.usalu.semio-builder
-productName: 'semio builder'
+appId: com.usalu.semio-sketchpad
+productName: 'semio sketchpad'
 directories:
   buildResources: build
 files:
@@ -15,7 +15,7 @@ win:
   target:
     - portable
   icon: build/semio.ico
-  executableName: semio-builder
+  executableName: semio-sketchpad
   certificateSubjectName: null
   certificateSha1: null
 nsis:
