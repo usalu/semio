@@ -17,21 +17,25 @@ import { KBarResults, useMatches } from 'kbar'
 import { ActionId, ActionImpl } from 'kbar'
 import {
     Avatar,
+    Button,
     ConfigProvider,
     GetProp,
+    Layout,
+    Menu,
     Modal,
+    Steps,
     Table,
     TableProps,
     Tag,
     Transfer,
     TransferProps,
+    message,
     theme
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Select, GizmoHelper, GizmoViewport } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import tailwindConfig from '../../../tailwind.config.js'
 import { ModalForm, ProForm, ProFormSelect } from '@ant-design/pro-components'
 import { INode, IEdge, IGraphInput, SelectionT, GraphUtils, IPoint, GraphView } from 'react-digraph'
 import SVG from 'react-inlinesvg'
@@ -44,11 +48,12 @@ import {
     Quality,
     Representation
 } from '@renderer/semio'
+import tailwindConfig from '../../../tailwind.config.js'
+import Sider from 'antd/es/layout/Sider'
+import { MenuItem } from 'electron'
 
 const {
-    theme: {
-        extend: { colors }
-    }
+    theme: { colors }
 } = tailwindConfig
 
 class SeededRandom {
@@ -3169,6 +3174,7 @@ function tinyKeyStringToHuman(string: string): string {
         .split('+')
         .map((key) => {
             if (key === '$mod') return 'Ctrl'
+            if (key === 'Shift') return '⇧'
             return key
         })
         .join(' + ')
@@ -3338,7 +3344,7 @@ interface IAttractionEdge extends IEdge {
     attraction: AttractionInput
 }
 
-interface IDraft extends IGraphInput {
+export interface IDraft extends IGraphInput {
     name?: string
     explanation?: string
     icon?: string
@@ -3592,6 +3598,10 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
         }
     }
 
+    const setDraft = (draft: IDraft) => {
+        setGraph(draft)
+    }
+
     const zoomToFit = () => {
         if (graphViewRef.current) {
             graphViewRef.current.handleZoomToFit()
@@ -3600,7 +3610,8 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
 
     useImperativeHandle(ref, () => ({
         zoomToFit,
-        getDraft
+        getDraft,
+        setDraft
     }))
 
     const onSelect = (newSelection: SelectionT, event?: any): void => {
@@ -3640,7 +3651,7 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
                                 if (node.id === selectedNode.id) {
                                     return {
                                         ...node,
-                                        piece:  updatedPiece
+                                        piece: updatedPiece
                                     }
                                 }
                                 return node
@@ -3821,11 +3832,26 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
         id: string | number,
         isSelected: boolean
     ): SVGProps<SVGGElement> => {
+        // replace all black colors with white and all white colors with black
+        const darkSvgString = svgString
+            .replace(/#000000/g, colors.dark)
+            .replace(/#000/g, colors.dark)
+            .replace(/black/g, colors.dark)
+            .replace(/#FFFFFF/g, colors.light)
+            .replace(/#FFF/g, colors.light)
+            .replace(/white/g, colors.light)
+        const lightSvgString = svgString
+            .replace(/#000000/g, colors.light)
+            .replace(/#000/g, colors.light)
+            .replace(/black/g, colors.light)
+            .replace(/#FFFFFF/g, colors.dark)
+            .replace(/#FFF/g, colors.dark)
+            .replace(/white/g, colors.dark)
         return (
             <foreignObject x="-16" y="-16" width="32" height="32">
                 <SVG
-                    className={`cursor-pointer ${isSelected ? 'opacity-50' : 'opacity-100'}`}
-                    src={svgString}
+                    className={`cursor-pointer ${isSelected ? 'text-light' : 'text-dark'}`}
+                    src={isSelected ? lightSvgString : darkSvgString}
                     width="32"
                     height="32"
                 />
@@ -3899,7 +3925,7 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
                 edgeTypes={EdgeTypes}
                 // layoutEngineType='VerticalTree'
                 allowMultiselect={true}
-                gridSpacing={20}
+                // gridSpacing={20}
                 gridDotSize={0}
                 nodeSize={100}
                 edgeHandleSize={200}
@@ -7367,9 +7393,260 @@ const kitMock: Kit = {
     ]
 }
 
-function App(): JSX.Element {
+const NodeEditor = () => {
+    const { token } = theme.useToken()
+    const [current, setCurrent] = useState(0)
+
+    const next = () => {
+        setCurrent(current + 1)
+    }
+
+    const prev = () => {
+        setCurrent(current - 1)
+    }
+
+    const items = pieceEditorSteps.map((item) => ({ key: item.title, title: item.title }))
+
+    const contentStyle: React.CSSProperties = {
+        lineHeight: '260px',
+        textAlign: 'center',
+        color: token.colorTextTertiary,
+        backgroundColor: token.colorFillAlter,
+        borderRadius: token.borderRadiusLG,
+        border: `1px dashed ${token.colorBorder}`,
+        marginTop: 16
+    }
+
+    const pieceEditorSteps = [
+        {
+            title: 'Select a type',
+            content: 'First-content'
+        },
+        {
+            title: 'Select a variant',
+            content: 'Second-content'
+        },
+        {
+            title: 'Select qualities',
+            content: 'Last-content'
+        }
+    ]
+
+    return (
+        <>
+            <Steps current={current} items={items} />
+            <div style={contentStyle}>{pieceEditorSteps[current].content}</div>
+            <div style={{ marginTop: 24 }}>
+                {current < pieceEditorSteps.length - 1 && (
+                    <Button type="primary" onClick={() => next()}>
+                        Next
+                    </Button>
+                )}
+                {current === pieceEditorSteps.length - 1 && (
+                    <Button type="primary" onClick={() => message.success('Processing complete!')}>
+                        Done
+                    </Button>
+                )}
+                {current > 0 && (
+                    <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
+                        Previous
+                    </Button>
+                )}
+            </div>
+        </>
+    )
+}
+
+function getItem(
+    label: React.ReactNode,
+    key: React.Key,
+    icon?: React.ReactNode,
+    children?: MenuItem[]
+): MenuItem {
+    return {
+        key,
+        icon,
+        children,
+        label
+    } as MenuItem
+}
+
+const DesignIcon = (props) => (
+    <svg width={48} height={48} {...props}>
+        <defs>
+            <marker
+                id="a"
+                markerHeight={0.6}
+                markerWidth={0.6}
+                orient="auto-start-reverse"
+                preserveAspectRatio="xMidYMid"
+                refX={0}
+                refY={0}
+                style={{
+                    overflow: 'visible'
+                }}
+                viewBox="0 0 1 1"
+            >
+                <path
+                    d="m5.77 0-8.65 5V-5Z"
+                    style={{
+                        fill: '#f7f3e3',
+                        fillRule: 'evenodd',
+                        stroke: '#f7f3e3',
+                        strokeWidth: '1pt'
+                    }}
+                    transform="scale(.5)"
+                />
+            </marker>
+        </defs>
+        <circle
+            cx={15.031}
+            cy={10.763}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+        <circle
+            cx={15.031}
+            cy={35.829}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+        <circle
+            cx={34.916}
+            cy={24}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+        <path
+            d="M15.03 30.822V17.878"
+            style={{
+                fill: 'none',
+                fillRule: 'evenodd',
+                stroke: '#f7f3e3',
+                strokeWidth: '.927333px',
+                strokeLinecap: 'butt',
+                strokeLinejoin: 'miter',
+                strokeMiterlimit: 4,
+                strokeOpacity: 1,
+                markerEnd: 'url(#a)'
+            }}
+        />
+    </svg>
+)
+
+const FormationIcon = (props) => (
+    <svg width={48} height={48} {...props}>
+        <defs>
+            <marker
+                id="a"
+                markerHeight={0.6}
+                markerWidth={0.6}
+                orient="auto-start-reverse"
+                preserveAspectRatio="xMidYMid"
+                refX={0}
+                refY={0}
+                style={{
+                    overflow: 'visible'
+                }}
+                viewBox="0 0 1 1"
+            >
+                <path
+                    d="m5.77 0-8.65 5V-5Z"
+                    style={{
+                        fill: '#f7f3e3',
+                        fillRule: 'evenodd',
+                        stroke: '#f7f3e3',
+                        strokeWidth: '1pt'
+                    }}
+                    transform="scale(.5)"
+                />
+            </marker>
+        </defs>
+        <circle
+            cx={24}
+            cy={11.739}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+        <circle
+            cx={24}
+            cy={36.806}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+        <path
+            d="M24 31.799V18.855"
+            style={{
+                fill: 'none',
+                fillRule: 'evenodd',
+                stroke: '#f7f3e3',
+                strokeWidth: '.927333px',
+                strokeLinecap: 'butt',
+                strokeLinejoin: 'miter',
+                strokeMiterlimit: 4,
+                strokeOpacity: 1,
+                markerEnd: 'url(#a)'
+            }}
+        />
+    </svg>
+)
+
+const TypeIcon = (props) => (
+    <svg width={48} height={48} {...props}>
+        <circle
+            cx={24}
+            cy={24}
+            r={5.007}
+            style={{
+                fill: 'none',
+                stroke: '#f7f3e3',
+                strokeWidth: 0.733,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        />
+    </svg>
+)
+
+interface AppProps {
+    onOpenKit: () => Promise<Kit>
+    onReloadKit: () => Promise<Kit>
+    onOpenDraft: () => Promise<string>
+    onSaveDraft: (draft: IDraft) => Promise<string>
+}
+
+const App = ({ onOpenKit, onReloadKit, onOpenDraft, onSaveDraft }: AppProps): JSX.Element => {
     const [kit, setKit] = useState<Kit | null>(kitMock)
-    const [draft, setDraft] = useState<IDraft | null>(null)
     const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
     const [isSelectionBoxActive, setIsSelectionBoxActive] = useState(false)
     const [piecePipette, setPiecePipette] = useState<PieceInput | null>(null)
@@ -7377,12 +7654,16 @@ function App(): JSX.Element {
     const [transformMode, setTransformMode] = useState<string>('translate')
 
     const [isPieceEditorOpen, setIsPieceEditorOpen] = useState(false)
-    const [resolveOnPieceEdit, setResolveOnPieceEdit] = useState<((value: PieceInput) => void) | null>(null);
+    const [resolveOnPieceEdit, setResolveOnPieceEdit] = useState<
+        ((value: PieceInput) => void) | null
+    >(null)
     const [piece, setPiece] = useState<PieceInput | null>(null)
     const [newPiece, setNewPiece] = useState<PieceInput | null>(null)
 
     const [isAttractionEditorOpen, setIsAttractionEditorOpen] = useState(false)
     const [Attraction, setAttraction] = useState<AttractionInput | null>(null)
+
+    const [collapsed, setCollapsed] = useState(false)
 
     const formationEditorRef = useRef(null)
 
@@ -7394,7 +7675,7 @@ function App(): JSX.Element {
             keywords: 'new',
             section: 'Files',
             perform: () => {
-                window.electron.ipcRenderer.invoke('open-kit').then((kit) => {
+                onOpenKit('').then((kit) => {
                     setKit(kit)
                 })
             }
@@ -7405,7 +7686,23 @@ function App(): JSX.Element {
             shortcut: ['$mod+r'],
             keywords: 'update',
             section: 'Files',
-            perform: () => {}
+            perform: () => {
+                onReloadKit().then((kit) => {
+                    setKit(kit)
+                })
+            }
+        },
+        {
+            id: 'open-draft',
+            name: 'Open Draft',
+            shortcut: ['$mod+Shift+o'],
+            keywords: 'load session',
+            section: 'Files',
+            perform: () => {
+                onOpenDraft('').then((draftJson) => {
+                    formationEditorRef.current.setDraft(JSON.parse(draftJson))
+                })
+            }
         },
         {
             id: 'save-draft',
@@ -7414,7 +7711,9 @@ function App(): JSX.Element {
             keywords: 'store session',
             section: 'Files',
             perform: () => {
-                window.electron.ipcRenderer.invoke('save-draft', draft)
+                onSaveDraft(formationEditorRef.current.getDraft()).then((url) => {
+                    console.log('Draft saved under: ', url)
+                })
             }
         },
         {
@@ -7437,8 +7736,8 @@ function App(): JSX.Element {
 
     const handleCancelPiece = () => {
         if (resolveOnPieceEdit) {
-            resolveOnPieceEdit(piece);
-            setResolveOnPieceEdit(null);
+            resolveOnPieceEdit(piece)
+            setResolveOnPieceEdit(null)
         }
         setIsPieceEditorOpen(false)
     }
@@ -7448,7 +7747,7 @@ function App(): JSX.Element {
             setPiece(piece)
             setNewPiece(piece)
             showPieceEditor()
-            setResolveOnPieceEdit(() => resolve);
+            setResolveOnPieceEdit(() => resolve)
         })
     }
 
@@ -7532,16 +7831,47 @@ function App(): JSX.Element {
             >
                 <KBarProvider actions={actions}>
                     <div className="relative font-sans bg-light dark:bg-dark flex flex-col h-full">
-                        <CommandBar />
-                        <FormationEditor
-                            className={`flex-grow ${isEditorActive() ? '' : 'blur-sm'}`}
-                            ref={formationEditorRef}
-                            piece={piece}
-                            onPieceEdit={onPieceEdit}
-                            onAttractionEdit={onAttractionEdit}
-                        />
+                        <Layout style={{ minHeight: '100vh' }}>
+                            <Sider
+                                collapsible
+                                collapsed={collapsed}
+                                onCollapse={(value) => setCollapsed(value)}
+                            >
+                                <div className="demo-logo-vertical" />
+                                <Menu
+                                    theme="dark"
+                                    defaultSelectedKeys={['1']}
+                                    mode="inline"
+                                    items={[
+                                        getItem('Types', '1', <TypeIcon />),
+                                        getItem('Formations', 'sub1', <FormationIcon />, [
+                                            getItem('Tom', '3'),
+                                            getItem('Bill', '4'),
+                                            getItem('Alex', '5')
+                                        ]),
+                                        getItem('Designs', 'sub2', <DesignIcon />, [
+                                            getItem('Team 1', '6'),
+                                            getItem('Team 2', '8')
+                                        ])
+                                    ]}
+                                />
+                            </Sider>
+                            <div />
+                                <CommandBar />
+                                <FormationEditor
+                                    className={`font-sans flex-grow ${isEditorActive() ? '' : 'blur-sm'}`}
+                                    ref={formationEditorRef}
+                                    piece={piece}
+                                    onPieceEdit={onPieceEdit}
+                                    onAttractionEdit={onAttractionEdit}
+                                />
+                            <div />
+                        </Layout>
                     </div>
-                    <ModalForm
+                    <Modal open={isPieceEditorOpen}>
+                        <NodeEditor />
+                    </Modal>
+                    {/* <ModalForm
                         title="Type"
                         open={isPieceEditorOpen}
                         autoFocusFirstInput
@@ -7556,16 +7886,19 @@ function App(): JSX.Element {
                                 id: piece?.id,
                                 type: {
                                     name: values.name,
-                                    qualities: values.qualities.map((name) => {
-                                        return piece?.type?.qualities.find((quality) => quality.name === name)
-                                    })
+                                    qualities:
+                                        values.qualities?.map((name) => {
+                                            return piece?.type?.qualities?.find(
+                                                (quality) => quality.name === name
+                                            )
+                                        }) || []
                                 }
                             }
                             setPiece(newPiece)
                             setNewPiece(newPiece)
                             if (resolveOnPieceEdit) {
-                                resolveOnPieceEdit(newPiece);
-                                setResolveOnPieceEdit(null);
+                                resolveOnPieceEdit(newPiece)
+                                setResolveOnPieceEdit(null)
                             }
                             setIsPieceEditorOpen(false)
                             return true
@@ -7593,7 +7926,9 @@ function App(): JSX.Element {
                         <ProForm.Item name="qualities">
                             <QualityTransfer
                                 dataSource={piece?.type?.qualities || []}
-                                targetKeys={newPiece?.type?.qualities.map((quality) => quality.name) || []}
+                                targetKeys={
+                                    newPiece?.type?.qualities?.map((quality) => quality.name) || []
+                                }
                                 onChange={onNewPieceTypeQualitiesChange}
                                 filterOption={(inputValue, item) =>
                                     item.name.indexOf(inputValue) !== -1 ||
@@ -7656,17 +7991,16 @@ function App(): JSX.Element {
                                 <GizmoHelper
                                     alignment="bottom-right" // widget alignment within scene
                                     margin={[80, 80]} // widget margins (X, Y)
-                                    >
+                                >
                                     <GizmoViewport
                                         labels={['X', 'Z', '-Y']}
                                         // axisColors={[colors.primary, colors.secondary, colors.tertiary]}
                                         // labelColor={colors.light} font="Anta"
                                     />
                                 </GizmoHelper>
-
                             </Canvas>
                         </div>
-                    </Modal>
+                    </Modal> */}
                 </KBarProvider>
             </ConfigProvider>
         </div>

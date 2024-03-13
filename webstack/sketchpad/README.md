@@ -1,4 +1,4 @@
-## semio builder
+## sketchpad
 
 A user interface for creating formations.
 
