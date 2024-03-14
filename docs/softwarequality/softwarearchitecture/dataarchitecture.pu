@@ -9,7 +9,7 @@ interface Artifact {
     *created_at : datetime
     *last_update_at : datetime
 }
-note right of Artifact
+note left of Artifact
     description is optional
     (can be set to "").
     icon is optional
@@ -22,7 +22,7 @@ entity Kit {
     ..
     *url : string
 }
-note right of Kit
+note left of Kit
     url is unique.
     url is optional
     (can be set to "").
@@ -36,7 +36,7 @@ entity Type {
     ..
     *kit_id : int <<FK>>
 }
-note left of Type
+note right of Type
     name and variant are unique.
     variant = "" means default.
 end note
@@ -49,7 +49,7 @@ entity Representation {
     ..
     *type_id : int <<FK>>
 }
-note left of Representation
+note right of Representation
     url is unique.
     lod="" means default.
 end note
@@ -60,20 +60,26 @@ entity Tag {
     *representation_id : int <<PK,FK>>
 }
 
+entity Plane{
+    *id : int <<PK,generated>>
+    ..
+    origin_x : float
+    origin_y : float
+    origin_z : float
+    ..
+    x_axis_x : float
+    x_axis_y : float
+    x_axis_z : float
+    ..
+    y_axis_x : float
+    y_axis_y : float
+    y_axis_z : float
+}
+
 entity Port {
     *id : int <<PK,generated>>
     ..
-    *plane_origin_x : float
-    *plane_origin_y : float
-    *plane_origin_z : float
-    ..
-    *plane_x_axis_x : float
-    *plane_x_axis_y : float
-    *plane_x_axis_z : float
-    ..
-    *plane_y_axis_x : float
-    *plane_y_axis_y : float
-    *plane_y_axis_z : float
+    *plane_id : int <<FK>>
     ..
     *type_id : int <<FK>>
 }
@@ -109,17 +115,7 @@ entity Piece{
     *local_id: string
     *type_id : int <<FK>>
     ..
-    shape_plane_origin_x : float
-    shape_plane_origin_y : float
-    shape_plane_origin_z : float
-    ..
-    shape_plane_x_axis_x : float
-    shape_plane_x_axis_y : float
-    shape_plane_x_axis_z : float
-    ..
-    shape_plane_y_axis_x : float
-    shape_plane_y_axis_y : float
-    shape_plane_y_axis_z : float
+    root_plane_id : int <<FK>>
     ..
     *sketch_point_x : float
     *sketch_point_y : float
@@ -127,7 +123,7 @@ entity Piece{
     *formation_id : int <<FK>>
 }
 note right of Piece
-    plane can only be set
+    root plane can only be set
     when piece is root.
 end note
 
@@ -163,7 +159,9 @@ Type ||--o{ Quality
 Formation ||--|{ Piece
 Formation ||--o{ Attraction
 Formation ||--o{ Quality
+Port ||--|| Plane
 Port ||--|{  Specifier
+Piece ||--o| Plane
 Type <-- Piece
 Piece <-- Attraction
 Port <-- Attraction
