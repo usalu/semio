@@ -1,10 +1,14 @@
-kit : !{
+kit : !Kit{
     name : !string
-    explanation : ?string
+    description : ?string
     icon : ?string
     url : ?string
     types : +[
         name : !string
+        description : ?string
+        icon : ?string
+        variant : ?string
+        unit : !string
         representations : +[
             url : !string
             lod : ?string
@@ -39,56 +43,73 @@ kit : !{
             unit : ?string
         ]
     ]
-    designs : +[
+    formations : +[
         name : !string
-        explanation : ?string
+        description : ?string
         icon : ?string
-        formations : *[
-            
-            pieces : ![
-                id : !string
-                type : !{
-                    name : !string
-                    qualities : +[
-                        name : !string
-                        value : !string
-                        unit : ?string
-                    ]
-                }
-            ]
-            attractions : +[
-                attracting : !{
-                    piece : !{
-                        id : !string
-                        type : !{
-                            port : !{
-                                specifiers : +[
-                                    context : !string
-                                    group : !string
-                                ]
-                            }
-                        }
-                    }
-                }
-                attracted : !{
-                    piece : !{
-                        id : !string
-                        type : !{
-                            port : !{
-                                specifiers : +[
-                                    context : !string
-                                    group : !string
-                                ]
-                            }
-                        }
-                    }
-                }
-            ]
-            qualities : *[
+        variant : ?string
+        unit : !string
+        pieces : ![
+            id : !string
+            type : !{
                 name : !string
-                value : !string
-                unit : ?string
-            ]
+                variant : ?string
+            }
+            root : ?{
+                plane : !{
+                    origin : !{
+                        x : float!
+                        y : float!
+                        z : float!
+                    }
+                    xAxis : !{
+                        x : float!
+                        y : float!
+                        z : float!
+                    }
+                    yAxis : !{
+                        x : float!
+                        y : float!
+                        z : float!
+                    }
+                }
+            }
+            sketch : ?{
+
+            }
+        ]
+        attractions : +[
+            attracting : !{
+                piece : !{
+                    id : !string
+                    type : !{
+                        port : !{
+                            specifiers : +[
+                                context : !string
+                                group : !string
+                            ]
+                        }
+                    }
+                }
+            }
+            attracted : !{
+                piece : !{
+                    id : !string
+                    type : !{
+                        port : !{
+                            specifiers : +[
+                                context : !string
+                                group : !string
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+        qualities : *[
+            name : !string
+            value : !string
+            unit : ?string
         ]
     ]
 }

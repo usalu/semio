@@ -21,6 +21,7 @@ function createWindow(): void {
         show: false,
         autoHideMenuBar: true,
         ...(process.platform === 'linux' ? { icon } : {}),
+        frame: false,
         webPreferences: {
             preload: join(__dirname, '../preload/index.js'),
             sandbox: false
@@ -60,6 +61,27 @@ app.whenReady().then(() => {
     // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
         optimizer.watchWindowShortcuts(window)
+    })
+
+    ipcMain.handle('minimize-window', (event) => {
+        const window = BrowserWindow.getFocusedWindow()
+        if (window) window.minimize()
+    })
+
+    ipcMain.handle('maximize-window', (event) => {
+        const window = BrowserWindow.getFocusedWindow()
+        if (window) {
+            if (window.isMaximized()) {
+                window.unmaximize()
+            } else {
+                window.maximize()
+            }
+        }
+    })
+
+    ipcMain.handle('close-window', (event) => {
+        const window = BrowserWindow.getFocusedWindow()
+        if (window) window.close()
     })
 
     ipcMain.handle('open-kit', async () => {

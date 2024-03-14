@@ -22,9 +22,13 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
-    "@ant-design/pro-components": "^2.6.49",
+    "@dnd-kit/core": "^6.1.0",
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.13",
+    "@mui/material": "^5.15.13",
     "@react-three/drei": "^9.101.0",
     "@react-three/fiber": "^8.15.19",
     "antd": "^5.15.0",

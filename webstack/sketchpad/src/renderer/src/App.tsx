@@ -11,21 +11,31 @@ import {
     useImperativeHandle,
     useRef
 } from 'react'
+import { createPortal } from 'react-dom'
 import { KBarProvider } from 'kbar'
 import { KBarAnimator, KBarPortal, KBarPositioner, KBarSearch } from 'kbar'
 import { KBarResults, useMatches } from 'kbar'
 import { ActionId, ActionImpl } from 'kbar'
 import {
     Avatar,
+    Breadcrumb,
     Button,
+    Col,
+    Collapse,
     ConfigProvider,
+    Divider,
+    Flex,
     GetProp,
     Layout,
     Menu,
     Modal,
+    Row,
+    Select,
+    Space,
     Steps,
     Table,
     TableProps,
+    Tabs,
     Tag,
     Transfer,
     TransferProps,
@@ -34,9 +44,14 @@ import {
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
 import { Canvas, useLoader } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Select, GizmoHelper, GizmoViewport } from '@react-three/drei'
+import {
+    OrbitControls,
+    useGLTF,
+    Select as ThreeSelect,
+    GizmoHelper,
+    GizmoViewport
+} from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { ModalForm, ProForm, ProFormSelect } from '@ant-design/pro-components'
 import { INode, IEdge, IGraphInput, SelectionT, GraphUtils, IPoint, GraphView } from 'react-digraph'
 import SVG from 'react-inlinesvg'
 import {
@@ -49,8 +64,15 @@ import {
     Representation
 } from '@renderer/semio'
 import tailwindConfig from '../../../tailwind.config.js'
-import Sider from 'antd/es/layout/Sider'
 import { MenuItem } from 'electron'
+import CloseSharpIcon from '@mui/icons-material/CloseSharp'
+import MinimizeSharpIcon from '@mui/icons-material/MinimizeSharp'
+import FullscreenSharpIcon from '@mui/icons-material/FullscreenSharp'
+import FullscreenExitSharpIcon from '@mui/icons-material/FullscreenExitSharp'
+import HomeSharpIcon from '@mui/icons-material/HomeSharp'
+import { DndContext, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
+
+const { Header, Content, Footer, Sider } = Layout
 
 const {
     theme: { colors }
@@ -3577,19 +3599,23 @@ const sample: IDraft = {
     ]
 }
 
-interface FormationEditorProps {
+interface DiagramEditorProps {
     className?: string
     piece: PieceInput
     onPieceEdit: (piece: PieceInput) => Promise<PieceInput>
     onAttractionEdit: (attraction: AttractionInput) => AttractionInput
 }
 
-const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
+const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     const [graph, setGraph] = useState(sample)
     const [selected, setSelected] = useState<SelectionT | null>(null)
     const [copiedNodes, setCopiedNodes] = useState<INode[]>([])
     const [copiedEdges, setCopiedEdges] = useState<IEdge[]>([])
     const graphViewRef = useRef(null)
+
+    const { isOver, setNodeRef } = useDroppable({
+        id: 'droppable'
+    })
 
     const getDraft = (): IDraft => {
         return {
@@ -3913,7 +3939,11 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
     const EdgeTypes = GraphConfig.EdgeTypes
 
     return (
-        <div id="formation-editor" className={props.className}>
+        <div
+            id="formation-editor"
+            className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
+            ref={setNodeRef}
+        >
             <GraphView
                 ref={graphViewRef}
                 nodeKey={NODE_KEY}
@@ -3951,99 +3981,7 @@ const FormationEditor = forwardRef((props: FormationEditorProps, ref) => {
     )
 })
 
-FormationEditor.displayName = 'FormationEditor'
-
-type TransferItem = GetProp<TransferProps, 'dataSource'>[number]
-type TableRowSelection<T extends object> = TableProps<T>['rowSelection']
-
-interface QualityTransferProps extends TransferProps<TransferItem> {
-    dataSource: Quality[]
-}
-
-const QualityTransfer = ({ ...restProps }: QualityTransferProps): JSX.Element => (
-    <Transfer
-        rowKey={(record) => record.name}
-        showSelectAll={false}
-        locale={{
-            itemUnit: 'quality',
-            itemsUnit: 'qualities',
-            searchPlaceholder: 'Search qualities',
-            notFoundContent: 'Quality not found',
-            remove: 'Remove quality',
-            selectAll: 'Select all qualities',
-            removeAll: 'Remove all qualities',
-            removeCurrent: 'Remove current quality',
-            selectCurrent: 'Select current quality',
-            selectInvert: 'Invert quality selection',
-            titles: ['Available', 'Selected']
-        }}
-        {...restProps}
-    >
-        {({
-            filteredItems,
-            onItemSelectAll,
-            onItemSelect,
-            selectedKeys: listSelectedNames,
-            disabled: listDisabled
-        }) => {
-            const rowSelection: TableRowSelection<TransferItem> = {
-                getCheckboxProps: (item) => ({ disabled: listDisabled || item.disabled }),
-                onSelectAll(selected, selectedRows) {
-                    const treeSelectedNames = selectedRows
-                        .filter((item) => !item.disabled)
-                        .map(({ name }) => name)
-                    const diffNames = selected
-                        ? difference(treeSelectedNames, listSelectedNames)
-                        : difference(listSelectedNames, treeSelectedNames)
-                    onItemSelectAll(diffNames as string[], selected)
-                },
-                onSelect({ name }, selected) {
-                    onItemSelect(name as string, selected)
-                },
-                onSelectInvert() {
-                    const diffNames = difference(
-                        filteredItems.map(({ name }) => name),
-                        listSelectedNames
-                    )
-                    onItemSelectAll(diffNames, true)
-                },
-                selectedRowKeys: listSelectedNames
-            }
-
-            return (
-                <Table
-                    rowSelection={rowSelection}
-                    columns={[
-                        {
-                            dataIndex: 'name',
-                            title: 'Name'
-                        },
-                        {
-                            dataIndex: 'value',
-                            title: 'Value',
-                            render: (value, record) => <Tag>{`${value} ${record.unit || ''}`}</Tag>
-                        }
-                    ]}
-                    dataSource={filteredItems}
-                    size="small"
-                    style={{ pointerEvents: listDisabled ? 'none' : undefined }}
-                    onRow={({ name, disabled: itemDisabled }) => ({
-                        onClick: () => {
-                            if (itemDisabled || listDisabled) return
-                            onItemSelect(
-                                name as string,
-                                !listSelectedNames.includes(name as string)
-                            )
-                        }
-                    })}
-                    locale={{
-                        emptyText: 'No qualities'
-                    }}
-                />
-            )
-        }}
-    </Transfer>
-)
+DiagramEditor.displayName = 'DiagramEditor'
 
 interface RepresentationThreeProps {
     representation: Representation
@@ -4102,6 +4040,78 @@ const FormationThree = ({ formation }: FormationThreeProps) => {
                 <PieceThree key={i} piece={piece} />
             ))}
         </group>
+    )
+}
+
+interface ShapeEditorProps {}
+
+const ShapeEditor = ({}: ShapeEditorProps) => {
+    const [kit, setKit] = useState<Kit | null>(null)
+    const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
+    const [isSelectionBoxActive, setIsSelectionBoxActive] = useState(false)
+
+    useEffect(() => {
+        ;[
+            'c:\\git\\semio\\2.x\\examples\\metabolism\\representations\\capsule_1_1to200_volume_wireframe.glb'
+        ].forEach((path) => {
+            window.electron.ipcRenderer.invoke('get-file-buffer', path).then((buffer) => {
+                const name = 'representations/capsule_1_1to200_volume_wireframe.glb'
+                const blob = new Blob([buffer], { type: 'model/gltf-binary' })
+                const url = URL.createObjectURL(blob)
+                useGLTF.preload(url)
+                setBlobUrls((prev) => ({ ...prev, [name]: url }))
+            })
+        })
+    }, [kit])
+
+    return (
+        <Canvas
+            shadows={true}
+            // orthographic={true}
+        >
+            <ThreeSelect
+                multiple
+                box
+                border="1px solid #fff"
+                onChange={(selected): void => {
+                    if (!isSelectionBoxActive) {
+                        setIsSelectionBoxActive(true)
+                        console.log('selection starting', selected)
+                    }
+                }}
+                onChangePointerUp={(e) => {
+                    if (isSelectionBoxActive) {
+                        setIsSelectionBoxActive(false)
+                        console.log('selection ending', e)
+                    }
+                }}
+                onClick={(e) => {
+                    console.log('select onClick', e)
+                }}
+            >
+                <Suspense fallback={null}>
+                    <RepresentationThree
+                        representation={{
+                            url: blobUrls['representations/capsule_1_1to200_volume_wireframe.glb']
+                        }}
+                    />
+                    <hemisphereLight color={colors.primary} intensity={0.5} />
+                    <ambientLight color={colors.primary} intensity={0.5} />
+                </Suspense>
+            </ThreeSelect>
+            <OrbitControls enabled={!isSelectionBoxActive} />
+            <GizmoHelper
+                alignment="bottom-right" // widget alignment within scene
+                margin={[80, 80]} // widget margins (X, Y)
+            >
+                <GizmoViewport
+                    labels={['X', 'Z', '-Y']}
+                    axisColors={[colors.primary, colors.tertiary, colors.secondary]}
+                    // labelColor={colors.light}
+                    // font="Anta"
+                />
+            </GizmoHelper>
+        </Canvas>
     )
 }
 
@@ -7393,70 +7403,6 @@ const kitMock: Kit = {
     ]
 }
 
-const NodeEditor = () => {
-    const { token } = theme.useToken()
-    const [current, setCurrent] = useState(0)
-
-    const next = () => {
-        setCurrent(current + 1)
-    }
-
-    const prev = () => {
-        setCurrent(current - 1)
-    }
-
-    const items = pieceEditorSteps.map((item) => ({ key: item.title, title: item.title }))
-
-    const contentStyle: React.CSSProperties = {
-        lineHeight: '260px',
-        textAlign: 'center',
-        color: token.colorTextTertiary,
-        backgroundColor: token.colorFillAlter,
-        borderRadius: token.borderRadiusLG,
-        border: `1px dashed ${token.colorBorder}`,
-        marginTop: 16
-    }
-
-    const pieceEditorSteps = [
-        {
-            title: 'Select a type',
-            content: 'First-content'
-        },
-        {
-            title: 'Select a variant',
-            content: 'Second-content'
-        },
-        {
-            title: 'Select qualities',
-            content: 'Last-content'
-        }
-    ]
-
-    return (
-        <>
-            <Steps current={current} items={items} />
-            <div style={contentStyle}>{pieceEditorSteps[current].content}</div>
-            <div style={{ marginTop: 24 }}>
-                {current < pieceEditorSteps.length - 1 && (
-                    <Button type="primary" onClick={() => next()}>
-                        Next
-                    </Button>
-                )}
-                {current === pieceEditorSteps.length - 1 && (
-                    <Button type="primary" onClick={() => message.success('Processing complete!')}>
-                        Done
-                    </Button>
-                )}
-                {current > 0 && (
-                    <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-                        Previous
-                    </Button>
-                )}
-            </div>
-        </>
-    )
-}
-
 function getItem(
     label: React.ReactNode,
     key: React.Key,
@@ -7470,6 +7416,96 @@ function getItem(
         label
     } as MenuItem
 }
+
+const SemioIcon = (props) => (
+    <svg width={48} height={48} overflow="visible" viewBox="0 0 99.95 99.921" {...props}>
+        {'-->'}
+        <g
+            style={{
+                stroke: '#000',
+                strokeWidth: 1,
+                strokeDasharray: 'none',
+                strokeOpacity: 1
+            }}
+        >
+            <g
+                style={{
+                    fill: '#fa9500',
+                    fillOpacity: 1,
+                    stroke: '#000',
+                    strokeWidth: 1,
+                    strokeDasharray: 'none',
+                    strokeOpacity: 1
+                }}
+            >
+                <path
+                    fillOpacity={0}
+                    stroke="none"
+                    d="M94.789 41.727v77.939l19.984-19.985V41.727Z"
+                    style={{
+                        fill: '#fa9500',
+                        fillOpacity: 1,
+                        stroke: 'none',
+                        strokeWidth: 0.489687,
+                        strokeDasharray: 'none',
+                        strokeOpacity: 1
+                    }}
+                    transform="translate(-94.789 -19.745)"
+                />
+            </g>
+            <g
+                fillOpacity={0}
+                stroke="none"
+                style={{
+                    fill: '#ff344f',
+                    fillOpacity: 1,
+                    stroke: '#000',
+                    strokeWidth: 1,
+                    strokeDasharray: 'none',
+                    strokeOpacity: 1
+                }}
+            >
+                <path
+                    d="m194.71 119.666.03-98.535-19.985 19.979-.03 78.556zM94.789 19.745h98.51l-19.984 19.984H94.79Z"
+                    style={{
+                        fill: '#ff344f',
+                        fillOpacity: 1,
+                        stroke: 'none',
+                        strokeWidth: 0.489687,
+                        strokeDasharray: 'none',
+                        strokeOpacity: 1
+                    }}
+                    transform="translate(-94.789 -19.745)"
+                />
+            </g>
+            <g
+                fillOpacity={0}
+                stroke="none"
+                style={{
+                    fill: '#00a69d',
+                    fillOpacity: 1,
+                    stroke: '#000',
+                    strokeWidth: 1,
+                    strokeDasharray: 'none',
+                    strokeOpacity: 1
+                }}
+            >
+                <path
+                    d="m134.757 119.666 19.984-19.985h17.987v19.985zM134.757 79.697l19.984-19.984h17.987v19.984z"
+                    style={{
+                        fill: '#00a69d',
+                        fillOpacity: 1,
+                        stroke: 'none',
+                        strokeWidth: 0.489687,
+                        strokeDasharray: 'none',
+                        strokeOpacity: 1
+                    }}
+                    transform="translate(-94.789 -19.745)"
+                />
+            </g>
+        </g>
+    </svg>
+)
 
 const DesignIcon = (props) => (
     <svg width={48} height={48} {...props}>
@@ -7490,9 +7526,9 @@ const DesignIcon = (props) => (
                 <path
                     d="m5.77 0-8.65 5V-5Z"
                     style={{
-                        fill: '#f7f3e3',
+                        fill: colors.light,
                         fillRule: 'evenodd',
-                        stroke: '#f7f3e3',
+                        stroke: colors.light,
                         strokeWidth: '1pt'
                     }}
                     transform="scale(.5)"
@@ -7505,7 +7541,7 @@ const DesignIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7517,7 +7553,7 @@ const DesignIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7529,7 +7565,7 @@ const DesignIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7540,7 +7576,7 @@ const DesignIcon = (props) => (
             style={{
                 fill: 'none',
                 fillRule: 'evenodd',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: '.927333px',
                 strokeLinecap: 'butt',
                 strokeLinejoin: 'miter',
@@ -7571,9 +7607,9 @@ const FormationIcon = (props) => (
                 <path
                     d="m5.77 0-8.65 5V-5Z"
                     style={{
-                        fill: '#f7f3e3',
+                        fill: colors.light,
                         fillRule: 'evenodd',
-                        stroke: '#f7f3e3',
+                        stroke: colors.light,
                         strokeWidth: '1pt'
                     }}
                     transform="scale(.5)"
@@ -7586,7 +7622,7 @@ const FormationIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7598,7 +7634,7 @@ const FormationIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7609,7 +7645,7 @@ const FormationIcon = (props) => (
             style={{
                 fill: 'none',
                 fillRule: 'evenodd',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: '.927333px',
                 strokeLinecap: 'butt',
                 strokeLinejoin: 'miter',
@@ -7629,7 +7665,7 @@ const TypeIcon = (props) => (
             r={5.007}
             style={{
                 fill: 'none',
-                stroke: '#f7f3e3',
+                stroke: colors.light,
                 strokeWidth: 0.733,
                 strokeDasharray: 'none',
                 strokeOpacity: 1
@@ -7638,370 +7674,480 @@ const TypeIcon = (props) => (
     </svg>
 )
 
+const DraggableAvatar = ({ user, id }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+        id: id
+    })
+    return (
+        <Avatar
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            size="large"
+            className="font-sans text-darkGrey"
+        >
+            {user}
+        </Avatar>
+    )
+}
+
 interface AppProps {
+    onWindowMinimize: () => void
+    onWindowMaximize: () => void
+    onWindowClose: () => void
     onOpenKit: () => Promise<Kit>
     onReloadKit: () => Promise<Kit>
     onOpenDraft: () => Promise<string>
     onSaveDraft: (draft: IDraft) => Promise<string>
 }
 
-const App = ({ onOpenKit, onReloadKit, onOpenDraft, onSaveDraft }: AppProps): JSX.Element => {
-    const [kit, setKit] = useState<Kit | null>(kitMock)
-    const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
-    const [isSelectionBoxActive, setIsSelectionBoxActive] = useState(false)
-    const [piecePipette, setPiecePipette] = useState<PieceInput | null>(null)
-    const [AttractionPipette, setAttractionPipette] = useState<AttractionInput | null>(null)
-    const [transformMode, setTransformMode] = useState<string>('translate')
+const App = ({
+    onWindowMinimize,
+    onWindowMaximize,
+    onWindowClose,
+    onOpenKit,
+    onReloadKit,
+    onOpenDraft,
+    onSaveDraft
+}: AppProps): JSX.Element => {
+    const [fullScreen, setFullScreen] = useState(false)
+    const [collapsedToolset, setCollapsedToolset] = useState(false)
+    const [isDropped, setIsDropped] = useState(false)
+    const [activeId, setActiveId] = useState(null)
 
-    const [isPieceEditorOpen, setIsPieceEditorOpen] = useState(false)
-    const [resolveOnPieceEdit, setResolveOnPieceEdit] = useState<
-        ((value: PieceInput) => void) | null
-    >(null)
-    const [piece, setPiece] = useState<PieceInput | null>(null)
-    const [newPiece, setNewPiece] = useState<PieceInput | null>(null)
+    const handleTabClick = () => {
+        setCollapsedToolset(!collapsedToolset)
+    }
 
-    const [isAttractionEditorOpen, setIsAttractionEditorOpen] = useState(false)
-    const [Attraction, setAttraction] = useState<AttractionInput | null>(null)
+    const DiagramEditorRef = useRef(null)
 
-    const [collapsed, setCollapsed] = useState(false)
+    // const actions = [
+    //     {
+    //         id: 'open-kit',
+    //         name: 'Open Kit',
+    //         shortcut: ['$mod+o'],
+    //         keywords: 'new',
+    //         section: 'Files',
+    //         perform: () => {
+    //             onOpenKit('').then((kit) => {
+    //                 // TODO: Set kit over redux
+    //                 // setKit(kit)
+    //             })
+    //         }
+    //     },
+    //     {
+    //         id: 'reload-kit',
+    //         name: 'Reload Kit',
+    //         shortcut: ['$mod+r'],
+    //         keywords: 'update',
+    //         section: 'Files',
+    //         perform: () => {
+    //             onReloadKit().then((kit) => {
+    //                 // TODO: Set kit over redux
+    //                 // setKit(kit)
+    //             })
+    //         }
+    //     },
+    //     {
+    //         id: 'open-draft',
+    //         name: 'Open Draft',
+    //         shortcut: ['$mod+Shift+o'],
+    //         keywords: 'load session',
+    //         section: 'Files',
+    //         perform: () => {
+    //             onOpenDraft('').then((draftJson) => {
+    //                 DiagramEditorRef.current.setDraft(JSON.parse(draftJson))
+    //             })
+    //         }
+    //     },
+    //     {
+    //         id: 'save-draft',
+    //         name: 'Save draft',
+    //         shortcut: ['$mod+s'],
+    //         keywords: 'store session',
+    //         section: 'Files',
+    //         perform: () => {
+    //             onSaveDraft(DiagramEditorRef.current.getDraft()).then((url) => {
+    //                 console.log('Draft saved under: ', url)
+    //             })
+    //         }
+    //     },
+    //     {
+    //         id: 'zoom-to-fit',
+    //         name: 'Zoom to Fit',
+    //         shortcut: ['$mod+t'],
+    //         keywords: 'formation',
+    //         section: 'Navigation',
+    //         perform: () => {
+    //             if (DiagramEditorRef.current) {
+    //                 DiagramEditorRef.current.zoomToFit()
+    //             }
+    //         }
+    //     }
+    // ]
 
-    const formationEditorRef = useRef(null)
+    // useEffect(() => {
+    //     if (kit) {
+    //         ;[
+    //             'c:\\git\\semio\\2.x\\examples\\metabolism\\representations\\capsule_1_1to200_volume_wireframe.glb'
+    //         ].forEach((path) => {
+    //             window.electron.ipcRenderer.invoke('get-file-buffer', path).then((buffer) => {
+    //                 const name = 'representations/capsule_1_1to200_volume_wireframe.glb'
+    //                 const blob = new Blob([buffer], { type: 'model/gltf-binary' })
+    //                 const url = URL.createObjectURL(blob)
+    //                 useGLTF.preload(url)
+    //                 setBlobUrls((prev) => ({ ...prev, [name]: url }))
+    //             })
+    //         })
+    //     }
+    // }, [kit])
 
-    const actions = [
-        {
-            id: 'open-kit',
-            name: 'Open Kit',
-            shortcut: ['$mod+o'],
-            keywords: 'new',
-            section: 'Files',
-            perform: () => {
-                onOpenKit('').then((kit) => {
-                    setKit(kit)
-                })
-            }
-        },
-        {
-            id: 'reload-kit',
-            name: 'Reload Kit',
-            shortcut: ['$mod+r'],
-            keywords: 'update',
-            section: 'Files',
-            perform: () => {
-                onReloadKit().then((kit) => {
-                    setKit(kit)
-                })
-            }
-        },
-        {
-            id: 'open-draft',
-            name: 'Open Draft',
-            shortcut: ['$mod+Shift+o'],
-            keywords: 'load session',
-            section: 'Files',
-            perform: () => {
-                onOpenDraft('').then((draftJson) => {
-                    formationEditorRef.current.setDraft(JSON.parse(draftJson))
-                })
-            }
-        },
-        {
-            id: 'save-draft',
-            name: 'Save draft',
-            shortcut: ['$mod+s'],
-            keywords: 'store session',
-            section: 'Files',
-            perform: () => {
-                onSaveDraft(formationEditorRef.current.getDraft()).then((url) => {
-                    console.log('Draft saved under: ', url)
-                })
-            }
-        },
-        {
-            id: 'zoom-to-fit',
-            name: 'Zoom to Fit',
-            shortcut: ['$mod+t'],
-            keywords: 'formation',
-            section: 'Navigation',
-            perform: () => {
-                if (formationEditorRef.current) {
-                    formationEditorRef.current.zoomToFit()
-                }
-            }
+    const handleDragEnd = (event) => {
+        if (event.over && event.over.id === 'droppable') {
+            setIsDropped(true)
         }
-    ]
-
-    const showPieceEditor = () => {
-        setIsPieceEditorOpen(true)
     }
-
-    const handleCancelPiece = () => {
-        if (resolveOnPieceEdit) {
-            resolveOnPieceEdit(piece)
-            setResolveOnPieceEdit(null)
-        }
-        setIsPieceEditorOpen(false)
-    }
-
-    const onPieceEdit = (piece: PieceInput): Promise<PieceInput> => {
-        return new Promise((resolve) => {
-            setPiece(piece)
-            setNewPiece(piece)
-            showPieceEditor()
-            setResolveOnPieceEdit(() => resolve)
-        })
-    }
-
-    const showAttractionEditor = () => {
-        setIsAttractionEditorOpen(true)
-    }
-
-    const handleSaveAttraction = () => {
-        setIsAttractionEditorOpen(false)
-    }
-
-    const handleCancelAttraction = () => {
-        setIsAttractionEditorOpen(false)
-    }
-
-    const onAttractionEdit = (attraction: AttractionInput): AttractionInput => {
-        setAttraction(attraction)
-        showAttractionEditor()
-        return attraction
-    }
-
-    const isEditorActive = (): boolean => {
-        return !isPieceEditorOpen && !isAttractionEditorOpen
-    }
-
-    const onNewPieceTypeQualitiesChange = (
-        nextNewQualityNames: string[],
-        direction: string,
-        moveNames: string[]
-    ) => {
-        setNewPiece({
-            ...newPiece,
-            type: {
-                ...newPiece.type,
-                qualities: newPiece.type.qualities.filter((quality) =>
-                    nextNewQualityNames.includes(quality.name)
-                )
-            }
-        })
-    }
-
-    useEffect(() => {
-        if (kit) {
-            ;[
-                'c:\\git\\semio\\2.x\\examples\\metabolism\\representations\\capsule_1_1to200_volume_wireframe.glb'
-            ].forEach((path) => {
-                window.electron.ipcRenderer.invoke('get-file-buffer', path).then((buffer) => {
-                    const name = 'representations/capsule_1_1to200_volume_wireframe.glb'
-                    const blob = new Blob([buffer], { type: 'model/gltf-binary' })
-                    const url = URL.createObjectURL(blob)
-                    useGLTF.preload(url)
-                    setBlobUrls((prev) => ({ ...prev, [name]: url }))
-                })
-            })
-        }
-    }, [kit])
 
     return (
         <div className="h-screen w-screen">
             <ConfigProvider
                 locale={enUS}
                 theme={{
-                    algorithm: [theme.darkAlgorithm],
+                    // algorithm: [theme.darkAlgorithm],
                     token: {
-                        colorPrimary: '#ff344f',
-                        colorBgBase: '#002430',
-                        colorTextBase: '#f7f3e3',
-                        colorError: '#a60009',
-                        colorWarning: '#fccf05',
-                        colorInfo: '#dbbea1',
-                        colorSuccess: '#7eb77f',
-                        colorInfoHover: '#ff344f',
-                        colorBgSpotlight: '#ff344f',
+                        // primary
+                        colorPrimary: colors.light,
+                        colorPrimaryBg: colors.light,
+                        colorPrimaryBgHover: colors.light,
+                        colorPrimaryBorder: colors.light,
+                        colorPrimaryBorderHover: colors.light,
+                        colorPrimaryHover: colors.light,
+                        colorPrimaryActive: colors.light,
+                        colorPrimaryText: colors.light,
+                        colorPrimaryTextHover: colors.light,
+                        colorPrimaryTextActive: colors.light,
+                        // text
+                        colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
+                        colorTextSecondary: colors.lightGrey,
+                        colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
+                        colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
+                        // border
+                        colorBorder: colors.light,
+                        colorBorderSecondary: colors.light,
+                        // fill
+                        colorFill: colors.light,
+                        colorFillSecondary: colors.light,
+                        colorFillTertiary: colors.light,
+                        colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
+                        // background
+                        colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
+                        colorBgElevated: colors.grey, // e.g. background selected menu
+                        colorBgLayout: colors.light,
+                        colorBgSpotlight: colors.light,
+                        colorBgMask: colors.light,
+                        colorBgTextActive: colors.light,
+                        colorBgBase: colors.light,
+                        // special colors
+                        colorError: colors.danger,
+                        colorWarning: colors.warning,
+                        colorInfo: colors.info,
+                        colorSuccess: colors.success,
                         fontFamily: 'Anta, sans-serif',
                         boxShadow: 'none',
                         boxShadowSecondary: 'none',
                         boxShadowTertiary: 'none',
-                        wireframe: false
+                        wireframe: false,
+                        borderRadius: 0,
+                        lineWidth: 0
+                        // motionUnit: 0.05
+                    },
+                    components: {
+                        Button: {
+                            borderColorDisabled: colors.light,
+                            dangerColor: colors.light,
+                            defaultActiveBg: colors.light,
+                            defaultActiveBorderColor: colors.light,
+                            defaultActiveColor: colors.light,
+                            defaultBg: colors.light,
+                            defaultBorderColor: colors.light,
+                            defaultColor: colors.lightGrey, // e.g. normal state of buttons
+                            defaultGhostBorderColor: colors.light,
+                            defaultGhostColor: colors.light,
+                            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
+                            ghostBg: colors.light,
+                            linkHoverBg: colors.light,
+                            primaryColor: colors.light,
+                            textHoverBg: colors.light
+                        },
+                        Layout: {
+                            bodyBg: colors.dark,
+                            footerBg: colors.grey,
+                            headerBg: colors.grey, // e.g. space between tabs and content
+                            headerColor: colors.light,
+                            lightSiderBg: colors.light,
+                            lightTriggerBg: colors.light,
+                            lightTriggerColor: colors.light,
+                            siderBg: colors.darkGrey,
+                            triggerBg: colors.light,
+                            triggerColor: colors.light,
+                            headerPadding: '0px 0px'
+                        },
+                        Tabs: {
+                            cardBg: colors.grey, // background of unselected tabs
+                            inkBarColor: colors.light,
+                            itemActiveColor: colors.light,
+                            itemColor: colors.lightGrey, // text and fill of unselected tabs
+                            itemHoverColor: colors.light,
+                            itemSelectedColor: colors.light,
+                            cardGutter: 0,
+                            cardHeight: 38,
+                            cardPadding: '0 16px',
+                            verticalItemMargin: '0'
+                        },
+                        Divider: {
+                            lineWidth: 0.25,
+                            verticalMarginInline: 0
+                        },
+                        Avatar: {
+                            groupBorderColor: colors.light
+                        },
+                        Collapse: {
+                            headerBg: colors.darkGrey,
+                            headerPadding: '0 0px',
+                            contentBg: colors.darkGrey,
+                            contentPadding: '0 0px'
+                        },
+                        Select: {
+                            clearBg: colors.lightGrey,
+                            multipleItemBg: colors.darkGrey,
+                            optionActiveBg: colors.darkGrey,
+                            optionSelectedBg: colors.darkGrey,
+                            optionSelectedColor: colors.light,
+                            selectorBg: colors.darkGrey,
+                        }
                     }
                 }}
             >
-                <KBarProvider actions={actions}>
-                    <div className="relative font-sans bg-light dark:bg-dark flex flex-col h-full">
-                        <Layout style={{ minHeight: '100vh' }}>
-                            <Sider
-                                collapsible
-                                collapsed={collapsed}
-                                onCollapse={(value) => setCollapsed(value)}
-                            >
-                                <div className="demo-logo-vertical" />
-                                <Menu
-                                    theme="dark"
-                                    defaultSelectedKeys={['1']}
-                                    mode="inline"
-                                    items={[
-                                        getItem('Types', '1', <TypeIcon />),
-                                        getItem('Formations', 'sub1', <FormationIcon />, [
-                                            getItem('Tom', '3'),
-                                            getItem('Bill', '4'),
-                                            getItem('Alex', '5')
-                                        ]),
-                                        getItem('Designs', 'sub2', <DesignIcon />, [
-                                            getItem('Team 1', '6'),
-                                            getItem('Team 2', '8')
-                                        ])
-                                    ]}
-                                />
-                            </Sider>
-                            <div />
-                                <CommandBar />
-                                <FormationEditor
-                                    className={`font-sans flex-grow ${isEditorActive() ? '' : 'blur-sm'}`}
-                                    ref={formationEditorRef}
-                                    piece={piece}
-                                    onPieceEdit={onPieceEdit}
-                                    onAttractionEdit={onAttractionEdit}
-                                />
-                            <div />
-                        </Layout>
-                    </div>
-                    <Modal open={isPieceEditorOpen}>
-                        <NodeEditor />
-                    </Modal>
-                    {/* <ModalForm
-                        title="Type"
-                        open={isPieceEditorOpen}
-                        autoFocusFirstInput
-                        modalProps={{
-                            destroyOnClose: true,
-                            onCancel: handleCancelPiece
-                        }}
-                        onFinish={async (values) => {
-                            // new piece has the the type name values.name and the qualities
-                            // from the transfer component
-                            const newPiece = {
-                                id: piece?.id,
-                                type: {
-                                    name: values.name,
-                                    qualities:
-                                        values.qualities?.map((name) => {
-                                            return piece?.type?.qualities?.find(
-                                                (quality) => quality.name === name
-                                            )
-                                        }) || []
-                                }
-                            }
-                            setPiece(newPiece)
-                            setNewPiece(newPiece)
-                            if (resolveOnPieceEdit) {
-                                resolveOnPieceEdit(newPiece)
-                                setResolveOnPieceEdit(null)
-                            }
-                            setIsPieceEditorOpen(false)
-                            return true
-                        }}
-                        submitter={{
-                            searchConfig: {
-                                submitText: 'Save',
-                                resetText: 'Cancel'
-                            },
-                            resetButtonProps: {
-                                onClick: handleCancelPiece
-                            }
-                        }}
-                    >
-                        <ProFormSelect
-                            initialValue={newPiece?.type?.name || undefined}
-                            options={[
-                                { value: 'capsule', label: 'capsule' },
-                                { value: 'shaft', label: 'shaft' }
-                            ]}
-                            name="name"
-                            label="Name"
-                            placeholder="Please select a type"
-                        />
-                        <ProForm.Item name="qualities">
-                            <QualityTransfer
-                                dataSource={piece?.type?.qualities || []}
-                                targetKeys={
-                                    newPiece?.type?.qualities?.map((quality) => quality.name) || []
-                                }
-                                onChange={onNewPieceTypeQualitiesChange}
-                                filterOption={(inputValue, item) =>
-                                    item.name.indexOf(inputValue) !== -1 ||
-                                    item.value.indexOf(inputValue) !== -1 ||
-                                    (item.unit && item.unit.indexOf(inputValue) !== -1)
-                                }
-                                showSearch={true}
-                                disabled={false}
-                            />
-                        </ProForm.Item>
-                    </ModalForm>
-                    <Modal
-                        title="Attraction Editor"
-                        open={isAttractionEditorOpen}
-                        onOk={handleSaveAttraction}
-                        onCancel={handleCancelAttraction}
-                    >
-                        <p>
-                            Edit port type specifiers here... Can you imagine a threejs viewer where
-                            you can pick your port without knowing any specifiers?😱
-                        </p>
+                <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+                    <Header style={{ height: 'auto' }}>
                         <div
-                            id="canvas-container"
-                            className="relative font-sans bg-light dark:bg-dark flex flex-col h-full"
+                            style={{
+                                height: '38px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                WebkitAppRegion: 'drag'
+                            }}
                         >
-                            <Canvas>
-                                <Select
-                                    multiple
-                                    box
-                                    border="1px solid #fff"
-                                    onChange={(selected): void => {
-                                        if (!isSelectionBoxActive) {
-                                            setIsSelectionBoxActive(true)
-                                            console.log('selection starting', selected)
-                                        }
-                                    }}
-                                    onChangePointerUp={(e) => {
-                                        if (isSelectionBoxActive) {
-                                            setIsSelectionBoxActive(false)
-                                            console.log('selection ending', e)
-                                        }
-                                    }}
-                                    onClick={(e) => {
-                                        console.log('select onClick', e)
+                            <Tabs
+                                className="p-0 flex items-center"
+                                type="editable-card"
+                                style={{
+                                    WebkitAppRegion: 'no-drag'
+                                }}
+                                defaultActiveKey="1"
+                                items={[
+                                    {
+                                        key: '1',
+                                        label: <HomeSharpIcon />,
+                                        closable: false
+                                    },
+                                    {
+                                        key: '2',
+                                        label: 'Nakagin Capsule Tower'
+                                    },
+                                    {
+                                        key: '3',
+                                        label: 'Unsaved'
+                                    }
+                                ]}
+                            />
+                            <Space />
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    height: '100%',
+                                    justifyContent: 'flex-end',
+                                    alignItems: 'center',
+                                    WebkitAppRegion: 'no-drag'
+                                }}
+                            >
+                                <Button
+                                    onClick={onWindowMinimize}
+                                    style={{
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
                                     }}
                                 >
-                                    <Suspense fallback={null}>
-                                        <RepresentationThree
-                                            representation={{
-                                                url: blobUrls[
-                                                    'representations/capsule_1_1to200_volume_wireframe.glb'
-                                                ]
-                                            }}
-                                        />
-                                        <hemisphereLight intensity={0.5} />
-                                        <ambientLight intensity={0.5} />
-                                    </Suspense>
-                                </Select>
-                                <OrbitControls enabled={!isSelectionBoxActive} />
-                                <GizmoHelper
-                                    alignment="bottom-right" // widget alignment within scene
-                                    margin={[80, 80]} // widget margins (X, Y)
+                                    <MinimizeSharpIcon />
+                                </Button>
+                                <Button
+                                    onClick={onWindowMaximize}
+                                    style={{
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}
                                 >
-                                    <GizmoViewport
-                                        labels={['X', 'Z', '-Y']}
-                                        // axisColors={[colors.primary, colors.secondary, colors.tertiary]}
-                                        // labelColor={colors.light} font="Anta"
-                                    />
-                                </GizmoHelper>
-                            </Canvas>
+                                    {fullScreen ? (
+                                        <FullscreenExitSharpIcon />
+                                    ) : (
+                                        <FullscreenSharpIcon />
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={onWindowClose}
+                                    style={{
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <CloseSharpIcon />
+                                </Button>
+                            </div>
                         </div>
-                    </Modal> */}
-                </KBarProvider>
+                    </Header>
+                    <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
+                        <Col className="flex items-center">
+                            {/* TODO: Add icons for main menu and tools */}
+                        </Col>
+                        <Col className="flex items-center">
+                            <Breadcrumb>
+                                <Breadcrumb.Item>Metabolism</Breadcrumb.Item>
+                                <Breadcrumb.Item>Formations</Breadcrumb.Item>
+                                <Breadcrumb.Item>Unsaved</Breadcrumb.Item>
+                            </Breadcrumb>
+                        </Col>
+                        <Col className="flex items-center">
+                            {/* TODO: Add icons for sharing, etc */}
+                        </Col>
+                    </Row>
+                    <Layout style={{ flex: 1 }}>
+                        <Layout>
+                            <DndContext onDragEnd={handleDragEnd}>
+                                <Sider width="240px" className="border-r-thin border-lightGrey">
+                                    <Collapse
+                                        className="p-3 border-b-thin border-lightGrey font-thin"
+                                        items={[
+                                            {
+                                                key: '1',
+                                                label: 'TYPES',
+                                                children: (
+                                                    <Collapse
+                                                        className="p-2 font-normal text-lightGrey"
+                                                        items={[
+                                                            {
+                                                                key: '1',
+                                                                label: 'capsule',
+                                                                children: (
+                                                                    <Space
+                                                                        className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                        direction="vertical"
+                                                                        size={10}
+                                                                        style={{
+                                                                            gridTemplateColumns:
+                                                                                'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                            gridAutoRows: '40px'
+                                                                        }}
+                                                                    >
+                                                                        {[
+                                                                            '📦1',
+                                                                            '📦2',
+                                                                            '📦3',
+                                                                            '📦4',
+                                                                            '📦5',
+                                                                            '📦6',
+                                                                            '📦7',
+                                                                            '📦8'
+                                                                        ].map((user, index) => (
+                                                                            <DraggableAvatar
+                                                                                key={index}
+                                                                                id={index}
+                                                                                user={user}
+                                                                            ></DraggableAvatar>
+                                                                        ))}
+                                                                    </Space>
+                                                                )
+                                                            }
+                                                        ]}
+                                                        defaultActiveKey={['1']}
+                                                    />
+                                                )
+                                            },
+                                            {
+                                                key: '2',
+                                                label: 'FORMATIONS',
+                                                children: <p>{'Test'}</p>
+                                            }
+                                        ]}
+                                        defaultActiveKey={['1']}
+                                    />
+                                </Sider>
+                                <Content>
+                                    <DiagramEditor />
+                                </Content>
+                                <Divider className="h-full top-0" type="vertical" />
+                                <Content>
+                                    <ShapeEditor />
+                                </Content>
+                                {createPortal(
+                                    <DragOverlay >
+                                        {/* {activeId ? (
+                                            <DraggableAvatar id={activeId} user="🏫" />
+                                        ) : null} */}
+                                        <DraggableAvatar id={activeId} user="🏫" />
+                                    </DragOverlay>,
+                                    document.body
+                                )}
+                            </DndContext>
+                        </Layout>
+                        <Sider className="border-l-thin border-lightGrey" width="240">
+                            <Collapse
+                                className="p-3"
+                                items={[
+                                    {
+                                        key: '1',
+                                        label: 'SCENE',
+                                        children: (
+                                            <Flex vertical={true} className='p-2 text-lightGrey'>
+                                                <text className='p-0'>Level of Details</text>
+                                                <Select
+                                                    className='p-1'
+                                                    mode="multiple"
+                                                    allowClear
+                                                    placeholder="Please select"
+                                                    defaultValue={['1to500']}
+                                                    options={[
+                                                        {
+                                                            label: '1to500',
+                                                            value: '1to500'
+                                                        },
+                                                        {
+                                                            label: '1to200',
+                                                            value: '1to200'
+                                                        }
+                                                    ]}
+                                                />
+                                            </Flex>
+                                        )
+                                    }
+                                ]}
+                                defaultActiveKey={['1']}
+                            />
+                        </Sider>
+                    </Layout>
+                    {/* <Footer className='p-0'>
+                        <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div className="flex items-center">
+                            </div>
+                        </div>
+                    </Footer> */}
+                </Layout>
             </ConfigProvider>
         </div>
     )
