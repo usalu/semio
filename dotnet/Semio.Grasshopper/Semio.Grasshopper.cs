@@ -8,8 +8,10 @@ using System.Text;
 using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
+using Rhino;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace Semio.Grasshopper;
 
@@ -22,125 +24,612 @@ namespace Semio.Grasshopper;
 
 #region Copilot
 
-//public class Representation
+//public class Representation : IDeepCloneable<global::Representation>
 //{
 //    public string Url { get; set; }
-//    public string Lod { get; set; }
-//    public List<string> Tags { get; set; }
+//    public string? Lod { get; set; }
+//    public List<string>? Tags { get; set; }
+
+//    public global::Representation DeepClone()
+//    {
+//        var representation = new global::Representation
+//        {
+//            Url = Url
+//        };
+//        if (Lod != null) representation.Lod = Lod;
+//        if (Tags != null) representation.Tags = new List<string>(Tags);
+//        return representation;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Representation(Url: {Url})";
+//    }
 //}
-//public class Specifier
+
+//public class Specifier : IDeepCloneable<global::Specifier>
 //{
 //    public string Context { get; set; }
 //    public string Group { get; set; }
+
+//    public global::Specifier DeepClone()
+//    {
+//        return new global::Specifier
+//        {
+//            Context = Context,
+//            Group = Group
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Specifier(Context: {Context})";
+//    }
 //}
 
-//public class Point
+//public class ScreenPoint : IDeepCloneable<ScreenPoint>
+//{
+//    public int X { get; set; }
+//    public int Y { get; set; }
+
+//    public ScreenPoint DeepClone()
+//    {
+//        return new ScreenPoint
+//        {
+//            X = X,
+//            Y = Y
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Point(X: {X}, Y: {Y})";
+//    }
+//}
+
+//public class Point : IDeepCloneable<global::Point>
 //{
 //    public float X { get; set; }
 //    public float Y { get; set; }
 //    public float Z { get; set; }
 
+//    public global::Point DeepClone()
+//    {
+//        return new global::Point
+//        {
+//            X = X,
+//            Y = Y,
+//            Z = Z
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Point(X: {X}, Y: {Y}, Z: {Z})";
+//    }
 //}
 
-//public class Vector
+//public class Vector : IDeepCloneable<global::Vector>
 //{
 //    public float X { get; set; }
 //    public float Y { get; set; }
 //    public float Z { get; set; }
 
+//    public global::Vector DeepClone()
+//    {
+//        return new global::Vector
+//        {
+//            X = X,
+//            Y = Y,
+//            Z = Z
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Vector(X: {X}, Y: {Y}, Z: {Z})";
+//    }
 //}
 
-//public class Plane
+//public class Plane : IDeepCloneable<global::Plane>
 //{
-//    public Point Origin { get; set; }
-//    public Vector XAxis { get; set; }
-//    public Vector YAxis { get; set; }
+//    public global::Point Origin { get; set; }
+//    public global::Vector XAxis { get; set; }
+//    public global::Vector YAxis { get; set; }
+
+//    public global::Plane DeepClone()
+//    {
+//        return new global::Plane
+//        {
+//            Origin = Origin.DeepClone(),
+//            XAxis = XAxis.DeepClone(),
+//            YAxis = YAxis.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Plane(Origin: {Origin}, XAxis: {XAxis}, YAxis: {YAxis})";
+//    }
 //}
 
-//public class Port
+//public class Port : IDeepCloneable<global::Port>
 //{
-//    public Plane Plane { get; set; }
-//    public List<Specifier> Specifiers { get; set; }
+//    public global::Plane Plane { get; set; }
+//    public List<global::Specifier> Specifiers { get; set; }
 
+//    public global::Port DeepClone()
+//    {
+//        return new global::Port
+//        {
+//            Plane = Plane.DeepClone(),
+//            Specifiers = new List<global::Specifier>(Specifiers.Select(s => s.DeepClone()))
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Port({GetHashCode()})";
+//    }
 //}
 
-//public class PortId
+//public class PortId : IDeepCloneable<global::PortId>
 //{
-//    public List<Specifier> Specifiers { get; set; }
+//    public List<global::Specifier> Specifiers { get; set; }
+
+//    public global::PortId DeepClone()
+//    {
+//        return new global::PortId
+//        {
+//            Specifiers = new List<global::Specifier>(Specifiers.Select(s => s.DeepClone()))
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"PortId({GetHashCode()})";
+//    }
 //}
 
-//public class Quality
+
+//public class Quality : IDeepCloneable<global::Quality>
 //{
 //    public string Name { get; set; }
 //    public string Value { get; set; }
+//    public string? Unit { get; set; }
+
+//    public global::Quality DeepClone()
+//    {
+//        var quality = new global::Quality
+//        {
+//            Name = Name,
+//            Value = Value
+//        };
+//        if (Unit != null) quality.Unit = Unit;
+//        return quality;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Quality(Name: {Name})";
+//    }
+//}
+
+//public class Type : IDeepCloneable<global::Type>
+//{
+//    public string Name { get; set; }
+//    public string? Description { get; set; }
+//    public string? Icon { get; set; }
+//    public string? Variant { get; set; }
 //    public string Unit { get; set; }
+//    public List<global::Representation> Representations { get; set; }
+//    public List<global::Port> Ports { get; set; }
+//    public List<global::Quality>? Qualities { get; set; }
+
+//    public global::Type DeepClone()
+//    {
+//        var type = new global::Type
+//        {
+//            Name = Name,
+//            Unit = Unit,
+//            Representations = new List<global::Representation>(Representations.Select(r => r.DeepClone())),
+//            Ports = new List<global::Port>(Ports.Select(p => p.DeepClone()))
+//        };
+//        if (Description != null) type.Description = Description;
+//        if (Icon != null) type.Icon = Icon;
+//        if (Variant != null) type.Variant = Variant;
+//        if (Qualities != null) type.Qualities = new List<global::Quality>(Qualities.Select(q => q.DeepClone()));
+//        return type;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Type(Name: {Name}, Variant: {Variant})";
+//    }
 //}
 
-//public class Type
+//public class TypeId : IDeepCloneable<global::TypeId>
 //{
 //    public string Name { get; set; }
-//    public string Explanation { get; set; }
-//    public string Icon { get; set; }
-//    public List<Representation> Representations { get; set; }
-//    public List<Port> Ports { get; set; }
-//    public List<Quality> Qualities { get; set; }
+//    public string? Variant { get; set; }
 
+//    public global::TypeId DeepClone()
+//    {
+//        var typeId = new global::TypeId
+//        {
+//            Name = Name
+//        };
+//        if (Variant != null) typeId.Variant = Variant;
+//        return typeId;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"TypeId(Name: {Name}, Variant: {Variant})";
+//    }
 //}
 
-//public class TypeId
+//public class RootPiece : IDeepCloneable<global::RootPiece>
 //{
-//    public string Name { get; set; }
-//    public List<Quality> Qualities { get; set; }
+//    public global::Plane Plane { get; set; }
+
+//    public global::RootPiece DeepClone()
+//    {
+//        return new global::RootPiece
+//        {
+//            Plane = Plane.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"RootPiece({GetHashCode()})";
+//    }
 //}
 
-//public class Piece
+//public class DiagramPiece : IDeepCloneable<global::DiagramPiece>
+//{
+//    public global::ScenePoint Point { get; set; }
+
+//    public global::DiagramPiece DeepClone()
+//    {
+//        return new global::DiagramPiece
+//        {
+//            Point = Point.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"DiagramPiece({GetHashCode()})";
+//    }
+//}
+
+//public class Piece : IDeepCloneable<global::Piece>
 //{
 //    public string Id { get; set; }
-//    public TypeId Type { get; set; }
+//    public global::TypeId Type { get; set; }
+//    public global::RootPiece? Root { get; set; }
+//    public global::DiagramPiece Diagram { get; set; }
+//    public global::Piece DeepClone()
+//    {
+//        var piece = new global::Piece
+//        {
+//            Id = Id,
+//            Type = Type.DeepClone(),
+//            Diagram = Diagram.DeepClone()
+//        };
+//        if (Root != null) piece.Root = Root.DeepClone();
+//        return piece;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Piece(Id: {Id})";
+//    }
 //}
 
-//public class TypePieceSide
-//{
-//    public PortId Port { get; set; }
-//}
-
-//public class PieceSide
+//public class PieceId : IDeepCloneable<global::PieceId>
 //{
 //    public string Id { get; set; }
-//    public TypePieceSide Type { get; set; }
+
+//    public global::PieceId DeepClone()
+//    {
+//        return new global::PieceId
+//        {
+//            Id = Id
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"PieceId(Id: {Id})";
+//    }
 //}
 
-//public class Side
+//public class TypePieceSide : IDeepCloneable<global::TypePieceSide>
 //{
-//    public PieceSide Piece { get; set; }
+//    public global::PortId Port { get; set; }
+
+//    public global::TypePieceSide DeepClone()
+//    {
+//        return new global::TypePieceSide
+//        {
+//            Port = Port.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"TypePieceSide({GetHashCode()})";
+//    }
 //}
 
-//public class Attraction
+//public class PieceSide : IDeepCloneable<global::PieceSide>
 //{
-//    public Side Attracting { get; set; }
-//    public Side Attracted { get; set; }
+//    public string Id { get; set; }
+//    public global::TypePieceSide Type { get; set; }
+
+//    public global::PieceSide DeepClone()
+//    {
+//        return new global::PieceSide
+//        {
+//            Id = Id,
+//            Type = Type.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"PieceSide(Id: {Id})";
+//    }
 //}
 
-//public class Formation
+//public class Side : IDeepCloneable<global::Side>
+//{
+//    public global::PieceSide Piece { get; set; }
+
+//    public global::Side DeepClone()
+//    {
+//        return new global::Side
+//        {
+//            Piece = Piece.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Side({GetHashCode()})";
+//    }
+//}
+
+
+//public class Attraction : IDeepCloneable<global::Attraction>
+//{
+//    public global::Side Attracting { get; set; }
+//    public global::Side Attracted { get; set; }
+
+//    public global::Attraction DeepClone()
+//    {
+//        return new global::Attraction
+//        {
+//            Attracting = Attracting.DeepClone(),
+//            Attracted = Attracted.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Attraction(Attracting(Piece: {Attracting.Piece.Id}), Attracted(Piece: {Attracted.Piece.Id}))";
+//    }
+//}
+
+//public class Formation : IDeepCloneable<global::Formation>
 //{
 //    public string Name { get; set; }
-//    public string Explanation { get; set; }
-//    public string Icon { get; set; }
-//    public List<Piece> Pieces { get; set; }
-//    public List<Attraction> Attractions { get; set; }
-//    public List<Quality> Qualities { get; set; }
+//    public string? Description { get; set; }
+//    public string? Icon { get; set; }
+//    public string? Variant { get; set; }
+//    public string Unit { get; set; }
+//    public List<global::Piece> Pieces { get; set; }
+//    public List<global::Attraction> Attractions { get; set; }
+//    public List<global::Quality>? Qualities { get; set; }
+
+//    public global::Formation DeepClone()
+//    {
+//        var formation = new global::Formation
+//        {
+//            Name = Name,
+//            Unit = Unit,
+//            Pieces = new List<global::Piece>(Pieces.Select(p => p.DeepClone())),
+//            Attractions = new List<global::Attraction>(Attractions.Select(a => a.DeepClone()))
+//        };
+//        if (Description != null) formation.Description = Description;
+//        if (Icon != null) formation.Icon = Icon;
+//        if (Variant != null) formation.Variant = Variant;
+//        if (Qualities != null) formation.Qualities = new List<global::Quality>(Qualities.Select(q => q.DeepClone()));
+//        return formation;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Formation(Name: {Name}, Variant: {Variant})";
+//    }
 //}
 
-//public class Kit
+//public class FormationId : IDeepCloneable<global::FormationId>
 //{
 //    public string Name { get; set; }
-//    public string Explanation { get; set; }
-//    public string Icon { get; set; }
-//    public string Url { get; set; }
-//    public List<Type> Types { get; set; }
-//    public List<Formation> Formations { get; set; }
+//    public string? Variant { get; set; }
+
+//    public global::FormationId DeepClone()
+//    {
+//        var formationId = new global::FormationId
+//        {
+//            Name = Name
+//        };
+//        if (Variant != null) formationId.Variant = Variant;
+//        return formationId;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"FormationId(Name: {Name}, Variant: {Variant})";
+//    }
 //}
 
+//public class TypePieceObject : IDeepCloneable<global::TypePieceObject>
+//{
+//    public List<global::Representation> Representations { get; set; }
+
+//    public global::TypePieceObject DeepClone()
+//    {
+//        return new global::TypePieceObject
+//        {
+//            Representations = new List<global::Representation>(Representations.Select(f => f.DeepClone()))
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"TypePieceObject({GetHashCode()})";
+//    }
+//}
+
+//public class PieceObject : IDeepCloneable<global::PieceObject>
+//{
+//    public string Id { get; set; }
+//    public global::TypePieceObject Type { get; set; }
+
+//    public global::PieceObject DeepClone()
+//    {
+//        return new global::PieceObject
+//        {
+//            Id = Id,
+//            Type = Type.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"PieceObject(Id: {Id})";
+//    }
+//}
+
+
+//public class ParentObject : IDeepCloneable<global::ParentObject>
+//{
+//    public global::PieceId Piece { get; set; }
+
+//    public global::ParentObject DeepClone()
+//    {
+//        return new global::ParentObject
+//        {
+//            Piece = Piece.DeepClone()
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"ParentObject({GetHashCode()})";
+//    }
+//}
+
+//public class Object : IDeepCloneable<global::Object>
+//{
+//    public global::PieceObject Piece { get; set; }
+//    public global::Plane Plane { get; set; }
+
+//    public global::ParentObject? Parent { get; set; }
+
+//    public global::Object DeepClone()
+//    {
+//        var obj = new global::Object
+//        {
+//            Piece = Piece.DeepClone(),
+//            Plane = Plane.DeepClone()
+//        };
+//        if (Parent != null) obj.Parent = Parent.DeepClone();
+//        return obj;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Object({GetHashCode()})";
+//    }
+//}
+
+//public class Scene : IDeepCloneable<global::Scene>
+//{
+//    public List<global::Object> Objects { get; set; }
+
+//    public global::Scene DeepClone()
+//    {
+//        return new global::Scene
+//        {
+//            Objects = new List<global::Object>(Objects.Select(o => o.DeepClone()))
+//        };
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Scene({GetHashCode()})";
+//    }
+//}
+
+//public class Kit : IDeepCloneable<global::Kit>
+//{
+//    public string Name { get; set; }
+//    public string? Description { get; set; }
+//    public string? Icon { get; set; }
+//    public string? Url { get; set; }
+//    public List<global::Type> Types { get; set; }
+//    public List<global::Formation> Formations { get; set; }
+
+//    public global::Kit DeepClone()
+//    {
+//        var kit = new global::Kit
+//        {
+//            Name = Name,
+//            Types = new List<global::Type>(Types.Select(t => t.DeepClone())),
+//            Formations = new List<global::Formation>(Formations.Select(f => f.DeepClone()))
+//        };
+//        if (Description != null) kit.Description = Description;
+
+//        if (Icon != null) kit.Icon = Icon;
+
+//        if (Url != null) kit.Url = Url;
+//        return kit;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"Kit(Name: {Name}, {GetHashCode()})";
+//    }
+//}
+
+//public class KitMetadata : IDeepCloneable<global::KitMetadata>
+//{
+//    public string? Name { get; set; }
+//    public string? Description { get; set; }
+//    public string? Icon { get; set; }
+//    public string? Url { get; set; }
+
+//    public global::KitMetadata DeepClone()
+//    {
+//        var kitMetadata = new global::KitMetadata();
+//        if (Name != null) kitMetadata.Name = Name;
+//        if (Description != null) kitMetadata.Description = Description;
+//        if (Icon != null) kitMetadata.Icon = Icon;
+//        if (Url != null) kitMetadata.Url = Url;
+//        return kitMetadata;
+//    }
+
+//    public override string ToString()
+//    {
+//        return $"KitMetadata(Name: {Name})";
+//    }
+//}
 #endregion
 
 #region Utility
@@ -154,6 +643,31 @@ public static class Utility
     {
         return Path.GetFullPath(path) == path;
     }
+
+    public static bool IsValidUnit(string unit)
+    {
+        return new string[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd"}.Contains(unit);
+    }
+    public static string UnitSystemToAbbreviation(UnitSystem unitSystem)
+    {
+        var unit = unitSystem switch
+        {
+            UnitSystem.Nanometers => "nm",
+            UnitSystem.Millimeters => "mm",
+            UnitSystem.Centimeters => "cm",
+            UnitSystem.Decimeters => "dm",
+            UnitSystem.Meters => "m",
+            UnitSystem.Kilometers => "km",
+            UnitSystem.Microinches => "µin",
+            UnitSystem.Inches => "in",
+            UnitSystem.Feet => "ft",
+            UnitSystem.Yards => "yd",
+            _ => "unsupported unit system"
+        };
+        if (IsValidUnit(unit) == false)
+            throw new ArgumentException("Invalid unit system", nameof(unitSystem));
+        return unit;
+}
 }
 
 #endregion
@@ -458,6 +972,75 @@ public class TypeGoo : GH_Goo<Type>
     {
         Value = reader.GetString("Type").Deserialize<Type>();
         return base.Read(reader);
+    }
+}
+
+public class ScreenPointGoo : GH_Goo<ScreenPoint>
+{
+    public ScreenPointGoo()
+    {
+        Value = new ScreenPoint();
+    }
+
+    public ScreenPointGoo(ScreenPoint screenPoint)
+    {
+        Value = screenPoint;
+    }
+
+    public override bool IsValid { get; }
+    public override string TypeName => "ScreenPoint";
+    public override string TypeDescription { get; }
+
+    public override IGH_Goo Duplicate()
+    {
+        return new ScreenPointGoo(Value.DeepClone());
+    }
+
+    public override string ToString()
+    {
+        return Value.ToString();
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString("ScreenPoint", Value.Serialize());
+        return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString("ScreenPoint").Deserialize<ScreenPoint>();
+        return base.Read(reader);
+    }
+
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
+        {
+            object ptr = new GH_Point(new Point3d(Value.X, Value.Y, 0));
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
+
+        var point = new Point3d();
+        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+        {
+            Value = new ScreenPoint
+            {
+                X = (int)point.X,
+                Y = (int)point.Y
+            };
+            return true;
+        }
+
+        return false;
     }
 }
 
@@ -814,6 +1397,26 @@ public class TypeParam : SemioPersistentParam<TypeGoo>
     }
 }
 
+public class ScreenPointParam : SemioPersistentParam<ScreenPointGoo>
+{
+    public ScreenPointParam() : base("Screen Point", "SP", "", "semio", "Params")
+    {
+    }
+
+    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
+
+    protected override Bitmap Icon => Resources.screenpoint_24x24;
+
+    protected override GH_GetterResult Prompt_Singular(ref ScreenPointGoo value)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override GH_GetterResult Prompt_Plural(ref List<ScreenPointGoo> values)
+    {
+        throw new NotImplementedException();
+    }
+}
 public class PieceParam : SemioPersistentParam<PieceGoo>
 {
     public PieceParam() : base("Piece", "Pc", "", "semio", "Params")
@@ -954,10 +1557,10 @@ public class RepresentationComponent : SemioComponent
         pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Level of Detail", "Ld?", "Optional level of detail of the representation.",
+        pManager.AddTextParameter("Level of Detail", "Ld?", "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \nThere can be only one default representation per type.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list,new List<string>());
         pManager[3].Optional = true;
     }
 
@@ -967,7 +1570,7 @@ public class RepresentationComponent : SemioComponent
             "Constructed or modified representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Level of Detail", "Ld?", "Optional level of detail of the representation.",
+        pManager.AddTextParameter("LoD", "Ld?", "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \\nThere can be only one default representation per type.",
             GH_ParamAccess.item);
         pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list);
     }
@@ -980,20 +1583,24 @@ public class RepresentationComponent : SemioComponent
         var tags = new List<string>();
 
         DA.GetData(0, ref representationGoo);
-        DA.GetData(1, ref url);
-        DA.GetData(2, ref lod);
-        DA.GetDataList(3, tags);
+        if (DA.GetData(1, ref url))
+            representationGoo.Value.Url = url;
+        if (DA.GetData(2, ref lod))
+            representationGoo.Value.Lod = lod;
+        if (DA.GetDataList(3, tags))
+            representationGoo.Value.Tags = tags;
 
-        if (url != "") representationGoo.Value.Url = url;
-
-        if (lod != "") representationGoo.Value.Lod = lod;
-
-        if (tags.Count > 0) representationGoo.Value.Tags = tags;
+        var isValidInput = true;
+        if (representationGoo.Value.Url == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A representation needs an url.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, representationGoo.Duplicate());
         DA.SetData(1, representationGoo.Value.Url);
-        if (representationGoo.Value.Lod != null)
-            DA.SetData(2, representationGoo.Value.Lod);
+        DA.SetData(2, representationGoo.Value.Lod??"");
         DA.SetDataList(3, representationGoo.Value.Tags);
     }
 }
@@ -1037,12 +1644,23 @@ public class SpecifierComponent : SemioComponent
         var group = "";
 
         DA.GetData(0, ref specifierGoo);
-        DA.GetData(1, ref context);
-        DA.GetData(2, ref group);
+        if (DA.GetData(1, ref context))
+            specifierGoo.Value.Context = context;
+        if (DA.GetData(2, ref group))
+            specifierGoo.Value.Group = group;
 
-        if (context != "") specifierGoo.Value.Context = context;
-
-        if (group != "") specifierGoo.Value.Group = group;
+        var isValidInput = true;
+        if (specifierGoo.Value.Context == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A specifier needs a context.");
+            isValidInput = false;
+        }
+        if (specifierGoo.Value.Group == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A specifier needs a group.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, specifierGoo.Duplicate());
         DA.SetData(1, specifierGoo.Value.Context);
@@ -1087,22 +1705,33 @@ public class PortComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var portGoo = new PortGoo();
-        var planeInput = false;
         var planeGeo = new Rhino.Geometry.Plane();
         var specifierGoos = new List<SpecifierGoo>();
 
         DA.GetData(0, ref portGoo);
         if (DA.GetData(1, ref planeGeo))
             portGoo.Value.Plane = planeGeo.convert();
-        DA.GetDataList(2, specifierGoos);
+        if (DA.GetDataList(2, specifierGoos))
+            portGoo.Value.Specifiers = specifierGoos.Select(s => s.Value).ToList();
 
-        if (specifierGoos.Count > 0) portGoo.Value.Specifiers = specifierGoos.Select(s => s.Value).ToList();
+        var isValidInput = true;
+        if (portGoo.Value.Plane == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a plane.");
+            isValidInput = false;
+        }
+
+        if (portGoo.Value.Specifiers == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs at least one specifier.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, portGoo.Duplicate());
         DA.SetData(1, portGoo.Value.Plane?.convert());
-        if (portGoo.Value.Specifiers != null)
-            DA.SetDataList(2, portGoo.Value.Specifiers.Select(s => new SpecifierGoo(s.DeepClone()
-            )));
+        DA.SetDataList(2, portGoo.Value.Specifiers?.Select(s => new SpecifierGoo(s.DeepClone()
+            ))??new List<SpecifierGoo>());
     }
 }
 
@@ -1149,21 +1778,31 @@ public class QualityComponent : SemioComponent
         var unit = "";
 
         DA.GetData(0, ref qualityGoo);
-        DA.GetData(1, ref name);
-        DA.GetData(2, ref value);
-        DA.GetData(3, ref unit);
+        if (DA.GetData(1, ref name))
+            qualityGoo.Value.Name = name;
+        if (DA.GetData(2, ref value))
+            qualityGoo.Value.Value = value;
+        if (DA.GetData(3, ref unit))
+            qualityGoo.Value.Unit = unit;
 
-        if (name != "") qualityGoo.Value.Name = name;
+        var isValidInput = true;
+        if (qualityGoo.Value.Name == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A quality needs a name.");
+            isValidInput = false;
+        }
 
-        if (value != "") qualityGoo.Value.Value = value;
-
-        if (unit != "") qualityGoo.Value.Unit = unit;
+        if (qualityGoo.Value.Value == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A quality needs a value.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, qualityGoo.Duplicate());
         DA.SetData(1, qualityGoo.Value.Name);
         DA.SetData(2, qualityGoo.Value.Value);
-        if (qualityGoo.Value.Unit != null)
-            DA.SetData(3, qualityGoo.Value.Unit);
+        DA.SetData(3, qualityGoo.Value.Unit);
     }
 }
 
@@ -1187,19 +1826,24 @@ public class TypeComponent : SemioComponent
         pManager[0].Optional = true;
         pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
         pManager[3].Optional = true;
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type.",
+                       GH_ParamAccess.item);
+        pManager[4].Optional = true;
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the type.", GH_ParamAccess.item);
+        pManager[5].Optional = true;
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
             GH_ParamAccess.list);
-        pManager[4].Optional = true;
+        pManager[6].Optional = true;
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-        pManager[5].Optional = true;
+        pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
             "Optional qualities of the type. They can be further used to distinguish types with the same name.",
             GH_ParamAccess.list);
-        pManager[6].Optional = true;
+        pManager[8].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1207,8 +1851,10 @@ public class TypeComponent : SemioComponent
         pManager.AddParameter(new TypeParam(), "Type", "Ty",
             "Constructed or modified type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the type. By default the document unit is used. Otherwise meters will be used.", GH_ParamAccess.item);
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the",
             GH_ParamAccess.list);
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
@@ -1220,45 +1866,146 @@ public class TypeComponent : SemioComponent
     {
         var typeGoo = new TypeGoo();
         var name = "";
-        var explanation = "";
+        var description = "";
         var icon = "";
+        var variant = "";
+        var unit = "";
         var representationGoos = new List<RepresentationGoo>();
         var portGoos = new List<PortGoo>();
         var qualityGoos = new List<QualityGoo>();
 
         DA.GetData(0, ref typeGoo);
-        DA.GetData(1, ref name);
-        DA.GetData(2, ref explanation);
-        DA.GetData(3, ref icon);
-        DA.GetDataList(4, representationGoos);
-        DA.GetDataList(5, portGoos);
-        DA.GetDataList(6, qualityGoos);
+        if (DA.GetData(1, ref name))
+            typeGoo.Value.Name = name;
+        if (DA.GetData(2, ref description))
+            typeGoo.Value.Description = description;
+        if (DA.GetData(3, ref icon))
+            typeGoo.Value.Icon = icon;
+        if (DA.GetData(4, ref variant))
+            typeGoo.Value.Variant = variant;
+        if (!DA.GetData(5, ref unit))
+        {
+            try
+            {
+                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
+                typeGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+            }
+            catch (Exception e)
+            {
+                typeGoo.Value.Unit = "m";
+            }
 
-        if (name != "") typeGoo.Value.Name = name;
-
-        if (explanation != "") typeGoo.Value.Explanation = explanation;
-
-        if (icon != "") typeGoo.Value.Icon = icon;
-
-        if (representationGoos.Count > 0)
+        }
+        else
+            typeGoo.Value.Unit = unit;
+        if (DA.GetDataList(6, representationGoos))
             typeGoo.Value.Representations = representationGoos.Select(r => r.Value).ToList();
+        if (DA.GetDataList(7, portGoos))
+            typeGoo.Value.Ports = portGoos.Select(p => p.Value).ToList();
+        if (DA.GetDataList(8, qualityGoos))
+            typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
-        if (portGoos.Count > 0) typeGoo.Value.Ports = portGoos.Select(p => p.Value).ToList();
-
-        if (qualityGoos.Count > 0) typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
+        var isValidInput = true;
+        if (typeGoo.Value.Name == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a name.");
+            isValidInput = false;
+        }
+        // currently impossible
+        if (typeGoo.Value.Unit == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a unit.");
+            isValidInput = false;
+        }
+        if (!Utility.IsValidUnit(typeGoo.Value.Unit))
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
+            isValidInput = false;
+        }
+        if (typeGoo.Value.Representations == null || typeGoo.Value.Representations.Count == 0)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one representation.");
+            isValidInput = false;
+        }
+        if (typeGoo.Value.Ports == null || typeGoo.Value.Ports.Count == 0)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one port.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, typeGoo.Duplicate());
         DA.SetData(1, typeGoo.Value.Name);
-        if (typeGoo.Value.Explanation != null)
-            DA.SetData(2, typeGoo.Value.Explanation);
-        if (typeGoo.Value.Icon != null)
-            DA.SetData(3, typeGoo.Value.Icon);
-        if (typeGoo.Value.Representations != null)
-            DA.SetDataList(4, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
-        if (typeGoo.Value.Ports != null)
-            DA.SetDataList(5, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
-        if (typeGoo.Value.Qualities != null)
-            DA.SetDataList(6, typeGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+        DA.SetData(2, typeGoo.Value.Description??"");
+        DA.SetData(3, typeGoo.Value.Icon??"");
+        DA.SetData(4, typeGoo.Value.Variant??"");
+        DA.SetData(5, typeGoo.Value.Unit);
+        DA.SetDataList(6, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
+        DA.SetDataList(7, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
+        DA.SetDataList(8, typeGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone()))??new List<QualityGoo>());
+    }
+}
+
+public class ScreenPointComponent : SemioComponent
+{
+    public ScreenPointComponent()
+        : base("Model Screen Point", "~SP",
+            "Construct, deconstruct or modify a screen point.",
+            "semio", "Modelling")
+    {
+    }
+
+    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+
+    protected override Bitmap Icon => Resources.screenpoint_modify_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP?",
+                       "Optional screen point to deconstruct or modify.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager.AddIntegerParameter("X", "X", "X coordinate of the screen point.", GH_ParamAccess.item);
+        pManager[1].Optional = true;
+        pManager.AddIntegerParameter("Y", "Y", "Y coordinate of the screen point.", GH_ParamAccess.item);
+        pManager[2].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP",
+                       "Constructed or modified screen point.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("X", "X", "X coordinate of the screen point.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Y", "Y", "Y coordinate of the screen point.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var screenPointGoo = new ScreenPointGoo();
+        var x = 0;
+        var y = 0;
+
+        DA.GetData(0, ref screenPointGoo);
+        if (DA.GetData(1, ref x))
+            screenPointGoo.Value.X = x;
+        if (DA.GetData(2, ref y))
+            screenPointGoo.Value.Y = y;
+
+        var isValidInput = true;
+        if (screenPointGoo.Value.X == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A screen point needs an x coordinate.");
+            isValidInput = false;
+        }
+        if (screenPointGoo.Value.Y == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A screen point needs a y coordinate.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
+
+        DA.SetData(0, screenPointGoo.Duplicate());
+        DA.SetData(1, screenPointGoo.Value.X);
+        DA.SetData(2, screenPointGoo.Value.Y);
     }
 }
 
@@ -1284,12 +2031,15 @@ public class PieceComponent : SemioComponent
             "Id of the piece. If none is provided then a newly generated one will be produced. \nWARNING: The generated id only works if this component constructs one piece.\nFor multiple pieces use the Random Id component.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("TypeName", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddParameter(new QualityParam(), "TypeQualities", "TyQl*",
-            "If there is more than one type with the same name use qualities to precisely identify the type.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece.", GH_ParamAccess.item);
         pManager[3].Optional = true;
+        pManager.AddPlaneParameter("Root Plane", "RtPn?", "Optional root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never attracted.", GH_ParamAccess.item);
+        pManager[4].Optional = true;
+        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP", "Screen point of the piece in the diagram.",
+            GH_ParamAccess.item);
+        pManager[5].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1297,9 +2047,11 @@ public class PieceComponent : SemioComponent
         pManager.AddParameter(new PieceParam(), "Piece", "Pc",
             "Constructed or modified piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("TypeName", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "TypeQualities", "TyQl*",
-            "Optional qualities of the type of the piece.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Root Plane", "RtPl?", "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never attracted.", GH_ParamAccess.item);
+        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP", "Screen point of the piece in the diagram.",
+                       GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1307,14 +2059,15 @@ public class PieceComponent : SemioComponent
         var pieceGoo = new PieceGoo();
         var id = "";
         var typeName = "";
-        var typeQualityGoos = new List<QualityGoo>();
+        var typeVariant = "";
+        var rootPlane = new Rhino.Geometry.Plane();
+        var screenPointGoo = new ScreenPointGoo();
 
         var existingPiece = DA.GetData(0, ref pieceGoo);
         if (DA.GetData(1, ref id))
             pieceGoo.Value.Id = id;
         else if (!existingPiece)
                 pieceGoo.Value.Id = Generator.GenerateRandomId(BitConverter.ToInt32(InstanceGuid.ToByteArray(), 0));
-        
         if (DA.GetData(2, ref typeName))
         {
             if (pieceGoo.Value.Type == null)
@@ -1322,15 +2075,37 @@ public class PieceComponent : SemioComponent
             else
                 pieceGoo.Value.Type.Name = typeName;
         }
+        if (DA.GetData(3, ref typeVariant))
+            pieceGoo.Value.Type.Variant = typeVariant;
+        if (DA.GetData(4, ref rootPlane))
+            pieceGoo.Value.Root = new RootPiece { Plane = rootPlane.convert() };
+        if (DA.GetData(5, ref screenPointGoo))
+            pieceGoo.Value.Diagram = new DiagramPiece() { Point = screenPointGoo.Value };
 
-        if (DA.GetDataList(3, typeQualityGoos))
-            pieceGoo.Value.Type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
+        var isValidInput = true;
+        if (pieceGoo.Value.Id == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A piece needs an id.");
+            isValidInput = false;
+        }
+        if (pieceGoo.Value.Type?.Name == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A piece needs a type.");
+            isValidInput = false;
+        }
+        if (pieceGoo.Value.Diagram?.Point == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A piece needs a screen point in the diagram.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, pieceGoo.Duplicate());
         DA.SetData(1, pieceGoo.Value.Id);
         DA.SetData(2, pieceGoo.Value.Type?.Name);
-        if (pieceGoo.Value.Type?.Qualities != null)
-            DA.SetDataList(3, pieceGoo.Value.Type.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+        DA.SetData(3, pieceGoo.Value.Type.Variant??"");
+        DA.SetData(4, pieceGoo.Value.Root?.Plane?.convert());
+        DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.Diagram.Point));
     }
 }
 
@@ -1372,42 +2147,37 @@ public class SideComponent : SemioComponent
     {
         var sideGoo = new SideGoo();
         var pieceId = "";
-        var specifierGoos = new List<SpecifierGoo>();
+        var pieceTypePortSpecifiers = new List<SpecifierGoo>();
 
         DA.GetData(0, ref sideGoo);
-        DA.GetData(1, ref pieceId);
-        DA.GetDataList(2, specifierGoos);
-
-        if (pieceId != "")
+        if (DA.GetData(1, ref pieceId))
+            sideGoo.Value.Piece.Id = pieceId;
+        if (DA.GetDataList(2, pieceTypePortSpecifiers))
         {
-            if (sideGoo.Value.Piece == null)
-                sideGoo.Value.Piece = new PieceSide { Id = pieceId };
-            else
-                sideGoo.Value.Piece.Id = pieceId;
+            if (sideGoo.Value.Piece.Type == null)
+                sideGoo.Value.Piece.Type = new TypePieceSide();
+            if (sideGoo.Value.Piece.Type.Port == null)
+                sideGoo.Value.Piece.Type.Port = new PortId();
+            sideGoo.Value.Piece.Type.Port.Specifiers = pieceTypePortSpecifiers.Select(s => s.Value).ToList();
         }
 
-        if (specifierGoos.Count > 0)
+        var isValidInput = true;
+        if (sideGoo.Value.Piece.Id == null)
         {
-            if (sideGoo.Value.Piece == null)
-                sideGoo.Value.Piece = new PieceSide
-                {
-                    Type = new TypePieceSide
-                        { Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() } }
-                };
-            else if (sideGoo.Value.Piece.Type == null)
-                sideGoo.Value.Piece.Type = new TypePieceSide
-                    { Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() } };
-            else if (sideGoo.Value.Piece.Type.Port == null)
-                sideGoo.Value.Piece.Type.Port = new PortId { Specifiers = specifierGoos.Select(s => s.Value).ToList() };
-            else
-                sideGoo.Value.Piece.Type.Port.Specifiers = specifierGoos.Select(s => s.Value).ToList();
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs a piece id.");
+            isValidInput = false;
         }
+
+        if (sideGoo.Value.Piece.Type.Port.Specifiers == null || sideGoo.Value.Piece.Type.Port.Specifiers.Count == 0)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs at least one piece type port specifier.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, sideGoo.Duplicate());
-        if (sideGoo.Value.Piece != null)
-            DA.SetData(1, sideGoo.Value.Piece.Id);
-        if (sideGoo.Value.Piece?.Type?.Port?.Specifiers != null)
-            DA.SetDataList(2, sideGoo.Value.Piece.Type.Port.Specifiers.Select(s => new SpecifierGoo(s.DeepClone())));
+        DA.SetData(1, sideGoo.Value.Piece.Id);
+        DA.SetDataList(2, sideGoo.Value.Piece.Type.Port.Specifiers.Select(s => new SpecifierGoo(s.DeepClone())));
     }
 }
 
@@ -1485,19 +2255,23 @@ public class FormationComponent : SemioComponent
         pManager[0].Optional = true;
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation.", GH_ParamAccess.item);
         pManager[4].Optional = true;
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
+        pManager[5].Optional = true;
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
+        pManager[6].Optional = true;
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
-        pManager[5].Optional = true;
+        pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the formation. They can be further used to distinguish formations with the same name.",
+            "Optional qualities of the formation.",
             GH_ParamAccess.list);
-        pManager[6].Optional = true;
+        pManager[8].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1505,8 +2279,10 @@ public class FormationComponent : SemioComponent
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
             "Constructed or modified formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
@@ -1518,44 +2294,78 @@ public class FormationComponent : SemioComponent
     {
         var formationGoo = new FormationGoo();
         var name = "";
-        var explanation = "";
+        var description = "";
         var icon = "";
+        var variant = "";
+        var unit = "";
         var pieceGoos = new List<PieceGoo>();
         var attractionGoos = new List<AttractionGoo>();
         var qualityGoos = new List<QualityGoo>();
 
         DA.GetData(0, ref formationGoo);
-        DA.GetData(1, ref name);
-        DA.GetData(2, ref explanation);
-        DA.GetData(3, ref icon);
-        DA.GetDataList(4, pieceGoos);
-        DA.GetDataList(5, attractionGoos);
-        DA.GetDataList(6, qualityGoos);
+        if (DA.GetData(1, ref name))
+            formationGoo.Value.Name = name;
+        if (DA.GetData(2, ref description))
+            formationGoo.Value.Description = description;
+        if (DA.GetData(3, ref icon))
+            formationGoo.Value.Icon = icon;
+        if (DA.GetData(4, ref variant))
+            formationGoo.Value.Variant = variant;
+        if (!DA.GetData(5, ref unit))
+        {
+            try
+            {
+                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
+                formationGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+            }
+            catch (Exception e)
+            {
+                formationGoo.Value.Unit = "m";
+            }
 
-        if (name != "") formationGoo.Value.Name = name;
+        }
+        else
+            formationGoo.Value.Unit = unit;
+        if (DA.GetDataList(6, pieceGoos))
+            formationGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
+        if (DA.GetDataList(7, attractionGoos))
+            formationGoo.Value.Attractions = attractionGoos.Select(a => a.Value).ToList();
+        if (DA.GetDataList(8, qualityGoos))
+            formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
-        if (explanation != "") formationGoo.Value.Explanation = explanation;
-
-        if (icon != "") formationGoo.Value.Icon = icon;
-
-        if (pieceGoos.Count > 0) formationGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
-
-        if (attractionGoos.Count > 0) formationGoo.Value.Attractions = attractionGoos.Select(a => a.Value).ToList();
-
-        if (qualityGoos.Count > 0) formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
+        var isValidInput = true;
+        if (formationGoo.Value.Name == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs a name.");
+            isValidInput = false;
+        }
+        // currently impossible
+        if (formationGoo.Value.Unit == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs a unit.");
+            isValidInput = false;
+        }
+        if (!Utility.IsValidUnit(formationGoo.Value.Unit))
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
+            isValidInput = false;
+        }
+        if (formationGoo.Value.Pieces == null || formationGoo.Value.Pieces.Count == 0)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs at least one piece.");
+            isValidInput = false;
+        }
+        if (!isValidInput) return;
 
         DA.SetData(0, formationGoo.Duplicate());
         DA.SetData(1, formationGoo.Value.Name);
-        if (formationGoo.Value.Explanation != null)
-            DA.SetData(2, formationGoo.Value.Explanation);
-        if (formationGoo.Value.Icon != null)
-            DA.SetData(3, formationGoo.Value.Icon);
-        if (formationGoo.Value.Pieces != null)
-            DA.SetDataList(4, formationGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
-        if (formationGoo.Value.Attractions != null)
-            DA.SetDataList(5, formationGoo.Value.Attractions.Select(a => new AttractionGoo(a.DeepClone())));
-        if (formationGoo.Value.Qualities != null)
-            DA.SetDataList(6, formationGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+        DA.SetData(2, formationGoo.Value.Description??"");
+        DA.SetData(3, formationGoo.Value.Icon??"");
+        DA.SetData(4, formationGoo.Value.Variant??"");
+        DA.SetData(5, formationGoo.Value.Unit);
+        DA.SetDataList(6, formationGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
+        DA.SetDataList(7, formationGoo.Value.Attractions.Select(a => new AttractionGoo(a.DeepClone())));
+        DA.SetDataList(8, formationGoo.Value.Qualities?.Select(q => new QualityGoo(q.DeepClone()))??new List<QualityGoo>());
     }
 }
 
@@ -1644,7 +2454,7 @@ public class LoadKitComponent : SemioComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddTextParameter("Name", "Na", "Name of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit", GH_ParamAccess.item);
         pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit", GH_ParamAccess.item);
         pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit", GH_ParamAccess.list);
@@ -1683,7 +2493,7 @@ public class LoadKitComponent : SemioComponent
             var kit = response.Kit;
 
             DA.SetData(0, kit.Name);
-            DA.SetData(1, kit.Explanation);
+            DA.SetData(1, kit.Description);
             DA.SetData(2, kit.Icon);
             DA.SetData(3, kit.Url);
             DA.SetDataList(4, kit.Types?.Select(t => new TypeGoo(t.DeepClone())));
@@ -1708,7 +2518,7 @@ public class CreateKitComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Name", "Na", "Name of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Explanation", "Ex?", "Optional explanation of the kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit", GH_ParamAccess.item);
         pManager[2].Optional = true;
@@ -1734,7 +2544,7 @@ public class CreateKitComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var name = "";
-        var explanation = "";
+        var description = "";
         var icon = "";
         var url = "";
         var typeGoos = new List<TypeGoo>();
@@ -1743,7 +2553,7 @@ public class CreateKitComponent : SemioComponent
         var run = false;
 
         DA.GetData(0, ref name);
-        DA.GetData(1, ref explanation);
+        DA.GetData(1, ref description);
         DA.GetData(2, ref icon);
         DA.GetData(3, ref url);
         DA.GetDataList(4, typeGoos);
@@ -1763,7 +2573,7 @@ public class CreateKitComponent : SemioComponent
         var kit = new Kit
         {
             Name = name,
-            Explanation = explanation,
+            Description = description,
             Icon = icon,
             Url = url,
             Types = typeGoos.Select(t => t.Value).ToList(),
@@ -2051,7 +2861,7 @@ public class RemoveTypeComponent : SemioComponent
         {
             Name = typeName
         };
-        if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
+        //if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveTypeFromLocalKit(path, type);
         if (response == null)
         {
@@ -2129,7 +2939,7 @@ public class RemoveFormationComponent : SemioComponent
         {
             Name = formationName
         };
-        if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
+        //if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveFormationFromLocalKit(path, formation);
         if (response == null)
         {
@@ -2589,10 +3399,10 @@ public class GetSceneComponent : SemioComponent
 
         if (!run) return;
 
-        var response = new Api().FormationToSceneFromLocalKit(path, new FormationId
+        var response = new Api().SceneFromFormationFromLocalKit(path, new FormationId
         {
             Name = formationName,
-            Qualities = formationQualityGoos.Select(q => q.Value).ToList()
+            //Qualities = formationQualityGoos.Select(q => q.Value).ToList()
         });
         if (response == null)
         {

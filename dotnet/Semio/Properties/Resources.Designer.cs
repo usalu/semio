@@ -65,7 +65,7 @@ namespace Semio.Properties {
         ///  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
         ///    formation {
         ///      name
-        ///      explanation
+        ///      description
         ///      icon
         ///      pieces {
         ///        id
@@ -96,7 +96,7 @@ namespace Semio.Properties {
         ///  addTypeToLocalKit(directory: $directory, typeInput: $type) {
         ///    type {
         ///      name
-        ///      explanation
+        ///      description
         ///      icon
         ///      representations {
         ///        url
@@ -149,12 +149,12 @@ namespace Semio.Properties {
         ///  createLocalKit(directory: $directory, kitInput: $kit) {
         ///    kit {
         ///      name
-        ///      explanation
+        ///      description
         ///      icon
         ///      url
         ///      types {
         ///        name
-        ///        explanation
+        ///        description
         ///        icon
         ///        representations {
         ///          url
@@ -192,7 +192,7 @@ namespace Semio.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+        ///   Looks up a localized string similar to query SceneFromFormationFromLocalKit($directory: String!, $formation: FormationIdInput!) {
         ///  formationToSceneFromLocalKit(
         ///    directory: $directory
         ///    formationIdInput: $formation
@@ -229,12 +229,12 @@ namespace Semio.Properties {
         ///  loadLocalKit(directory: $directory) {
         ///    kit {
         ///      name
-        ///      explanation
+        ///      description
         ///      icon
         ///      url
         ///      types {
         ///        name
-        ///        explanation
+        ///        description
         ///        icon
         ///        representations {
         ///          url
@@ -297,7 +297,7 @@ namespace Semio.Properties {
         /// <summary>
         ///   Looks up a localized string similar to type Query {
         ///  loadLocalKit(directory: String!): LoadLocalKitResponse
-        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): SceneFromFormationFromLocalKitResponse
         ///}
         ///
         ///type LoadLocalKitResponse {
@@ -307,7 +307,7 @@ namespace Semio.Properties {
         ///
         ///type Kit implements Artifact {
         ///  name: String!
-        ///  explanation: String
+        ///  description: String
         ///  icon: String
         ///  createdAt: DateTime!
         ///  modifiedAt: DateTime!
@@ -329,7 +329,7 @@ namespace Semio.Properties {
         ///  updateLocalKitMetadata(directory: $directory, kitMetadataInput: $kit) {
         ///    kit {
         ///      name
-        ///      explanation
+        ///      description
         ///      icon
         ///      url
         ///    }

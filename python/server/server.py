@@ -29,6 +29,7 @@ semio server.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
 
+from argparse import ArgumentParser
 import os
 import sys
 import logging  # for uvicorn in pyinstaller
@@ -45,10 +46,16 @@ from pytransform3d.transformations import (
     invert_transform,
     transform_from,
 )
-from networkx import DiGraph, bfs_tree
+from networkx import (
+    DiGraph,
+    bfs_tree,
+    connected_components,
+    weakly_connected_components,
+)
 from pint import UnitRegistry
 from pydantic import BaseModel
 from sqlalchemy import (
+    Boolean,
     String,
     Text,
     Float,
@@ -68,7 +75,7 @@ from sqlalchemy.orm import (
     Session,
     validates,
 )
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 import graphene
 from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
 from graphene_sqlalchemy import (
@@ -102,14 +109,22 @@ ureg = UnitRegistry()
 
 
 class SemioException(Exception):
+    """The base class for all exceptions in semio."""
+
     pass
 
 
 class SpecificationError(SemioException):
+    """The base class for all specification errors.
+    A specification error is when the user input does not respect the specification."""
+
     pass
 
 
 class InvalidURL(ValueError, SpecificationError):
+    """The URL is not valid. An url must have the form:
+    scheme://netloc/path;parameters?query#fragment."""
+
     def __init__(self, url: str) -> None:
         self.url = url
 
@@ -118,6 +133,10 @@ class InvalidURL(ValueError, SpecificationError):
 
 
 class InvalidDatabase(SemioException):
+    """The state of the database is somehow invalid.
+    Check the constraints and the insert validators.
+    """
+
     def __init__(self, message: str) -> None:
         self.message = message
 
@@ -126,6 +145,8 @@ class InvalidDatabase(SemioException):
 
 
 class InvalidBackend(SemioException):
+    """The backend processed something wrong. Check the order of operations."""
+
     def __init__(self, message: str) -> None:
         self.message = message
 
@@ -133,25 +154,27 @@ class InvalidBackend(SemioException):
         return self.message + "\n The backend is invalid. Please report this bug."
 
 
-class Artifact(Protocol):
+class Entity(Protocol):
+    """An entity is anything that is captured in the persistance layer."""
+
     @property
-    def parent(self) -> Union["Artifact", None]:
+    def parent(self) -> Union["Entity", None]:
         return None
 
     @property
-    def children(self) -> List["Artifact"]:
+    def children(self) -> List["Entity"]:
         return []
 
     @property
-    def references(self) -> List["Artifact"]:
+    def references(self) -> List["Entity"]:
         return []
 
     @property
-    def referenced_by(self) -> List["Artifact"]:
+    def referenced_by(self) -> List["Entity"]:
         return []
 
     @property
-    def related_to(self) -> List["Artifact"]:
+    def related_to(self) -> List["Entity"]:
         return (
             ([self.parent] if self.parent else [])
             + self.children
@@ -159,17 +182,29 @@ class Artifact(Protocol):
             + self.referenced_by
         )
 
-    def client__str__(self) -> str: ...
+    def client__str__(self) -> str:
+        """A string representation of the entitity for the client."""
+        pass
 
 
-def list_client__str__(list) -> str:
-    return f"[{', '.join([i.client__str__() for i in list])}]"
+def list_client__str__(entities: Entity) -> str:
+    """Get a string representation of a list of entitities for the client.
+
+    Args:
+        entities (Entity): The list of entitities.
+
+    Returns:
+        str: String representation.
+    """
+    return f"[{', '.join([e.client__str__() for e in entities])}]"
 
 
 # TODO: Refactor Protocol to ABC and make it work with SQLAlchemy
-class Document(Artifact):
+class Artifact(Entity):
+    """An artifact is anything that is worth to be reused."""
+
     name: str
-    explanation: str
+    description: str
     icon: str
 
 
@@ -178,9 +213,16 @@ class Base(DeclarativeBase):
 
 
 class Tag(Base):
+    """A tag helps to categorize a representation.
+    It enables to select groups of representations that belong together."""
+
     __tablename__ = "tag"
 
-    value: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    value: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(value) > 0", name="value_not_empty_constraint"),
+        primary_key=True,
+    )
     representation_id: Mapped[int] = mapped_column(
         ForeignKey("representation.id"), primary_key=True
     )
@@ -210,33 +252,39 @@ class Tag(Base):
         return f"{self.value}"
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.representation
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent]
 
 
 class Representation(Base):
+    """A representation is a link to a file that describes a type from a certain point of view."""
+
     __tablename__ = "representation"
     id: Mapped[int] = mapped_column(primary_key=True)
-    url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
-    # level of detail
-    lod: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
-    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
+    url: Mapped[str] = mapped_column(
+        String(URL_LENGTH_MAX),
+        CheckConstraint("length(url) > 0", name="url_not_empty_constraint"),
+    )
+    # level of detail/development/design/...
+    # "" means the defaut lod.
+    lod: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    type_id: Mapped[int] = mapped_column(ForeignKey("type.id"), nullable=False)
     type: Mapped["Type"] = relationship("Type", back_populates="representations")
     _tags: Mapped[List[Tag]] = relationship(
         Tag, back_populates="representation", cascade="all, delete-orphan"
@@ -277,31 +325,41 @@ class Representation(Base):
         self._tags = [Tag(value=tag) for tag in tags]
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.type
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return self._tags  # type: ignore
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.children if self.children else []
 
 
 class Specifier(Base):
+    """A specifier helps to categorize a port from a type.
+    It enables to select a single port from all ports based on groups."""
+
     __tablename__ = "specifier"
 
-    context: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
-    group: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    context: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(context) > 0", name="context_not_empty_constraint"),
+        primary_key=True,
+    )
+    group: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(group) > 0", name="group_not_empty_constraint"),
+    )
     port_id: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
     port: Mapped["Port"] = relationship("Port", back_populates="specifiers")
 
@@ -323,24 +381,29 @@ class Specifier(Base):
         return f"Specifier(context={self.context}, group={self.group})"
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.port
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent]
+
+
+class ScreenPoint(BaseModel):
+    x: int
+    y: int
 
 
 class Point(BaseModel):
@@ -361,17 +424,45 @@ class Vector(BaseModel):
     #     return Transform.transformVector(transform, self)
 
 
-class Plane(BaseModel):
-    origin: Point
-    x_axis: Vector
-    y_axis: Vector
+class Plane(Base):
+    """A plane with an origin and two axis. Synonyms are reference frame or coordinate system."""
+
+    __tablename__ = "plane"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    origin_x: Mapped[float] = mapped_column(Float())
+    origin_y: Mapped[float] = mapped_column(Float())
+    origin_z: Mapped[float] = mapped_column(Float())
+    x_axis_x: Mapped[float] = mapped_column(Float())
+    x_axis_y: Mapped[float] = mapped_column(Float())
+    x_axis_z: Mapped[float] = mapped_column(Float())
+    y_axis_x: Mapped[float] = mapped_column(Float())
+    y_axis_y: Mapped[float] = mapped_column(Float())
+    y_axis_z: Mapped[float] = mapped_column(Float())
+
+    port: Mapped["Port"] = relationship("Port", back_populates="plane", uselist=False)
+    root_piece: Mapped["Piece"] = relationship(
+        "Piece", back_populates="root_plane", uselist=False
+    )
+
+    @property
+    def origin(self) -> Point:
+        return Point(x=self.origin_x, y=self.origin_y, z=self.origin_z)
+
+    @property
+    def x_axis(self) -> Vector:
+        return Vector(x=self.x_axis_x, y=self.x_axis_y, z=self.x_axis_z)
+
+    @property
+    def y_axis(self) -> Vector:
+        return Vector(x=self.y_axis_x, y=self.y_axis_y, z=self.y_axis_z)
 
     @property
     def normal(self) -> Vector:
         return Vector(
-            x=self.x_axis.y * self.y_axis.z - self.x_axis.z * self.y_axis.y,
-            y=self.x_axis.z * self.y_axis.x - self.x_axis.x * self.y_axis.z,
-            z=self.x_axis.x * self.y_axis.y - self.x_axis.y * self.y_axis.x,
+            x=self.x_axis_y * self.y_axis_z - self.x_axis_z * self.y_axis_y,
+            y=self.x_axis_z * self.y_axis_x - self.x_axis_x * self.y_axis_z,
+            z=self.x_axis_x * self.y_axis_y - self.x_axis_y * self.y_axis_x,
         )
 
     def transform(self, transform: "Transform") -> "Plane":
@@ -390,6 +481,9 @@ class Plane(BaseModel):
 
 
 class Transform(BaseModel):
+    """A 4x4 transformation matrix. It is only used for translation and rotation.
+    It is not used for scaling or shearing."""
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -401,10 +495,12 @@ class Transform(BaseModel):
 
     @property
     def rotation(self) -> ndarray:
+        """The 3x3 rotation part of the transformation matrix."""
         return self.matrix[:3, :3]
 
     @property
     def translation(self) -> ndarray:
+        """The 3x1 translation part of the transformation matrix."""
         return self.matrix[:3, 3]
 
     def after(self, before: "Transform") -> "Transform":
@@ -493,18 +589,15 @@ class Transform(BaseModel):
 
 
 class Port(Base):
+    """A port is specified plane in a type. It is used to connect types together."""
+
     __tablename__ = "port"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    origin_x: Mapped[float] = mapped_column(Float())
-    origin_y: Mapped[float] = mapped_column(Float())
-    origin_z: Mapped[float] = mapped_column(Float())
-    x_axis_x: Mapped[float] = mapped_column(Float())
-    x_axis_y: Mapped[float] = mapped_column(Float())
-    x_axis_z: Mapped[float] = mapped_column(Float())
-    y_axis_x: Mapped[float] = mapped_column(Float())
-    y_axis_y: Mapped[float] = mapped_column(Float())
-    y_axis_z: Mapped[float] = mapped_column(Float())
+    plane_id: Mapped[int] = mapped_column(ForeignKey("plane.id"))
+    plane: Mapped["Plane"] = relationship(
+        "Plane", back_populates="port", uselist=False, cascade="all, delete"
+    )
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
     specifiers: Mapped[List[Specifier]] = relationship(
@@ -530,7 +623,7 @@ class Port(Base):
     #     return hash(set(self.qualities))
 
     def __repr__(self) -> str:
-        return f"Port(id={self.id!r}, origin_x={self.origin_x!r}, origin_y={self.origin_y!r}, origin_z={self.origin_z!r}, x_axis_x={self.x_axis_x!r}, x_axis_y={self.x_axis_y!r}, x_axis_z={self.x_axis_z!r}, y_axis_x={self.y_axis_x!r}, y_axis_y={self.y_axis_y!r}, y_axis_z={self.y_axis_z!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
+        return f"Port(id={self.id!r}, plane_id={self.plane_id!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
 
     def __str__(self) -> str:
         return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
@@ -538,66 +631,44 @@ class Port(Base):
     def client__str__(self) -> str:
         return f"Port(specifiers={list_client__str__(self.specifiers)})"
 
-    @property
-    def plane(self) -> Plane:
-        return Plane(
-            origin=Point(
-                x=self.origin_x,
-                y=self.origin_y,
-                z=self.origin_z,
-            ),
-            x_axis=Vector(
-                x=self.x_axis_x,
-                y=self.x_axis_y,
-                z=self.x_axis_z,
-            ),
-            y_axis=Vector(
-                x=self.y_axis_x,
-                y=self.y_axis_y,
-                z=self.y_axis_z,
-            ),
-        )
-
-    # @plane.setter
-    # def plane(self, plane: Plane):
-    #     self.origin_x = plane.origin.x
-    #     self.origin_y = plane.origin.y
-    #     self.origin_z = plane.origin.z
-    #     self.x_axis_x = plane.x_axis.x
-    #     self.x_axis_y = plane.x_axis.y
-    #     self.x_axis_z = plane.x_axis.z
-    #     self.y_axis_x = plane.y_axis.x
-    #     self.y_axis_y = plane.y_axis.y
-    #     self.y_axis_z = plane.y_axis.z
-
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.type
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return self.specifiers  # type: ignore
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return self.attractings + self.attracteds  # type: ignore
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.children + self.referenced_by
 
 
 class Quality(Base):
+    """A quality helps to categorize a type or a formation.
+    Qualities should be high-level information that can be important for decision making.
+    """
+
     __tablename__ = "quality"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    value: Mapped[str] = mapped_column(Text())
-    unit: Mapped[Optional[str]] = mapped_column(String(NAME_LENGTH_MAX))
+    name: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
+    )
+    value: Mapped[str] = mapped_column(
+        Text(), CheckConstraint("length(value) > 0", name="value_not_empty_constraint")
+    )
+    # Optional. Set to "" for None.
+    unit: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"), nullable=True)
     type: Mapped["Type"] = relationship("Type", back_populates="qualities")
     formation_id: Mapped[Optional[int]] = mapped_column(
@@ -615,22 +686,22 @@ class Quality(Base):
         UniqueConstraint("name", "type_id", "formation_id"),
     )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Quality):
-            raise NotImplementedError()
-        if self.name == other.name:
-            if self.unit == other.unit:
-                return self.value == other.value
-            # TODO: use pint to compare values with different units
-            raise NotImplementedError(
-                "Comparing values with different units is not implemented yet."
-            )
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, Quality):
+    #         raise NotImplementedError()
+    #     if self.name == other.name:
+    #         if self.unit == other.unit:
+    #             return self.value == other.value
+    #         # TODO: use pint to compare values with different units
+    #         raise NotImplementedError(
+    #             "Comparing values with different units is not implemented yet."
+    #         )
 
-        return False
+    #     return False
 
-    def __hash__(self) -> int:
-        # TODO: Implement unit normalization for consistent hashing
-        return hash((self.name, self.value, self.unit))
+    # def __hash__(self) -> int:
+    #     # TODO: Implement unit normalization for consistent hashing
+    #     return hash((self.name, self.value, self.unit))
 
     def __repr__(self) -> str:
         return f"Quality(id={self.id}, name={self.name!r}, value={self.value!r}, unit={self.unit!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r})"
@@ -642,37 +713,55 @@ class Quality(Base):
         return f"Quality(name={self.name}, value={self.value}, unit={self.unit})"
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.type if self.type_id else self.formation
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent]
 
 
 class Type(Base):
+    """A type is a reusable building block that can be freely combined with other types over ports.
+    It is uniquely identified by its name and its variant.
+    Representations can be used to visualize or simulate the type.
+    Qualities are meta-data that help to categorize the type.
+    """
+
     __tablename__ = "type"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    icon: Mapped[Optional[str]] = mapped_column(Text())
+    name: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
+    )
+    # Optional. Set to "" for None.
+    description: Mapped[str] = mapped_column(Text())
+    # Optional. Set to "" for None.
+    icon: Mapped[str] = mapped_column(Text())
+    # Set to "" for default variant.
+    variant: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    # The unit of the ports.
+    unit: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(unit) > 0", name="unit_not_empty_constraint"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False
     )
-    modified_at: Mapped[datetime] = mapped_column(
+    last_update_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
@@ -691,58 +780,84 @@ class Type(Base):
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Type):
     #         raise NotImplementedError()
-    #     return self.name == other.name and set(self.qualities) == set(other.qualities)
+    #     return self.name == other.name and self.variant == other.variant
 
     # def __hash__(self) -> int:
-    #     return hash((self.name, set(self.qualities)))
+    #     return hash((self.name, self.variant))
 
     def __repr__(self) -> str:
-        return f"Type(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, unit={self.unit!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
+        return f"Type(id={self.id!r}, name={self.name!r}, description={self.description!r}, icon={self.icon!r}, variant={self.variant!r} unit={self.unit!r}, kit_id={self.kit_id!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
 
     def __str__(self) -> str:
         return f"Type(id={str(self.id)}, kit_id={str(self.kit_id)})"
 
     def client__str__(self) -> str:
-        return f"Type(name={self.name}, qualities={list_client__str__(self.qualities)})"
+        return f"Type(name={self.name}, variant={self.variant})"
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.kit
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return self.representations + self.ports + self.qualities  # type: ignore
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return [self.pieces]  # type: ignore
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.children + self.referenced_by
 
 
 @event.listens_for(Representation, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.type.modified_at = datetime.utcnow()
+    target.type.last_update_at = datetime.utcnow()
 
 
 @event.listens_for(Port, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.type.modified_at = datetime.utcnow()
+    target.type.last_update_at = datetime.utcnow()
+
+
+class RootPiece(BaseModel):
+    """The plane of the root piece of a formation."""
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    plane: Plane
+
+
+class DiagramPiece(BaseModel):
+    """The point of a diagram of a piece."""
+
+    point: ScreenPoint
 
 
 class Piece(Base):
+    """A piece is an instance of a type in a formation."""
+
     __tablename__ = "piece"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    local_id: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    local_id: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(local_id) > 0", name="local_id_not_empty_constraint"),
+    )
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
+    root_plane_id: Mapped[int] = mapped_column(ForeignKey("plane.id"))
+    root_plane: Mapped["Plane"] = relationship(
+        "Plane", back_populates="root_piece", uselist=False, cascade="all, delete"
+    )
+    diagram_point_x: Mapped[int] = mapped_column()
+    diagram_point_y: Mapped[int] = mapped_column(Float())
     formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
     attractings: Mapped[List["Attraction"]] = relationship(
@@ -767,36 +882,48 @@ class Piece(Base):
     #     return hash(self.local_id)
 
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, local_id={self.local_id!r}, type_id={self.type_id!r}, formation_id={self.formation_id!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
+        return f"Piece(id={self.id!r}, local_id={self.local_id!r}, type_id={self.type_id!r}, root_plane_id={self.root_plane_id!r}, diagram_point_x={self.diagram_point_x!r}, diagram_point_y={self.diagram_point_y!r}, formation_id={self.formation_id!r})"
 
     def __str__(self) -> str:
-        return f"Piece(id={str(self.id)}, local_id={str(self.local_id)}, type_id={str(self.type_id)}, formation_id={str(self.formation_id)})"
+        return f"Piece(id={str(self.id)}, formation_id={str(self.formation_id)})"
 
     def client__str__(self) -> str:
         return f"Piece(id={self.local_id})"
 
+    @property
+    def root(self) -> RootPiece:
+        return RootPiece(plane=self.root_plane)
+
+    @property
+    def diagram(self) -> DiagramPiece:
+        return DiagramPiece(
+            point=ScreenPoint(x=self.diagram_point_x, y=self.diagram_point_y)
+        )
+
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.formation
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return self.type  # type: ignore
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return self.attractings + self.attracteds  # type: ignore
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.references + self.referenced_by
 
 
 class TypePieceSide(BaseModel):
+    """The port of a type of a piece of a side of an attraction."""
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -804,6 +931,8 @@ class TypePieceSide(BaseModel):
 
 
 class PieceSide(BaseModel):
+    """The piece of a side of an attraction."""
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -812,6 +941,8 @@ class PieceSide(BaseModel):
 
 
 class Side(BaseModel):
+    """A side of an attraction."""
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -819,6 +950,8 @@ class Side(BaseModel):
 
 
 class Attraction(Base):
+    """An attraction is a connection between two pieces of a formation."""
+
     __tablename__ = "attraction"
 
     attracting_piece_id: Mapped[int] = mapped_column(
@@ -845,9 +978,7 @@ class Attraction(Base):
         foreign_keys=[attracted_piece_type_port_id],
         back_populates="attracteds",
     )
-    formation_id: Mapped[int] = mapped_column(
-        ForeignKey("formation.id"), primary_key=True
-    )
+    formation_id: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship(
         "Formation", back_populates="attractions"
     )
@@ -902,15 +1033,15 @@ class Attraction(Base):
         )
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.formation
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return [
     #         self.attracting_piece,
     #         self.attracted_piece,
@@ -919,30 +1050,50 @@ class Attraction(Base):
     #     ]
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.references
 
 
 # TODO: Add complex validation before insert with networkx such as:
-#       - only one root
-#       - one connected component.
+#       - only root pieces can have a plane.
 class Formation(Base):
+    """A formation is a collection of pieces that are connected by attractions.
+    It is uniquely identified by its name and its variant.
+    Qualities are meta-data that help to categorize the formation.
+    """
+
     __tablename__ = "formation"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    icon: Mapped[Optional[str]] = mapped_column(Text())
+    name: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
+    )
+    # Optional. Set to "" for None.
+    description: Mapped[str] = mapped_column(Text())
+    # Optional. Set to "" for None.
+    icon: Mapped[str] = mapped_column(Text())
+    # Set to "" for default variant.
+    variant: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    # Unit of the root planes of the pieces.
+    unit: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(unit) > 0", name="unit_not_empty_constraint"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False
     )
-    modified_at: Mapped[datetime] = mapped_column(
+    last_update_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
+    # Volatile formations are temporary and can be deleted.
+    # They exist because the input validation is in the sql layer and not in the graphql layer.
+    # Scene are derived from formations but are not stored in the database.
+    volatile: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
     pieces: Mapped[List[Piece]] = relationship(
@@ -958,13 +1109,13 @@ class Formation(Base):
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Formation):
     #         raise NotImplementedError()
-    #     return self.name == other.name and set(self.qualities) == set(other.qualities)
+    #     return self.local_id == other.local_id
 
     # def __hash__(self) -> int:
-    #     return hash((self.name, set(self.qualities)))
+    #     return hash(self.local_id)
 
     def __repr__(self) -> str:
-        return f"Formation(id={self.id!r}, name={self.name!r}, explanation={self.explanation!r}, icon={self.icon!r}, kit_id={self.kit_id!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, qualities={self.qualities!r})"
+        return f"Formation(id={self.id!r}, name={self.name!r}, description={self.description!r}, icon={self.icon!r}, variant={self.variant!r}, kit_id={self.kit_id!r}, pieces={self.pieces!r}, attractions={self.attractions!r}, qualities={self.qualities!r})"
 
     def __str__(self) -> str:
         return f"Formation(id={str(self.id)}, kit_id={str(self.kit_id)})"
@@ -973,43 +1124,43 @@ class Formation(Base):
         return f"Formation(name={self.name}, qualities={list_client__str__(self.qualities)})"
 
     # @property
-    # def parent(self) -> Artifact:
+    # def parent(self) -> Entity:
     #     return self.kit
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return self.pieces + self.attractions  # type: ignore
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return [self.parent] + self.children
 
 
 @event.listens_for(Piece, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.formation.modified_at = datetime.utcnow()
+    target.formation.last_update_at = datetime.utcnow()
 
 
 @event.listens_for(Attraction, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.formation.modified_at = datetime.utcnow()
+    target.formation.last_update_at = datetime.utcnow()
 
 
 # Both Type and Formation can own qualities
 @event.listens_for(Quality, "after_update")
 def receive_after_update(mapper, connection, target):
     if target.type_id:
-        target.type.modified_at = datetime.utcnow()
+        target.type.last_update_at = datetime.utcnow()
     else:
-        target.formation.modified_at = datetime.utcnow()
+        target.formation.last_update_at = datetime.utcnow()
 
 
 class Hierarchy(BaseModel):
@@ -1035,25 +1186,35 @@ class Scene(BaseModel):
 
 
 class Kit(Base):
+    """A kit is a collection of types and formations. It is uniquely identified by its name."""
+
     __tablename__ = "kit"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    explanation: Mapped[Optional[str]] = mapped_column(Text())
-    icon: Mapped[Optional[str]] = mapped_column(Text())
+    name: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
+    )
+    # Optional. Set to "" for None.
+    description: Mapped[str] = mapped_column(Text())
+    # Optional. Set to "" for None.
+    icon: Mapped[str] = mapped_column(Text())
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False
     )
-    modified_at: Mapped[datetime] = mapped_column(
+    last_update_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
-    url: Mapped[Optional[str]] = mapped_column(String(URL_LENGTH_MAX))
+    # Optional. Set to "" for None.
+    url: Mapped[str] = mapped_column(String(URL_LENGTH_MAX))
     types: Mapped[List[Type]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
     formations: Mapped[List[Formation]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
+
+    __table_args__ = (UniqueConstraint("name"), UniqueConstraint("url"))
 
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Kit):
@@ -1064,7 +1225,7 @@ class Kit(Base):
     #     return hash(self.name)
 
     def __repr__(self) -> str:
-        return f"Kit(id={self.id!r}, name={self.name!r}), explanation={self.explanation!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
+        return f"Kit(id={self.id!r}, name={self.name!r}), description={self.description!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
 
     def __str__(self) -> str:
         return f"Kit(id={str(self.id)})"
@@ -1077,19 +1238,19 @@ class Kit(Base):
     #     return None
 
     # @property
-    # def children(self) -> List[Artifact]:
+    # def children(self) -> List[Entity]:
     #     return self.types + self.formations  # type: ignore
 
     # @property
-    # def references(self) -> List[Artifact]:
+    # def references(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def referenced_by(self) -> List[Artifact]:
+    # def referenced_by(self) -> List[Entity]:
     #     return []
 
     # @property
-    # def related_to(self) -> List[Artifact]:
+    # def related_to(self) -> List[Entity]:
     #     return self.children
 
 
@@ -1131,32 +1292,32 @@ def getLocalSession(directory: str) -> Session:
     return sessionmaker(bind=engine)()
 
 
-# class DocumentNode(graphene.Interface):
+# class ArtifactNode(graphene.Interface):
 #     class Meta:
-#         name = "Document"
+#         name = "Artifact"
 
 #     name = NonNull(graphene.String)
-#     explanation = graphene.String()
-#     icon = graphene.String()
-#     parent = graphene.Field(lambda: DocumentNode)
-#     children = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
-#     references = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
-#     referenced_by = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
-#     related_to = NonNull(graphene.List(NonNull(lambda: DocumentNode)))
+#     description = NonNull(graphene.String)
+#     icon = NonNull(graphene.String)
+#     parent = graphene.Field(lambda: ArtifactNode)
+#     children = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+#     references = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+#     referenced_by = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
+#     related_to = NonNull(graphene.List(NonNull(lambda: ArtifactNode)))
 
-#     def resolve_parent(artifact: "DocumentNode", info):
+#     def resolve_parent(artifact: "ArtifactNode", info):
 #         return artifact.parent
 
-#     def resolve_children(artifact: "DocumentNode", info):
+#     def resolve_children(artifact: "ArtifactNode", info):
 #         return artifact.children
 
-#     def resolve_references(artifact: "DocumentNode", info):
+#     def resolve_references(artifact: "ArtifactNode", info):
 #         return artifact.references
 
-#     def resolve_referenced_by(artifact: "DocumentNode", info):
+#     def resolve_referenced_by(artifact: "ArtifactNode", info):
 #         return artifact.referenced_by
 
-#     def resolve_related_to(artifact: "DocumentNode", info):
+#     def resolve_related_to(artifact: "ArtifactNode", info):
 #         return artifact.related_to
 
 
@@ -1174,6 +1335,12 @@ class RepresentationNode(SQLAlchemyObjectType):
 
     def resolve_tags(representation: Representation, info):
         return representation.tags
+
+
+class ScreenPointNode(PydanticObjectType):
+    class Meta:
+        model = ScreenPoint
+        name = "ScreenPoint"
 
 
 class PointNode(PydanticObjectType):
@@ -1195,16 +1362,10 @@ class SpecifierNode(SQLAlchemyObjectType):
         exclude_fields = ("port_id",)
 
 
-class PlaneNode(PydanticObjectType):
+class PlaneNode(SQLAlchemyObjectType):
     class Meta:
         model = Plane
         name = "Plane"
-
-
-class PortNode(SQLAlchemyObjectType):
-    class Meta:
-        model = Port
-        name = "Port"
         exclude_fields = (
             "id",
             "origin_x",
@@ -1216,13 +1377,31 @@ class PortNode(SQLAlchemyObjectType):
             "y_axis_x",
             "y_axis_y",
             "y_axis_z",
-            "type_id",
         )
 
-    plane = graphene.Field(PlaneNode)
+    origin = NonNull(PointNode)
+    x_axis = NonNull(VectorNode)
+    y_axis = NonNull(VectorNode)
 
-    def resolve_plane(port: Port, info):
-        return port.plane
+    def resolve_origin(plane: Plane, info):
+        return plane.origin
+
+    def resolve_x_axis(plane: Plane, info):
+        return plane.x_axis
+
+    def resolve_y_axis(plane: Plane, info):
+        return plane.y_axis
+
+
+class PortNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Port
+        name = "Port"
+        exclude_fields = (
+            "id",
+            "plane_id",
+            "type_id",
+        )
 
 
 class QualityNode(SQLAlchemyObjectType):
@@ -1236,29 +1415,66 @@ class TypeNode(SQLAlchemyObjectType):
     class Meta:
         model = Type
         name = "Type"
-        # interfaces = (DocumentNode,)
+        # interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
             "kit_id",
         )
 
 
+class RootPieceNode(PydanticObjectType):
+    class Meta:
+        model = RootPiece
+        name = "RootPiece"
+        # plane is none Pydanctic model and needs to be resolved manually
+        exclude_fields = ("plane",)
+
+    plane = graphene.Field(NonNull(PlaneNode))
+
+    def resolve_plane(root, info):
+        return root.plane
+
+
+class DiagramPieceNode(PydanticObjectType):
+    class Meta:
+        model = DiagramPiece
+        name = "DiagramPiece"
+
+
 class PieceNode(SQLAlchemyObjectType):
     class Meta:
         model = Piece
         name = "Piece"
-        exclude_fields = ("id", "local_id", "type_id", "formation_id")
+        exclude_fields = (
+            "id",
+            "local_id",
+            "type_id",
+            "root_plane_id",
+            "root_plane",
+            "diagram_point_x",
+            "diagram_point_y",
+            "formation_id",
+        )
 
     id = graphene.Field(NonNull(graphene.String))
+    root = graphene.Field(NonNull(RootPieceNode))
+    diagram = graphene.Field(NonNull(DiagramPieceNode))
 
     def resolve_id(piece: Piece, info):
         return piece.local_id
+
+    def resolve_root(piece: Piece, info):
+        return piece.root
+
+    def resolve_diagram(piece: Piece, info):
+        return piece.diagram
 
 
 class TypePieceSideNode(PydanticObjectType):
     class Meta:
         model = TypePieceSide
         name = "TypePieceSide"
+        # port is none Pydanctic model and needs to be resolved manually
         exclude_fields = ("port",)
 
     port = graphene.Field(PortNode)
@@ -1309,7 +1525,7 @@ class FormationNode(SQLAlchemyObjectType):
     class Meta:
         model = Formation
         name = "Formation"
-        # interfaces = (DocumentNode,)
+        # interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
             "kit_id",
@@ -1346,7 +1562,7 @@ class KitNode(SQLAlchemyObjectType):
     class Meta:
         model = Kit
         name = "Kit"
-        # interfaces = (DocumentNode,)
+        # interfaces = (ArtifactNode,)
         exclude_fields = ("id",)
 
 
@@ -1361,6 +1577,11 @@ class SpecifierInput(InputObjectType):
     group = NonNull(graphene.String)
 
 
+class ScreenPointInput(PydanticInputObjectType):
+    class Meta:
+        model = ScreenPoint
+
+
 class PointInput(PydanticInputObjectType):
     class Meta:
         model = Point
@@ -1371,9 +1592,10 @@ class VectorInput(PydanticInputObjectType):
         model = Vector
 
 
-class PlaneInput(PydanticInputObjectType):
-    class Meta:
-        model = Plane
+class PlaneInput(InputObjectType):
+    origin = NonNull(PointInput)
+    x_axis = NonNull(VectorInput)
+    y_axis = NonNull(VectorInput)
 
 
 class PortInput(InputObjectType):
@@ -1393,8 +1615,10 @@ class QualityInput(InputObjectType):
 
 class TypeInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
+    description = graphene.String()
     icon = graphene.String()
+    variant = graphene.String()
+    unit = NonNull(graphene.String)
     representations = NonNull(graphene.List(NonNull(RepresentationInput)))
     ports = NonNull(graphene.List(NonNull(PortInput)))
     qualities = graphene.List(NonNull(QualityInput))
@@ -1402,12 +1626,28 @@ class TypeInput(InputObjectType):
 
 class TypeIdInput(InputObjectType):
     name = NonNull(graphene.String)
-    qualities = graphene.List(NonNull(QualityInput))
+    variant = graphene.String()
+
+
+class RootPieceInput(PydanticInputObjectType):
+    class Meta:
+        model = RootPiece
+        # plane is none Pydanctic model and needs to be resolved manually
+        exclude_fields = ("plane",)
+
+    plane = NonNull(PlaneInput)
+
+
+class DiagramPieceInput(PydanticInputObjectType):
+    class Meta:
+        model = DiagramPiece
 
 
 class PieceInput(InputObjectType):
     id = NonNull(graphene.String)
     type = NonNull(TypeIdInput)
+    root = graphene.Field(RootPieceInput)
+    diagram = NonNull(DiagramPieceInput)
 
 
 class TypePieceSideInput(InputObjectType):
@@ -1430,8 +1670,10 @@ class AttractionInput(InputObjectType):
 
 class FormationInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
+    description = graphene.String()
     icon = graphene.String()
+    variant = graphene.String()
+    unit = NonNull(graphene.String)
     pieces = NonNull(graphene.List(NonNull(PieceInput)))
     attractions = NonNull(graphene.List(NonNull(AttractionInput)))
     qualities = graphene.List(NonNull(QualityInput))
@@ -1439,12 +1681,12 @@ class FormationInput(InputObjectType):
 
 class FormationIdInput(InputObjectType):
     name = NonNull(graphene.String)
-    qualities = graphene.List(NonNull(QualityInput))
+    variant = graphene.String()
 
 
 class KitInput(InputObjectType):
     name = NonNull(graphene.String)
-    explanation = graphene.String()
+    description = graphene.String()
     icon = graphene.String()
     url = graphene.String()
     types = graphene.List(NonNull(TypeInput))
@@ -1453,7 +1695,7 @@ class KitInput(InputObjectType):
 
 class KitMetadataInput(InputObjectType):
     name = graphene.String()
-    explanation = graphene.String()
+    description = graphene.String()
     icon = graphene.String()
     url = graphene.String()
 
@@ -1620,7 +1862,7 @@ class DocumentAlreadyExists(AlreadyExists):
         self.document = document
 
     def __str__(self):
-        return f"Document ({self.document.name}) already exists: {str(self.document)}"
+        return f"Artifact ({self.document.name}) already exists: {str(self.document)}"
 
 
 class TypeAlreadyExists(DocumentAlreadyExists):
@@ -1689,84 +1931,112 @@ def getRepresentationByUrl(session: Session, type: Type, url: str) -> Representa
             )
 
 
-def getTypeByNameAndQualities(
-    session: Session, name: String, qualityInputs: List[QualityInput]
-) -> Type:
-    typesWithSameName = session.query(Type).filter_by(name=name)
-    if typesWithSameName.count() < 1:
+# def getTypeByNameAndQualities(
+#     session: Session, name: String, qualityInputs: List[QualityInput]
+# ) -> Type:
+#     typesWithSameName = session.query(Type).filter_by(name=name)
+#     if typesWithSameName.count() < 1:
+#         raise TypeNotFound(name)
+#     typesWithSameName = typesWithSameName.all()
+#     qualities = (
+#         [
+#             qualityInputToTransientQualityForEquality(qualityInput)
+#             for qualityInput in qualityInputs
+#         ]
+#         if qualityInputs
+#         else []
+#     )
+#     typesWithSameQualities = [
+#         type
+#         for type in typesWithSameName
+#         if set(qualities).issubset(set(type.qualities))
+#     ]
+#     if len(typesWithSameQualities) < 1:
+#         raise QualitiesDontMatchType(name, qualityInputs, typesWithSameName)
+#     elif len(typesWithSameQualities) > 1:
+#         typesWithExactSameQualities = [
+#             type
+#             for type in typesWithSameQualities
+#             if set(type.qualities) == set(qualities)
+#         ]
+#         if len(typesWithExactSameQualities) < 1:
+#             raise TooLittleQualitiesToMatchExcactlyType(
+#                 name, qualityInputs, typesWithSameQualities
+#             )
+#         elif len(typesWithExactSameQualities) > 1:
+#             raise InvalidDatabase(
+#                 f"Found multiple types {typesWithExactSameQualities!r} for {name} and same qualities: {qualities}"
+#             )
+#         return typesWithExactSameQualities[0]
+#     return typesWithSameQualities[0]
+
+
+def getTypeByNameAndVariant(session: Session, name: str, variant: str) -> Type:
+    try:
+        type = session.query(Type).filter_by(name=name, variant=variant).one_or_none()
+    except MultipleResultsFound as e:
+        raise InvalidDatabase(
+            f"Found multiple types with name {name} and variant {variant}"
+        ) from e
+    if not type:
         raise TypeNotFound(name)
-    typesWithSameName = typesWithSameName.all()
-    qualities = (
-        [
-            qualityInputToTransientQualityForEquality(qualityInput)
-            for qualityInput in qualityInputs
-        ]
-        if qualityInputs
-        else []
-    )
-    typesWithSameQualities = [
-        type
-        for type in typesWithSameName
-        if set(qualities).issubset(set(type.qualities))
-    ]
-    if len(typesWithSameQualities) < 1:
-        raise QualitiesDontMatchType(name, qualityInputs, typesWithSameName)
-    elif len(typesWithSameQualities) > 1:
-        typesWithExactSameQualities = [
-            type
-            for type in typesWithSameQualities
-            if set(type.qualities) == set(qualities)
-        ]
-        if len(typesWithExactSameQualities) < 1:
-            raise TooLittleQualitiesToMatchExcactlyType(
-                name, qualityInputs, typesWithSameQualities
-            )
-        elif len(typesWithExactSameQualities) > 1:
-            raise InvalidDatabase(
-                f"Found multiple types {typesWithExactSameQualities!r} for {name} and same qualities: {qualities}"
-            )
-        return typesWithExactSameQualities[0]
-    return typesWithSameQualities[0]
+    return type
 
 
-def getFormationByNameAndQualities(
-    session: Session, name: String, qualityInputs: List[QualityInput]
+# def getFormationByNameAndQualities(
+#     session: Session, name: String, qualityInputs: List[QualityInput]
+# ) -> Formation:
+#     formationsWithSameName = session.query(Formation).filter_by(name=name)
+#     if formationsWithSameName.count() < 1:
+#         raise FormationNotFound(name)
+#     formationsWithSameName = formationsWithSameName.all()
+#     qualities = (
+#         [
+#             qualityInputToTransientQualityForEquality(qualityInput)
+#             for qualityInput in qualityInputs
+#         ]
+#         if qualityInputs
+#         else []
+#     )
+#     formationsWithSameQualities = [
+#         formation
+#         for formation in formationsWithSameName
+#         if set(qualities).issubset(set(formation.qualities))
+#     ]
+#     if len(formationsWithSameQualities) < 1:
+#         raise QualitiesDontMatchFormation(name, qualityInputs, formationsWithSameName)
+#     elif len(formationsWithSameQualities) > 1:
+#         formationsWithExactSameQualities = [
+#             formation
+#             for formation in formationsWithSameQualities
+#             if set(formation.qualities) == set(qualities)
+#         ]
+#         if len(formationsWithExactSameQualities) < 1:
+#             raise TooLittleQualitiesToMatchExcactlyFormation(
+#                 name, qualityInputs, formationsWithSameQualities
+#             )
+#         elif len(formationsWithExactSameQualities) > 1:
+#             raise InvalidDatabase(
+#                 f"Found multiple formations {formationsWithExactSameQualities!r} for {name} and same qualities: {qualities}"
+#             )
+#         return formationsWithExactSameQualities[0]
+#     return formationsWithSameQualities[0]
+
+
+def getFormationByNameAndVariant(
+    session: Session, name: str, variant: str
 ) -> Formation:
-    formationsWithSameName = session.query(Formation).filter_by(name=name)
-    if formationsWithSameName.count() < 1:
+    try:
+        formation = (
+            session.query(Formation).filter_by(name=name, variant=variant).one_or_none()
+        )
+    except MultipleResultsFound as e:
+        raise InvalidDatabase(
+            f"Found multiple formations with name {name} and variant {variant}"
+        ) from e
+    if not formation:
         raise FormationNotFound(name)
-    formationsWithSameName = formationsWithSameName.all()
-    qualities = (
-        [
-            qualityInputToTransientQualityForEquality(qualityInput)
-            for qualityInput in qualityInputs
-        ]
-        if qualityInputs
-        else []
-    )
-    formationsWithSameQualities = [
-        formation
-        for formation in formationsWithSameName
-        if set(qualities).issubset(set(formation.qualities))
-    ]
-    if len(formationsWithSameQualities) < 1:
-        raise QualitiesDontMatchFormation(name, qualityInputs, formationsWithSameName)
-    elif len(formationsWithSameQualities) > 1:
-        formationsWithExactSameQualities = [
-            formation
-            for formation in formationsWithSameQualities
-            if set(formation.qualities) == set(qualities)
-        ]
-        if len(formationsWithExactSameQualities) < 1:
-            raise TooLittleQualitiesToMatchExcactlyFormation(
-                name, qualityInputs, formationsWithSameQualities
-            )
-        elif len(formationsWithExactSameQualities) > 1:
-            raise InvalidDatabase(
-                f"Found multiple formations {formationsWithExactSameQualities!r} for {name} and same qualities: {qualities}"
-            )
-        return formationsWithExactSameQualities[0]
-    return formationsWithSameQualities[0]
+    return formation
 
 
 def getPortBySpecifiers(
@@ -1811,18 +2081,19 @@ def addRepresentationInputToSession(
     representationInput: RepresentationInput,
 ) -> Representation:
     try:
+        lod = representationInput.lod
+    except AttributeError:
+        lod = ""
+    try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
         raise RepresentationAlreadyExists(representation)
     except RepresentationNotFound:
         pass
     representation = Representation(
         url=representationInput.url,
+        lod=lod,
         type_id=type.id,
     )
-    try:
-        representation.lod = representationInput.lod
-    except AttributeError:
-        pass
     session.add(representation)
     session.flush()
     for tagInput in representationInput.tags or []:
@@ -1854,7 +2125,7 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
         raise PortAlreadyExists(existingPort)
     except PortNotFound:
         pass
-    port = Port(
+    plane = Plane(
         origin_x=portInput.plane.origin.x,
         origin_y=portInput.plane.origin.y,
         origin_z=portInput.plane.origin.z,
@@ -1864,6 +2135,10 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
         y_axis_x=portInput.plane.y_axis.x,
         y_axis_y=portInput.plane.y_axis.y,
         y_axis_z=portInput.plane.y_axis.z,
+    )
+    session.add(plane)
+    port = Port(
+        plane_id=plane.id,
         type_id=type.id,
     )
     session.add(port)
@@ -1878,18 +2153,19 @@ def addQualityInputToSession(
     owner: Type | Formation,
     qualityInput: QualityInput,
 ) -> Quality:
+    try:
+        unit = qualityInput.unit
+    except AttributeError:
+        unit = ""
     typeId = owner.id if isinstance(owner, Type) else None
     formationId = owner.id if isinstance(owner, Formation) else None
     quality = Quality(
         name=qualityInput.name,
         value=qualityInput.value,
+        unit=unit,
         type_id=typeId,
         formation_id=formationId,
     )
-    try:
-        quality.unit = qualityInput.unit
-    except AttributeError:
-        pass
     session.add(quality)
     session.flush()
     return quality
@@ -1897,21 +2173,30 @@ def addQualityInputToSession(
 
 def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> Type:
     try:
-        existingType = getTypeByNameAndQualities(
-            session, typeInput.name, typeInput.qualities
-        )
+        description = typeInput.description
+    except AttributeError:
+        description = ""
+    try:
+        icon = typeInput.icon
+    except AttributeError:
+        icon = ""
+    try:
+        variant = typeInput.variant
+    except AttributeError:
+        variant = ""
+    try:
+        existingType = getTypeByNameAndVariant(session, typeInput.name, variant)
         raise TypeAlreadyExists(existingType)
     except TypeNotFound:
         pass
-    type = Type(name=typeInput.name, kit_id=kit.id)
-    try:
-        type.explanation = typeInput.explanation
-    except AttributeError:
-        pass
-    try:
-        type.icon = typeInput.icon
-    except AttributeError:
-        pass
+    type = Type(
+        name=typeInput.name,
+        description=description,
+        icon=icon,
+        variant=variant,
+        unit=typeInput.unit,
+        kit_id=kit.id,
+    )
     session.add(type)
     session.flush()
     for representationInput in typeInput.representations or []:
@@ -1928,10 +2213,32 @@ def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> T
 def addPieceInputToSession(
     session: Session, formation: Formation, pieceInput: PieceInput
 ) -> Piece:
-    type = getTypeByNameAndQualities(
-        session, pieceInput.type.name, pieceInput.type.qualities
+    try:
+        variant = pieceInput.type.variant
+    except AttributeError:
+        variant = ""
+    type = getTypeByNameAndVariant(session, pieceInput.type.name, variant)
+    piece = Piece(
+        local_id=pieceInput.id,
+        type_id=type.id,
+        diagram_point_x=pieceInput.diagram.point.x,
+        diagram_point_y=pieceInput.diagram.point.y,
+        formation_id=formation.id,
     )
-    piece = Piece(local_id=pieceInput.id, type_id=type.id, formation_id=formation.id)
+    try:
+        piece.root_plane = Plane(
+            origin_x=pieceInput.root.plane.origin.x,
+            origin_y=pieceInput.root.plane.origin.y,
+            origin_z=pieceInput.root.plane.origin.z,
+            x_axis_x=pieceInput.root.plane.x_axis.x,
+            x_axis_y=pieceInput.root.plane.x_axis.y,
+            x_axis_z=pieceInput.root.plane.x_axis.z,
+            y_axis_x=pieceInput.root.plane.y_axis.x,
+            y_axis_y=pieceInput.root.plane.y_axis.y,
+            y_axis_z=pieceInput.root.plane.y_axis.z,
+        )
+    except AttributeError:
+        pass
     session.add(piece)
     session.flush()
     return piece
@@ -1987,27 +2294,36 @@ def addAttractionInputToSession(
 
 
 def addFormationInputToSession(
-    session: Session, kit: Kit, formationInput: FormationInput
+    session: Session, kit: Kit, formationInput: FormationInput, volatile: bool = False
 ):
     try:
-        existingFormation = getFormationByNameAndQualities(
-            session, formationInput.name, formationInput.qualities
+        description = formationInput.description
+    except AttributeError:
+        description = ""
+    try:
+        icon = formationInput.icon
+    except AttributeError:
+        icon = ""
+    try:
+        variant = formationInput.variant
+    except AttributeError:
+        variant = ""
+    try:
+        existingFormation = getFormationByNameAndVariant(
+            session, formationInput.name, variant
         )
         raise FormationAlreadyExists(existingFormation)
     except FormationNotFound:
         pass
     formation = Formation(
-        name=formationInput.name,
+        name=formationInput.name + "_volatile" if volatile else formationInput.name,
+        description=description,
+        icon=icon,
+        variant=variant,
+        unit=formationInput.unit,
+        volatile=volatile,
         kit_id=kit.id,
     )
-    try:
-        formation.explanation = formationInput.explanation
-    except AttributeError:
-        pass
-    try:
-        formation.icon = formationInput.icon
-    except AttributeError:
-        pass
     session.add(formation)
     session.flush()
     localIdToPiece: Dict[str, Piece] = {}
@@ -2031,7 +2347,7 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
             name=kitInput.name,
         )
     try:
-        kit.explanation = kitInput.explanation
+        kit.description = kitInput.description
     except AttributeError:
         pass
     try:
@@ -2058,7 +2374,7 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     except AttributeError:
         pass
     try:
-        kit.explanation = kitMetadata.explanation
+        kit.description = kitMetadata.description
     except AttributeError:
         pass
     try:
@@ -2072,9 +2388,16 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     return kit
 
 
-def hierarchyFromFormationInSession(
+def cleanVolatileFormations(session: Session) -> None:
+    volatileFormations = session.query(Formation).filter_by(volatile=True)
+    for formation in volatileFormations:
+        session.delete(formation)
+    session.flush()
+
+
+def hierarchiesFromFormationInSession(
     session: Session, formation: Formation
-) -> Hierarchy:
+) -> List[Hierarchy]:
     nodes = list((piece.local_id, {"piece": piece}) for piece in formation.pieces)
     edges = (
         (
@@ -2087,27 +2410,30 @@ def hierarchyFromFormationInSession(
     G = DiGraph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
-    root = [node for node, degree in G.in_degree() if degree == 0][0]
-    rootHierarchy = Hierarchy(
-        piece=G.nodes[root]["piece"], transform=Transform.identity(), children=[]
-    )
-    G.nodes[root]["hierarchy"] = rootHierarchy
-    for parent, child in bfs_tree(G, source=root).edges():
-        parentTransform = G[parent][child][
-            "attraction"
-        ].attracting.piece.type.port.plane.toTransform()
-        childTransform = (
-            G[parent][child]["attraction"]
-            .attracted.piece.type.port.plane.toTransform()
-            .invert()
+    hierarchies = []
+    for component in weakly_connected_components(G):
+        root = [node for node, degree in component.in_degree() if degree == 0][0]
+        rootHierarchy = Hierarchy(
+            piece=G.nodes[root]["piece"], transform=Transform.identity(), children=[]
         )
-        transform = parentTransform.after(childTransform)
-        hierarchy = Hierarchy(
-            piece=G.nodes[child]["piece"], transform=transform, children=[]
-        )
-        G.nodes[child]["hierarchy"] = hierarchy
-        G.nodes[parent]["hierarchy"].children.append(hierarchy)
-    return rootHierarchy
+        component.nodes[root]["hierarchy"] = rootHierarchy
+        for parent, child in bfs_tree(component, source=root).edges():
+            parentTransform = component[parent][child][
+                "attraction"
+            ].attracting.piece.type.port.plane.toTransform()
+            childTransform = (
+                component[parent][child]["attraction"]
+                .attracted.piece.type.port.plane.toTransform()
+                .invert()
+            )
+            transform = parentTransform.after(childTransform)
+            hierarchy = Hierarchy(
+                piece=component.nodes[child]["piece"], transform=transform, children=[]
+            )
+            component.nodes[child]["hierarchy"] = hierarchy
+            component.nodes[parent]["hierarchy"].children.append(hierarchy)
+        hierarchies.append(rootHierarchy)
+    return hierarchies
 
 
 def addObjectsToSceneInSession(
@@ -2129,15 +2455,23 @@ def addObjectsToSceneInSession(
 
 
 def sceneFromFormationInSession(
-    session: Session, formationIdInput: FormationIdInput
+    session: Session, formationInput: FormationInput
 ) -> "Scene":
-    formation = getFormationByNameAndQualities(
-        session, formationIdInput.name, formationIdInput.qualities
-    )
-    hierarchy = hierarchyFromFormationInSession(session, formation)
+    # This will limit the number of volatile formations in the database to 1
+    cleanVolatileFormations(session)
+    try:
+        variant = formationInput.variant
+    except AttributeError:
+        variant = ""
+    kit = getMainKit(session)
+    formation = addFormationInputToSession(session, kit, formationInput, volatile=True)
+    hierarchies = hierarchiesFromFormationInSession(session, formation)
     plane = Plane.XY()
     scene = Scene(objects=[])
-    addObjectsToSceneInSession(session, scene, None, hierarchy, plane)
+    for hierarchy in hierarchies:
+        addObjectsToSceneInSession(session, scene, None, hierarchy, plane)
+    # Can't delete because the scene depends on the formation
+    # session.delete(formation)
     return scene
 
 
@@ -2439,7 +2773,11 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
         except NoMainKit:
             raise Exception("Main kit not found.")
         try:
-            type = getTypeByNameAndQualities(session, typeId.name, typeId.qualities)
+            try:
+                variant = typeId.variant
+            except AttributeError:
+                variant = ""
+            type = getTypeByNameAndVariant(session, typeId.name, variant)
         except TypeNotFound:
             return RemoveTypeFromLocalKitMutation(
                 error=RemoveTypeFromLocalKitErrorNode(
@@ -2528,7 +2866,7 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
                 error=AddFormationToLocalKitErrorNode(
                     code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
                     message=str(
-                        "Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical explanation of what is wrong: "
+                        "Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical description of what is wrong: "
                         + str(e)
                     ),
                 )
@@ -2592,9 +2930,11 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
         except NoMainKit:
             raise Exception("Main kit not found.")
         try:
-            formation = getFormationByNameAndQualities(
-                session, formationId.name, formationId.qualities
-            )
+            try:
+                variant = formationId.variant
+            except AttributeError:
+                variant = ""
+            formation = getFormationByNameAndVariant(session, formationId.name, variant)
         except FormationNotFound:
             return RemoveFormationFromLocalKitMutation(
                 error=RemoveFormationFromLocalKitErrorNode(
@@ -2618,7 +2958,7 @@ class LoadLocalKitResponse(ObjectType):
     error = Field(LoadLocalKitError)
 
 
-class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
+class SceneFromFormationFromLocalKitResponseErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
@@ -2626,25 +2966,25 @@ class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
     FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
 
 
-class FormationToSceneFromLocalKitResponseErrorNode(ObjectType):
+class SceneFromFormationFromLocalKitResponseErrorNode(ObjectType):
     class Meta:
-        name = "FormationToSceneFromLocalKitResponseError"
+        name = "SceneFromFormationFromLocalKitResponseError"
 
-    code = NonNull(FormationToSceneFromLocalKitResponseErrorCode)
+    code = NonNull(SceneFromFormationFromLocalKitResponseErrorCode)
     message = graphene.String()
 
 
-class FormationToSceneFromLocalKitResponse(ObjectType):
+class SceneFromFormationFromLocalKitResponse(ObjectType):
     scene = Field(SceneNode)
-    error = Field(FormationToSceneFromLocalKitResponseErrorNode)
+    error = Field(SceneFromFormationFromLocalKitResponseErrorNode)
 
 
 class Query(ObjectType):
     loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
-    formationToSceneFromLocalKit = Field(
-        FormationToSceneFromLocalKitResponse,
+    sceneFromFormationFromLocalKit = Field(
+        SceneFromFormationFromLocalKitResponse,
         directory=NonNull(graphene.String),
-        formationIdInput=NonNull(FormationIdInput),
+        formationInput=NonNull(FormationInput),
     )
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
@@ -2669,25 +3009,25 @@ class Query(ObjectType):
             return LoadLocalKitResponse(error=LoadLocalKitError.DIRECTORY_HAS_NO_KIT)
         return LoadLocalKitResponse(kit=kit)
 
-    def resolve_formationToSceneFromLocalKit(self, info, directory, formationIdInput):
+    def resolve_sceneFromFormationFromLocalKit(self, info, directory, formationInput):
         directory = Path(directory)
         if not directory.exists():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
+            return SceneFromFormationFromLocalKitResponse(
+                error=SceneFromFormationFromLocalKitResponseErrorNode(
+                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
                 )
             )
         if not directory.is_dir():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+            return SceneFromFormationFromLocalKitResponse(
+                error=SceneFromFormationFromLocalKitResponseErrorNode(
+                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
+            return SceneFromFormationFromLocalKitResponse(
+                error=SceneFromFormationFromLocalKitResponseErrorNode(
+                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
                 )
             )
         kitFileFullPath = kitFile.resolve()
@@ -2697,14 +3037,14 @@ class Query(ObjectType):
             )
         session = getLocalSession(directory)
         try:
-            scene = sceneFromFormationInSession(session, formationIdInput)
+            scene = sceneFromFormationInSession(session, formationInput)
         except FormationNotFound:
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
+            return SceneFromFormationFromLocalKitResponse(
+                error=SceneFromFormationFromLocalKitResponseErrorNode(
+                    code=SceneFromFormationFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
                 )
             )
-        return FormationToSceneFromLocalKitResponse(scene=scene)
+        return SceneFromFormationFromLocalKitResponse(scene=scene)
 
 
 class Mutation(ObjectType):
@@ -2725,7 +3065,10 @@ schema = Schema(
 server = Starlette()
 server.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
 
-if server.debug:
+parser = ArgumentParser()
+parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+args = parser.parse_args()
+if args.debug:
     with open("../../graphql/schema.graphql", "w") as f:
         f.write(str(schema))
 

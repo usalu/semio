@@ -2,13 +2,15 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
   createLocalKit(directory: $directory, kitInput: $kit) {
     kit {
       name
-      explanation
+      description
       icon
       url
       types {
         name
-        explanation
+        description
         icon
+        variant
+        unit
         representations {
           url
           lod
@@ -45,17 +47,15 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
       }
       formations {
         name
-        explanation
+        description
         icon
+        variant
+        unit
         pieces {
           id
           type {
             name
-            qualities {
-              name
-              value
-              unit
-            }
+            variant
           }
         }
         attractions {
@@ -85,11 +85,6 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               }
             }
           }
-        }
-        qualities {
-          name
-          value
-          unit
         }
       }
     }

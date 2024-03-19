@@ -1,12 +1,12 @@
 {
     "name": "metabolism",
-    "explanation": "Everything for metabolistic architecture.",
+    "description": "Everything for metabolistic architecture.",
     "icon": "🫀",
     "url": "https://github.com/usalu/semio/examples/metabolism",
     "types": [
       {
         "name": "capsule",
-        "explanation": "A living capsule for one person.",
+        "description": "A living capsule for one person.",
         "icon": "📦",
         "representations": [
           {
@@ -98,7 +98,7 @@
       },
       {
         "name": "capital",
-        "explanation": "An efficient core with many doors.",
+        "description": "An efficient core with many doors.",
         "icon": null,
         "representations": [
           {
@@ -183,7 +183,7 @@
       },
       {
         "name": "base",
-        "explanation": "A two storey office building with a setback and a colonade on the groundfloor towards the street.",
+        "description": "A two storey office building with a setback and a colonade on the groundfloor towards the street.",
         "icon": "🏫",
         "representations": [
           {
@@ -288,7 +288,7 @@
       },
       {
         "name": "shaft",
-        "explanation": "An efficient core with many doors.",
+        "description": "An efficient core with many doors.",
         "icon": "🛗",
         "representations": [
           {

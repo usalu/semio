@@ -27,7 +27,7 @@ from semio import (
 
 class TowerPlacement(Transformation):
     name = "tower placement"
-    explanation = "Place a tower on a base"
+    description = "Place a tower on a base"
     icon = "🏭"
 
     def transform(formation: Formation, parameters: List[Parameter]) -> Formation:

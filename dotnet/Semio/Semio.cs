@@ -16,7 +16,7 @@ using Semio.Properties;
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
-//  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+//  sceneFromFormationFromLocalKit(directory: String!, formationInput: FormationInput!): SceneFromFormationFromLocalKitResponse
 //}
 
 //type LoadLocalKitResponse
@@ -25,32 +25,16 @@ using Semio.Properties;
 //  error: LoadLocalKitError
 //}
 
-//type Kit implements Artifact {
-//  name: String!
-//  explanation: String
-//  icon: String
+//type Kit
+//{
+//name: String!
+//  description: String!
+//  icon: String!
 //  createdAt: DateTime!
-//  modifiedAt: DateTime!
-//  url: String
+//  lastUpdateAt: DateTime!
+//  url: String!
 //  types: [Type!]!
 //  formations: [Formation!]!
-//  parent: Artifact
-//  children: [Artifact!]!
-//  references: [Artifact!]!
-//  referencedBy: [Artifact!]!
-//  relatedTo: [Artifact!]!
-//}
-
-//interface Artifact
-//{
-//    name: String!
-//  explanation: String
-//  icon: String
-//  parent: Artifact
-//  children: [Artifact!]!
-//  references: [Artifact!]!
-//  referencedBy: [Artifact!]!
-//  relatedTo: [Artifact!]!
 //}
 
 //"""
@@ -60,125 +44,146 @@ using Semio.Properties;
 //"""
 //scalar DateTime
 
-//type Type implements Artifact {
+//type Type {
 //  name: String!
-//  explanation: String
-//  icon: String
+//  description: String!
+//  icon: String!
+//  variant: String!
+//  unit: String!
 //  createdAt: DateTime!
-//  modifiedAt: DateTime!
+//  lastUpdateAt: DateTime!
 //  kit: Kit
 //  representations: [Representation!]!
 //  ports: [Port!]!
 //  qualities: [Quality!]!
 //  pieces: [Piece!]!
-//  parent: Artifact
-//  children: [Artifact!]!
-//  references: [Artifact!]!
-//  referencedBy: [Artifact!]!
-//  relatedTo: [Artifact!]!
 //}
 
 //type Representation
 //{
-//    url: String!
-//  lod: String
+//url: String!
+//  lod: String!
 //  type: Type
 //  tags: [String!]!
 //}
 
 //type Port
 //{
-//    type: Type
+//plane: Plane
+//  type: Type
 //  specifiers: [Specifier!]!
 //  attractings: [Attraction!]!
 //  attracteds: [Attraction!]!
-//  plane: Plane
-//}
-
-//type Specifier
-//{
-//    context: String!
-//  group: String!
-//  port: Port
-//}
-
-//type Attraction
-//{
-//    formation: Formation
-//  attracting: Side!
-//  attracted: Side!
-//}
-
-//type Formation implements Artifact {
-//  name: String!
-//  explanation: String
-//  icon: String
-//  createdAt: DateTime!
-//  modifiedAt: DateTime!
-//  kit: Kit
-//  pieces: [Piece!]!
-//  attractions: [Attraction!]!
-//  qualities: [Quality!]!
-//  parent: Artifact
-//  children: [Artifact!]!
-//  references: [Artifact!]!
-//  referencedBy: [Artifact!]!
-//  relatedTo: [Artifact!]!
-//}
-
-//type Piece
-//{
-//    type: Type
-//  formation: Formation
-//  attractings: [Attraction!]!
-//  attracteds: [Attraction!]!
-//  id: String!
-//}
-
-//type Quality
-//{
-//    name: String!
-//  value: String!
-//  unit: String
-//  type: Type
-//  formation: Formation
-//}
-
-//type Side
-//{
-//    piece: PieceSide!
-//}
-
-//type PieceSide
-//{
-//    id: String!
-//  type: TypePieceSide!
-//}
-
-//type TypePieceSide
-//{
-//    port: Port
 //}
 
 //type Plane
 //{
-//    origin: Point!
+//port: Port
+//  rootPiece: Piece
+//  origin: Point!
 //  xAxis: Vector!
 //  yAxis: Vector!
 //}
 
+//type Piece
+//{
+//type: Type
+//  formation: Formation
+//  attractings: [Attraction!]!
+//  attracteds: [Attraction!]!
+//  id: String!
+//  root: RootPiece!
+//  diagram: DiagramPiece!
+//}
+
+//type Formation
+//{
+//name: String!
+//  description: String!
+//  icon: String!
+//  variant: String!
+//  unit: String!
+//  createdAt: DateTime!
+//  lastUpdateAt: DateTime!
+//  volatile: Boolean!
+//  kit: Kit
+//  pieces: [Piece!]!
+//  attractions: [Attraction!]!
+//  qualities: [Quality!]!
+//}
+
+//type Attraction
+//{
+//formation: Formation
+//  attracting: Side!
+//  attracted: Side!
+//}
+
+//"""A side of an attraction."""
+//type Side
+//{
+//piece: PieceSide!
+//}
+
+//"""The piece of a side of an attraction."""
+//type PieceSide
+//{
+//id: String!
+//  type: TypePieceSide!
+//}
+
+//"""The port of a type of a piece of a side of an attraction."""
+//type TypePieceSide
+//{
+//port: Port
+//}
+
+//type Quality
+//{
+//name: String!
+//  value: String!
+//  unit: String!
+//  type: Type
+//  formation: Formation
+//}
+
+//"""The plane of the root piece of a formation."""
+//type RootPiece
+//{
+//plane: Plane!
+//}
+
+//"""The point of a diagram of a piece."""
+//type DiagramPiece
+//{
+//point: ScreenPoint!
+//}
+
+//type ScreenPoint
+//{
+//x: Int!
+//  y: Int!
+//}
+
 //type Point
 //{
-//    x: Float!
+//x: Float!
 //  y: Float!
 //  z: Float!
 //}
 
 //type Vector
 //{
-//    x: Float!
+//x: Float!
 //  y: Float!
 //  z: Float!
+//}
+
+//type Specifier
+//{
+//context: String!
+//  group: String!
+//  port: Port
 //}
 
 //enum LoadLocalKitError
@@ -188,10 +193,11 @@ using Semio.Properties;
 //  DIRECTORY_HAS_NO_KIT
 //  NO_PERMISSION_TO_READ_KIT
 //}
-//type FormationToSceneFromLocalKitResponse
+
+//type SceneFromFormationFromLocalKitResponse
 //{
 //    scene: Scene
-//    error: FormationToSceneFromLocalKitResponseError
+//  error: SceneFromFormationFromLocalKitResponseError
 //}
 
 //type Scene
@@ -202,17 +208,17 @@ using Semio.Properties;
 //type Object
 //{
 //    piece: Piece
-//    plane: Plane
-//    parent: Object
+//  plane: Plane
+//  parent: Object
 //}
 
-//type FormationToSceneFromLocalKitResponseError
+//type SceneFromFormationFromLocalKitResponseError
 //{
-//    code: FormationToSceneFromLocalKitResponseErrorCode!
-//    message: String
+//    code: SceneFromFormationFromLocalKitResponseErrorCode!
+//  message: String
 //}
 
-//enum FormationToSceneFromLocalKitResponseErrorCode
+//enum SceneFromFormationFromLocalKitResponseErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -221,10 +227,100 @@ using Semio.Properties;
 //  FORMATION_DOES_NOT_EXIST
 //}
 
-//input FormationIdInput
+//input FormationInput
 //{
 //    name: String!
+//  description: String
+//  icon: String
+//  variant: String
+//  unit: String!
+//  pieces: [PieceInput!]!
+//  attractions: [AttractionInput!]!
 //  qualities: [QualityInput!]
+//}
+
+//input PieceInput
+//{
+//    id: String!
+//  type: TypeIdInput!
+//  root: RootPieceInput = null
+//  diagram: DiagramPieceInput!
+//}
+
+//input TypeIdInput
+//{
+//    name: String!
+//  variant: String
+//}
+
+//input RootPieceInput
+//{
+//    plane: PlaneInput!
+//}
+
+//input PlaneInput
+//{
+//    origin: PointInput!
+//  xAxis: VectorInput!
+//  yAxis: VectorInput!
+//}
+
+//input PointInput
+//{
+//    x: Float!
+//  y: Float!
+//  z: Float!
+//}
+
+//input VectorInput
+//{
+//    x: Float!
+//  y: Float!
+//  z: Float!
+//}
+
+//input DiagramPieceInput
+//{
+//    point: ScreenPointInput!
+//}
+
+//input ScreenPointInput
+//{
+//    x: Int!
+//  y: Int!
+//}
+
+//input AttractionInput
+//{
+//    attracting: SideInput!
+//  attracted: SideInput!
+//}
+
+//input SideInput
+//{
+//    piece: PieceSideInput!
+//}
+
+//input PieceSideInput
+//{
+//    id: String!
+//  type: TypePieceSideInput!
+//}
+
+//input TypePieceSideInput
+//{
+//    port: PortIdInput!
+//}
+
+//input PortIdInput
+//{
+//    specifiers: [SpecifierInput!]
+//}
+
+//input SpecifierInput
+//{
+//    context: String!
+//  group: String!
 //}
 
 //input QualityInput
@@ -269,7 +365,7 @@ using Semio.Properties;
 //input KitInput
 //{
 //    name: String!
-//  explanation: String
+//  description: String
 //  icon: String
 //  url: String
 //  types: [TypeInput!]
@@ -279,8 +375,10 @@ using Semio.Properties;
 //input TypeInput
 //{
 //    name: String!
-//  explanation: String
+//  description: String
 //  icon: String
+//  variant: String
+//  unit: String!
 //  representations: [RepresentationInput!]!
 //  ports: [PortInput!]!
 //  qualities: [QualityInput!]
@@ -297,82 +395,6 @@ using Semio.Properties;
 //{
 //    plane: PlaneInput!
 //  specifiers: [SpecifierInput!]
-//}
-
-//input PlaneInput
-//{
-//    origin: PointInput!
-//  xAxis: VectorInput!
-//  yAxis: VectorInput!
-//}
-
-//input PointInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input VectorInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input SpecifierInput
-//{
-//    context: String!
-//  group: String!
-//}
-
-//input FormationInput
-//{
-//    name: String!
-//  explanation: String
-//  icon: String
-//  pieces: [PieceInput!]!
-//  attractions: [AttractionInput!]!
-//  qualities: [QualityInput!]
-//}
-
-//input PieceInput
-//{
-//    id: String!
-//  type: TypeIdInput!
-//}
-
-//input TypeIdInput
-//{
-//    name: String!
-//  qualities: [QualityInput!]
-//}
-
-//input AttractionInput
-//{
-//    attracting: SideInput!
-//  attracted: SideInput!
-//}
-
-//input SideInput
-//{
-//    piece: PieceSideInput!
-//}
-
-//input PieceSideInput
-//{
-//    id: String!
-//  type: TypePieceSideInput!
-//}
-
-//input TypePieceSideInput
-//{
-//    port: PortIdInput!
-//}
-
-//input PortIdInput
-//{
-//    specifiers: [SpecifierInput!]
 //}
 
 //type UpdateLocalKitMetadataMutation
@@ -399,7 +421,7 @@ using Semio.Properties;
 //input KitMetadataInput
 //{
 //    name: String
-//  explanation: String
+//  description: String
 //  icon: String
 //  url: String
 //}
@@ -484,6 +506,27 @@ using Semio.Properties;
 //    error: RemoveFormationFromLocalKitError
 //}
 
+//type RemoveFormationFromLocalKitError
+//{
+//    code: RemoveFormationFromLocalKitErrorCode!
+//  message: String
+//}
+
+//enum RemoveFormationFromLocalKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST
+//  DIRECTORY_IS_NOT_A_DIRECTORY
+//  DIRECTORY_HAS_NO_KIT
+//  NO_PERMISSION_TO_MODIFY_KIT
+//  FORMATION_DOES_NOT_EXIST
+//}
+
+//input FormationIdInput
+//{
+//    name: String!
+//  variant: String
+//}
+
 #endregion
 
 #region Utility
@@ -553,6 +596,26 @@ public class Specifier : IDeepCloneable<Specifier>
     public override string ToString()
     {
         return $"Specifier(Context: {Context})";
+    }
+}
+
+public class ScreenPoint : IDeepCloneable<ScreenPoint>
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    public ScreenPoint DeepClone()
+    {
+        return new ScreenPoint
+        {
+            X = X,
+            Y = Y
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"Point(X: {X}, Y: {Y})";
     }
 }
 
@@ -687,8 +750,10 @@ public class Quality : IDeepCloneable<Quality>
 public class Type : IDeepCloneable<Type>
 {
     public string Name { get; set; }
-    public string? Explanation { get; set; }
+    public string? Description { get; set; }
     public string? Icon { get; set; }
+    public string? Variant { get; set; }
+    public string Unit { get; set; }
     public List<Representation> Representations { get; set; }
     public List<Port> Ports { get; set; }
     public List<Quality>? Qualities { get; set; }
@@ -698,25 +763,27 @@ public class Type : IDeepCloneable<Type>
         var type = new Type
         {
             Name = Name,
+            Unit = Unit,
             Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
             Ports = new List<Port>(Ports.Select(p => p.DeepClone()))
         };
-        if (Explanation != null) type.Explanation = Explanation;
+        if (Description != null) type.Description = Description;
         if (Icon != null) type.Icon = Icon;
+        if (Variant != null) type.Variant = Variant;
         if (Qualities != null) type.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
         return type;
     }
 
     public override string ToString()
     {
-        return $"Type(Name: {Name}, {GetHashCode()})";
+        return $"Type(Name: {Name}, Variant: {Variant})";
     }
 }
 
 public class TypeId : IDeepCloneable<TypeId>
 {
     public string Name { get; set; }
-    public List<Quality>? Qualities { get; set; }
+    public string? Variant { get; set; }
 
     public TypeId DeepClone()
     {
@@ -724,13 +791,49 @@ public class TypeId : IDeepCloneable<TypeId>
         {
             Name = Name
         };
-        if (Qualities != null) typeId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
+        if (Variant != null) typeId.Variant = Variant;
         return typeId;
     }
 
     public override string ToString()
     {
-        return $"TypeId(Name: {Name}, {GetHashCode()})";
+        return $"TypeId(Name: {Name}, Variant: {Variant})";
+    }
+}
+
+public class RootPiece : IDeepCloneable<RootPiece>
+{
+    public Plane Plane { get; set; }
+
+    public RootPiece DeepClone()
+    {
+        return new RootPiece
+        {
+            Plane = Plane.DeepClone()
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"RootPiece({GetHashCode()})";
+    }
+}
+
+public class DiagramPiece : IDeepCloneable<DiagramPiece>
+{
+    public ScreenPoint Point { get; set; }
+
+    public DiagramPiece DeepClone()
+    {
+        return new DiagramPiece
+        {
+            Point = Point.DeepClone()
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"DiagramPiece({GetHashCode()})";
     }
 }
 
@@ -738,14 +841,18 @@ public class Piece : IDeepCloneable<Piece>
 {
     public string Id { get; set; }
     public TypeId Type { get; set; }
-
+    public RootPiece? Root { get; set; }
+    public DiagramPiece Diagram { get; set; }
     public Piece DeepClone()
     {
-        return new Piece
+        var piece = new Piece
         {
             Id = Id,
-            Type = Type.DeepClone()
+            Type = Type.DeepClone(),
+            Diagram = Diagram.DeepClone()
         };
+        if (Root != null) piece.Root = Root.DeepClone();
+        return piece;
     }
 
     public override string ToString()
@@ -852,8 +959,10 @@ public class Attraction : IDeepCloneable<Attraction>
 public class Formation : IDeepCloneable<Formation>
 {
     public string Name { get; set; }
-    public string? Explanation { get; set; }
+    public string? Description { get; set; }
     public string? Icon { get; set; }
+    public string? Variant { get; set; }
+    public string Unit { get; set; }
     public List<Piece> Pieces { get; set; }
     public List<Attraction> Attractions { get; set; }
     public List<Quality>? Qualities { get; set; }
@@ -863,26 +972,27 @@ public class Formation : IDeepCloneable<Formation>
         var formation = new Formation
         {
             Name = Name,
+            Unit = Unit,
             Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
             Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone()))
         };
-        if (Explanation != null) formation.Explanation = Explanation;
-
+        if (Description != null) formation.Description = Description;
         if (Icon != null) formation.Icon = Icon;
+        if (Variant != null) formation.Variant = Variant;
         if (Qualities != null) formation.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
         return formation;
     }
 
     public override string ToString()
     {
-        return $"Formation(Name: {Name}, {GetHashCode()})";
+        return $"Formation(Name: {Name}, Variant: {Variant})";
     }
 }
 
 public class FormationId : IDeepCloneable<FormationId>
 {
     public string Name { get; set; }
-    public List<Quality>? Qualities { get; set; }
+    public string? Variant { get; set; }
 
     public FormationId DeepClone()
     {
@@ -890,13 +1000,13 @@ public class FormationId : IDeepCloneable<FormationId>
         {
             Name = Name
         };
-        if (Qualities != null) formationId.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
+        if (Variant != null) formationId.Variant = Variant;
         return formationId;
     }
 
     public override string ToString()
     {
-        return $"FormationId(Name: {Name}, {GetHashCode()})";
+        return $"FormationId(Name: {Name}, Variant: {Variant})";
     }
 }
 
@@ -1002,7 +1112,7 @@ public class Scene : IDeepCloneable<Scene>
 public class Kit : IDeepCloneable<Kit>
 {
     public string Name { get; set; }
-    public string? Explanation { get; set; }
+    public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Url { get; set; }
     public List<Type> Types { get; set; }
@@ -1016,7 +1126,7 @@ public class Kit : IDeepCloneable<Kit>
             Types = new List<Type>(Types.Select(t => t.DeepClone())),
             Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
         };
-        if (Explanation != null) kit.Explanation = Explanation;
+        if (Description != null) kit.Description = Description;
 
         if (Icon != null) kit.Icon = Icon;
 
@@ -1033,7 +1143,7 @@ public class Kit : IDeepCloneable<Kit>
 public class KitMetadata : IDeepCloneable<KitMetadata>
 {
     public string? Name { get; set; }
-    public string? Explanation { get; set; }
+    public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Url { get; set; }
 
@@ -1041,11 +1151,8 @@ public class KitMetadata : IDeepCloneable<KitMetadata>
     {
         var kitMetadata = new KitMetadata();
         if (Name != null) kitMetadata.Name = Name;
-
-        if (Explanation != null) kitMetadata.Explanation = Explanation;
-
+        if (Description != null) kitMetadata.Description = Description;
         if (Icon != null) kitMetadata.Icon = Icon;
-
         if (Url != null) kitMetadata.Url = Url;
         return kitMetadata;
     }
@@ -1267,7 +1374,7 @@ public class RemoveFormationFromLocalKitResponseContainer
     public RemoveFormationFromLocalKitResponse RemoveFormationFromLocalKit { get; set; }
 }
 
-public enum FormationToSceneFromLocalKitResponseErrorCode
+public enum SceneFromFormationFromLocalKitResponseErrorCode
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_IS_NOT_A_DIRECTORY,
@@ -1276,21 +1383,21 @@ public enum FormationToSceneFromLocalKitResponseErrorCode
     FORMATION_DOES_NOT_EXIST
 }
 
-public class FormationToSceneFromLocalKitResponseError
+public class SceneFromFormationFromLocalKitResponseError
 {
-    public FormationToSceneFromLocalKitResponseErrorCode Code { get; set; }
+    public SceneFromFormationFromLocalKitResponseErrorCode Code { get; set; }
     public string Message { get; set; }
 }
 
-public class FormationToSceneFromLocalKitResponse
+public class SceneFromFormationFromLocalKitResponse
 {
     public Scene? Scene { get; set; }
-    public FormationToSceneFromLocalKitResponseError? Error { get; set; }
+    public SceneFromFormationFromLocalKitResponseError? Error { get; set; }
 }
 
-public class FormationToSceneFromLocalKitResponseContainer
+public class SceneFromFormationFromLocalKitResponseContainer
 {
-    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit { get; set; }
+    public SceneFromFormationFromLocalKitResponse SceneFromFormationFromLocalKit { get; set; }
 }
 
 public class Api : ICloneable
@@ -1428,17 +1535,17 @@ public class Api : ICloneable
         return response.Data.RemoveFormationFromLocalKit;
     }
 
-    public FormationToSceneFromLocalKitResponse? FormationToSceneFromLocalKit(string directory, FormationId formation)
+    public SceneFromFormationFromLocalKitResponse? SceneFromFormationFromLocalKit(string directory, FormationId formation)
     {
         var query = new GraphQLRequest
         {
             Query = Resources.formationToSceneFromLocalKit,
-            OperationName = "FormationToSceneFromLocalKit",
+            OperationName = "SceneFromFormationFromLocalKit",
             Variables = new { directory, formation }
         };
-        var response = Client.SendQueryAsync<FormationToSceneFromLocalKitResponseContainer>(query).Result;
+        var response = Client.SendQueryAsync<SceneFromFormationFromLocalKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
-        return response.Data.FormationToSceneFromLocalKit;
+        return response.Data.SceneFromFormationFromLocalKit;
     }
 }
 

@@ -24,7 +24,7 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   loadLocalKit?: Maybe<LoadLocalKitResponse>;
-  formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
+  formationToSceneFromLocalKit?: Maybe<SceneFromFormationFromLocalKitResponse>;
 };
 
 
@@ -33,7 +33,7 @@ export type QueryLoadLocalKitArgs = {
 };
 
 
-export type QueryFormationToSceneFromLocalKitArgs = {
+export type QuerySceneFromFormationFromLocalKitArgs = {
   directory: Scalars['String']['input'];
   formationIdInput: FormationIdInput;
 };
@@ -47,7 +47,7 @@ export type LoadLocalKitResponse = {
 export type Kit = {
   __typename?: 'Kit';
   name: Scalars['String']['output'];
-  explanation?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
   icon?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   modifiedAt: Scalars['DateTime']['output'];
@@ -59,7 +59,7 @@ export type Kit = {
 export type Type = {
   __typename?: 'Type';
   name: Scalars['String']['output'];
-  explanation?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
   icon?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   modifiedAt: Scalars['DateTime']['output'];
@@ -104,7 +104,7 @@ export type Attraction = {
 export type Formation = {
   __typename?: 'Formation';
   name: Scalars['String']['output'];
-  explanation?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
   icon?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   modifiedAt: Scalars['DateTime']['output'];
@@ -176,10 +176,10 @@ export enum LoadLocalKitError {
   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 }
 
-export type FormationToSceneFromLocalKitResponse = {
-  __typename?: 'FormationToSceneFromLocalKitResponse';
+export type SceneFromFormationFromLocalKitResponse = {
+  __typename?: 'SceneFromFormationFromLocalKitResponse';
   scene?: Maybe<Scene>;
-  error?: Maybe<FormationToSceneFromLocalKitResponseError>;
+  error?: Maybe<SceneFromFormationFromLocalKitResponseError>;
 };
 
 export type Scene = {
@@ -194,13 +194,13 @@ export type Object = {
   parent?: Maybe<Object>;
 };
 
-export type FormationToSceneFromLocalKitResponseError = {
-  __typename?: 'FormationToSceneFromLocalKitResponseError';
-  code: FormationToSceneFromLocalKitResponseErrorCode;
+export type SceneFromFormationFromLocalKitResponseError = {
+  __typename?: 'SceneFromFormationFromLocalKitResponseError';
+  code: SceneFromFormationFromLocalKitResponseErrorCode;
   message?: Maybe<Scalars['String']['output']>;
 };
 
-export enum FormationToSceneFromLocalKitResponseErrorCode {
+export enum SceneFromFormationFromLocalKitResponseErrorCode {
   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
@@ -293,7 +293,7 @@ export enum CreateLocalKitErrorCode {
 
 export type KitInput = {
   name: Scalars['String']['input'];
-  explanation?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   url?: InputMaybe<Scalars['String']['input']>;
   types?: InputMaybe<Array<TypeInput>>;
@@ -302,7 +302,7 @@ export type KitInput = {
 
 export type TypeInput = {
   name: Scalars['String']['input'];
-  explanation?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   representations: Array<RepresentationInput>;
   ports: Array<PortInput>;
@@ -345,7 +345,7 @@ export type SpecifierInput = {
 
 export type FormationInput = {
   name: Scalars['String']['input'];
-  explanation?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   pieces: Array<PieceInput>;
   attractions: Array<AttractionInput>;
@@ -406,7 +406,7 @@ export enum UpdateLocalKitMetadataErrorCode {
 
 export type KitMetadataInput = {
   name?: InputMaybe<Scalars['String']['input']>;
-  explanation?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   url?: InputMaybe<Scalars['String']['input']>;
 };

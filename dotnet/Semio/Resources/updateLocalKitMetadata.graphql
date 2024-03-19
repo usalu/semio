@@ -2,7 +2,7 @@ mutation UpdateLocalKitMetadata($directory: String!, $kit: KitMetadataInput!) {
   updateLocalKitMetadata(directory: $directory, kitMetadataInput: $kit) {
     kit {
       name
-      explanation
+      description
       icon
       url
     }

@@ -76,7 +76,7 @@ class Quality(BaseModel):
 
 class Type(BaseModel):
     name: str
-    explanation: str
+    description: str
     icon: str
     representations: List[Representation]
     ports: List[Port]
@@ -113,7 +113,7 @@ class Attraction(BaseModel):
 
 class Formation(BaseModel):
     name: str
-    explanation: str
+    description: str
     icon: str
     pieces: List[Piece]
     attractions: List[Attraction]
@@ -127,7 +127,7 @@ class FormationId(BaseModel):
 
 class Kit(BaseModel):
     name: str
-    explanation: str
+    description: str
     icon: str
     url: str
     types: List[Type]
@@ -141,7 +141,7 @@ class Parameter(BaseModel):
 
 class Script(ABC):
     name: str
-    explanation: str
+    description: str
     icon: str
     parameters: List[Parameter]
 

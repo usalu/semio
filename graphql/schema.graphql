@@ -1,6 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
-  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+  sceneFromFormationFromLocalKit(directory: String!, formationInput: FormationInput!): SceneFromFormationFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -10,11 +10,11 @@ type LoadLocalKitResponse {
 
 type Kit {
   name: String!
-  explanation: String
-  icon: String
+  description: String!
+  icon: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
-  url: String
+  lastUpdateAt: DateTime!
+  url: String!
   types: [Type!]!
   formations: [Formation!]!
 }
@@ -28,10 +28,12 @@ scalar DateTime
 
 type Type {
   name: String!
-  explanation: String
-  icon: String
+  description: String!
+  icon: String!
+  variant: String!
+  unit: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
+  lastUpdateAt: DateTime!
   kit: Kit
   representations: [Representation!]!
   ports: [Port!]!
@@ -41,41 +43,25 @@ type Type {
 
 type Representation {
   url: String!
-  lod: String
+  lod: String!
   type: Type
   tags: [String!]!
 }
 
 type Port {
+  plane: Plane
   type: Type
   specifiers: [Specifier!]!
   attractings: [Attraction!]!
   attracteds: [Attraction!]!
-  plane: Plane
 }
 
-type Specifier {
-  context: String!
-  group: String!
+type Plane {
   port: Port
-}
-
-type Attraction {
-  formation: Formation
-  attracting: Side!
-  attracted: Side!
-}
-
-type Formation {
-  name: String!
-  explanation: String
-  icon: String
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  kit: Kit
-  pieces: [Piece!]!
-  attractions: [Attraction!]!
-  qualities: [Quality!]!
+  rootPiece: Piece
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
 }
 
 type Piece {
@@ -84,33 +70,68 @@ type Piece {
   attractings: [Attraction!]!
   attracteds: [Attraction!]!
   id: String!
+  root: RootPiece!
+  diagram: DiagramPiece!
 }
 
-type Quality {
+type Formation {
   name: String!
-  value: String!
-  unit: String
-  type: Type
-  formation: Formation
+  description: String!
+  icon: String!
+  variant: String!
+  unit: String!
+  createdAt: DateTime!
+  lastUpdateAt: DateTime!
+  volatile: Boolean!
+  kit: Kit
+  pieces: [Piece!]!
+  attractions: [Attraction!]!
+  qualities: [Quality!]!
 }
 
+type Attraction {
+  formation: Formation
+  attracting: Side!
+  attracted: Side!
+}
+
+"""A side of an attraction."""
 type Side {
   piece: PieceSide!
 }
 
+"""The piece of a side of an attraction."""
 type PieceSide {
   id: String!
   type: TypePieceSide!
 }
 
+"""The port of a type of a piece of a side of an attraction."""
 type TypePieceSide {
   port: Port
 }
 
-type Plane {
-  origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
+type Quality {
+  name: String!
+  value: String!
+  unit: String!
+  type: Type
+  formation: Formation
+}
+
+"""The plane of the root piece of a formation."""
+type RootPiece {
+  plane: Plane!
+}
+
+"""The point of a diagram of a piece."""
+type DiagramPiece {
+  point: ScreenPoint!
+}
+
+type ScreenPoint {
+  x: Int!
+  y: Int!
 }
 
 type Point {
@@ -125,6 +146,12 @@ type Vector {
   z: Float!
 }
 
+type Specifier {
+  context: String!
+  group: String!
+  port: Port
+}
+
 enum LoadLocalKitError {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
@@ -132,9 +159,9 @@ enum LoadLocalKitError {
   NO_PERMISSION_TO_READ_KIT
 }
 
-type FormationToSceneFromLocalKitResponse {
+type SceneFromFormationFromLocalKitResponse {
   scene: Scene
-  error: FormationToSceneFromLocalKitResponseError
+  error: SceneFromFormationFromLocalKitResponseError
 }
 
 type Scene {
@@ -147,12 +174,12 @@ type Object {
   parent: Object
 }
 
-type FormationToSceneFromLocalKitResponseError {
-  code: FormationToSceneFromLocalKitResponseErrorCode!
+type SceneFromFormationFromLocalKitResponseError {
+  code: SceneFromFormationFromLocalKitResponseErrorCode!
   message: String
 }
 
-enum FormationToSceneFromLocalKitResponseErrorCode {
+enum SceneFromFormationFromLocalKitResponseErrorCode {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
   DIRECTORY_HAS_NO_KIT
@@ -160,9 +187,85 @@ enum FormationToSceneFromLocalKitResponseErrorCode {
   FORMATION_DOES_NOT_EXIST
 }
 
-input FormationIdInput {
+input FormationInput {
   name: String!
+  description: String
+  icon: String
+  variant: String
+  unit: String!
+  pieces: [PieceInput!]!
+  attractions: [AttractionInput!]!
   qualities: [QualityInput!]
+}
+
+input PieceInput {
+  id: String!
+  type: TypeIdInput!
+  root: RootPieceInput = null
+  diagram: DiagramPieceInput!
+}
+
+input TypeIdInput {
+  name: String!
+  variant: String
+}
+
+input RootPieceInput {
+  plane: PlaneInput!
+}
+
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
+
+input PointInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input VectorInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input DiagramPieceInput {
+  point: ScreenPointInput!
+}
+
+input ScreenPointInput {
+  x: Int!
+  y: Int!
+}
+
+input AttractionInput {
+  attracting: SideInput!
+  attracted: SideInput!
+}
+
+input SideInput {
+  piece: PieceSideInput!
+}
+
+input PieceSideInput {
+  id: String!
+  type: TypePieceSideInput!
+}
+
+input TypePieceSideInput {
+  port: PortIdInput!
+}
+
+input PortIdInput {
+  specifiers: [SpecifierInput!]
+}
+
+input SpecifierInput {
+  context: String!
+  group: String!
 }
 
 input QualityInput {
@@ -201,7 +304,7 @@ enum CreateLocalKitErrorCode {
 
 input KitInput {
   name: String!
-  explanation: String
+  description: String
   icon: String
   url: String
   types: [TypeInput!]
@@ -210,8 +313,10 @@ input KitInput {
 
 input TypeInput {
   name: String!
-  explanation: String
+  description: String
   icon: String
+  variant: String
+  unit: String!
   representations: [RepresentationInput!]!
   ports: [PortInput!]!
   qualities: [QualityInput!]
@@ -225,70 +330,6 @@ input RepresentationInput {
 
 input PortInput {
   plane: PlaneInput!
-  specifiers: [SpecifierInput!]
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
-}
-
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input SpecifierInput {
-  context: String!
-  group: String!
-}
-
-input FormationInput {
-  name: String!
-  explanation: String
-  icon: String
-  pieces: [PieceInput!]!
-  attractions: [AttractionInput!]!
-  qualities: [QualityInput!]
-}
-
-input PieceInput {
-  id: String!
-  type: TypeIdInput!
-}
-
-input TypeIdInput {
-  name: String!
-  qualities: [QualityInput!]
-}
-
-input AttractionInput {
-  attracting: SideInput!
-  attracted: SideInput!
-}
-
-input SideInput {
-  piece: PieceSideInput!
-}
-
-input PieceSideInput {
-  id: String!
-  type: TypePieceSideInput!
-}
-
-input TypePieceSideInput {
-  port: PortIdInput!
-}
-
-input PortIdInput {
   specifiers: [SpecifierInput!]
 }
 
@@ -312,7 +353,7 @@ enum UpdateLocalKitMetadataErrorCode {
 
 input KitMetadataInput {
   name: String
-  explanation: String
+  description: String
   icon: String
   url: String
 }
@@ -396,4 +437,9 @@ enum RemoveFormationFromLocalKitErrorCode {
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
   FORMATION_DOES_NOT_EXIST
+}
+
+input FormationIdInput {
+  name: String!
+  variant: String
 }
