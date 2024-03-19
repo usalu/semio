@@ -3,7 +3,7 @@ skinparam linetype ortho
 
 interface Document {
     name : string
-    explanation : string
+    description : string
     icon : string
 }
 

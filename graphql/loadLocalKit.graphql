@@ -2,13 +2,15 @@ query LoadLocalKit($directory: String!) {
   loadLocalKit(directory: $directory) {
     kit {
       name
-      explanation
+      description
       icon
       url
       types {
         name
-        explanation
+        description
         icon
+        variant
+        unit
         representations {
           url
           lod
@@ -45,17 +47,15 @@ query LoadLocalKit($directory: String!) {
       }
       formations {
         name
-        explanation
+        description
         icon
+        variant
+        unit
         pieces {
           id
           type {
             name
-            qualities {
-              name
-              value
-              unit
-            }
+            variant
           }
         }
         attractions {
@@ -85,11 +85,6 @@ query LoadLocalKit($directory: String!) {
               }
             }
           }
-        }
-        qualities {
-          name
-          value
-          unit
         }
       }
     }

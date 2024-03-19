@@ -27,12 +27,12 @@ formationToSceneFromLocalKit = open(
 def test_integration_graphql_local_kit_crud(tmp_path):
     client = Client(schema)
     name = "metabolism"
-    explanation = "For metabolistic architecture."
+    description = "For metabolistic architecture."
     icon = "🫀"
     url = "https://github.com/usalu/semio/tree/main/examples/metabolism"
     base = {
         "name": "base",
-        "explanation": "A base with a public entrance and two towers that are on top of it.",
+        "description": "A base with a public entrance and two towers that are on top of it.",
         "icon": "🏫",
         "representations": [
             {"url": "base/geometry.3dm", "lod": "1to100", "tags": ["simple"]}
@@ -71,7 +71,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     }
     shaft = {
         "name": "shaft",
-        "explanation": "A cuboid building core shaft with 10 storeys and a floor height of 3 meters.",
+        "description": "A cuboid building core shaft with 10 storeys and a floor height of 3 meters.",
         "icon": "🛗",
         "representations": [
             {"url": "shaft/geometry.3dm", "lod": "1to100", "tags": ["simple"]}
@@ -104,7 +104,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     }
     capsule = {
         "name": "capsule",
-        "explanation": "A capsule with the door in the back and window in the front.",
+        "description": "A capsule with the door in the back and window in the front.",
         "icon": "📦",
         "representations": [
             {
@@ -137,7 +137,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     }
     mirroredCapsule = {
         "name": "capsule",
-        "explanation": "A mirrored capsule with the door in the back and window in the front.",
+        "description": "A mirrored capsule with the door in the back and window in the front.",
         "icon": "📦^🪞",
         "representations": [
             {
@@ -173,7 +173,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     types = [shaft, capsule, mirroredCapsule]
     nakaginCapsuleTower = {
         "name": "nakagin capsule tower",
-        "explanation": "The Nakagin Capsule Tower.",
+        "description": "The Nakagin Capsule Tower.",
         "icon": "🏯",
         "pieces": [
             {
@@ -240,7 +240,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     }
     kit = {
         "name": name,
-        "explanation": explanation,
+        "description": description,
         "icon": icon,
         "url": url,
         "types": types,
@@ -307,7 +307,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
     client = Client(schema)
     type1 = {
         "name": "box",
-        "explanation": None,
+        "description": None,
         "icon": None,
         "representations": [{"url": "box\\geometry.3dm", "lod": None, "tags": None}],
         "ports": [
@@ -349,7 +349,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
 
     formation1 = {
         "name": "formation1",
-        "explanation": None,
+        "description": None,
         "icon": None,
         "pieces": [
             {"id": "1", "type": {"name": "box", "qualities": None}},

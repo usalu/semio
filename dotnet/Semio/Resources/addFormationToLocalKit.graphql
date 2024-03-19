@@ -2,17 +2,15 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
   addFormationToLocalKit(directory: $directory, formationInput: $formation) {
     formation {
       name
-      explanation
+      description
       icon
+      variant
+      unit
       pieces {
         id
         type {
           name
-          qualities {
-            name
-            value
-            unit
-          }
+          variant
         }
       }
       attractions {
@@ -43,13 +41,8 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
           }
         }
       }
-      qualities {
-        name
-        value
-        unit
-      }
     }
-    error{
+    error {
       code
       message
     }

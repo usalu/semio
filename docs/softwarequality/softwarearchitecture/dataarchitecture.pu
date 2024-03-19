@@ -117,8 +117,8 @@ entity Piece{
     ..
     root_plane_id : int <<FK>>
     ..
-    *sketch_point_x : float
-    *sketch_point_y : float
+    *diagram_point_x : float
+    *diagram_point_y : float
     ..
     *formation_id : int <<FK>>
 }

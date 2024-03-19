@@ -211,6 +211,12 @@
   <data name="scene_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scene_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="screenpoint_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\screenpoint_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="screenpoint_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\screenpoint_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="semio_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\semio_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

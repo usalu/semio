@@ -58,6 +58,7 @@ import SVG from 'react-inlinesvg'
 import {
     AttractionInput,
     Formation,
+    FormationInput,
     Kit,
     Piece,
     PieceInput,
@@ -75,7 +76,34 @@ import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } fro
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
 import sampleDiagram from './assets/samplediagram'
+import { config } from 'process'
+import { configureStore, createSlice } from '@reduxjs/toolkit'
+import { Provider } from 'react-redux'
 // import sampleKit from './assets/samplekit.json'
+
+
+const formationsSlice = createSlice({
+    name: 'formations',
+    initialState: {
+        formations: new Map<string, Array<FormationInput>>()
+    },
+    reducers: {
+        openFormation: (state, action) => {
+            state.formations.push(action.payload)
+        },
+        closeFormation: (state, action) => {
+            state.formations = state.formations.filter(
+                (formation) => formation.name !== action.payload.name && formation.variant !== action.payload.variant
+            )
+        }
+    }
+})
+
+const store = configureStore({
+    reducer: {
+        formations: formationsSlice.reducer
+    }
+})
 
 const { Header, Content, Footer, Sider } = Layout
 
@@ -299,7 +327,7 @@ interface IAttractionEdge extends IEdge {
 
 export interface IDraft extends IGraphInput {
     name?: string
-    explanation?: string
+    description?: string
     icon?: string
     nodes: IPieceNode[]
     edges: IAttractionEdge[]
@@ -1260,345 +1288,379 @@ const App = ({
 
     return (
         <div className="h-screen w-screen">
-            <ConfigProvider
-                locale={enUS}
-                theme={{
-                    // algorithm: [theme.darkAlgorithm],
-                    token: {
-                        // primary
-                        colorPrimary: colors.light,
-                        colorPrimaryBg: colors.light,
-                        colorPrimaryBgHover: colors.light,
-                        colorPrimaryBorder: colors.light,
-                        colorPrimaryBorderHover: colors.light,
-                        colorPrimaryHover: colors.light,
-                        colorPrimaryActive: colors.light,
-                        colorPrimaryText: colors.light,
-                        colorPrimaryTextHover: colors.light,
-                        colorPrimaryTextActive: colors.light,
-                        // text
-                        colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
-                        colorTextSecondary: colors.lightGrey,
-                        colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
-                        colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
-                        // border
-                        colorBorder: colors.light,
-                        colorBorderSecondary: colors.light,
-                        // fill
-                        colorFill: colors.light,
-                        colorFillSecondary: colors.light,
-                        colorFillTertiary: colors.light,
-                        colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
-                        // background
-                        colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
-                        colorBgElevated: colors.grey, // e.g. background selected menu
-                        colorBgLayout: colors.light,
-                        colorBgSpotlight: colors.light,
-                        colorBgMask: colors.light,
-                        colorBgTextActive: colors.light,
-                        colorBgBase: colors.light,
-                        // special colors
-                        colorError: colors.danger,
-                        colorWarning: colors.warning,
-                        colorInfo: colors.info,
-                        colorSuccess: colors.success,
-                        fontFamily: 'Anta, sans-serif',
-                        boxShadow: 'none',
-                        boxShadowSecondary: 'none',
-                        boxShadowTertiary: 'none',
-                        wireframe: false,
-                        borderRadius: 0,
-                        lineWidth: 0
-                        // motionUnit: 0.05
-                    },
-                    components: {
-                        Button: {
-                            borderColorDisabled: colors.light,
-                            dangerColor: colors.light,
-                            defaultActiveBg: colors.light,
-                            defaultActiveBorderColor: colors.light,
-                            defaultActiveColor: colors.light,
-                            defaultBg: colors.light,
-                            defaultBorderColor: colors.light,
-                            defaultColor: colors.lightGrey, // e.g. normal state of buttons
-                            defaultGhostBorderColor: colors.light,
-                            defaultGhostColor: colors.light,
-                            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
-                            ghostBg: colors.light,
-                            linkHoverBg: colors.light,
-                            primaryColor: colors.light,
-                            textHoverBg: colors.light
+            <Provider store={store}>
+                <ConfigProvider
+                    locale={enUS}
+                    theme={{
+                        // algorithm: [theme.darkAlgorithm],
+                        token: {
+                            // primary
+                            colorPrimary: colors.light,
+                            colorPrimaryBg: colors.light,
+                            colorPrimaryBgHover: colors.light,
+                            colorPrimaryBorder: colors.light,
+                            colorPrimaryBorderHover: colors.light,
+                            colorPrimaryHover: colors.light,
+                            colorPrimaryActive: colors.light,
+                            colorPrimaryText: colors.light,
+                            colorPrimaryTextHover: colors.light,
+                            colorPrimaryTextActive: colors.light,
+                            // text
+                            colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
+                            colorTextSecondary: colors.lightGrey,
+                            colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
+                            colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
+                            // border
+                            colorBorder: colors.light,
+                            colorBorderSecondary: colors.light,
+                            // fill
+                            colorFill: colors.light,
+                            colorFillSecondary: colors.light,
+                            colorFillTertiary: colors.light,
+                            colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
+                            // background
+                            colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
+                            colorBgElevated: colors.grey, // e.g. background selected menu
+                            colorBgLayout: colors.light,
+                            colorBgSpotlight: colors.light,
+                            colorBgMask: colors.light,
+                            colorBgTextActive: colors.light,
+                            colorBgBase: colors.light,
+                            // special colors
+                            colorError: colors.danger,
+                            colorWarning: colors.warning,
+                            colorInfo: colors.info,
+                            colorSuccess: colors.success,
+                            fontFamily: 'Anta, sans-serif',
+                            boxShadow: 'none',
+                            boxShadowSecondary: 'none',
+                            boxShadowTertiary: 'none',
+                            wireframe: false,
+                            borderRadius: 0,
+                            lineWidth: 0
+                            // motionUnit: 0.05
                         },
-                        Layout: {
-                            bodyBg: colors.dark,
-                            footerBg: colors.grey,
-                            headerBg: colors.grey, // e.g. space between tabs and content
-                            headerColor: colors.light,
-                            lightSiderBg: colors.light,
-                            lightTriggerBg: colors.light,
-                            lightTriggerColor: colors.light,
-                            siderBg: colors.darkGrey,
-                            triggerBg: colors.light,
-                            triggerColor: colors.light,
-                            headerPadding: '0px 0px'
-                        },
-                        Tabs: {
-                            cardBg: colors.grey, // background of unselected tabs
-                            inkBarColor: colors.light,
-                            itemActiveColor: colors.light,
-                            itemColor: colors.lightGrey, // text and fill of unselected tabs
-                            itemHoverColor: colors.light,
-                            itemSelectedColor: colors.light,
-                            cardGutter: 0,
-                            cardHeight: 38,
-                            cardPadding: '0 16px',
-                            verticalItemMargin: '0'
-                        },
-                        Divider: {
-                            lineWidth: 0.25,
-                            verticalMarginInline: 0
-                        },
-                        Avatar: {
-                            groupBorderColor: colors.light
-                        },
-                        Collapse: {
-                            headerBg: colors.darkGrey,
-                            headerPadding: '0 0px',
-                            contentBg: colors.darkGrey,
-                            contentPadding: '0 0px'
-                        },
-                        Select: {
-                            clearBg: colors.lightGrey,
-                            multipleItemBg: colors.darkGrey,
-                            optionActiveBg: colors.darkGrey,
-                            optionSelectedBg: colors.darkGrey,
-                            optionSelectedColor: colors.light,
-                            selectorBg: colors.darkGrey
+                        components: {
+                            Button: {
+                                borderColorDisabled: colors.light,
+                                dangerColor: colors.light,
+                                defaultActiveBg: colors.light,
+                                defaultActiveBorderColor: colors.light,
+                                defaultActiveColor: colors.light,
+                                defaultBg: colors.light,
+                                defaultBorderColor: colors.light,
+                                defaultColor: colors.lightGrey, // e.g. normal state of buttons
+                                defaultGhostBorderColor: colors.light,
+                                defaultGhostColor: colors.light,
+                                defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
+                                ghostBg: colors.light,
+                                linkHoverBg: colors.light,
+                                primaryColor: colors.light,
+                                textHoverBg: colors.light
+                            },
+                            Layout: {
+                                bodyBg: colors.dark,
+                                footerBg: colors.grey,
+                                headerBg: colors.grey, // e.g. space between tabs and content
+                                headerColor: colors.light,
+                                lightSiderBg: colors.light,
+                                lightTriggerBg: colors.light,
+                                lightTriggerColor: colors.light,
+                                siderBg: colors.darkGrey,
+                                triggerBg: colors.light,
+                                triggerColor: colors.light,
+                                headerPadding: '0px 0px'
+                            },
+                            Tabs: {
+                                cardBg: colors.grey, // background of unselected tabs
+                                inkBarColor: colors.light,
+                                itemActiveColor: colors.light,
+                                itemColor: colors.lightGrey, // text and fill of unselected tabs
+                                itemHoverColor: colors.light,
+                                itemSelectedColor: colors.light,
+                                cardGutter: 0,
+                                cardHeight: 38,
+                                cardPadding: '0 16px',
+                                verticalItemMargin: '0'
+                            },
+                            Divider: {
+                                lineWidth: 0.25,
+                                verticalMarginInline: 0
+                            },
+                            Avatar: {
+                                groupBorderColor: colors.light
+                            },
+                            Collapse: {
+                                headerBg: colors.darkGrey,
+                                headerPadding: '0 0px',
+                                contentBg: colors.darkGrey,
+                                contentPadding: '0 0px'
+                            },
+                            Select: {
+                                clearBg: colors.lightGrey,
+                                multipleItemBg: colors.darkGrey,
+                                optionActiveBg: colors.darkGrey,
+                                optionSelectedBg: colors.darkGrey,
+                                optionSelectedColor: colors.light,
+                                selectorBg: colors.darkGrey
+                            }
                         }
-                    }
-                }}
-            >
-                <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-                    <Header style={{ height: 'auto' }}>
-                        <div
-                            style={{
-                                height: '38px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                                WebkitAppRegion: 'drag'
-                            }}
-                        >
-                            <Tabs
-                                className="p-0 flex items-center"
-                                type="editable-card"
-                                style={{
-                                    WebkitAppRegion: 'no-drag'
-                                }}
-                                defaultActiveKey="1"
-                                items={[
-                                    {
-                                        key: '1',
-                                        label: <HomeSharpIcon />,
-                                        closable: false
-                                    },
-                                    {
-                                        key: '2',
-                                        label: 'Nakagin Capsule Tower'
-                                    },
-                                    {
-                                        key: '3',
-                                        label: 'Unsaved'
-                                    }
-                                ]}
-                            />
-                            <Space />
+                    }}
+                >
+                    <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+                        <Header style={{ height: 'auto' }}>
                             <div
                                 style={{
+                                    height: '38px',
                                     display: 'flex',
-                                    height: '100%',
-                                    justifyContent: 'flex-end',
-                                    alignItems: 'center',
-                                    WebkitAppRegion: 'no-drag'
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    WebkitAppRegion: 'drag'
                                 }}
                             >
-                                <Button
-                                    onClick={onWindowMinimize}
+                                <Tabs
+                                    className="p-0 flex items-center"
+                                    type="editable-card"
                                     style={{
-                                        height: '100%',
+                                        WebkitAppRegion: 'no-drag'
+                                    }}
+                                    defaultActiveKey="3"
+                                    items={[
+                                        {
+                                            key: '1',
+                                            label: <HomeSharpIcon />,
+                                            closable: false
+                                        },
+                                        {
+                                            key: '2',
+                                            label: 'Nakagin Capsule Tower'
+                                        },
+                                        {
+                                            key: '3',
+                                            label: 'Unsaved'
+                                        }
+                                    ]}
+                                />
+                                <Space />
+                                <div
+                                    style={{
                                         display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center'
+                                        height: '100%',
+                                        justifyContent: 'flex-end',
+                                        alignItems: 'center',
+                                        WebkitAppRegion: 'no-drag'
                                     }}
                                 >
-                                    <MinimizeSharpIcon />
-                                </Button>
-                                <Button
-                                    onClick={onWindowMaximize}
-                                    style={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center'
-                                    }}
-                                >
-                                    {fullScreen ? (
-                                        <FullscreenExitSharpIcon />
-                                    ) : (
-                                        <FullscreenSharpIcon />
-                                    )}
-                                </Button>
-                                <Button
-                                    onClick={onWindowClose}
-                                    style={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center'
-                                    }}
-                                >
-                                    <CloseSharpIcon />
-                                </Button>
+                                    <Button
+                                        onClick={onWindowMinimize}
+                                        style={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <MinimizeSharpIcon />
+                                    </Button>
+                                    <Button
+                                        onClick={onWindowMaximize}
+                                        style={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {fullScreen ? (
+                                            <FullscreenExitSharpIcon />
+                                        ) : (
+                                            <FullscreenSharpIcon />
+                                        )}
+                                    </Button>
+                                    <Button
+                                        onClick={onWindowClose}
+                                        style={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <CloseSharpIcon />
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </Header>
-                    <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
-                        <Col className="flex items-center">
-                            {/* TODO: Add icons for main menu and tools */}
-                        </Col>
-                        <Col className="flex items-center">
-                            <Breadcrumb>
-                                <Breadcrumb.Item>Metabolism</Breadcrumb.Item>
-                                <Breadcrumb.Item>Formations</Breadcrumb.Item>
-                                <Breadcrumb.Item>Unsaved</Breadcrumb.Item>
-                            </Breadcrumb>
-                        </Col>
-                        <Col className="flex items-center">
-                            {/* TODO: Add icons for sharing, etc */}
-                        </Col>
-                    </Row>
-                    <Layout style={{ flex: 1 }}>
-                        <Layout>
-                            <DndContext onDragEnd={onDragEnd}>
-                                <Sider width="240px" className="border-r-thin border-lightGrey">
-                                    <Collapse
-                                        className="p-3 border-b-thin border-lightGrey font-thin"
-                                        items={[
-                                            {
-                                                key: '1',
-                                                label: 'TYPES',
-                                                children: (
-                                                    <Collapse
-                                                        className="p-2 font-normal text-lightGrey"
-                                                        items={[
+                        </Header>
+                        <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
+                            <Col className="flex items-center">
+                                {/* TODO: Add icons for main menu and tools */}
+                            </Col>
+                            <Col className="flex items-center">
+                                <Breadcrumb>
+                                    <Breadcrumb.Item>Metabolism</Breadcrumb.Item>
+                                    <Breadcrumb.Item>Formations</Breadcrumb.Item>
+                                    <Breadcrumb.Item>Unsaved</Breadcrumb.Item>
+                                </Breadcrumb>
+                            </Col>
+                            <Col className="flex items-center">
+                                {/* TODO: Add icons for sharing, etc */}
+                            </Col>
+                        </Row>
+                        <Layout style={{ flex: 1 }}>
+                            <Layout>
+                                <DndContext onDragEnd={onDragEnd}>
+                                    <Sider width="240px" className="border-r-thin border-lightGrey">
+                                        <Collapse
+                                            className="p-3 border-b-thin border-lightGrey font-thin"
+                                            items={[
+                                                {
+                                                    key: '1',
+                                                    label: 'TYPES',
+                                                    children: (
+                                                        <Collapse
+                                                            className="p-2 font-normal text-lightGrey"
+                                                            items={[
+                                                                {
+                                                                    key: '1',
+                                                                    label: 'capsule',
+                                                                    children: (
+                                                                        <Space
+                                                                            className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                            direction="vertical"
+                                                                            size={10}
+                                                                            style={{
+                                                                                gridTemplateColumns:
+                                                                                    'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                                gridAutoRows: '40px'
+                                                                            }}
+                                                                        >
+                                                                            {[
+                                                                                '📦1',
+                                                                                '📦2',
+                                                                                '📦3',
+                                                                                '📦4',
+                                                                                '📦5',
+                                                                                '📦6',
+                                                                                '📦7',
+                                                                                '📦8'
+                                                                            ].map((user, index) => (
+                                                                                <DraggableAvatar
+                                                                                    key={index}
+                                                                                    id={index}
+                                                                                    user={user}
+                                                                                ></DraggableAvatar>
+                                                                            ))}
+                                                                        </Space>
+                                                                    )
+                                                                }
+                                                            ]}
+                                                            defaultActiveKey={['1']}
+                                                        />
+                                                    )
+                                                },
+                                                {
+                                                    key: '2',
+                                                    label: 'FORMATIONS',
+                                                    children: <p>{'Test'}</p>
+                                                }
+                                            ]}
+                                            defaultActiveKey={['1']}
+                                        />
+                                    </Sider>
+                                    <Content>
+                                        <DiagramEditor ref={diagramEditorRef} />
+                                    </Content>
+                                    <Divider className="h-full top-0" type="vertical" />
+                                    <Content>
+                                        <ShapeEditor />
+                                    </Content>
+                                    {createPortal(
+                                        <DragOverlay>
+                                            {/* {activeId ? (
+                                                <DraggableAvatar id={activeId} user="🏫" />
+                                            ) : null} */}
+                                            <DraggableAvatar id={2} user="🏫" />
+                                        </DragOverlay>,
+                                        document.body
+                                    )}
+                                </DndContext>
+                            </Layout>
+                            <Sider className="border-l-thin border-lightGrey" width="240">
+                                <Collapse
+                                    className="p-3"
+                                    items={[
+                                        {
+                                            key: '1',
+                                            label: 'SCENE',
+                                            children: (
+                                                <Flex
+                                                    vertical={true}
+                                                    className="p-2 text-lightGrey"
+                                                >
+                                                    <div className="p-0">Level of Details</div>
+                                                    <Select
+                                                        className="p-1"
+                                                        mode="multiple"
+                                                        allowClear
+                                                        placeholder="Please select"
+                                                        defaultValue={['1to500']}
+                                                        options={[
                                                             {
-                                                                key: '1',
-                                                                label: 'capsule',
-                                                                children: (
-                                                                    <Space
-                                                                        className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                                                                        direction="vertical"
-                                                                        size={10}
-                                                                        style={{
-                                                                            gridTemplateColumns:
-                                                                                'repeat(auto-fill, minmax(40px, 1fr))',
-                                                                            gridAutoRows: '40px'
-                                                                        }}
-                                                                    >
-                                                                        {[
-                                                                            '📦1',
-                                                                            '📦2',
-                                                                            '📦3',
-                                                                            '📦4',
-                                                                            '📦5',
-                                                                            '📦6',
-                                                                            '📦7',
-                                                                            '📦8'
-                                                                        ].map((user, index) => (
-                                                                            <DraggableAvatar
-                                                                                key={index}
-                                                                                id={index}
-                                                                                user={user}
-                                                                            ></DraggableAvatar>
-                                                                        ))}
-                                                                    </Space>
-                                                                )
+                                                                label: '1to500',
+                                                                value: '1to500'
+                                                            },
+                                                            {
+                                                                label: '1to200',
+                                                                value: '1to200'
                                                             }
                                                         ]}
-                                                        defaultActiveKey={['1']}
                                                     />
-                                                )
-                                            },
-                                            {
-                                                key: '2',
-                                                label: 'FORMATIONS',
-                                                children: <p>{'Test'}</p>
-                                            }
-                                        ]}
-                                        defaultActiveKey={['1']}
-                                    />
-                                </Sider>
-                                <Content>
-                                    <DiagramEditor ref={diagramEditorRef} />
-                                </Content>
-                                <Divider className="h-full top-0" type="vertical" />
-                                <Content>
-                                    <ShapeEditor />
-                                </Content>
-                                {createPortal(
-                                    <DragOverlay>
-                                        {/* {activeId ? (
-                                            <DraggableAvatar id={activeId} user="🏫" />
-                                        ) : null} */}
-                                        <DraggableAvatar id={activeId} user="🏫" />
-                                    </DragOverlay>,
-                                    document.body
-                                )}
-                            </DndContext>
+                                                </Flex>
+                                            )
+                                        },
+                                        {
+                                            key: '2',
+                                            label: 'TAGS',
+                                            children: (
+                                                <Flex
+                                                    vertical={true}
+                                                    className="p-2 text-lightGrey"
+                                                >
+                                                    <div className="p-0">Tags</div>
+                                                    <Select
+                                                        className="p-1"
+                                                        mode="multiple"
+                                                        allowClear
+                                                        placeholder="Please select"
+                                                        defaultValue={['']}
+                                                        options={[
+                                                            {
+                                                                label: 'volume',
+                                                                value: 'volume'
+                                                            },
+                                                            {
+                                                                label: 'floor plan',
+                                                                value: 'floor plan'
+                                                            }
+                                                        ]}
+                                                    />
+                                                </Flex>
+                                            )
+                                        }
+                                    ]}
+                                    defaultActiveKey={['1']}
+                                />
+                            </Sider>
                         </Layout>
-                        <Sider className="border-l-thin border-lightGrey" width="240">
-                            <Collapse
-                                className="p-3"
-                                items={[
-                                    {
-                                        key: '1',
-                                        label: 'SCENE',
-                                        children: (
-                                            <Flex vertical={true} className="p-2 text-lightGrey">
-                                                <div className="p-0">Level of Details</div>
-                                                <Select
-                                                    className="p-1"
-                                                    mode="multiple"
-                                                    allowClear
-                                                    placeholder="Please select"
-                                                    defaultValue={['1to500']}
-                                                    options={[
-                                                        {
-                                                            label: '1to500',
-                                                            value: '1to500'
-                                                        },
-                                                        {
-                                                            label: '1to200',
-                                                            value: '1to200'
-                                                        }
-                                                    ]}
-                                                />
-                                            </Flex>
-                                        )
-                                    }
-                                ]}
-                                defaultActiveKey={['1']}
-                            />
-                        </Sider>
-                    </Layout>
-                    {/* <Footer className='p-0'>
-                        <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div className="flex items-center">
+                        {/* <Footer className='p-0'>
+                            <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="flex items-center">
+                                </div>
                             </div>
-                        </div>
-                    </Footer> */}
-                </Layout>
-            </ConfigProvider>
+                        </Footer> */}
+                    </Layout>
+                </ConfigProvider>
+            </Provider>
         </div>
     )
 }
