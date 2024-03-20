@@ -12,7 +12,6 @@ using Semio.Properties;
 // TODO: Add logging mechanism to all API calls if they fail
 
 #region Copilot
-
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
@@ -320,7 +319,6 @@ using Semio.Properties;
 //input SpecifierInput
 //{
 //    context: String!
-//  group: String!
 //}
 
 //input QualityInput
@@ -526,7 +524,6 @@ using Semio.Properties;
 //    name: String!
 //  variant: String
 //}
-
 #endregion
 
 #region Utility
@@ -556,31 +553,54 @@ public interface IDeepCloneable<T>
     T DeepClone();
 }
 
-public class Representation : IDeepCloneable<Representation>
+public interface IEntity
 {
+    string ToString();
+    bool IsInvalid();
+}
+
+public class Representation : IDeepCloneable<Representation>, IEntity
+{
+    public Representation()
+    {
+        Url = "";
+        Lod = "";
+        Tags = new List<string>();
+    }
+
     public string Url { get; set; }
-    public string? Lod { get; set; }
-    public List<string>? Tags { get; set; }
+    public string Lod { get; set; }
+    public List<string> Tags { get; set; }
 
     public Representation DeepClone()
     {
-        var representation = new Representation
+        return new Representation
         {
-            Url = Url
+            Url = Url,
+            Lod = Lod,
+            Tags = new List<string>(Tags)
         };
-        if (Lod != null) representation.Lod = Lod;
-        if (Tags != null) representation.Tags = new List<string>(Tags);
-        return representation;
     }
 
     public override string ToString()
     {
         return $"Representation(Url: {Url})";
     }
+
+    public bool IsInvalid()
+    {
+        return Url == "";
+    }
 }
 
-public class Specifier : IDeepCloneable<Specifier>
+public class Specifier : IDeepCloneable<Specifier>, IEntity
 {
+    public Specifier()
+    {
+        Context = "";
+        Group = "";
+    }
+
     public string Context { get; set; }
     public string Group { get; set; }
 
@@ -597,10 +617,21 @@ public class Specifier : IDeepCloneable<Specifier>
     {
         return $"Specifier(Context: {Context})";
     }
+
+    public bool IsInvalid()
+    {
+        return Context == "";
+    }
 }
 
-public class ScreenPoint : IDeepCloneable<ScreenPoint>
+public class ScreenPoint : IDeepCloneable<ScreenPoint>, IEntity
 {
+    public ScreenPoint()
+    {
+        X = 0;
+        Y = 0;
+    }
+
     public int X { get; set; }
     public int Y { get; set; }
 
@@ -617,10 +648,27 @@ public class ScreenPoint : IDeepCloneable<ScreenPoint>
     {
         return $"Point(X: {X}, Y: {Y})";
     }
+
+    public bool IsInvalid()
+    {
+        return false;
+    }
+
+    public bool IsZero()
+    {
+        return X == 0 && Y == 0;
+    }
 }
 
-public class Point : IDeepCloneable<Point>
+public class Point : IDeepCloneable<Point>, IEntity
 {
+    public Point()
+    {
+        X = 0;
+        Y = 0;
+        Z = 0;
+    }
+
     public float X { get; set; }
     public float Y { get; set; }
     public float Z { get; set; }
@@ -639,10 +687,27 @@ public class Point : IDeepCloneable<Point>
     {
         return $"Point(X: {X}, Y: {Y}, Z: {Z})";
     }
+
+    public bool IsInvalid()
+    {
+        return false;
+    }
+
+    public bool IsZero()
+    {
+        return X == 0 && Y == 0 && Z == 0;
+    }
 }
 
-public class Vector : IDeepCloneable<Vector>
+public class Vector : IDeepCloneable<Vector>, IEntity
 {
+    public Vector()
+    {
+        X = 0;
+        Y = 0;
+        Z = 0;
+    }
+
     public float X { get; set; }
     public float Y { get; set; }
     public float Z { get; set; }
@@ -661,10 +726,27 @@ public class Vector : IDeepCloneable<Vector>
     {
         return $"Vector(X: {X}, Y: {Y}, Z: {Z})";
     }
+
+    public bool IsInvalid()
+    {
+        return false;
+    }
+
+    public bool IsZero()
+    {
+        return X == 0 && Y == 0 && Z == 0;
+    }
 }
 
-public class Plane : IDeepCloneable<Plane>
+public class Plane : IDeepCloneable<Plane>, IEntity
 {
+    public Plane()
+    {
+        Origin = new Point();
+        XAxis = new Vector();
+        YAxis = new Vector();
+    }
+
     public Point Origin { get; set; }
     public Vector XAxis { get; set; }
     public Vector YAxis { get; set; }
@@ -683,10 +765,22 @@ public class Plane : IDeepCloneable<Plane>
     {
         return $"Plane(Origin: {Origin}, XAxis: {XAxis}, YAxis: {YAxis})";
     }
+
+    public bool IsInvalid()
+    {
+        // TODO: Check if axes are normalized and orthogonal.
+        return Origin.IsZero() && XAxis.IsZero() && YAxis.IsZero();
+    }
 }
 
-public class Port : IDeepCloneable<Port>
+public class Port : IDeepCloneable<Port>, IEntity
 {
+    public Port()
+    {
+        Plane = new Plane();
+        Specifiers = new List<Specifier>();
+    }
+
     public Plane Plane { get; set; }
     public List<Specifier> Specifiers { get; set; }
 
@@ -694,7 +788,7 @@ public class Port : IDeepCloneable<Port>
     {
         return new Port
         {
-            Plane = Plane.DeepClone(),
+            Plane = Plane?.DeepClone(),
             Specifiers = new List<Specifier>(Specifiers.Select(s => s.DeepClone()))
         };
     }
@@ -703,10 +797,20 @@ public class Port : IDeepCloneable<Port>
     {
         return $"Port({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Plane.IsInvalid() || Specifiers.Any(s => s.IsInvalid());
+    }
 }
 
-public class PortId : IDeepCloneable<PortId>
+public class PortId : IDeepCloneable<PortId>, IEntity
 {
+    public PortId()
+    {
+        Specifiers = new List<Specifier>();
+    }
+
     public List<Specifier> Specifiers { get; set; }
 
     public PortId DeepClone()
@@ -721,88 +825,136 @@ public class PortId : IDeepCloneable<PortId>
     {
         return $"PortId({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Specifiers.Any(s => s.IsInvalid());
+    }
 }
 
 
-public class Quality : IDeepCloneable<Quality>
+public class Quality : IDeepCloneable<Quality>, IEntity
 {
+    public Quality()
+    {
+        Name = "";
+        Value = "";
+        Unit = "";
+    }
+
     public string Name { get; set; }
     public string Value { get; set; }
-    public string? Unit { get; set; }
+    public string Unit { get; set; }
 
     public Quality DeepClone()
     {
-        var quality = new Quality
+        return new Quality
         {
             Name = Name,
-            Value = Value
+            Value = Value,
+            Unit = Unit
         };
-        if (Unit != null) quality.Unit = Unit;
-        return quality;
     }
 
     public override string ToString()
     {
         return $"Quality(Name: {Name})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "";
+    }
 }
 
-public class Type : IDeepCloneable<Type>
+public class Type : IDeepCloneable<Type>, IEntity
 {
+    public Type()
+    {
+        Name = "";
+        Description = "";
+        Icon = "";
+        Variant = "";
+        Unit = "";
+        Representations = new List<Representation>();
+        Ports = new List<Port>();
+        Qualities = new List<Quality>();
+    }
+
     public string Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Variant { get; set; }
+    public string Description { get; set; }
+    public string Icon { get; set; }
+    public string Variant { get; set; }
     public string Unit { get; set; }
     public List<Representation> Representations { get; set; }
     public List<Port> Ports { get; set; }
-    public List<Quality>? Qualities { get; set; }
+    public List<Quality> Qualities { get; set; }
 
     public Type DeepClone()
     {
-        var type = new Type
+        return new Type
         {
             Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Variant = Variant,
             Unit = Unit,
             Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
-            Ports = new List<Port>(Ports.Select(p => p.DeepClone()))
+            Ports = new List<Port>(Ports.Select(p => p.DeepClone())),
+            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
-        if (Description != null) type.Description = Description;
-        if (Icon != null) type.Icon = Icon;
-        if (Variant != null) type.Variant = Variant;
-        if (Qualities != null) type.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
-        return type;
     }
 
     public override string ToString()
     {
         return $"Type(Name: {Name}, Variant: {Variant})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "" || Unit == "" || Representations.Any(r => r.IsInvalid()) || Ports.Any(p => p.IsInvalid()) ||
+               Qualities.Any(q => q.IsInvalid());
+    }
 }
 
-public class TypeId : IDeepCloneable<TypeId>
+public class TypeId : IDeepCloneable<TypeId>, IEntity
 {
+    public TypeId()
+    {
+        Name = "";
+        Variant = "";
+    }
+
     public string Name { get; set; }
-    public string? Variant { get; set; }
+    public string Variant { get; set; }
 
     public TypeId DeepClone()
     {
-        var typeId = new TypeId
+        return new TypeId
         {
-            Name = Name
+            Name = Name,
+            Variant = Variant
         };
-        if (Variant != null) typeId.Variant = Variant;
-        return typeId;
     }
 
     public override string ToString()
     {
         return $"TypeId(Name: {Name}, Variant: {Variant})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "";
+    }
 }
 
-public class RootPiece : IDeepCloneable<RootPiece>
+public class RootPiece : IDeepCloneable<RootPiece>, IEntity
 {
+    public RootPiece()
+    {
+        Plane = new Plane();
+    }
+
     public Plane Plane { get; set; }
 
     public RootPiece DeepClone()
@@ -817,10 +969,20 @@ public class RootPiece : IDeepCloneable<RootPiece>
     {
         return $"RootPiece({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Plane.IsInvalid();
+    }
 }
 
-public class DiagramPiece : IDeepCloneable<DiagramPiece>
+public class DiagramPiece : IDeepCloneable<DiagramPiece>, IEntity
 {
+    public DiagramPiece()
+    {
+        Point = new ScreenPoint();
+    }
+
     public ScreenPoint Point { get; set; }
 
     public DiagramPiece DeepClone()
@@ -835,34 +997,57 @@ public class DiagramPiece : IDeepCloneable<DiagramPiece>
     {
         return $"DiagramPiece({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Point.IsInvalid();
+    }
 }
 
-public class Piece : IDeepCloneable<Piece>
+public class Piece : IDeepCloneable<Piece>, IEntity
 {
+    public Piece()
+    {
+        Id = "";
+        Type = new TypeId();
+        Root = null;
+        Diagram = new DiagramPiece();
+    }
+
     public string Id { get; set; }
     public TypeId Type { get; set; }
     public RootPiece? Root { get; set; }
     public DiagramPiece Diagram { get; set; }
+
     public Piece DeepClone()
     {
-        var piece = new Piece
+        return new Piece
         {
             Id = Id,
             Type = Type.DeepClone(),
+            Root = Root?.DeepClone(),
             Diagram = Diagram.DeepClone()
         };
-        if (Root != null) piece.Root = Root.DeepClone();
-        return piece;
     }
 
     public override string ToString()
     {
         return $"Piece(Id: {Id})";
     }
+
+    public bool IsInvalid()
+    {
+        return Id == "" || Type.IsInvalid() || (Root?.IsInvalid() ?? false) || Diagram.IsInvalid();
+    }
 }
 
-public class PieceId : IDeepCloneable<PieceId>
+public class PieceId : IDeepCloneable<PieceId>, IEntity
 {
+    public PieceId()
+    {
+        Id = "";
+    }
+
     public string Id { get; set; }
 
     public PieceId DeepClone()
@@ -877,10 +1062,20 @@ public class PieceId : IDeepCloneable<PieceId>
     {
         return $"PieceId(Id: {Id})";
     }
+
+    public bool IsInvalid()
+    {
+        return Id == "";
+    }
 }
 
-public class TypePieceSide : IDeepCloneable<TypePieceSide>
+public class TypePieceSide : IDeepCloneable<TypePieceSide>, IEntity
 {
+    public TypePieceSide()
+    {
+        Port = new PortId();
+    }
+
     public PortId Port { get; set; }
 
     public TypePieceSide DeepClone()
@@ -895,10 +1090,21 @@ public class TypePieceSide : IDeepCloneable<TypePieceSide>
     {
         return $"TypePieceSide({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Port.IsInvalid();
+    }
 }
 
-public class PieceSide : IDeepCloneable<PieceSide>
+public class PieceSide : IDeepCloneable<PieceSide>, IEntity
 {
+    public PieceSide()
+    {
+        Id = "";
+        Type = new TypePieceSide();
+    }
+
     public string Id { get; set; }
     public TypePieceSide Type { get; set; }
 
@@ -915,10 +1121,20 @@ public class PieceSide : IDeepCloneable<PieceSide>
     {
         return $"PieceSide(Id: {Id})";
     }
+
+    public bool IsInvalid()
+    {
+        return Id == "" || Type.IsInvalid();
+    }
 }
 
-public class Side : IDeepCloneable<Side>
+public class Side : IDeepCloneable<Side>, IEntity
 {
+    public Side()
+    {
+        Piece = new PieceSide();
+    }
+
     public PieceSide Piece { get; set; }
 
     public Side DeepClone()
@@ -933,11 +1149,22 @@ public class Side : IDeepCloneable<Side>
     {
         return $"Side({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Piece.IsInvalid();
+    }
 }
 
 
-public class Attraction : IDeepCloneable<Attraction>
+public class Attraction : IDeepCloneable<Attraction>, IEntity
 {
+    public Attraction()
+    {
+        Attracting = new Side();
+        Attracted = new Side();
+    }
+
     public Side Attracting { get; set; }
     public Side Attracted { get; set; }
 
@@ -954,64 +1181,101 @@ public class Attraction : IDeepCloneable<Attraction>
     {
         return $"Attraction(Attracting(Piece: {Attracting.Piece.Id}), Attracted(Piece: {Attracted.Piece.Id}))";
     }
+
+    public bool IsInvalid()
+    {
+        return Attracting.IsInvalid() || Attracted.IsInvalid() || Attracting.Piece.Id == Attracted.Piece.Id;
+    }
 }
 
-public class Formation : IDeepCloneable<Formation>
+public class Formation : IDeepCloneable<Formation>, IEntity
 {
+    public Formation()
+    {
+        Name = "";
+        Description = "";
+        Icon = "";
+        Variant = "";
+        Unit = "";
+        Pieces = new List<Piece>();
+        Attractions = new List<Attraction>();
+        Qualities = new List<Quality>();
+    }
+
     public string Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Variant { get; set; }
+    public string Description { get; set; }
+    public string Icon { get; set; }
+    public string Variant { get; set; }
     public string Unit { get; set; }
     public List<Piece> Pieces { get; set; }
     public List<Attraction> Attractions { get; set; }
-    public List<Quality>? Qualities { get; set; }
+    public List<Quality> Qualities { get; set; }
 
     public Formation DeepClone()
     {
-        var formation = new Formation
+        return new Formation
         {
             Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Variant = Variant,
             Unit = Unit,
             Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
-            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone()))
+            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone())),
+            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
-        if (Description != null) formation.Description = Description;
-        if (Icon != null) formation.Icon = Icon;
-        if (Variant != null) formation.Variant = Variant;
-        if (Qualities != null) formation.Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()));
-        return formation;
     }
 
     public override string ToString()
     {
         return $"Formation(Name: {Name}, Variant: {Variant})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Attractions.Any(a => a.IsInvalid()) ||
+               Qualities.Any(q => q.IsInvalid());
+    }
 }
 
-public class FormationId : IDeepCloneable<FormationId>
+public class FormationId : IDeepCloneable<FormationId>, IEntity
 {
+    public FormationId()
+    {
+        Name = "";
+        Variant = "";
+    }
+
     public string Name { get; set; }
-    public string? Variant { get; set; }
+    public string Variant { get; set; }
 
     public FormationId DeepClone()
     {
-        var formationId = new FormationId
+        return new FormationId
         {
-            Name = Name
+            Name = Name,
+            Variant = Variant
         };
-        if (Variant != null) formationId.Variant = Variant;
-        return formationId;
     }
 
     public override string ToString()
     {
         return $"FormationId(Name: {Name}, Variant: {Variant})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "";
+    }
 }
 
-public class TypePieceObject : IDeepCloneable<TypePieceObject>
+public class TypePieceObject : IDeepCloneable<TypePieceObject>, IEntity
 {
+    public TypePieceObject()
+    {
+        Representations = new List<Representation>();
+    }
+
     public List<Representation> Representations { get; set; }
 
     public TypePieceObject DeepClone()
@@ -1026,10 +1290,21 @@ public class TypePieceObject : IDeepCloneable<TypePieceObject>
     {
         return $"TypePieceObject({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Representations.Any(r => r.IsInvalid());
+    }
 }
 
-public class PieceObject : IDeepCloneable<PieceObject>
+public class PieceObject : IDeepCloneable<PieceObject>, IEntity
 {
+    public PieceObject()
+    {
+        Id = "";
+        Type = new TypePieceObject();
+    }
+
     public string Id { get; set; }
     public TypePieceObject Type { get; set; }
 
@@ -1046,11 +1321,21 @@ public class PieceObject : IDeepCloneable<PieceObject>
     {
         return $"PieceObject(Id: {Id})";
     }
+
+    public bool IsInvalid()
+    {
+        return Id == "" || Type.IsInvalid();
+    }
 }
 
 
-public class ParentObject : IDeepCloneable<ParentObject>
+public class ParentObject : IDeepCloneable<ParentObject>, IEntity
 {
+    public ParentObject()
+    {
+        Piece = new PieceId();
+    }
+
     public PieceId Piece { get; set; }
 
     public ParentObject DeepClone()
@@ -1065,34 +1350,54 @@ public class ParentObject : IDeepCloneable<ParentObject>
     {
         return $"ParentObject({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Piece.IsInvalid();
+    }
 }
 
-public class Object : IDeepCloneable<Object>
+public class Object : IDeepCloneable<Object>, IEntity
 {
+    public Object()
+    {
+        Piece = new PieceObject();
+        Plane = new Plane();
+        Parent = null;
+    }
+
     public PieceObject Piece { get; set; }
     public Plane Plane { get; set; }
-
     public ParentObject? Parent { get; set; }
 
     public Object DeepClone()
     {
-        var obj = new Object
+        return new Object
         {
             Piece = Piece.DeepClone(),
-            Plane = Plane.DeepClone()
+            Plane = Plane.DeepClone(),
+            Parent = Parent?.DeepClone()
         };
-        if (Parent != null) obj.Parent = Parent.DeepClone();
-        return obj;
     }
 
     public override string ToString()
     {
         return $"Object({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Piece.IsInvalid() || Plane.IsInvalid() || (Parent?.IsInvalid() ?? false);
+    }
 }
 
-public class Scene : IDeepCloneable<Scene>
+public class Scene : IDeepCloneable<Scene>, IEntity
 {
+    public Scene()
+    {
+        Objects = new List<Object>();
+    }
+
     public List<Object> Objects { get; set; }
 
     public Scene DeepClone()
@@ -1107,40 +1412,57 @@ public class Scene : IDeepCloneable<Scene>
     {
         return $"Scene({GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Objects.Any(o => o.IsInvalid());
+    }
 }
 
-public class Kit : IDeepCloneable<Kit>
+public class Kit : IDeepCloneable<Kit>, IEntity
 {
+    public Kit()
+    {
+        Name = "";
+        Description = "";
+        Icon = "";
+        Url = "";
+        Types = new List<Type>();
+        Formations = new List<Formation>();
+    }
+
     public string Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Url { get; set; }
+    public string Description { get; set; }
+    public string Icon { get; set; }
+    public string Url { get; set; }
     public List<Type> Types { get; set; }
     public List<Formation> Formations { get; set; }
 
     public Kit DeepClone()
     {
-        var kit = new Kit
+        return new Kit
         {
             Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Url = Url,
             Types = new List<Type>(Types.Select(t => t.DeepClone())),
             Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
         };
-        if (Description != null) kit.Description = Description;
-
-        if (Icon != null) kit.Icon = Icon;
-
-        if (Url != null) kit.Url = Url;
-        return kit;
     }
 
     public override string ToString()
     {
         return $"Kit(Name: {Name}, {GetHashCode()})";
     }
+
+    public bool IsInvalid()
+    {
+        return Name == "" || Types.Any(t => t.IsInvalid()) || Formations.Any(f => f.IsInvalid());
+    }
 }
 
-public class KitMetadata : IDeepCloneable<KitMetadata>
+public class KitMetadata : IDeepCloneable<KitMetadata>, IEntity
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
@@ -1160,6 +1482,11 @@ public class KitMetadata : IDeepCloneable<KitMetadata>
     public override string ToString()
     {
         return $"KitMetadata(Name: {Name})";
+    }
+
+    public bool IsInvalid()
+    {
+        return false;
     }
 }
 
@@ -1535,7 +1862,8 @@ public class Api : ICloneable
         return response.Data.RemoveFormationFromLocalKit;
     }
 
-    public SceneFromFormationFromLocalKitResponse? SceneFromFormationFromLocalKit(string directory, FormationId formation)
+    public SceneFromFormationFromLocalKitResponse? SceneFromFormationFromLocalKit(string directory,
+        FormationId formation)
     {
         var query = new GraphQLRequest
         {

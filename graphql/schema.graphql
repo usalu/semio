@@ -265,7 +265,6 @@ input PortIdInput {
 
 input SpecifierInput {
   context: String!
-  group: String!
 }
 
 input QualityInput {
