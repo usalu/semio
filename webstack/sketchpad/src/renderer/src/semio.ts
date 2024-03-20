@@ -24,7 +24,7 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   loadLocalKit?: Maybe<LoadLocalKitResponse>;
-  formationToSceneFromLocalKit?: Maybe<SceneFromFormationFromLocalKitResponse>;
+  formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
 };
 
 
@@ -33,7 +33,7 @@ export type QueryLoadLocalKitArgs = {
 };
 
 
-export type QuerySceneFromFormationFromLocalKitArgs = {
+export type QueryFormationToSceneFromLocalKitArgs = {
   directory: Scalars['String']['input'];
   formationIdInput: FormationIdInput;
 };
@@ -176,10 +176,10 @@ export enum LoadLocalKitError {
   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 }
 
-export type SceneFromFormationFromLocalKitResponse = {
-  __typename?: 'SceneFromFormationFromLocalKitResponse';
+export type FormationToSceneFromLocalKitResponse = {
+  __typename?: 'FormationToSceneFromLocalKitResponse';
   scene?: Maybe<Scene>;
-  error?: Maybe<SceneFromFormationFromLocalKitResponseError>;
+  error?: Maybe<FormationToSceneFromLocalKitResponseError>;
 };
 
 export type Scene = {
@@ -194,13 +194,13 @@ export type Object = {
   parent?: Maybe<Object>;
 };
 
-export type SceneFromFormationFromLocalKitResponseError = {
-  __typename?: 'SceneFromFormationFromLocalKitResponseError';
-  code: SceneFromFormationFromLocalKitResponseErrorCode;
+export type FormationToSceneFromLocalKitResponseError = {
+  __typename?: 'FormationToSceneFromLocalKitResponseError';
+  code: FormationToSceneFromLocalKitResponseErrorCode;
   message?: Maybe<Scalars['String']['output']>;
 };
 
-export enum SceneFromFormationFromLocalKitResponseErrorCode {
+export enum FormationToSceneFromLocalKitResponseErrorCode {
   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',

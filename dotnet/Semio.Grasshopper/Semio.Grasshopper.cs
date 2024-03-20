@@ -1980,7 +1980,8 @@ public class RepresentationComponent : SemioComponent
         var lod = "";
         var tags = new List<string>();
 
-        DA.GetData(0, ref representationGoo);
+        if (DA.GetData(0, ref representationGoo))
+            representationGoo = representationGoo.Duplicate() as RepresentationGoo;
         if (DA.GetData(1, ref url))
             representationGoo.Value.Url = url;
         if (DA.GetData(2, ref lod))
@@ -2044,7 +2045,8 @@ public class SpecifierComponent : SemioComponent
         var context = "";
         var group = "";
 
-        DA.GetData(0, ref specifierGoo);
+        if (DA.GetData(0, ref specifierGoo))
+            specifierGoo = specifierGoo.Duplicate() as SpecifierGoo;
         if (DA.GetData(1, ref context))
             specifierGoo.Value.Context = context;
         if (DA.GetData(2, ref group))
@@ -2105,7 +2107,8 @@ public class PortComponent : SemioComponent
         var planeGeo = new Rhino.Geometry.Plane();
         var specifierGoos = new List<SpecifierGoo>();
 
-        DA.GetData(0, ref portGoo);
+        if (DA.GetData(0, ref portGoo))
+            portGoo = portGoo.Duplicate() as PortGoo;
         if (DA.GetData(1, ref planeGeo))
             portGoo.Value.Plane = planeGeo.convert();
         if (DA.GetDataList(2, specifierGoos))
@@ -2177,7 +2180,8 @@ public class QualityComponent : SemioComponent
         var value = "";
         var unit = "";
 
-        DA.GetData(0, ref qualityGoo);
+        if (DA.GetData(0, ref qualityGoo))
+            qualityGoo = qualityGoo.Duplicate() as QualityGoo;
         if (DA.GetData(1, ref name))
             qualityGoo.Value.Name = name;
         if (DA.GetData(2, ref value))
@@ -2271,7 +2275,8 @@ public class TypeComponent : SemioComponent
         var portGoos = new List<PortGoo>();
         var qualityGoos = new List<QualityGoo>();
 
-        DA.GetData(0, ref typeGoo);
+        if (DA.GetData(0, ref typeGoo))
+            typeGoo = typeGoo.Duplicate() as TypeGoo;
         if (DA.GetData(1, ref name))
             typeGoo.Value.Name = name;
         if (DA.GetData(2, ref description))
@@ -2384,7 +2389,8 @@ public class ScreenPointComponent : SemioComponent
         var x = 0;
         var y = 0;
 
-        DA.GetData(0, ref screenPointGoo);
+        if (DA.GetData(0, ref screenPointGoo))
+            screenPointGoo = screenPointGoo.Duplicate() as ScreenPointGoo;
         if (DA.GetData(1, ref x))
             screenPointGoo.Value.X = x;
         if (DA.GetData(2, ref y))
@@ -2458,7 +2464,8 @@ public class PieceComponent : SemioComponent
         var rootPlane = new Rhino.Geometry.Plane();
         var screenPointGoo = new ScreenPointGoo();
 
-        DA.GetData(0, ref pieceGoo);
+        if (DA.GetData(0, ref pieceGoo))
+            pieceGoo = pieceGoo.Duplicate() as PieceGoo;
         if (DA.GetData(1, ref id))
             pieceGoo.Value.Id = id;
         if (DA.GetData(2, ref typeName))
@@ -2534,7 +2541,8 @@ public class SideComponent : SemioComponent
         var pieceId = "";
         var pieceTypePortSpecifiers = new List<SpecifierGoo>();
 
-        DA.GetData(0, ref sideGoo);
+        if (DA.GetData(0, ref sideGoo))
+            sideGoo = sideGoo.Duplicate() as SideGoo;
         if (DA.GetData(1, ref pieceId))
             sideGoo.Value.Piece.Id = pieceId;
         if (DA.GetDataList(2, pieceTypePortSpecifiers))
@@ -2603,7 +2611,8 @@ public class AttractionComponent : SemioComponent
         var attractingSideGoo = new SideGoo();
         var attractedSideGoo = new SideGoo();
 
-        DA.GetData(0, ref attractionGoo);
+        if (DA.GetData(0, ref attractionGoo))
+            attractionGoo = attractionGoo.Duplicate() as AttractionGoo;
         if (DA.GetData(1, ref attractingSideGoo)) attractionGoo.Value.Attracting = attractingSideGoo.Value;
         if (DA.GetData(2, ref attractedSideGoo)) attractionGoo.Value.Attracted = attractedSideGoo.Value;
 
@@ -2620,7 +2629,7 @@ public class AttractionComponent : SemioComponent
             isValidInput = false;
         }
 
-        if (attractionGoo.Value.Attracting.Piece.Id == attractionGoo.Value.Attracted.Piece.Id)
+        if (attractionGoo.Value.Attracting.Piece.Id != "" && attractionGoo.Value.Attracting.Piece.Id == attractionGoo.Value.Attracted.Piece.Id)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "An attraction cannot attract itself.");
             isValidInput = false;
@@ -2701,7 +2710,8 @@ public class FormationComponent : SemioComponent
         var attractionGoos = new List<AttractionGoo>();
         var qualityGoos = new List<QualityGoo>();
 
-        DA.GetData(0, ref formationGoo);
+        if(DA.GetData(0, ref formationGoo))
+            formationGoo = formationGoo.Duplicate() as FormationGoo;
         if (DA.GetData(1, ref name))
             formationGoo.Value.Name = name;
         if (DA.GetData(2, ref description))
@@ -2875,31 +2885,33 @@ public class LoadKitComponent : SemioComponent
                 : Directory.GetCurrentDirectory();
 
         DA.GetData(1, ref run);
-
-        if (run)
+        if (!run)
         {
-            var response = new Api().LoadLocalKit(path);
-            if (response == null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-                return;
-            }
-
-            if (response.Error != null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error);
-                return;
-            }
-
-            var kit = response.Kit;
-
-            DA.SetData(0, kit.Name);
-            DA.SetData(1, kit.Description);
-            DA.SetData(2, kit.Icon);
-            DA.SetData(3, kit.Url);
-            DA.SetDataList(4, kit.Types?.Select(t => new TypeGoo(t.DeepClone())));
-            DA.SetDataList(5, kit.Formations?.Select(f => new FormationGoo(f.DeepClone())));
+            return;
         }
+
+        var response = new Api().LoadLocalKit(path);
+        if (response == null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+            return;
+        }
+
+        if (response.Error != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error);
+            return;
+        }
+
+        var kit = response.Kit;
+
+        DA.SetData(0, kit.Name);
+        DA.SetData(1, kit.Description);
+        DA.SetData(2, kit.Icon);
+        DA.SetData(3, kit.Url);
+        DA.SetDataList(4, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
+        DA.SetDataList(5, kit.Formations.Select(f => new FormationGoo(f.DeepClone())));
+        
     }
 }
 
@@ -3100,13 +3112,14 @@ public class AddTypeComponent : SemioComponent
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref typeGoo);
+        if(DA.GetData(0, ref typeGoo))
+            typeGoo = typeGoo.Duplicate() as TypeGoo;
         if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
-
+        
         if (!run)
         {
             DA.SetData(0, false);
@@ -3168,7 +3181,8 @@ public class AddFormationComponent : SemioComponent
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref formationGoo);
+        if (DA.GetData(0, ref formationGoo))
+            formationGoo = formationGoo.Duplicate() as FormationGoo;
         if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3221,9 +3235,8 @@ public class RemoveTypeComponent : SemioComponent
     {
         pManager.AddTextParameter("Type Name", "TyNa",
             "Name of the type to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Type Qualities", "TyQl*",
-            "If there is more than one type with the same name use qualities to precisely identify the type.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Type Variant", "TyVn?",
+                       "Optional variant of the type to remove from the kit.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3241,12 +3254,12 @@ public class RemoveTypeComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var typeName = "";
-        var typeQualityGoos = new List<QualityGoo>();
+        var typeVariant = "";
         var path = "";
         var run = false;
 
         DA.GetData(0, ref typeName);
-        DA.GetDataList(1, typeQualityGoos);
+        DA.GetData(1, ref typeVariant);
         if (!DA.GetData(2, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3261,9 +3274,9 @@ public class RemoveTypeComponent : SemioComponent
 
         var type = new TypeId
         {
-            Name = typeName
+            Name = typeName,
+            Variant = typeVariant
         };
-        //if (typeQualityGoos.Count > 0) type.Qualities = typeQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveTypeFromLocalKit(path, type);
         if (response == null)
         {
@@ -3300,9 +3313,8 @@ public class RemoveFormationComponent : SemioComponent
     {
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of the formation to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Formation Qualities", "FoQl*",
-            "If there is more than one formation with the same name use qualities to precisely identify the formation.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Formation Variant", "FoVn?",
+            "Optional variant of the formation to remove from the kit.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3320,12 +3332,12 @@ public class RemoveFormationComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var formationName = "";
-        var formationQualityGoos = new List<QualityGoo>();
+        var formationVariant = "";
         var path = "";
         var run = false;
 
         DA.GetData(0, ref formationName);
-        DA.GetDataList(1, formationQualityGoos);
+        DA.GetData(1, ref formationVariant);
         if (!DA.GetData(2, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3340,9 +3352,9 @@ public class RemoveFormationComponent : SemioComponent
 
         var formation = new FormationId
         {
-            Name = formationName
+            Name = formationName,
+            Variant = formationVariant
         };
-        //if (formationQualityGoos.Count > 0) formation.Qualities = formationQualityGoos.Select(q => q.Value).ToList();
         var response = new Api().RemoveFormationFromLocalKit(path, formation);
         if (response == null)
         {
@@ -3772,8 +3784,8 @@ public class GetSceneComponent : SemioComponent
     {
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of formation to convert to a scene.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Formation Qualities", "FoQl*", "Optional qualities to identify the formation.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Formation Variant", "FoVn?",
+            "Optional variant of the formation to convert to a scene.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3790,12 +3802,12 @@ public class GetSceneComponent : SemioComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var formationName = "";
-        var formationQualityGoos = new List<QualityGoo>();
+        var formationVariant = "";
         var path = "";
         var run = false;
 
         DA.GetData(0, ref formationName);
-        DA.GetDataList(1, formationQualityGoos);
+        DA.GetData(1, ref formationVariant);
         if (!DA.GetData(2, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3804,10 +3816,10 @@ public class GetSceneComponent : SemioComponent
 
         if (!run) return;
 
-        var response = new Api().SceneFromFormationFromLocalKit(path, new FormationId
+        var response = new Api().FormationToSceneFromLocalKit(path, new FormationId
         {
-            Name = formationName
-            //Qualities = formationQualityGoos.Select(q => q.Value).ToList()
+            Name = formationName,
+            Variant = formationVariant
         });
         if (response == null)
         {

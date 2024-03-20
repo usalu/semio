@@ -1,6 +1,6 @@
 mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
   addTypeToLocalKit(directory: $directory, typeInput: $type) {
-    types {
+    type {
         name
         description
         icon

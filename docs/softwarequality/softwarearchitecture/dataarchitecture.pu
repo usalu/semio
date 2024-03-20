@@ -97,6 +97,7 @@ entity Quality {
 note bottom of Quality
     Either type_id or formation_id
     must be set.
+    value = "" means true.
     unit is optional
     (can be set to "").
 end note
@@ -108,6 +109,9 @@ entity Specifier {
     ..
     *port_id : int <<PK,FK>>
 }
+note bottom of Specifier
+    group = "" means true.
+end note
 
 entity Piece{
     *id : int <<PK,generated>>

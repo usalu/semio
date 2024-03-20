@@ -1,6 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
-  sceneFromFormationFromLocalKit(directory: String!, formationInput: FormationInput!): SceneFromFormationFromLocalKitResponse
+  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -82,7 +82,6 @@ type Formation {
   unit: String!
   createdAt: DateTime!
   lastUpdateAt: DateTime!
-  volatile: Boolean!
   kit: Kit
   pieces: [Piece!]!
   attractions: [Attraction!]!
@@ -159,9 +158,9 @@ enum LoadLocalKitError {
   NO_PERMISSION_TO_READ_KIT
 }
 
-type SceneFromFormationFromLocalKitResponse {
+type FormationToSceneFromLocalKitResponse {
   scene: Scene
-  error: SceneFromFormationFromLocalKitResponseError
+  error: FormationToSceneFromLocalKitResponseError
 }
 
 type Scene {
@@ -174,12 +173,12 @@ type Object {
   parent: Object
 }
 
-type SceneFromFormationFromLocalKitResponseError {
-  code: SceneFromFormationFromLocalKitResponseErrorCode!
+type FormationToSceneFromLocalKitResponseError {
+  code: FormationToSceneFromLocalKitResponseErrorCode!
   message: String
 }
 
-enum SceneFromFormationFromLocalKitResponseErrorCode {
+enum FormationToSceneFromLocalKitResponseErrorCode {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
   DIRECTORY_HAS_NO_KIT
@@ -187,91 +186,9 @@ enum SceneFromFormationFromLocalKitResponseErrorCode {
   FORMATION_DOES_NOT_EXIST
 }
 
-input FormationInput {
-  name: String!
-  description: String
-  icon: String
-  variant: String
-  unit: String!
-  pieces: [PieceInput!]!
-  attractions: [AttractionInput!]!
-  qualities: [QualityInput!]
-}
-
-input PieceInput {
-  id: String!
-  type: TypeIdInput!
-  root: RootPieceInput = null
-  diagram: DiagramPieceInput!
-}
-
-input TypeIdInput {
+input FormationIdInput {
   name: String!
   variant: String
-}
-
-input RootPieceInput {
-  plane: PlaneInput!
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
-}
-
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input DiagramPieceInput {
-  point: ScreenPointInput!
-}
-
-input ScreenPointInput {
-  x: Int!
-  y: Int!
-}
-
-input AttractionInput {
-  attracting: SideInput!
-  attracted: SideInput!
-}
-
-input SideInput {
-  piece: PieceSideInput!
-}
-
-input PieceSideInput {
-  id: String!
-  type: TypePieceSideInput!
-}
-
-input TypePieceSideInput {
-  port: PortIdInput!
-}
-
-input PortIdInput {
-  specifiers: [SpecifierInput!]
-}
-
-input SpecifierInput {
-  context: String!
-  group: String!
-}
-
-input QualityInput {
-  name: String!
-  value: String!
-  unit: String
 }
 
 type Mutation {
@@ -330,6 +247,93 @@ input RepresentationInput {
 
 input PortInput {
   plane: PlaneInput!
+  specifiers: [SpecifierInput!]
+}
+
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
+
+input PointInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input VectorInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input SpecifierInput {
+  context: String!
+  group: String
+}
+
+input QualityInput {
+  name: String!
+  value: String
+  unit: String
+}
+
+input FormationInput {
+  name: String!
+  description: String
+  icon: String
+  variant: String
+  unit: String!
+  pieces: [PieceInput!]!
+  attractions: [AttractionInput!]!
+  qualities: [QualityInput!]
+}
+
+input PieceInput {
+  id: String!
+  type: TypeIdInput!
+  root: RootPieceInput = null
+  diagram: DiagramPieceInput!
+}
+
+input TypeIdInput {
+  name: String!
+  variant: String
+}
+
+input RootPieceInput {
+  plane: PlaneInput!
+}
+
+input DiagramPieceInput {
+  point: ScreenPointInput!
+}
+
+input ScreenPointInput {
+  x: Int!
+  y: Int!
+}
+
+input AttractionInput {
+  attracting: SideInput!
+  attracted: SideInput!
+}
+
+input SideInput {
+  piece: PieceSideInput!
+}
+
+input PieceSideInput {
+  id: String!
+  type: TypePieceSideInput!
+}
+
+input TypePieceSideInput {
+  port: PortIdInput!
+}
+
+input PortIdInput {
   specifiers: [SpecifierInput!]
 }
 
@@ -437,9 +441,4 @@ enum RemoveFormationFromLocalKitErrorCode {
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
   FORMATION_DOES_NOT_EXIST
-}
-
-input FormationIdInput {
-  name: String!
-  variant: String
 }

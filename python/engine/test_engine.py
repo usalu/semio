@@ -1,7 +1,7 @@
 from pytest import mark
 from graphene.test import Client
 from deepdiff import DeepDiff, Delta
-from server import schema
+from engine import schema
 
 createLocalKit = open("../../graphql/createLocalKit.graphql", "r").read()
 updateLocalKitMetadata = open(
