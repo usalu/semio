@@ -12,10 +12,11 @@ using Semio.Properties;
 // TODO: Add logging mechanism to all API calls if they fail
 
 #region Copilot
+
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
-//  sceneFromFormationFromLocalKit(directory: String!, formationInput: FormationInput!): SceneFromFormationFromLocalKitResponse
+//  formationToSceneFromLocalKit(directory: String!, formationInput: FormationInput!): FormationToSceneFromLocalKitResponse
 //}
 
 //type LoadLocalKitResponse
@@ -193,10 +194,10 @@ using Semio.Properties;
 //  NO_PERMISSION_TO_READ_KIT
 //}
 
-//type SceneFromFormationFromLocalKitResponse
+//type FormationToSceneFromLocalKitResponse
 //{
 //    scene: Scene
-//  error: SceneFromFormationFromLocalKitResponseError
+//  error: FormationToSceneFromLocalKitResponseError
 //}
 
 //type Scene
@@ -211,13 +212,13 @@ using Semio.Properties;
 //  parent: Object
 //}
 
-//type SceneFromFormationFromLocalKitResponseError
+//type FormationToSceneFromLocalKitResponseError
 //{
-//    code: SceneFromFormationFromLocalKitResponseErrorCode!
+//    code: FormationToSceneFromLocalKitResponseErrorCode!
 //  message: String
 //}
 
-//enum SceneFromFormationFromLocalKitResponseErrorCode
+//enum FormationToSceneFromLocalKitResponseErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -524,6 +525,7 @@ using Semio.Properties;
 //    name: String!
 //  variant: String
 //}
+
 #endregion
 
 #region Utility
@@ -615,7 +617,7 @@ public class Specifier : IDeepCloneable<Specifier>, IEntity
 
     public override string ToString()
     {
-        return $"Specifier(Context: {Context})";
+        return $"Specifier(Context: {Context}" + (Group != "" ? $", Group: {Group})" : ")");
     }
 
     public bool IsInvalid()
@@ -907,7 +909,7 @@ public class Type : IDeepCloneable<Type>, IEntity
 
     public override string ToString()
     {
-        return $"Type(Name: {Name}, Variant: {Variant})";
+        return $"Type(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -939,7 +941,7 @@ public class TypeId : IDeepCloneable<TypeId>, IEntity
 
     public override string ToString()
     {
-        return $"TypeId(Name: {Name}, Variant: {Variant})";
+        return $"TypeId(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1228,7 +1230,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
 
     public override string ToString()
     {
-        return $"Formation(Name: {Name}, Variant: {Variant})";
+        return $"Formation(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1260,7 +1262,7 @@ public class FormationId : IDeepCloneable<FormationId>, IEntity
 
     public override string ToString()
     {
-        return $"FormationId(Name: {Name}, Variant: {Variant})";
+        return $"FormationId(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1701,7 +1703,7 @@ public class RemoveFormationFromLocalKitResponseContainer
     public RemoveFormationFromLocalKitResponse RemoveFormationFromLocalKit { get; set; }
 }
 
-public enum SceneFromFormationFromLocalKitResponseErrorCode
+public enum FormationToSceneFromLocalKitResponseErrorCode
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_IS_NOT_A_DIRECTORY,
@@ -1710,21 +1712,21 @@ public enum SceneFromFormationFromLocalKitResponseErrorCode
     FORMATION_DOES_NOT_EXIST
 }
 
-public class SceneFromFormationFromLocalKitResponseError
+public class FormationToSceneFromLocalKitResponseError
 {
-    public SceneFromFormationFromLocalKitResponseErrorCode Code { get; set; }
+    public FormationToSceneFromLocalKitResponseErrorCode Code { get; set; }
     public string Message { get; set; }
 }
 
-public class SceneFromFormationFromLocalKitResponse
+public class FormationToSceneFromLocalKitResponse
 {
     public Scene? Scene { get; set; }
-    public SceneFromFormationFromLocalKitResponseError? Error { get; set; }
+    public FormationToSceneFromLocalKitResponseError? Error { get; set; }
 }
 
-public class SceneFromFormationFromLocalKitResponseContainer
+public class FormationToSceneFromLocalKitResponseContainer
 {
-    public SceneFromFormationFromLocalKitResponse SceneFromFormationFromLocalKit { get; set; }
+    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit { get; set; }
 }
 
 public class Api : ICloneable
@@ -1862,18 +1864,18 @@ public class Api : ICloneable
         return response.Data.RemoveFormationFromLocalKit;
     }
 
-    public SceneFromFormationFromLocalKitResponse? SceneFromFormationFromLocalKit(string directory,
+    public FormationToSceneFromLocalKitResponse? FormationToSceneFromLocalKit(string directory,
         FormationId formation)
     {
         var query = new GraphQLRequest
         {
             Query = Resources.formationToSceneFromLocalKit,
-            OperationName = "SceneFromFormationFromLocalKit",
+            OperationName = "FormationToSceneFromLocalKit",
             Variables = new { directory, formation }
         };
-        var response = Client.SendQueryAsync<SceneFromFormationFromLocalKitResponseContainer>(query).Result;
+        var response = Client.SendQueryAsync<FormationToSceneFromLocalKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
-        return response.Data.SceneFromFormationFromLocalKit;
+        return response.Data.FormationToSceneFromLocalKit;
     }
 }
 

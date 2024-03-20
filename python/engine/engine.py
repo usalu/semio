@@ -25,6 +25,7 @@ semio engine.
 #       ✅Constraints
 #       ❔Polymorphism
 #       ❔graphene_sqlalchemy
+#       ❔graphene_pydantic
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
@@ -37,6 +38,7 @@ from os import remove
 from pathlib import Path
 from multiprocessing import Process, freeze_support
 from functools import lru_cache
+from time import sleep
 from typing import Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
@@ -472,9 +474,15 @@ class Plane(Base):
     @staticmethod
     def XY() -> "Plane":
         return Plane(
-            origin=Point(x=0, y=0, z=0),
-            x_axis=Vector(x=1, y=0, z=0),
-            y_axis=Vector(x=0, y=1, z=0),
+            origin_x=0,
+            origin_y=0,
+            origin_z=0,
+            x_axis_x=1,
+            x_axis_y=0,
+            x_axis_z=0,
+            y_axis_x=0,
+            y_axis_y=1,
+            y_axis_z=0,
         )
 
 
@@ -568,21 +576,15 @@ class Transform(BaseModel):
     @staticmethod
     def toPlane(transform: "Transform") -> Plane:
         return Plane(
-            origin=Point(
-                x=transform.translation[0],
-                y=transform.translation[1],
-                z=transform.translation[2],
-            ),
-            x_axis=Vector(
-                x=transform.rotation[0, 0],
-                y=transform.rotation[1, 0],
-                z=transform.rotation[2, 0],
-            ),
-            y_axis=Vector(
-                x=transform.rotation[0, 1],
-                y=transform.rotation[1, 1],
-                z=transform.rotation[2, 1],
-            ),
+            origin_x=transform.translation[0],
+            origin_y=transform.translation[1],
+            origin_z=transform.translation[2],
+            x_axis_x=transform.rotation[0, 0],
+            x_axis_y=transform.rotation[1, 0],
+            x_axis_z=transform.rotation[2, 0],
+            y_axis_x=transform.rotation[0, 1],
+            y_axis_y=transform.rotation[1, 1],
+            y_axis_z=transform.rotation[2, 1],
         )
 
 
@@ -663,7 +665,7 @@ class Quality(Base):
         CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
     )
     # Optional. "" means true.
-    value: Mapped[str] = mapped_column(Text())
+    value: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     # Optional. Set to "" for None.
     unit: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"), nullable=True)
@@ -849,7 +851,7 @@ class Piece(Base):
     )
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
-    root_plane_id: Mapped[int] = mapped_column(ForeignKey("plane.id"))
+    root_plane_id: Mapped[int] = mapped_column(ForeignKey("plane.id"), nullable=True)
     root_plane: Mapped["Plane"] = relationship(
         "Plane", back_populates="root_piece", uselist=False, cascade="all, delete"
     )
@@ -1087,10 +1089,6 @@ class Formation(Base):
     last_update_at: Mapped[datetime] = mapped_column(
         DateTime(), default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
     )
-    # Volatile formations are temporary and can be deleted.
-    # They exist because the input validation is in the sql layer and not in the graphql layer.
-    # Scene are derived from formations but are not stored in the database.
-    volatile: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
     kit_id: Mapped[int] = mapped_column(ForeignKey("kit.id"))
     kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
     pieces: Mapped[List[Piece]] = relationship(
@@ -1571,7 +1569,7 @@ class RepresentationInput(InputObjectType):
 
 class SpecifierInput(InputObjectType):
     context = NonNull(graphene.String)
-    group = graphene.String
+    group = graphene.String()
 
 
 class ScreenPointInput(PydanticInputObjectType):
@@ -1606,7 +1604,7 @@ class PortIdInput(InputObjectType):
 
 class QualityInput(InputObjectType):
     name = NonNull(graphene.String)
-    value = graphene.String
+    value = graphene.String()
     unit = graphene.String()
 
 
@@ -1921,10 +1919,7 @@ def specifierInputToTransientSpecifierForEquality(
         group = specifierInput.group
     except AttributeError:
         group = ""
-    return Specifier(
-        context=specifierInput.context,
-        group=group
-    )
+    return Specifier(context=specifierInput.context, group=group)
 
 
 def getRepresentationByUrl(session: Session, type: Type, url: str) -> Representation:
@@ -2122,11 +2117,7 @@ def addSpecifierInputToSession(
         group = specifierInput.group
     except AttributeError:
         group = ""
-    specifier = Specifier(
-        context=specifierInput.context,
-        group=group,
-        port_id=port.id
-    )
+    specifier = Specifier(context=specifierInput.context, group=group, port_id=port.id)
     session.add(specifier)
     session.flush()
     return specifier
@@ -2150,6 +2141,7 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
         y_axis_z=portInput.plane.y_axis.z,
     )
     session.add(plane)
+    session.flush()
     port = Port(
         plane_id=plane.id,
         type_id=type.id,
@@ -2235,15 +2227,8 @@ def addPieceInputToSession(
     except AttributeError:
         variant = ""
     type = getTypeByNameAndVariant(session, pieceInput.type.name, variant)
-    piece = Piece(
-        local_id=pieceInput.id,
-        type_id=type.id,
-        diagram_point_x=pieceInput.diagram.point.x,
-        diagram_point_y=pieceInput.diagram.point.y,
-        formation_id=formation.id,
-    )
     try:
-        piece.root_plane = Plane(
+        root_plane = Plane(
             origin_x=pieceInput.root.plane.origin.x,
             origin_y=pieceInput.root.plane.origin.y,
             origin_z=pieceInput.root.plane.origin.z,
@@ -2254,8 +2239,19 @@ def addPieceInputToSession(
             y_axis_y=pieceInput.root.plane.y_axis.y,
             y_axis_z=pieceInput.root.plane.y_axis.z,
         )
+        session.add(root_plane)
+        session.flush()
+        root_plane_id = root_plane.id
     except AttributeError:
-        pass
+        root_plane_id = None
+    piece = Piece(
+        local_id=pieceInput.id,
+        type_id=type.id,
+        root_plane_id=root_plane_id,
+        diagram_point_x=pieceInput.diagram.point.x,
+        diagram_point_y=pieceInput.diagram.point.y,
+        formation_id=formation.id,
+    )
     session.add(piece)
     session.flush()
     return piece
@@ -2311,7 +2307,7 @@ def addAttractionInputToSession(
 
 
 def addFormationInputToSession(
-    session: Session, kit: Kit, formationInput: FormationInput, volatile: bool = False
+    session: Session, kit: Kit, formationInput: FormationInput
 ):
     try:
         description = formationInput.description
@@ -2333,12 +2329,11 @@ def addFormationInputToSession(
     except FormationNotFound:
         pass
     formation = Formation(
-        name=formationInput.name + "_volatile" if volatile else formationInput.name,
+        name=formationInput.name,
         description=description,
         icon=icon,
         variant=variant,
         unit=formationInput.unit,
-        volatile=volatile,
         kit_id=kit.id,
     )
     session.add(formation)
@@ -2405,13 +2400,6 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     return kit
 
 
-def cleanVolatileFormations(session: Session) -> None:
-    volatileFormations = session.query(Formation).filter_by(volatile=True)
-    for formation in volatileFormations:
-        session.delete(formation)
-    session.flush()
-
-
 def hierarchiesFromFormationInSession(
     session: Session, formation: Formation
 ) -> List[Hierarchy]:
@@ -2429,26 +2417,33 @@ def hierarchiesFromFormationInSession(
     G.add_edges_from(edges)
     hierarchies = []
     for component in weakly_connected_components(G):
-        root = [node for node, degree in component.in_degree() if degree == 0][0]
+        connected_subgraph = G.subgraph(component)
+        root = [node for node, degree in connected_subgraph.in_degree() if degree == 0][
+            0
+        ]
+        if not root:
+            root = G.nodes[0]
         rootHierarchy = Hierarchy(
             piece=G.nodes[root]["piece"], transform=Transform.identity(), children=[]
         )
-        component.nodes[root]["hierarchy"] = rootHierarchy
-        for parent, child in bfs_tree(component, source=root).edges():
-            parentTransform = component[parent][child][
+        connected_subgraph.nodes[root]["hierarchy"] = rootHierarchy
+        for parent, child in bfs_tree(connected_subgraph, source=root).edges():
+            parentTransform = connected_subgraph[parent][child][
                 "attraction"
             ].attracting.piece.type.port.plane.toTransform()
             childTransform = (
-                component[parent][child]["attraction"]
+                connected_subgraph[parent][child]["attraction"]
                 .attracted.piece.type.port.plane.toTransform()
                 .invert()
             )
             transform = parentTransform.after(childTransform)
             hierarchy = Hierarchy(
-                piece=component.nodes[child]["piece"], transform=transform, children=[]
+                piece=connected_subgraph.nodes[child]["piece"],
+                transform=transform,
+                children=[],
             )
-            component.nodes[child]["hierarchy"] = hierarchy
-            component.nodes[parent]["hierarchy"].children.append(hierarchy)
+            connected_subgraph.nodes[child]["hierarchy"] = hierarchy
+            connected_subgraph.nodes[parent]["hierarchy"].children.append(hierarchy)
         hierarchies.append(rootHierarchy)
     return hierarchies
 
@@ -2472,23 +2467,23 @@ def addObjectsToSceneInSession(
 
 
 def sceneFromFormationInSession(
-    session: Session, formationInput: FormationInput
+    session: Session, formationIdInput: FormationIdInput
 ) -> "Scene":
-    # This will limit the number of volatile formations in the database to 1
-    cleanVolatileFormations(session)
     try:
-        variant = formationInput.variant
+        variant = formationIdInput.variant
     except AttributeError:
         variant = ""
-    kit = getMainKit(session)
-    formation = addFormationInputToSession(session, kit, formationInput, volatile=True)
+    formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
     hierarchies = hierarchiesFromFormationInSession(session, formation)
-    plane = Plane.XY()
     scene = Scene(objects=[])
     for hierarchy in hierarchies:
-        addObjectsToSceneInSession(session, scene, None, hierarchy, plane)
-    # Can't delete because the scene depends on the formation
-    # session.delete(formation)
+        addObjectsToSceneInSession(
+            session,
+            scene,
+            None,
+            hierarchy,
+            hierarchy.piece.root_plane if hierarchy.piece.root_plane else Plane.XY(),
+        )
     return scene
 
 
@@ -2519,7 +2514,7 @@ class CreateLocalKitMutation(graphene.Mutation):
     kit = Field(KitNode)
     error = Field(CreateLocalKitErrorNode)
 
-    def mutate(self, info, directory, kitInput):
+    def mutate(self, info, directory, kitInput: KitInput):
         directory = Path(directory)
         if not directory.exists():
             try:
@@ -2548,9 +2543,10 @@ class CreateLocalKitMutation(graphene.Mutation):
 
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't create a new kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
 
         session = getLocalSession(directory)
         try:
@@ -2613,9 +2609,10 @@ class UpdateLocalKitMetadataMutation(graphene.Mutation):
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
             kit = updateKitMetadataInSession(session, kitMetadataInput)
@@ -2712,9 +2709,10 @@ class AddTypeToLocalKitMutation(graphene.Mutation):
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
             kit = getMainKit(session)
@@ -2728,6 +2726,17 @@ class AddTypeToLocalKitMutation(graphene.Mutation):
                 error=AddTypeToLocalKitErrorNode(
                     code=AddTypeToLocalKitErrorCode.TYPE_INPUT_IS_INVALID,
                     message=str(e),
+                )
+            )
+        except IntegrityError as e:
+            session.rollback()
+            return AddTypeToLocalKitMutation(
+                error=AddTypeToLocalKitErrorNode(
+                    code=AddTypeToLocalKitErrorCode.TYPE_INPUT_IS_INVALID,
+                    message=str(
+                        "Sorry, I didn't have time to write you a nice error message. For now I can only give you the technical description of what is wrong: "
+                        + str(e)
+                    ),
                 )
             )
         session.commit()
@@ -2781,9 +2790,10 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
             kit = getMainKit(session)
@@ -2859,9 +2869,10 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
             kit = getMainKit(session)
@@ -2883,7 +2894,7 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
                 error=AddFormationToLocalKitErrorNode(
                     code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
                     message=str(
-                        "Sorry, I didn't have time to write you a nice warning. For now I can only give you the technical description of what is wrong: "
+                        "Sorry, I didn't have time to write you a nice error message. For now I can only give you the technical description of what is wrong: "
                         + str(e)
                     ),
                 )
@@ -2938,9 +2949,10 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
             kit = getMainKit(session)
@@ -2975,7 +2987,7 @@ class LoadLocalKitResponse(ObjectType):
     error = Field(LoadLocalKitError)
 
 
-class SceneFromFormationFromLocalKitResponseErrorCode(graphene.Enum):
+class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
@@ -2983,25 +2995,25 @@ class SceneFromFormationFromLocalKitResponseErrorCode(graphene.Enum):
     FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
 
 
-class SceneFromFormationFromLocalKitResponseErrorNode(ObjectType):
+class FormationToSceneFromLocalKitResponseErrorNode(ObjectType):
     class Meta:
-        name = "SceneFromFormationFromLocalKitResponseError"
+        name = "FormationToSceneFromLocalKitResponseError"
 
-    code = NonNull(SceneFromFormationFromLocalKitResponseErrorCode)
+    code = NonNull(FormationToSceneFromLocalKitResponseErrorCode)
     message = graphene.String()
 
 
-class SceneFromFormationFromLocalKitResponse(ObjectType):
+class FormationToSceneFromLocalKitResponse(ObjectType):
     scene = Field(SceneNode)
-    error = Field(SceneFromFormationFromLocalKitResponseErrorNode)
+    error = Field(FormationToSceneFromLocalKitResponseErrorNode)
 
 
 class Query(ObjectType):
     loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
-    sceneFromFormationFromLocalKit = Field(
-        SceneFromFormationFromLocalKitResponse,
+    formationToSceneFromLocalKit = Field(
+        FormationToSceneFromLocalKitResponse,
         directory=NonNull(graphene.String),
-        formationInput=NonNull(FormationInput),
+        formationIdInput=NonNull(FormationIdInput),
     )
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
@@ -3026,42 +3038,45 @@ class Query(ObjectType):
             return LoadLocalKitResponse(error=LoadLocalKitError.DIRECTORY_HAS_NO_KIT)
         return LoadLocalKitResponse(kit=kit)
 
-    def resolve_sceneFromFormationFromLocalKit(self, info, directory, formationInput):
+    def resolve_formationToSceneFromLocalKit(
+        self, info, directory, formationIdInput: FormationIdInput
+    ):
         directory = Path(directory)
         if not directory.exists():
-            return SceneFromFormationFromLocalKitResponse(
-                error=SceneFromFormationFromLocalKitResponseErrorNode(
-                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
                 )
             )
         if not directory.is_dir():
-            return SceneFromFormationFromLocalKitResponse(
-                error=SceneFromFormationFromLocalKitResponseErrorNode(
-                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return SceneFromFormationFromLocalKitResponse(
-                error=SceneFromFormationFromLocalKitResponseErrorNode(
-                    code=SceneFromFormationFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
                 )
             )
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
-            raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
-            )
+            # Can't update a kit in a directory where this process already deleted an engine.
+            # Ending the process and let the watcher restart it is the only way to handle this.
+            logging.debug("Engine already disposed. Exiting.")
+            os._exit(1)
         session = getLocalSession(directory)
         try:
-            scene = sceneFromFormationInSession(session, formationInput)
+            scene = sceneFromFormationInSession(session, formationIdInput)
         except FormationNotFound:
-            return SceneFromFormationFromLocalKitResponse(
-                error=SceneFromFormationFromLocalKitResponseErrorNode(
-                    code=SceneFromFormationFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
+            return FormationToSceneFromLocalKitResponse(
+                error=FormationToSceneFromLocalKitResponseErrorNode(
+                    code=FormationToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
                 )
             )
-        return SceneFromFormationFromLocalKitResponse(scene=scene)
+        return FormationToSceneFromLocalKitResponse(scene=scene)
 
 
 class Mutation(ObjectType):
@@ -3113,6 +3128,18 @@ def restart_engine():
     ui_instance.engine_process.start()
 
 
+def watcher():
+    ui_instance = QApplication.instance()
+    try:
+        engine_process = ui_instance.engine_process
+    except AttributeError:
+        start_engine()
+    while True:
+        if not engine_process.is_alive():
+            restart_engine()
+        sleep(1)
+
+
 if __name__ == "__main__":
     freeze_support()
 
@@ -3148,7 +3175,7 @@ if __name__ == "__main__":
 
     tray.setContextMenu(menu)
 
-    ui.engine_process = Process(target=start_engine)
-    ui.engine_process.start()
+    ui.watcher_process = Process(target=watcher)
+    ui.watcher_process.start()
 
     sys.exit(ui.exec())

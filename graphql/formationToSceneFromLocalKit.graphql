@@ -1,4 +1,4 @@
-query SceneFromFormationFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
   formationToSceneFromLocalKit(
     directory: $directory
     formationIdInput: $formation

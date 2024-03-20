@@ -192,7 +192,7 @@ namespace Semio.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to query SceneFromFormationFromLocalKit($directory: String!, $formation: FormationIdInput!) {
+        ///   Looks up a localized string similar to query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
         ///  formationToSceneFromLocalKit(
         ///    directory: $directory
         ///    formationIdInput: $formation
@@ -297,7 +297,7 @@ namespace Semio.Properties {
         /// <summary>
         ///   Looks up a localized string similar to type Query {
         ///  loadLocalKit(directory: String!): LoadLocalKitResponse
-        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): SceneFromFormationFromLocalKitResponse
+        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
         ///}
         ///
         ///type LoadLocalKitResponse {
