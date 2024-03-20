@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# semio server.
+# semio engine.
 # Copyright (C) 2024 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-semio server.
+semio engine.
 """
 # TODO: Refactoring Error handling by only exposing client__str__ and not __str__.
 #       Write better error messages.
@@ -356,10 +356,8 @@ class Specifier(Base):
         CheckConstraint("length(context) > 0", name="context_not_empty_constraint"),
         primary_key=True,
     )
-    group: Mapped[str] = mapped_column(
-        String(NAME_LENGTH_MAX),
-        CheckConstraint("length(group) > 0", name="group_not_empty_constraint"),
-    )
+    # Optional. "" means true.
+    group: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     port_id: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
     port: Mapped["Port"] = relationship("Port", back_populates="specifiers")
 
@@ -664,9 +662,8 @@ class Quality(Base):
         String(NAME_LENGTH_MAX),
         CheckConstraint("length(name) > 0", name="name_not_empty_constraint"),
     )
-    value: Mapped[str] = mapped_column(
-        Text(), CheckConstraint("length(value) > 0", name="value_not_empty_constraint")
-    )
+    # Optional. "" means true.
+    value: Mapped[str] = mapped_column(Text())
     # Optional. Set to "" for None.
     unit: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"), nullable=True)
@@ -1574,7 +1571,7 @@ class RepresentationInput(InputObjectType):
 
 class SpecifierInput(InputObjectType):
     context = NonNull(graphene.String)
-    group = NonNull(graphene.String)
+    group = graphene.String
 
 
 class ScreenPointInput(PydanticInputObjectType):
@@ -1609,7 +1606,7 @@ class PortIdInput(InputObjectType):
 
 class QualityInput(InputObjectType):
     name = NonNull(graphene.String)
-    value = NonNull(graphene.String)
+    value = graphene.String
     unit = graphene.String()
 
 
@@ -1902,19 +1899,31 @@ def getMainKit(session: Session) -> Kit:
 
 
 def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Quality:
+    try:
+        value = qualityInput.value
+    except AttributeError:
+        value = ""
+    try:
+        unit = qualityInput.unit
+    except AttributeError:
+        unit = ""
     return Quality(
         name=qualityInput.name,
-        value=qualityInput.value,
-        unit=qualityInput.unit,
+        value=value,
+        unit=unit,
     )
 
 
 def specifierInputToTransientSpecifierForEquality(
     specifierInput: SpecifierInput,
 ) -> Specifier:
+    try:
+        group = specifierInput.group
+    except AttributeError:
+        group = ""
     return Specifier(
         context=specifierInput.context,
-        group=specifierInput.group,
+        group=group
     )
 
 
@@ -2109,10 +2118,14 @@ def addRepresentationInputToSession(
 def addSpecifierInputToSession(
     session: Session, port: Port, specifierInput: SpecifierInput
 ) -> Specifier:
+    try:
+        group = specifierInput.group
+    except AttributeError:
+        group = ""
     specifier = Specifier(
         context=specifierInput.context,
-        group=specifierInput.group,
-        port_id=port.id,
+        group=group,
+        port_id=port.id
     )
     session.add(specifier)
     session.flush()
@@ -2157,11 +2170,15 @@ def addQualityInputToSession(
         unit = qualityInput.unit
     except AttributeError:
         unit = ""
+    try:
+        value = qualityInput.value
+    except AttributeError:
+        value = ""
     typeId = owner.id if isinstance(owner, Type) else None
     formationId = owner.id if isinstance(owner, Formation) else None
     quality = Quality(
         name=qualityInput.name,
-        value=qualityInput.value,
+        value=value,
         unit=unit,
         type_id=typeId,
         formation_id=formationId,
@@ -2532,7 +2549,7 @@ class CreateLocalKitMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't create a new kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't create a new kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
 
         session = getLocalSession(directory)
@@ -2597,7 +2614,7 @@ class UpdateLocalKitMetadataMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -2696,7 +2713,7 @@ class AddTypeToLocalKitMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -2765,7 +2782,7 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -2843,7 +2860,7 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -2922,7 +2939,7 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -3033,7 +3050,7 @@ class Query(ObjectType):
         kitFileFullPath = kitFile.resolve()
         if kitFileFullPath in disposed_engines:
             raise Exception(
-                "Can't update a kit in a directory where this process already deleted an engine. Restart the server and try again."
+                "Can't update a kit in a directory where this process already deleted an engine. Restart the engine and try again."
             )
         session = getLocalSession(directory)
         try:
@@ -3062,8 +3079,8 @@ schema = Schema(
     mutation=Mutation,
 )
 
-server = Starlette()
-server.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
+engine = Starlette()
+engine.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
 
 parser = ArgumentParser()
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
@@ -3076,9 +3093,9 @@ if args.debug:
     Base.metadata.create_all(metadata_engine)
 
 
-def start_server():
+def start_engine():
     run(
-        server,
+        engine,
         host=HOST,
         port=PORT,
         log_level="info",
@@ -3087,13 +3104,13 @@ def start_server():
     )
 
 
-def restart_server():
+def restart_engine():
     ui_instance = QApplication.instance()
-    server_process = ui_instance.server_process
-    if server_process.is_alive():
-        server_process.terminate()
-    ui_instance.server_process = Process(target=start_server)
-    ui_instance.server_process.start()
+    engine_process = ui_instance.engine_process
+    if engine_process.is_alive():
+        engine_process.terminate()
+    ui_instance.engine_process = Process(target=start_engine)
+    ui_instance.engine_process.start()
 
 
 if __name__ == "__main__":
@@ -3121,17 +3138,17 @@ if __name__ == "__main__":
 
     menu = QMenu()
     restart = QAction("Restart")
-    restart.triggered.connect(restart_server)
+    restart.triggered.connect(restart_engine)
     menu.addAction(restart)
 
     quit = QAction("Quit")
-    # kill server and quit ui
-    quit.triggered.connect(lambda: ui.server_process.terminate() or ui.quit())
+    # kill engine and quit ui
+    quit.triggered.connect(lambda: ui.engine_process.terminate() or ui.quit())
     menu.addAction(quit)
 
     tray.setContextMenu(menu)
 
-    ui.server_process = Process(target=start_server)
-    ui.server_process.start()
+    ui.engine_process = Process(target=start_engine)
+    ui.engine_process.start()
 
     sys.exit(ui.exec())

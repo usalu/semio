@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "semio-server"
+name = "semio-engine"
 version = "2.0.0"
-description = "Server for collaborativ, scalable and cross-platform design tool: semio"
-authors = ["Ueli Saluz <usaluz@posteo.de>"]
-maintainers = ["Ueli Saluz <usaluz@posteo.de>"]
+description = "Engine for the collaborative, scalable and cross-platform design tool: semio"
+authors = ["Ueli Saluz <semio-community@posteo.org>"]
+maintainers = ["Ueli Saluz <semio-community@posteo.org>"]
 license = "LGPL-3.0-or-later"
 repository = "https://github.com/usalu/semio"
-homepage = "https://usalu.github.io/semio"
+# homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
