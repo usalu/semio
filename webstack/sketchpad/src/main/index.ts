@@ -1,17 +1,10 @@
-import {
-    app,
-    shell,
-    BrowserWindow,
-    ipcMain,
-    IpcMainEvent,
-    dialog,
-    IpcMainInvokeEvent
-} from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { readFileSync, writeFile } from 'fs'
-import { c } from 'vite/dist/node/types.d-AKzkD8vd'
+import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent } from 'electron'
+import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { GraphQLClient, gql } from 'graphql-request'
+import icon from '../../resources/icon.png?asset'
+
 
 function createWindow(): void {
     // Create the browser window.
@@ -84,54 +77,120 @@ app.whenReady().then(() => {
         if (window) window.close()
     })
 
-    ipcMain.handle('open-kit', async () => {
+    ipcMain.handle('open-directory', async () => {
         const directory = await dialog.showOpenDialog({
             properties: ['openDirectory']
         })
-        // TODO: call local graphql server
-        return null
-    })
-
-    ipcMain.handle('reload-kit', async () => {
-        // TODO: implement
-        return null
-    })
-
-    ipcMain.handle('open-draft', async (event: IpcMainInvokeEvent) => {
-        const result = await dialog.showOpenDialog({
-            properties: ['openFile'],
-            defaultPath: 'formation.draft',
-            filters: [{ name: 'DRAFT', extensions: ['draft'] }]
-        })
-        if (!result.canceled && result.filePaths.length > 0) {
-            const filePath = result.filePaths[0]
-            const data = readFileSync(filePath)
-            return data.toString()
+        if (directory.canceled || directory.filePaths.length === 0) {
+            return null
         }
-        return ''
+        return directory.filePaths[0]
     })
 
-    ipcMain.handle('save-draft', (event: IpcMainInvokeEvent, draftJson: string) => {
-        return dialog
-            .showSaveDialog({
-                title: 'Save Draft',
-                defaultPath: 'formation.draft',
-                filters: [{ name: 'DRAFT', extensions: ['draft'] }]
-            })
-            .then((result) => {
-                if (!result.canceled && result.filePath) {
-                    return new Promise((resolve, reject) => {
-                        writeFile(result.filePath, draftJson, (err) => {
-                            if (err) {
-                                reject(err)
-                            } else {
-                                resolve(result.filePath)
+    const LOAD_LOCAL_KIT = gql`
+    query LoadLocalKit($directory: String!) {
+        loadLocalKit(directory: $directory) {
+            kit {
+                name
+                description
+                icon
+                url
+                types {
+                    name
+                    description
+                    icon
+                    variant
+                    unit
+                    representations {
+                        url
+                        lod
+                        tags
+                    }
+                    ports {
+                        plane {
+                            origin {
+                                x
+                                y
+                                z
                             }
-                        })
-                    })
+                            xAxis {
+                                x
+                                y
+                                z
+                            }
+                            yAxis {
+                                x
+                                y
+                                z
+                            }
+                        }
+                        specifiers {
+                            context
+                            group
+                        }
+                    }
+                    qualities {
+                        name
+                        value
+                        unit
+                    }
                 }
-            })
-    })
+                formations {
+                    name
+                    description
+                    icon
+                    variant
+                    unit
+                    pieces {
+                        id
+                        type {
+                            name
+                            variant
+                        }
+                    }
+                    attractions {
+                        attracting {
+                            piece {
+                                id
+                                type {
+                                    port {
+                                        specifiers {
+                                            context
+                                            group
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        attracted {
+                            piece {
+                                id
+                                type {
+                                    port {
+                                        specifiers {
+                                            group
+                                            context
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            error
+        }
+    }
+`
+    const endpoint = 'http://127.0.0.1:5052/graphql'
+    const client = new GraphQLClient(endpoint)
+    ipcMain.handle('load-local-kit', async (event, directory) => {
+        if (!directory) {
+            return;
+        }
+        const response = await client.request(LOAD_LOCAL_KIT, { directory })
+        return response;
+    });
 
     ipcMain.handle('get-file-buffer', async (event, filePath) => {
         const data = readFileSync(filePath)

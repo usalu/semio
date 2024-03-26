@@ -47,11 +47,11 @@ export type LoadLocalKitResponse = {
 export type Kit = {
   __typename?: 'Kit';
   name: Scalars['String']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
-  modifiedAt: Scalars['DateTime']['output'];
-  url?: Maybe<Scalars['String']['output']>;
+  lastUpdateAt: Scalars['DateTime']['output'];
+  url: Scalars['String']['output'];
   types: Array<Type>;
   formations: Array<Formation>;
 };
@@ -59,10 +59,12 @@ export type Kit = {
 export type Type = {
   __typename?: 'Type';
   name: Scalars['String']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  variant: Scalars['String']['output'];
+  unit: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
-  modifiedAt: Scalars['DateTime']['output'];
+  lastUpdateAt: Scalars['DateTime']['output'];
   kit?: Maybe<Kit>;
   representations: Array<Representation>;
   ports: Array<Port>;
@@ -73,45 +75,27 @@ export type Type = {
 export type Representation = {
   __typename?: 'Representation';
   url: Scalars['String']['output'];
-  lod?: Maybe<Scalars['String']['output']>;
+  lod: Scalars['String']['output'];
   type?: Maybe<Type>;
   tags: Array<Scalars['String']['output']>;
 };
 
 export type Port = {
   __typename?: 'Port';
+  plane?: Maybe<Plane>;
   type?: Maybe<Type>;
   specifiers: Array<Specifier>;
   attractings: Array<Attraction>;
   attracteds: Array<Attraction>;
-  plane?: Maybe<Plane>;
 };
 
-export type Specifier = {
-  __typename?: 'Specifier';
-  context: Scalars['String']['output'];
-  group: Scalars['String']['output'];
+export type Plane = {
+  __typename?: 'Plane';
   port?: Maybe<Port>;
-};
-
-export type Attraction = {
-  __typename?: 'Attraction';
-  formation?: Maybe<Formation>;
-  attracting: Side;
-  attracted: Side;
-};
-
-export type Formation = {
-  __typename?: 'Formation';
-  name: Scalars['String']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  modifiedAt: Scalars['DateTime']['output'];
-  kit?: Maybe<Kit>;
-  pieces: Array<Piece>;
-  attractions: Array<Attraction>;
-  qualities: Array<Quality>;
+  rootPiece?: Maybe<Piece>;
+  origin: Point;
+  xAxis: Vector;
+  yAxis: Vector;
 };
 
 export type Piece = {
@@ -121,38 +105,76 @@ export type Piece = {
   attractings: Array<Attraction>;
   attracteds: Array<Attraction>;
   id: Scalars['String']['output'];
+  root: RootPiece;
+  diagram: DiagramPiece;
 };
 
-export type Quality = {
-  __typename?: 'Quality';
+export type Formation = {
+  __typename?: 'Formation';
   name: Scalars['String']['output'];
-  value: Scalars['String']['output'];
-  unit?: Maybe<Scalars['String']['output']>;
-  type?: Maybe<Type>;
-  formation?: Maybe<Formation>;
+  description: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  variant: Scalars['String']['output'];
+  unit: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  lastUpdateAt: Scalars['DateTime']['output'];
+  kit?: Maybe<Kit>;
+  pieces: Array<Piece>;
+  attractions: Array<Attraction>;
+  qualities: Array<Quality>;
 };
 
+export type Attraction = {
+  __typename?: 'Attraction';
+  formation?: Maybe<Formation>;
+  attracting: Side;
+  attracted: Side;
+};
+
+/** A side of an attraction. */
 export type Side = {
   __typename?: 'Side';
   piece: PieceSide;
 };
 
+/** The piece of a side of an attraction. */
 export type PieceSide = {
   __typename?: 'PieceSide';
   id: Scalars['String']['output'];
   type: TypePieceSide;
 };
 
+/** The port of a type of a piece of a side of an attraction. */
 export type TypePieceSide = {
   __typename?: 'TypePieceSide';
   port?: Maybe<Port>;
 };
 
-export type Plane = {
-  __typename?: 'Plane';
-  origin: Point;
-  xAxis: Vector;
-  yAxis: Vector;
+export type Quality = {
+  __typename?: 'Quality';
+  name: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+  unit: Scalars['String']['output'];
+  type?: Maybe<Type>;
+  formation?: Maybe<Formation>;
+};
+
+/** The plane of the root piece of a formation. */
+export type RootPiece = {
+  __typename?: 'RootPiece';
+  plane: Plane;
+};
+
+/** The point of a diagram of a piece. */
+export type DiagramPiece = {
+  __typename?: 'DiagramPiece';
+  point: ScreenPoint;
+};
+
+export type ScreenPoint = {
+  __typename?: 'ScreenPoint';
+  x: Scalars['Int']['output'];
+  y: Scalars['Int']['output'];
 };
 
 export type Point = {
@@ -167,6 +189,13 @@ export type Vector = {
   x: Scalars['Float']['output'];
   y: Scalars['Float']['output'];
   z: Scalars['Float']['output'];
+};
+
+export type Specifier = {
+  __typename?: 'Specifier';
+  context: Scalars['String']['output'];
+  group: Scalars['String']['output'];
+  port?: Maybe<Port>;
 };
 
 export enum LoadLocalKitError {
@@ -210,13 +239,7 @@ export enum FormationToSceneFromLocalKitResponseErrorCode {
 
 export type FormationIdInput = {
   name: Scalars['String']['input'];
-  qualities?: InputMaybe<Array<QualityInput>>;
-};
-
-export type QualityInput = {
-  name: Scalars['String']['input'];
-  value: Scalars['String']['input'];
-  unit?: InputMaybe<Scalars['String']['input']>;
+  variant?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -304,6 +327,8 @@ export type TypeInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
+  variant?: InputMaybe<Scalars['String']['input']>;
+  unit: Scalars['String']['input'];
   representations: Array<RepresentationInput>;
   ports: Array<PortInput>;
   qualities?: InputMaybe<Array<QualityInput>>;
@@ -340,13 +365,21 @@ export type VectorInput = {
 
 export type SpecifierInput = {
   context: Scalars['String']['input'];
-  group: Scalars['String']['input'];
+  group?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QualityInput = {
+  name: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['String']['input']>;
+  unit?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type FormationInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
+  variant?: InputMaybe<Scalars['String']['input']>;
+  unit: Scalars['String']['input'];
   pieces: Array<PieceInput>;
   attractions: Array<AttractionInput>;
   qualities?: InputMaybe<Array<QualityInput>>;
@@ -355,11 +388,26 @@ export type FormationInput = {
 export type PieceInput = {
   id: Scalars['String']['input'];
   type: TypeIdInput;
+  root?: InputMaybe<RootPieceInput>;
+  diagram: DiagramPieceInput;
 };
 
 export type TypeIdInput = {
   name: Scalars['String']['input'];
-  qualities?: InputMaybe<Array<QualityInput>>;
+  variant?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RootPieceInput = {
+  plane: PlaneInput;
+};
+
+export type DiagramPieceInput = {
+  point: ScreenPointInput;
+};
+
+export type ScreenPointInput = {
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
 };
 
 export type AttractionInput = {
