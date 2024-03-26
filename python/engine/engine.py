@@ -2400,9 +2400,7 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     return kit
 
 
-def hierarchiesFromFormationInSession(
-    session: Session, formation: Formation
-) -> List[Hierarchy]:
+def hierarchiesFromFormation(formation: Formation) -> List[Hierarchy]:
     nodes = list((piece.local_id, {"piece": piece}) for piece in formation.pieces)
     edges = (
         (
@@ -2412,19 +2410,21 @@ def hierarchiesFromFormationInSession(
         )
         for attraction in formation.attractions
     )
-    G = DiGraph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
+    graph = DiGraph()
+    graph.add_nodes_from(nodes)
+    graph.add_edges_from(edges)
     hierarchies = []
-    for component in weakly_connected_components(G):
-        connected_subgraph = G.subgraph(component)
+    for component in weakly_connected_components(graph):
+        connected_subgraph = graph.subgraph(component)
         root = [node for node, degree in connected_subgraph.in_degree() if degree == 0][
             0
         ]
         if not root:
-            root = G.nodes[0]
+            root = graph.nodes[0]
         rootHierarchy = Hierarchy(
-            piece=G.nodes[root]["piece"], transform=Transform.identity(), children=[]
+            piece=graph.nodes[root]["piece"],
+            transform=Transform.identity(),
+            children=[],
         )
         connected_subgraph.nodes[root]["hierarchy"] = rootHierarchy
         for parent, child in bfs_tree(connected_subgraph, source=root).edges():
@@ -2448,8 +2448,7 @@ def hierarchiesFromFormationInSession(
     return hierarchies
 
 
-def addObjectsToSceneInSession(
-    session: Session,
+def addObjectsToScene(
     scene: "Scene",
     parent: Object,
     hierarchy: Hierarchy,
@@ -2463,7 +2462,7 @@ def addObjectsToSceneInSession(
     )
     scene.objects.append(object)
     for child in hierarchy.children:
-        addObjectsToSceneInSession(session, scene, object, child, transformedPlane)
+        addObjectsToScene(scene, object, child, transformedPlane)
 
 
 def sceneFromFormationInSession(
@@ -2474,11 +2473,10 @@ def sceneFromFormationInSession(
     except AttributeError:
         variant = ""
     formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
-    hierarchies = hierarchiesFromFormationInSession(session, formation)
+    hierarchies = hierarchiesFromFormation(formation)
     scene = Scene(objects=[])
     for hierarchy in hierarchies:
-        addObjectsToSceneInSession(
-            session,
+        addObjectsToScene(
             scene,
             None,
             hierarchy,

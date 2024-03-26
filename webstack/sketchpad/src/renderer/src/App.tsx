@@ -1,5 +1,18 @@
 import './App.scss'
 import {
+    AttractionInput,
+    Formation,
+    FormationInput,
+    Kit,
+    Piece,
+    PieceInput,
+    Quality,
+    Representation,
+    Type,
+    TypeInput
+} from '@renderer/semio'
+import tailwindConfig from '../../../tailwind.config.js'
+import {
     useState,
     forwardRef,
     Ref,
@@ -41,7 +54,11 @@ import {
     TransferProps,
     message,
     theme,
-    MenuItem
+    MenuItem,
+    Form,
+    Radio,
+    Input,
+    FormProps
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
 import { Canvas, useLoader } from '@react-three/fiber'
@@ -55,55 +72,42 @@ import {
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { INode, IEdge, IGraphInput, SelectionT, GraphUtils, IPoint, GraphView } from 'react-digraph'
 import SVG from 'react-inlinesvg'
-import {
-    AttractionInput,
-    Formation,
-    FormationInput,
-    Kit,
-    Piece,
-    PieceInput,
-    Quality,
-    Representation,
-    Type
-} from '@renderer/semio'
-import tailwindConfig from '../../../tailwind.config.js'
 import CloseSharpIcon from '@mui/icons-material/CloseSharp'
 import MinimizeSharpIcon from '@mui/icons-material/MinimizeSharp'
 import FullscreenSharpIcon from '@mui/icons-material/FullscreenSharp'
 import FullscreenExitSharpIcon from '@mui/icons-material/FullscreenExitSharp'
 import HomeSharpIcon from '@mui/icons-material/HomeSharp'
+import FolderSharpIcon from '@mui/icons-material/FolderSharp'
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
+import { createAsyncThunk, configureStore, createSlice, nanoid } from '@reduxjs/toolkit'
+import { Provider, useDispatch, useSelector } from 'react-redux'
+import { GraphQLClient, gql } from 'graphql-request'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
 import sampleDiagram from './assets/samplediagram'
-import { config } from 'process'
-import { configureStore, createSlice } from '@reduxjs/toolkit'
-import { Provider } from 'react-redux'
-// import sampleKit from './assets/samplekit.json'
-
-
-const formationsSlice = createSlice({
-    name: 'formations',
-    initialState: {
-        formations: new Map<string, Array<FormationInput>>()
-    },
-    reducers: {
-        openFormation: (state, action) => {
-            state.formations.push(action.payload)
-        },
-        closeFormation: (state, action) => {
-            state.formations = state.formations.filter(
-                (formation) => formation.name !== action.payload.name && formation.variant !== action.payload.variant
-            )
-        }
-    }
-})
-
-const store = configureStore({
-    reducer: {
-        formations: formationsSlice.reducer
-    }
-})
+import sampleKit from './assets/samplekit'
+import {
+    RootState,
+    addView,
+    deleteWindow,
+    loadLocalKit,
+    newWindow,
+    removeView,
+    selectFormationWindow,
+    selectKit,
+    selectKits,
+    selectTypes,
+    selectWindow,
+    selectViews,
+    selectFormationView,
+    FormationView,
+    IArtifactView,
+    ViewKind,
+    selectView,
+    TypeView,
+    loadKit,
+    selectFormations
+} from './store'
 
 const { Header, Content, Footer, Sider } = Layout
 
@@ -1143,7 +1147,7 @@ const TypeIcon = (props) => (
     </svg>
 )
 
-const DraggableAvatar = ({ user, id }) => {
+const DraggableAvatar = ({ icon, id }) => {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: id
     })
@@ -1155,8 +1159,385 @@ const DraggableAvatar = ({ user, id }) => {
             size="large"
             className="font-sans text-darkGrey"
         >
-            {user}
+            {icon}
         </Avatar>
+    )
+}
+
+interface FormationWindowProps {
+    viewId: string
+    kitDirectory: string
+}
+
+const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.Element => {
+    const dispatch = useDispatch()
+    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
+    const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
+    const formations = useSelector((state: RootState) => selectFormations(state, kitDirectory))
+    const totalStore = useSelector((state: RootState) => state)
+
+    const [isDropped, setIsDropped] = useState(false)
+
+    const diagramEditorRef = useRef(null)
+
+    const onDragEnd = (event: DragEndEvent) => {
+        if (event.over && event.over.id === 'diagramEditor') {
+            // relative coordinates in the diagram editor
+            const relativeX = event.activatorEvent.pageX + event.delta.x - event.over.rect.left
+            const relativeY = event.activatorEvent.pageY + event.delta.y - event.over.rect.top
+            diagramEditorRef.current.onDropPiece(relativeX, relativeY, {
+                name: 'capsule',
+                variant: '1',
+                icon: '📦1'
+            } as Type)
+            setIsDropped(true)
+        }
+    }
+
+    if (!kit) {
+        return <div>Kit not found</div>
+    }
+
+    if (!formationView) {
+        return <div>Formation not found</div>
+    }
+
+    return (
+        <>
+            <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
+                <Col className="flex items-center">
+                    {/* TODO: Add icons for main menu and tools */}
+                </Col>
+                <Col className="flex items-center">
+                    <Breadcrumb>
+                        <Breadcrumb.Item>{kit.name}</Breadcrumb.Item>
+                        <Breadcrumb.Item>Formations</Breadcrumb.Item>
+                        <Breadcrumb.Item>{formationView?.formation.name}</Breadcrumb.Item>
+                    </Breadcrumb>
+                </Col>
+                <Col className="flex items-center">{/* TODO: Add icons for sharing, etc */}</Col>
+            </Row>
+            <Layout style={{ flex: 1 }}>
+                <Layout>
+                    <DndContext onDragEnd={onDragEnd}>
+                        <Sider width="240px" className="border-r-thin border-lightGrey">
+                            <Collapse
+                                className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+                                defaultActiveKey={['types', 'formations']}
+                                items={[
+                                    {
+                                        key: 'types',
+                                        label: 'Types',
+
+                                        children: (
+                                            <Collapse
+                                                className="p-2 font-normal text-lightGrey normal-case"
+                                                defaultActiveKey={Array.from(types.keys())}
+                                                items={Array.from(types.entries()).map(
+                                                    ([typeName, typeVariants], index) => ({
+                                                        key: typeName,
+                                                        label: typeName,
+                                                        children: (
+                                                            <Space
+                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                direction="vertical"
+                                                                size={10}
+                                                                style={{
+                                                                    gridTemplateColumns:
+                                                                        'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                    gridAutoRows: '40px'
+                                                                }}
+                                                            >
+                                                                {Array.from(
+                                                                    typeVariants.entries()
+                                                                ).map(
+                                                                    (
+                                                                        [typeVariant, type],
+                                                                        index
+                                                                    ) => (
+                                                                        <DraggableAvatar
+                                                                            key={typeVariant}
+                                                                            id={typeVariant}
+                                                                            icon={type.icon}
+                                                                        ></DraggableAvatar>
+                                                                    )
+                                                                )}
+                                                            </Space>
+                                                        )
+                                                    })
+                                                )}
+                                            />
+                                        )
+                                    },
+                                    {
+                                        key: 'formations',
+                                        label: 'Formations',
+                                        children: (
+                                            <Collapse
+                                                className="p-2 font-normal text-lightGrey normal-case"
+                                                defaultActiveKey={Array.from(formations.keys())}
+                                                items={Array.from(formations.entries()).map(
+                                                    (
+                                                        [formationName, formationVariants],
+                                                        index
+                                                    ) => ({
+                                                        key: formationName,
+                                                        label: formationName,
+                                                        children: (
+                                                            <Space
+                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                direction="vertical"
+                                                                size={10}
+                                                                style={{
+                                                                    gridTemplateColumns:
+                                                                        'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                    gridAutoRows: '40px'
+                                                                }}
+                                                            >
+                                                                {Array.from(
+                                                                    formationVariants.entries()
+                                                                ).map(
+                                                                    (
+                                                                        [
+                                                                            formationVariant,
+                                                                            formation
+                                                                        ],
+                                                                        index
+                                                                    ) => (
+                                                                        <DraggableAvatar
+                                                                            key={formationVariant}
+                                                                            id={formationVariant}
+                                                                            icon={formation.icon}
+                                                                        ></DraggableAvatar>
+                                                                    )
+                                                                )}
+                                                            </Space>
+                                                        )
+                                                    })
+                                                )}
+                                            />
+                                        )
+                                    }
+                                ]}
+                                defaultActiveKey={['1']}
+                            />
+                        </Sider>
+                        <Content>
+                            <DiagramEditor ref={diagramEditorRef} />
+                        </Content>
+                        <Divider className="h-full top-0" type="vertical" />
+                        <Content>
+                            <ShapeEditor />
+                        </Content>
+                        {createPortal(
+                            <DragOverlay>
+                                {/* {activeId ? (
+                                                    <DraggableAvatar id={activeId} icon="🏫" />
+                                                ) : null} */}
+                                <DraggableAvatar id={2} icon="🏫" />
+                            </DragOverlay>,
+                            document.body
+                        )}
+                    </DndContext>
+                </Layout>
+                <Sider className="border-l-thin border-lightGrey" width="240">
+                    <Collapse
+                        className="p-3"
+                        items={[
+                            {
+                                key: '1',
+                                label: 'SCENE',
+                                children: (
+                                    <Flex vertical={true} className="p-2 text-lightGrey">
+                                        <div className="p-0">Level of Details</div>
+                                        <Select
+                                            className="p-1"
+                                            mode="multiple"
+                                            allowClear
+                                            placeholder="Please select"
+                                            defaultValue={['1to500']}
+                                            options={[
+                                                {
+                                                    label: '1to500',
+                                                    value: '1to500'
+                                                },
+                                                {
+                                                    label: '1to200',
+                                                    value: '1to200'
+                                                }
+                                            ]}
+                                        />
+                                    </Flex>
+                                )
+                            },
+                            {
+                                key: '2',
+                                label: 'TAGS',
+                                children: (
+                                    <Flex vertical={true} className="p-2 text-lightGrey">
+                                        <div className="p-0">Tags</div>
+                                        <Select
+                                            className="p-1"
+                                            mode="multiple"
+                                            allowClear
+                                            placeholder="Please select"
+                                            defaultValue={['']}
+                                            options={[
+                                                {
+                                                    label: 'volume',
+                                                    value: 'volume'
+                                                },
+                                                {
+                                                    label: 'floor plan',
+                                                    value: 'floor plan'
+                                                }
+                                            ]}
+                                        />
+                                    </Flex>
+                                )
+                            }
+                        ]}
+                        defaultActiveKey={['1']}
+                    />
+                </Sider>
+            </Layout>
+            {/* <Footer className='p-0'>
+                    <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="flex items-center">
+                        </div>
+                    </div>
+                </Footer> */}
+        </>
+    )
+}
+
+interface ArtifactWizardProps {
+    onOpenDirectory: () => Promise<string>
+    onFinish: () => FormProps<IArtifactView>['onFinish']
+}
+
+const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX.Element => {
+    const [form] = Form.useForm()
+
+    const onOpenDirectoryFromButton = async () => {
+        const kitDirectory = await onOpenDirectory()
+        form.setFieldsValue({
+            kitDirectory: kitDirectory
+        })
+    }
+    return (
+        <Form
+            form={form}
+            name="Artifact Wizard"
+            initialValues={{ remember: true }}
+            onFinish={onFinish}
+            autoComplete="off"
+        >
+            <Form.Item<IArtifactView>
+                label="Kind"
+                name="kind"
+                rules={[{ required: true, message: 'What artifact do you want to create?' }]}
+            >
+                <Radio.Group>
+                    <Radio.Button value={ViewKind.Type}>Type</Radio.Button>
+                    <Radio.Button value={ViewKind.Formation}>Formation</Radio.Button>
+                </Radio.Group>
+            </Form.Item>
+            <Form.Item<IArtifactView>
+                label="Kit Directory"
+                name="kitDirectory"
+                rules={[{ required: true, message: 'In what directory is the kit?' }]}
+            >
+                <Button onClick={onOpenDirectoryFromButton} icon={<FolderSharpIcon />}></Button>
+            </Form.Item>
+            <Form.Item<IArtifactView>
+                label="Name"
+                name="name"
+                rules={[{ required: true, message: 'Every artifacts needs a name.' }]}
+            >
+                <Input />
+            </Form.Item>
+            <Form.Item<IArtifactView> label="Description" name="description">
+                <Input />
+            </Form.Item>
+            <Form.Item>
+                <Button type="primary" htmlType="submit">
+                    Create
+                </Button>
+            </Form.Item>
+        </Form>
+    )
+}
+
+interface ArtifactWindowProps {
+    viewId: string
+    onOpenDirectory: () => Promise<string>
+}
+
+const ArtifactWindow = ({ viewId, onOpenDirectory }: ArtifactWindowProps): JSX.Element => {
+    const dispatch = useDispatch()
+    const artifactView = useSelector((state: RootState) => selectView(state, viewId))
+
+    const onFinish: FormProps<IArtifactView>['onFinish'] = (artifactView) => {
+        dispatch(loadLocalKit(artifactView.kitDirectory))
+        artifactView.id = viewId
+        switch (artifactView.kind) {
+            case ViewKind.Type:
+                dispatch(
+                    addView({
+                        kind: ViewKind.Type,
+                        kitDirectory: artifactView.kitDirectory,
+                        id: artifactView.id,
+                        type: {
+                            name: artifactView.name,
+                            description: artifactView.description,
+                            icon: artifactView.icon
+                        }
+                    } as TypeView)
+                )
+                return
+            case ViewKind.Formation:
+                dispatch(
+                    addView({
+                        kind: ViewKind.Formation,
+                        kitDirectory: artifactView.kitDirectory,
+                        id: artifactView.id,
+                        formation: {
+                            name: artifactView.name,
+                            description: artifactView.description,
+                            icon: artifactView.icon
+                        }
+                    } as FormationView)
+                )
+                return
+            default:
+                break
+        }
+    }
+
+    return artifactView ? (
+        <>
+            {artifactView.kind}
+            {(() => {
+                switch (artifactView.kind) {
+                    case ViewKind.Type:
+                        // return <TypeWindow viewId={viewId} kitDirectory={artifactView.kitDirectory} />
+                        return <div>Soon you can create types here🥳</div>
+                    case ViewKind.Formation:
+                        return (
+                            <FormationWindow
+                                viewId={viewId}
+                                kitDirectory={artifactView.kitDirectory}
+                            />
+                        )
+                    default:
+                        return null
+                }
+            })()}
+        </>
+    ) : (
+        <ArtifactWizard onFinish={onFinish} onOpenDirectory={onOpenDirectory} />
     )
 }
 
@@ -1164,9 +1545,7 @@ interface AppProps {
     onWindowMinimize: () => void
     onWindowMaximize: () => void
     onWindowClose: () => void
-    onOpenKit: () => Promise<Kit>
-    onReloadKit: () => Promise<Kit>
-    onOpenDraft: () => Promise<string>
+    onOpenDirectory: () => Promise<string>
     onSaveDraft: (draft: IDraft) => Promise<string>
 }
 
@@ -1174,21 +1553,12 @@ const App = ({
     onWindowMinimize,
     onWindowMaximize,
     onWindowClose,
-    onOpenKit,
-    onReloadKit,
-    onOpenDraft,
-    onSaveDraft
+    onOpenDirectory
 }: AppProps): JSX.Element => {
+    const views = useSelector((state: RootState) => selectViews(state))
     const [fullScreen, setFullScreen] = useState(false)
-    const [collapsedToolset, setCollapsedToolset] = useState(false)
-    const [isDropped, setIsDropped] = useState(false)
-    const [activeId, setActiveId] = useState(null)
-
-    const handleTabClick = () => {
-        setCollapsedToolset(!collapsedToolset)
-    }
-
-    const diagramEditorRef = useRef(null)
+    const [openTabs, setOpenTabs] = useState([])
+    const [activeTab, setActiveTab] = useState('home')
 
     // const actions = [
     //     {
@@ -1271,396 +1641,235 @@ const App = ({
     //     }
     // }, [kit])
 
-    const onDragEnd = (event: DragEndEvent) => {
-        console.log('drag end', event)
-        if (event.over && event.over.id === 'diagramEditor') {
-            // relative coordinates in the diagram editor
-            const relativeX = event.activatorEvent.pageX + event.delta.x - event.over.rect.left
-            const relativeY = event.activatorEvent.pageY + event.delta.y - event.over.rect.top
-            diagramEditorRef.current.onDropPiece(relativeX, relativeY, {
-                name: 'capsule',
-                variant: '1',
-                icon: '📦1'
-            } as Type)
-            setIsDropped(true)
-        }
-    }
-
     return (
         <div className="h-screen w-screen">
-            <Provider store={store}>
-                <ConfigProvider
-                    locale={enUS}
-                    theme={{
-                        // algorithm: [theme.darkAlgorithm],
-                        token: {
-                            // primary
-                            colorPrimary: colors.light,
-                            colorPrimaryBg: colors.light,
-                            colorPrimaryBgHover: colors.light,
-                            colorPrimaryBorder: colors.light,
-                            colorPrimaryBorderHover: colors.light,
-                            colorPrimaryHover: colors.light,
-                            colorPrimaryActive: colors.light,
-                            colorPrimaryText: colors.light,
-                            colorPrimaryTextHover: colors.light,
-                            colorPrimaryTextActive: colors.light,
-                            // text
-                            colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
-                            colorTextSecondary: colors.lightGrey,
-                            colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
-                            colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
-                            // border
-                            colorBorder: colors.light,
-                            colorBorderSecondary: colors.light,
-                            // fill
-                            colorFill: colors.light,
-                            colorFillSecondary: colors.light,
-                            colorFillTertiary: colors.light,
-                            colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
-                            // background
-                            colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
-                            colorBgElevated: colors.grey, // e.g. background selected menu
-                            colorBgLayout: colors.light,
-                            colorBgSpotlight: colors.light,
-                            colorBgMask: colors.light,
-                            colorBgTextActive: colors.light,
-                            colorBgBase: colors.light,
-                            // special colors
-                            colorError: colors.danger,
-                            colorWarning: colors.warning,
-                            colorInfo: colors.info,
-                            colorSuccess: colors.success,
-                            fontFamily: 'Anta, sans-serif',
-                            boxShadow: 'none',
-                            boxShadowSecondary: 'none',
-                            boxShadowTertiary: 'none',
-                            wireframe: false,
-                            borderRadius: 0,
-                            lineWidth: 0
-                            // motionUnit: 0.05
+            <ConfigProvider
+                locale={enUS}
+                theme={{
+                    // algorithm: [theme.darkAlgorithm],
+                    token: {
+                        // primary
+                        colorPrimary: colors.light,
+                        colorPrimaryBg: colors.light,
+                        colorPrimaryBgHover: colors.light,
+                        colorPrimaryBorder: colors.light,
+                        colorPrimaryBorderHover: colors.light,
+                        colorPrimaryHover: colors.light,
+                        colorPrimaryActive: colors.light,
+                        colorPrimaryText: colors.light,
+                        colorPrimaryTextHover: colors.light,
+                        colorPrimaryTextActive: colors.light,
+                        // text
+                        colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
+                        colorTextSecondary: colors.lightGrey,
+                        colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
+                        colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
+                        // border
+                        colorBorder: colors.light,
+                        colorBorderSecondary: colors.light,
+                        // fill
+                        colorFill: colors.light,
+                        colorFillSecondary: colors.light,
+                        colorFillTertiary: colors.light,
+                        colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
+                        // background
+                        colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
+                        colorBgElevated: colors.grey, // e.g. background selected menu
+                        colorBgLayout: colors.light,
+                        colorBgSpotlight: colors.light,
+                        colorBgMask: colors.light,
+                        colorBgTextActive: colors.light,
+                        colorBgBase: colors.light,
+                        // special colors
+                        colorError: colors.danger,
+                        colorWarning: colors.warning,
+                        colorInfo: colors.info,
+                        colorSuccess: colors.success,
+                        fontFamily: 'Anta, sans-serif',
+                        boxShadow: 'none',
+                        boxShadowSecondary: 'none',
+                        boxShadowTertiary: 'none',
+                        wireframe: false,
+                        borderRadius: 0,
+                        lineWidth: 0
+                        // motionUnit: 0.05
+                    },
+                    components: {
+                        Button: {
+                            borderColorDisabled: colors.light,
+                            dangerColor: colors.light,
+                            defaultActiveBg: colors.light,
+                            defaultActiveBorderColor: colors.light,
+                            defaultActiveColor: colors.light,
+                            defaultBg: colors.light,
+                            defaultBorderColor: colors.light,
+                            defaultColor: colors.lightGrey, // e.g. normal state of buttons
+                            defaultGhostBorderColor: colors.light,
+                            defaultGhostColor: colors.light,
+                            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
+                            ghostBg: colors.light,
+                            linkHoverBg: colors.light,
+                            primaryColor: colors.light,
+                            textHoverBg: colors.light
                         },
-                        components: {
-                            Button: {
-                                borderColorDisabled: colors.light,
-                                dangerColor: colors.light,
-                                defaultActiveBg: colors.light,
-                                defaultActiveBorderColor: colors.light,
-                                defaultActiveColor: colors.light,
-                                defaultBg: colors.light,
-                                defaultBorderColor: colors.light,
-                                defaultColor: colors.lightGrey, // e.g. normal state of buttons
-                                defaultGhostBorderColor: colors.light,
-                                defaultGhostColor: colors.light,
-                                defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
-                                ghostBg: colors.light,
-                                linkHoverBg: colors.light,
-                                primaryColor: colors.light,
-                                textHoverBg: colors.light
-                            },
-                            Layout: {
-                                bodyBg: colors.dark,
-                                footerBg: colors.grey,
-                                headerBg: colors.grey, // e.g. space between tabs and content
-                                headerColor: colors.light,
-                                lightSiderBg: colors.light,
-                                lightTriggerBg: colors.light,
-                                lightTriggerColor: colors.light,
-                                siderBg: colors.darkGrey,
-                                triggerBg: colors.light,
-                                triggerColor: colors.light,
-                                headerPadding: '0px 0px'
-                            },
-                            Tabs: {
-                                cardBg: colors.grey, // background of unselected tabs
-                                inkBarColor: colors.light,
-                                itemActiveColor: colors.light,
-                                itemColor: colors.lightGrey, // text and fill of unselected tabs
-                                itemHoverColor: colors.light,
-                                itemSelectedColor: colors.light,
-                                cardGutter: 0,
-                                cardHeight: 38,
-                                cardPadding: '0 16px',
-                                verticalItemMargin: '0'
-                            },
-                            Divider: {
-                                lineWidth: 0.25,
-                                verticalMarginInline: 0
-                            },
-                            Avatar: {
-                                groupBorderColor: colors.light
-                            },
-                            Collapse: {
-                                headerBg: colors.darkGrey,
-                                headerPadding: '0 0px',
-                                contentBg: colors.darkGrey,
-                                contentPadding: '0 0px'
-                            },
-                            Select: {
-                                clearBg: colors.lightGrey,
-                                multipleItemBg: colors.darkGrey,
-                                optionActiveBg: colors.darkGrey,
-                                optionSelectedBg: colors.darkGrey,
-                                optionSelectedColor: colors.light,
-                                selectorBg: colors.darkGrey
-                            }
+                        Layout: {
+                            bodyBg: colors.dark,
+                            footerBg: colors.grey, //
+                            headerBg: colors.grey, // e.g. space between tabs and content
+                            headerColor: colors.light,
+                            lightSiderBg: colors.light,
+                            lightTriggerBg: colors.light,
+                            lightTriggerColor: colors.light,
+                            siderBg: colors.darkGrey, //
+                            triggerBg: colors.light,
+                            triggerColor: colors.light,
+                            headerPadding: '0px 0px'
+                        },
+                        Tabs: {
+                            cardBg: colors.grey, // background of unselected tabs
+                            inkBarColor: colors.light,
+                            itemActiveColor: colors.light,
+                            itemColor: colors.lightGrey, // text and fill of unselected tabs
+                            itemHoverColor: colors.light,
+                            itemSelectedColor: colors.light,
+                            cardGutter: 0,
+                            cardHeight: 38,
+                            cardPadding: '0 16px',
+                            verticalItemMargin: '0'
+                        },
+                        Divider: {
+                            lineWidth: 0.25,
+                            verticalMarginInline: 0
+                        },
+                        Avatar: {
+                            groupBorderColor: colors.light
+                        },
+                        Collapse: {
+                            headerBg: colors.darkGrey, //
+                            headerPadding: '0 0px',
+                            contentBg: colors.darkGrey, //
+                            contentPadding: '0 0px'
+                        },
+                        Select: {
+                            clearBg: colors.lightGrey,
+                            multipleItemBg: colors.darkGrey,
+                            optionActiveBg: colors.darkGrey,
+                            optionSelectedBg: colors.darkGrey,
+                            optionSelectedColor: colors.light,
+                            selectorBg: colors.darkGrey
                         }
-                    }}
-                >
-                    <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-                        <Header style={{ height: 'auto' }}>
+                    }
+                }}
+            >
+                <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+                    <Header style={{ height: 'auto' }}>
+                        <div
+                            style={{
+                                height: '38px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                WebkitAppRegion: 'drag'
+                            }}
+                        >
+                            <Tabs
+                                className="p-0 flex items-center"
+                                type="editable-card"
+                                style={{
+                                    WebkitAppRegion: 'no-drag'
+                                }}
+                                activeKey={activeTab}
+                                onChange={(key) => setActiveTab(key)}
+                                onEdit={(targetKey, action) => {
+                                    if (action === 'add') {
+                                        const id = nanoid()
+                                        setOpenTabs([...openTabs, id])
+                                        setActiveTab(id)
+                                    } else if (action === 'remove') {
+                                        setOpenTabs(openTabs.filter((t) => t !== targetKey))
+                                        if (activeTab === targetKey) setActiveTab('home')
+                                    }
+                                }}
+                                defaultActiveKey="home"
+                                items={[
+                                    {
+                                        key: 'home',
+                                        label: <HomeSharpIcon />,
+                                        closable: false
+                                    },
+                                    ...openTabs.map((tab, index) => {
+                                        const view = views.find((v) => v.id === tab)
+                                        if (view)
+                                            return {
+                                                key: view?.id,
+                                                label: view?.name
+                                            }
+                                        return {
+                                            key: tab,
+                                            label: 'New Artifact'
+                                        }
+                                    })
+                                ]}
+                            />
+                            <Space />
                             <div
                                 style={{
-                                    height: '38px',
                                     display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'flex-start',
-                                    WebkitAppRegion: 'drag'
+                                    height: '100%',
+                                    justifyContent: 'flex-end',
+                                    alignItems: 'center',
+                                    WebkitAppRegion: 'no-drag'
                                 }}
                             >
-                                <Tabs
-                                    className="p-0 flex items-center"
-                                    type="editable-card"
+                                <Button
+                                    onClick={onWindowMinimize}
                                     style={{
-                                        WebkitAppRegion: 'no-drag'
-                                    }}
-                                    defaultActiveKey="3"
-                                    items={[
-                                        {
-                                            key: '1',
-                                            label: <HomeSharpIcon />,
-                                            closable: false
-                                        },
-                                        {
-                                            key: '2',
-                                            label: 'Nakagin Capsule Tower'
-                                        },
-                                        {
-                                            key: '3',
-                                            label: 'Unsaved'
-                                        }
-                                    ]}
-                                />
-                                <Space />
-                                <div
-                                    style={{
-                                        display: 'flex',
                                         height: '100%',
-                                        justifyContent: 'flex-end',
-                                        alignItems: 'center',
-                                        WebkitAppRegion: 'no-drag'
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
                                     }}
                                 >
-                                    <Button
-                                        onClick={onWindowMinimize}
-                                        style={{
-                                            height: '100%',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        <MinimizeSharpIcon />
-                                    </Button>
-                                    <Button
-                                        onClick={onWindowMaximize}
-                                        style={{
-                                            height: '100%',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        {fullScreen ? (
-                                            <FullscreenExitSharpIcon />
-                                        ) : (
-                                            <FullscreenSharpIcon />
-                                        )}
-                                    </Button>
-                                    <Button
-                                        onClick={onWindowClose}
-                                        style={{
-                                            height: '100%',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        <CloseSharpIcon />
-                                    </Button>
-                                </div>
-                            </div>
-                        </Header>
-                        <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
-                            <Col className="flex items-center">
-                                {/* TODO: Add icons for main menu and tools */}
-                            </Col>
-                            <Col className="flex items-center">
-                                <Breadcrumb>
-                                    <Breadcrumb.Item>Metabolism</Breadcrumb.Item>
-                                    <Breadcrumb.Item>Formations</Breadcrumb.Item>
-                                    <Breadcrumb.Item>Unsaved</Breadcrumb.Item>
-                                </Breadcrumb>
-                            </Col>
-                            <Col className="flex items-center">
-                                {/* TODO: Add icons for sharing, etc */}
-                            </Col>
-                        </Row>
-                        <Layout style={{ flex: 1 }}>
-                            <Layout>
-                                <DndContext onDragEnd={onDragEnd}>
-                                    <Sider width="240px" className="border-r-thin border-lightGrey">
-                                        <Collapse
-                                            className="p-3 border-b-thin border-lightGrey font-thin"
-                                            items={[
-                                                {
-                                                    key: '1',
-                                                    label: 'TYPES',
-                                                    children: (
-                                                        <Collapse
-                                                            className="p-2 font-normal text-lightGrey"
-                                                            items={[
-                                                                {
-                                                                    key: '1',
-                                                                    label: 'capsule',
-                                                                    children: (
-                                                                        <Space
-                                                                            className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                                                                            direction="vertical"
-                                                                            size={10}
-                                                                            style={{
-                                                                                gridTemplateColumns:
-                                                                                    'repeat(auto-fill, minmax(40px, 1fr))',
-                                                                                gridAutoRows: '40px'
-                                                                            }}
-                                                                        >
-                                                                            {[
-                                                                                '📦1',
-                                                                                '📦2',
-                                                                                '📦3',
-                                                                                '📦4',
-                                                                                '📦5',
-                                                                                '📦6',
-                                                                                '📦7',
-                                                                                '📦8'
-                                                                            ].map((user, index) => (
-                                                                                <DraggableAvatar
-                                                                                    key={index}
-                                                                                    id={index}
-                                                                                    user={user}
-                                                                                ></DraggableAvatar>
-                                                                            ))}
-                                                                        </Space>
-                                                                    )
-                                                                }
-                                                            ]}
-                                                            defaultActiveKey={['1']}
-                                                        />
-                                                    )
-                                                },
-                                                {
-                                                    key: '2',
-                                                    label: 'FORMATIONS',
-                                                    children: <p>{'Test'}</p>
-                                                }
-                                            ]}
-                                            defaultActiveKey={['1']}
-                                        />
-                                    </Sider>
-                                    <Content>
-                                        <DiagramEditor ref={diagramEditorRef} />
-                                    </Content>
-                                    <Divider className="h-full top-0" type="vertical" />
-                                    <Content>
-                                        <ShapeEditor />
-                                    </Content>
-                                    {createPortal(
-                                        <DragOverlay>
-                                            {/* {activeId ? (
-                                                <DraggableAvatar id={activeId} user="🏫" />
-                                            ) : null} */}
-                                            <DraggableAvatar id={2} user="🏫" />
-                                        </DragOverlay>,
-                                        document.body
+                                    <MinimizeSharpIcon />
+                                </Button>
+                                <Button
+                                    onClick={onWindowMaximize}
+                                    style={{
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    {fullScreen ? (
+                                        <FullscreenExitSharpIcon />
+                                    ) : (
+                                        <FullscreenSharpIcon />
                                     )}
-                                </DndContext>
-                            </Layout>
-                            <Sider className="border-l-thin border-lightGrey" width="240">
-                                <Collapse
-                                    className="p-3"
-                                    items={[
-                                        {
-                                            key: '1',
-                                            label: 'SCENE',
-                                            children: (
-                                                <Flex
-                                                    vertical={true}
-                                                    className="p-2 text-lightGrey"
-                                                >
-                                                    <div className="p-0">Level of Details</div>
-                                                    <Select
-                                                        className="p-1"
-                                                        mode="multiple"
-                                                        allowClear
-                                                        placeholder="Please select"
-                                                        defaultValue={['1to500']}
-                                                        options={[
-                                                            {
-                                                                label: '1to500',
-                                                                value: '1to500'
-                                                            },
-                                                            {
-                                                                label: '1to200',
-                                                                value: '1to200'
-                                                            }
-                                                        ]}
-                                                    />
-                                                </Flex>
-                                            )
-                                        },
-                                        {
-                                            key: '2',
-                                            label: 'TAGS',
-                                            children: (
-                                                <Flex
-                                                    vertical={true}
-                                                    className="p-2 text-lightGrey"
-                                                >
-                                                    <div className="p-0">Tags</div>
-                                                    <Select
-                                                        className="p-1"
-                                                        mode="multiple"
-                                                        allowClear
-                                                        placeholder="Please select"
-                                                        defaultValue={['']}
-                                                        options={[
-                                                            {
-                                                                label: 'volume',
-                                                                value: 'volume'
-                                                            },
-                                                            {
-                                                                label: 'floor plan',
-                                                                value: 'floor plan'
-                                                            }
-                                                        ]}
-                                                    />
-                                                </Flex>
-                                            )
-                                        }
-                                    ]}
-                                    defaultActiveKey={['1']}
-                                />
-                            </Sider>
-                        </Layout>
-                        {/* <Footer className='p-0'>
-                            <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div className="flex items-center">
-                                </div>
+                                </Button>
+                                <Button
+                                    onClick={onWindowClose}
+                                    style={{
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <CloseSharpIcon />
+                                </Button>
                             </div>
-                        </Footer> */}
-                    </Layout>
-                </ConfigProvider>
-            </Provider>
+                        </div>
+                    </Header>
+                    {activeTab === 'home' ? (
+                        <div className="h-full flex items-center justify-center text-lightGrey text-2xl">
+                            Click + to add a new artifact.
+                        </div>
+                    ) : (
+                        <ArtifactWindow viewId={activeTab} onOpenDirectory={onOpenDirectory} />
+                    )}
+                </Layout>
+            </ConfigProvider>
         </div>
     )
 }

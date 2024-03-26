@@ -1,8 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import { IDraft } from './App'
-import { Kit } from './semio'
+import { Provider } from 'react-redux'
+import { store } from './store'
+
 
 const onWindowMinimize = (): void => {
     window.electron.ipcRenderer.invoke('minimize-window')
@@ -16,32 +17,19 @@ const onWindowClose = (): void => {
     window.electron.ipcRenderer.invoke('close-window')
 }
 
-const onOpenKit = (): Promise<Kit> => {
-    return window.electron.ipcRenderer.invoke('open-kit')
-}
-
-const onReloadKit = (): Promise<Kit> => {
-    return window.electron.ipcRenderer.invoke('reload-kit')
-}
-
-const onOpenDraft = (): Promise<string> => {
-    return window.electron.ipcRenderer.invoke('open-draft')
-}
-
-const onSaveDraft = (draft: IDraft): Promise<string> => {
-    return window.electron.ipcRenderer.invoke('save-draft', JSON.stringify(draft))
+const onOpenDirectory = (): Promise<string> => {
+    return window.electron.ipcRenderer.invoke('open-directory')
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-        <App
-            onWindowMinimize={onWindowMinimize}
-            onWindowMaximize={onWindowMaximize}
-            onWindowClose={onWindowClose}
-            onOpenKit={onOpenKit}
-            onReloadKit={onReloadKit}
-            onOpenDraft={onOpenDraft}
-            onSaveDraft={onSaveDraft}
-        />
+        <Provider store={store}>
+            <App
+                onWindowMinimize={onWindowMinimize}
+                onWindowMaximize={onWindowMaximize}
+                onWindowClose={onWindowClose}
+                onOpenDirectory={onOpenDirectory}
+            />
+        </Provider>
     </React.StrictMode>
 )
