@@ -22,6 +22,7 @@ namespace Semio.Grasshopper;
 //          : Directory.GetCurrentDirectory();
 // TODO: IsInvalid is used to check null state which is not clean.
 // Think of a better way to handle this.
+// The invalid check happen twice and code is duplicated.
 
 #region Copilot
 //public interface IDeepCloneable<T>
@@ -60,7 +61,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Representation(Url: {Url})";
+//        return $"Representation(Url:{Url})";
 //    }
 
 //    public bool IsInvalid()
@@ -69,34 +70,34 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class Specifier : IDeepCloneable<Specifier>, IEntity
+//public class Locator : IDeepCloneable<Locator>, IEntity
 //{
-//    public Specifier()
+//    public Locator()
 //    {
-//        Context = "";
 //        Group = "";
+//        Subgroup = "";
 //    }
 
-//    public string Context { get; set; }
 //    public string Group { get; set; }
+//    public string Subgroup { get; set; }
 
-//    public Specifier DeepClone()
+//    public Locator DeepClone()
 //    {
-//        return new Specifier
+//        return new Locator
 //        {
-//            Context = Context,
-//            Group = Group
+//            Group = Group,
+//            Subgroup = Subgroup
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Specifier(Context: {Context})";
+//        return $"Locator(Group:{Group}" + (Subgroup != "" ? $",Subgroup:{Subgroup})" : ")");
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Context == "";
+//        return Group == "";
 //    }
 //}
 
@@ -122,7 +123,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Point(X: {X}, Y: {Y})";
+//        return $"Point(X:{X},Y:{Y})";
 //    }
 
 //    public bool IsInvalid()
@@ -130,10 +131,6 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 
-//    public bool IsZero()
-//    {
-//        return X == 0 && Y == 0;
-//    }
 //}
 
 //public class Point : IDeepCloneable<Point>, IEntity
@@ -161,7 +158,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Point(X: {X}, Y: {Y}, Z: {Z})";
+//        return $"Point(X:{X},Y:{Y},Z:{Z})";
 //    }
 
 //    public bool IsInvalid()
@@ -200,7 +197,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Vector(X: {X}, Y: {Y}, Z: {Z})";
+//        return $"Vector(X:{X},Y:{Y},Z:{Z})";
 //    }
 
 //    public bool IsInvalid()
@@ -239,7 +236,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Plane(Origin: {Origin}, XAxis: {XAxis}, YAxis: {YAxis})";
+//        return $"Plane(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
 //    }
 
 //    public bool IsInvalid()
@@ -253,30 +250,32 @@ namespace Semio.Grasshopper;
 //{
 //    public Port()
 //    {
+//        Id = "";
 //        Plane = new Plane();
-//        Specifiers = new List<Specifier>();
+//        Locators = new List<Locator>();
 //    }
-
+//    public string Id { get; set; }
 //    public Plane Plane { get; set; }
-//    public List<Specifier> Specifiers { get; set; }
+//    public List<Locator> Locators { get; set; }
 
 //    public Port DeepClone()
 //    {
 //        return new Port
 //        {
-//            Plane = Plane?.DeepClone(),
-//            Specifiers = new List<Specifier>(Specifiers.Select(s => s.DeepClone()))
+//            Id = Id,
+//            Plane = Plane.DeepClone(),
+//            Locators = new List<Locator>(Locators.Select(s => s.DeepClone()))
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Port({GetHashCode()})";
+//        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Plane.IsInvalid() || Specifiers.Any(s => s.IsInvalid());
+//        return Id == "" || Plane.IsInvalid() || Locators.Any(s => s.IsInvalid());
 //    }
 //}
 
@@ -284,27 +283,27 @@ namespace Semio.Grasshopper;
 //{
 //    public PortId()
 //    {
-//        Specifiers = new List<Specifier>();
+//        Id = "";
 //    }
 
-//    public List<Specifier> Specifiers { get; set; }
+//    public string Id { get; set; }
 
 //    public PortId DeepClone()
 //    {
 //        return new PortId
 //        {
-//            Specifiers = new List<Specifier>(Specifiers.Select(s => s.DeepClone()))
+//            Id = Id
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"PortId({GetHashCode()})";
+//        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Specifiers.Any(s => s.IsInvalid());
+//        return false;
 //    }
 //}
 
@@ -334,7 +333,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Quality(Name: {Name})";
+//        return $"Quality(Name:{Name})";
 //    }
 
 //    public bool IsInvalid()
@@ -383,7 +382,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Type(Name: {Name}, Variant: {Variant})";
+//        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -415,7 +414,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"TypeId(Name: {Name}, Variant: {Variant})";
+//        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -443,7 +442,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"RootPiece({GetHashCode()})";
+//        return $"Root({GetHashCode()})";
 //    }
 
 //    public bool IsInvalid()
@@ -471,7 +470,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"DiagramPiece({GetHashCode()})";
+//        return $"Diagram({Point})";
 //    }
 
 //    public bool IsInvalid()
@@ -508,7 +507,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Piece(Id: {Id})";
+//        return $"Piece(Id:{Id})";
 //    }
 
 //    public bool IsInvalid()
@@ -536,7 +535,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"PieceId(Id: {Id})";
+//        return $"Piece(Id:{Id})";
 //    }
 
 //    public bool IsInvalid()
@@ -564,7 +563,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"TypePieceSide({GetHashCode()})";
+//        return $"Type({Port})";
 //    }
 
 //    public bool IsInvalid()
@@ -595,7 +594,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"PieceSide(Id: {Id})";
+//        return $"Piece(Id:{Id}" + (Type.Port.Id != "" ? $",{Type})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -623,7 +622,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Side({GetHashCode()})";
+//        return $"Side({Piece})";
 //    }
 
 //    public bool IsInvalid()
@@ -655,7 +654,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Attraction(Attracting(Piece: {Attracting.Piece.Id}), Attracted(Piece: {Attracted.Piece.Id}))";
+//        return $"Attraction(Attracting({Attracting}),Attracted({Attracted}))";
 //    }
 
 //    public bool IsInvalid()
@@ -704,7 +703,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Formation(Name: {Name}, Variant: {Variant})";
+//        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -736,7 +735,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"FormationId(Name: {Name}, Variant: {Variant})";
+//        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -764,7 +763,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"TypePieceObject({GetHashCode()})";
+//        return $"Type({GetHashCode()})";
 //    }
 
 //    public bool IsInvalid()
@@ -795,7 +794,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"PieceObject(Id: {Id})";
+//        return $"Piece(Id:{Id})";
 //    }
 
 //    public bool IsInvalid()
@@ -824,7 +823,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"ParentObject({GetHashCode()})";
+//        return $"Parent({Piece})";
 //    }
 
 //    public bool IsInvalid()
@@ -858,7 +857,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Object({GetHashCode()})";
+//        return $"Object({Piece})";
 //    }
 
 //    public bool IsInvalid()
@@ -871,27 +870,29 @@ namespace Semio.Grasshopper;
 //{
 //    public Scene()
 //    {
+//        Formation = new FormationId();
 //        Objects = new List<Object>();
 //    }
-
+//    public FormationId Formation { get; set; }
 //    public List<Object> Objects { get; set; }
 
 //    public Scene DeepClone()
 //    {
 //        return new Scene
 //        {
+//            Formation = Formation.DeepClone(),
 //            Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Scene({GetHashCode()})";
+//        return $"Scene({Formation})";
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Objects.Any(o => o.IsInvalid());
+//        return Formation.IsInvalid() || Objects.Any(o => o.IsInvalid());
 //    }
 //}
 
@@ -929,7 +930,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Kit(Name: {Name}, {GetHashCode()})";
+//        return $"Kit(Name:{Name}, {GetHashCode()})";
 //    }
 
 //    public bool IsInvalid()
@@ -957,7 +958,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"KitMetadata(Name: {Name})";
+//        return $"Kit(Name:{Name})";
 //    }
 
 //    public bool IsInvalid()
@@ -965,6 +966,7 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
+
 #endregion
 
 #region Utility
@@ -1091,25 +1093,25 @@ public class RepresentationGoo : GH_Goo<Representation>
     }
 }
 
-public class SpecifierGoo : GH_Goo<Specifier>
+public class LocatorGoo : GH_Goo<Locator>
 {
-    public SpecifierGoo()
+    public LocatorGoo()
     {
-        Value = new Specifier();
+        Value = new Locator();
     }
 
-    public SpecifierGoo(Specifier specifier)
+    public LocatorGoo(Locator locator)
     {
-        Value = specifier;
+        Value = locator;
     }
 
     public override bool IsValid { get; }
-    public override string TypeName => "Specifier";
+    public override string TypeName => "Locator";
     public override string TypeDescription { get; }
 
     public override IGH_Goo Duplicate()
     {
-        return new SpecifierGoo(Value.DeepClone());
+        return new LocatorGoo(Value.DeepClone());
     }
 
     public override string ToString()
@@ -1119,13 +1121,13 @@ public class SpecifierGoo : GH_Goo<Specifier>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Specifier", Value.Serialize());
+        writer.SetString("Locator", Value.Serialize());
         return base.Write(writer);
     }
 
     public override bool Read(GH_IReader reader)
     {
-        Value = reader.GetString("Specifier").Deserialize<Specifier>();
+        Value = reader.GetString("Locator").Deserialize<Locator>();
         return base.Read(reader);
     }
 
@@ -1133,7 +1135,7 @@ public class SpecifierGoo : GH_Goo<Specifier>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Context);
+            object ptr = new GH_String(Value.Group);
             target = (Q)ptr;
             return true;
         }
@@ -1148,9 +1150,9 @@ public class SpecifierGoo : GH_Goo<Specifier>
         string str = null;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
         {
-            Value = new Specifier
+            Value = new Locator
             {
-                Context = str
+                Group = str
             };
             return true;
         }
@@ -1514,6 +1516,49 @@ public class SideGoo : GH_Goo<Side>
         Value = reader.GetString("Side").Deserialize<Side>();
         return base.Read(reader);
     }
+
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Piece.Id);
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
+
+        string str;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Side
+            {
+                Piece = new PieceSide
+                {
+                    Id = str
+                }
+            };
+            return true;
+        }
+        if (source is Piece piece)
+        {
+            Value = new Side
+            {
+                Piece = new PieceSide
+                {
+                    Id = piece.Id
+                }
+            };
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class AttractionGoo : GH_Goo<Attraction>
@@ -1707,22 +1752,22 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo>
     }
 }
 
-public class SpecifierParam : SemioPersistentParam<SpecifierGoo>
+public class LocatorParam : SemioPersistentParam<LocatorGoo>
 {
-    public SpecifierParam() : base("Specifier", "Sp", "", "semio", "Params")
+    public LocatorParam() : base("Locator", "Lc", "", "semio", "Params")
     {
     }
 
     public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
 
-    protected override Bitmap Icon => Resources.specifier_24x24;
+    protected override Bitmap Icon => Resources.locator_24x24;
 
-    protected override GH_GetterResult Prompt_Singular(ref SpecifierGoo value)
+    protected override GH_GetterResult Prompt_Singular(ref LocatorGoo value)
     {
         throw new NotImplementedException();
     }
 
-    protected override GH_GetterResult Prompt_Plural(ref List<SpecifierGoo> values)
+    protected override GH_GetterResult Prompt_Plural(ref List<LocatorGoo> values)
     {
         throw new NotImplementedException();
     }
@@ -2005,65 +2050,65 @@ public class RepresentationComponent : SemioComponent
     }
 }
 
-public class SpecifierComponent : SemioComponent
+public class LocatorComponent : SemioComponent
 {
-    public SpecifierComponent()
-        : base("Model Specifier", "~Spc",
-            "Construct, deconstruct or modify a specifier.",
+    public LocatorComponent()
+        : base("Model Locator", "~Loc",
+            "Construct, deconstruct or modify a locator.",
             "semio", "Modelling")
     {
     }
 
     public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
 
-    protected override Bitmap Icon => Resources.specifier_modify_24x24;
+    protected override Bitmap Icon => Resources.locator_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new SpecifierParam(), "Specifier", "Sp?",
-            "Optional specifier to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocatorParam(), "Locator", "Sp?",
+            "Optional locator to deconstruct or modify.", GH_ParamAccess.item);
         pManager[0].Optional = true;
-        pManager.AddTextParameter("Context", "Ct", "Context of the specifier.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Group", "Gr", "Group of the locator.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Group", "Gr?", "Optional group of the specifier. No group means true.",
+        pManager.AddTextParameter("Subgroup", "SG?", "Optional subgroup of the locator.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new SpecifierParam(), "Specifier", "Sp",
-            "Constructed or modified specifier.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Context", "Ct", "Context of the specifier.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Group", "Gr?", "Optional group of the specifier. No group means true.",
+        pManager.AddParameter(new LocatorParam(), "Locator", "Lc",
+            "Constructed or modified locator.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Group", "Gr", "Group of the locator.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Subgroup", "SG?", "Optional subgroup of the locator.",
             GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var specifierGoo = new SpecifierGoo();
-        var context = "";
+        var locatorGoo = new LocatorGoo();
         var group = "";
+        var subgroup = "";
 
-        if (DA.GetData(0, ref specifierGoo))
-            specifierGoo = specifierGoo.Duplicate() as SpecifierGoo;
-        if (DA.GetData(1, ref context))
-            specifierGoo.Value.Context = context;
-        if (DA.GetData(2, ref group))
-            specifierGoo.Value.Group = group;
+        if (DA.GetData(0, ref locatorGoo))
+            locatorGoo = locatorGoo.Duplicate() as LocatorGoo;
+        if (DA.GetData(1, ref group))
+            locatorGoo.Value.Group = group;
+        if (DA.GetData(2, ref subgroup))
+            locatorGoo.Value.Subgroup = subgroup;
 
         var isValidInput = true;
-        if (specifierGoo.Value.Context == "")
+        if (locatorGoo.Value.Group == "")
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A specifier needs a context.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A locator needs a group.");
             isValidInput = false;
         }
 
         if (!isValidInput) return;
 
-        DA.SetData(0, specifierGoo.Duplicate());
-        DA.SetData(1, specifierGoo.Value.Context);
-        DA.SetData(2, specifierGoo.Value.Group);
+        DA.SetData(0, locatorGoo.Duplicate());
+        DA.SetData(1, locatorGoo.Value.Group);
+        DA.SetData(2, locatorGoo.Value.Subgroup);
     }
 }
 
@@ -2085,34 +2130,40 @@ public class PortComponent : SemioComponent
         pManager.AddParameter(new PortParam(), "Port", "Po?",
             "Optional port to deconstruct or modify.", GH_ParamAccess.item);
         pManager[0].Optional = true;
-        pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id?", "Optional id of the port.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddParameter(new SpecifierParam(), "Specifiers", "Sp+", "Specifiers of the port.",
-            GH_ParamAccess.list);
+        pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
         pManager[2].Optional = true;
+        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new PortParam(), "Port", "Po",
             "Constructed or modified port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id", "Id of the port.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
-        pManager.AddParameter(new SpecifierParam(), "Specifiers", "Sp+", "Specifiers to identify the port.",
+        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
             GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var portGoo = new PortGoo();
+        var id = "";
         var planeGeo = new Rhino.Geometry.Plane();
-        var specifierGoos = new List<SpecifierGoo>();
+        var locatorGoos = new List<LocatorGoo>();
 
         if (DA.GetData(0, ref portGoo))
             portGoo = portGoo.Duplicate() as PortGoo;
-        if (DA.GetData(1, ref planeGeo))
+        if (DA.GetData(1, ref id))
+            portGoo.Value.Id = id;
+        if (DA.GetData(2, ref planeGeo))
             portGoo.Value.Plane = planeGeo.convert();
-        if (DA.GetDataList(2, specifierGoos))
-            portGoo.Value.Specifiers = specifierGoos.Select(s => s.Value).ToList();
+        if (DA.GetDataList(3, locatorGoos))
+            portGoo.Value.Locators = locatorGoos.Select(s => s.Value).ToList();
 
         var isValidInput = true;
         if (portGoo.Value.Plane.IsInvalid())
@@ -2120,18 +2171,12 @@ public class PortComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a plane.");
             isValidInput = false;
         }
-
-        if (portGoo.Value.Specifiers.Count == 0)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs at least one specifier.");
-            isValidInput = false;
-        }
-
         if (!isValidInput) return;
 
         DA.SetData(0, portGoo.Duplicate());
-        DA.SetData(1, portGoo.Value.Plane.convert());
-        DA.SetDataList(2, portGoo.Value.Specifiers.Select(s => new SpecifierGoo(s.DeepClone()
+        DA.SetData(1, portGoo.Value.Id);
+        DA.SetData(2, portGoo.Value.Plane.convert());
+        DA.SetDataList(3, portGoo.Value.Locators.Select(s => new LocatorGoo(s.DeepClone()
         )));
     }
 }
@@ -2229,10 +2274,10 @@ public class TypeComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type.",
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
-        pManager.AddTextParameter("Unit", "Ut", "Unit of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the type. By default the document unit is used. Otherwise meters will be used.", GH_ParamAccess.item);
         pManager[5].Optional = true;
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
             GH_ParamAccess.list);
@@ -2240,7 +2285,7 @@ public class TypeComponent : SemioComponent
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
         pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the type. They can be further used to distinguish types with the same name.",
+            "Optional qualities of the type. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between types and variants or make fast performance assessments.",
             GH_ParamAccess.list);
         pManager[8].Optional = true;
     }
@@ -2252,14 +2297,14 @@ public class TypeComponent : SemioComponent
         pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut",
             "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the",
+        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
             GH_ParamAccess.list);
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between types and variants or make fast performance assessments.",
             GH_ParamAccess.list);
     }
 
@@ -2426,7 +2471,7 @@ public class PieceComponent : SemioComponent
         pManager[1].Optional = true;
         pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece.",
+        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager[3].Optional = true;
         pManager.AddPlaneParameter("Root Plane", "RtPn?",
@@ -2445,7 +2490,7 @@ public class PieceComponent : SemioComponent
             "Constructed or modified piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece.",
+        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager.AddPlaneParameter("Root Plane", "RtPl?",
             "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never attracted.",
@@ -2521,8 +2566,8 @@ public class SideComponent : SemioComponent
         pManager[0].Optional = true;
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddParameter(new SpecifierParam(), "Piece Type Port Specifiers", "PcTyPoSp+",
-            "Specifiers to identify the port of the type of the piece of the side.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
+                       "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.", GH_ParamAccess.item);
         pManager[2].Optional = true;
     }
 
@@ -2531,22 +2576,22 @@ public class SideComponent : SemioComponent
         pManager.AddParameter(new SideParam(), "Side", "Sd",
             "Constructed or modified side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
-        pManager.AddParameter(new SpecifierParam(), "Piece Type Port Specifiers", "PcTyPoSp+",
-            "Specifiers to identify the port of type of the piece of the side.", GH_ParamAccess.list);
+        pManager.AddParameter(new LocatorParam(), "Piece Type Port Id", "PcTyPoId?",
+            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var sideGoo = new SideGoo();
         var pieceId = "";
-        var pieceTypePortSpecifiers = new List<SpecifierGoo>();
+        var pieceTypePortId = "";
 
         if (DA.GetData(0, ref sideGoo))
             sideGoo = sideGoo.Duplicate() as SideGoo;
         if (DA.GetData(1, ref pieceId))
             sideGoo.Value.Piece.Id = pieceId;
-        if (DA.GetDataList(2, pieceTypePortSpecifiers))
-            sideGoo.Value.Piece.Type.Port.Specifiers = pieceTypePortSpecifiers.Select(s => s.Value).ToList();
+        if (DA.GetData(2, ref pieceTypePortId))
+            sideGoo.Value.Piece.Type.Port.Id = pieceTypePortId;
 
         var isValidInput = true;
         if (sideGoo.Value.Piece.Id == "")
@@ -2554,18 +2599,11 @@ public class SideComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs a piece id.");
             isValidInput = false;
         }
-
-        if (sideGoo.Value.Piece.Type.Port.Specifiers.Count == 0)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs at least one piece type port specifier.");
-            isValidInput = false;
-        }
-
         if (!isValidInput) return;
 
         DA.SetData(0, sideGoo.Duplicate());
         DA.SetData(1, sideGoo.Value.Piece.Id);
-        DA.SetDataList(2, sideGoo.Value.Piece.Type.Port.Specifiers.Select(s => new SpecifierGoo(s.DeepClone())));
+        DA.SetData(2, sideGoo.Value.Piece.Type.Port.Id);
     }
 }
 
@@ -2667,7 +2705,7 @@ public class FormationComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
         pManager[4].Optional = true;
         pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager[5].Optional = true;
@@ -2677,7 +2715,7 @@ public class FormationComponent : SemioComponent
             GH_ParamAccess.list);
         pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the formation.",
+            "Optional qualities of the formation. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between formations and variants or make fast performance assessments.",
             GH_ParamAccess.list);
         pManager[8].Optional = true;
     }
@@ -2689,12 +2727,12 @@ public class FormationComponent : SemioComponent
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
         pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
             GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between formations and variants or make fast performance assessments.",
             GH_ParamAccess.list);
     }
 
@@ -3236,7 +3274,7 @@ public class RemoveTypeComponent : SemioComponent
         pManager.AddTextParameter("Type Name", "TyNa",
             "Name of the type to remove from the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Variant", "TyVn?",
-                       "Optional variant of the type to remove from the kit.", GH_ParamAccess.item);
+                       "Optional variant of the type to remove from the kit. No variant will remove the default variant.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3314,7 +3352,7 @@ public class RemoveFormationComponent : SemioComponent
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of the formation to remove from the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to remove from the kit.", GH_ParamAccess.item);
+            "Optional variant of the formation to remove from the kit. No variant will remove the default variant.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3785,7 +3823,7 @@ public class GetSceneComponent : SemioComponent
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of formation to convert to a scene.", GH_ParamAccess.item);
         pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to convert to a scene.", GH_ParamAccess.item);
+            "Optional variant of the formation to convert to a scene. No variant will convert the default variant.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",

@@ -223,6 +223,26 @@ namespace Semio.Grasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap locator_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("locator_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap locator_modify_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("locator_modify_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap piece_24x24 {
             get {
                 object obj = ResourceManager.GetObject("piece_24x24", resourceCulture);
@@ -416,26 +436,6 @@ namespace Semio.Grasshopper.Properties {
         internal static System.Drawing.Bitmap side_modify_24x24 {
             get {
                 object obj = ResourceManager.GetObject("side_modify_24x24", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap specifier_24x24 {
-            get {
-                object obj = ResourceManager.GetObject("specifier_24x24", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap specifier_modify_24x24 {
-            get {
-                object obj = ResourceManager.GetObject("specifier_modify_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

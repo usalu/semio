@@ -12,6 +12,7 @@ mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
           tags
         }
         ports {
+          id
           plane {
             origin {
               x
@@ -29,9 +30,9 @@ mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
               z
             }
           }
-          specifiers {
-            context
+          locators {
             group
+            subgroup
           }
         }
         qualities {

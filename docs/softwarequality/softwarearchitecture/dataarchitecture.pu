@@ -37,8 +37,8 @@ entity Type {
     *kit_id : int <<FK>>
 }
 note right of Type
-    name and variant are unique.
-    variant = "" means default.
+    name and variant is unique.
+    variant="" means default.
 end note
 
 entity Representation {
@@ -79,10 +79,16 @@ entity Plane{
 entity Port {
     *id : int <<PK,generated>>
     ..
+    *local_id : string
     *plane_id : int <<FK>>
     ..
     *type_id : int <<FK>>
 }
+note top of Port
+    local_id and type_id
+    is unique.
+    local_id="" means default.
+end note
 
 entity Quality {
     *id : int <<PK,generated>>
@@ -97,20 +103,21 @@ entity Quality {
 note bottom of Quality
     Either type_id or formation_id
     must be set.
-    value = "" means true.
+    value="" means true.
     unit is optional
     (can be set to "").
 end note
 
 
-entity Specifier {
-    *context : string <<PK>>
-    *group : string
+entity Locator {
+    *group : string <<PK>>
+    *subgroup : string
     ..
     *port_id : int <<PK,FK>>
 }
-note bottom of Specifier
-    group = "" means true.
+note bottom of Locator
+    subgroup is optional
+    (can be set to "").
 end note
 
 entity Piece{
@@ -127,6 +134,8 @@ entity Piece{
     *formation_id : int <<FK>>
 }
 note right of Piece
+    local_id and type_id
+    is unique.
     root plane can only be set
     when piece is root.
 end note
@@ -150,8 +159,8 @@ entity Formation {
     *kit_id : int <<FK>>
 }
 note right of Formation
-    name and variant are unique.
-    variant = "" means default.
+    name and variant is unique.
+    variant="" means default.
 end note
 
 Kit ||--|{ Formation
@@ -164,7 +173,7 @@ Formation ||--|{ Piece
 Formation ||--o{ Attraction
 Formation ||--o{ Quality
 Port ||--|| Plane
-Port ||--|{  Specifier
+Port ||--o{  Locator
 Piece ||--o| Plane
 Type <-- Piece
 Piece <-- Attraction

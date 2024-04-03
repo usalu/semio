@@ -51,9 +51,10 @@ type Representation {
 type Port {
   plane: Plane
   type: Type
-  specifiers: [Specifier!]!
+  locators: [Locator!]!
   attractings: [Attraction!]!
   attracteds: [Attraction!]!
+  id: String!
 }
 
 type Plane {
@@ -145,9 +146,9 @@ type Vector {
   z: Float!
 }
 
-type Specifier {
-  context: String!
+type Locator {
   group: String!
+  subgroup: String!
   port: Port
 }
 
@@ -165,6 +166,7 @@ type FormationToSceneFromLocalKitResponse {
 
 type Scene {
   objects: [Object]!
+  formation: Formation
 }
 
 type Object {
@@ -246,8 +248,9 @@ input RepresentationInput {
 }
 
 input PortInput {
+  id: String
   plane: PlaneInput!
-  specifiers: [SpecifierInput!]
+  locators: [LocatorInput!]
 }
 
 input PlaneInput {
@@ -268,9 +271,9 @@ input VectorInput {
   z: Float!
 }
 
-input SpecifierInput {
-  context: String!
-  group: String
+input LocatorInput {
+  group: String!
+  subgroup: String
 }
 
 input QualityInput {
@@ -326,15 +329,15 @@ input SideInput {
 
 input PieceSideInput {
   id: String!
-  type: TypePieceSideInput!
+  type: TypePieceSideInput = null
 }
 
 input TypePieceSideInput {
-  port: PortIdInput!
+  port: PortIdInput = null
 }
 
 input PortIdInput {
-  specifiers: [SpecifierInput!]
+  id: String
 }
 
 type UpdateLocalKitMetadataMutation {

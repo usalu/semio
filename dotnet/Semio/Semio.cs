@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
@@ -8,15 +9,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Semio.Properties;
 
-// TODO: Replace GetHashcode() with a proper hash function
-// TODO: Add logging mechanism to all API calls if they fail
+// TODO: Replace GetHashcode() with a proper hash function.
+// TODO: Add logging mechanism to all API calls if they fail.
+// TODO: Add a more detailed message system when a model is invalid.
 
 #region Copilot
-
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
-//  formationToSceneFromLocalKit(directory: String!, formationInput: FormationInput!): FormationToSceneFromLocalKitResponse
+//  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
 //}
 
 //type LoadLocalKitResponse
@@ -71,9 +72,10 @@ using Semio.Properties;
 //{
 //plane: Plane
 //  type: Type
-//  specifiers: [Specifier!]!
+//  locators: [Locator!]!
 //  attractings: [Attraction!]!
 //  attracteds: [Attraction!]!
+//  id: String!
 //}
 
 //type Plane
@@ -105,7 +107,6 @@ using Semio.Properties;
 //  unit: String!
 //  createdAt: DateTime!
 //  lastUpdateAt: DateTime!
-//  volatile: Boolean!
 //  kit: Kit
 //  pieces: [Piece!]!
 //  attractions: [Attraction!]!
@@ -179,10 +180,10 @@ using Semio.Properties;
 //  z: Float!
 //}
 
-//type Specifier
+//type Locator
 //{
-//context: String!
-//  group: String!
+//group: String!
+//  subgroup: String!
 //  port: Port
 //}
 
@@ -203,6 +204,7 @@ using Semio.Properties;
 //type Scene
 //{
 //    objects: [Object]!
+//  formation: Formation
 //}
 
 //type Object
@@ -227,106 +229,10 @@ using Semio.Properties;
 //  FORMATION_DOES_NOT_EXIST
 //}
 
-//input FormationInput
-//{
-//    name: String!
-//  description: String
-//  icon: String
-//  variant: String
-//  unit: String!
-//  pieces: [PieceInput!]!
-//  attractions: [AttractionInput!]!
-//  qualities: [QualityInput!]
-//}
-
-//input PieceInput
-//{
-//    id: String!
-//  type: TypeIdInput!
-//  root: RootPieceInput = null
-//  diagram: DiagramPieceInput!
-//}
-
-//input TypeIdInput
+//input FormationIdInput
 //{
 //    name: String!
 //  variant: String
-//}
-
-//input RootPieceInput
-//{
-//    plane: PlaneInput!
-//}
-
-//input PlaneInput
-//{
-//    origin: PointInput!
-//  xAxis: VectorInput!
-//  yAxis: VectorInput!
-//}
-
-//input PointInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input VectorInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input DiagramPieceInput
-//{
-//    point: ScreenPointInput!
-//}
-
-//input ScreenPointInput
-//{
-//    x: Int!
-//  y: Int!
-//}
-
-//input AttractionInput
-//{
-//    attracting: SideInput!
-//  attracted: SideInput!
-//}
-
-//input SideInput
-//{
-//    piece: PieceSideInput!
-//}
-
-//input PieceSideInput
-//{
-//    id: String!
-//  type: TypePieceSideInput!
-//}
-
-//input TypePieceSideInput
-//{
-//    port: PortIdInput!
-//}
-
-//input PortIdInput
-//{
-//    specifiers: [SpecifierInput!]
-//}
-
-//input SpecifierInput
-//{
-//    context: String!
-//}
-
-//input QualityInput
-//{
-//    name: String!
-//  value: String!
-//  unit: String
 //}
 
 //type Mutation
@@ -392,8 +298,112 @@ using Semio.Properties;
 
 //input PortInput
 //{
+//    id: String
+//  plane: PlaneInput!
+//  locators: [LocatorInput!]
+//}
+
+//input PlaneInput
+//{
+//    origin: PointInput!
+//  xAxis: VectorInput!
+//  yAxis: VectorInput!
+//}
+
+//input PointInput
+//{
+//    x: Float!
+//  y: Float!
+//  z: Float!
+//}
+
+//input VectorInput
+//{
+//    x: Float!
+//  y: Float!
+//  z: Float!
+//}
+
+//input LocatorInput
+//{
+//    group: String!
+//  subgroup: String
+//}
+
+//input QualityInput
+//{
+//    name: String!
+//  value: String
+//  unit: String
+//}
+
+//input FormationInput
+//{
+//    name: String!
+//  description: String
+//  icon: String
+//  variant: String
+//  unit: String!
+//  pieces: [PieceInput!]!
+//  attractions: [AttractionInput!]!
+//  qualities: [QualityInput!]
+//}
+
+//input PieceInput
+//{
+//    id: String!
+//  type: TypeIdInput!
+//  root: RootPieceInput = null
+//  diagram: DiagramPieceInput!
+//}
+
+//input TypeIdInput
+//{
+//    name: String!
+//  variant: String
+//}
+
+//input RootPieceInput
+//{
 //    plane: PlaneInput!
-//  specifiers: [SpecifierInput!]
+//}
+
+//input DiagramPieceInput
+//{
+//    point: ScreenPointInput!
+//}
+
+//input ScreenPointInput
+//{
+//    x: Int!
+//  y: Int!
+//}
+
+//input AttractionInput
+//{
+//    attracting: SideInput!
+//  attracted: SideInput!
+//}
+
+//input SideInput
+//{
+//    piece: PieceSideInput!
+//}
+
+//input PieceSideInput
+//{
+//    id: String!
+//  type: TypePieceSideInput = null
+//}
+
+//input TypePieceSideInput
+//{
+//    port: PortIdInput = null
+//}
+
+//input PortIdInput
+//{
+//    id: String
 //}
 
 //type UpdateLocalKitMetadataMutation
@@ -519,13 +529,6 @@ using Semio.Properties;
 //  NO_PERMISSION_TO_MODIFY_KIT
 //  FORMATION_DOES_NOT_EXIST
 //}
-
-//input FormationIdInput
-//{
-//    name: String!
-//  variant: String
-//}
-
 #endregion
 
 #region Utility
@@ -586,7 +589,7 @@ public class Representation : IDeepCloneable<Representation>, IEntity
 
     public override string ToString()
     {
-        return $"Representation(Url: {Url})";
+        return $"Representation(Url:{Url})";
     }
 
     public bool IsInvalid()
@@ -595,34 +598,34 @@ public class Representation : IDeepCloneable<Representation>, IEntity
     }
 }
 
-public class Specifier : IDeepCloneable<Specifier>, IEntity
+public class Locator : IDeepCloneable<Locator>, IEntity
 {
-    public Specifier()
+    public Locator()
     {
-        Context = "";
         Group = "";
+        Subgroup = "";
     }
 
-    public string Context { get; set; }
     public string Group { get; set; }
+    public string Subgroup { get; set; }
 
-    public Specifier DeepClone()
+    public Locator DeepClone()
     {
-        return new Specifier
+        return new Locator
         {
-            Context = Context,
-            Group = Group
+            Group = Group,
+            Subgroup = Subgroup
         };
     }
 
     public override string ToString()
     {
-        return $"Specifier(Context: {Context}" + (Group != "" ? $", Group: {Group})" : ")");
+        return $"Locator(Group:{Group}" + (Subgroup != "" ? $",Subgroup:{Subgroup})" : ")");
     }
 
     public bool IsInvalid()
     {
-        return Context == "";
+        return Group == "";
     }
 }
 
@@ -648,7 +651,7 @@ public class ScreenPoint : IDeepCloneable<ScreenPoint>, IEntity
 
     public override string ToString()
     {
-        return $"Point(X: {X}, Y: {Y})";
+        return $"Point(X:{X},Y:{Y})";
     }
 
     public bool IsInvalid()
@@ -656,10 +659,6 @@ public class ScreenPoint : IDeepCloneable<ScreenPoint>, IEntity
         return false;
     }
 
-    public bool IsZero()
-    {
-        return X == 0 && Y == 0;
-    }
 }
 
 public class Point : IDeepCloneable<Point>, IEntity
@@ -687,7 +686,7 @@ public class Point : IDeepCloneable<Point>, IEntity
 
     public override string ToString()
     {
-        return $"Point(X: {X}, Y: {Y}, Z: {Z})";
+        return $"Point(X:{X},Y:{Y},Z:{Z})";
     }
 
     public bool IsInvalid()
@@ -726,7 +725,7 @@ public class Vector : IDeepCloneable<Vector>, IEntity
 
     public override string ToString()
     {
-        return $"Vector(X: {X}, Y: {Y}, Z: {Z})";
+        return $"Vector(X:{X},Y:{Y},Z:{Z})";
     }
 
     public bool IsInvalid()
@@ -765,7 +764,7 @@ public class Plane : IDeepCloneable<Plane>, IEntity
 
     public override string ToString()
     {
-        return $"Plane(Origin: {Origin}, XAxis: {XAxis}, YAxis: {YAxis})";
+        return $"Plane(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
     }
 
     public bool IsInvalid()
@@ -779,30 +778,32 @@ public class Port : IDeepCloneable<Port>, IEntity
 {
     public Port()
     {
+        Id = "";
         Plane = new Plane();
-        Specifiers = new List<Specifier>();
+        Locators = new List<Locator>();
     }
-
+    public string Id { get; set; } 
     public Plane Plane { get; set; }
-    public List<Specifier> Specifiers { get; set; }
+    public List<Locator> Locators { get; set; }
 
     public Port DeepClone()
     {
         return new Port
         {
-            Plane = Plane?.DeepClone(),
-            Specifiers = new List<Specifier>(Specifiers.Select(s => s.DeepClone()))
+            Id = Id,
+            Plane = Plane.DeepClone(),
+            Locators = new List<Locator>(Locators.Select(s => s.DeepClone()))
         };
     }
 
     public override string ToString()
     {
-        return $"Port({GetHashCode()})";
+        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
     }
 
     public bool IsInvalid()
     {
-        return Plane.IsInvalid() || Specifiers.Any(s => s.IsInvalid());
+        return Id == "" || Plane.IsInvalid() || Locators.Any(s => s.IsInvalid());
     }
 }
 
@@ -810,27 +811,27 @@ public class PortId : IDeepCloneable<PortId>, IEntity
 {
     public PortId()
     {
-        Specifiers = new List<Specifier>();
+        Id = "";
     }
 
-    public List<Specifier> Specifiers { get; set; }
+    public string Id { get; set; }
 
     public PortId DeepClone()
     {
         return new PortId
         {
-            Specifiers = new List<Specifier>(Specifiers.Select(s => s.DeepClone()))
+            Id = Id
         };
     }
 
     public override string ToString()
     {
-        return $"PortId({GetHashCode()})";
+        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
     }
 
     public bool IsInvalid()
     {
-        return Specifiers.Any(s => s.IsInvalid());
+        return false;
     }
 }
 
@@ -860,7 +861,7 @@ public class Quality : IDeepCloneable<Quality>, IEntity
 
     public override string ToString()
     {
-        return $"Quality(Name: {Name})";
+        return $"Quality(Name:{Name})";
     }
 
     public bool IsInvalid()
@@ -909,7 +910,7 @@ public class Type : IDeepCloneable<Type>, IEntity
 
     public override string ToString()
     {
-        return $"Type(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
+        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -941,7 +942,7 @@ public class TypeId : IDeepCloneable<TypeId>, IEntity
 
     public override string ToString()
     {
-        return $"TypeId(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
+        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -969,7 +970,7 @@ public class RootPiece : IDeepCloneable<RootPiece>, IEntity
 
     public override string ToString()
     {
-        return $"RootPiece({GetHashCode()})";
+        return $"Root({GetHashCode()})";
     }
 
     public bool IsInvalid()
@@ -997,7 +998,7 @@ public class DiagramPiece : IDeepCloneable<DiagramPiece>, IEntity
 
     public override string ToString()
     {
-        return $"DiagramPiece({GetHashCode()})";
+        return $"Diagram({Point})";
     }
 
     public bool IsInvalid()
@@ -1034,7 +1035,7 @@ public class Piece : IDeepCloneable<Piece>, IEntity
 
     public override string ToString()
     {
-        return $"Piece(Id: {Id})";
+        return $"Piece(Id:{Id})";
     }
 
     public bool IsInvalid()
@@ -1062,7 +1063,7 @@ public class PieceId : IDeepCloneable<PieceId>, IEntity
 
     public override string ToString()
     {
-        return $"PieceId(Id: {Id})";
+        return $"Piece(Id:{Id})";
     }
 
     public bool IsInvalid()
@@ -1090,7 +1091,7 @@ public class TypePieceSide : IDeepCloneable<TypePieceSide>, IEntity
 
     public override string ToString()
     {
-        return $"TypePieceSide({GetHashCode()})";
+        return $"Type({Port})";
     }
 
     public bool IsInvalid()
@@ -1121,7 +1122,7 @@ public class PieceSide : IDeepCloneable<PieceSide>, IEntity
 
     public override string ToString()
     {
-        return $"PieceSide(Id: {Id})";
+        return $"Piece(Id:{Id}" + (Type.Port.Id != "" ? $",{Type})" : ")");
     }
 
     public bool IsInvalid()
@@ -1149,7 +1150,7 @@ public class Side : IDeepCloneable<Side>, IEntity
 
     public override string ToString()
     {
-        return $"Side({GetHashCode()})";
+        return $"Side({Piece})";
     }
 
     public bool IsInvalid()
@@ -1181,7 +1182,7 @@ public class Attraction : IDeepCloneable<Attraction>, IEntity
 
     public override string ToString()
     {
-        return $"Attraction(Attracting(Piece: {Attracting.Piece.Id}), Attracted(Piece: {Attracted.Piece.Id}))";
+        return $"Attraction(Attracting({Attracting}),Attracted({Attracted}))";
     }
 
     public bool IsInvalid()
@@ -1230,7 +1231,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
 
     public override string ToString()
     {
-        return $"Formation(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
+        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1262,7 +1263,7 @@ public class FormationId : IDeepCloneable<FormationId>, IEntity
 
     public override string ToString()
     {
-        return $"FormationId(Name: {Name}" + (Variant != "" ? $", Variant: {Variant})" : ")");
+        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1290,7 +1291,7 @@ public class TypePieceObject : IDeepCloneable<TypePieceObject>, IEntity
 
     public override string ToString()
     {
-        return $"TypePieceObject({GetHashCode()})";
+        return $"Type({GetHashCode()})";
     }
 
     public bool IsInvalid()
@@ -1321,7 +1322,7 @@ public class PieceObject : IDeepCloneable<PieceObject>, IEntity
 
     public override string ToString()
     {
-        return $"PieceObject(Id: {Id})";
+        return $"Piece(Id:{Id})";
     }
 
     public bool IsInvalid()
@@ -1350,7 +1351,7 @@ public class ParentObject : IDeepCloneable<ParentObject>, IEntity
 
     public override string ToString()
     {
-        return $"ParentObject({GetHashCode()})";
+        return $"Parent({Piece})";
     }
 
     public bool IsInvalid()
@@ -1384,7 +1385,7 @@ public class Object : IDeepCloneable<Object>, IEntity
 
     public override string ToString()
     {
-        return $"Object({GetHashCode()})";
+        return $"Object({Piece})";
     }
 
     public bool IsInvalid()
@@ -1397,27 +1398,29 @@ public class Scene : IDeepCloneable<Scene>, IEntity
 {
     public Scene()
     {
+        Formation = new FormationId();
         Objects = new List<Object>();
     }
-
+    public FormationId Formation { get; set; }
     public List<Object> Objects { get; set; }
 
     public Scene DeepClone()
     {
         return new Scene
         {
+            Formation = Formation.DeepClone(),
             Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
         };
     }
 
     public override string ToString()
     {
-        return $"Scene({GetHashCode()})";
+        return $"Scene({Formation})";
     }
 
     public bool IsInvalid()
     {
-        return Objects.Any(o => o.IsInvalid());
+        return Formation.IsInvalid() || Objects.Any(o => o.IsInvalid());
     }
 }
 
@@ -1455,7 +1458,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
 
     public override string ToString()
     {
-        return $"Kit(Name: {Name}, {GetHashCode()})";
+        return $"Kit(Name:{Name}, {GetHashCode()})";
     }
 
     public bool IsInvalid()
@@ -1483,7 +1486,7 @@ public class KitMetadata : IDeepCloneable<KitMetadata>, IEntity
 
     public override string ToString()
     {
-        return $"KitMetadata(Name: {Name})";
+        return $"Kit(Name:{Name})";
     }
 
     public bool IsInvalid()

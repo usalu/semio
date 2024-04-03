@@ -44,8 +44,8 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
-                "specifiers": [
-                    {"context": "tower", "group": "left"},
+                "locators": [
+                    {"group": "tower", "subgroup": "left"},
                 ],
             },
             {
@@ -54,8 +54,8 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
-                "specifiers": [
-                    {"context": "tower", "group": "right"},
+                "locators": [
+                    {"group": "tower", "subgroup": "right"},
                 ],
             },
         ],
@@ -83,10 +83,10 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
-                "specifiers": [
-                    {"context": "facade", "group": "north"},
-                    {"context": "floor", "group": "1"},
-                    {"context": "door", "group": "0"},
+                "locators": [
+                    {"group": "facade", "subgroup": "north"},
+                    {"group": "floor", "subgroup": "1"},
+                    {"group": "door", "subgroup": "0"},
                 ],
             }
         ],
@@ -120,7 +120,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
-                "specifiers": [{"context": "doors", "group": "front"}],
+                "locators": [{"group": "doors", "subgroup": "front"}],
             }
         ],
         "qualities": [
@@ -153,7 +153,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
                 },
-                "specifiers": [{"context": "doors", "group": "front"}],
+                "locators": [{"group": "doors", "subgroup": "front"}],
             }
         ],
         "qualities": [
@@ -215,10 +215,10 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                         "id": "s",
                         "type": {
                             "port": {
-                                "specifiers": [
-                                    {"context": "facade", "group": "north"},
-                                    {"context": "floor", "group": "1"},
-                                    {"context": "door", "group": "0"},
+                                "locators": [
+                                    {"group": "facade", "subgroup": "north"},
+                                    {"group": "floor", "subgroup": "1"},
+                                    {"group": "door", "subgroup": "0"},
                                 ]
                             }
                         },
@@ -229,7 +229,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                         "id": "c1",
                         "type": {
                             "port": {
-                                "specifiers": [{"context": "doors", "group": "front"}]
+                                "locators": [{"group": "doors", "subgroup": "front"}]
                             }
                         },
                     }
@@ -317,7 +317,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "xAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                     "yAxis": {"x": 0.5171522, "y": 0.210352287, "z": -0.8296418},
                 },
-                "specifiers": [{"context": "side", "group": "q"}],
+                "locators": [{"group": "side", "subgroup": "q"}],
             },
             {
                 "plane": {
@@ -325,7 +325,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "xAxis": {"x": -0.5171522, "y": -0.210352287, "z": 0.8296418},
                     "yAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                 },
-                "specifiers": [{"context": "side", "group": "r"}],
+                "locators": [{"group": "side", "subgroup": "r"}],
             },
             {
                 "plane": {
@@ -333,7 +333,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "xAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                     "yAxis": {"x": 0.5171522, "y": 0.210352287, "z": -0.8296418},
                 },
-                "specifiers": [{"context": "side", "group": "s"}],
+                "locators": [{"group": "side", "subgroup": "s"}],
             },
             {
                 "plane": {
@@ -341,7 +341,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "xAxis": {"x": -0.5171522, "y": -0.210352287, "z": 0.8296418},
                     "yAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                 },
-                "specifiers": [{"context": "side", "group": "t"}],
+                "locators": [{"group": "side", "subgroup": "t"}],
             },
         ],
         "qualities": None,
@@ -367,7 +367,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "s"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "s"}]}
                         },
                     }
                 },
@@ -375,7 +375,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1a",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "q"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "q"}]}
                         },
                     }
                 },
@@ -385,7 +385,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1a",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "r"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "r"}]}
                         },
                     }
                 },
@@ -393,7 +393,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1ab",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "t"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "t"}]}
                         },
                     }
                 },
@@ -403,7 +403,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1a1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "r"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "r"}]}
                         },
                     }
                 },
@@ -411,7 +411,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "a",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "t"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "t"}]}
                         },
                     }
                 },
@@ -421,7 +421,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1ab",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "s"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "s"}]}
                         },
                     }
                 },
@@ -429,7 +429,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "a",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "q"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "q"}]}
                         },
                     }
                 },
@@ -439,7 +439,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "r"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "r"}]}
                         },
                     }
                 },
@@ -447,7 +447,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1b",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "t"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "t"}]}
                         },
                     }
                 },
@@ -457,7 +457,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1a",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "s"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "s"}]}
                         },
                     }
                 },
@@ -465,7 +465,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1a1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "q"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "q"}]}
                         },
                     }
                 },
@@ -475,7 +475,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1ab",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "r"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "r"}]}
                         },
                     }
                 },
@@ -483,7 +483,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "b",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "t"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "t"}]}
                         },
                     }
                 },
@@ -493,7 +493,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1b",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "s"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "s"}]}
                         },
                     }
                 },
@@ -501,7 +501,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1ab",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "q"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "q"}]}
                         },
                     }
                 },
@@ -511,7 +511,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1b",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "r"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "r"}]}
                         },
                     }
                 },
@@ -519,7 +519,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1b1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "t"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "t"}]}
                         },
                     }
                 },
@@ -529,7 +529,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "1b1",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "s"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "s"}]}
                         },
                     }
                 },
@@ -537,7 +537,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
                     "piece": {
                         "id": "b",
                         "type": {
-                            "port": {"specifiers": [{"context": "side", "group": "q"}]}
+                            "port": {"locators": [{"group": "side", "subgroup": "q"}]}
                         },
                     }
                 },

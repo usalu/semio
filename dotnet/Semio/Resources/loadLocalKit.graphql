@@ -17,6 +17,7 @@ query LoadLocalKit($directory: String!) {
           tags
         }
         ports {
+          id
           plane {
             origin {
               x
@@ -34,9 +35,9 @@ query LoadLocalKit($directory: String!) {
               z
             }
           }
-          specifiers {
-            context
+          locators {
             group
+            subgroup
           }
         }
         qualities {
@@ -64,10 +65,7 @@ query LoadLocalKit($directory: String!) {
               id
               type {
                 port {
-                  specifiers {
-                    context
-                    group
-                  }
+                  id
                 }
               }
             }
@@ -77,10 +75,7 @@ query LoadLocalKit($directory: String!) {
               id
               type {
                 port {
-                  specifiers {
-                    group
-                    context
-                  }
+                  id
                 }
               }
             }

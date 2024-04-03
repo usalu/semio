@@ -226,11 +226,8 @@
   <data name="side_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\side_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="specifier_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\specifier_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="specifier_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\specifier_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="locator_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\locator_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="type_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\type_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -249,5 +246,8 @@
   </data>
   <data name="type_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\type_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="locator_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\locator-modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

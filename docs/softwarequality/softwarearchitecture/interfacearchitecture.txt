@@ -1,76 +1,77 @@
 kit : !Kit{
-    name : !string
-    description : ?string
-    icon : ?string
-    url : ?string
+    name : !String
+    description : ?String
+    icon : ?String
+    url : ?String
     types : +[
-        name : !string
-        description : ?string
-        icon : ?string
-        variant : ?string
-        unit : !string
+        name : !String
+        description : ?String
+        icon : ?String
+        variant : ?String
+        unit : !String
         representations : +[
-            url : !string
-            lod : ?string
-            tags : *[string]
+            url : !String
+            lod : ?String
+            tags : *[String]
         ]
         ports : +[
+            id : !String
             plane : !{
                 origin : !{
-                    x : float!
-                    y : float!
-                    z : float!
+                    x : !Float
+                    y : !Float
+                    z : !Float
                 }
                 xAxis : !{
-                    x : float!
-                    y : float!
-                    z : float!
+                    x : !Float
+                    y : !Float
+                    z : !Float
                 }
                 yAxis : !{
-                    x : float!
-                    y : float!
-                    z : float!
+                    x : !Float
+                    y : !Float
+                    z : !Float
                 }
             }
-            specifiers : +[
-                context : !string
-                group : !string
+            locators : +[
+                group : !String
+                subgroup : !String
             ]
         ]
         qualities : *[
-            name : !string
-            value : !string
-            unit : ?string
+            name : !String
+            value : !String
+            unit : ?String
         ]
     ]
     formations : +[
-        name : !string
-        description : ?string
-        icon : ?string
-        variant : ?string
-        unit : !string
+        name : !String
+        description : ?String
+        icon : ?String
+        variant : ?String
+        unit : !String
         pieces : ![
-            id : !string
+            id : !String
             type : !{
-                name : !string
-                variant : ?string
+                name : !String
+                variant : ?String
             }
             root : ?{
                 plane : !{
                     origin : !{
-                        x : float!
-                        y : float!
-                        z : float!
+                        x : !Float
+                        y : !Float
+                        z : !Float
                     }
                     xAxis : !{
-                        x : float!
-                        y : float!
-                        z : float!
+                        x : !Float
+                        y : !Float
+                        z : !Float
                     }
                     yAxis : !{
-                        x : float!
-                        y : float!
-                        z : float!
+                        x : !Float
+                        y : !Float
+                        z : !Float
                     }
                 }
             }
@@ -81,12 +82,12 @@ kit : !Kit{
         attractions : +[
             attracting : !{
                 piece : !{
-                    id : !string
+                    id : !String
                     type : !{
                         port : !{
-                            specifiers : +[
-                                context : !string
-                                group : !string
+                            locators : +[
+                                group : !String
+                                subgroup : !String
                             ]
                         }
                     }
@@ -94,12 +95,12 @@ kit : !Kit{
             }
             attracted : !{
                 piece : !{
-                    id : !string
+                    id : !String
                     type : !{
                         port : !{
-                            specifiers : +[
-                                context : !string
-                                group : !string
+                            locators : +[
+                                group : !String
+                                subgroup : !String
                             ]
                         }
                     }
@@ -107,9 +108,9 @@ kit : !Kit{
             }
         ]
         qualities : *[
-            name : !string
-            value : !string
-            unit : ?string
+            name : !String
+            value : !String
+            unit : ?String
         ]
     ]
 }

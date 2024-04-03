@@ -4,6 +4,10 @@ query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdI
     formationIdInput: $formation
   ) {
     scene {
+      formation {
+        name
+        variant
+      }
       objects {
         piece {
           id

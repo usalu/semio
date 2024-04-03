@@ -19,10 +19,7 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
             id
             type {
               port {
-                specifiers {
-                  context
-                  group
-                }
+                id
               }
             }
           }
@@ -32,10 +29,7 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
             id
             type {
               port {
-                specifiers {
-                  group
-                  context
-                }
+                id
               }
             }
           }

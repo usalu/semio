@@ -36,9 +36,9 @@ class Representation(BaseModel):
     tags: List[str]
 
 
-class Specifier(BaseModel):
-    context: str
+class Locator(BaseModel):
     group: str
+    subgroup: str
 
 
 class Point(BaseModel):
@@ -61,11 +61,11 @@ class Plane(BaseModel):
 
 class Port(BaseModel):
     plane: Plane
-    specifiers: List[Specifier]
+    locators: List[Locator]
 
 
 class PortId(BaseModel):
-    specifiers: List[Specifier]
+    locators: List[Locator]
 
 
 class Quality(BaseModel):

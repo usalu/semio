@@ -34,9 +34,9 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               z
             }
           }
-          specifiers {
-            context
+          locators {
             group
+            subgroup
           }
         }
         qualities {
@@ -64,9 +64,9 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               id
               type {
                 port {
-                  specifiers {
-                    context
+                  locators {
                     group
+                    subgroup
                   }
                 }
               }
@@ -77,9 +77,9 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
               id
               type {
                 port {
-                  specifiers {
+                  locators {
+                    subgroup
                     group
-                    context
                   }
                 }
               }

@@ -216,7 +216,7 @@ class Base(DeclarativeBase):
 
 class Tag(Base):
     """A tag helps to categorize a representation.
-    It enables to select groups of representations that belong together."""
+    It enables to select subgroups of representations that belong together."""
 
     __tablename__ = "tag"
 
@@ -347,38 +347,40 @@ class Representation(Base):
     #     return [self.parent] + self.children if self.children else []
 
 
-class Specifier(Base):
-    """A specifier helps to categorize a port from a type.
-    It enables to select a single port from all ports based on groups."""
+class Locator(Base):
+    """A locator helps to categorize a port from a type.
+    It enables to select a single port from all ports based on groups and subgroups."""
 
-    __tablename__ = "specifier"
+    __tablename__ = "locator"
 
-    context: Mapped[str] = mapped_column(
+    group: Mapped[str] = mapped_column(
+        "group_name",  # group is a reserved keyword in SQL
         String(NAME_LENGTH_MAX),
-        CheckConstraint("length(context) > 0", name="context_not_empty_constraint"),
+        CheckConstraint("length(group_name) > 0", name="group_not_empty_constraint"),
         primary_key=True,
+        key="group",
     )
     # Optional. "" means true.
-    group: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
+    subgroup: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     port_id: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
-    port: Mapped["Port"] = relationship("Port", back_populates="specifiers")
+    port: Mapped["Port"] = relationship("Port", back_populates="locators")
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Specifier):
+        if not isinstance(other, Locator):
             raise NotImplementedError()
-        return self.context == other.context and self.group == other.group
+        return self.group == other.group and self.subgroup == other.subgroup
 
     def __hash__(self) -> int:
-        return hash((self.context, self.group))
+        return hash((self.group, self.subgroup))
 
     def __repr__(self) -> str:
-        return f"Specifier(context={self.context!r}, group={self.group!r}, port_id={self.port_id!r})"
+        return f"Locator(group={self.group!r}, subgroup={self.subgroup!r}, port_id={self.port_id!r})"
 
     def __str__(self) -> str:
-        return f"Specifier(context={self.context}, port_id={str(self.port_id)})"
+        return f"Locator(group={self.group}, port_id={str(self.port_id)})"
 
     def client__str__(self) -> str:
-        return f"Specifier(context={self.context}, group={self.group})"
+        return f"Locator(group={self.group}, subgroup={self.subgroup})"
 
     # @property
     # def parent(self) -> Entity:
@@ -594,14 +596,16 @@ class Port(Base):
     __tablename__ = "port"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    # "" means the default port.
+    local_id: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     plane_id: Mapped[int] = mapped_column(ForeignKey("plane.id"))
     plane: Mapped["Plane"] = relationship(
         "Plane", back_populates="port", uselist=False, cascade="all, delete"
     )
     type_id: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="ports")
-    specifiers: Mapped[List[Specifier]] = relationship(
-        Specifier, back_populates="port", cascade="all, delete-orphan"
+    locators: Mapped[List[Locator]] = relationship(
+        Locator, back_populates="port", cascade="all, delete-orphan"
     )
     attractings: Mapped[List["Attraction"]] = relationship(
         "Attraction",
@@ -614,6 +618,8 @@ class Port(Base):
         back_populates="attracted_piece_type_port",
     )
 
+    __table_args__ = (UniqueConstraint("local_id", "type_id"),)
+
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Port):
     #         raise NotImplementedError()
@@ -623,13 +629,13 @@ class Port(Base):
     #     return hash(set(self.qualities))
 
     def __repr__(self) -> str:
-        return f"Port(id={self.id!r}, plane_id={self.plane_id!r}, type_id={self.type_id!r}, specifiers={self.specifiers!r}, attractings={self.attractings!r}, attracteds={self.attracteds!r})"
+        return f"Port(id={self.id!r}, local_id={self.local_id!r}, plane_id={self.plane_id!r}, type_id={self.type_id!r}, locators={self.locators!r})"
 
     def __str__(self) -> str:
         return f"Port(id={str(self.id)}, type_id={str(self.type_id)})"
 
     def client__str__(self) -> str:
-        return f"Port(specifiers={list_client__str__(self.specifiers)})"
+        return f"Port(id={self.local_id})"
 
     # @property
     # def parent(self) -> Entity:
@@ -637,7 +643,7 @@ class Port(Base):
 
     # @property
     # def children(self) -> List[Entity]:
-    #     return self.specifiers  # type: ignore
+    #     return self.locators  # type: ignore
 
     # @property
     # def references(self) -> List[Entity]:
@@ -1177,6 +1183,10 @@ class Object(BaseModel):
 
 
 class Scene(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    formation: Formation
     objects: List[Object]
 
 
@@ -1350,10 +1360,10 @@ class VectorNode(PydanticObjectType):
         name = "Vector"
 
 
-class SpecifierNode(SQLAlchemyObjectType):
+class LocatorNode(SQLAlchemyObjectType):
     class Meta:
-        model = Specifier
-        name = "Specifier"
+        model = Locator
+        name = "Locator"
         exclude_fields = ("port_id",)
 
 
@@ -1394,9 +1404,15 @@ class PortNode(SQLAlchemyObjectType):
         name = "Port"
         exclude_fields = (
             "id",
+            "local_id",
             "plane_id",
             "type_id",
         )
+
+    id = graphene.Field(NonNull(graphene.String))
+
+    def resolve_id(locator: Locator, info):
+        return locator.local_id
 
 
 class QualityNode(SQLAlchemyObjectType):
@@ -1421,7 +1437,7 @@ class RootPieceNode(PydanticObjectType):
     class Meta:
         model = RootPiece
         name = "RootPiece"
-        # plane is none Pydanctic model and needs to be resolved manually
+        # plane is not a Pydanctic model and needs to be resolved manually
         exclude_fields = ("plane",)
 
     plane = graphene.Field(NonNull(PlaneNode))
@@ -1551,6 +1567,13 @@ class SceneNode(PydanticObjectType):
     class Meta:
         model = Scene
         name = "Scene"
+        # formation is not a Pydanctic model and needs to be resolved manually
+        exclude_fields = ("formation",)
+
+    formation = graphene.Field(FormationNode)
+
+    def resolve_formation(root, info):
+        return root.formation
 
 
 class KitNode(SQLAlchemyObjectType):
@@ -1567,9 +1590,9 @@ class RepresentationInput(InputObjectType):
     tags = graphene.List(NonNull(graphene.String))
 
 
-class SpecifierInput(InputObjectType):
-    context = NonNull(graphene.String)
-    group = graphene.String()
+class LocatorInput(InputObjectType):
+    group = NonNull(graphene.String)
+    subgroup = graphene.String()
 
 
 class ScreenPointInput(PydanticInputObjectType):
@@ -1594,12 +1617,13 @@ class PlaneInput(InputObjectType):
 
 
 class PortInput(InputObjectType):
+    id = graphene.String()
     plane = NonNull(PlaneInput)
-    specifiers = graphene.List(NonNull(SpecifierInput))
+    locators = graphene.List(NonNull(LocatorInput))
 
 
 class PortIdInput(InputObjectType):
-    specifiers = graphene.List(NonNull(SpecifierInput))
+    id = graphene.String()
 
 
 class QualityInput(InputObjectType):
@@ -1646,12 +1670,12 @@ class PieceInput(InputObjectType):
 
 
 class TypePieceSideInput(InputObjectType):
-    port = NonNull(PortIdInput)
+    port = graphene.Field(PortIdInput)
 
 
 class PieceSideInput(InputObjectType):
     id = NonNull(graphene.String)
-    type = NonNull(TypePieceSideInput)
+    type = graphene.Field(TypePieceSideInput)
 
 
 class SideInput(InputObjectType):
@@ -1831,12 +1855,11 @@ class RepresentationAlreadyExists(AlreadyExists):
 
 
 class PortAlreadyExists(AlreadyExists):
-    def __init__(self, port) -> None:
-        super().__init__(port.specifiers, port)
-        self.port = port
+    def __init__(self, id) -> None:
+        super().__init__(id, id)
 
     def __str__(self):
-        return f"Port with specifiers: {self.port.specifiers!r} already exists: {str(self.port)}"
+        return f"Port with id: {self.id!r} already exists."
 
 
 class AttractionAlreadyExists(AlreadyExists):
@@ -1912,14 +1935,14 @@ def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Qua
     )
 
 
-def specifierInputToTransientSpecifierForEquality(
-    specifierInput: SpecifierInput,
-) -> Specifier:
-    try:
-        group = specifierInput.group
-    except AttributeError:
-        group = ""
-    return Specifier(context=specifierInput.context, group=group)
+# def locatorInputToTransientLocatorForEquality(
+#     locatorInput: LocatorInput,
+# ) -> Locator:
+#     try:
+#         subgroup = locatorInput.subgroup
+#     except AttributeError:
+#         subgroup = ""
+#     return Locator(group=locatorInput.group, subgroup=subgroup)
 
 
 def getRepresentationByUrl(session: Session, type: Type, url: str) -> Representation:
@@ -2043,20 +2066,27 @@ def getFormationByNameAndVariant(
     return formation
 
 
-def getPortBySpecifiers(
-    session: Session, type: Formation, specifierInputs: List[SpecifierInput]
-) -> Port:
-    ports = session.query(Port).filter_by(type_id=type.id)
-    specifiers = [
-        specifierInputToTransientSpecifierForEquality(specifierInput)
-        for specifierInput in specifierInputs
-    ]
-    portsWithSameSpecifier = [
-        port for port in ports if set(port.specifiers) == set(specifiers)
-    ]
-    if len(portsWithSameSpecifier) != 1:
-        raise PortNotFound(specifiers)
-    return portsWithSameSpecifier[0]
+# def getPortByLocators(
+#     session: Session, type: Formation, locatorInputs: List[LocatorInput]
+# ) -> Port:
+#     ports = session.query(Port).filter_by(type_id=type.id)
+#     locators = [
+#         locatorInputToTransientLocatorForEquality(locatorInput)
+#         for locatorInput in locatorInputs
+#     ]
+#     portsWithSameLocator = [
+#         port for port in ports if set(port.locators) == set(locators)
+#     ]
+#     if len(portsWithSameLocator) != 1:
+#         raise PortNotFound(locators)
+#     return portsWithSameLocator[0]
+
+
+def getPortById(session: Session, type: Type, portId: str) -> Port:
+    port = session.query(Port).filter_by(type_id=type.id, local_id=portId).first()
+    if not port:
+        raise PortNotFound(portId)
+    return port
 
 
 def getAttractionByPieceIds(
@@ -2110,22 +2140,26 @@ def addRepresentationInputToSession(
     return representation
 
 
-def addSpecifierInputToSession(
-    session: Session, port: Port, specifierInput: SpecifierInput
-) -> Specifier:
+def addLocatorInputToSession(
+    session: Session, port: Port, locatorInput: LocatorInput
+) -> Locator:
     try:
-        group = specifierInput.group
+        subgroup = locatorInput.subgroup
     except AttributeError:
-        group = ""
-    specifier = Specifier(context=specifierInput.context, group=group, port_id=port.id)
-    session.add(specifier)
+        subgroup = ""
+    locator = Locator(group=locatorInput.group, subgroup=subgroup, port_id=port.id)
+    session.add(locator)
     session.flush()
-    return specifier
+    return locator
 
 
 def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
     try:
-        existingPort = getPortBySpecifiers(session, type, portInput.specifiers)
+        id = portInput.id
+    except AttributeError:
+        id = ""
+    try:
+        existingPort = getPortById(session, type, id)
         raise PortAlreadyExists(existingPort)
     except PortNotFound:
         pass
@@ -2143,13 +2177,14 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
     session.add(plane)
     session.flush()
     port = Port(
+        local_id=id,
         plane_id=plane.id,
         type_id=type.id,
     )
     session.add(port)
     session.flush()
-    for specifierInput in portInput.specifiers or []:
-        specifier = addSpecifierInputToSession(session, port, specifierInput)
+    for locatorInput in portInput.locators or []:
+        locator = addLocatorInputToSession(session, port, locatorInput)
     return port
 
 
@@ -2264,6 +2299,14 @@ def addAttractionInputToSession(
     localIdToPiece: dict,
 ) -> Attraction:
     try:
+        attracting_piece_type_port_id = attractionInput.attracting.piece.type.port.id
+    except AttributeError:
+        attracting_piece_type_port_id = ""
+    try:
+        attracted_piece_type_port_id = attractionInput.attracted.piece.type.port.id
+    except AttributeError:
+        attracted_piece_type_port_id = ""
+    try:
         # TODO: Somehow the flushing of the other attractions works but you can't query for them.
         # When I try to look for an existing attraction it finds none but when adding it,
         # it raises a proper IntegrityError
@@ -2284,15 +2327,15 @@ def addAttractionInputToSession(
         attractedPiece = localIdToPiece[attractionInput.attracted.piece.id]
     except KeyError:
         raise PieceNotFound(formation, attractionInput.attracted.piece.id)
-    attractingPieceTypePort = getPortBySpecifiers(
+    attractingPieceTypePort = getPortById(
         session,
         attractingPiece.type,
-        attractionInput.attracting.piece.type.port.specifiers,
+        attracting_piece_type_port_id,
     )
-    attractedPieceTypePort = getPortBySpecifiers(
+    attractedPieceTypePort = getPortById(
         session,
         attractedPiece.type,
-        attractionInput.attracted.piece.type.port.specifiers,
+        attracted_piece_type_port_id,
     )
     attraction = Attraction(
         attracting_piece_id=attractingPiece.id,
@@ -2474,7 +2517,7 @@ def sceneFromFormationInSession(
         variant = ""
     formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
     hierarchies = hierarchiesFromFormation(formation)
-    scene = Scene(objects=[])
+    scene = Scene(formation=formation, objects=[])
     for hierarchy in hierarchies:
         addObjectsToScene(
             scene,
