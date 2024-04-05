@@ -4,14 +4,6 @@ enableMapSet()
 import { PayloadAction, configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { Formation, FormationInput, Kit, Type, TypeInput } from './semio'
 
-// export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
-//     if (!directory) {
-//         return
-//     }
-//     const response = await client.request<Kit>(LOAD_LOCAL_KIT, { directory })
-//     return response
-// })
-
 export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
     if (!directory) {
         return
@@ -63,7 +55,10 @@ export const { loadKit } = kitsSlice.actions
 export const selectKits = (state: { kits: { kits: Map<string, Kit> } }): Map<string, Kit> =>
     state.kits.kits
 
-export const selectKit = (state: { kits: { kits: Map<string, Kit> } }, directory: string): Kit => {
+export const selectKit = (
+    state: { kits: { kits: Map<string, Kit> } },
+    directory: string
+): Kit | undefined => {
     const kits = state.kits.kits
     return kits.get(directory)
 }
@@ -73,16 +68,30 @@ export const selectTypes = (
     directory: string
 ): Map<string, Map<string, Type>> => {
     const kit = selectKit(state, directory)
-    const types = new Map<string, Map<string, Type>>()
     if (kit && kit.types) {
+        const types = new Map<string, Map<string, Type>>()
         kit.types.forEach((type) => {
             if (!types.has(type.name)) {
                 types.set(type.name, new Map<string, Type>())
             }
-            types.get(type.name).set(type.variant, type)
+            types.get(type.name)?.set(type.variant, type)
         })
+        return types
     }
-    return types
+    return new Map<string, Map<string, Type>>()
+}
+
+export const selectType = (
+    state: { kits: { kits: Map<string, Kit> } },
+    directory: string,
+    name: string,
+    variant: string
+): Type | undefined => {
+    const kit = selectKit(state, directory)
+    if (kit && kit.types) {
+        return kit.types.find((type) => type.name === name && type.variant === variant)
+    }
+    return undefined
 }
 
 export const selectFormations = (
@@ -90,16 +99,32 @@ export const selectFormations = (
     directory: string
 ): Map<string, Map<string, Formation>> => {
     const kit = selectKit(state, directory)
-    const formations = new Map<string, Map<string, Formation>>()
     if (kit && kit.formations) {
+        const formations = new Map<string, Map<string, Formation>>()
         kit.formations.forEach((formation) => {
             if (!formations.has(formation.name)) {
                 formations.set(formation.name, new Map<string, Formation>())
             }
-            formations.get(formation.name).set(formation.variant, formation)
+            formations.get(formation.name)?.set(formation.variant, formation)
         })
+        return formations
     }
-    return formations
+    return new Map<string, Map<string, Formation>>()
+}
+
+export const selectFormation = (
+    state: { kits: { kits: Map<string, Kit> } },
+    directory: string,
+    name: string,
+    variant: string
+): Formation | undefined => {
+    const kit = selectKit(state, directory)
+    if (kit && kit.formations) {
+        return kit.formations.find(
+            (formation) => formation.name === name && formation.variant === variant
+        )
+    }
+    return undefined
 }
 
 export enum ViewKind {
@@ -225,9 +250,15 @@ export const viewsSlice = createSlice({
             ) => {
                 const { id, kitDirectory, viewKind, formation, type, selection } = action.payload
                 if (viewKind === ViewKind.Type) {
-                    state.views.push(new TypeView(id, kitDirectory, type))
+                    state.views.push({ kind: viewKind, id, kitDirectory, type })
                 } else if (viewKind === ViewKind.Formation) {
-                    state.views.push(new FormationView(id, kitDirectory, formation, selection))
+                    state.views.push({
+                        kind: viewKind,
+                        id,
+                        kitDirectory,
+                        formation,
+                        selection: selection ?? { piecesIds: [], attractionsPiecesIds: [] }
+                    })
                 }
             },
             prepare: (view: IArtifactView) => {
@@ -251,11 +282,43 @@ export const viewsSlice = createSlice({
         },
         removeView: (state, action: PayloadAction<string>) => {
             state.views = state.views.filter((view) => view.id !== action.payload)
+        },
+        updateFormation: (
+            state,
+            action: PayloadAction<{ id: string; formation: FormationInput }>
+        ) => {
+            const formationView = state.views.find(
+                (view) => view.id === action.payload.id && view.kind === ViewKind.Formation
+            )
+            if (formationView) {
+                formationView.formation = action.payload.formation
+            }
+        },
+        updateFormationSelection: {
+            reducer: (
+                state,
+                action: PayloadAction<{ id: string; selection: ISelectionFormation }>
+            ) => {
+                const formationView = state.views.find(
+                    (view) => view.id === action.payload.id && view.kind === ViewKind.Formation
+                )
+                if (formationView) {
+                    formationView.selection = action.payload.selection
+                }
+            },
+            prepare: (id: string, selection: ISelectionFormation) => {
+                return {
+                    payload: {
+                        id,
+                        selection: selection ?? { piecesIds: [], attractionsPiecesIds: [] }
+                    }
+                }
+            }
         }
     }
 })
 
-export const { addView, removeView } = viewsSlice.actions
+export const { addView, removeView, updateFormation, updateFormationSelection } = viewsSlice.actions
 
 export const selectViews = (state: { views: { views: IArtifactView[] } }): IArtifactView[] =>
     state.views.views

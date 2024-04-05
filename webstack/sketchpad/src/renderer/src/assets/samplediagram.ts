@@ -151,10 +151,10 @@ const sampleDiagram = {
                         id: 'b',
                         type: {
                             port: {
-                                specifiers: [
+                                locators: [
                                     {
-                                        context: 'core',
-                                        group: '0'
+                                        group: 'core',
+                                        subgroup: '0'
                                     }
                                 ]
                             }
@@ -166,10 +166,10 @@ const sampleDiagram = {
                         id: 's',
                         type: {
                             port: {
-                                specifiers: [
+                                locators: [
                                     {
-                                        context: 'bottom',
-                                        group: 'true'
+                                        group: 'bottom',
+                                        subgroup: 'true'
                                     }
                                 ]
                             }
@@ -191,10 +191,10 @@ const sampleDiagram = {
                         id: 's',
                         type: {
                             port: {
-                                specifiers: [
+                                locators: [
                                     {
-                                        context: 'top',
-                                        group: 'true'
+                                        group: 'top',
+                                        subgroup: 'true'
                                     }
                                 ]
                             }
@@ -206,10 +206,10 @@ const sampleDiagram = {
                         id: 'cp',
                         type: {
                             port: {
-                                specifiers: [
+                                locators: [
                                     {
-                                        context: 'bottom',
-                                        group: 'true'
+                                        group: 'bottom',
+                                        subgroup: 'true'
                                     }
                                 ]
                             }

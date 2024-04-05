@@ -21,6 +21,10 @@ const onOpenDirectory = (): Promise<string> => {
     return window.electron.ipcRenderer.invoke('open-directory')
 }
 
+const onOpenFile = (): Promise<string> => {
+    return window.electron.ipcRenderer.invoke('open-file')
+}
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
         <Provider store={store}>
@@ -29,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
                 onWindowMaximize={onWindowMaximize}
                 onWindowClose={onWindowClose}
                 onOpenDirectory={onOpenDirectory}
+                onOpenFile={onOpenFile}
             />
         </Provider>
     </React.StrictMode>

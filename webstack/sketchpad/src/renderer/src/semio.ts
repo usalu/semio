@@ -84,9 +84,10 @@ export type Port = {
   __typename?: 'Port';
   plane?: Maybe<Plane>;
   type?: Maybe<Type>;
-  specifiers: Array<Specifier>;
+  locators: Array<Locator>;
   attractings: Array<Attraction>;
   attracteds: Array<Attraction>;
+  id: Scalars['String']['output'];
 };
 
 export type Plane = {
@@ -191,10 +192,10 @@ export type Vector = {
   z: Scalars['Float']['output'];
 };
 
-export type Specifier = {
-  __typename?: 'Specifier';
-  context: Scalars['String']['output'];
+export type Locator = {
+  __typename?: 'Locator';
   group: Scalars['String']['output'];
+  subgroup: Scalars['String']['output'];
   port?: Maybe<Port>;
 };
 
@@ -214,6 +215,7 @@ export type FormationToSceneFromLocalKitResponse = {
 export type Scene = {
   __typename?: 'Scene';
   objects: Array<Maybe<Object>>;
+  formation?: Maybe<Formation>;
 };
 
 export type Object = {
@@ -341,8 +343,9 @@ export type RepresentationInput = {
 };
 
 export type PortInput = {
+  id?: InputMaybe<Scalars['String']['input']>;
   plane: PlaneInput;
-  specifiers?: InputMaybe<Array<SpecifierInput>>;
+  locators?: InputMaybe<Array<LocatorInput>>;
 };
 
 export type PlaneInput = {
@@ -363,9 +366,9 @@ export type VectorInput = {
   z: Scalars['Float']['input'];
 };
 
-export type SpecifierInput = {
-  context: Scalars['String']['input'];
-  group?: InputMaybe<Scalars['String']['input']>;
+export type LocatorInput = {
+  group: Scalars['String']['input'];
+  subgroup?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QualityInput = {
@@ -421,15 +424,15 @@ export type SideInput = {
 
 export type PieceSideInput = {
   id: Scalars['String']['input'];
-  type: TypePieceSideInput;
+  type?: InputMaybe<TypePieceSideInput>;
 };
 
 export type TypePieceSideInput = {
-  port: PortIdInput;
+  port?: InputMaybe<PortIdInput>;
 };
 
 export type PortIdInput = {
-  specifiers?: InputMaybe<Array<SpecifierInput>>;
+  id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateLocalKitMetadataMutation = {

@@ -1,18 +1,19 @@
 import './App.scss'
+import cytoscape from 'cytoscape'
 import {
     AttractionInput,
     Formation,
+    FormationIdInput,
     FormationInput,
-    Kit,
     Piece,
     PieceInput,
-    Quality,
     Representation,
     Type,
+    TypeIdInput,
     TypeInput
 } from '@renderer/semio'
 import tailwindConfig from '../../../tailwind.config.js'
-import {
+import React, {
     useState,
     forwardRef,
     Ref,
@@ -22,10 +23,12 @@ import {
     useEffect,
     SVGProps,
     useImperativeHandle,
-    useRef
+    useRef,
+    ReactNode,
+    createContext,
+    useContext
 } from 'react'
 import { createPortal } from 'react-dom'
-import { KBarProvider } from 'kbar'
 import { KBarAnimator, KBarPortal, KBarPositioner, KBarSearch } from 'kbar'
 import { KBarResults, useMatches } from 'kbar'
 import { ActionId, ActionImpl } from 'kbar'
@@ -38,39 +41,38 @@ import {
     ConfigProvider,
     Divider,
     Flex,
-    GetProp,
     Layout,
-    Menu,
-    Modal,
     Row,
     Select,
     Space,
-    Steps,
-    Table,
-    TableProps,
     Tabs,
-    Tag,
-    Transfer,
-    TransferProps,
     message,
-    theme,
     MenuItem,
     Form,
     Radio,
     Input,
-    FormProps
+    FormProps,
+    Tooltip
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
+import { Mesh } from 'three'
 import { Canvas, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
     useGLTF,
     Select as ThreeSelect,
     GizmoHelper,
-    GizmoViewport
+    GizmoViewport,
+    TransformControls
 } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { INode, IEdge, IGraphInput, SelectionT, GraphUtils, IPoint, GraphView } from 'react-digraph'
+import {
+    Selection,
+    EffectComposer,
+    Outline,
+    Select as PostProcessSelect
+} from '@react-three/postprocessing'
+import { INode, IEdge, IGraphInput, SelectionT, IPoint, GraphView } from 'react-digraph'
 import SVG from 'react-inlinesvg'
 import CloseSharpIcon from '@mui/icons-material/CloseSharp'
 import MinimizeSharpIcon from '@mui/icons-material/MinimizeSharp'
@@ -78,26 +80,18 @@ import FullscreenSharpIcon from '@mui/icons-material/FullscreenSharp'
 import FullscreenExitSharpIcon from '@mui/icons-material/FullscreenExitSharp'
 import HomeSharpIcon from '@mui/icons-material/HomeSharp'
 import FolderSharpIcon from '@mui/icons-material/FolderSharp'
+import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp'
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
-import { createAsyncThunk, configureStore, createSlice, nanoid } from '@reduxjs/toolkit'
-import { Provider, useDispatch, useSelector } from 'react-redux'
-import { GraphQLClient, gql } from 'graphql-request'
+import { nanoid } from '@reduxjs/toolkit'
+import { useDispatch, useSelector } from 'react-redux'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
-import sampleDiagram from './assets/samplediagram'
-import sampleKit from './assets/samplekit'
 import {
     RootState,
     addView,
-    deleteWindow,
     loadLocalKit,
-    newWindow,
-    removeView,
-    selectFormationWindow,
     selectKit,
-    selectKits,
     selectTypes,
-    selectWindow,
     selectViews,
     selectFormationView,
     FormationView,
@@ -105,15 +99,695 @@ import {
     ViewKind,
     selectView,
     TypeView,
-    loadKit,
-    selectFormations
+    selectFormations,
+    selectType,
+    updateFormation,
+    updateFormationSelection
 } from './store'
+
+// Copilot
+// export type Maybe<T> = T | null;
+// export type InputMaybe<T> = Maybe<T>;
+// export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+// export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+// export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+// export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+// export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+
+// export type Scalars = {
+//   ID: { input: string; output: string; }
+//   String: { input: string; output: string; }
+//   Boolean: { input: boolean; output: boolean; }
+//   Int: { input: number; output: number; }
+//   Float: { input: number; output: number; }
+//   /**
+//    * The `DateTime` scalar type represents a DateTime
+//    * value as specified by
+//    * [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+//    */
+//   DateTime: { input: any; output: any; }
+// };
+
+// export type Query = {
+//   __typename?: 'Query';
+//   loadLocalKit?: Maybe<LoadLocalKitResponse>;
+//   formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
+// };
+
+// export type QueryLoadLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+// };
+
+// export type QueryFormationToSceneFromLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   formationIdInput: FormationIdInput;
+// };
+
+// export type LoadLocalKitResponse = {
+//   __typename?: 'LoadLocalKitResponse';
+//   kit?: Maybe<Kit>;
+//   error?: Maybe<LoadLocalKitError>;
+// };
+
+// export type Kit = {
+//   __typename?: 'Kit';
+//   name: Scalars['String']['output'];
+//   description: Scalars['String']['output'];
+//   icon: Scalars['String']['output'];
+//   createdAt: Scalars['DateTime']['output'];
+//   lastUpdateAt: Scalars['DateTime']['output'];
+//   url: Scalars['String']['output'];
+//   types: Array<Type>;
+//   formations: Array<Formation>;
+// };
+
+// export type Type = {
+//   __typename?: 'Type';
+//   name: Scalars['String']['output'];
+//   description: Scalars['String']['output'];
+//   icon: Scalars['String']['output'];
+//   variant: Scalars['String']['output'];
+//   unit: Scalars['String']['output'];
+//   createdAt: Scalars['DateTime']['output'];
+//   lastUpdateAt: Scalars['DateTime']['output'];
+//   kit?: Maybe<Kit>;
+//   representations: Array<Representation>;
+//   ports: Array<Port>;
+//   qualities: Array<Quality>;
+//   pieces: Array<Piece>;
+// };
+
+// export type Representation = {
+//   __typename?: 'Representation';
+//   url: Scalars['String']['output'];
+//   lod: Scalars['String']['output'];
+//   type?: Maybe<Type>;
+//   tags: Array<Scalars['String']['output']>;
+// };
+
+// export type Port = {
+//   __typename?: 'Port';
+//   plane?: Maybe<Plane>;
+//   type?: Maybe<Type>;
+//   locators: Array<Locator>;
+//   attractings: Array<Attraction>;
+//   attracteds: Array<Attraction>;
+//   id: Scalars['String']['output'];
+// };
+
+// export type Plane = {
+//   __typename?: 'Plane';
+//   port?: Maybe<Port>;
+//   rootPiece?: Maybe<Piece>;
+//   origin: Point;
+//   xAxis: Vector;
+//   yAxis: Vector;
+// };
+
+// export type Piece = {
+//   __typename?: 'Piece';
+//   type?: Maybe<Type>;
+//   formation?: Maybe<Formation>;
+//   attractings: Array<Attraction>;
+//   attracteds: Array<Attraction>;
+//   id: Scalars['String']['output'];
+//   root: RootPiece;
+//   diagram: DiagramPiece;
+// };
+
+// export type Formation = {
+//   __typename?: 'Formation';
+//   name: Scalars['String']['output'];
+//   description: Scalars['String']['output'];
+//   icon: Scalars['String']['output'];
+//   variant: Scalars['String']['output'];
+//   unit: Scalars['String']['output'];
+//   createdAt: Scalars['DateTime']['output'];
+//   lastUpdateAt: Scalars['DateTime']['output'];
+//   kit?: Maybe<Kit>;
+//   pieces: Array<Piece>;
+//   attractions: Array<Attraction>;
+//   qualities: Array<Quality>;
+// };
+
+// export type Attraction = {
+//   __typename?: 'Attraction';
+//   formation?: Maybe<Formation>;
+//   attracting: Side;
+//   attracted: Side;
+// };
+
+// /** A side of an attraction. */
+// export type Side = {
+//   __typename?: 'Side';
+//   piece: PieceSide;
+// };
+
+// /** The piece of a side of an attraction. */
+// export type PieceSide = {
+//   __typename?: 'PieceSide';
+//   id: Scalars['String']['output'];
+//   type: TypePieceSide;
+// };
+
+// /** The port of a type of a piece of a side of an attraction. */
+// export type TypePieceSide = {
+//   __typename?: 'TypePieceSide';
+//   port?: Maybe<Port>;
+// };
+
+// export type Quality = {
+//   __typename?: 'Quality';
+//   name: Scalars['String']['output'];
+//   value: Scalars['String']['output'];
+//   unit: Scalars['String']['output'];
+//   type?: Maybe<Type>;
+//   formation?: Maybe<Formation>;
+// };
+
+// /** The plane of the root piece of a formation. */
+// export type RootPiece = {
+//   __typename?: 'RootPiece';
+//   plane: Plane;
+// };
+
+// /** The point of a diagram of a piece. */
+// export type DiagramPiece = {
+//   __typename?: 'DiagramPiece';
+//   point: ScreenPoint;
+// };
+
+// export type ScreenPoint = {
+//   __typename?: 'ScreenPoint';
+//   x: Scalars['Int']['output'];
+//   y: Scalars['Int']['output'];
+// };
+
+// export type Point = {
+//   __typename?: 'Point';
+//   x: Scalars['Float']['output'];
+//   y: Scalars['Float']['output'];
+//   z: Scalars['Float']['output'];
+// };
+
+// export type Vector = {
+//   __typename?: 'Vector';
+//   x: Scalars['Float']['output'];
+//   y: Scalars['Float']['output'];
+//   z: Scalars['Float']['output'];
+// };
+
+// export type Locator = {
+//   __typename?: 'Locator';
+//   group: Scalars['String']['output'];
+//   subgroup: Scalars['String']['output'];
+//   port?: Maybe<Port>;
+// };
+
+// export enum LoadLocalKitError {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
+// }
+
+// export type FormationToSceneFromLocalKitResponse = {
+//   __typename?: 'FormationToSceneFromLocalKitResponse';
+//   scene?: Maybe<Scene>;
+//   error?: Maybe<FormationToSceneFromLocalKitResponseError>;
+// };
+
+// export type Scene = {
+//   __typename?: 'Scene';
+//   objects: Array<Maybe<Object>>;
+//   formation?: Maybe<Formation>;
+// };
+
+// export type Object = {
+//   __typename?: 'Object';
+//   piece?: Maybe<Piece>;
+//   plane?: Maybe<Plane>;
+//   parent?: Maybe<Object>;
+// };
+
+// export type FormationToSceneFromLocalKitResponseError = {
+//   __typename?: 'FormationToSceneFromLocalKitResponseError';
+//   code: FormationToSceneFromLocalKitResponseErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum FormationToSceneFromLocalKitResponseErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
+//   FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+// }
+
+// export type FormationIdInput = {
+//   name: Scalars['String']['input'];
+//   variant?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type Mutation = {
+//   __typename?: 'Mutation';
+//   createLocalKit?: Maybe<CreateLocalKitMutation>;
+//   updateLocalKitMetadata?: Maybe<UpdateLocalKitMetadataMutation>;
+//   deleteLocalKit?: Maybe<DeleteLocalKitMutation>;
+//   addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>;
+//   removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>;
+//   addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>;
+//   removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>;
+// };
+
+// export type MutationCreateLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   kitInput: KitInput;
+// };
+
+// export type MutationUpdateLocalKitMetadataArgs = {
+//   directory: Scalars['String']['input'];
+//   kitMetadataInput: KitMetadataInput;
+// };
+
+// export type MutationDeleteLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+// };
+
+// export type MutationAddTypeToLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   typeInput: TypeInput;
+// };
+
+// export type MutationRemoveTypeFromLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   typeId: TypeIdInput;
+// };
+
+// export type MutationAddFormationToLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   formationInput: FormationInput;
+// };
+
+// export type MutationRemoveFormationFromLocalKitArgs = {
+//   directory: Scalars['String']['input'];
+//   formationId: FormationIdInput;
+// };
+
+// export type CreateLocalKitMutation = {
+//   __typename?: 'CreateLocalKitMutation';
+//   kit?: Maybe<Kit>;
+//   error?: Maybe<CreateLocalKitError>;
+// };
+
+// export type CreateLocalKitError = {
+//   __typename?: 'CreateLocalKitError';
+//   code: CreateLocalKitErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum CreateLocalKitErrorCode {
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryAlreadyContainsAKit = 'DIRECTORY_ALREADY_CONTAINS_A_KIT',
+//   NoPermissionToCreateDirectory = 'NO_PERMISSION_TO_CREATE_DIRECTORY',
+//   NoPermissionToCreateKit = 'NO_PERMISSION_TO_CREATE_KIT',
+//   KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
+// }
+
+// export type KitInput = {
+//   name: Scalars['String']['input'];
+//   description?: InputMaybe<Scalars['String']['input']>;
+//   icon?: InputMaybe<Scalars['String']['input']>;
+//   url?: InputMaybe<Scalars['String']['input']>;
+//   types?: InputMaybe<Array<TypeInput>>;
+//   formations?: InputMaybe<Array<FormationInput>>;
+// };
+
+// export type TypeInput = {
+//   name: Scalars['String']['input'];
+//   description?: InputMaybe<Scalars['String']['input']>;
+//   icon?: InputMaybe<Scalars['String']['input']>;
+//   variant?: InputMaybe<Scalars['String']['input']>;
+//   unit: Scalars['String']['input'];
+//   representations: Array<RepresentationInput>;
+//   ports: Array<PortInput>;
+//   qualities?: InputMaybe<Array<QualityInput>>;
+// };
+
+// export type RepresentationInput = {
+//   url: Scalars['String']['input'];
+//   lod?: InputMaybe<Scalars['String']['input']>;
+//   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+// };
+
+// export type PortInput = {
+//   id?: InputMaybe<Scalars['String']['input']>;
+//   plane: PlaneInput;
+//   locators?: InputMaybe<Array<LocatorInput>>;
+// };
+
+// export type PlaneInput = {
+//   origin: PointInput;
+//   xAxis: VectorInput;
+//   yAxis: VectorInput;
+// };
+
+// export type PointInput = {
+//   x: Scalars['Float']['input'];
+//   y: Scalars['Float']['input'];
+//   z: Scalars['Float']['input'];
+// };
+
+// export type VectorInput = {
+//   x: Scalars['Float']['input'];
+//   y: Scalars['Float']['input'];
+//   z: Scalars['Float']['input'];
+// };
+
+// export type LocatorInput = {
+//   group: Scalars['String']['input'];
+//   subgroup?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type QualityInput = {
+//   name: Scalars['String']['input'];
+//   value?: InputMaybe<Scalars['String']['input']>;
+//   unit?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type FormationInput = {
+//   name: Scalars['String']['input'];
+//   description?: InputMaybe<Scalars['String']['input']>;
+//   icon?: InputMaybe<Scalars['String']['input']>;
+//   variant?: InputMaybe<Scalars['String']['input']>;
+//   unit: Scalars['String']['input'];
+//   pieces: Array<PieceInput>;
+//   attractions: Array<AttractionInput>;
+//   qualities?: InputMaybe<Array<QualityInput>>;
+// };
+
+// export type PieceInput = {
+//   id: Scalars['String']['input'];
+//   type: TypeIdInput;
+//   root?: InputMaybe<RootPieceInput>;
+//   diagram: DiagramPieceInput;
+// };
+
+// export type TypeIdInput = {
+//   name: Scalars['String']['input'];
+//   variant?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type RootPieceInput = {
+//   plane: PlaneInput;
+// };
+
+// export type DiagramPieceInput = {
+//   point: ScreenPointInput;
+// };
+
+// export type ScreenPointInput = {
+//   x: Scalars['Int']['input'];
+//   y: Scalars['Int']['input'];
+// };
+
+// export type AttractionInput = {
+//   attracting: SideInput;
+//   attracted: SideInput;
+// };
+
+// export type SideInput = {
+//   piece: PieceSideInput;
+// };
+
+// export type PieceSideInput = {
+//   id: Scalars['String']['input'];
+//   type?: InputMaybe<TypePieceSideInput>;
+// };
+
+// export type TypePieceSideInput = {
+//   port?: InputMaybe<PortIdInput>;
+// };
+
+// export type PortIdInput = {
+//   id?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type UpdateLocalKitMetadataMutation = {
+//   __typename?: 'UpdateLocalKitMetadataMutation';
+//   kit?: Maybe<Kit>;
+//   error?: Maybe<UpdateLocalKitMetadataError>;
+// };
+
+// export type UpdateLocalKitMetadataError = {
+//   __typename?: 'UpdateLocalKitMetadataError';
+//   code: UpdateLocalKitMetadataErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum UpdateLocalKitMetadataErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToUpdateKit = 'NO_PERMISSION_TO_UPDATE_KIT',
+//   KitMetadataIsInvalid = 'KIT_METADATA_IS_INVALID'
+// }
+
+// export type KitMetadataInput = {
+//   name?: InputMaybe<Scalars['String']['input']>;
+//   description?: InputMaybe<Scalars['String']['input']>;
+//   icon?: InputMaybe<Scalars['String']['input']>;
+//   url?: InputMaybe<Scalars['String']['input']>;
+// };
+
+// export type DeleteLocalKitMutation = {
+//   __typename?: 'DeleteLocalKitMutation';
+//   error?: Maybe<DeleteLocalKitError>;
+// };
+
+// export enum DeleteLocalKitError {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToDeleteKit = 'NO_PERMISSION_TO_DELETE_KIT'
+// }
+
+// export type AddTypeToLocalKitMutation = {
+//   __typename?: 'AddTypeToLocalKitMutation';
+//   type?: Maybe<Type>;
+//   error?: Maybe<AddTypeToLocalKitError>;
+// };
+
+// export type AddTypeToLocalKitError = {
+//   __typename?: 'AddTypeToLocalKitError';
+//   code: AddTypeToLocalKitErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum AddTypeToLocalKitErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//   TypeInputIsInvalid = 'TYPE_INPUT_IS_INVALID'
+// }
+
+// export type RemoveTypeFromLocalKitMutation = {
+//   __typename?: 'RemoveTypeFromLocalKitMutation';
+//   error?: Maybe<RemoveTypeFromLocalKitError>;
+// };
+
+// export type RemoveTypeFromLocalKitError = {
+//   __typename?: 'RemoveTypeFromLocalKitError';
+//   code: RemoveTypeFromLocalKitErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum RemoveTypeFromLocalKitErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//   TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
+//   FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+// }
+
+// export type AddFormationToLocalKitMutation = {
+//   __typename?: 'AddFormationToLocalKitMutation';
+//   formation?: Maybe<Formation>;
+//   error?: Maybe<AddFormationToLocalKitError>;
+// };
+
+// export type AddFormationToLocalKitError = {
+//   __typename?: 'AddFormationToLocalKitError';
+//   code: AddFormationToLocalKitErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum AddFormationToLocalKitErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//   FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+// }
+
+// export type RemoveFormationFromLocalKitMutation = {
+//   __typename?: 'RemoveFormationFromLocalKitMutation';
+//   error?: Maybe<RemoveFormationFromLocalKitError>;
+// };
+
+// export type RemoveFormationFromLocalKitError = {
+//   __typename?: 'RemoveFormationFromLocalKitError';
+//   code: RemoveFormationFromLocalKitErrorCode;
+//   message?: Maybe<Scalars['String']['output']>;
+// };
+
+// export enum RemoveFormationFromLocalKitErrorCode {
+//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//   FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+// }
 
 const { Header, Content, Footer, Sider } = Layout
 
 const {
     theme: { colors }
 } = tailwindConfig
+
+const sketchpadTheme = {
+    // algorithm: [theme.darkAlgorithm],
+    token: {
+        // primary
+        colorPrimary: colors.light,
+        colorPrimaryBg: colors.light,
+        colorPrimaryBgHover: colors.light,
+        colorPrimaryBorder: colors.light,
+        colorPrimaryBorderHover: colors.light,
+        colorPrimaryHover: colors.light, // e.g. hover primary button
+        colorPrimaryActive: colors.light,
+        colorPrimaryText: colors.light,
+        colorPrimaryTextHover: colors.light,
+        colorPrimaryTextActive: colors.light,
+        // text
+        colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
+        colorTextSecondary: colors.lightGrey,
+        colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
+        colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
+        // border
+        colorBorder: colors.light,
+        colorBorderSecondary: colors.light,
+        // fill
+        colorFill: colors.light,
+        colorFillSecondary: colors.light,
+        colorFillTertiary: colors.light,
+        colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
+        // background
+        colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
+        colorBgElevated: colors.grey, // e.g. background selected menu
+        colorBgLayout: colors.light,
+        colorBgSpotlight: colors.grey, // e.g background of tooltip
+        colorBgMask: colors.light,
+        colorBgTextActive: colors.light,
+        colorBgBase: colors.light,
+        // special colors
+        colorError: colors.danger,
+        colorWarning: colors.warning,
+        colorInfo: colors.info,
+        colorSuccess: colors.success,
+        fontFamily: 'Anta, sans-serif',
+        boxShadow: 'none',
+        boxShadowSecondary: 'none',
+        boxShadowTertiary: 'none',
+        wireframe: false,
+        borderRadius: 0,
+        lineType: 'none',
+        lineWidth: 0
+        // motionUnit: 0.05
+    },
+    components: {
+        Button: {
+            borderColorDisabled: colors.light,
+            dangerColor: colors.light,
+            defaultActiveBg: colors.light,
+            defaultActiveBorderColor: colors.light,
+            defaultActiveColor: colors.light,
+            defaultBg: colors.light,
+            defaultBorderColor: colors.light,
+            defaultColor: colors.lightGrey, // e.g. normal state of buttons
+            defaultGhostBorderColor: colors.light,
+            defaultGhostColor: colors.light,
+            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
+            ghostBg: colors.light,
+            linkHoverBg: colors.light,
+            primaryColor: colors.light,
+            textHoverBg: colors.light
+        },
+        Layout: {
+            bodyBg: colors.dark,
+            footerBg: colors.grey, //
+            headerBg: colors.grey, // e.g. space between tabs and content
+            headerColor: colors.light,
+            lightSiderBg: colors.light,
+            lightTriggerBg: colors.light,
+            lightTriggerColor: colors.light,
+            siderBg: colors.darkGrey, //
+            triggerBg: colors.light,
+            triggerColor: colors.light,
+            headerPadding: '0px 0px'
+        },
+        Tabs: {
+            cardBg: colors.grey, // background of unselected tabs
+            inkBarColor: colors.light,
+            itemActiveColor: colors.light,
+            itemColor: colors.lightGrey, // text and fill of unselected tabs
+            itemHoverColor: colors.light,
+            itemSelectedColor: colors.light,
+            cardGutter: 0,
+            cardHeight: 38,
+            cardPadding: '0 16px',
+            verticalItemMargin: '0'
+        },
+        Divider: {
+            lineWidth: 0.25,
+            verticalMarginInline: 0
+        },
+        Avatar: {
+            groupBorderColor: colors.light
+        },
+        Collapse: {
+            headerBg: colors.darkGrey, //
+            headerPadding: '0 0px',
+            contentBg: colors.darkGrey, //
+            contentPadding: '0 0px'
+        },
+        Select: {
+            clearBg: colors.lightGrey,
+            multipleItemBg: colors.darkGrey,
+            optionActiveBg: colors.darkGrey,
+            optionSelectedBg: colors.darkGrey,
+            optionSelectedColor: colors.light,
+            selectorBg: colors.darkGrey
+        },
+        Form: {
+            labelColor: colors.lightGrey, // e.g. text of label
+            labelRequiredMarkColor: colors.light
+        },
+        Radio: {
+            buttonBg: colors.grey, //
+            buttonCheckedBg: colors.lightGrey, //
+            buttonCheckedBgDisabled: colors.light,
+            buttonCheckedColorDisabled: colors.light,
+            buttonColor: colors.lightGrey, // e.g. text of radio
+            buttonSolidCheckedActiveBg: colors.light,
+            buttonSolidCheckedColor: colors.light,
+            buttonSolidCheckedHoverBg: colors.light,
+            dotColorDisabled: colors.light
+        },
+        Tooltip: {}
+    }
+}
 
 class SeededRandom {
     private seed: number
@@ -152,6 +826,13 @@ class Generator {
 
         return `${adjective}${animal}${number}`
     }
+}
+
+const typeToString = (type: Type | TypeInput | TypeIdInput): string => {
+    return `${type.name}##(${type.variant})`
+}
+const formationToString = (formation: Formation | FormationInput | FormationIdInput): string => {
+    return `${formation.name}##(${formation.variant})`
 }
 
 function tinyKeyStringToHuman(string: string): string {
@@ -289,6 +970,149 @@ function getIconData(dataUrl): [string, IconKind] {
     return [data, kind]
 }
 
+const turnBlackAndWhiteSvgSemiotic = (svgString: string, dark = false): string => {
+    if (dark)
+        return svgString
+            .replace(/#000000/g, colors.light)
+            .replace(/#000/g, colors.light)
+            .replace(/black/g, colors.light)
+            .replace(/#FFFFFF/g, colors.dark)
+            .replace(/#FFF/g, colors.dark)
+            .replace(/white/g, colors.dark)
+    return svgString
+        .replace(/#000000/g, colors.dark)
+        .replace(/#000/g, colors.dark)
+        .replace(/black/g, colors.dark)
+        .replace(/#FFFFFF/g, colors.light)
+        .replace(/#FFF/g, colors.light)
+        .replace(/white/g, colors.light)
+}
+
+interface ArtifactAvatarProps {
+    icon: string
+    description?: ReactNode
+    isSelected?: boolean
+    draggableId?: string
+}
+
+const ArtifactAvatar = ({
+    icon,
+    description,
+    isSelected,
+    draggableId
+}: ArtifactAvatarProps): JSX.Element => {
+    const [data, kind] = getIconData(icon)
+    const draggableProps = draggableId
+        ? (() => {
+              const { attributes, listeners, setNodeRef } = useDraggable({
+                  id: draggableId
+              })
+
+              return {
+                  ref: setNodeRef,
+                  ...listeners,
+                  ...attributes
+              }
+          })()
+        : {}
+
+    switch (kind) {
+        case IconKind.Svg:
+            return (
+                <Tooltip placement="right" title={description}>
+                    <Avatar
+                        className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
+                        size={38}
+                        {...draggableProps}
+                    >
+                        <SVG
+                            src={turnBlackAndWhiteSvgSemiotic(data, isSelected)}
+                            width="32"
+                            height="32"
+                        />
+                    </Avatar>
+                </Tooltip>
+            )
+        case IconKind.Image:
+            return (
+                <Tooltip placement="right" title={description}>
+                    <Avatar
+                        className={`cursor-pointer ${isSelected ? 'bg-primary opacity-50' : 'bg-light opacity-100'}`}
+                        src={data}
+                        size={38}
+                        {...draggableProps}
+                    ></Avatar>
+                </Tooltip>
+            )
+        case IconKind.Text:
+            return (
+                <Tooltip placement="right" title={description}>
+                    <Avatar
+                        className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
+                        size={38}
+                        {...draggableProps}
+                    >
+                        {data}
+                    </Avatar>
+                </Tooltip>
+            )
+    }
+}
+
+type Hierarchy = {
+    pieceId: string
+    children: Hierarchy[]
+}
+
+const formationToHierarchies = (formation: Formation | FormationInput): Hierarchy[] => {
+    if (formation.pieces.length === 0) return []
+    const cy = cytoscape({
+        elements: {
+            nodes: formation.pieces.map((piece) => ({
+                data: { id: piece.id, label: piece.id }
+            })),
+            edges: formation.attractions.map((attraction) => ({
+                data: {
+                    id: `${attraction.attracting.piece.id}->${attraction.attracted.piece.id}`,
+                    source: attraction.attracting.piece.id,
+                    target: attraction.attracted.piece.id
+                }
+            }))
+        }
+    })
+    const hierarchies: Hierarchy[] = []
+    const components = cy.elements().components()
+    components.forEach((component) => {
+        const roots = component.roots()
+        const root = roots.length === 0 ? component.nodes()[0] : roots[0]
+        const { path } = cy.elements().bfs({
+            root,
+            directed: true
+        })
+        // path[i] are the nodes. path[i-1] are the edges.
+        // path[0] is the root. path[length-1] is the last node.
+        const rootHierarchy: Hierarchy = {
+            pieceId: path[0].id(),
+            children: []
+        }
+        hierarchies.push(rootHierarchy)
+        const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
+        pieceIdToHierarchy[rootHierarchy.pieceId] = rootHierarchy
+        for (let i = 2; i < path.length; i += 2) {
+            const pieceId = path[i].id()
+            const edge = path[i - 1]
+            const hierarchy = {
+                pieceId,
+                children: []
+            }
+            pieceIdToHierarchy[pieceId] = hierarchy
+            const parentPieceId = edge.source().id()
+            pieceIdToHierarchy[parentPieceId].children.push(hierarchy)
+        }
+    })
+    return hierarchies
+}
+
 const GraphConfig = {
     NodeTypes: {
         piece: {
@@ -340,33 +1164,98 @@ export interface IDraft extends IGraphInput {
 const NODE_KEY = 'id' // Allows D3 to correctly update DOM
 
 interface DiagramEditorProps {
-    className?: string
+    viewId: string
+    kitDirectory: string
     piece: PieceInput
     onPieceEdit: (piece: PieceInput) => Promise<PieceInput>
     onAttractionEdit: (attraction: AttractionInput) => AttractionInput
+    className?: string
 }
 
 const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
-    const [graph, setGraph] = useState(sampleDiagram)
-    const [selected, setSelected] = useState<SelectionT | null>(null)
-    const [copiedNodes, setCopiedNodes] = useState<INode[]>([])
-    const [copiedEdges, setCopiedEdges] = useState<IEdge[]>([])
+    const dispatch = useDispatch()
+
+    const types = useSelector((state: RootState) => selectTypes(state, props.kitDirectory))
+    const formationView = useSelector((state: RootState) =>
+        selectFormationView(state, props.viewId)
+    )
+
+    const transformFormationToGraph = (formation: Formation): IDraft => {
+        const nodes = formation.pieces.map(
+            (piece) =>
+                ({
+                    id: piece.id,
+                    title: '',
+                    type: 'piece',
+                    x: piece.diagram.point.x,
+                    y: piece.diagram.point.y,
+                    piece
+                }) as IPieceNode
+        )
+
+        const edges = formation.attractions.map(
+            (attraction) =>
+                ({
+                    source: attraction.attracting.piece.id,
+                    target: attraction.attracted.piece.id,
+                    type: 'attraction',
+                    attraction
+                }) as IAttractionEdge
+        )
+
+        return {
+            nodes,
+            edges
+        }
+    }
+    const graph = transformFormationToGraph(formationView.formation)
+    const nodes = graph.nodes
+    const edges = graph.edges
+
+    const transformPieceToNode = (piece: PieceInput): IPieceNode => {
+        return {
+            id: piece.id,
+            title: '',
+            type: 'piece',
+            x: piece.diagram.point.x,
+            y: piece.diagram.point.y,
+            piece
+        }
+    }
+    const transformAttractionToEdge = (attraction: AttractionInput): IAttractionEdge => {
+        return {
+            source: attraction.attracting.piece.id,
+            target: attraction.attracted.piece.id,
+            type: 'attraction',
+            attraction
+        }
+    }
+    const transformSelectionToGraph = (selection: ISelectionFormation): SelectionT => {
+        const nodes = new Map<string, INode>()
+        const edges = new Map<string, IEdge>()
+        selection.piecesIds.forEach((pieceId) => {
+            const piece = formationView.formation.pieces.find((p) => p.id === pieceId)
+            if (piece) {
+                nodes.set(piece.id, transformPieceToNode(piece))
+            }
+        })
+        selection.attractionsPiecesIds.forEach(([sourceId, targetId]) => {
+            const attraction = formationView.formation.attractions.find(
+                (a) => a.attracting.piece.id === sourceId && a.attracted.piece.id === targetId
+            )
+            if (attraction) {
+                edges.set(`${sourceId}-${targetId}`, transformAttractionToEdge(attraction))
+            }
+        })
+        return { nodes, edges }
+    }
+    const selected = transformSelectionToGraph(formationView.selection)
+
     const graphViewRef = useRef(null)
 
     const { isOver, setNodeRef } = useDroppable({
         id: 'diagramEditor'
     })
-
-    const getDraft = (): IDraft => {
-        return {
-            nodes: graph.nodes,
-            edges: graph.edges
-        }
-    }
-
-    const setDraft = (draft: IDraft) => {
-        setGraph(draft)
-    }
 
     const zoomToFit = () => {
         if (graphViewRef.current) {
@@ -376,214 +1265,201 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     useImperativeHandle(ref, () => ({
         onDropPiece,
-        getDraft,
-        setDraft,
         zoomToFit
     }))
 
     const onSelect = (newSelection: SelectionT, event?: any): void => {
-        // when only an edge is selected, then the attraction editor should be opened
-        if (!newSelection.nodes && newSelection.edges?.size === 1) {
-            const edge = newSelection.edges.values().next().value
-            const sourceNode = graph.nodes.find((node) => node.id === edge.source)
-            const targetNode = graph.nodes.find((node) => node.id === edge.target)
-            if (sourceNode && targetNode) {
-                const attraction = edge.attraction
-                const editedAttraction = props.onAttractionEdit(attraction)
-                if (editedAttraction) {
-                    const newEdge = {
-                        ...edge,
-                        attraction: editedAttraction
-                    }
-                    setGraph({
-                        ...graph,
-                        edges: graph.edges.map((e) => (e === edge ? newEdge : e))
-                    })
-                }
-            }
-            return
-        }
-
-        // alt key for node edit mode
-        if (event && event.altKey === true) {
-            const selectedNode = graph.nodes.find(
-                (node) => node.id === newSelection?.nodes?.keys().next().value
-            )
-            if (selectedNode.type === 'piece') {
-                props.onPieceEdit(selectedNode.piece).then((updatedPiece) => {
-                    if (updatedPiece) {
-                        setGraph({
-                            ...graph,
-                            nodes: graph.nodes.map((node) => {
-                                if (node.id === selectedNode.id) {
-                                    return {
-                                        ...node,
-                                        piece: updatedPiece
-                                    }
-                                }
-                                return node
-                            })
-                        })
-                    }
-                })
-            }
-            return
-        }
-
-        // event is only active when clicked on a node
         if (event == null && !newSelection.nodes && !newSelection.edges) {
-            setSelected(null)
+            dispatch(updateFormationSelection(props.viewId, null))
             return
         }
-        // Remove the previously selected nodes and edges from the selectionState if they are in the new selection.
-        // Add the new selected nodes and edges if they were not in the previous selection.
-        const newNodes = new Map(selected?.nodes)
+        // Remove the previously selected pieces and attractions from the selectionState if they are in the new selection.
+        // Add the new selected pieces and attractions if they were not in the previous selection.
+        const selectedPiecesIds = formationView.selection.piecesIds.slice()
         if (newSelection.nodes) {
-            newSelection.nodes.forEach((node, nodeId) => {
-                if (GraphUtils.isEqual(node, selected?.nodes?.get(nodeId))) {
-                    newNodes.delete(nodeId)
+            newSelection.nodes.forEach((node) => {
+                if (formationView.selection.piecesIds.includes(node.id)) {
+                    selectedPiecesIds.splice(selectedPiecesIds.indexOf(node.id), 1)
                 } else {
-                    newNodes.set(nodeId, node)
+                    selectedPiecesIds.push(node.id)
                 }
             })
         }
-        const newEdges = new Map(selected?.edges)
+        const selectedAttractionsIds = formationView.selection.attractionsPiecesIds.slice()
         if (newSelection.edges) {
-            newSelection.edges.forEach((edge, edgeId) => {
+            newSelection.edges.forEach((edge) => {
+                const [sourceId, targetId] = edge.id.split('-')
                 if (
-                    selected?.edges &&
-                    [...selected.edges.values()].some((selectedEdge) =>
-                        GraphUtils.isEqual(selectedEdge, edge)
+                    formationView.selection.attractionsPiecesIds.some(
+                        ([source, target]) => source === sourceId && target === targetId
                     )
                 ) {
-                    newEdges.delete(edgeId)
+                    selectedAttractionsIds.splice(
+                        selectedAttractionsIds.findIndex(
+                            ([source, target]) => source === sourceId && target === targetId
+                        ),
+                        1
+                    )
                 } else {
-                    newEdges.set(edgeId, edge)
+                    selectedAttractionsIds.push([sourceId, targetId])
                 }
             })
         }
-        // check for orphaned edges
-        newEdges?.forEach((edge, edgeId) => {
-            selected?.nodes?.forEach((node) => {
-                if (node.id === edge.source || node.id === edge.target) {
-                    newEdges.delete(edgeId)
-                }
+        dispatch(
+            updateFormationSelection(props.viewId, {
+                piecesIds: selectedPiecesIds,
+                attractionsPiecesIds: selectedAttractionsIds
             })
-        })
-        setSelected({ nodes: newNodes, edges: newEdges })
+        )
     }
 
     const onCreateNode = (x: number, y: number, event: any): void => {
-        const id = Generator.generateRandomId(x + y)
-
-        const newNode = {
-            id,
-            title: '',
-            type: 'piece',
-            icon: event.typeIcon,
-            x,
-            y,
-            piece: { ...event.piece, id: id } as PieceInput
-        } as IPieceNode
-
-        setGraph({
-            ...graph,
-            nodes: [...graph.nodes, newNode]
-        })
+        dispatch(
+            updateFormation({
+                id: formationView.id,
+                formation: {
+                    ...formationView.formation,
+                    pieces: [
+                        ...formationView.formation.pieces,
+                        {
+                            id: Generator.generateRandomId(x + y),
+                            type: event.piece.type,
+                            diagram: {
+                                point: { x, y }
+                            }
+                        } as PieceInput
+                    ]
+                }
+            })
+        )
     }
 
     const onUpdateNode = (
         node: INode,
         updatedNodes?: Map<string, INode> | null,
         updatedNodePosition?: IPoint
-    ): void | Promise<any> => {}
+    ): void | Promise<any> => {
+        const piece = formationView.formation.pieces.find((p) => p.id === node.id)
+        if (piece) {
+            dispatch(
+                updateFormation({
+                    id: formationView.id,
+                    formation: {
+                        ...formationView.formation,
+                        pieces: formationView.formation.pieces.map((p) =>
+                            p.id === node.id
+                                ? {
+                                      ...p,
+                                      diagram: {
+                                          point: {
+                                              x: updatedNodePosition?.x ?? node.x,
+                                              y: updatedNodePosition?.y ?? node.y
+                                          }
+                                      }
+                                  }
+                                : p
+                        )
+                    } as FormationInput
+                })
+            )
+        }
+    }
 
     const onCreateEdge = (sourceNode: INode, targetNode: INode): void => {
-        const newEdge = {
-            source: sourceNode.id,
-            target: targetNode.id,
-            type: 'attraction'
-        }
-
-        setGraph({
-            ...graph,
-            edges: [...graph.edges, newEdge]
-        })
+        console.log('onCreateEdge should not be possible', sourceNode, targetNode)
     }
 
     const onDeleteSelected = (selected: SelectionT) => {
-        const newNodes = graph.nodes.filter((node) => !selected.nodes?.has(node.id))
-        const newEdges = graph.edges.filter((edge) => {
-            return (
-                !selected.nodes?.has(edge.source.toString()) &&
-                !selected.nodes?.has(edge.target.toString())
-            )
-        })
-
-        setGraph({
-            nodes: newNodes,
-            edges: newEdges
-        })
+        dispatch(
+            updateFormation({
+                id: formationView.id,
+                formation: {
+                    ...formationView.formation,
+                    pieces: formationView.formation.pieces.filter(
+                        (piece) => !selected.nodes?.has(piece.id)
+                    ),
+                    attractions: formationView.formation.attractions.filter(
+                        (attraction) =>
+                            !selected.nodes?.has(attraction.attracting.piece.id) &&
+                            !selected.nodes?.has(attraction.attracted.piece.id)
+                    )
+                }
+            })
+        )
     }
 
     const onCopySelected = () => {
         if (selected && selected.nodes) {
             const nodesToCopy = graph.nodes.filter((node) => selected.nodes?.has(node.id))
-            const topLeftNode = nodesToCopy.reduce((prev, curr) => ({
-                x: Math.min(prev.x, curr.x),
-                y: Math.min(prev.y, curr.y)
-            }))
-            const nodesWithRelativePositions = nodesToCopy.map((node) => ({
-                ...node,
-                x: node.x - topLeftNode.x,
-                y: node.y - topLeftNode.y
-            }))
-            setCopiedNodes(nodesWithRelativePositions)
-
-            const edgesToCopy = graph.edges.filter(
-                (edge) => selected.nodes?.has(edge.source) && selected.nodes?.has(edge.target)
-            )
-            setCopiedEdges(edgesToCopy)
+            const toppestNode = nodesToCopy.reduce((prev, curr) => (prev.y < curr.y ? prev : curr))
+            const leftestNode = nodesToCopy.reduce((prev, curr) => (prev.x < curr.x ? prev : curr))
+            const formationSnippetToCopy = {
+                pieces: nodesToCopy.map((node) => ({
+                    ...node.piece,
+                    diagram: {
+                        point: {
+                            x: node.x - leftestNode.x,
+                            y: node.y - toppestNode.y
+                        }
+                    }
+                })),
+                attractions: graph.edges.map((edge) => edge.attraction)
+            }
+            navigator.clipboard
+                .writeText(JSON.stringify(formationSnippetToCopy))
+                .then(() => {
+                    console.log('Copying to clipboard was successful!')
+                })
+                .catch((err) => {
+                    console.error('Could not copy text: ', err)
+                })
         }
     }
 
     const onPasteSelected = (selected?: SelectionT | null, xyCoords?: IPoint): void => {
-        if (copiedNodes.length > 0 && xyCoords) {
-            const idMap = new Map()
-            const newNodes = copiedNodes.map((node) => {
-                const newId = Generator.generateRandomId(xyCoords.x + node.x + xyCoords.y + node.y)
-                idMap.set(node.id, newId)
-                return {
-                    ...node,
-                    id: newId,
-                    x: xyCoords.x + node.x,
-                    y: xyCoords.y + node.y
-                }
-            })
-            const newEdges = copiedEdges.map((edge) => ({
-                ...edge,
-                source: idMap.get(edge.source),
-                target: idMap.get(edge.target)
-            }))
-            setGraph({
-                ...graph,
-                nodes: [...graph.nodes, ...newNodes],
-                edges: [...graph.edges, ...newEdges]
-            })
-        }
+        navigator.clipboard.readText().then((text) => {
+            const formationSnippet = JSON.parse(text)
+            const placedFormationSnippet = {
+                pieces: formationSnippet.pieces.map((piece) => {
+                    const x = xyCoords?.x + piece.diagram.point.x
+                    const y = xyCoords?.y + piece.diagram.point.y
+                    return {
+                        ...piece,
+                        id: Generator.generateRandomId(x + y),
+                        diagram: {
+                            point: { x, y }
+                        }
+                    }
+                }),
+                attractions: formationSnippet.attractions
+            }
+            const newPieceIds = placedFormationSnippet.pieces.map((piece) => piece.id)
+            if (newPieceIds.length !== new Set(newPieceIds).size) {
+                message.error('All pieces must have unique ids.')
+                return
+            }
+            dispatch(
+                updateFormation({
+                    id: formationView.id,
+                    formation: {
+                        ...formationView.formation,
+                        pieces: [
+                            ...formationView.formation.pieces,
+                            ...placedFormationSnippet.pieces
+                        ],
+                        attractions: [
+                            ...formationView.formation.attractions,
+                            ...placedFormationSnippet.attractions
+                        ]
+                    } as FormationInput
+                } as FormationView)
+            )
+        })
     }
 
     const onSwapEdge = (sourceNode: INode, targetNode: INode, edge: IEdge): void => {
-        const newEdge = {
-            source: sourceNode.id,
-            target: targetNode.id,
-            type: edge.type
-        }
-
-        setGraph({
-            ...graph,
-            edges: graph.edges.map((e) => (e === edge ? newEdge : e))
-        })
+        console.log('onSwapEdge should not be possible', sourceNode, targetNode, edge)
+        return
     }
 
     const canSwapEdge = (
@@ -591,87 +1467,34 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         hoveredNode: INode | null,
         swapEdge: IEdge
     ): boolean => {
-        return true
+        return false
     }
 
     const onContextMenu = (x: number, y: number, event: any): void => {}
 
-    const renderSvg = (
-        svgString: string,
+    const renderNodeText = (
+        data: IPieceNode,
         id: string | number,
         isSelected: boolean
     ): SVGProps<SVGGElement> => {
-        // replace all black colors with white and all white colors with black
-        const darkSvgString = svgString
-            .replace(/#000000/g, colors.dark)
-            .replace(/#000/g, colors.dark)
-            .replace(/black/g, colors.dark)
-            .replace(/#FFFFFF/g, colors.light)
-            .replace(/#FFF/g, colors.light)
-            .replace(/white/g, colors.light)
-        const lightSvgString = svgString
-            .replace(/#000000/g, colors.light)
-            .replace(/#000/g, colors.light)
-            .replace(/black/g, colors.light)
-            .replace(/#FFFFFF/g, colors.dark)
-            .replace(/#FFF/g, colors.dark)
-            .replace(/white/g, colors.dark)
-        return (
-            <foreignObject x="-16" y="-16" width="32" height="32">
-                <SVG
-                    className={`cursor-pointer ${isSelected ? 'text-light' : 'text-dark'}`}
-                    src={isSelected ? lightSvgString : darkSvgString}
-                    width="32"
-                    height="32"
-                />
-            </foreignObject>
-        )
-    }
-
-    const renderImage = (
-        imageData: string,
-        id: string | number,
-        isSelected: boolean
-    ): SVGProps<SVGGElement> => {
+        const type = types.get(data.piece.type.name)?.get(data.piece.type.variant ?? '')
         return (
             <foreignObject x="-19" y="-19" width="38" height="38">
-                <Avatar
-                    className={`cursor-pointer ${isSelected ? 'opacity-50' : 'opacity-100'}`}
-                    src={imageData}
-                    size={38}
-                ></Avatar>
+                <ConfigProvider locale={enUS} theme={sketchpadTheme}>
+                    <ArtifactAvatar
+                        icon={type.icon}
+                        // description={
+                        //     <>
+                        //         {type?.variant ? `${type.name} - ${type.variant}` : type?.name}
+                        //         <br />
+                        //         {type?.description}
+                        //     </>
+                        // }
+                        isSelected={isSelected}
+                    />
+                </ConfigProvider>
             </foreignObject>
         )
-    }
-
-    const renderText = (
-        text: string,
-        id: string | number,
-        isSelected: boolean
-    ): SVGProps<SVGGElement> => {
-        const className = `node-text ${isSelected ? 'selected' : ''}`
-        return (
-            <text className={className} textAnchor="middle" dy=".3em">
-                {text}
-            </text>
-        )
-    }
-
-    const renderNodeText = (
-        data: any,
-        id: string | number,
-        isSelected: boolean
-    ): SVGProps<SVGGElement> => {
-        const [iconData, iconKind] = getIconData(data.icon)
-
-        switch (iconKind) {
-            case IconKind.Svg:
-                return renderSvg(iconData, id, isSelected)
-            case IconKind.Image:
-                return renderImage(iconData, id, isSelected)
-            case IconKind.Text:
-                return renderText(iconData, id, isSelected)
-        }
     }
 
     // Adaptation of: https://github.com/uber/react-digraph/issues/179
@@ -686,14 +1509,10 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         name: type.name,
                         variant: type.variant
                     }
-                },
-                typeIcon: type.icon
+                }
             })
         }
     }
-
-    const nodes = graph.nodes
-    const edges = graph.edges
 
     const NodeTypes = GraphConfig.NodeTypes
     const NodeSubtypes = GraphConfig.NodeSubtypes
@@ -744,137 +1563,206 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
 DiagramEditor.displayName = 'DiagramEditor'
 
+// 3D Editor
+
+const BlobUrlContext = createContext<{ [key: string]: string }>({})
+
 interface RepresentationThreeProps {
+    id: string
     representation: Representation
 }
 
-const RepresentationThree = ({ representation }: RepresentationThreeProps) => {
-    const { nodes } = useLoader(GLTFLoader, representation.url)
-    return (
-        <group>
-            {Object.values(nodes).map((node, i) => (
-                <primitive
-                    key={i}
-                    object={node}
-                    attach={(parent, self) => {
-                        parent.add(self)
-                        return () => parent.remove(self)
-                    }}
-                />
-            ))}
-        </group>
-    )
+const RepresentationThree = ({ id, representation }: RepresentationThreeProps): JSX.Element => {
+    const blobUrls = useContext(BlobUrlContext)
+    const representationThree = useLoader(GLTFLoader, blobUrls[representation.url])
+    representationThree.scene.name = id
+    return <primitive object={representationThree.scene} />
 }
 
 RepresentationThree.displayName = 'Representation'
 
-interface PieceThreeProps {
-    piece: Piece
+const getPieceIdFromClickEventGroupObject = (o: any): string => {
+    if (o.name !== '') return o.name
+
+    const childWithId = o.children.find((element) => {
+        if (element?.isGroup !== true) return false
+        const childrenPieceId = getPieceIdFromClickEventGroupObject(element)
+        return childrenPieceId !== ''
+    })
+
+    return childWithId ? getPieceIdFromClickEventGroupObject(childWithId) : ''
 }
 
-const PieceThree = ({ piece }: PieceThreeProps) => {
-    const [lod, setLod] = useState('')
-    const [tags, setTags] = useState([''])
-    return (
-        <RepresentationThree
-            representation={
-                piece.type.representations.find(
-                    (representation) =>
-                        (representation.lod !== '' || representation.lod === lod) &&
-                        (representation.tags.length === 0 ||
-                            representation.tags.some((tag) => tags.includes(tag)))
-                )!
-            }
-        />
-    )
+interface PieceThreeProps {
+    viewId: string
+    kitDirectory: string
+    piece: PieceInput
+    isTransformed
 }
+
+const PieceThree = ({ viewId, kitDirectory, piece }: PieceThreeProps) => {
+    const dispatch = useDispatch()
+    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    const type = useSelector((state: RootState) =>
+        selectType(state, kitDirectory, piece.type.name, piece.type.variant ?? '')
+    )
+    const representationRef = useRef<Mesh>(null)
+    const pieceJsx = (
+        <Selection>
+            <EffectComposer
+                autoClear={false}
+                enabled={formationView?.selection.piecesIds.includes(piece.id)}
+            >
+                <Outline
+                    edgeStrength={200}
+                    visibleEdgeColor={colors.primary}
+                    patternTexture={null}
+                />
+                {/* <SelectiveBloom 
+                luminanceThreshold={0.9}
+            /> */}
+            </EffectComposer>
+            <ThreeSelect
+                multiple
+                box
+                border="1px solid #fff"
+                // onChange={(selected): void => {
+                //     if (!isSelectionBoxActive) {
+                //         setIsSelectionBoxActive(true)
+                //         console.log('selection starting', selected)
+                //     }
+                // }}
+                // onChangePointerUp={(e) => {
+                //     if (isSelectionBoxActive) {
+                //         setIsSelectionBoxActive(false)
+                //         console.log('selection ending', e)
+                //     }
+                // }}
+                onClick={(e) => {
+                    console.log('click', e)
+                    const pieceId = getPieceIdFromClickEventGroupObject(e.eventObject)
+                    if (formationView.selection.piecesIds.includes(pieceId)) {
+                        dispatch(
+                            updateFormationSelection(viewId, {
+                                piecesIds: formationView.selection.piecesIds.filter(
+                                    (id) => id !== pieceId
+                                ),
+                                attractionsPiecesIds: formationView.selection.attractionsPiecesIds
+                            })
+                        )
+                    } else {
+                        dispatch(
+                            updateFormationSelection(viewId, {
+                                piecesIds: [...formationView.selection.piecesIds, pieceId],
+                                attractionsPiecesIds: formationView.selection.attractionsPiecesIds
+                            })
+                        )
+                    }
+
+                    e.stopPropagation()
+                }}
+            >
+                <PostProcessSelect enabled={formationView.selection.piecesIds.includes(piece.id)}>
+                    <RepresentationThree
+                        forwardedRef={representationRef}
+                        id={piece.id}
+                        representation={type.representations.find((representation) =>
+                            representation.url.endsWith('.glb')
+                        )}
+                    />
+                </PostProcessSelect>
+            </ThreeSelect>
+        </Selection>
+    )
+    return <TransformControls>{pieceJsx}</TransformControls>
+}
+
+PieceThree.displayName = 'PieceThree'
 
 interface FormationThreeProps {
-    formation: Formation
+    viewId: string
+    kitDirectory: string
 }
 
-const FormationThree = ({ formation }: FormationThreeProps) => {
-    const { pieces } = formation
+const FormationThree = ({ viewId, kitDirectory }: FormationThreeProps) => {
+    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    const selectedPieceId = formationView?.selection.piecesIds.length > 0 ? formationView.selection.piecesIds[0] : ''
+    // const hierarchies = formationToHierarchies(formationView.formation)
+    
     return (
-        <group>
-            {pieces.map((piece, i) => (
-                <PieceThree key={i} piece={piece} />
+        <group name={formationToString(formationView.formation)}>
+            {formationView?.formation.pieces.map((piece, i) => (
+                <PieceThree key={i} viewId={viewId} kitDirectory={kitDirectory} piece={piece} />
             ))}
         </group>
     )
 }
 
-interface ShapeEditorProps {}
+FormationThree.displayName = 'FormationThree'
 
-const ShapeEditor = ({}: ShapeEditorProps) => {
-    const [kit, setKit] = useState<Kit | null>(null)
+interface ShapeEditorProps {
+    viewId: string
+    kitDirectory: string
+}
+
+const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
+    const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
+
     const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
     const [isSelectionBoxActive, setIsSelectionBoxActive] = useState(false)
 
+    const hierarchies = formationToHierarchies(kit!.formations[0])
+
     useEffect(() => {
-        ;[
-            'c:\\git\\semio\\2.x\\examples\\metabolism\\representations\\capsule_1_1to200_volume_wireframe.glb'
-        ].forEach((path) => {
-            window.electron.ipcRenderer.invoke('get-file-buffer', path).then((buffer) => {
-                const name = 'representations/capsule_1_1to200_volume_wireframe.glb'
-                const blob = new Blob([buffer], { type: 'model/gltf-binary' })
-                const url = URL.createObjectURL(blob)
-                useGLTF.preload(url)
-                setBlobUrls((prev) => ({ ...prev, [name]: url }))
-            })
+        kit?.types.forEach((type) => {
+            const representation = type.representations.find((representation) =>
+                representation.url.endsWith('.glb')
+            )
+            if (!representation) return
+            window.electron.ipcRenderer
+                .invoke('get-file-buffer', representation.url, kitDirectory)
+                .then(
+                    (buffer) => {
+                        const blob = new Blob([buffer], { type: 'model/gltf-binary' })
+                        const url = URL.createObjectURL(blob)
+                        useGLTF.preload(url)
+                        setBlobUrls((prev) => ({ ...prev, [representation.url]: url }))
+                    },
+                    (error) => {
+                        console.error(error)
+                    }
+                )
         })
     }, [kit])
 
     return (
-        <Canvas
-            shadows={true}
-            // orthographic={true}
-        >
-            <ThreeSelect
-                multiple
-                box
-                border="1px solid #fff"
-                onChange={(selected): void => {
-                    if (!isSelectionBoxActive) {
-                        setIsSelectionBoxActive(true)
-                        console.log('selection starting', selected)
-                    }
-                }}
-                onChangePointerUp={(e) => {
-                    if (isSelectionBoxActive) {
-                        setIsSelectionBoxActive(false)
-                        console.log('selection ending', e)
-                    }
-                }}
-                onClick={(e) => {
-                    console.log('select onClick', e)
-                }}
+        <BlobUrlContext.Provider value={blobUrls}>
+            <Canvas
+                shadows={true}
+                // orthographic={true}
             >
                 <Suspense fallback={null}>
-                    <RepresentationThree
-                        representation={{
-                            url: blobUrls['representations/capsule_1_1to200_volume_wireframe.glb']
-                        }}
-                    />
-                    <hemisphereLight color={colors.primary} intensity={0.5} />
-                    <ambientLight color={colors.primary} intensity={0.5} />
+                    <FormationThree kitDirectory={kitDirectory} viewId={viewId} />
+                    <ambientLight color={colors.light} intensity={1} />
                 </Suspense>
-            </ThreeSelect>
-            <OrbitControls enabled={!isSelectionBoxActive} />
-            <GizmoHelper
-                alignment="bottom-right" // widget alignment within scene
-                margin={[80, 80]} // widget margins (X, Y)
-            >
-                <GizmoViewport
-                    labels={['X', 'Z', '-Y']}
-                    axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-                    // labelColor={colors.light}
-                    // font="Anta"
-                />
-            </GizmoHelper>
-        </Canvas>
+                <OrbitControls makeDefault />
+                <GizmoHelper
+                    alignment="bottom-right" // widget alignment within scene
+                    margin={[80, 80]} // widget margins (X, Y)
+                >
+                    <GizmoViewport
+                        labels={['X', 'Z', '-Y']}
+                        axisColors={[colors.primary, colors.tertiary, colors.secondary]}
+                        // labelColor={colors.light}
+                        // font="Anta"
+                    />
+                </GizmoHelper>
+            </Canvas>
+        </BlobUrlContext.Provider>
     )
 }
+
+ShapeEditor.displayName = 'ShapeEditor'
 
 function getItem(
     label: React.ReactNode,
@@ -1175,24 +2063,63 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
     const formations = useSelector((state: RootState) => selectFormations(state, kitDirectory))
-    const totalStore = useSelector((state: RootState) => state)
 
-    const [isDropped, setIsDropped] = useState(false)
+    const [activeDraggedArtifactId, setActiveDraggedArtifactId] = useState('')
+    const [activeDraggedArtifact, setActiveDraggedArtifact] = useState<Type | Formation>()
+    const [activeDraggedArtifactKind, setActiveDraggedArtifactKind] = useState('') // type, formation or ''
+
+    useEffect(() => {
+        const separatorIndex = activeDraggedArtifactId.indexOf('##')
+        const artifactType = activeDraggedArtifactId.substring(0, separatorIndex)
+        const artifactId = activeDraggedArtifactId.substring(separatorIndex + 2)
+        switch (artifactType) {
+            case 'type': {
+                const typeNameSeparatorIndex = artifactId.indexOf('##')
+                const typeName = artifactId.substring(0, typeNameSeparatorIndex)
+                const typeVariant = artifactId.substring(typeNameSeparatorIndex + 2)
+                const type = types.get(typeName)?.get(typeVariant ?? '')
+                setActiveDraggedArtifact(type)
+                setActiveDraggedArtifactKind('type')
+                break
+            }
+            case 'formation': {
+                const formationNameSeparatorIndex = artifactId.indexOf('##')
+                const formationName = artifactId.substring(0, formationNameSeparatorIndex)
+                const formationVariant = artifactId.substring(formationNameSeparatorIndex + 2)
+                const formation = formations.get(formationName)?.get(formationVariant ?? '')
+                setActiveDraggedArtifact(formation)
+                setActiveDraggedArtifactKind('formation')
+                break
+            }
+        }
+    }, [activeDraggedArtifactId])
 
     const diagramEditorRef = useRef(null)
+
+    const onDragStart = (event: DragStartEvent) => {
+        setActiveDraggedArtifactId(event.active.id)
+    }
 
     const onDragEnd = (event: DragEndEvent) => {
         if (event.over && event.over.id === 'diagramEditor') {
             // relative coordinates in the diagram editor
             const relativeX = event.activatorEvent.pageX + event.delta.x - event.over.rect.left
             const relativeY = event.activatorEvent.pageY + event.delta.y - event.over.rect.top
-            diagramEditorRef.current.onDropPiece(relativeX, relativeY, {
-                name: 'capsule',
-                variant: '1',
-                icon: '📦1'
-            } as Type)
-            setIsDropped(true)
+            switch (activeDraggedArtifactKind) {
+                case 'type': {
+                    diagramEditorRef.current.onDropPiece(relativeX, relativeY, {
+                        name: activeDraggedArtifact.name,
+                        variant: activeDraggedArtifact?.variant ?? ''
+                    })
+                    break
+                }
+                case 'formation': {
+                    console.log('Not implemented yet: Dropping formations')
+                    break
+                }
+            }
         }
+        setActiveDraggedArtifactId('')
     }
 
     if (!kit) {
@@ -1220,7 +2147,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
             </Row>
             <Layout style={{ flex: 1 }}>
                 <Layout>
-                    <DndContext onDragEnd={onDragEnd}>
+                    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
                         <Sider width="240px" className="border-r-thin border-lightGrey">
                             <Collapse
                                 className="p-3 border-b-thin border-lightGrey font-thin uppercase"
@@ -1229,13 +2156,13 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                     {
                                         key: 'types',
                                         label: 'Types',
-
                                         children: (
                                             <Collapse
                                                 className="p-2 font-normal text-lightGrey normal-case"
                                                 defaultActiveKey={Array.from(types.keys())}
-                                                items={Array.from(types.entries()).map(
-                                                    ([typeName, typeVariants], index) => ({
+                                                items={Array.from(types.entries())
+                                                    .sort()
+                                                    .map(([typeName, typeVariants], index) => ({
                                                         key: typeName,
                                                         label: typeName,
                                                         children: (
@@ -1249,24 +2176,48 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                                     gridAutoRows: '40px'
                                                                 }}
                                                             >
-                                                                {Array.from(
-                                                                    typeVariants.entries()
-                                                                ).map(
-                                                                    (
-                                                                        [typeVariant, type],
-                                                                        index
-                                                                    ) => (
-                                                                        <DraggableAvatar
-                                                                            key={typeVariant}
-                                                                            id={typeVariant}
-                                                                            icon={type.icon}
-                                                                        ></DraggableAvatar>
-                                                                    )
-                                                                )}
+                                                                {Array.from(typeVariants.entries())
+                                                                    .sort()
+                                                                    .map(
+                                                                        (
+                                                                            [typeVariant, type],
+                                                                            index
+                                                                        ) => (
+                                                                            <ArtifactAvatar
+                                                                                key={
+                                                                                    'type' +
+                                                                                    '##' +
+                                                                                    typeName +
+                                                                                    '##' +
+                                                                                    typeVariant
+                                                                                }
+                                                                                icon={type.icon}
+                                                                                description={
+                                                                                    typeVariant ? (
+                                                                                        <>
+                                                                                            {`Variant: ${typeVariant}`}
+                                                                                            <br />
+                                                                                            {
+                                                                                                type.description
+                                                                                            }
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        type.description
+                                                                                    )
+                                                                                }
+                                                                                draggableId={
+                                                                                    'type' +
+                                                                                    '##' +
+                                                                                    typeName +
+                                                                                    '##' +
+                                                                                    typeVariant
+                                                                                }
+                                                                            ></ArtifactAvatar>
+                                                                        )
+                                                                    )}
                                                             </Space>
                                                         )
-                                                    })
-                                                )}
+                                                    }))}
                                             />
                                         )
                                     },
@@ -1277,65 +2228,101 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                             <Collapse
                                                 className="p-2 font-normal text-lightGrey normal-case"
                                                 defaultActiveKey={Array.from(formations.keys())}
-                                                items={Array.from(formations.entries()).map(
-                                                    (
-                                                        [formationName, formationVariants],
-                                                        index
-                                                    ) => ({
-                                                        key: formationName,
-                                                        label: formationName,
-                                                        children: (
-                                                            <Space
-                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                                                                direction="vertical"
-                                                                size={10}
-                                                                style={{
-                                                                    gridTemplateColumns:
-                                                                        'repeat(auto-fill, minmax(40px, 1fr))',
-                                                                    gridAutoRows: '40px'
-                                                                }}
-                                                            >
-                                                                {Array.from(
-                                                                    formationVariants.entries()
-                                                                ).map(
-                                                                    (
-                                                                        [
-                                                                            formationVariant,
-                                                                            formation
-                                                                        ],
-                                                                        index
-                                                                    ) => (
-                                                                        <DraggableAvatar
-                                                                            key={formationVariant}
-                                                                            id={formationVariant}
-                                                                            icon={formation.icon}
-                                                                        ></DraggableAvatar>
+                                                items={Array.from(formations.entries())
+                                                    .sort()
+                                                    .map(
+                                                        (
+                                                            [formationName, formationVariants],
+                                                            index
+                                                        ) => ({
+                                                            key: formationName,
+                                                            label: formationName,
+                                                            children: (
+                                                                <Space
+                                                                    className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                    direction="vertical"
+                                                                    size={10}
+                                                                    style={{
+                                                                        gridTemplateColumns:
+                                                                            'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                        gridAutoRows: '40px'
+                                                                    }}
+                                                                >
+                                                                    {Array.from(
+                                                                        formationVariants.entries()
                                                                     )
-                                                                )}
-                                                            </Space>
-                                                        )
-                                                    })
-                                                )}
+                                                                        .sort()
+                                                                        .map(
+                                                                            (
+                                                                                [
+                                                                                    formationVariant,
+                                                                                    formation
+                                                                                ],
+                                                                                index
+                                                                            ) => (
+                                                                                <ArtifactAvatar
+                                                                                    key={
+                                                                                        'formation' +
+                                                                                        '##' +
+                                                                                        formationName +
+                                                                                        '##' +
+                                                                                        formationVariant
+                                                                                    }
+                                                                                    draggableId={
+                                                                                        'formation' +
+                                                                                        '##' +
+                                                                                        formationName +
+                                                                                        '##' +
+                                                                                        formationVariant
+                                                                                    }
+                                                                                    icon={
+                                                                                        formation.icon
+                                                                                    }
+                                                                                    description={
+                                                                                        formationVariant ? (
+                                                                                            <>
+                                                                                                {`Variant: ${formationVariant}`}
+                                                                                                <br />
+                                                                                                {
+                                                                                                    formation.description
+                                                                                                }
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            formation.description
+                                                                                        )
+                                                                                    }
+                                                                                ></ArtifactAvatar>
+                                                                            )
+                                                                        )}
+                                                                </Space>
+                                                            )
+                                                        })
+                                                    )}
                                             />
                                         )
                                     }
                                 ]}
-                                defaultActiveKey={['1']}
                             />
                         </Sider>
                         <Content>
-                            <DiagramEditor ref={diagramEditorRef} />
+                            <DiagramEditor
+                                ref={diagramEditorRef}
+                                kitDirectory={kitDirectory}
+                                viewId={viewId}
+                            />
                         </Content>
                         <Divider className="h-full top-0" type="vertical" />
                         <Content>
-                            <ShapeEditor />
+                            <ShapeEditor kitDirectory={kitDirectory} viewId={viewId} />
                         </Content>
                         {createPortal(
                             <DragOverlay>
-                                {/* {activeId ? (
-                                                    <DraggableAvatar id={activeId} icon="🏫" />
-                                                ) : null} */}
-                                <DraggableAvatar id={2} icon="🏫" />
+                                {activeDraggedArtifactId && (
+                                    <ArtifactAvatar
+                                        draggableId={activeDraggedArtifactId}
+                                        icon={activeDraggedArtifact?.icon ?? ''}
+                                    />
+                                )}
                             </DragOverlay>,
                             document.body
                         )}
@@ -1343,20 +2330,23 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                 </Layout>
                 <Sider className="border-l-thin border-lightGrey" width="240">
                     <Collapse
-                        className="p-3"
+                        className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+                        defaultActiveKey={['scene']}
                         items={[
                             {
-                                key: '1',
-                                label: 'SCENE',
+                                key: 'scene',
+                                label: 'Scene',
                                 children: (
-                                    <Flex vertical={true} className="p-2 text-lightGrey">
+                                    <Flex
+                                        vertical={true}
+                                        className="p-2 font-normal text-lightGrey normal-case"
+                                    >
                                         <div className="p-0">Level of Details</div>
                                         <Select
                                             className="p-1"
                                             mode="multiple"
                                             allowClear
                                             placeholder="Please select"
-                                            defaultValue={['1to500']}
                                             options={[
                                                 {
                                                     label: '1to500',
@@ -1368,21 +2358,12 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                 }
                                             ]}
                                         />
-                                    </Flex>
-                                )
-                            },
-                            {
-                                key: '2',
-                                label: 'TAGS',
-                                children: (
-                                    <Flex vertical={true} className="p-2 text-lightGrey">
                                         <div className="p-0">Tags</div>
                                         <Select
                                             className="p-1"
                                             mode="multiple"
                                             allowClear
                                             placeholder="Please select"
-                                            defaultValue={['']}
                                             options={[
                                                 {
                                                     label: 'volume',
@@ -1396,9 +2377,22 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                         />
                                     </Flex>
                                 )
+                            },
+                            {
+                                key: 'properties',
+                                label: 'Properties',
+                                children: (
+                                    <Flex
+                                        vertical={true}
+                                        className="p-2 text-lightGrey normal-case"
+                                    >
+                                        <div className="p-0">
+                                            This will change based on the Selection.
+                                        </div>
+                                    </Flex>
+                                )
                             }
                         ]}
-                        defaultActiveKey={['1']}
                     />
                 </Sider>
             </Layout>
@@ -1414,20 +2408,41 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
 
 interface ArtifactWizardProps {
     onOpenDirectory: () => Promise<string>
+    onOpenFile: () => Promise<string>
     onFinish: () => FormProps<IArtifactView>['onFinish']
 }
 
-const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX.Element => {
+const ArtifactWizard = ({
+    onOpenDirectory,
+    onOpenFile,
+    onFinish
+}: ArtifactWizardProps): JSX.Element => {
     const [form] = Form.useForm()
+    const kitDirectory = Form.useWatch('kitDirectory', form)
+
+    const [onOpenDirectoryStatus, setOnOpenDirectoryStatus] = useState('idle') // idle, loading
+    const [onOpenFileStatus, setOnOpenFileStatus] = useState('idle') // idle, loading
 
     const onOpenDirectoryFromButton = async () => {
-        const kitDirectory = await onOpenDirectory()
+        setOnOpenDirectoryStatus('loading')
+        const selectedKitDirectory = await onOpenDirectory()
         form.setFieldsValue({
-            kitDirectory: kitDirectory
+            kitDirectory: selectedKitDirectory
         })
+        setOnOpenDirectoryStatus('idle')
     }
+    const onOpenFileFromButton = async () => {
+        setOnOpenFileStatus('loading')
+        const selectedFile = await onOpenFile()
+        form.setFieldsValue({
+            icon: selectedFile
+        })
+        setOnOpenFileStatus('idle')
+    }
+
     return (
         <Form
+            className="p-3"
             form={form}
             name="Artifact Wizard"
             initialValues={{ remember: true }}
@@ -1438,6 +2453,7 @@ const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX
                 label="Kind"
                 name="kind"
                 rules={[{ required: true, message: 'What artifact do you want to create?' }]}
+                initialValue={ViewKind.Formation}
             >
                 <Radio.Group>
                     <Radio.Button value={ViewKind.Type}>Type</Radio.Button>
@@ -1449,11 +2465,18 @@ const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX
                 name="kitDirectory"
                 rules={[{ required: true, message: 'In what directory is the kit?' }]}
             >
-                <Button onClick={onOpenDirectoryFromButton} icon={<FolderSharpIcon />}></Button>
+                <Button onClick={onOpenDirectoryFromButton} icon={<FolderSharpIcon />}>
+                    {kitDirectory
+                        ? kitDirectory
+                        : onOpenDirectoryStatus === 'loading'
+                          ? 'Loading...'
+                          : 'Open Directory'}
+                </Button>
             </Form.Item>
             <Form.Item<IArtifactView>
                 label="Name"
                 name="name"
+                initialValue={'Untitled'}
                 rules={[{ required: true, message: 'Every artifacts needs a name.' }]}
             >
                 <Input />
@@ -1461,8 +2484,13 @@ const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX
             <Form.Item<IArtifactView> label="Description" name="description">
                 <Input />
             </Form.Item>
+            <Form.Item<IArtifactView> label="Icon" name="icon">
+                <Button onClick={onOpenFileFromButton} icon={<FileUploadSharpIcon />}>
+                    {onOpenFileStatus === 'loading' ? 'Loading...' : 'Upload Icon'}
+                </Button>
+            </Form.Item>
             <Form.Item>
-                <Button type="primary" htmlType="submit">
+                <Button htmlType="submit" className="bg-lightGrey text-dark">
                     Create
                 </Button>
             </Form.Item>
@@ -1473,9 +2501,14 @@ const ArtifactWizard = ({ onOpenDirectory, onFinish }: ArtifactWizardProps): JSX
 interface ArtifactWindowProps {
     viewId: string
     onOpenDirectory: () => Promise<string>
+    onOpenFile: () => Promise<string>
 }
 
-const ArtifactWindow = ({ viewId, onOpenDirectory }: ArtifactWindowProps): JSX.Element => {
+const ArtifactWindow = ({
+    viewId,
+    onOpenDirectory,
+    onOpenFile
+}: ArtifactWindowProps): JSX.Element => {
     const dispatch = useDispatch()
     const artifactView = useSelector((state: RootState) => selectView(state, viewId))
 
@@ -1492,8 +2525,13 @@ const ArtifactWindow = ({ viewId, onOpenDirectory }: ArtifactWindowProps): JSX.E
                         type: {
                             name: artifactView.name,
                             description: artifactView.description,
-                            icon: artifactView.icon
-                        }
+                            icon: artifactView.icon,
+                            variant: '',
+                            unit: 'm',
+                            representations: [],
+                            ports: [],
+                            qualities: []
+                        } as TypeInput
                     } as TypeView)
                 )
                 return
@@ -1506,8 +2544,13 @@ const ArtifactWindow = ({ viewId, onOpenDirectory }: ArtifactWindowProps): JSX.E
                         formation: {
                             name: artifactView.name,
                             description: artifactView.description,
-                            icon: artifactView.icon
-                        }
+                            icon: artifactView.icon,
+                            variant: '',
+                            unit: 'm',
+                            pieces: [],
+                            attractions: [],
+                            qualities: []
+                        } as FormationInput
                     } as FormationView)
                 )
                 return
@@ -1537,7 +2580,11 @@ const ArtifactWindow = ({ viewId, onOpenDirectory }: ArtifactWindowProps): JSX.E
             })()}
         </>
     ) : (
-        <ArtifactWizard onFinish={onFinish} onOpenDirectory={onOpenDirectory} />
+        <ArtifactWizard
+            onFinish={onFinish}
+            onOpenDirectory={onOpenDirectory}
+            onOpenFile={onOpenFile}
+        />
     )
 }
 
@@ -1546,14 +2593,15 @@ interface AppProps {
     onWindowMaximize: () => void
     onWindowClose: () => void
     onOpenDirectory: () => Promise<string>
-    onSaveDraft: (draft: IDraft) => Promise<string>
+    onOpenFile: () => Promise<string>
 }
 
 const App = ({
     onWindowMinimize,
     onWindowMaximize,
     onWindowClose,
-    onOpenDirectory
+    onOpenDirectory,
+    onOpenFile
 }: AppProps): JSX.Element => {
     const views = useSelector((state: RootState) => selectViews(state))
     const [fullScreen, setFullScreen] = useState(false)
@@ -1643,124 +2691,7 @@ const App = ({
 
     return (
         <div className="h-screen w-screen">
-            <ConfigProvider
-                locale={enUS}
-                theme={{
-                    // algorithm: [theme.darkAlgorithm],
-                    token: {
-                        // primary
-                        colorPrimary: colors.light,
-                        colorPrimaryBg: colors.light,
-                        colorPrimaryBgHover: colors.light,
-                        colorPrimaryBorder: colors.light,
-                        colorPrimaryBorderHover: colors.light,
-                        colorPrimaryHover: colors.light,
-                        colorPrimaryActive: colors.light,
-                        colorPrimaryText: colors.light,
-                        colorPrimaryTextHover: colors.light,
-                        colorPrimaryTextActive: colors.light,
-                        // text
-                        colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
-                        colorTextSecondary: colors.lightGrey,
-                        colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
-                        colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
-                        // border
-                        colorBorder: colors.light,
-                        colorBorderSecondary: colors.light,
-                        // fill
-                        colorFill: colors.light,
-                        colorFillSecondary: colors.light,
-                        colorFillTertiary: colors.light,
-                        colorFillQuaternary: colors.darkGrey, // e.g. background of collapse title
-                        // background
-                        colorBgContainer: colors.darkGrey, // e.g. active tab, collapse content box
-                        colorBgElevated: colors.grey, // e.g. background selected menu
-                        colorBgLayout: colors.light,
-                        colorBgSpotlight: colors.light,
-                        colorBgMask: colors.light,
-                        colorBgTextActive: colors.light,
-                        colorBgBase: colors.light,
-                        // special colors
-                        colorError: colors.danger,
-                        colorWarning: colors.warning,
-                        colorInfo: colors.info,
-                        colorSuccess: colors.success,
-                        fontFamily: 'Anta, sans-serif',
-                        boxShadow: 'none',
-                        boxShadowSecondary: 'none',
-                        boxShadowTertiary: 'none',
-                        wireframe: false,
-                        borderRadius: 0,
-                        lineWidth: 0
-                        // motionUnit: 0.05
-                    },
-                    components: {
-                        Button: {
-                            borderColorDisabled: colors.light,
-                            dangerColor: colors.light,
-                            defaultActiveBg: colors.light,
-                            defaultActiveBorderColor: colors.light,
-                            defaultActiveColor: colors.light,
-                            defaultBg: colors.light,
-                            defaultBorderColor: colors.light,
-                            defaultColor: colors.lightGrey, // e.g. normal state of buttons
-                            defaultGhostBorderColor: colors.light,
-                            defaultGhostColor: colors.light,
-                            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
-                            ghostBg: colors.light,
-                            linkHoverBg: colors.light,
-                            primaryColor: colors.light,
-                            textHoverBg: colors.light
-                        },
-                        Layout: {
-                            bodyBg: colors.dark,
-                            footerBg: colors.grey, //
-                            headerBg: colors.grey, // e.g. space between tabs and content
-                            headerColor: colors.light,
-                            lightSiderBg: colors.light,
-                            lightTriggerBg: colors.light,
-                            lightTriggerColor: colors.light,
-                            siderBg: colors.darkGrey, //
-                            triggerBg: colors.light,
-                            triggerColor: colors.light,
-                            headerPadding: '0px 0px'
-                        },
-                        Tabs: {
-                            cardBg: colors.grey, // background of unselected tabs
-                            inkBarColor: colors.light,
-                            itemActiveColor: colors.light,
-                            itemColor: colors.lightGrey, // text and fill of unselected tabs
-                            itemHoverColor: colors.light,
-                            itemSelectedColor: colors.light,
-                            cardGutter: 0,
-                            cardHeight: 38,
-                            cardPadding: '0 16px',
-                            verticalItemMargin: '0'
-                        },
-                        Divider: {
-                            lineWidth: 0.25,
-                            verticalMarginInline: 0
-                        },
-                        Avatar: {
-                            groupBorderColor: colors.light
-                        },
-                        Collapse: {
-                            headerBg: colors.darkGrey, //
-                            headerPadding: '0 0px',
-                            contentBg: colors.darkGrey, //
-                            contentPadding: '0 0px'
-                        },
-                        Select: {
-                            clearBg: colors.lightGrey,
-                            multipleItemBg: colors.darkGrey,
-                            optionActiveBg: colors.darkGrey,
-                            optionSelectedBg: colors.darkGrey,
-                            optionSelectedColor: colors.light,
-                            selectorBg: colors.darkGrey
-                        }
-                    }
-                }}
-            >
+            <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                 <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
                     <Header style={{ height: 'auto' }}>
                         <div
@@ -1802,7 +2733,16 @@ const App = ({
                                         if (view)
                                             return {
                                                 key: view?.id,
-                                                label: view?.name
+                                                label:
+                                                    view.kind === ViewKind.Type
+                                                        ? view.type.name +
+                                                          (view.type.variant
+                                                              ? ` (${view.type.variant})`
+                                                              : '')
+                                                        : view.formation.name +
+                                                          (view.formation.variant
+                                                              ? ` (${view.formation.variant})`
+                                                              : '')
                                             }
                                         return {
                                             key: tab,
@@ -1866,7 +2806,11 @@ const App = ({
                             Click + to add a new artifact.
                         </div>
                     ) : (
-                        <ArtifactWindow viewId={activeTab} onOpenDirectory={onOpenDirectory} />
+                        <ArtifactWindow
+                            viewId={activeTab}
+                            onOpenDirectory={onOpenDirectory}
+                            onOpenFile={onOpenFile}
+                        />
                     )}
                 </Layout>
             </ConfigProvider>

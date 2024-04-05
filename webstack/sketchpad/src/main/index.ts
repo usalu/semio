@@ -87,100 +87,105 @@ app.whenReady().then(() => {
         return directory.filePaths[0]
     })
 
-    const LOAD_LOCAL_KIT = gql`
-    query LoadLocalKit($directory: String!) {
-        loadLocalKit(directory: $directory) {
-            kit {
-                name
-                description
-                icon
-                url
-                types {
-                    name
-                    description
-                    icon
-                    variant
-                    unit
-                    representations {
-                        url
-                        lod
-                        tags
-                    }
-                    ports {
-                        plane {
-                            origin {
-                                x
-                                y
-                                z
-                            }
-                            xAxis {
-                                x
-                                y
-                                z
-                            }
-                            yAxis {
-                                x
-                                y
-                                z
-                            }
-                        }
-                        specifiers {
-                            context
-                            group
-                        }
-                    }
-                    qualities {
-                        name
-                        value
-                        unit
-                    }
-                }
-                formations {
-                    name
-                    description
-                    icon
-                    variant
-                    unit
-                    pieces {
-                        id
-                        type {
-                            name
-                            variant
-                        }
-                    }
-                    attractions {
-                        attracting {
-                            piece {
-                                id
-                                type {
-                                    port {
-                                        specifiers {
-                                            context
-                                            group
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        attracted {
-                            piece {
-                                id
-                                type {
-                                    port {
-                                        specifiers {
-                                            group
-                                            context
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            error
+    ipcMain.handle('open-file', async () => {
+        const file = await dialog.showOpenDialog({
+            properties: ['openFile']
+        })
+        if (file.canceled || file.filePaths.length === 0) {
+            return null
         }
+        return file.filePaths[0]
+    })
+
+    const LOAD_LOCAL_KIT = gql`
+query LoadLocalKit($directory: String!) {
+  loadLocalKit(directory: $directory) {
+    kit {
+      name
+      description
+      icon
+      url
+      types {
+        name
+        description
+        icon
+        variant
+        unit
+        representations {
+          url
+          lod
+          tags
+        }
+        ports {
+          id
+          plane {
+            origin {
+              x
+              y
+              z
+            }
+            xAxis {
+              x
+              y
+              z
+            }
+            yAxis {
+              x
+              y
+              z
+            }
+          }
+          locators {
+            group
+            subgroup
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+        }
+      }
+      formations {
+        name
+        description
+        icon
+        variant
+        unit
+        pieces {
+          id
+          type {
+            name
+            variant
+          }
+        }
+        attractions {
+          attracting {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
+              }
+            }
+          }
+          attracted {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
     }
+    error
+  }
+}
 `
     const endpoint = 'http://127.0.0.1:5052/graphql'
     const client = new GraphQLClient(endpoint)
@@ -192,9 +197,11 @@ app.whenReady().then(() => {
         return response;
     });
 
-    ipcMain.handle('get-file-buffer', async (event, filePath) => {
-        const data = readFileSync(filePath)
-        return data
+    ipcMain.handle('get-file-buffer', async (event, filePath, directory=undefined) => {
+        if (directory) {
+            filePath = join(directory, filePath)
+        }
+        return readFileSync(filePath)
     })
 
     createWindow()

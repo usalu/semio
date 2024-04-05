@@ -45,10 +45,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -132,10 +132,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -214,10 +214,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -301,10 +301,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -383,10 +383,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -470,10 +470,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -552,10 +552,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -639,10 +639,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "door",
-              group: ""
+              group: "door",
+              subgroup: ""
             }
           ]
         }
@@ -726,10 +726,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "bottom",
-              group: ""
+              group: "bottom",
+              subgroup: ""
             }
           ]
         }
@@ -818,10 +818,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "core",
-              group: "0"
+              group: "core",
+              subgroup: "0"
             }
           ]
         },
@@ -843,10 +843,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "core",
-              group: "1"
+              group: "core",
+              subgroup: "1"
             }
           ]
         }
@@ -925,10 +925,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "bottom",
-              group: ""
+              group: "bottom",
+              subgroup: ""
             }
           ]
         },
@@ -950,10 +950,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "top",
-              group: ""
+              group: "top",
+              subgroup: ""
             }
           ]
         },
@@ -975,18 +975,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1008,18 +1008,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1041,18 +1041,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -1074,18 +1074,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -1107,18 +1107,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1140,18 +1140,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1173,18 +1173,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1206,18 +1206,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1239,18 +1239,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1272,18 +1272,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1305,18 +1305,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -1338,18 +1338,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -1371,18 +1371,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1404,18 +1404,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1437,18 +1437,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1470,18 +1470,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1503,18 +1503,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1536,18 +1536,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1569,18 +1569,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -1602,18 +1602,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -1635,18 +1635,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1668,18 +1668,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1701,18 +1701,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1734,18 +1734,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1767,18 +1767,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1800,18 +1800,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1833,18 +1833,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -1866,18 +1866,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -1899,18 +1899,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1932,18 +1932,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -1965,18 +1965,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -1998,18 +1998,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2031,18 +2031,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2064,18 +2064,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2097,18 +2097,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -2130,18 +2130,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -2163,18 +2163,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2196,18 +2196,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2229,18 +2229,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2262,18 +2262,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2295,18 +2295,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2328,18 +2328,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2361,18 +2361,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -2394,18 +2394,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -2427,18 +2427,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2460,18 +2460,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2493,18 +2493,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2526,18 +2526,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2559,18 +2559,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2592,18 +2592,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2625,18 +2625,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -2658,18 +2658,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -2691,18 +2691,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2724,18 +2724,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2757,18 +2757,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2790,18 +2790,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2823,18 +2823,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2856,18 +2856,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -2889,18 +2889,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -2922,18 +2922,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -2955,18 +2955,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -2988,18 +2988,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3021,18 +3021,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3054,18 +3054,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3087,18 +3087,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3120,18 +3120,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3153,18 +3153,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -3186,18 +3186,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -3219,18 +3219,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3252,18 +3252,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3285,18 +3285,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3318,18 +3318,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3351,18 +3351,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3384,18 +3384,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3417,18 +3417,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -3450,18 +3450,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -3483,18 +3483,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3516,18 +3516,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3549,18 +3549,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3582,18 +3582,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "9"
+              group: "floor",
+              subgroup: "9"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3615,18 +3615,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3648,18 +3648,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3681,18 +3681,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -3714,18 +3714,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -3747,18 +3747,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3780,18 +3780,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -3813,18 +3813,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -3846,18 +3846,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "10"
+              group: "floor",
+              subgroup: "10"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         }
@@ -3941,10 +3941,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "bottom",
-              group: ""
+              group: "bottom",
+              subgroup: ""
             }
           ]
         },
@@ -3966,10 +3966,10 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "top",
-              group: ""
+              group: "top",
+              subgroup: ""
             }
           ]
         },
@@ -3991,18 +3991,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4024,18 +4024,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4057,18 +4057,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -4090,18 +4090,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -4123,18 +4123,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4156,18 +4156,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4189,18 +4189,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4222,18 +4222,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "0"
+              group: "floor",
+              subgroup: "0"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4255,18 +4255,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4288,18 +4288,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4321,18 +4321,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -4354,18 +4354,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -4387,18 +4387,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4420,18 +4420,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4453,18 +4453,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4486,18 +4486,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "1"
+              group: "floor",
+              subgroup: "1"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4519,18 +4519,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4552,18 +4552,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4585,18 +4585,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -4618,18 +4618,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -4651,18 +4651,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4684,18 +4684,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4717,18 +4717,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4750,18 +4750,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "2"
+              group: "floor",
+              subgroup: "2"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4783,18 +4783,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4816,18 +4816,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4849,18 +4849,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -4882,18 +4882,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -4915,18 +4915,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -4948,18 +4948,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -4981,18 +4981,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5014,18 +5014,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "3"
+              group: "floor",
+              subgroup: "3"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5047,18 +5047,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5080,18 +5080,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5113,18 +5113,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -5146,18 +5146,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -5179,18 +5179,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5212,18 +5212,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5245,18 +5245,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5278,18 +5278,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "4"
+              group: "floor",
+              subgroup: "4"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5311,18 +5311,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5344,18 +5344,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5377,18 +5377,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -5410,18 +5410,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -5443,18 +5443,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5476,18 +5476,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5509,18 +5509,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5542,18 +5542,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "5"
+              group: "floor",
+              subgroup: "5"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5575,18 +5575,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5608,18 +5608,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5641,18 +5641,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -5674,18 +5674,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -5707,18 +5707,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5740,18 +5740,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5773,18 +5773,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5806,18 +5806,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "6"
+              group: "floor",
+              subgroup: "6"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5839,18 +5839,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -5872,18 +5872,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -5905,18 +5905,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -5938,18 +5938,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -5971,18 +5971,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -6004,18 +6004,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -6037,18 +6037,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -6070,18 +6070,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "7"
+              group: "floor",
+              subgroup: "7"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -6103,18 +6103,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -6136,18 +6136,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -6169,18 +6169,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "2"
+              group: "door",
+              subgroup: "2"
             }
           ]
         },
@@ -6202,18 +6202,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "0"
+              group: "split level",
+              subgroup: "0"
             },
             {
-              context: "door",
-              group: "3"
+              group: "door",
+              subgroup: "3"
             }
           ]
         },
@@ -6235,18 +6235,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -6268,18 +6268,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "1"
+              group: "split level",
+              subgroup: "1"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         },
@@ -6301,18 +6301,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "0"
+              group: "door",
+              subgroup: "0"
             }
           ]
         },
@@ -6334,18 +6334,18 @@ const sampleKit = {
               z: 0
             }
           },
-          specifiers: [
+          locators: [
             {
-              context: "floor",
-              group: "8"
+              group: "floor",
+              subgroup: "8"
             },
             {
-              context: "split level",
-              group: "2"
+              group: "split level",
+              subgroup: "2"
             },
             {
-              context: "door",
-              group: "1"
+              group: "door",
+              subgroup: "1"
             }
           ]
         }
@@ -7560,10 +7560,10 @@ const sampleKit = {
               id: "CowardlySchapendoes841",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "core",
-                      group: "0"
+                      group: "core",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7575,10 +7575,10 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "bottom"
+                      subgroup: "",
+                      group: "bottom"
                     }
                   ]
                 }
@@ -7592,10 +7592,10 @@ const sampleKit = {
               id: "CowardlySchapendoes841",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "core",
-                      group: "1"
+                      group: "core",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -7607,10 +7607,10 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "bottom"
+                      subgroup: "",
+                      group: "bottom"
                     }
                   ]
                 }
@@ -7624,10 +7624,10 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "top",
-                      group: ""
+                      group: "top",
+                      subgroup: ""
                     }
                   ]
                 }
@@ -7639,10 +7639,10 @@ const sampleKit = {
               id: "ThinHippopotamus423",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "bottom"
+                      subgroup: "",
+                      group: "bottom"
                     }
                   ]
                 }
@@ -7656,10 +7656,10 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "top",
-                      group: ""
+                      group: "top",
+                      subgroup: ""
                     }
                   ]
                 }
@@ -7671,10 +7671,10 @@ const sampleKit = {
               id: "MadlyConey795",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "bottom"
+                      subgroup: "",
+                      group: "bottom"
                     }
                   ]
                 }
@@ -7688,18 +7688,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7711,10 +7711,10 @@ const sampleKit = {
               id: "SolidHeron340",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7728,18 +7728,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7751,10 +7751,10 @@ const sampleKit = {
               id: "SecretiveLeopardseal287",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7768,18 +7768,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7791,10 +7791,10 @@ const sampleKit = {
               id: "PuffyCatfish395",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7808,18 +7808,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7831,10 +7831,10 @@ const sampleKit = {
               id: "MiniatureSunbittern419",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7848,18 +7848,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7871,10 +7871,10 @@ const sampleKit = {
               id: "SlowFinch497",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7888,18 +7888,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7911,10 +7911,10 @@ const sampleKit = {
               id: "FlagrantBoa174",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7928,18 +7928,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7951,10 +7951,10 @@ const sampleKit = {
               id: "IncompetentAurochs281",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -7968,18 +7968,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -7991,10 +7991,10 @@ const sampleKit = {
               id: "FluffyFlyingsquirrel17",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8008,18 +8008,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -8031,10 +8031,10 @@ const sampleKit = {
               id: "BonyBoar961",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8048,18 +8048,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -8071,10 +8071,10 @@ const sampleKit = {
               id: "UsedCub797",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8088,18 +8088,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -8111,10 +8111,10 @@ const sampleKit = {
               id: "SteadyAbalone625",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8128,18 +8128,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8151,10 +8151,10 @@ const sampleKit = {
               id: "SilkyNightheron743",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8168,18 +8168,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8191,10 +8191,10 @@ const sampleKit = {
               id: "AbhorrentStarling544",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8208,18 +8208,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8231,10 +8231,10 @@ const sampleKit = {
               id: "HurtPheasant541",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8248,18 +8248,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8271,10 +8271,10 @@ const sampleKit = {
               id: "MeekHoki392",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8288,18 +8288,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8311,10 +8311,10 @@ const sampleKit = {
               id: "LethalMyna174",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8328,18 +8328,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8351,10 +8351,10 @@ const sampleKit = {
               id: "BashfulAmurminnow563",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8368,18 +8368,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8391,10 +8391,10 @@ const sampleKit = {
               id: "SpiffyPolarbear154",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8408,18 +8408,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8431,10 +8431,10 @@ const sampleKit = {
               id: "UltraSmelts713",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8448,18 +8448,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8471,10 +8471,10 @@ const sampleKit = {
               id: "BlindOyster551",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8488,18 +8488,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8511,10 +8511,10 @@ const sampleKit = {
               id: "BestGiantschnauzer105",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8528,18 +8528,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -8551,10 +8551,10 @@ const sampleKit = {
               id: "MeatyGemsbok156",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8568,18 +8568,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8591,10 +8591,10 @@ const sampleKit = {
               id: "StickyZebrafinch838",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8608,18 +8608,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8631,10 +8631,10 @@ const sampleKit = {
               id: "BerserkMeadowhawk244",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8648,18 +8648,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8671,10 +8671,10 @@ const sampleKit = {
               id: "AbjectJabiru130",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8688,18 +8688,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8711,10 +8711,10 @@ const sampleKit = {
               id: "MountainousGermanshepherd964",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8728,18 +8728,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8751,10 +8751,10 @@ const sampleKit = {
               id: "MaterialNauplius848",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8768,18 +8768,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8791,10 +8791,10 @@ const sampleKit = {
               id: "HardCopperhead485",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8808,18 +8808,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8831,10 +8831,10 @@ const sampleKit = {
               id: "LeanYnambu602",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8848,18 +8848,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8871,10 +8871,10 @@ const sampleKit = {
               id: "ExultantManxcat708",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8888,18 +8888,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8911,10 +8911,10 @@ const sampleKit = {
               id: "DutifulSpiketail603",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8928,18 +8928,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8951,10 +8951,10 @@ const sampleKit = {
               id: "AwkwardBumblebee771",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -8968,18 +8968,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -8991,10 +8991,10 @@ const sampleKit = {
               id: "ArcticBoto329",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9008,18 +9008,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9031,10 +9031,10 @@ const sampleKit = {
               id: "OverdueAcaciarat725",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9048,18 +9048,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9071,10 +9071,10 @@ const sampleKit = {
               id: "WhimsicalSongbird425",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9088,18 +9088,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9111,10 +9111,10 @@ const sampleKit = {
               id: "WingedDotterel237",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9128,18 +9128,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9151,10 +9151,10 @@ const sampleKit = {
               id: "GoldenMantisray505",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9168,18 +9168,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9191,10 +9191,10 @@ const sampleKit = {
               id: "ObeseTegus499",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9208,18 +9208,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9231,10 +9231,10 @@ const sampleKit = {
               id: "OutlyingFrog357",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9248,18 +9248,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9271,10 +9271,10 @@ const sampleKit = {
               id: "StainedPupfish90",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9288,18 +9288,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9311,10 +9311,10 @@ const sampleKit = {
               id: "FancyCheetah998",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9328,18 +9328,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9351,10 +9351,10 @@ const sampleKit = {
               id: "ImaginaryKittiwake855",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9368,18 +9368,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9391,10 +9391,10 @@ const sampleKit = {
               id: "ChiefCopperhead915",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9408,18 +9408,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -9431,10 +9431,10 @@ const sampleKit = {
               id: "FascinatedMajungatholus889",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9448,18 +9448,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9471,10 +9471,10 @@ const sampleKit = {
               id: "RequiredAlpaca68",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9488,18 +9488,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9511,10 +9511,10 @@ const sampleKit = {
               id: "LastGoa230",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9528,18 +9528,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9551,10 +9551,10 @@ const sampleKit = {
               id: "CircularShorebird528",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9568,18 +9568,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9591,10 +9591,10 @@ const sampleKit = {
               id: "HallowedChital355",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9608,18 +9608,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9631,10 +9631,10 @@ const sampleKit = {
               id: "RightfulTerrier113",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9648,18 +9648,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9671,10 +9671,10 @@ const sampleKit = {
               id: "LonePlanthopper612",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9688,18 +9688,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9711,10 +9711,10 @@ const sampleKit = {
               id: "VisibleWoodborer638",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9728,18 +9728,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9751,10 +9751,10 @@ const sampleKit = {
               id: "BowedYucker17",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9768,18 +9768,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9791,10 +9791,10 @@ const sampleKit = {
               id: "InsecureNag799",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9808,18 +9808,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9831,10 +9831,10 @@ const sampleKit = {
               id: "AquaticSwordfish164",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9848,18 +9848,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -9871,10 +9871,10 @@ const sampleKit = {
               id: "OurLeonberger899",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9888,18 +9888,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -9911,10 +9911,10 @@ const sampleKit = {
               id: "AgitatedHamadryad482",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9928,18 +9928,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -9951,10 +9951,10 @@ const sampleKit = {
               id: "DownrightElkhound157",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -9968,18 +9968,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -9991,10 +9991,10 @@ const sampleKit = {
               id: "DailyPiedstarling237",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10008,18 +10008,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10031,10 +10031,10 @@ const sampleKit = {
               id: "BreezyGoosefish652",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10048,18 +10048,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10071,10 +10071,10 @@ const sampleKit = {
               id: "CumbersomeBandicoot22",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10088,18 +10088,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10111,10 +10111,10 @@ const sampleKit = {
               id: "PiquantSiskin104",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10128,18 +10128,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10151,10 +10151,10 @@ const sampleKit = {
               id: "SpontaneousRainbowfish68",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10168,18 +10168,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10191,10 +10191,10 @@ const sampleKit = {
               id: "YummyGazelle673",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10208,18 +10208,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10231,10 +10231,10 @@ const sampleKit = {
               id: "PushyCarp243",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10248,18 +10248,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10271,10 +10271,10 @@ const sampleKit = {
               id: "OverdueCurl285",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10288,18 +10288,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10311,10 +10311,10 @@ const sampleKit = {
               id: "HushedCrustacean689",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10328,18 +10328,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10351,10 +10351,10 @@ const sampleKit = {
               id: "ToothsomeMallard223",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10368,18 +10368,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10391,10 +10391,10 @@ const sampleKit = {
               id: "DevilishGlassfish353",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10408,18 +10408,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10431,10 +10431,10 @@ const sampleKit = {
               id: "SparseJacana451",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10448,18 +10448,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10471,10 +10471,10 @@ const sampleKit = {
               id: "CylindricalSquid97",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10488,18 +10488,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10511,10 +10511,10 @@ const sampleKit = {
               id: "SinfulMassasauga767",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10528,18 +10528,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10551,10 +10551,10 @@ const sampleKit = {
               id: "IdenticalPoodle860",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10568,18 +10568,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10591,10 +10591,10 @@ const sampleKit = {
               id: "WrathfulPony916",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10608,18 +10608,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10631,10 +10631,10 @@ const sampleKit = {
               id: "RingedYellowhammer92",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10648,18 +10648,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10671,10 +10671,10 @@ const sampleKit = {
               id: "ChivalrousImago604",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10688,18 +10688,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10711,10 +10711,10 @@ const sampleKit = {
               id: "WhoppingOxpecker569",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10728,18 +10728,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -10751,10 +10751,10 @@ const sampleKit = {
               id: "RebelMara725",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10768,18 +10768,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10791,10 +10791,10 @@ const sampleKit = {
               id: "InfantileKingsnake150",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10808,18 +10808,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10831,10 +10831,10 @@ const sampleKit = {
               id: "LowlySpringtail166",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10848,18 +10848,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10871,10 +10871,10 @@ const sampleKit = {
               id: "HospitableInepython987",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10888,18 +10888,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10911,10 +10911,10 @@ const sampleKit = {
               id: "SpiritedShihtzu326",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10928,18 +10928,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10951,10 +10951,10 @@ const sampleKit = {
               id: "QuarrelsomeIslandcanary721",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -10968,18 +10968,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -10991,10 +10991,10 @@ const sampleKit = {
               id: "HeadyDraughthorse812",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11008,18 +11008,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11031,10 +11031,10 @@ const sampleKit = {
               id: "UrbanPtarmigan897",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11048,18 +11048,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11071,10 +11071,10 @@ const sampleKit = {
               id: "WhisperingCrocodile272",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11088,18 +11088,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11111,10 +11111,10 @@ const sampleKit = {
               id: "BlankGlowworm699",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11128,18 +11128,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "9"
+                      group: "floor",
+                      subgroup: "9"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11151,10 +11151,10 @@ const sampleKit = {
               id: "FruitfulStonefly52",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11168,18 +11168,18 @@ const sampleKit = {
               id: "ProudMynah941",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "10"
+                      group: "floor",
+                      subgroup: "10"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11191,10 +11191,10 @@ const sampleKit = {
               id: "AccurateCusimanse330",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11208,18 +11208,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11231,10 +11231,10 @@ const sampleKit = {
               id: "UniformMantid574",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11248,18 +11248,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11271,10 +11271,10 @@ const sampleKit = {
               id: "FineBarracuda230",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11288,18 +11288,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11311,10 +11311,10 @@ const sampleKit = {
               id: "ForegoingAcouchi516",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11328,18 +11328,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11351,10 +11351,10 @@ const sampleKit = {
               id: "CraftySlothbear953",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11368,18 +11368,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11391,10 +11391,10 @@ const sampleKit = {
               id: "DispensableLlama199",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11408,18 +11408,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11431,10 +11431,10 @@ const sampleKit = {
               id: "RaspyWreckfish32",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11448,18 +11448,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11471,10 +11471,10 @@ const sampleKit = {
               id: "ScratchyGoldfish395",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11488,18 +11488,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11511,10 +11511,10 @@ const sampleKit = {
               id: "CanineMolesnake909",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11528,18 +11528,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -11551,10 +11551,10 @@ const sampleKit = {
               id: "UnhappyGrub868",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11568,18 +11568,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11591,10 +11591,10 @@ const sampleKit = {
               id: "DescriptiveGlasslizard981",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11608,18 +11608,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11631,10 +11631,10 @@ const sampleKit = {
               id: "JudiciousOxen732",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11648,18 +11648,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11671,10 +11671,10 @@ const sampleKit = {
               id: "PrimeColt961",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11688,18 +11688,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11711,10 +11711,10 @@ const sampleKit = {
               id: "LowQuagga17",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11728,18 +11728,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11751,10 +11751,10 @@ const sampleKit = {
               id: "PristineScorpion186",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11768,18 +11768,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11791,10 +11791,10 @@ const sampleKit = {
               id: "FantasticRainbowfish852",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11808,18 +11808,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11831,10 +11831,10 @@ const sampleKit = {
               id: "UltraMonarch771",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11848,18 +11848,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11871,10 +11871,10 @@ const sampleKit = {
               id: "VigilantSpringpeeper326",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11888,18 +11888,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -11911,10 +11911,10 @@ const sampleKit = {
               id: "SmilingWaterstrider509",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11928,18 +11928,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -11951,10 +11951,10 @@ const sampleKit = {
               id: "ZestyVampirebat158",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -11968,18 +11968,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -11991,10 +11991,10 @@ const sampleKit = {
               id: "AliveAntbear261",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12008,18 +12008,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12031,10 +12031,10 @@ const sampleKit = {
               id: "SecretHare172",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12048,18 +12048,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12071,10 +12071,10 @@ const sampleKit = {
               id: "RotatingOctopus669",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12088,18 +12088,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12111,10 +12111,10 @@ const sampleKit = {
               id: "AdoredFantail424",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12128,18 +12128,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12151,10 +12151,10 @@ const sampleKit = {
               id: "SynonymousGuineafowl95",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12168,18 +12168,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12191,10 +12191,10 @@ const sampleKit = {
               id: "DefeatedMonkey388",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12208,18 +12208,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12231,10 +12231,10 @@ const sampleKit = {
               id: "AcridHoneybadger166",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12248,18 +12248,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "2"
+                      group: "door",
+                      subgroup: "2"
                     }
                   ]
                 }
@@ -12271,10 +12271,10 @@ const sampleKit = {
               id: "PointedGosling788",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12288,18 +12288,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12311,10 +12311,10 @@ const sampleKit = {
               id: "ScentedCattledog229",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12328,18 +12328,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12351,10 +12351,10 @@ const sampleKit = {
               id: "TameTamarin483",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12368,18 +12368,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12391,10 +12391,10 @@ const sampleKit = {
               id: "ThinkableDarwinsfox897",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12408,18 +12408,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12431,10 +12431,10 @@ const sampleKit = {
               id: "FatRaptors755",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12448,18 +12448,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12471,10 +12471,10 @@ const sampleKit = {
               id: "UnadvisedMandrill5",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12488,18 +12488,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12511,10 +12511,10 @@ const sampleKit = {
               id: "PoorHarpseal18",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12528,18 +12528,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12551,10 +12551,10 @@ const sampleKit = {
               id: "AbortiveGoral231",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12568,18 +12568,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12591,10 +12591,10 @@ const sampleKit = {
               id: "PlasticSetter8",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12608,18 +12608,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "0"
+                      group: "split level",
+                      subgroup: "0"
                     },
                     {
-                      context: "door",
-                      group: "3"
+                      group: "door",
+                      subgroup: "3"
                     }
                   ]
                 }
@@ -12631,10 +12631,10 @@ const sampleKit = {
               id: "RealBilby174",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12648,18 +12648,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12671,10 +12671,10 @@ const sampleKit = {
               id: "PastoralWombat366",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12688,18 +12688,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12711,10 +12711,10 @@ const sampleKit = {
               id: "EtherealRacer964",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12728,18 +12728,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12751,10 +12751,10 @@ const sampleKit = {
               id: "MustyCottontail808",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12768,18 +12768,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12791,10 +12791,10 @@ const sampleKit = {
               id: "ShutNumbat484",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12808,18 +12808,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12831,10 +12831,10 @@ const sampleKit = {
               id: "AdorableMantid286",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12848,18 +12848,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12871,10 +12871,10 @@ const sampleKit = {
               id: "VulgarYellowthroat175",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12888,18 +12888,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12911,10 +12911,10 @@ const sampleKit = {
               id: "GullibleAidi472",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12928,18 +12928,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12951,10 +12951,10 @@ const sampleKit = {
               id: "MagentaLeonberger993",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -12968,18 +12968,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -12991,10 +12991,10 @@ const sampleKit = {
               id: "DidacticReptile18",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13008,18 +13008,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13031,10 +13031,10 @@ const sampleKit = {
               id: "MereHake580",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13048,18 +13048,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13071,10 +13071,10 @@ const sampleKit = {
               id: "EverlastingEyra142",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13088,18 +13088,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13111,10 +13111,10 @@ const sampleKit = {
               id: "HumiliatingVelvetworm177",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13128,18 +13128,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13151,10 +13151,10 @@ const sampleKit = {
               id: "ArrogantWaterbuck979",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13168,18 +13168,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13191,10 +13191,10 @@ const sampleKit = {
               id: "FunnyQuelea243",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13208,18 +13208,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13231,10 +13231,10 @@ const sampleKit = {
               id: "BigGoldeneye919",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13248,18 +13248,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13271,10 +13271,10 @@ const sampleKit = {
               id: "PeriodicVulpesvulpes847",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13288,18 +13288,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13311,10 +13311,10 @@ const sampleKit = {
               id: "ThoughtlessBlackfish195",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13328,18 +13328,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "1"
+                      group: "split level",
+                      subgroup: "1"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13351,10 +13351,10 @@ const sampleKit = {
               id: "CandidNudibranch278",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13368,18 +13368,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13391,10 +13391,10 @@ const sampleKit = {
               id: "FranticTattler688",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13408,18 +13408,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13431,10 +13431,10 @@ const sampleKit = {
               id: "MisguidedTriceratops788",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13448,18 +13448,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13471,10 +13471,10 @@ const sampleKit = {
               id: "LovableAlpaca817",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13488,18 +13488,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13511,10 +13511,10 @@ const sampleKit = {
               id: "AmbitiousStonefly839",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13528,18 +13528,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13551,10 +13551,10 @@ const sampleKit = {
               id: "MediocreVelociraptor707",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13568,18 +13568,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13591,10 +13591,10 @@ const sampleKit = {
               id: "ShimmeringNutria785",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13608,18 +13608,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13631,10 +13631,10 @@ const sampleKit = {
               id: "DerangedRainbowtrout438",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13648,18 +13648,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13671,10 +13671,10 @@ const sampleKit = {
               id: "SubtleFantail625",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13688,18 +13688,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "0"
+                      group: "door",
+                      subgroup: "0"
                     }
                   ]
                 }
@@ -13711,10 +13711,10 @@ const sampleKit = {
               id: "PalatableSquid933",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13728,18 +13728,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "0"
+                      group: "floor",
+                      subgroup: "0"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13751,10 +13751,10 @@ const sampleKit = {
               id: "HarmlessSponge364",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13768,18 +13768,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "1"
+                      group: "floor",
+                      subgroup: "1"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13791,10 +13791,10 @@ const sampleKit = {
               id: "DullSaiga459",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13808,18 +13808,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "2"
+                      group: "floor",
+                      subgroup: "2"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13831,10 +13831,10 @@ const sampleKit = {
               id: "UnequalKinglet62",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13848,18 +13848,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "3"
+                      group: "floor",
+                      subgroup: "3"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13871,10 +13871,10 @@ const sampleKit = {
               id: "ModestMullet344",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13888,18 +13888,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "4"
+                      group: "floor",
+                      subgroup: "4"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13911,10 +13911,10 @@ const sampleKit = {
               id: "MotionlessLemonshark447",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13928,18 +13928,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "5"
+                      group: "floor",
+                      subgroup: "5"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13951,10 +13951,10 @@ const sampleKit = {
               id: "StripedLemonshark620",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -13968,18 +13968,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "6"
+                      group: "floor",
+                      subgroup: "6"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -13991,10 +13991,10 @@ const sampleKit = {
               id: "ThoughtlessZander366",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -14008,18 +14008,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "7"
+                      group: "floor",
+                      subgroup: "7"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -14031,10 +14031,10 @@ const sampleKit = {
               id: "CourageousFossa980",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
@@ -14048,18 +14048,18 @@ const sampleKit = {
               id: "XylographicLhasaapso275",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      context: "floor",
-                      group: "8"
+                      group: "floor",
+                      subgroup: "8"
                     },
                     {
-                      context: "split level",
-                      group: "2"
+                      group: "split level",
+                      subgroup: "2"
                     },
                     {
-                      context: "door",
-                      group: "1"
+                      group: "door",
+                      subgroup: "1"
                     }
                   ]
                 }
@@ -14071,10 +14071,10 @@ const sampleKit = {
               id: "GuardedPlainsqueaker760",
               type: {
                 port: {
-                  specifiers: [
+                  locators: [
                     {
-                      group: "",
-                      context: "door"
+                      subgroup: "",
+                      group: "door"
                     }
                   ]
                 }
