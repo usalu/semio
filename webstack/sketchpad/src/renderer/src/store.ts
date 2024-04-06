@@ -2,7 +2,7 @@ import { enableMapSet } from 'immer'
 enableMapSet()
 
 import { PayloadAction, configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { Formation, FormationInput, Kit, Type, TypeInput } from './semio'
+import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio'
 
 export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
     if (!directory) {
@@ -66,7 +66,7 @@ export const selectKit = (
 export const selectTypes = (
     state: { kits: { kits: Map<string, Kit> } },
     directory: string
-): Map<string, Map<string, Type>> => {
+): Map<string, Map<string, Type>> => { // typeName -> typeVariant -> Type
     const kit = selectKit(state, directory)
     if (kit && kit.types) {
         const types = new Map<string, Map<string, Type>>()
@@ -92,6 +92,30 @@ export const selectType = (
         return kit.types.find((type) => type.name === name && type.variant === variant)
     }
     return undefined
+}
+
+export const selectPorts = (
+    state: { kits: { kits: Map<string, Kit> } },
+    directory: string,
+): Map<string, Map<string, Map<string, Port>>> => {
+    // typeName -> typeVariant -> portId -> Port
+    const kit = selectKit(state, directory)
+    if (kit && kit.types) {
+        const ports = new Map<string, Map<string, Map<string, Port>>>()
+        kit.types.forEach((type) => {
+            if (!ports.has(type.name)) {
+                ports.set(type.name, new Map<string, Map<string, Port>>())
+            }
+            if (!ports.get(type.name)?.has(type.variant)) {
+                ports.get(type.name)?.set(type.variant, new Map<string, Port>())
+            }
+            type.ports.forEach((port) => {
+                ports.get(type.name)?.get(type.variant)?.set(port.id, port)
+            })
+        })
+        return ports
+    }
+    return new Map<string, Map<string, Map<string, Port>>>()
 }
 
 export const selectFormations = (

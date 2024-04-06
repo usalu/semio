@@ -12,6 +12,31 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
           name
           variant
         }
+        root {
+            plane {
+              origin {
+                x
+                y
+                z
+              }
+              xAxis {
+                x
+                y
+                z
+              }
+              yAxis {
+                x
+                y
+                z
+              }
+            }
+          }
+          diagram {
+            point {
+              x
+              y
+            }
+          }
       }
       attractions {
         attracting {

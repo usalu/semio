@@ -71,7 +71,7 @@ type Piece {
   attractings: [Attraction!]!
   attracteds: [Attraction!]!
   id: String!
-  root: RootPiece!
+  root: RootPiece
   diagram: DiagramPiece!
 }
 

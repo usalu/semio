@@ -7,10 +7,15 @@ import {
     FormationInput,
     Piece,
     PieceInput,
+    Plane,
+    PlaneInput,
+    Point,
+    Port,
     Representation,
     Type,
     TypeIdInput,
-    TypeInput
+    TypeInput,
+    Vector
 } from '@renderer/semio'
 import tailwindConfig from '../../../tailwind.config.js'
 import React, {
@@ -55,7 +60,7 @@ import {
     Tooltip
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
-import { Mesh } from 'three'
+import { Mesh, Matrix4 } from 'three'
 import { Canvas, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
@@ -63,7 +68,8 @@ import {
     Select as ThreeSelect,
     GizmoHelper,
     GizmoViewport,
-    TransformControls
+    TransformControls,
+    Grid
 } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import {
@@ -102,7 +108,8 @@ import {
     selectFormations,
     selectType,
     updateFormation,
-    updateFormationSelection
+    updateFormationSelection,
+    selectPorts
 } from './store'
 
 // Copilot
@@ -814,7 +821,10 @@ class SeededRandom {
 }
 
 class Generator {
-    public static generateRandomId(seed: number): string {
+    public static generateRandomId(seed: number | undefined): string {
+        if (seed === undefined) {
+            seed = Math.floor(Math.random() * 1000000)
+        }
         const random = new SeededRandom(seed)
 
         let adjective = adjectives[random.nextInt(adjectives.length)]
@@ -1061,10 +1071,58 @@ const ArtifactAvatar = ({
 
 type Hierarchy = {
     pieceId: string
+    transform: Matrix4
     children: Hierarchy[]
 }
 
-const formationToHierarchies = (formation: Formation | FormationInput): Hierarchy[] => {
+const cross = (a: Vector, b: Vector): Vector => {
+    return {
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x
+    } as Vector
+}
+
+const planeToTransform = (plane: Plane | PlaneInput): Matrix4 => {
+    const origin = plane.origin
+    const xAxis = plane.xAxis
+    const yAxis = plane.yAxis
+    const zAxis = cross(xAxis, yAxis)
+    return new Matrix4().fromArray([
+        xAxis.x,
+        xAxis.y,
+        xAxis.z,
+        0,
+        yAxis.x,
+        yAxis.y,
+        yAxis.z,
+        0,
+        zAxis.x,
+        zAxis.y,
+        zAxis.z,
+        0,
+        origin.x,
+        origin.y,
+        origin.z,
+        1
+    ])
+}
+
+const transformToPlane = (transform: Matrix4): Plane => {
+    const origin = {x: transform.elements[12], y: transform.elements[13], z: transform.elements[14]} as Point
+    const xAxis = {x: transform.elements[0], y: transform.elements[1], z: transform.elements[2]} as Vector
+    const yAxis = {x: transform.elements[4], y: transform.elements[5], z: transform.elements[6]} as Vector
+    return {
+        origin,
+        xAxis,
+        yAxis
+    }
+}
+
+const formationToHierarchies = (
+    formation: Formation | FormationInput,
+    ports: Map<string, Map<string, Map<string,Port>>> // typeName -> typeVariant -> portId -> port
+): Hierarchy[] => {
     if (formation.pieces.length === 0) return []
     const cy = cytoscape({
         elements: {
@@ -1093,21 +1151,40 @@ const formationToHierarchies = (formation: Formation | FormationInput): Hierarch
         // path[0] is the root. path[length-1] is the last node.
         const rootHierarchy: Hierarchy = {
             pieceId: path[0].id(),
+            transform: planeToTransform(
+                formation.pieces.find((p) => p.id === path[0].id()).root?.plane ?? {
+                    origin: { x: 0, y: 0, z: 0 },
+                    xAxis: { x: 1, y: 0, z: 0 },
+                    yAxis: { x: 0, y: 1, z: 0 }
+                }
+            ),
             children: []
         }
         hierarchies.push(rootHierarchy)
         const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
         pieceIdToHierarchy[rootHierarchy.pieceId] = rootHierarchy
         for (let i = 2; i < path.length; i += 2) {
-            const pieceId = path[i].id()
             const edge = path[i - 1]
+            const parentPieceId = edge.source().id()
+            const parentPiece = formation.pieces.find((p) => p.id === parentPieceId)
+            const pieceId = edge.target().id()
+            const piece = formation.pieces.find((p) => p.id === pieceId)
+            const attraction = formation.attractions.find(
+                (attraction) =>
+                attraction.attracting.piece.id === parentPieceId &&
+                attraction.attracted.piece.id === pieceId
+                )
+            const parentPort = ports.get(parentPiece.type.name)?.get(parentPiece.type.variant ?? '')?.get(attraction.attracting.piece?.type?.port?.id ?? '')
+            const childPort = ports.get(piece.type.name)?.get(piece.type.variant ?? '')?.get(attraction.attracted.piece?.type?.port?.id ?? '')
+            if (!parentPort || !childPort)
+                throw new Error('Port not found')
             const hierarchy = {
                 pieceId,
+                transform: planeToTransform(childPort.plane).multiply(planeToTransform(parentPort.plane).invert()),
                 children: []
             }
             pieceIdToHierarchy[pieceId] = hierarchy
-            const parentPieceId = edge.source().id()
-            pieceIdToHierarchy[parentPieceId].children.push(hierarchy)
+            pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
         }
     })
     return hierarchies
@@ -1565,7 +1642,13 @@ DiagramEditor.displayName = 'DiagramEditor'
 
 // 3D Editor
 
-const BlobUrlContext = createContext<{ [key: string]: string }>({})
+interface IShapeEditorContext {
+    formationViewId: string
+    kitDirectory: string
+    blobUrls: { [key: string]: string }
+}
+
+const ShapeEditorContext = createContext<IShapeEditorContext>({} as IShapeEditorContext)
 
 interface RepresentationThreeProps {
     id: string
@@ -1573,7 +1656,7 @@ interface RepresentationThreeProps {
 }
 
 const RepresentationThree = ({ id, representation }: RepresentationThreeProps): JSX.Element => {
-    const blobUrls = useContext(BlobUrlContext)
+    const { blobUrls } = useContext(ShapeEditorContext)
     const representationThree = useLoader(GLTFLoader, blobUrls[representation.url])
     representationThree.scene.name = id
     return <primitive object={representationThree.scene} />
@@ -1594,105 +1677,167 @@ const getPieceIdFromClickEventGroupObject = (o: any): string => {
 }
 
 interface PieceThreeProps {
-    viewId: string
-    kitDirectory: string
     piece: PieceInput
-    isTransformed
+    selected: boolean
 }
 
-const PieceThree = ({ viewId, kitDirectory, piece }: PieceThreeProps) => {
+const PieceThree = ({ piece, selected }: PieceThreeProps) => {
+    const { formationViewId, kitDirectory } = useContext(ShapeEditorContext)
     const dispatch = useDispatch()
-    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    const formationView = useSelector((state: RootState) =>
+        selectFormationView(state, formationViewId)
+    )
     const type = useSelector((state: RootState) =>
         selectType(state, kitDirectory, piece.type.name, piece.type.variant ?? '')
     )
-    const representationRef = useRef<Mesh>(null)
-    const pieceJsx = (
-        <Selection>
-            <EffectComposer
-                autoClear={false}
-                enabled={formationView?.selection.piecesIds.includes(piece.id)}
-            >
-                <Outline
-                    edgeStrength={200}
-                    visibleEdgeColor={colors.primary}
-                    patternTexture={null}
-                />
-                {/* <SelectiveBloom 
-                luminanceThreshold={0.9}
-            /> */}
-            </EffectComposer>
-            <ThreeSelect
-                multiple
-                box
-                border="1px solid #fff"
-                // onChange={(selected): void => {
-                //     if (!isSelectionBoxActive) {
-                //         setIsSelectionBoxActive(true)
-                //         console.log('selection starting', selected)
-                //     }
-                // }}
-                // onChangePointerUp={(e) => {
-                //     if (isSelectionBoxActive) {
-                //         setIsSelectionBoxActive(false)
-                //         console.log('selection ending', e)
-                //     }
-                // }}
-                onClick={(e) => {
-                    console.log('click', e)
-                    const pieceId = getPieceIdFromClickEventGroupObject(e.eventObject)
-                    if (formationView.selection.piecesIds.includes(pieceId)) {
-                        dispatch(
-                            updateFormationSelection(viewId, {
-                                piecesIds: formationView.selection.piecesIds.filter(
-                                    (id) => id !== pieceId
-                                ),
-                                attractionsPiecesIds: formationView.selection.attractionsPiecesIds
-                            })
-                        )
-                    } else {
-                        dispatch(
-                            updateFormationSelection(viewId, {
-                                piecesIds: [...formationView.selection.piecesIds, pieceId],
-                                attractionsPiecesIds: formationView.selection.attractionsPiecesIds
-                            })
-                        )
-                    }
+    return (
+    <Selection>
+    <EffectComposer autoClear={false} enabled={selected}>
+        <Outline
+            edgeStrength={200}
+            visibleEdgeColor={colors.primary}
+            patternTexture={null}
+        />
+        {/* <SelectiveBloom 
+        luminanceThreshold={0.9}
+    /> */}
+    </EffectComposer>
+    <ThreeSelect
+        multiple
+        box
+        border="1px solid #fff"
+        // onChange={(selected): void => {
+        //         console.log('selection starting', selected)
+        //     }}
+        // onChangePointerUp={(e) => {
+        //     if (isSelectionBoxActive) {
+        //         setIsSelectionBoxActive(false)
+        //         console.log('selection ending', e)
+        //     }
+        // }}
+        onClick={(e) => {
+            const pieceId = getPieceIdFromClickEventGroupObject(e.eventObject)
+            if (formationView.selection.piecesIds.includes(pieceId)) {
+                dispatch(
+                    updateFormationSelection(formationViewId, {
+                        piecesIds: formationView.selection.piecesIds.filter(
+                            (id) => id !== pieceId
+                        ),
+                        attractionsPiecesIds: formationView.selection.attractionsPiecesIds
+                    })
+                )
+            } else {
+                dispatch(
+                    updateFormationSelection(formationViewId, {
+                        piecesIds: [...formationView.selection.piecesIds, pieceId],
+                        attractionsPiecesIds: formationView.selection.attractionsPiecesIds
+                    })
+                )
+            }
 
-                    e.stopPropagation()
-                }}
-            >
-                <PostProcessSelect enabled={formationView.selection.piecesIds.includes(piece.id)}>
-                    <RepresentationThree
-                        forwardedRef={representationRef}
-                        id={piece.id}
-                        representation={type.representations.find((representation) =>
-                            representation.url.endsWith('.glb')
-                        )}
-                    />
-                </PostProcessSelect>
-            </ThreeSelect>
-        </Selection>
-    )
-    return <TransformControls>{pieceJsx}</TransformControls>
+            e.stopPropagation()
+        }}
+    >
+        <PostProcessSelect enabled={selected}>
+            <RepresentationThree
+                id={piece.id}
+                representation={type.representations.find((representation) =>
+                    representation.url.endsWith('.glb')
+                )}
+            />
+        </PostProcessSelect>
+    </ThreeSelect>
+</Selection>
+)
 }
 
 PieceThree.displayName = 'PieceThree'
 
-interface FormationThreeProps {
-    viewId: string
-    kitDirectory: string
+interface HierarchyThreeProps {
+    hierarchy: Hierarchy
 }
 
-const FormationThree = ({ viewId, kitDirectory }: FormationThreeProps) => {
-    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
-    const selectedPieceId = formationView?.selection.piecesIds.length > 0 ? formationView.selection.piecesIds[0] : ''
-    // const hierarchies = formationToHierarchies(formationView.formation)
-    
+const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
+    const { formationViewId } = useContext(ShapeEditorContext)
+    const formationView = useSelector((state: RootState) =>
+        selectFormationView(state, formationViewId)
+    )
+    const piece = formationView.formation.pieces.find((p) => p.id === hierarchy.pieceId)
+    const selected = formationView.selection.piecesIds.includes(piece.id)
+    if (!piece) return null
+
+    const groupRef = useRef();
+    useEffect(() => {
+        if (groupRef.current) {
+            groupRef.current.applyMatrix4(hierarchy.transform);
+        }
+    }, []);
+
+    return (
+        <group name={piece.id} ref={groupRef}>
+            <PieceThree piece={piece} selected={selected} />
+            {hierarchy.children.map((child, i) => (
+                <HierarchyThree key={i} hierarchy={child} />
+            ))}
+        </group>
+    )
+}
+
+HierarchyThree.displayName = 'HierarchyThree'
+
+interface FormationThreeProps {
+}
+
+const FormationThree = ({ }: FormationThreeProps) => {
+    const dispatch = useDispatch()
+    const { formationViewId, kitDirectory } = useContext(ShapeEditorContext)
+    const formationView = useSelector((state: RootState) => selectFormationView(state, formationViewId))
+    const ports = useSelector((state: RootState) => selectPorts(state, kitDirectory))
+    if (!formationView) return null
+    if (!ports) return null
+    const selectedHierarchyRootPiecesIds = formationView.selection.piecesIds
+    const hierarchies = formationToHierarchies(formationView.formation, ports)
+    const transformControlRef = useRef<TransformControls>(null)
     return (
         <group name={formationToString(formationView.formation)}>
-            {formationView?.formation.pieces.map((piece, i) => (
-                <PieceThree key={i} viewId={viewId} kitDirectory={kitDirectory} piece={piece} />
+            {hierarchies.map((hierarchy, i) => (
+                selectedHierarchyRootPiecesIds.includes(hierarchy.pieceId) ? (
+                        <TransformControls 
+                            key={i}
+                            ref={transformControlRef}
+                            onMouseUp={(event) => {
+                                dispatch(updateFormation({
+                                    id: formationViewId,
+                                    formation: {
+                                        ...formationView.formation,
+                                        pieces: formationView.formation.pieces.map((piece) =>
+                                            selectedHierarchyRootPiecesIds.includes(piece.id)
+                                                ? {
+                                                      ...piece,
+                                                      root: {
+                                                          plane: transformToPlane(
+                                                            planeToTransform(piece.root?.plane ?? {
+                                                                origin: { x: 0, y: 0, z: 0 },
+                                                                xAxis: { x: 1, y: 0, z: 0 },
+                                                                yAxis: { x: 0, y: 1, z: 0 }
+                                                            }).multiply(
+                                                            new Matrix4().makeRotationFromEuler(transformControlRef.current.rotation).setPosition(transformControlRef.current.offset))
+                                                          )
+                                                      }
+                                                  }
+                                                : piece
+                                        )
+                                    }
+                                }))
+                                }
+                            }
+                        >
+                            <HierarchyThree hierarchy={hierarchy} />
+                        </TransformControls>
+                    ) : (
+                        <HierarchyThree key={i} hierarchy={hierarchy} />
+                    )
+                
             ))}
         </group>
     )
@@ -1706,13 +1851,9 @@ interface ShapeEditorProps {
 }
 
 const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
+    const dispatch = useDispatch()
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
-
     const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
-    const [isSelectionBoxActive, setIsSelectionBoxActive] = useState(false)
-
-    const hierarchies = formationToHierarchies(kit!.formations[0])
-
     useEffect(() => {
         kit?.types.forEach((type) => {
             const representation = type.representations.find((representation) =>
@@ -1736,29 +1877,30 @@ const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
     }, [kit])
 
     return (
-        <BlobUrlContext.Provider value={blobUrls}>
+        <ShapeEditorContext.Provider value={{kitDirectory, formationViewId:viewId, blobUrls}}>
             <Canvas
-                shadows={true}
+                shadows
                 // orthographic={true}
+                onPointerMissed={() => dispatch(updateFormationSelection(viewId, null))}
             >
                 <Suspense fallback={null}>
-                    <FormationThree kitDirectory={kitDirectory} viewId={viewId} />
+                    <FormationThree  />
                     <ambientLight color={colors.light} intensity={1} />
                 </Suspense>
                 <OrbitControls makeDefault />
                 <GizmoHelper
-                    alignment="bottom-right" // widget alignment within scene
-                    margin={[80, 80]} // widget margins (X, Y)
-                >
+                    alignment="bottom-right"
+                    margin={[80, 80]}
+                    >
                     <GizmoViewport
-                        labels={['X', 'Z', '-Y']}
+                        // labels={['X', 'Z', '-Y']}
                         axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-                        // labelColor={colors.light}
                         // font="Anta"
-                    />
+                        />
                 </GizmoHelper>
+                <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
             </Canvas>
-        </BlobUrlContext.Provider>
+        </ShapeEditorContext.Provider>
     )
 }
 
@@ -2035,23 +2177,6 @@ const TypeIcon = (props) => (
     </svg>
 )
 
-const DraggableAvatar = ({ icon, id }) => {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: id
-    })
-    return (
-        <Avatar
-            ref={setNodeRef}
-            {...listeners}
-            {...attributes}
-            size="large"
-            className="font-sans text-darkGrey"
-        >
-            {icon}
-        </Avatar>
-    )
-}
-
 interface FormationWindowProps {
     viewId: string
     kitDirectory: string
@@ -2114,8 +2239,51 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                     break
                 }
                 case 'formation': {
-                    console.log('Not implemented yet: Dropping formations')
-                    break
+                    const formationToDrop = formations.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
+                    if (formationToDrop) {
+                        const idMap = new Map<string, string>()
+                        const newFormationPieces = formationToDrop.pieces.map((piece) => {
+                            const id = Generator.generateRandomId()
+                            idMap.set(piece.id, id)
+                            return {
+                                ...piece,
+                                id,
+                                diagram: {
+                                    point: {
+                                        x: piece.diagram.point.x + relativeX,
+                                        y: piece.diagram.point.y + relativeY
+                                    }
+                                }
+                            }
+                        })
+                        const newFormationAttractions = formationToDrop.attractions.map((attraction) => ({
+                            ...attraction,
+                            attracted: {
+                                ...attraction.attracted,
+                                piece: {
+                                    ...attraction.attracted.piece,
+                                    id: idMap.get(attraction.attracted.piece.id)
+                                }
+                            },
+                            attracting: {
+                                ...attraction.attracting,
+                                piece: {
+                                    ...attraction.attracting.piece,
+                                    id: idMap.get(attraction.attracting.piece.id)
+                                }
+                            }
+                        }))
+                        dispatch(
+                            updateFormation({
+                                id: viewId,
+                                formation: {
+                                    ...formationView.formation,
+                                    pieces: [...formationView.formation.pieces, ...newFormationPieces],
+                                    attractions: [...formationView.formation.attractions, ...newFormationAttractions]
+                                }
+                            })
+                        )
+                    }
                 }
             }
         }

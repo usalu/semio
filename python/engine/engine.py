@@ -896,8 +896,10 @@ class Piece(Base):
         return f"Piece(id={self.local_id})"
 
     @property
-    def root(self) -> RootPiece:
-        return RootPiece(plane=self.root_plane)
+    def root(self) -> RootPiece | None:
+        if self.root_plane:
+            return RootPiece(plane=self.root_plane)
+        return None
 
     @property
     def diagram(self) -> DiagramPiece:
@@ -1468,14 +1470,15 @@ class PieceNode(SQLAlchemyObjectType):
         )
 
     id = graphene.Field(NonNull(graphene.String))
-    root = graphene.Field(NonNull(RootPieceNode))
+    root = graphene.Field(RootPieceNode)
     diagram = graphene.Field(NonNull(DiagramPieceNode))
 
     def resolve_id(piece: Piece, info):
         return piece.local_id
 
     def resolve_root(piece: Piece, info):
-        return piece.root
+        if piece.root is not None:
+            return piece.root
 
     def resolve_diagram(piece: Piece, info):
         return piece.diagram
