@@ -1083,7 +1083,99 @@ const cross = (a: Vector, b: Vector): Vector => {
     } as Vector
 }
 
-const planeToTransform = (plane: Plane | PlaneInput): Matrix4 => {
+const convertSemioTransformToThreeTransform = (transform: Matrix4): Matrix4 => {
+    return new Matrix4().fromArray([
+        transform.elements[0],
+        transform.elements[1],
+        transform.elements[2],
+        0,
+        transform.elements[8],
+        transform.elements[9],
+        transform.elements[10],
+        0,
+        -transform.elements[4],
+        -transform.elements[5],
+        -transform.elements[6],
+        0,
+        transform.elements[12],
+        transform.elements[14],
+        -transform.elements[13],
+        1
+    ])
+}
+
+const semioToThreeTransform = (): Matrix4 => {
+    return convertSemioTransformToThreeTransform(new Matrix4().identity())
+}
+
+const semioToThreeRotation = (): Matrix4 => {
+    return new Matrix4().fromArray([
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+    ])
+}
+
+const convertThreeTransformToSemioTransform = (transform: Matrix4): Matrix4 => {
+    return new Matrix4().fromArray([
+        transform.elements[0],
+        transform.elements[1],
+        transform.elements[2],
+        0,
+        -transform.elements[8],
+        -transform.elements[9],
+        -transform.elements[10],
+        0,
+        transform.elements[4],
+        transform.elements[5],
+        transform.elements[6],
+        0,
+        transform.elements[12],
+        -transform.elements[14],
+        transform.elements[13],
+        1
+    ])
+}
+
+const threeToSemioTransform = (): Matrix4 => {
+    return convertThreeTransformToSemioTransform(new Matrix4().identity())
+}
+
+const threeToSemioRotation = (): Matrix4 => {
+    return new Matrix4().fromArray([
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+    ])
+}
+
+const convertPlaneToTransform = (plane: Plane | PlaneInput): Matrix4 => {
     const origin = plane.origin
     const xAxis = plane.xAxis
     const yAxis = plane.yAxis
@@ -1108,10 +1200,10 @@ const planeToTransform = (plane: Plane | PlaneInput): Matrix4 => {
     ])
 }
 
-const transformToPlane = (transform: Matrix4): Plane => {
-    const origin = {x: transform.elements[12], y: transform.elements[13], z: transform.elements[14]} as Point
-    const xAxis = {x: transform.elements[0], y: transform.elements[1], z: transform.elements[2]} as Vector
-    const yAxis = {x: transform.elements[4], y: transform.elements[5], z: transform.elements[6]} as Vector
+const convertTransformToPlane = (transform: Matrix4): Plane => {
+    const origin = {x: transform.elements[12], y: -transform.elements[14], z: transform.elements[13]} as Point;
+    const xAxis = {x: transform.elements[0], y: transform.elements[1], z: transform.elements[2]} as Vector;
+    const yAxis = {x: transform.elements[4], y: transform.elements[5], z: transform.elements[6]} as Vector;
     return {
         origin,
         xAxis,
@@ -1151,7 +1243,7 @@ const formationToHierarchies = (
         // path[0] is the root. path[length-1] is the last node.
         const rootHierarchy: Hierarchy = {
             pieceId: path[0].id(),
-            transform: planeToTransform(
+            transform: convertPlaneToTransform(
                 formation.pieces.find((p) => p.id === path[0].id()).root?.plane ?? {
                     origin: { x: 0, y: 0, z: 0 },
                     xAxis: { x: 1, y: 0, z: 0 },
@@ -1176,17 +1268,22 @@ const formationToHierarchies = (
                 )
             const parentPort = ports.get(parentPiece.type.name)?.get(parentPiece.type.variant ?? '')?.get(attraction.attracting.piece?.type?.port?.id ?? '')
             const childPort = ports.get(piece.type.name)?.get(piece.type.variant ?? '')?.get(attraction.attracted.piece?.type?.port?.id ?? '')
-            if (!parentPort || !childPort)
-                throw new Error('Port not found')
+            const parentTransform = convertPlaneToTransform(parentPort.plane)
+            const childTransform = convertPlaneToTransform(childPort.plane).invert()
             const hierarchy = {
                 pieceId,
-                transform: planeToTransform(childPort.plane).multiply(planeToTransform(parentPort.plane).invert()),
+                transform: semioToThreeRotation().premultiply(convertSemioTransformToThreeTransform((parentTransform.multiply(childTransform)))),
                 children: []
             }
             pieceIdToHierarchy[pieceId] = hierarchy
             pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
         }
     })
+    // console.log('test', 
+    // convertTransformToPlane(
+    //     convertThreeTransformToSemioTransform(
+    //         convertSemioTransformToThreeTransform(
+    //             convertPlaneToTransform({origin: {x: 0, y: 0, z: 0}, xAxis: {x: 1, y: 0, z: 0}, yAxis: {x: 0, y: 1, z: 0}})))))
     return hierarchies
 }
 
@@ -1342,6 +1439,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     useImperativeHandle(ref, () => ({
         onDropPiece,
+        onDropFormationSnippet,
         zoomToFit
     }))
 
@@ -1591,6 +1689,59 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         }
     }
 
+    const onDropFormationSnippet = (x: number, y: number, formationSnippet: Formation | FormationInput) => {
+        if (graphViewRef.current) {
+            const viewTransfrom = graphViewRef.current.state.viewTransform
+            const svgX = -1 * ((viewTransfrom.x - x) / viewTransfrom.k)
+            const svgY = -1 * ((viewTransfrom.y - y) / viewTransfrom.k)
+
+            const idMap = new Map<string, string>()
+            const newFormationPieces = formationSnippet.pieces.map((piece) => {
+                const x = svgX + piece.diagram.point.x
+                const y = svgY + piece.diagram.point.y
+                const id = Generator.generateRandomId()
+                idMap.set(piece.id, id)
+                return {
+                    ...piece,
+                    id,
+                    diagram: {
+                        point: {
+                            x: x,
+                            y: y
+                        }
+                    }
+                }
+            })
+            const newFormationAttractions = formationSnippet.attractions.map((attraction) => ({
+                ...attraction,
+                attracted: {
+                    ...attraction.attracted,
+                    piece: {
+                        ...attraction.attracted.piece,
+                        id: idMap.get(attraction.attracted.piece.id)
+                    }
+                },
+                attracting: {
+                    ...attraction.attracting,
+                    piece: {
+                        ...attraction.attracting.piece,
+                        id: idMap.get(attraction.attracting.piece.id)
+                    }
+                }
+            }))
+            dispatch(
+                updateFormation({
+                    id: formationView.id,
+                    formation: {
+                        ...formationView.formation,
+                        pieces: [...formationView.formation.pieces, ...newFormationPieces],
+                        attractions: [...formationView.formation.attractions, ...newFormationAttractions]
+                    }
+                })
+            )
+        }
+    }
+
     const NodeTypes = GraphConfig.NodeTypes
     const NodeSubtypes = GraphConfig.NodeSubtypes
     const EdgeTypes = GraphConfig.EdgeTypes
@@ -1610,7 +1761,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 nodeTypes={NodeTypes}
                 nodeSubtypes={NodeSubtypes}
                 edgeTypes={EdgeTypes}
-                // layoutEngineType='VerticalTree'
+                // layoutEngineType='HorizontalTree'
                 allowMultiselect={true}
                 // gridSpacing={20}
                 gridDotSize={0}
@@ -1657,9 +1808,9 @@ interface RepresentationThreeProps {
 
 const RepresentationThree = ({ id, representation }: RepresentationThreeProps): JSX.Element => {
     const { blobUrls } = useContext(ShapeEditorContext)
-    const representationThree = useLoader(GLTFLoader, blobUrls[representation.url])
-    representationThree.scene.name = id
-    return <primitive object={representationThree.scene} />
+    const representationThreeScene = useLoader(GLTFLoader, blobUrls[representation.url]).scene.clone()
+    representationThreeScene.name = id
+    return <primitive object={representationThreeScene} />
 }
 
 RepresentationThree.displayName = 'Representation'
@@ -1769,9 +1920,9 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
     const groupRef = useRef();
     useEffect(() => {
         if (groupRef.current) {
-            groupRef.current.applyMatrix4(hierarchy.transform);
+            groupRef.current.applyMatrix4(hierarchy.transform)
         }
-    }, []);
+    }, [])
 
     return (
         <group name={piece.id} ref={groupRef}>
@@ -1786,9 +1937,10 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
 HierarchyThree.displayName = 'HierarchyThree'
 
 interface FormationThreeProps {
+    transformationMode?: string
 }
 
-const FormationThree = ({ }: FormationThreeProps) => {
+const FormationThree = ({ transformationMode='translate' }: FormationThreeProps) => {
     const dispatch = useDispatch()
     const { formationViewId, kitDirectory } = useContext(ShapeEditorContext)
     const formationView = useSelector((state: RootState) => selectFormationView(state, formationViewId))
@@ -1797,15 +1949,28 @@ const FormationThree = ({ }: FormationThreeProps) => {
     if (!ports) return null
     const selectedHierarchyRootPiecesIds = formationView.selection.piecesIds
     const hierarchies = formationToHierarchies(formationView.formation, ports)
-    const transformControlRef = useRef<TransformControls>(null)
+    const transformControlRef = useRef(null)
+
     return (
-        <group name={formationToString(formationView.formation)}>
+        <group name={formationToString(formationView.formation)} >
             {hierarchies.map((hierarchy, i) => (
                 selectedHierarchyRootPiecesIds.includes(hierarchy.pieceId) ? (
                         <TransformControls 
                             key={i}
                             ref={transformControlRef}
+                            mode={transformationMode}
                             onMouseUp={(event) => {
+                                let transformControlMatrix = new Matrix4();
+                                switch (transformationMode) {
+                                    case 'translate':
+                                        transformControlMatrix.setPosition(transformControlRef.current.offset);
+                                        break;
+                                    case 'rotate':
+                                        transformControlMatrix.makeRotationFromQuaternion(transformControlRef.current.tempQuaternion);
+                                        break;
+                                    default:
+                                        break;
+                                }
                                 dispatch(updateFormation({
                                     id: formationViewId,
                                     formation: {
@@ -1815,14 +1980,14 @@ const FormationThree = ({ }: FormationThreeProps) => {
                                                 ? {
                                                       ...piece,
                                                       root: {
-                                                          plane: transformToPlane(
-                                                            planeToTransform(piece.root?.plane ?? {
-                                                                origin: { x: 0, y: 0, z: 0 },
-                                                                xAxis: { x: 1, y: 0, z: 0 },
-                                                                yAxis: { x: 0, y: 1, z: 0 }
-                                                            }).multiply(
-                                                            new Matrix4().makeRotationFromEuler(transformControlRef.current.rotation).setPosition(transformControlRef.current.offset))
-                                                          )
+                                                          plane: convertTransformToPlane(
+                                                                    convertPlaneToTransform(
+                                                                            piece.root?.plane ?? {
+                                                                                origin: { x: 0, y: 0, z: 0 },
+                                                                                xAxis: { x: 1, y: 0, z: 0 },
+                                                                                yAxis: { x: 0, y: 1, z: 0 }
+                                                                        })
+                                                                    .premultiply(convertThreeTransformToSemioTransform(transformControlMatrix)))
                                                       }
                                                   }
                                                 : piece
@@ -1884,7 +2049,7 @@ const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
                 onPointerMissed={() => dispatch(updateFormationSelection(viewId, null))}
             >
                 <Suspense fallback={null}>
-                    <FormationThree  />
+                    <FormationThree  transformationMode='translate' />
                     <ambientLight color={colors.light} intensity={1} />
                 </Suspense>
                 <OrbitControls makeDefault />
@@ -1893,7 +2058,7 @@ const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
                     margin={[80, 80]}
                     >
                     <GizmoViewport
-                        // labels={['X', 'Z', '-Y']}
+                        labels={['X', 'Z', '-Y']}
                         axisColors={[colors.primary, colors.tertiary, colors.secondary]}
                         // font="Anta"
                         />
@@ -2241,48 +2406,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                 case 'formation': {
                     const formationToDrop = formations.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
                     if (formationToDrop) {
-                        const idMap = new Map<string, string>()
-                        const newFormationPieces = formationToDrop.pieces.map((piece) => {
-                            const id = Generator.generateRandomId()
-                            idMap.set(piece.id, id)
-                            return {
-                                ...piece,
-                                id,
-                                diagram: {
-                                    point: {
-                                        x: piece.diagram.point.x + relativeX,
-                                        y: piece.diagram.point.y + relativeY
-                                    }
-                                }
-                            }
-                        })
-                        const newFormationAttractions = formationToDrop.attractions.map((attraction) => ({
-                            ...attraction,
-                            attracted: {
-                                ...attraction.attracted,
-                                piece: {
-                                    ...attraction.attracted.piece,
-                                    id: idMap.get(attraction.attracted.piece.id)
-                                }
-                            },
-                            attracting: {
-                                ...attraction.attracting,
-                                piece: {
-                                    ...attraction.attracting.piece,
-                                    id: idMap.get(attraction.attracting.piece.id)
-                                }
-                            }
-                        }))
-                        dispatch(
-                            updateFormation({
-                                id: viewId,
-                                formation: {
-                                    ...formationView.formation,
-                                    pieces: [...formationView.formation.pieces, ...newFormationPieces],
-                                    attractions: [...formationView.formation.attractions, ...newFormationAttractions]
-                                }
-                            })
-                        )
+                        diagramEditorRef.current.onDropFormationSnippet(relativeX, relativeY, formationToDrop)
                     }
                 }
             }
@@ -2729,7 +2853,6 @@ const ArtifactWindow = ({
 
     return artifactView ? (
         <>
-            {artifactView.kind}
             {(() => {
                 switch (artifactView.kind) {
                     case ViewKind.Type:
