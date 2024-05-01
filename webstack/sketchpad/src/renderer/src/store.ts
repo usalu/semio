@@ -66,7 +66,8 @@ export const selectKit = (
 export const selectTypes = (
     state: { kits: { kits: Map<string, Kit> } },
     directory: string
-): Map<string, Map<string, Type>> => { // typeName -> typeVariant -> Type
+): Map<string, Map<string, Type>> => {
+    // typeName -> typeVariant -> Type
     const kit = selectKit(state, directory)
     if (kit && kit.types) {
         const types = new Map<string, Map<string, Type>>()
@@ -96,7 +97,7 @@ export const selectType = (
 
 export const selectPorts = (
     state: { kits: { kits: Map<string, Kit> } },
-    directory: string,
+    directory: string
 ): Map<string, Map<string, Map<string, Port>>> => {
     // typeName -> typeVariant -> portId -> Port
     const kit = selectKit(state, directory)
@@ -321,20 +322,35 @@ export const viewsSlice = createSlice({
         updateFormationSelection: {
             reducer: (
                 state,
-                action: PayloadAction<{ id: string; selection: ISelectionFormation }>
+                action: PayloadAction<{
+                    id: string
+                    piecesIds: string[] | null | undefined,
+                    attractionsPiecesIds: [string, string][] | null | undefined
+                }>
             ) => {
                 const formationView = state.views.find(
                     (view) => view.id === action.payload.id && view.kind === ViewKind.Formation
                 )
                 if (formationView) {
-                    formationView.selection = action.payload.selection
+                    if (action.payload.piecesIds) {
+                        formationView.selection.piecesIds = action.payload.piecesIds
+                    }
+                    if (action.payload.attractionsPiecesIds) {
+                        formationView.selection.attractionsPiecesIds =
+                            action.payload.attractionsPiecesIds
+                    }
                 }
             },
-            prepare: (id: string, selection: ISelectionFormation) => {
+            prepare: (
+                id: string,
+                piecesIds: string[] | null | undefined = null,
+                attractionsPiecesIds: [string, string][] | null | undefined = null,
+            ) => {
                 return {
                     payload: {
                         id,
-                        selection: selection ?? { piecesIds: [], attractionsPiecesIds: [] }
+                        piecesIds: piecesIds,
+                        attractionsPiecesIds: attractionsPiecesIds
                     }
                 }
             }

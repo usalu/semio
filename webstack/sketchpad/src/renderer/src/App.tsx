@@ -1,22 +1,4 @@
 import './App.scss'
-import cytoscape from 'cytoscape'
-import {
-    AttractionInput,
-    Formation,
-    FormationIdInput,
-    FormationInput,
-    Piece,
-    PieceInput,
-    Plane,
-    PlaneInput,
-    Point,
-    Port,
-    Representation,
-    Type,
-    TypeIdInput,
-    TypeInput,
-    Vector
-} from '@renderer/semio'
 import tailwindConfig from '../../../tailwind.config.js'
 import React, {
     useState,
@@ -57,11 +39,12 @@ import {
     Radio,
     Input,
     FormProps,
-    Tooltip
+    Tooltip,
+    Modal
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
-import { Mesh, Matrix4 } from 'three'
-import { Canvas, useLoader } from '@react-three/fiber'
+import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color } from 'three'
+import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
     useGLTF,
@@ -69,15 +52,12 @@ import {
     GizmoHelper,
     GizmoViewport,
     TransformControls,
-    Grid
+    Grid,
+    Line as DreiLine,
+    Cone as DreiCone,
+    Box as DreiBox
 } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import {
-    Selection,
-    EffectComposer,
-    Outline,
-    Select as PostProcessSelect
-} from '@react-three/postprocessing'
 import { INode, IEdge, IGraphInput, SelectionT, IPoint, GraphView } from 'react-digraph'
 import SVG from 'react-inlinesvg'
 import CloseSharpIcon from '@mui/icons-material/CloseSharp'
@@ -90,6 +70,26 @@ import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp'
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
 import { nanoid } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
+import {
+    Attraction,
+    AttractionInput,
+    Formation,
+    FormationIdInput,
+    FormationInput,
+    Piece,
+    PieceInput,
+    Plane,
+    PlaneInput,
+    Point,
+    Port,
+    PortInput,
+    Representation,
+    Type,
+    TypeIdInput,
+    TypeInput,
+    Vector
+} from './semio.d'
+import { convertPlaneToTransform, convertTransformToPlane, formationToHierarchies } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
 import {
@@ -109,8 +109,10 @@ import {
     selectType,
     updateFormation,
     updateFormationSelection,
-    selectPorts
+    selectPorts,
+    ISelectionFormation
 } from './store'
+import { n } from 'vitest/dist/reporters-LqC_WI4d'
 
 // Copilot
 // export type Maybe<T> = T | null;
@@ -1069,223 +1071,309 @@ const ArtifactAvatar = ({
     }
 }
 
-type Hierarchy = {
-    pieceId: string
-    transform: Matrix4
-    children: Hierarchy[]
+
+const getGroupNameFromClickEventGroupObject = (o: any): string => {
+    if (o.name !== '') return o.name
+
+    const childGroupWithId = o.children.find((element) => {
+        if (element?.isGroup !== true) return false
+        const childGroupId = getGroupNameFromClickEventGroupObject(element)
+        return childGroupId !== ''
+    })
+
+    return childGroupWithId ? getGroupNameFromClickEventGroupObject(childGroupWithId) : ''
 }
 
-const cross = (a: Vector, b: Vector): Vector => {
-    return {
-        x: a.y * b.z - a.z * b.y,
-        y: a.z * b.x - a.x * b.z,
-        z: a.x * b.y - a.y * b.x
-    } as Vector
+const Gizmo = (): JSX.Element => {
+    return (
+        <GizmoHelper
+            alignment="bottom-right"
+            margin={[80, 80]}
+            >
+            <GizmoViewport
+                labels={['X', 'Z', '-Y']}
+                axisColors={[colors.primary, colors.tertiary, colors.secondary]}
+                // font="Anta"
+                />
+        </GizmoHelper>
+)}
+
+interface PlaneThreeProps {
+    plane: Plane
+    lineWidth?: number
+    onSelect: (event: ThreeEvent<MouseEvent>) => void
 }
 
-const convertSemioTransformToThreeTransform = (transform: Matrix4): Matrix4 => {
-    return new Matrix4().fromArray([
-        transform.elements[0],
-        transform.elements[1],
-        transform.elements[2],
-        0,
-        transform.elements[8],
-        transform.elements[9],
-        transform.elements[10],
-        0,
-        -transform.elements[4],
-        -transform.elements[5],
-        -transform.elements[6],
-        0,
-        transform.elements[12],
-        transform.elements[14],
-        -transform.elements[13],
-        1
-    ])
+const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
+    if (!lineWidth) lineWidth = 1
+    const groupRef = useRef();
+    useEffect(() => {
+        if (groupRef.current) {
+            const transform = convertPlaneToTransform(plane)
+            console.log('plane', plane,'transform', transform)
+            groupRef.current.applyMatrix4(transform)
+        }
+    }, [])
+    return (
+        <group name="plane" ref={groupRef}>
+            <DreiLine
+                // name="x-axis"
+                points = {[[0, 0, 0],[1, 0, 0]]}
+                color={colors.primary}
+                lineWidth={lineWidth*2}
+            />
+            <DreiLine
+                // name="y-axis"
+                points = {[[0, 0, 0],[0, 0, -1]]}
+                color={colors.secondary}
+                lineWidth={lineWidth*2}
+            />
+            <DreiLine
+                // name="z-axis"
+                points = {[[0, 0, 0],[0, 1, 0]]}
+                color={colors.tertiary}
+                lineWidth={lineWidth*2}
+            />
+            <DreiLine
+                points = {[[-1,0,-1],[1,0,-1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,-1],[-1,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,-0.666667],[1,0,-0.666667]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,-0.333333],[1,0,-0.333333]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,0.333333],[1,0,0.333333]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,0.666667],[1,0,0.666667]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,1],[1,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-0.666667,0,-1],[-0.666667,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-0.333333,0,-1],[-0.333333,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[0.333333,0,-1],[0.333333,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[0.666667,0,-1],[0.666667,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[1,0,-1],[1,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[0,0,0],[0,0,1]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiLine
+                points = {[[-1,0,0],[0,0,0]]}	color={colors.grey}
+                lineWidth={lineWidth}
+            />
+            <DreiBox
+                args={[2.0, 1.0, 2.0]}
+                position={[0, 0.5, 0]}
+                material={new MeshBasicMaterial({ transparent: true, opacity: 0 })}
+                onClick={(event) => {
+                    onSelect(event)
+                    event.stopPropagation()
+                }}
+            />
+        </group>
+    )
+  }
+  
+interface PortThreeProps {
+    port: Port | PortInput
+    selected: boolean
+    onSelect: (portId: string ,event: ThreeEvent<MouseEvent>) => void
 }
 
-const semioToThreeTransform = (): Matrix4 => {
-    return convertSemioTransformToThreeTransform(new Matrix4().identity())
-}
-
-const semioToThreeRotation = (): Matrix4 => {
-    return new Matrix4().fromArray([
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        -1,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1
-    ])
-}
-
-const convertThreeTransformToSemioTransform = (transform: Matrix4): Matrix4 => {
-    return new Matrix4().fromArray([
-        transform.elements[0],
-        transform.elements[1],
-        transform.elements[2],
-        0,
-        -transform.elements[8],
-        -transform.elements[9],
-        -transform.elements[10],
-        0,
-        transform.elements[4],
-        transform.elements[5],
-        transform.elements[6],
-        0,
-        transform.elements[12],
-        -transform.elements[14],
-        transform.elements[13],
-        1
-    ])
-}
-
-const threeToSemioTransform = (): Matrix4 => {
-    return convertThreeTransformToSemioTransform(new Matrix4().identity())
-}
-
-const threeToSemioRotation = (): Matrix4 => {
-    return new Matrix4().fromArray([
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        -1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1
-    ])
-}
-
-const convertPlaneToTransform = (plane: Plane | PlaneInput): Matrix4 => {
-    const origin = plane.origin
-    const xAxis = plane.xAxis
-    const yAxis = plane.yAxis
-    const zAxis = cross(xAxis, yAxis)
-    return new Matrix4().fromArray([
-        xAxis.x,
-        xAxis.y,
-        xAxis.z,
-        0,
-        yAxis.x,
-        yAxis.y,
-        yAxis.z,
-        0,
-        zAxis.x,
-        zAxis.y,
-        zAxis.z,
-        0,
-        origin.x,
-        origin.y,
-        origin.z,
-        1
-    ])
-}
-
-const convertTransformToPlane = (transform: Matrix4): Plane => {
-    const origin = {x: transform.elements[12], y: -transform.elements[14], z: transform.elements[13]} as Point;
-    const xAxis = {x: transform.elements[0], y: transform.elements[1], z: transform.elements[2]} as Vector;
-    const yAxis = {x: transform.elements[4], y: transform.elements[5], z: transform.elements[6]} as Vector;
-    return {
-        origin,
-        xAxis,
-        yAxis
+const PortThree = ({ port, selected, onSelect }: PortThreeProps): JSX.Element => {
+    const onSelectPlane = (event: ThreeEvent<MouseEvent>) : void => {
+        onSelect(port.id, event)
     }
+    return (
+        <PlaneThree plane={port.plane} onSelect={onSelectPlane} lineWidth={selected ? 3 : 1}/>
+    )
 }
 
-const formationToHierarchies = (
-    formation: Formation | FormationInput,
-    ports: Map<string, Map<string, Map<string,Port>>> // typeName -> typeVariant -> portId -> port
-): Hierarchy[] => {
-    if (formation.pieces.length === 0) return []
-    const cy = cytoscape({
-        elements: {
-            nodes: formation.pieces.map((piece) => ({
-                data: { id: piece.id, label: piece.id }
-            })),
-            edges: formation.attractions.map((attraction) => ({
-                data: {
-                    id: `${attraction.attracting.piece.id}->${attraction.attracted.piece.id}`,
-                    source: attraction.attracting.piece.id,
-                    target: attraction.attracted.piece.id
-                }
-            }))
-        }
-    })
-    const hierarchies: Hierarchy[] = []
-    const components = cy.elements().components()
-    components.forEach((component) => {
-        const roots = component.roots()
-        const root = roots.length === 0 ? component.nodes()[0] : roots[0]
-        const { path } = cy.elements().bfs({
-            root,
-            directed: true
-        })
-        // path[i] are the nodes. path[i-1] are the edges.
-        // path[0] is the root. path[length-1] is the last node.
-        const rootHierarchy: Hierarchy = {
-            pieceId: path[0].id(),
-            transform: convertPlaneToTransform(
-                formation.pieces.find((p) => p.id === path[0].id()).root?.plane ?? {
-                    origin: { x: 0, y: 0, z: 0 },
-                    xAxis: { x: 1, y: 0, z: 0 },
-                    yAxis: { x: 0, y: 1, z: 0 }
-                }
-            ),
-            children: []
-        }
-        hierarchies.push(rootHierarchy)
-        const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
-        pieceIdToHierarchy[rootHierarchy.pieceId] = rootHierarchy
-        for (let i = 2; i < path.length; i += 2) {
-            const edge = path[i - 1]
-            const parentPieceId = edge.source().id()
-            const parentPiece = formation.pieces.find((p) => p.id === parentPieceId)
-            const pieceId = edge.target().id()
-            const piece = formation.pieces.find((p) => p.id === pieceId)
-            const attraction = formation.attractions.find(
-                (attraction) =>
-                attraction.attracting.piece.id === parentPieceId &&
-                attraction.attracted.piece.id === pieceId
-                )
-            const parentPort = ports.get(parentPiece.type.name)?.get(parentPiece.type.variant ?? '')?.get(attraction.attracting.piece?.type?.port?.id ?? '')
-            const childPort = ports.get(piece.type.name)?.get(piece.type.variant ?? '')?.get(attraction.attracted.piece?.type?.port?.id ?? '')
-            const parentTransform = convertPlaneToTransform(parentPort.plane)
-            const childTransform = convertPlaneToTransform(childPort.plane).invert()
-            const hierarchy = {
-                pieceId,
-                transform: semioToThreeRotation().premultiply(convertSemioTransformToThreeTransform((parentTransform.multiply(childTransform)))),
-                children: []
-            }
-            pieceIdToHierarchy[pieceId] = hierarchy
-            pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
-        }
-    })
-    // console.log('test', 
-    // convertTransformToPlane(
-    //     convertThreeTransformToSemioTransform(
-    //         convertSemioTransformToThreeTransform(
-    //             convertPlaneToTransform({origin: {x: 0, y: 0, z: 0}, xAxis: {x: 1, y: 0, z: 0}, yAxis: {x: 0, y: 1, z: 0}})))))
-    return hierarchies
+interface RepresentationThreeProps {
+    representation: Representation
+    color?: string
+    id?: string
+    plane?: Plane
 }
+
+const RepresentationThree = ({ representation, id, color, plane }: RepresentationThreeProps): JSX.Element => {
+    const { blobUrls } = useContext(EditorContext)
+    const representationThreeScene = useMemo(() => {
+        const clone = useLoader(GLTFLoader, blobUrls[representation.url]).scene.clone()
+        clone.traverse((object) => {
+            if (object instanceof Mesh) {
+                const meshColor = color ? new Color(color) : new Color(colors.lightGrey)
+                object.material = new MeshBasicMaterial({ color: meshColor })
+            }
+            if (object instanceof Line) {
+                const lineColor = new Color(colors.dark)
+                object.material = new LineBasicMaterial({ color: lineColor })
+            }
+        })
+        if (plane) {
+            const transform = convertPlaneToTransform(plane)
+            clone.applyMatrix4(transform)
+        }
+        return clone
+    }, [representation.url, color, plane]);
+    representationThreeScene.name = id
+    return <primitive object={representationThreeScene} />
+}
+
+RepresentationThree.displayName = 'Representation'
+
+interface PortSelectorProps {
+    type: Type | TypeInput
+    onChangePortId: (portId: string) => void
+}
+
+const PortSelector = ({ type, onChangePortId }: PortSelectorProps): JSX.Element => {
+    const ports = type.ports
+
+    const [selectedPortId, setSelectedPortId] = useState('')
+
+    return (
+        <div className="w-[350px] h-[350px]">
+            <Canvas>
+                <OrbitControls makeDefault />
+                <Gizmo/>
+                <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
+                {ports.map((port) => (
+                    <PortThree
+                        key={port.id}
+                        port={port}
+                        selected={selectedPortId === port.id}
+                        onSelect={(portId, event) => {
+                            setSelectedPortId(portId)
+                            onChangePortId(portId)
+                        }}
+                    />
+                ))}
+            </Canvas>
+        </div>
+    )
+}
+
+interface AttractionPreview{
+    attractingType: Type | TypeInput
+    attractedType: Type | TypeInput
+    attraction: Attraction | AttractionInput
+}
+
+const AttractionPreview = ({ attractingType, attractedType, attraction }: AttractionPreview): JSX.Element => {
+    const attractingPort = 
+        attraction ? attractingType.ports.find((port) => port.id === attraction.attracting.piece.type?.port?.id) : null
+    const attractedPort = 
+        attraction ? attractedType.ports.find((port) => port.id === attraction.attracted.piece.type?.port?.id) : null
+
+    const parentTransform = attractingPort ? convertPlaneToTransform(attractingPort.plane) : new Matrix4()
+    const childTransform = attractedPort ? convertPlaneToTransform(attractedPort.plane).invert() : new Matrix4()
+    const attractedPlane = convertTransformToPlane(parentTransform.multiply(childTransform))
+    return (
+        <div className="w-[700px] h-[700px]">
+            <Canvas>
+                <OrbitControls makeDefault />
+                <Gizmo/>
+                { attraction ?
+                <group>
+                    { attractingPort ?
+                        <RepresentationThree
+                            id='attracting'
+                            representation={attractingType.representations.find((r) => r.url.endsWith('.glb'))}
+                        /> : null }
+                    { attractedPort ?
+                            <RepresentationThree
+                                id='attracted'
+                                representation={attractedType.representations.find((r) => r.url.endsWith('.glb'))}
+                                plane = {attractedPlane}
+                            /> : null }
+                </group> : null}
+            </Canvas>
+        </div>
+    )
+}
+
+interface AttractionBuilderProps {
+    attractingType: Type | TypeInput
+    attractedType: Type | TypeInput
+    onAttractionChange: (attraction: AttractionInput) => void
+}
+
+const AttractionBuilder = ({ attractingType, attractedType, onAttractionChange }: AttractionBuilderProps): JSX.Element => {
+    const [attractingPortId, setAttractingPortId] = useState('')
+    const [attractedPortId, setAttractedPortId] = useState('')
+
+    const attraction = {
+        attracting: {
+            piece: {
+                type: {
+                    name: attractingType.name,
+                    variant: attractingType.variant ?? '',
+                    port: {
+                        id: attractingPortId
+                    }
+                }
+            }
+        },
+        attracted: {
+            piece: {
+                type: {
+                    name: attractedType.name,
+                    variant: attractedType.variant ?? '',
+                    port: {
+                        id: attractedPortId
+                    }
+                }
+            }
+        }
+    } as AttractionInput
+
+    useEffect(() => {
+        onAttractionChange(attraction)
+    }, [attractingType, attractedType, attractingPortId, attractedPortId])
+
+    return (
+        <Flex>
+            <Flex vertical>
+                <PortSelector type={attractingType} onChangePortId={setAttractingPortId} />
+                <Divider className="m-0"/>
+                <PortSelector type={attractedType} onChangePortId={setAttractedPortId} />
+            </Flex>
+            <Divider className="h-auto" type="vertical" />
+            <AttractionPreview attractingType={attractingType} attractedType={attractedType} attraction={attraction} />
+        </Flex>
+    )
+}
+
 
 const GraphConfig = {
     NodeTypes: {
@@ -1320,11 +1408,11 @@ const GraphConfig = {
 }
 
 interface IPieceNode extends INode {
-    piece: PieceInput
+    piece: Piece | PieceInput
 }
 
 interface IAttractionEdge extends IEdge {
-    attraction: AttractionInput
+    attraction: Attraction | AttractionInput
 }
 
 export interface IDraft extends IGraphInput {
@@ -1337,9 +1425,60 @@ export interface IDraft extends IGraphInput {
 
 const NODE_KEY = 'id' // Allows D3 to correctly update DOM
 
+const transformPieceToNode = (piece: Piece | PieceInput): IPieceNode => {
+    return {
+        id: piece.id,
+        title: '',
+        type: 'piece',
+        x: piece.diagram.point.x,
+        y: piece.diagram.point.y,
+        piece
+    }
+}
+const transformAttractionToEdge = (attraction: Attraction | AttractionInput): IAttractionEdge => {
+    return {
+        source: attraction.attracting.piece.id,
+        target: attraction.attracted.piece.id,
+        // label_from: attraction.attracting.piece.type?.port?.id === '' ? ' ' : attraction.attracting.piece.type?.port?.id,
+        // label_to: attraction.attracted.piece.type?.port?.id === '' ? ' ' : attraction.attracted.piece.type?.port?.id,
+        handleTooltipText: attraction.attracting.piece.type?.port?.id + ' -> ' + attraction.attracted.piece.type?.port?.id,
+        type: 'attraction',
+        attraction
+    }
+}
+
+const transformFormationToGraph = (formation: Formation | FormationInput): IDraft => {
+    const nodes = formation.pieces.map((piece) => transformPieceToNode(piece))
+
+    const edges = formation.attractions.map((attraction) => transformAttractionToEdge(attraction))
+
+    return {
+        nodes,
+        edges
+    }
+}
+
+const transformSelectionToGraph = (formation: Formation | FormationInput, selection: ISelectionFormation): SelectionT => {
+    const nodes = new Map<string, INode>()
+    const edges = new Map<string, IEdge>()
+    selection.piecesIds.forEach((pieceId) => {
+        const piece = formation.pieces.find((p) => p.id === pieceId)
+        if (piece) {
+            nodes.set(piece.id, transformPieceToNode(piece))
+        }
+    })
+    selection.attractionsPiecesIds.forEach(([sourceId, targetId]) => {
+        const attraction = formation.attractions.find(
+            (a) => a.attracting.piece.id === sourceId && a.attracted.piece.id === targetId
+        )
+        if (attraction) {
+            edges.set(`${sourceId}_${targetId}`, transformAttractionToEdge(attraction))
+        }
+    })
+    return { nodes, edges }
+}
+
 interface DiagramEditorProps {
-    viewId: string
-    kitDirectory: string
     piece: PieceInput
     onPieceEdit: (piece: PieceInput) => Promise<PieceInput>
     onAttractionEdit: (attraction: AttractionInput) => AttractionInput
@@ -1347,89 +1486,33 @@ interface DiagramEditorProps {
 }
 
 const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
+    const { formationViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
-
-    const types = useSelector((state: RootState) => selectTypes(state, props.kitDirectory))
+    const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
     const formationView = useSelector((state: RootState) =>
-        selectFormationView(state, props.viewId)
+        selectFormationView(state, formationViewId)
     )
 
-    const transformFormationToGraph = (formation: Formation): IDraft => {
-        const nodes = formation.pieces.map(
-            (piece) =>
-                ({
-                    id: piece.id,
-                    title: '',
-                    type: 'piece',
-                    x: piece.diagram.point.x,
-                    y: piece.diagram.point.y,
-                    piece
-                }) as IPieceNode
-        )
+    if (!formationView) return null
 
-        const edges = formation.attractions.map(
-            (attraction) =>
-                ({
-                    source: attraction.attracting.piece.id,
-                    target: attraction.attracted.piece.id,
-                    type: 'attraction',
-                    attraction
-                }) as IAttractionEdge
-        )
-
-        return {
-            nodes,
-            edges
-        }
-    }
-    const graph = transformFormationToGraph(formationView.formation)
+    const graph = useMemo(() => transformFormationToGraph(formationView.formation), [formationView.formation])
     const nodes = graph.nodes
     const edges = graph.edges
 
-    const transformPieceToNode = (piece: PieceInput): IPieceNode => {
-        return {
-            id: piece.id,
-            title: '',
-            type: 'piece',
-            x: piece.diagram.point.x,
-            y: piece.diagram.point.y,
-            piece
-        }
-    }
-    const transformAttractionToEdge = (attraction: AttractionInput): IAttractionEdge => {
-        return {
-            source: attraction.attracting.piece.id,
-            target: attraction.attracted.piece.id,
-            type: 'attraction',
-            attraction
-        }
-    }
-    const transformSelectionToGraph = (selection: ISelectionFormation): SelectionT => {
-        const nodes = new Map<string, INode>()
-        const edges = new Map<string, IEdge>()
-        selection.piecesIds.forEach((pieceId) => {
-            const piece = formationView.formation.pieces.find((p) => p.id === pieceId)
-            if (piece) {
-                nodes.set(piece.id, transformPieceToNode(piece))
-            }
-        })
-        selection.attractionsPiecesIds.forEach(([sourceId, targetId]) => {
-            const attraction = formationView.formation.attractions.find(
-                (a) => a.attracting.piece.id === sourceId && a.attracted.piece.id === targetId
-            )
-            if (attraction) {
-                edges.set(`${sourceId}-${targetId}`, transformAttractionToEdge(attraction))
-            }
-        })
-        return { nodes, edges }
-    }
-    const selected = transformSelectionToGraph(formationView.selection)
+    const selected = useMemo(() => transformSelectionToGraph(formationView.formation, formationView.selection), [formationView.formation, formationView.selection])
 
     const graphViewRef = useRef(null)
 
     const { isOver, setNodeRef } = useDroppable({
         id: 'diagramEditor'
     })
+
+    const [isAttractionBuilderOpen, setIsAttractionBuilderOpen] = useState(false);
+    const [attractingType, setAttractingType] = useState<Type | TypeInput | null>(null)
+    const [attractingPieceId, setAttractingPieceId] = useState<string | null>(null)
+    const [attractedType, setAttractedType] = useState<Type | TypeInput | null>(null)
+    const [attractedPieceId, setAttractedPieceId] = useState<string | null>(null)
+    const [attraction, setAttraction] = useState<AttractionInput | null>(null)
 
     const zoomToFit = () => {
         if (graphViewRef.current) {
@@ -1443,9 +1526,57 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         zoomToFit
     }))
 
+    const showAttractionBuilder = () => {
+        setIsAttractionBuilderOpen(true)
+    }
+    
+    const handleAttractionBuilderFinished = () => {
+        dispatch(
+            updateFormation({
+                id: formationView.id,
+                formation: {
+                    ...formationView.formation,
+                    attractions: [
+                        ...formationView.formation.attractions,
+                        {
+                            ...attraction,
+                            attracting: {
+                                piece: {
+                                    ...attraction.attracting.piece,
+                                    id: attractingPieceId
+                                }
+                            },
+                            attracted: {
+                                piece: {
+                                    ...attraction.attracted.piece,
+                                    id: attractedPieceId
+                                }
+                            }
+                        }
+                    ]
+                } as FormationInput
+            })
+        )
+        setAttractingType(null)
+        setAttractingPieceId(null)
+        setAttractedType(null)
+        setAttractedPieceId(null)
+        setAttraction(null)
+        setIsAttractionBuilderOpen(false)
+    };
+    
+    const handleAttractionBuilderCanceled = () => {
+        setAttractingType(null)
+        setAttractingPieceId(null)
+        setAttractedType(null)
+        setAttractedPieceId(null)
+        setAttraction(null)
+    setIsAttractionBuilderOpen(false)
+    };
+
     const onSelect = (newSelection: SelectionT, event?: any): void => {
         if (event == null && !newSelection.nodes && !newSelection.edges) {
-            dispatch(updateFormationSelection(props.viewId, null))
+            dispatch(updateFormationSelection(formationViewId, [],[]))
             return
         }
         // Remove the previously selected pieces and attractions from the selectionState if they are in the new selection.
@@ -1463,29 +1594,23 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         const selectedAttractionsIds = formationView.selection.attractionsPiecesIds.slice()
         if (newSelection.edges) {
             newSelection.edges.forEach((edge) => {
-                const [sourceId, targetId] = edge.id.split('-')
                 if (
                     formationView.selection.attractionsPiecesIds.some(
-                        ([source, target]) => source === sourceId && target === targetId
+                        ([source, target]) => source === edge.source && target === edge.target
                     )
                 ) {
                     selectedAttractionsIds.splice(
                         selectedAttractionsIds.findIndex(
-                            ([source, target]) => source === sourceId && target === targetId
+                            ([source, target]) => source === edge.source && target === edge.target
                         ),
                         1
                     )
                 } else {
-                    selectedAttractionsIds.push([sourceId, targetId])
+                    selectedAttractionsIds.push([edge.source, edge.target])
                 }
             })
         }
-        dispatch(
-            updateFormationSelection(props.viewId, {
-                piecesIds: selectedPiecesIds,
-                attractionsPiecesIds: selectedAttractionsIds
-            })
-        )
+        dispatch(updateFormationSelection(formationViewId, selectedPiecesIds, selectedAttractionsIds))
     }
 
     const onCreateNode = (x: number, y: number, event: any): void => {
@@ -1541,10 +1666,17 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     }
 
     const onCreateEdge = (sourceNode: INode, targetNode: INode): void => {
-        console.log('onCreateEdge should not be possible', sourceNode, targetNode)
+        const attractingPieceType = types.get(sourceNode.piece.type.name).get(sourceNode.piece.type.variant ?? '')
+        const attractedPieceType = types.get(targetNode.piece.type.name).get(targetNode.piece.type.variant ?? '')
+        setAttractingType(attractingPieceType)
+        setAttractingPieceId(sourceNode.id)
+        setAttractedType(attractedPieceType)
+        setAttractedPieceId(targetNode.id)
+        showAttractionBuilder()
     }
 
     const onDeleteSelected = (selected: SelectionT) => {
+        dispatch(updateFormationSelection(formationView.id, formationView.selection.piecesIds.filter((id) => !selected.nodes?.has(id))))
         dispatch(
             updateFormation({
                 id: formationView.id,
@@ -1555,10 +1687,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     ),
                     attractions: formationView.formation.attractions.filter(
                         (attraction) =>
-                            !selected.nodes?.has(attraction.attracting.piece.id) &&
-                            !selected.nodes?.has(attraction.attracted.piece.id)
+                            !selected.edges?.has(
+                                `${attraction.attracting.piece.id}_${attraction.attracted.piece.id}`
+                            ) && !selected.nodes?.has(attraction.attracting.piece.id) 
+                            && !selected.nodes?.has(attraction.attracted.piece.id)
                     )
-                }
+                } as FormationInput
             })
         )
     }
@@ -1568,6 +1702,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const nodesToCopy = graph.nodes.filter((node) => selected.nodes?.has(node.id))
             const toppestNode = nodesToCopy.reduce((prev, curr) => (prev.y < curr.y ? prev : curr))
             const leftestNode = nodesToCopy.reduce((prev, curr) => (prev.x < curr.x ? prev : curr))
+            const edgesToCopy = graph.edges.filter((edge) => selected.edges?.has(`${edge.source}_${edge.target}`))
             const formationSnippetToCopy = {
                 pieces: nodesToCopy.map((node) => ({
                     ...node.piece,
@@ -1578,15 +1713,13 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         }
                     }
                 })),
-                attractions: graph.edges.map((edge) => edge.attraction)
+                attractions: edgesToCopy.map((edge) => edge.attraction)
             }
             navigator.clipboard
                 .writeText(JSON.stringify(formationSnippetToCopy))
                 .then(() => {
-                    console.log('Copying to clipboard was successful!')
                 })
                 .catch((err) => {
-                    console.error('Could not copy text: ', err)
                 })
         }
     }
@@ -1594,19 +1727,38 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     const onPasteSelected = (selected?: SelectionT | null, xyCoords?: IPoint): void => {
         navigator.clipboard.readText().then((text) => {
             const formationSnippet = JSON.parse(text)
+            const oldPieceToNewPiece = new Map<string, string>()
             const placedFormationSnippet = {
                 pieces: formationSnippet.pieces.map((piece) => {
                     const x = xyCoords?.x + piece.diagram.point.x
                     const y = xyCoords?.y + piece.diagram.point.y
+                    const id = Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
+                    oldPieceToNewPiece.set(piece.id, id)
                     return {
                         ...piece,
-                        id: Generator.generateRandomId(x + y),
+                        id: id,
                         diagram: {
                             point: { x, y }
                         }
                     }
                 }),
-                attractions: formationSnippet.attractions
+                attractions: formationSnippet.attractions.map((attraction) => ({
+                    ...attraction,
+                    attracting: {
+                        ...attraction.attracting,
+                        piece: {
+                            ...attraction.attracting.piece,
+                            id: oldPieceToNewPiece.get(attraction.attracting.piece.id)
+                        }
+                    },
+                    attracted: {
+                        ...attraction.attracted,
+                        piece: {
+                            ...attraction.attracted.piece,
+                            id: oldPieceToNewPiece.get(attraction.attracted.piece.id)
+                        }
+                    }
+                }))
             }
             const newPieceIds = placedFormationSnippet.pieces.map((piece) => piece.id)
             if (newPieceIds.length !== new Set(newPieceIds).size) {
@@ -1747,45 +1899,62 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     const EdgeTypes = GraphConfig.EdgeTypes
 
     return (
-        <div
-            id="formation-editor"
-            className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
-            ref={setNodeRef}
-        >
-            <GraphView
-                ref={graphViewRef}
-                nodeKey={NODE_KEY}
-                nodes={nodes}
-                edges={edges}
-                selected={selected}
-                nodeTypes={NodeTypes}
-                nodeSubtypes={NodeSubtypes}
-                edgeTypes={EdgeTypes}
-                // layoutEngineType='HorizontalTree'
-                allowMultiselect={true}
-                // gridSpacing={20}
-                gridDotSize={0}
-                nodeSize={100}
-                edgeHandleSize={200}
-                edgeArrowSize={4}
-                // rotateEdgeHandle={false}
-                minZoom={0.1}
-                maxZoom={4}
-                showGraphControls={false}
-                canSwapEdge={canSwapEdge}
-                onSwapEdge={onSwapEdge}
-                onArrowClicked={(selectedEdge: IEdge): void => {}}
-                onSelect={onSelect}
-                onCreateNode={onCreateNode}
-                onUpdateNode={onUpdateNode}
-                onCreateEdge={onCreateEdge}
-                onDeleteSelected={onDeleteSelected}
-                onCopySelected={onCopySelected}
-                onPasteSelected={onPasteSelected}
-                onContextMenu={onContextMenu}
-                renderNodeText={renderNodeText}
-            ></GraphView>
-        </div>
+        <>
+            <div
+                id="formation-editor"
+                className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
+                ref={setNodeRef}
+            >
+                <GraphView
+                    ref={graphViewRef}
+                    nodeKey={NODE_KEY}
+                    nodes={nodes}
+                    edges={edges}
+                    selected={selected}
+                    nodeTypes={NodeTypes}
+                    nodeSubtypes={NodeSubtypes}
+                    edgeTypes={EdgeTypes}
+                    // layoutEngineType='HorizontalTree'
+                    allowMultiselect={true}
+                    // gridSpacing={20}
+                    gridDotSize={0}
+                    nodeSize={100}
+                    edgeHandleSize={200}
+                    edgeArrowSize={4}
+                    // rotateEdgeHandle={false}
+                    minZoom={0.1}
+                    maxZoom={4}
+                    showGraphControls={false}
+                    canSwapEdge={canSwapEdge}
+                    onSwapEdge={onSwapEdge}
+                    onArrowClicked={(selectedEdge: IEdge): void => {}}
+                    onSelect={onSelect}
+                    onCreateNode={onCreateNode}
+                    onUpdateNode={onUpdateNode}
+                    onCreateEdge={onCreateEdge}
+                    onDeleteSelected={onDeleteSelected}
+                    onCopySelected={onCopySelected}
+                    onPasteSelected={onPasteSelected}
+                    onContextMenu={onContextMenu}
+                    renderNodeText={renderNodeText}
+                ></GraphView>
+            </div>
+            <Modal
+                width={1200}
+                title="New attraction"
+                open={isAttractionBuilderOpen}
+                onOk={handleAttractionBuilderFinished}
+                onCancel={handleAttractionBuilderCanceled}
+                mask={false}>
+                {attractingType && attractedType ? (
+                    <AttractionBuilder
+                        attractingType={attractingType}
+                        attractedType={attractedType}
+                        onAttractionChange={setAttraction}
+                    />
+                ) : null}
+            </Modal>
+        </>
     )
 })
 
@@ -1793,39 +1962,13 @@ DiagramEditor.displayName = 'DiagramEditor'
 
 // 3D Editor
 
-interface IShapeEditorContext {
+interface IEditorContext {
     formationViewId: string
     kitDirectory: string
     blobUrls: { [key: string]: string }
 }
 
-const ShapeEditorContext = createContext<IShapeEditorContext>({} as IShapeEditorContext)
-
-interface RepresentationThreeProps {
-    id: string
-    representation: Representation
-}
-
-const RepresentationThree = ({ id, representation }: RepresentationThreeProps): JSX.Element => {
-    const { blobUrls } = useContext(ShapeEditorContext)
-    const representationThreeScene = useLoader(GLTFLoader, blobUrls[representation.url]).scene.clone()
-    representationThreeScene.name = id
-    return <primitive object={representationThreeScene} />
-}
-
-RepresentationThree.displayName = 'Representation'
-
-const getPieceIdFromClickEventGroupObject = (o: any): string => {
-    if (o.name !== '') return o.name
-
-    const childWithId = o.children.find((element) => {
-        if (element?.isGroup !== true) return false
-        const childrenPieceId = getPieceIdFromClickEventGroupObject(element)
-        return childrenPieceId !== ''
-    })
-
-    return childWithId ? getPieceIdFromClickEventGroupObject(childWithId) : ''
-}
+const EditorContext = createContext<IEditorContext>({} as IEditorContext)
 
 interface PieceThreeProps {
     piece: PieceInput
@@ -1833,7 +1976,7 @@ interface PieceThreeProps {
 }
 
 const PieceThree = ({ piece, selected }: PieceThreeProps) => {
-    const { formationViewId, kitDirectory } = useContext(ShapeEditorContext)
+    const { formationViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
     const formationView = useSelector((state: RootState) =>
         selectFormationView(state, formationViewId)
@@ -1841,64 +1984,52 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
     const type = useSelector((state: RootState) =>
         selectType(state, kitDirectory, piece.type.name, piece.type.variant ?? '')
     )
+    const isSelected = formationView.selection.piecesIds.includes(piece.id)
     return (
-    <Selection>
-    <EffectComposer autoClear={false} enabled={selected}>
-        <Outline
-            edgeStrength={200}
-            visibleEdgeColor={colors.primary}
-            patternTexture={null}
-        />
-        {/* <SelectiveBloom 
-        luminanceThreshold={0.9}
-    /> */}
-    </EffectComposer>
-    <ThreeSelect
-        multiple
-        box
-        border="1px solid #fff"
-        // onChange={(selected): void => {
-        //         console.log('selection starting', selected)
-        //     }}
-        // onChangePointerUp={(e) => {
-        //     if (isSelectionBoxActive) {
-        //         setIsSelectionBoxActive(false)
-        //         console.log('selection ending', e)
-        //     }
-        // }}
-        onClick={(e) => {
-            const pieceId = getPieceIdFromClickEventGroupObject(e.eventObject)
-            if (formationView.selection.piecesIds.includes(pieceId)) {
-                dispatch(
-                    updateFormationSelection(formationViewId, {
-                        piecesIds: formationView.selection.piecesIds.filter(
-                            (id) => id !== pieceId
-                        ),
-                        attractionsPiecesIds: formationView.selection.attractionsPiecesIds
-                    })
-                )
-            } else {
-                dispatch(
-                    updateFormationSelection(formationViewId, {
-                        piecesIds: [...formationView.selection.piecesIds, pieceId],
-                        attractionsPiecesIds: formationView.selection.attractionsPiecesIds
-                    })
-                )
-            }
+        <ThreeSelect
+            multiple
+            box
+            border="1px solid #fff"
+            // onChange={(selected): void => {
+            //         console.log('selection starting', selected)
+            //     }}
+            // onChangePointerUp={(e) => {
+            //     if (isSelectionBoxActive) {
+            //         setIsSelectionBoxActive(false)
+            //         console.log('selection ending', e)
+            //     }
+            // }}
+            onClick={(e) => {
+                const pieceId = getGroupNameFromClickEventGroupObject(e.eventObject)
+                if (formationView.selection.piecesIds.includes(pieceId)) {
+                    dispatch(
+                        updateFormationSelection(formationViewId, 
+                            formationView.selection.piecesIds.filter(
+                                (id) => id !== pieceId
+                            ),
+                            formationView.selection.attractionsPiecesIds
+                        )
+                    )
+                } else {
+                    dispatch(
+                        updateFormationSelection(formationViewId, 
+                            [...formationView.selection.piecesIds, pieceId],
+                            formationView.selection.attractionsPiecesIds
+                        )
+                    )
+                }
 
-            e.stopPropagation()
-        }}
-    >
-        <PostProcessSelect enabled={selected}>
+                e.stopPropagation()
+            }}
+        >
             <RepresentationThree
                 id={piece.id}
                 representation={type.representations.find((representation) =>
                     representation.url.endsWith('.glb')
                 )}
+                color={selected ? colors.primary : undefined}
             />
-        </PostProcessSelect>
-    </ThreeSelect>
-</Selection>
+        </ThreeSelect>
 )
 }
 
@@ -1909,7 +2040,7 @@ interface HierarchyThreeProps {
 }
 
 const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
-    const { formationViewId } = useContext(ShapeEditorContext)
+    const { formationViewId } = useContext(EditorContext)
     const formationView = useSelector((state: RootState) =>
         selectFormationView(state, formationViewId)
     )
@@ -1942,13 +2073,15 @@ interface FormationThreeProps {
 
 const FormationThree = ({ transformationMode='translate' }: FormationThreeProps) => {
     const dispatch = useDispatch()
-    const { formationViewId, kitDirectory } = useContext(ShapeEditorContext)
+    const { formationViewId, kitDirectory } = useContext(EditorContext)
     const formationView = useSelector((state: RootState) => selectFormationView(state, formationViewId))
     const ports = useSelector((state: RootState) => selectPorts(state, kitDirectory))
     if (!formationView) return null
     if (!ports) return null
     const selectedHierarchyRootPiecesIds = formationView.selection.piecesIds
-    const hierarchies = formationToHierarchies(formationView.formation, ports)
+    const hierarchies = useMemo(() => {
+        return formationToHierarchies(formationView.formation, ports);
+    }, [formationView.formation, ports]);
     const transformControlRef = useRef(null)
 
     return (
@@ -1981,13 +2114,13 @@ const FormationThree = ({ transformationMode='translate' }: FormationThreeProps)
                                                       ...piece,
                                                       root: {
                                                           plane: convertTransformToPlane(
-                                                                    convertPlaneToTransform(
-                                                                            piece.root?.plane ?? {
-                                                                                origin: { x: 0, y: 0, z: 0 },
-                                                                                xAxis: { x: 1, y: 0, z: 0 },
-                                                                                yAxis: { x: 0, y: 1, z: 0 }
-                                                                        })
-                                                                    .premultiply(convertThreeTransformToSemioTransform(transformControlMatrix)))
+                                                            convertPlaneToTransform(
+                                                                    piece.root?.plane ?? {
+                                                                        origin: { x: 0, y: 0, z: 0 },
+                                                                        xAxis: { x: 1, y: 0, z: 0 },
+                                                                        yAxis: { x: 0, y: 1, z: 0 }
+                                                                })
+                                                            .premultiply(transformControlMatrix))
                                                       }
                                                   }
                                                 : piece
@@ -2011,61 +2144,26 @@ const FormationThree = ({ transformationMode='translate' }: FormationThreeProps)
 FormationThree.displayName = 'FormationThree'
 
 interface ShapeEditorProps {
-    viewId: string
-    kitDirectory: string
 }
 
-const ShapeEditor = ({ viewId, kitDirectory }: ShapeEditorProps) => {
+const ShapeEditor = ({}: ShapeEditorProps) => {
+    const { formationViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
-    const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
-    const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
-    useEffect(() => {
-        kit?.types.forEach((type) => {
-            const representation = type.representations.find((representation) =>
-                representation.url.endsWith('.glb')
-            )
-            if (!representation) return
-            window.electron.ipcRenderer
-                .invoke('get-file-buffer', representation.url, kitDirectory)
-                .then(
-                    (buffer) => {
-                        const blob = new Blob([buffer], { type: 'model/gltf-binary' })
-                        const url = URL.createObjectURL(blob)
-                        useGLTF.preload(url)
-                        setBlobUrls((prev) => ({ ...prev, [representation.url]: url }))
-                    },
-                    (error) => {
-                        console.error(error)
-                    }
-                )
-        })
-    }, [kit])
 
     return (
-        <ShapeEditorContext.Provider value={{kitDirectory, formationViewId:viewId, blobUrls}}>
-            <Canvas
-                shadows
-                // orthographic={true}
-                onPointerMissed={() => dispatch(updateFormationSelection(viewId, null))}
-            >
-                <Suspense fallback={null}>
-                    <FormationThree  transformationMode='translate' />
-                    <ambientLight color={colors.light} intensity={1} />
-                </Suspense>
-                <OrbitControls makeDefault />
-                <GizmoHelper
-                    alignment="bottom-right"
-                    margin={[80, 80]}
-                    >
-                    <GizmoViewport
-                        labels={['X', 'Z', '-Y']}
-                        axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-                        // font="Anta"
-                        />
-                </GizmoHelper>
-                <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
-            </Canvas>
-        </ShapeEditorContext.Provider>
+        <Canvas
+            // shadows
+            // orthographic={true}
+            onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [],[]))}
+        >
+            <Suspense fallback={null}>
+                <FormationThree transformationMode='translate' />
+                {/* <ambientLight color={colors.light} intensity={1} /> */}
+            </Suspense>
+            <OrbitControls makeDefault />
+            <Gizmo/>
+            <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
+        </Canvas>
     )
 }
 
@@ -2348,11 +2446,33 @@ interface FormationWindowProps {
 }
 
 const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.Element => {
-    const dispatch = useDispatch()
     const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
     const formations = useSelector((state: RootState) => selectFormations(state, kitDirectory))
+
+    const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
+    useEffect(() => {
+        kit?.types.forEach((type) => {
+            const representation = type.representations.find((representation) =>
+                representation.url.endsWith('.glb')
+            )
+            if (!representation) return
+            window.electron.ipcRenderer
+                .invoke('get-file-buffer', representation.url, kitDirectory)
+                .then(
+                    (buffer) => {
+                        const blob = new Blob([buffer], { type: 'model/gltf-binary' })
+                        const url = URL.createObjectURL(blob)
+                        useGLTF.preload(url)
+                        setBlobUrls((prev) => ({ ...prev, [representation.url]: url }))
+                    },
+                    (error) => {
+                        console.error(error)
+                    }
+                )
+        })
+    }, [kit])
 
     const [activeDraggedArtifactId, setActiveDraggedArtifactId] = useState('')
     const [activeDraggedArtifact, setActiveDraggedArtifact] = useState<Type | Formation>()
@@ -2596,28 +2716,28 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                 ]}
                             />
                         </Sider>
-                        <Content>
-                            <DiagramEditor
-                                ref={diagramEditorRef}
-                                kitDirectory={kitDirectory}
-                                viewId={viewId}
-                            />
-                        </Content>
-                        <Divider className="h-full top-0" type="vertical" />
-                        <Content>
-                            <ShapeEditor kitDirectory={kitDirectory} viewId={viewId} />
-                        </Content>
-                        {createPortal(
-                            <DragOverlay>
-                                {activeDraggedArtifactId && (
-                                    <ArtifactAvatar
-                                        draggableId={activeDraggedArtifactId}
-                                        icon={activeDraggedArtifact?.icon ?? ''}
-                                    />
-                                )}
-                            </DragOverlay>,
-                            document.body
-                        )}
+                        <EditorContext.Provider value={{kitDirectory, formationViewId:viewId, blobUrls}}>
+                            <Content>
+                                <DiagramEditor
+                                    ref={diagramEditorRef}
+                                />
+                            </Content>
+                            <Divider className="h-full top-0" type="vertical" />
+                            <Content>
+                                <ShapeEditor/>
+                            </Content>
+                            {createPortal(
+                                <DragOverlay>
+                                    {activeDraggedArtifactId && (
+                                        <ArtifactAvatar
+                                            draggableId={activeDraggedArtifactId}
+                                            icon={activeDraggedArtifact?.icon ?? ''}
+                                        />
+                                    )}
+                                </DragOverlay>,
+                                document.body
+                            )}
+                        </EditorContext.Provider>
                     </DndContext>
                 </Layout>
                 <Sider className="border-l-thin border-lightGrey" width="240">
