@@ -77,16 +77,29 @@ test('convertTransformToPlane origin', () => {
     } as Plane)}
 )
 
-test('convertPlaneToTransform yz', () => {
+test('convertPlaneToTransform zy', () => {
     expect(
         convertPlaneToTransform({
             origin: { x: 0, y: 0, z: 0 },
-            xAxis: { x: 0, y: 1, z: 0 },
-            yAxis: { x: 0, y: 0, z: 1 }
+            xAxis: { x: 0, y: 0, z: 1 },
+            yAxis: { x: 0, y: 1, z: 0 }
         } as Plane)
     ).toBeCloseToMatrix(new Matrix4().set(
+        0,-1, 0, 0, 
         1, 0, 0, 0, 
-        0, 0, -1, 0, 
-        0, 1, 0, 0, 
+        0, 0, 1, 0, 
         0, 0, 0, 1))
 })
+
+test('convertTransformToPlane zy', () => {
+    expect(
+        convertTransformToPlane(new Matrix4().set(
+            0,-1, 0, 0, 
+            1, 0, 0, 0, 
+            0, 0, 1, 0, 
+            0, 0, 0, 1))
+    ).toBeCloseToPlane({
+        origin: { x: 0, y: 0, z: 0 },
+        xAxis: { x: 0, y: 0, z: 1 },
+        yAxis: { x: 0, y: 1, z: 0 }
+    } as Plane)})

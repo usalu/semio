@@ -40,7 +40,9 @@ import {
     Input,
     FormProps,
     Tooltip,
-    Modal
+    Modal,
+    FloatButton,
+    Badge
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
 import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color } from 'three'
@@ -55,7 +57,8 @@ import {
     Grid,
     Line as DreiLine,
     Cone as DreiCone,
-    Box as DreiBox
+    Box as DreiBox,
+    Stage
 } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { INode, IEdge, IGraphInput, SelectionT, IPoint, GraphView } from 'react-digraph'
@@ -67,6 +70,8 @@ import FullscreenExitSharpIcon from '@mui/icons-material/FullscreenExitSharp'
 import HomeSharpIcon from '@mui/icons-material/HomeSharp'
 import FolderSharpIcon from '@mui/icons-material/FolderSharp'
 import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp'
+import OpenWithIcon from '@mui/icons-material/OpenWith'
+import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty'
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
 import { nanoid } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
@@ -113,6 +118,7 @@ import {
     ISelectionFormation
 } from './store'
 import { n } from 'vitest/dist/reporters-LqC_WI4d'
+import { ThemeConfig } from 'antd/lib'
 
 // Copilot
 // export type Maybe<T> = T | null;
@@ -700,6 +706,7 @@ const sketchpadTheme = {
         colorBgMask: colors.light,
         colorBgTextActive: colors.light,
         colorBgBase: colors.light,
+        controlItemBgHover: colors.light,
         // special colors
         colorError: colors.danger,
         colorWarning: colors.warning,
@@ -712,8 +719,9 @@ const sketchpadTheme = {
         wireframe: false,
         borderRadius: 0,
         lineType: 'none',
-        lineWidth: 0
-        // motionUnit: 0.05
+        lineWidth: 0,
+        // TODO: Fast motion without modal freeze
+        // motionUnit: 0.001, // Makes modal freeze somehow and overwriting it on Modal doesn't work.
     },
     components: {
         Button: {
@@ -732,6 +740,8 @@ const sketchpadTheme = {
             linkHoverBg: colors.light,
             primaryColor: colors.light,
             textHoverBg: colors.light
+        },
+        FloatButton: {
         },
         Layout: {
             bodyBg: colors.dark,
@@ -794,9 +804,9 @@ const sketchpadTheme = {
             buttonSolidCheckedHoverBg: colors.light,
             dotColorDisabled: colors.light
         },
-        Tooltip: {}
+        Tooltip: {},
     }
-}
+} as ThemeConfig
 
 class SeededRandom {
     private seed: number
@@ -1109,8 +1119,7 @@ const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
     const groupRef = useRef();
     useEffect(() => {
         if (groupRef.current) {
-            const transform = convertPlaneToTransform(plane)
-            console.log('plane', plane,'transform', transform)
+            const transform = convertPlaneToTransform(plane, true)
             groupRef.current.applyMatrix4(transform)
         }
     }, [])
@@ -1563,7 +1572,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         setAttractedPieceId(null)
         setAttraction(null)
         setIsAttractionBuilderOpen(false)
-    };
+    }
     
     const handleAttractionBuilderCanceled = () => {
         setAttractingType(null)
@@ -1571,8 +1580,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         setAttractedType(null)
         setAttractedPieceId(null)
         setAttraction(null)
-    setIsAttractionBuilderOpen(false)
-    };
+        setIsAttractionBuilderOpen(false)
+    }
 
     const onSelect = (newSelection: SelectionT, event?: any): void => {
         if (event == null && !newSelection.nodes && !newSelection.edges) {
@@ -2093,7 +2102,7 @@ const FormationThree = ({ transformationMode='translate' }: FormationThreeProps)
                             ref={transformControlRef}
                             mode={transformationMode}
                             onMouseUp={(event) => {
-                                let transformControlMatrix = new Matrix4();
+                                const transformControlMatrix = new Matrix4();
                                 switch (transformationMode) {
                                     case 'translate':
                                         transformControlMatrix.setPosition(transformControlRef.current.offset);
@@ -2150,20 +2159,47 @@ const ShapeEditor = ({}: ShapeEditorProps) => {
     const { formationViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
+    const [transformationMode, setTransformationMode] = useState('translate')
+
     return (
-        <Canvas
-            // shadows
-            // orthographic={true}
-            onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [],[]))}
-        >
-            <Suspense fallback={null}>
-                <FormationThree transformationMode='translate' />
-                {/* <ambientLight color={colors.light} intensity={1} /> */}
-            </Suspense>
-            <OrbitControls makeDefault />
-            <Gizmo/>
-            <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
-        </Canvas>
+        <div className="h-full relative">
+            <FloatButton.Group className="absolute right-4 top-4" >
+            {/* TODO: Fix hacky repositioning of icons */}
+            <FloatButton 
+                icon={
+                    <div className="-ml-[2.5px]">
+                        <OpenWithIcon />
+                    </div>
+                } 
+                badge={{ dot:transformationMode==='translate', color: colors.primary }}
+                onClick={() => setTransformationMode('translate')}
+            />
+            <FloatButton 
+                icon={
+                    <div className="-ml-[2.5px]">
+                        <ThreeSixtyIcon />
+                    </div>
+                } 
+                badge={{ dot:transformationMode==='rotate', color: colors.primary }}
+                onClick={() => setTransformationMode('rotate')}
+            />
+            </FloatButton.Group>
+            <Canvas
+                // shadows
+                // orthographic={true}
+                onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [],[]))}
+            >
+                <Suspense fallback={null}>
+                    {/* <Stage contactShadow={{ opacity: 1, blur: 2 }}>
+                    </Stage> */}
+                    <FormationThree transformationMode={transformationMode} />
+                    {/* <ambientLight color={colors.light} intensity={1} /> */}
+                </Suspense>
+                <OrbitControls makeDefault />
+                <Gizmo/>
+                <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
+            </Canvas>
+        </div>
     )
 }
 
@@ -2758,7 +2794,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                             className="p-1"
                                             mode="multiple"
                                             allowClear
-                                            placeholder="Please select"
+                                            placeholder="Select"
                                             options={[
                                                 {
                                                     label: '1to500',
@@ -2775,7 +2811,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                             className="p-1"
                                             mode="multiple"
                                             allowClear
-                                            placeholder="Please select"
+                                            placeholder="Select"
                                             options={[
                                                 {
                                                     label: 'volume',

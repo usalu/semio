@@ -1,6 +1,16 @@
 import cytoscape from 'cytoscape'
 import { Matrix4, Vector3 as ThreeVector } from 'three'
-import { Vector, VectorInput, Formation, FormationInput, Plane, PlaneInput, Port, Point, PointInput } from './semio.d'
+import {
+    Vector,
+    VectorInput,
+    Formation,
+    FormationInput,
+    Plane,
+    PlaneInput,
+    Port,
+    Point,
+    PointInput
+} from './semio.d'
 
 type Hierarchy = {
     pieceId: string
@@ -26,20 +36,34 @@ const threeToSemioRotation = (): Matrix4 => {
     )
 }
 
+const pointToThreeVector = (point: Point): ThreeVector => {
+    return new ThreeVector(point.x, point.y, point.z)
+}
+
 const convertPointToThreeVector = (point: Point | PointInput): ThreeVector => {
-    return new ThreeVector(point.x, point.z, -point.y)
+    const rotation = semioToThreeRotation()
+    return pointToThreeVector(point).applyMatrix4(rotation)
+}
+
+const vectorToThreeVector = (vector: Vector): ThreeVector => {
+    return new ThreeVector(vector.x, vector.y, vector.z)
 }
 
 const convertVectorToThreeVector = (vector: Vector | VectorInput): ThreeVector => {
-    return new ThreeVector(vector.x, vector.z, -vector.y)
+    const rotation = semioToThreeRotation()
+    return vectorToThreeVector(vector).applyMatrix4(rotation)
 }
 
 const convertThreeVectorToPoint = (vector: ThreeVector): Point => {
-    return { x: vector.x, y: -vector.z, z: vector.y }
+    const rotation = threeToSemioRotation()
+    const rotatedVector = vector.clone().applyMatrix4(rotation)
+    return { x: rotatedVector.x, y: rotatedVector.y, z: rotatedVector.z }
 }
 
 const convertThreeVectorToVector = (vector: ThreeVector): Vector => {
-    return { x: vector.x, y: -vector.z, z: vector.y }
+    const rotation = threeToSemioRotation()
+    const rotatedVector = vector.clone().applyMatrix4(rotation)
+    return { x: rotatedVector.x, y: rotatedVector.y, z: rotatedVector.z }
 }
 
 /**
@@ -47,25 +71,27 @@ const convertThreeVectorToVector = (vector: ThreeVector): Vector => {
  * @param plane plane in the semio coordinate system.
  * @returns transform in the three.js coordinate system.
  */
-export const convertPlaneToTransform = (plane: Plane | PlaneInput): Matrix4 => {
-    const inverseExportRotation = threeToSemioRotation()
-    const newOrigin = convertPointToThreeVector(plane.origin)
-    const newXAxis = convertVectorToThreeVector(plane.xAxis).applyMatrix4(inverseExportRotation)
-    const newYAxis = convertVectorToThreeVector(plane.yAxis).applyMatrix4(inverseExportRotation)
-    const newZAxis = newXAxis.clone().cross(newYAxis)
-    return new Matrix4().set(
-        newXAxis.x, newYAxis.x, newZAxis.x, newOrigin.x,
-        newXAxis.y, newYAxis.y, newZAxis.y, newOrigin.y,
-        newXAxis.z, newYAxis.z, newZAxis.z, newOrigin.z,
+export const convertPlaneToTransform = (plane: Plane | PlaneInput, invertExportRotation=false): Matrix4 => {
+    const origin = convertPointToThreeVector(plane.origin)
+    const xAxis = convertVectorToThreeVector(plane.xAxis)
+    const yAxis = convertVectorToThreeVector(plane.yAxis)
+    const zAxis = xAxis.clone().cross(yAxis)
+    const transform = new Matrix4().set(
+        xAxis.x, yAxis.x, zAxis.x, origin.x,
+        xAxis.y, yAxis.y, zAxis.y, origin.y,
+        xAxis.z, yAxis.z, zAxis.z, origin.z,
         0, 0, 0, 1
     )
+    if (invertExportRotation) {
+        transform.multiply(threeToSemioRotation())
+    }
+    return transform
 }
 
 export const convertTransformToPlane = (transform: Matrix4): Plane => {
-    const exportRotation = semioToThreeRotation()
     const origin = convertThreeVectorToPoint(new ThreeVector(transform.elements[12], transform.elements[13], transform.elements[14]))
-    const xAxis = convertThreeVectorToVector(new ThreeVector(transform.elements[0], transform.elements[1], transform.elements[2]).applyMatrix4(exportRotation))
-    const yAxis = convertThreeVectorToVector(new ThreeVector(transform.elements[4], transform.elements[5], transform.elements[6]).applyMatrix4(exportRotation))
+    const xAxis = convertThreeVectorToVector(new ThreeVector(transform.elements[0], transform.elements[1], transform.elements[2]))
+    const yAxis = convertThreeVectorToVector(new ThreeVector(transform.elements[4], transform.elements[5], transform.elements[6]))
     return { origin, xAxis, yAxis }
 }
 
@@ -106,7 +132,8 @@ export const formationToHierarchies = (
                     origin: { x: 0, y: 0, z: 0 },
                     xAxis: { x: 1, y: 0, z: 0 },
                     yAxis: { x: 0, y: 1, z: 0 }
-                }
+                },
+                true
             ),
             children: []
         }
