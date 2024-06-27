@@ -54,7 +54,7 @@ semio is an open ecosystem for component-based design of architecture. The decom
 - Windows
 - Rhino 7 or greater
 
-semio consists of two parts: a server which runs locally ([portable windows program](https://github.com/usalu/semio/releases/download/2.0/semio.zip)) and a Grasshopper user-interface.
+semio has currently two user-interfaces: a server which runs locally ([portable windows program](https://github.com/usalu/semio/releases/download/2.0/semio.zip)) and a Grasshopper user-interface.
 
 ## Installation
 

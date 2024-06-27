@@ -29,6 +29,7 @@ semio engine.
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 attraction are required.
+# TODO: Make uvicorn pyinstaller multiprocessing work. Then qt can be integrated again for system tray.
 
 from argparse import ArgumentParser
 import os
@@ -36,7 +37,7 @@ import sys
 import logging  # for uvicorn in pyinstaller
 from os import remove
 from pathlib import Path
-from multiprocessing import Process, freeze_support
+from multiprocessing import Process, freeze_support, set_start_method
 from functools import lru_cache
 from time import sleep
 from typing import Optional, Dict, Protocol, List, Union
@@ -87,16 +88,16 @@ from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
 from uvicorn import run
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler
-from PySide6.QtWidgets import (
-    QApplication,
-    QSystemTrayIcon,
-    QMenu,
-)
-from PySide6.QtCore import QSize
-from PySide6.QtGui import (
-    QIcon,
-    QAction,
-)
+# from PySide6.QtWidgets import (
+#     QApplication,
+#     QSystemTrayIcon,
+#     QMenu,
+# )
+# from PySide6.QtCore import QSize
+# from PySide6.QtGui import (
+#     QIcon,
+#     QAction,
+# )
 
 logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
@@ -1741,12 +1742,13 @@ class RepresentationNotFound(NotFound):
 
 
 class PortNotFound(NotFound):
-    def __init__(self, qualities) -> None:
-        super().__init__(qualities)
-        self.qualities = qualities
+    def __init__(self, type, id) -> None:
+        super().__init__(id)
+        self.type = type
+        self.id = id
 
     def __str__(self):
-        return f"Port({self.qualities}) not found."
+        return f"Port({self.id}) not found for type: {str(self.type)}."
 
 
 class TypeNotFound(NotFound):
@@ -1924,11 +1926,11 @@ def getMainKit(session: Session) -> Kit:
 
 def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Quality:
     try:
-        value = qualityInput.value
+        value = qualityInput.value if qualityInput.value is not None else ""
     except AttributeError:
         value = ""
     try:
-        unit = qualityInput.unit
+        unit = qualityInput.unit if qualityInput.unit is not None else ""
     except AttributeError:
         unit = ""
     return Quality(
@@ -1942,7 +1944,7 @@ def qualityInputToTransientQualityForEquality(qualityInput: QualityInput) -> Qua
 #     locatorInput: LocatorInput,
 # ) -> Locator:
 #     try:
-#         subgroup = locatorInput.subgroup
+#         subgroup = locatorInput.subgroup if locatorInput.subgroup is not None else ""
 #     except AttributeError:
 #         subgroup = ""
 #     return Locator(group=locatorInput.group, subgroup=subgroup)
@@ -2081,14 +2083,14 @@ def getFormationByNameAndVariant(
 #         port for port in ports if set(port.locators) == set(locators)
 #     ]
 #     if len(portsWithSameLocator) != 1:
-#         raise PortNotFound(locators)
+#         raise PortNotFound(type,locators)
 #     return portsWithSameLocator[0]
 
 
 def getPortById(session: Session, type: Type, portId: str) -> Port:
     port = session.query(Port).filter_by(type_id=type.id, local_id=portId).first()
     if not port:
-        raise PortNotFound(portId)
+        raise PortNotFound(type, portId)
     return port
 
 
@@ -2118,7 +2120,7 @@ def addRepresentationInputToSession(
     representationInput: RepresentationInput,
 ) -> Representation:
     try:
-        lod = representationInput.lod
+        lod = representationInput.lod if representationInput.lod is not None else ""
     except AttributeError:
         lod = ""
     try:
@@ -2147,7 +2149,7 @@ def addLocatorInputToSession(
     session: Session, port: Port, locatorInput: LocatorInput
 ) -> Locator:
     try:
-        subgroup = locatorInput.subgroup
+        subgroup = locatorInput.subgroup if locatorInput.subgroup is not None else ""
     except AttributeError:
         subgroup = ""
     locator = Locator(group=locatorInput.group, subgroup=subgroup, port_id=port.id)
@@ -2158,7 +2160,7 @@ def addLocatorInputToSession(
 
 def addPortInputToSession(session: Session, type: Type, portInput: PortInput) -> Port:
     try:
-        id = portInput.id
+        id = portInput.id if portInput.id is not None else ""
     except AttributeError:
         id = ""
     try:
@@ -2197,11 +2199,11 @@ def addQualityInputToSession(
     qualityInput: QualityInput,
 ) -> Quality:
     try:
-        unit = qualityInput.unit
+        unit = qualityInput.unit if qualityInput.unit is not None else ""
     except AttributeError:
         unit = ""
     try:
-        value = qualityInput.value
+        value = qualityInput.value if qualityInput.value is not None else ""
     except AttributeError:
         value = ""
     typeId = owner.id if isinstance(owner, Type) else None
@@ -2220,15 +2222,15 @@ def addQualityInputToSession(
 
 def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> Type:
     try:
-        description = typeInput.description
+        description = typeInput.description if typeInput.description is not None else ""
     except AttributeError:
         description = ""
     try:
-        icon = typeInput.icon
+        icon = typeInput.icon if typeInput.icon is not None else ""
     except AttributeError:
         icon = ""
     try:
-        variant = typeInput.variant
+        variant = typeInput.variant if typeInput.variant is not None else ""
     except AttributeError:
         variant = ""
     try:
@@ -2261,7 +2263,7 @@ def addPieceInputToSession(
     session: Session, formation: Formation, pieceInput: PieceInput
 ) -> Piece:
     try:
-        variant = pieceInput.type.variant
+        variant = pieceInput.type.variant if pieceInput.type.variant is not None else ""
     except AttributeError:
         variant = ""
     type = getTypeByNameAndVariant(session, pieceInput.type.name, variant)
@@ -2302,11 +2304,11 @@ def addAttractionInputToSession(
     localIdToPiece: dict,
 ) -> Attraction:
     try:
-        attracting_piece_type_port_id = attractionInput.attracting.piece.type.port.id
+        attracting_piece_type_port_id = attractionInput.attracting.piece.type.port.id if attractionInput.attracting.piece.type.port.id is not None else ""
     except AttributeError:
         attracting_piece_type_port_id = ""
     try:
-        attracted_piece_type_port_id = attractionInput.attracted.piece.type.port.id
+        attracted_piece_type_port_id = attractionInput.attracted.piece.type.port.id if attractionInput.attracted.piece.type.port.id is not None else ""
     except AttributeError:
         attracted_piece_type_port_id = ""
     try:
@@ -2356,15 +2358,15 @@ def addFormationInputToSession(
     session: Session, kit: Kit, formationInput: FormationInput
 ):
     try:
-        description = formationInput.description
+        description = formationInput.description if formationInput.description is not None else ""
     except AttributeError:
         description = ""
     try:
-        icon = formationInput.icon
+        icon = formationInput.icon if formationInput.icon is not None else ""
     except AttributeError:
         icon = ""
     try:
-        variant = formationInput.variant
+        variant = formationInput.variant if formationInput.variant is not None else ""
     except AttributeError:
         variant = ""
     try:
@@ -2405,15 +2407,15 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
             name=kitInput.name,
         )
     try:
-        kit.description = kitInput.description
+        kit.description = kitInput.description or ""
     except AttributeError:
         pass
     try:
-        kit.icon = kitInput.icon
+        kit.icon = kitInput.icon or ""
     except AttributeError:
         pass
     try:
-        kit.url = kitInput.url
+        kit.url = kitInput.url or ""
     except AttributeError:
         pass
     session.add(kit)
@@ -2428,19 +2430,19 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
 def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     kit = getMainKit(session)
     try:
-        kit.name = kitMetadata.name
+        kit.name = kitMetadata.name or ""
     except AttributeError:
         pass
     try:
-        kit.description = kitMetadata.description
+        kit.description = kitMetadata.description or ""
     except AttributeError:
         pass
     try:
-        kit.icon = kitMetadata.icon
+        kit.icon = kitMetadata.icon or ""
     except AttributeError:
         pass
     try:
-        kit.url = kitMetadata.url
+        kit.url = kitMetadata.url or ""
     except AttributeError:
         pass
     return kit
@@ -2462,11 +2464,12 @@ def hierarchiesFromFormation(formation: Formation) -> List[Hierarchy]:
     hierarchies = []
     for component in weakly_connected_components(graph):
         connected_subgraph = graph.subgraph(component)
-        root = [node for node, degree in connected_subgraph.in_degree() if degree == 0][
-            0
-        ]
-        if not root:
-            root = graph.nodes[0]
+        try:
+            root = [
+                node for node, degree in connected_subgraph.in_degree() if degree == 0
+            ][0]
+        except IndexError:
+            root = next(iter(connected_subgraph.nodes))
         rootHierarchy = Hierarchy(
             piece=graph.nodes[root]["piece"],
             transform=Transform.identity(),
@@ -2515,7 +2518,7 @@ def sceneFromFormationInSession(
     session: Session, formationIdInput: FormationIdInput
 ) -> "Scene":
     try:
-        variant = formationIdInput.variant
+        variant = formationIdInput.variant if formationIdInput.variant is not None else ""
     except AttributeError:
         variant = ""
     formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
@@ -2845,7 +2848,7 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
             raise Exception("Main kit not found.")
         try:
             try:
-                variant = typeId.variant
+                variant = typeId.variant if typeId.variant is not None else ""
             except AttributeError:
                 variant = ""
             type = getTypeByNameAndVariant(session, typeId.name, variant)
@@ -3004,7 +3007,7 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
             raise Exception("Main kit not found.")
         try:
             try:
-                variant = formationId.variant
+                variant = formationId.variant if formationId.variant is not None else ""
             except AttributeError:
                 variant = ""
             formation = getFormationByNameAndVariant(session, formationId.name, variant)
@@ -3163,63 +3166,55 @@ def start_engine():
     )
 
 
-def restart_engine():
-    ui_instance = QApplication.instance()
-    engine_process = ui_instance.engine_process
-    if engine_process.is_alive():
-        engine_process.terminate()
-    ui_instance.engine_process = Process(target=start_engine)
-    ui_instance.engine_process.start()
+# def restart_engine():
+#     ui_instance = QApplication.instance()
+#     engine_process = ui_instance.engine_process
+#     if engine_process.is_alive():
+#         engine_process.terminate()
+#     ui_instance.engine_process = Process(target=start_engine)
+#     ui_instance.engine_process.start()
 
 
-def watcher():
-    ui_instance = QApplication.instance()
-    try:
-        engine_process = ui_instance.engine_process
-    except AttributeError:
-        start_engine()
-    while True:
-        if not engine_process.is_alive():
-            restart_engine()
-        sleep(1)
+def main():
+    start_engine()
 
 
 if __name__ == "__main__":
-    freeze_support()
+    freeze_support()  # needed for pyinstaller on Windows
+    main()
 
-    ui = QApplication(sys.argv)
-    ui.setQuitOnLastWindowClosed(False)
+    # ui = QApplication(sys.argv)
+    # ui.setQuitOnLastWindowClosed(False)
 
-    # final location of assests when bundeled with PyInstaller
-    if getattr(sys, "frozen", False):
-        basedir = sys._MEIPASS
-    else:
-        basedir = "../.."
+    # # Final location of assets when bundled with PyInstaller
+    # if getattr(sys, "frozen", False):
+    #     basedir = sys._MEIPASS
+    # else:
+    #     basedir = "../.."
 
-    icon = QIcon()
-    icon.addFile(os.path.join(basedir, "icons/semio_16x16.png"), QSize(16, 16))
-    icon.addFile(os.path.join(basedir, "icons/semio_32x32.png"), QSize(32, 32))
-    icon.addFile(os.path.join(basedir, "icons/semio_48x48.png"), QSize(48, 48))
-    icon.addFile(os.path.join(basedir, "icons/semio_128x128.png"), QSize(128, 128))
-    icon.addFile(os.path.join(basedir, "icons/semio_256x256.png"), QSize(256, 256))
+    # icon = QIcon()
+    # icon.addFile(os.path.join(basedir, "icons/semio_16x16.png"), QSize(16, 16))
+    # icon.addFile(os.path.join(basedir, "icons/semio_32x32.png"), QSize(32, 32))
+    # icon.addFile(os.path.join(basedir, "icons/semio_48x48.png"), QSize(48, 48))
+    # icon.addFile(os.path.join(basedir, "icons/semio_128x128.png"), QSize(128, 128))
+    # icon.addFile(os.path.join(basedir, "icons/semio_256x256.png"), QSize(256, 256))
 
-    tray = QSystemTrayIcon()
-    tray.setIcon(icon)
-    tray.setVisible(True)
+    # tray = QSystemTrayIcon()
+    # tray.setIcon(icon)
+    # tray.setVisible(True)
 
-    menu = QMenu()
-    restart = QAction("Restart")
-    restart.triggered.connect(restart_engine)
-    menu.addAction(restart)
+    # menu = QMenu()
+    # restart = QAction("Restart")
+    # restart.triggered.connect(restart_engine)
+    # menu.addAction(restart)
 
-    quit = QAction("Quit")
-    # kill engine and quit ui
-    quit.triggered.connect(lambda: ui.engine_process.terminate() or ui.quit())
-    menu.addAction(quit)
+    # quit = QAction("Quit")
+    # quit.triggered.connect(lambda: ui.engine_process.terminate() or ui.quit())
+    # menu.addAction(quit)
 
-    tray.setContextMenu(menu)
+    # tray.setContextMenu(menu)
 
-    ui.watcher_process = Process(target=watcher)
-    ui.watcher_process.start()
+    # ui.engine_process = Process(target=start_engine)
+    # ui.engine_process.start()
 
-    sys.exit(ui.exec())
+    # sys.exit(ui.exec_())

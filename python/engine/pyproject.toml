@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "semio-engine"
-version = "2.0.0"
-description = "Engine for the collaborative, scalable and cross-platform design tool: semio"
+name = "engine"
+version = "1.0.0"
+description = "Engine for the collaborative, scalable and cross-platform design tool semio."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 maintainers = ["Ueli Saluz <semio-community@posteo.org>"]
 license = "LGPL-3.0-or-later"
@@ -9,20 +9,19 @@ repository = "https://github.com/usalu/semio"
 # homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.12,<3.13"
 sqlalchemy = "^2.0.23"
 uvicorn = { extras = ["standard"], version = "^0.27.1" }
 starlette = "^0.37.1"
 graphene = "^3.3"
 graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
-setuptools = "<58.0.0"                                                    # hidden dependency of graphene-sqlalchemy because of import pkg_resources
 starlette-graphene3 = "^0.6.0"
 pydantic = "^1"
 graphene-pydantic = "^0.4.2"
-pint = "^0.23"
+pint = "^0.24.1"
 networkx = "^3.2.1"
 pytransform3d = "^3.5.0"
-pyside6 = "^6.6.2"
+# pyside6 = "^6.7.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
@@ -34,14 +33,14 @@ black = "^23.11.0"
 
 
 [tool.poetry.group.build.dependencies]
-pyinstaller = "^5"
+pyinstaller = "^6"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-server = "server:main" #doesn't work. Use instead: poetry run python server.py
+engine = "engine:main" #doesn't work. Use instead: poetry run python engine.py
 
 [tool.coverage.run]
 branch = true

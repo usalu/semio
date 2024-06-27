@@ -222,6 +222,85 @@ query LoadLocalKit($directory: String!) {
         return response;
     });
 
+    const ADD_LOCAL_FORMATION = gql`
+mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
+  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
+    formation {
+      name
+      description
+      icon
+      variant
+      unit
+      pieces {
+        id
+        type {
+          name
+          variant
+        }
+        root {
+            plane {
+              origin {
+                x
+                y
+                z
+              }
+              xAxis {
+                x
+                y
+                z
+              }
+              yAxis {
+                x
+                y
+                z
+              }
+            }
+          }
+          diagram {
+            point {
+              x
+              y
+            }
+          }
+      }
+      attractions {
+        attracting {
+          piece {
+            id
+            type {
+              port {
+                id
+              }
+            }
+          }
+        }
+        attracted {
+          piece {
+            id
+            type {
+              port {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    error {
+      code
+      message
+    }
+  }
+}
+`
+    ipcMain.handle('add-local-formation', async (event, directory, formation) => {
+        if (!directory) {
+            return;
+        }
+        const {addFormationToLocalKit} = await client.request(ADD_LOCAL_FORMATION, { directory, formation })
+        return addFormationToLocalKit;
+    });
+
     ipcMain.handle('get-file-buffer', async (event, filePath, directory=undefined) => {
         if (directory) {
             filePath = join(directory, filePath)

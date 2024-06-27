@@ -1,6 +1,6 @@
 ---
 name: semio
-version: 2.0.0
+version: 2.1.2
 authors:
 - Ueli Saluz
 description: >
@@ -10,9 +10,9 @@ icon: icon.png
 keywords:
 - procedural_modelling
 - generative_design
+- computer-aided-architectural-design 
 - graph-based_design
 - port-based_design
 - design_prototypes
 - shape_grammar
 - building_information_modelling
-- bim

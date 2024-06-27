@@ -1,1 +1,1 @@
-"C:\Program Files\Rhino 7\System\Yak.exe" push --source https://test.yak.rhino3d.com semio-1.0.0-any-win.yak
+"C:\Program Files\Rhino 7\System\Yak.exe" push --source https://test.yak.rhino3d.com semio-2.1.0-any-win.yak

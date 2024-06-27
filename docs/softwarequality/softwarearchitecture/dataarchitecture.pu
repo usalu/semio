@@ -63,17 +63,17 @@ entity Tag {
 entity Plane{
     *id : int <<PK,generated>>
     ..
-    origin_x : float
-    origin_y : float
-    origin_z : float
+    *origin_x : float
+    *origin_y : float
+    *origin_z : float
     ..
-    x_axis_x : float
-    x_axis_y : float
-    x_axis_z : float
+    *x_axis_x : float
+    *x_axis_y : float
+    *x_axis_z : float
     ..
-    y_axis_x : float
-    y_axis_y : float
-    y_axis_z : float
+    *y_axis_x : float
+    *y_axis_y : float
+    *y_axis_z : float
 }
 
 entity Port {
@@ -134,7 +134,7 @@ entity Piece{
     *formation_id : int <<FK>>
 }
 note right of Piece
-    local_id and type_id
+    local_id and formation_id
     is unique.
     root plane can only be set
     when piece is root.
@@ -163,8 +163,8 @@ note right of Formation
     variant="" means default.
 end note
 
-Kit ||--|{ Formation
-Kit ||--|{ Type 
+Kit ||--o{ Formation
+Kit ||--o{ Type 
 Tag }o--|| Representation
 Representation }|--|| Type
 Type ||--|{ Port

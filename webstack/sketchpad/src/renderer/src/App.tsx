@@ -16,7 +16,7 @@ import React, {
     useContext
 } from 'react'
 import { createPortal } from 'react-dom'
-import { KBarAnimator, KBarPortal, KBarPositioner, KBarSearch } from 'kbar'
+import { KBarAnimator, KBarPortal, KBarPositioner, KBarProvider, KBarSearch } from 'kbar'
 import { KBarResults, useMatches } from 'kbar'
 import { ActionId, ActionImpl } from 'kbar'
 import {
@@ -1275,18 +1275,20 @@ const PortSelector = ({ type, onChangePortId }: PortSelectorProps): JSX.Element 
             <Canvas>
                 <OrbitControls makeDefault />
                 <Gizmo/>
-                <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
-                {ports.map((port) => (
-                    <PortThree
-                        key={port.id}
-                        port={port}
-                        selected={selectedPortId === port.id}
-                        onSelect={(portId, event) => {
-                            setSelectedPortId(portId)
-                            onChangePortId(portId)
-                        }}
-                    />
-                ))}
+                <Stage center={{disable:true}} environment={null}>
+                    <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
+                    {ports.map((port) => (
+                        <PortThree
+                            key={port.id}
+                            port={port}
+                            selected={selectedPortId === port.id}
+                            onSelect={(portId, event) => {
+                                setSelectedPortId(portId)
+                                onChangePortId(portId)
+                            }}
+                        />
+                    ))}
+                </Stage>
             </Canvas>
         </div>
     )
@@ -1312,8 +1314,9 @@ const AttractionPreview = ({ attractingType, attractedType, attraction }: Attrac
             <Canvas>
                 <OrbitControls makeDefault />
                 <Gizmo/>
+                <Stage center={{disable:true}} environment={null}>
                 { attraction ?
-                <group>
+                    <group>
                     { attractingPort ?
                         <RepresentationThree
                             id='attracting'
@@ -1325,7 +1328,9 @@ const AttractionPreview = ({ attractingType, attractedType, attraction }: Attrac
                                 representation={attractedType.representations.find((r) => r.url.endsWith('.glb'))}
                                 plane = {attractedPlane}
                             /> : null }
-                </group> : null}
+                    </group>
+                 : null}
+                 </Stage>
             </Canvas>
         </div>
     )
@@ -1345,8 +1350,6 @@ const AttractionBuilder = ({ attractingType, attractedType, onAttractionChange }
         attracting: {
             piece: {
                 type: {
-                    name: attractingType.name,
-                    variant: attractingType.variant ?? '',
                     port: {
                         id: attractingPortId
                     }
@@ -1356,8 +1359,6 @@ const AttractionBuilder = ({ attractingType, attractedType, onAttractionChange }
         attracted: {
             piece: {
                 type: {
-                    name: attractedType.name,
-                    variant: attractedType.variant ?? '',
                     port: {
                         id: attractedPortId
                     }
@@ -1439,8 +1440,8 @@ const transformPieceToNode = (piece: Piece | PieceInput): IPieceNode => {
         id: piece.id,
         title: '',
         type: 'piece',
-        x: piece.diagram.point.x,
-        y: piece.diagram.point.y,
+        x: Math.round(piece.diagram.point.x),
+        y: Math.round(piece.diagram.point.y),
         piece
     }
 }
@@ -1501,8 +1502,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     const formationView = useSelector((state: RootState) =>
         selectFormationView(state, formationViewId)
     )
-
     if (!formationView) return null
+    const formationRef = useRef(formationView.formation)
+    useEffect(() => {
+        formationRef.current = formationView.formation;
+    }, [formationView.formation])
+
 
     const graph = useMemo(() => transformFormationToGraph(formationView.formation), [formationView.formation])
     const nodes = graph.nodes
@@ -1544,9 +1549,9 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             updateFormation({
                 id: formationView.id,
                 formation: {
-                    ...formationView.formation,
+                    ...formationRef.current,
                     attractions: [
-                        ...formationView.formation.attractions,
+                        ...formationRef.current.attractions,
                         {
                             ...attraction,
                             attracting: {
@@ -1627,14 +1632,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             updateFormation({
                 id: formationView.id,
                 formation: {
-                    ...formationView.formation,
+                    ...formationRef.current,
                     pieces: [
-                        ...formationView.formation.pieces,
+                        ...formationRef.current.pieces,
                         {
                             id: Generator.generateRandomId(x + y),
                             type: event.piece.type,
                             diagram: {
-                                point: { x, y }
+                                point: { x:Math.round(x), y:Math.round(y) }
                             }
                         } as PieceInput
                     ]
@@ -1648,21 +1653,21 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         updatedNodes?: Map<string, INode> | null,
         updatedNodePosition?: IPoint
     ): void | Promise<any> => {
-        const piece = formationView.formation.pieces.find((p) => p.id === node.id)
+        const piece = formationRef.current.pieces.find((p) => p.id === node.id)
         if (piece) {
             dispatch(
                 updateFormation({
                     id: formationView.id,
                     formation: {
-                        ...formationView.formation,
-                        pieces: formationView.formation.pieces.map((p) =>
+                        ...formationRef.current,
+                        pieces: formationRef.current.pieces.map((p) =>
                             p.id === node.id
                                 ? {
                                       ...p,
                                       diagram: {
                                           point: {
-                                              x: updatedNodePosition?.x ?? node.x,
-                                              y: updatedNodePosition?.y ?? node.y
+                                              x: Math.round(updatedNodePosition?.x ?? node.x),
+                                              y: Math.round(updatedNodePosition?.y ?? node.y)
                                           }
                                       }
                                   }
@@ -1690,11 +1695,11 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             updateFormation({
                 id: formationView.id,
                 formation: {
-                    ...formationView.formation,
-                    pieces: formationView.formation.pieces.filter(
+                    ...formationRef.current,
+                    pieces: formationRef.current.pieces.filter(
                         (piece) => !selected.nodes?.has(piece.id)
                     ),
-                    attractions: formationView.formation.attractions.filter(
+                    attractions: formationRef.current.attractions.filter(
                         (attraction) =>
                             !selected.edges?.has(
                                 `${attraction.attracting.piece.id}_${attraction.attracted.piece.id}`
@@ -1717,8 +1722,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     ...node.piece,
                     diagram: {
                         point: {
-                            x: node.x - leftestNode.x,
-                            y: node.y - toppestNode.y
+                            x: Math.round(node.x - leftestNode.x),
+                            y: Math.round(node.y - toppestNode.y)
                         }
                     }
                 })),
@@ -1739,8 +1744,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const oldPieceToNewPiece = new Map<string, string>()
             const placedFormationSnippet = {
                 pieces: formationSnippet.pieces.map((piece) => {
-                    const x = xyCoords?.x + piece.diagram.point.x
-                    const y = xyCoords?.y + piece.diagram.point.y
+                    const x = Math.round(xyCoords?.x + piece.diagram.point.x)
+                    const y = Math.round(xyCoords?.y + piece.diagram.point.y)
                     const id = Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
                     oldPieceToNewPiece.set(piece.id, id)
                     return {
@@ -1778,13 +1783,13 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 updateFormation({
                     id: formationView.id,
                     formation: {
-                        ...formationView.formation,
+                        ...formationRef.current,
                         pieces: [
-                            ...formationView.formation.pieces,
+                            ...formationRef.current.pieces,
                             ...placedFormationSnippet.pieces
                         ],
                         attractions: [
-                            ...formationView.formation.attractions,
+                            ...formationRef.current.attractions,
                             ...placedFormationSnippet.attractions
                         ]
                     } as FormationInput
@@ -1858,8 +1863,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
             const idMap = new Map<string, string>()
             const newFormationPieces = formationSnippet.pieces.map((piece) => {
-                const x = svgX + piece.diagram.point.x
-                const y = svgY + piece.diagram.point.y
+                const x = Math.round(svgX + piece.diagram.point.x)
+                const y = Math.round(svgY + piece.diagram.point.y)
                 const id = Generator.generateRandomId()
                 idMap.set(piece.id, id)
                 return {
@@ -1894,9 +1899,9 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 updateFormation({
                     id: formationView.id,
                     formation: {
-                        ...formationView.formation,
-                        pieces: [...formationView.formation.pieces, ...newFormationPieces],
-                        attractions: [...formationView.formation.attractions, ...newFormationAttractions]
+                        ...formationRef.current,
+                        pieces: [...formationRef.current.pieces, ...newFormationPieces],
+                        attractions: [...formationRef.current.attractions, ...newFormationAttractions]
                     }
                 })
             )
@@ -2190,9 +2195,9 @@ const ShapeEditor = ({}: ShapeEditorProps) => {
                 onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [],[]))}
             >
                 <Suspense fallback={null}>
-                    {/* <Stage contactShadow={{ opacity: 1, blur: 2 }}>
-                    </Stage> */}
-                    <FormationThree transformationMode={transformationMode} />
+                    <Stage center={{disable:true}} environment={null}>
+                        <FormationThree transformationMode={transformationMode} />
+                    </Stage>
                     {/* <ambientLight color={colors.light} intensity={1} /> */}
                 </Suspense>
                 <OrbitControls makeDefault />
@@ -2483,6 +2488,11 @@ interface FormationWindowProps {
 
 const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.Element => {
     const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    const formationRef = useRef(formationView.formation)
+    useEffect(() => {
+        formationRef.current = formationView.formation;
+    }, [formationView.formation])
+
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
     const formations = useSelector((state: RootState) => selectFormations(state, kitDirectory))
@@ -2578,8 +2588,52 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
         return <div>Formation not found</div>
     }
 
+    const actions = [
+        // {
+        //     id: 'reload-kit',
+        //     name: 'Reload Kit',
+        //     shortcut: ['$mod+r'],
+        //     keywords: 'update',
+        //     section: 'Files',
+        //     perform: () => {
+        //     }
+        // },
+        {
+            id: 'save',
+            name: 'Save',
+            shortcut: ['$mod+s'],
+            keywords: 'store',
+            section: 'Files',
+            perform: () => {
+                // TODO: Inject method and remove direct ipcRenderer call
+                window.electron.ipcRenderer.invoke('add-local-formation', kitDirectory,formationRef.current).then((result) => {
+                    const {formation, error} = result
+                    if (error) {
+                        message.error(error.code)
+                    } else {
+                        message.success('Formation saved')
+                    }
+                })
+                
+            }
+        },
+        // {
+        //     id: 'zoom-to-fit',
+        //     name: 'Zoom to Fit',
+        //     shortcut: ['$mod+t'],
+        //     keywords: 'formation',
+        //     section: 'Navigation',
+        //     perform: () => {
+        //         if (diagramEditorRef.current) {
+        //             diagramEditorRef.current.zoomToFit()
+        //         }
+        //     }
+        // }
+    ]
+
     return (
-        <>
+        <KBarProvider actions={actions}>
+            <CommandBar />
             <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
                 <Col className="flex items-center">
                     {/* TODO: Add icons for main menu and tools */}
@@ -2850,7 +2904,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                         </div>
                     </div>
                 </Footer> */}
-        </>
+        </KBarProvider >
     )
 }
 
@@ -3055,89 +3109,9 @@ const App = ({
     const [openTabs, setOpenTabs] = useState([])
     const [activeTab, setActiveTab] = useState('home')
 
-    // const actions = [
-    //     {
-    //         id: 'open-kit',
-    //         name: 'Open Kit',
-    //         shortcut: ['$mod+o'],
-    //         keywords: 'new',
-    //         section: 'Files',
-    //         perform: () => {
-    //             onOpenKit('').then((kit) => {
-    //                 // TODO: Set kit over redux
-    //                 // setKit(kit)
-    //             })
-    //         }
-    //     },
-    //     {
-    //         id: 'reload-kit',
-    //         name: 'Reload Kit',
-    //         shortcut: ['$mod+r'],
-    //         keywords: 'update',
-    //         section: 'Files',
-    //         perform: () => {
-    //             onReloadKit().then((kit) => {
-    //                 // TODO: Set kit over redux
-    //                 // setKit(kit)
-    //             })
-    //         }
-    //     },
-    //     {
-    //         id: 'open-draft',
-    //         name: 'Open Draft',
-    //         shortcut: ['$mod+Shift+o'],
-    //         keywords: 'load session',
-    //         section: 'Files',
-    //         perform: () => {
-    //             onOpenDraft('').then((draftJson) => {
-    //                 diagramEditorRef.current.setDraft(JSON.parse(draftJson))
-    //             })
-    //         }
-    //     },
-    //     {
-    //         id: 'save-draft',
-    //         name: 'Save draft',
-    //         shortcut: ['$mod+s'],
-    //         keywords: 'store session',
-    //         section: 'Files',
-    //         perform: () => {
-    //             onSaveDraft(diagramEditorRef.current.getDraft()).then((url) => {
-    //                 console.log('Draft saved under: ', url)
-    //             })
-    //         }
-    //     },
-    //     {
-    //         id: 'zoom-to-fit',
-    //         name: 'Zoom to Fit',
-    //         shortcut: ['$mod+t'],
-    //         keywords: 'formation',
-    //         section: 'Navigation',
-    //         perform: () => {
-    //             if (diagramEditorRef.current) {
-    //                 diagramEditorRef.current.zoomToFit()
-    //             }
-    //         }
-    //     }
-    // ]
-
-    // useEffect(() => {
-    //     if (kit) {
-    //         ;[
-    //             'c:\\git\\semio\\2.x\\examples\\metabolism\\representations\\capsule_1_1to200_volume_wireframe.glb'
-    //         ].forEach((path) => {
-    //             window.electron.ipcRenderer.invoke('get-file-buffer', path).then((buffer) => {
-    //                 const name = 'representations/capsule_1_1to200_volume_wireframe.glb'
-    //                 const blob = new Blob([buffer], { type: 'model/gltf-binary' })
-    //                 const url = URL.createObjectURL(blob)
-    //                 useGLTF.preload(url)
-    //                 setBlobUrls((prev) => ({ ...prev, [name]: url }))
-    //             })
-    //         })
-    //     }
-    // }, [kit])
-
     return (
         <div className="h-screen w-screen">
+
             <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                 <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
                     <Header style={{ height: 'auto' }}>
@@ -3183,13 +3157,13 @@ const App = ({
                                                 label:
                                                     view.kind === ViewKind.Type
                                                         ? view.type.name +
-                                                          (view.type.variant
-                                                              ? ` (${view.type.variant})`
-                                                              : '')
+                                                        (view.type.variant
+                                                            ? ` (${view.type.variant})`
+                                                            : '')
                                                         : view.formation.name +
-                                                          (view.formation.variant
-                                                              ? ` (${view.formation.variant})`
-                                                              : '')
+                                                        (view.formation.variant
+                                                            ? ` (${view.formation.variant})`
+                                                            : '')
                                             }
                                         return {
                                             key: tab,

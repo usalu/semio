@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using GH_IO.Serialization;
@@ -2877,7 +2879,32 @@ public class RandomIdsComponent : SemioComponent
 
 #region Loading/Saving
 
-public class LoadKitComponent : SemioComponent
+public abstract class EngineComponent : SemioComponent
+{
+    protected EngineComponent(string name, string nickname, string description, string category, string subcategory)
+        : base(name, nickname, description, category, subcategory)
+    {
+    }
+
+    protected override void BeforeSolveInstance()
+    {
+        base.BeforeSolveInstance();
+        Process[] processes = Process.GetProcessesByName("semio-engine");
+        if (processes.Length == 0){
+            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "semio-engine.exe");
+            var engine = Process.Start(path);
+            // lightweight way to kill child process when parent process is killed
+            // https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed#4657392
+            AppDomain.CurrentDomain.DomainUnload += (s, e) => { engine.Kill(); engine.WaitForExit(); };
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => { engine.Kill(); engine.WaitForExit(); };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => { engine.Kill(); engine.WaitForExit(); };
+        }
+            
+
+    }    
+}
+
+public class LoadKitComponent : EngineComponent
 {
     public LoadKitComponent()
         : base("Load Kit", "/Kit",
@@ -2953,7 +2980,7 @@ public class LoadKitComponent : SemioComponent
     }
 }
 
-public class CreateKitComponent : SemioComponent
+public class CreateKitComponent : EngineComponent
 {
     public CreateKitComponent()
         : base("Create Kit", "+Kit",
@@ -3050,7 +3077,7 @@ public class CreateKitComponent : SemioComponent
     }
 }
 
-public class DeleteKitComponent : SemioComponent
+public class DeleteKitComponent : EngineComponent
 {
     public DeleteKitComponent()
         : base("Delete Kit", "-Kit",
@@ -3115,7 +3142,7 @@ public class DeleteKitComponent : SemioComponent
 
 #region Adding
 
-public class AddTypeComponent : SemioComponent
+public class AddTypeComponent : EngineComponent
 {
     public AddTypeComponent()
         : base("Add Type", "+Typ",
@@ -3183,7 +3210,7 @@ public class AddTypeComponent : SemioComponent
     }
 }
 
-public class AddFormationComponent : SemioComponent
+public class AddFormationComponent : EngineComponent
 {
     public AddFormationComponent()
         : base("Add Formation", "+For",
@@ -3256,7 +3283,7 @@ public class AddFormationComponent : SemioComponent
 
 #region Removing
 
-public class RemoveTypeComponent : SemioComponent
+public class RemoveTypeComponent : EngineComponent
 {
     public RemoveTypeComponent()
         : base("Remove Type", "-Typ",
@@ -3334,7 +3361,7 @@ public class RemoveTypeComponent : SemioComponent
     }
 }
 
-public class RemoveFormationComponent : SemioComponent
+public class RemoveFormationComponent : EngineComponent
 {
     public RemoveFormationComponent()
         : base("Remove Formation", "-For",
