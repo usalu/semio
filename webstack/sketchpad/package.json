@@ -1,7 +1,7 @@
 {
   "name": "semio-sketchpad",
-  "version": "2.0.0",
-  "description": "A sketchpad to design.",
+  "version": "1.0.0",
+  "description": "A sketchpad to design with semio.",
   "main": "./out/main/index.js",
   "author": "Ueli Saluz",
   "homepage": "https://github.com/usalu/semio",

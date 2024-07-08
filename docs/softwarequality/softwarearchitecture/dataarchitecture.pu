@@ -60,31 +60,22 @@ entity Tag {
     *representation_id : int <<PK,FK>>
 }
 
-entity Plane{
-    *id : int <<PK,generated>>
-    ..
-    *origin_x : float
-    *origin_y : float
-    *origin_z : float
-    ..
-    *x_axis_x : float
-    *x_axis_y : float
-    *x_axis_z : float
-    ..
-    *y_axis_x : float
-    *y_axis_y : float
-    *y_axis_z : float
-}
-
 entity Port {
     *id : int <<PK,generated>>
     ..
     *local_id : string
-    *plane_id : int <<FK>>
+    ..
+    *plane_origin_x : float
+    *plane_origin_y : float
+    *plane_origin_z : float
+    ..
+    *plane_normal_x : float
+    *plane_normal_y : float
+    *plane_normal_z : float
     ..
     *type_id : int <<FK>>
 }
-note top of Port
+note right of Port
     local_id and type_id
     is unique.
     local_id="" means default.
@@ -96,6 +87,7 @@ entity Quality {
     *name : string
     *value : string
     *unit : string
+    *definition : string
     ..
     type_id : int <<FK>>
     formation_id : int <<FK>>
@@ -106,6 +98,8 @@ note bottom of Quality
     value="" means true.
     unit is optional
     (can be set to "").
+    definition is optional.
+    (can be set to "").
 end note
 
 
@@ -115,7 +109,7 @@ entity Locator {
     ..
     *port_id : int <<PK,FK>>
 }
-note bottom of Locator
+note right of Locator
     subgroup is optional
     (can be set to "").
 end note
@@ -126,10 +120,22 @@ entity Piece{
     *local_id: string
     *type_id : int <<FK>>
     ..
-    root_plane_id : int <<FK>>
+    is_root : bool
     ..
-    *diagram_point_x : float
-    *diagram_point_y : float
+    root_plane_origin_x : float
+    root_plane_origin_y : float
+    root_plane_origin_z : float
+    ..
+    root_plane_x_axis_x : float
+    root_plane_x_axis_y : float
+    root_plane_x_axis_z : float
+    ..
+    root_plane_y_axis_x : float
+    root_plane_y_axis_y : float
+    root_plane_y_axis_z : float
+    ..
+    *diagram_point_x : int
+    *diagram_point_y : int
     ..
     *formation_id : int <<FK>>
 }
@@ -138,17 +144,31 @@ note right of Piece
     is unique.
     root plane can only be set
     when piece is root.
+    Otherwise all values 0.
 end note
 
-entity Attraction {
-    *attracting_piece_id : int <<PK,FK>>
-    *attracting_piece_type_port_id : int <<FK>>
+entity Connection {
+    *connecting_piece_id : int <<PK,FK>>
+    *connecting_piece_type_port_id : int <<FK>>
     ..
-    *attracted_piece_id : int <<PK,FK>>
-    *attracted_piece_type_port_id : int <<FK>>
+    *connected_piece_id : int <<PK,FK>>
+    *connected_piece_type_port_id : int <<FK>>
+    ..
+    *offset : float
+    *rotation : float
     ..
     *formation_id : int <<FK>>
 }
+note right of Connection
+    offset is in normal 
+    direction and optional
+    (can be set to 0).
+    rotation is azimuthal
+    angle of normal in
+    degree [0,360[
+    and optional
+    (can be set to 0). 
+end note
 
 entity Formation {
     *id : int <<PK,generated>>
@@ -170,14 +190,12 @@ Representation }|--|| Type
 Type ||--|{ Port
 Type ||--o{ Quality
 Formation ||--|{ Piece
-Formation ||--o{ Attraction
+Formation ||--o{ Connection
 Formation ||--o{ Quality
-Port ||--|| Plane
 Port ||--o{  Locator
-Piece ||--o| Plane
 Type <-- Piece
-Piece <-- Attraction
-Port <-- Attraction
+Piece <-- Connection
+Port <-- Connection
 
 Artifact <|-- Kit
 Artifact <|-- Formation
