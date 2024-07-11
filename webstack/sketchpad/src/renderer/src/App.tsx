@@ -686,10 +686,17 @@ const sketchpadTheme = {
         colorPrimaryTextHover: colors.light,
         colorPrimaryTextActive: colors.light,
         // text
+        colorTextBase: colors.light,
         colorText: colors.light, // e.g. title of collapse, leaf of breadcrumb
         colorTextSecondary: colors.lightGrey,
         colorTextTertiary: colors.lightGrey, // e.g. x on close button of tab
         colorTextQuaternary: colors.lightGrey, // e.g. placeholder text
+        colorTextDescription: colors.light,
+        colorTextHeading: colors.light,
+        colorTextLabel: colors.light,
+        colorTextLightSolid: colors.light,
+        colorTextPlaceholder: colors.light,
+        colorTextDisabled: colors.light,
         // border
         colorBorder: colors.light,
         colorBorderSecondary: colors.light,
@@ -730,21 +737,24 @@ const sketchpadTheme = {
             defaultActiveBg: colors.light,
             defaultActiveBorderColor: colors.light,
             defaultActiveColor: colors.light,
-            defaultBg: colors.light,
+            defaultBg: colors.grey, // e.g. background of window control buttons
             defaultBorderColor: colors.light,
             defaultColor: colors.lightGrey, // e.g. normal state of buttons
             defaultGhostBorderColor: colors.light,
             defaultGhostColor: colors.light,
-            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons
+            defaultHoverBg: colors.darkGrey, // e.g. hover over window control buttons,
+            defaultHoverBorderColor: colors.light,
+            defaultHoverColor: colors.light,
             ghostBg: colors.light,
+            groupBorderColor: colors.light,
             linkHoverBg: colors.light,
             primaryColor: colors.light,
-            textHoverBg: colors.light
+            textHoverBg: colors.light,
         },
         FloatButton: {
         },
         Layout: {
-            bodyBg: colors.dark,
+            bodyBg: colors.dark, //
             footerBg: colors.grey, //
             headerBg: colors.grey, // e.g. space between tabs and content
             headerColor: colors.light,
@@ -782,12 +792,12 @@ const sketchpadTheme = {
             contentPadding: '0 0px'
         },
         Select: {
-            clearBg: colors.lightGrey,
-            multipleItemBg: colors.darkGrey,
-            optionActiveBg: colors.darkGrey,
-            optionSelectedBg: colors.darkGrey,
+            clearBg: colors.lightGrey, //
+            multipleItemBg: colors.darkGrey, //
+            optionActiveBg: colors.darkGrey, //
+            optionSelectedBg: colors.darkGrey, //
             optionSelectedColor: colors.light,
-            selectorBg: colors.darkGrey
+            selectorBg: colors.darkGrey //
         },
         Form: {
             labelColor: colors.lightGrey, // e.g. text of label
@@ -802,7 +812,7 @@ const sketchpadTheme = {
             buttonSolidCheckedActiveBg: colors.light,
             buttonSolidCheckedColor: colors.light,
             buttonSolidCheckedHoverBg: colors.light,
-            dotColorDisabled: colors.light
+            dotColorDisabled: colors.light,
         },
         Tooltip: {},
     }

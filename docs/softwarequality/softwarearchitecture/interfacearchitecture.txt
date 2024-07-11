@@ -22,18 +22,13 @@ kit : !Kit{
                     y : !Float
                     z : !Float
                 }
-                xAxis : !{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-                yAxis : !{
+                normal : !{
                     x : !Float
                     y : !Float
                     z : !Float
                 }
             }
-            locators : +[
+            locators : *[
                 group : !String
                 subgroup : !String
             ]
@@ -63,12 +58,12 @@ kit : !Kit{
                         y : !Float
                         z : !Float
                     }
-                    xAxis : !{
+                    x_axis : !{
                         x : !Float
                         y : !Float
                         z : !Float
                     }
-                    yAxis : !{
+                    y_axis : !{
                         x : !Float
                         y : !Float
                         z : !Float
@@ -76,36 +71,35 @@ kit : !Kit{
                 }
             }
             diagram : ?{
-
+                point :  !{
+                    x : !Integer
+                    y : !Integer
+                }
             }
         ]
-        attractions : +[
-            attracting : !{
+        connections : +[
+            connected : !{
                 piece : !{
                     id : !String
                     type : !{
                         port : !{
-                            locators : +[
-                                group : !String
-                                subgroup : !String
-                            ]
+                            id : !String
                         }
                     }
                 }
             }
-            attracted : !{
+            connecting : !{
                 piece : !{
                     id : !String
                     type : !{
                         port : !{
-                            locators : +[
-                                group : !String
-                                subgroup : !String
-                            ]
+                            id : !String
                         }
                     }
                 }
             }
+            rotation : ?Float
+            offset : ?Float
         ]
         qualities : *[
             name : !String
