@@ -1,0 +1,204 @@
+@startuml "data architecture"
+skinparam linetype ortho
+
+interface Artifact {
+    *name : string
+    *description : string
+    *icon : string
+    ..
+    *createdAt : datetime
+    *lastUpdatedAt : datetime
+}
+note left of Artifact
+    description is optional
+    (can be set to "").
+    icon is optional
+    (can be set to "").
+    icon in data:uri format.
+end note
+
+entity Kit {
+    *id : int <<PK,generated>> 
+    ..
+    *url : string
+    *homePage : string
+}
+note left of Kit
+    url is unique.
+    url is optional
+    (can be set to "").
+    homePage is optional
+    (can be set to "").
+end note
+
+entity Type {
+    *id : int <<PK,generated>>
+    ..
+    *variant : string
+    *unit : string
+    ..
+    *kitId : int <<FK>>
+}
+note right of Type
+    name and variant is unique.
+    variant="" means default.
+end note
+
+entity Representation {
+    *id : int <<PK,generated>>
+    ..
+    *url : string
+    *lod : string
+    ..
+    *typeId : int <<FK>>
+}
+note right of Representation
+    url is unique.
+    lod="" means default.
+end note
+
+entity Tag {
+    *value : string <<PK>>
+    ..
+    *representationId : int <<PK,FK>>
+}
+
+entity Port {
+    *id : int <<PK,generated>>
+    ..
+    *localId : string
+    ..
+    *pointX : float
+    *pointY : float
+    *pointZ : float
+    ..
+    *directionX : float
+    *directionY : float
+    *directionZ : float
+    ..
+    *typeId : int <<FK>>
+}
+note right of Port
+    localId and typeId
+    is unique.
+    localId="" means default.
+end note
+
+entity Quality {
+    *id : int <<PK,generated>>
+    ..
+    *name : string
+    *value : string
+    *unit : string
+    *definition : string
+    ..
+    typeId : int <<FK>>
+    formationId : int <<FK>>
+}
+note bottom of Quality
+    Either typeId or formationId
+    must be set.
+    value="" means true.
+    unit is optional
+    (can be set to "").
+    definition is optional.
+    (can be set to "").
+end note
+
+entity Locator {
+    *group : string <<PK>>
+    *subgroup : string
+    ..
+    *portId : int <<PK,FK>>
+}
+note right of Locator
+    subgroup is optional
+    (can be set to "").
+end note
+
+entity Piece {
+    *id : int <<PK,generated>>
+    ..
+    *localId : string
+    *typeId : int <<FK>>
+    ..
+    rootPlaneOriginX : float
+    rootPlaneOriginY : float
+    rootPlaneOriginZ : float
+    ..
+    rootPlaneXAxisX : float
+    rootPlaneXAxisY : float
+    rootPlaneXAxisZ : float
+    ..
+    rootPlaneYAxisX : float
+    rootPlaneYAxisY : float
+    rootPlaneYAxisZ : float
+    ..
+    *diagramPointX : int
+    *diagramPointY : int
+    ..
+    *formationId : int <<FK>>
+}
+note right of Piece
+    localId and formationId
+    is unique.
+    root plane can only be set
+    when piece is root.
+    Otherwise all values are null.
+end note
+
+entity Connection {
+    *connectingPieceId : int <<PK,FK>>
+    *connectingPieceTypePortId : int <<FK>>
+    ..
+    *connectedPieceId : int <<PK,FK>>
+    *connectedPieceTypePortId : int <<FK>>
+    ..
+    *offset : float
+    *rotation : float
+    ..
+    *formationId : int <<FK>>
+}
+note right of Connection
+    offset is in normal 
+    direction and optional
+    (can be set to 0).
+    rotation is azimuthal
+    angle of normal in
+    degree [0,360[
+    and optional
+    (can be set to 0). 
+end note
+
+entity Formation {
+    *id : int <<PK,generated>>
+    ..
+    *variant : string
+    *unit : string
+    ..
+    *kitId : int <<FK>>
+}
+note right of Formation
+    name and variant is unique.
+    variant="" means default.
+end note
+
+Kit ||--o{ Formation
+Kit ||--o{ Type 
+Tag }o--|| Representation
+Representation }|--|| Type
+Type ||--|{ Port
+Type ||--o{ Quality
+Formation ||--|{ Piece
+Formation ||--o{ Connection
+Formation ||--o{ Quality
+Port ||--o{ Locator
+Type <-- Piece
+Piece <-- Connection
+Port <-- Connection
+
+Artifact <|-- Kit
+Artifact <|-- Formation
+Artifact <|-- Type
+
+@enduml

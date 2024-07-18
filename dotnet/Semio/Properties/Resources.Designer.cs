@@ -78,8 +78,8 @@ namespace Semio.Properties {
         ///          }
         ///        }
         ///      }
-        ///      attractions {
-        ///        attracting {
+        ///      connections {
+        ///        connecting {
         ///          piece {
         ///            id
         ///            type {

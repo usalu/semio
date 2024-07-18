@@ -11,6 +11,7 @@ using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino;
+using Rhino.Collections;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
 
@@ -253,11 +254,13 @@ namespace Semio.Grasshopper;
 //    public Port()
 //    {
 //        Id = "";
-//        Plane = new Plane();
+//        Point = new Point();
+//        Direction = new Vector();
 //        Locators = new List<Locator>();
 //    }
 //    public string Id { get; set; }
-//    public Plane Plane { get; set; }
+//    public Point Point { get; set; }
+//    public Vector Direction { get; set; }
 //    public List<Locator> Locators { get; set; }
 
 //    public Port DeepClone()
@@ -265,7 +268,8 @@ namespace Semio.Grasshopper;
 //        return new Port
 //        {
 //            Id = Id,
-//            Plane = Plane.DeepClone(),
+//            Point = Point.DeepClone(),
+//            Direction = Direction.DeepClone(),
 //            Locators = new List<Locator>(Locators.Select(s => s.DeepClone()))
 //        };
 //    }
@@ -277,7 +281,7 @@ namespace Semio.Grasshopper;
 
 //    public bool IsInvalid()
 //    {
-//        return Id == "" || Plane.IsInvalid() || Locators.Any(s => s.IsInvalid());
+//        return Id == "" || Point.IsInvalid() || Direction.IsInvalid() || Locators.Any(s => s.IsInvalid());
 //    }
 //}
 
@@ -317,11 +321,13 @@ namespace Semio.Grasshopper;
 //        Name = "";
 //        Value = "";
 //        Unit = "";
+//        Definition = "";
 //    }
 
 //    public string Name { get; set; }
 //    public string Value { get; set; }
 //    public string Unit { get; set; }
+//    public string Definition { get; set; }
 
 //    public Quality DeepClone()
 //    {
@@ -329,7 +335,8 @@ namespace Semio.Grasshopper;
 //        {
 //            Name = Name,
 //            Value = Value,
-//            Unit = Unit
+//            Unit = Unit,
+//            Definition = Definition
 //        };
 //    }
 
@@ -425,18 +432,18 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class RootPiece : IDeepCloneable<RootPiece>, IEntity
+//public class PieceRoot : IDeepCloneable<PieceRoot>, IEntity
 //{
-//    public RootPiece()
+//    public PieceRoot()
 //    {
 //        Plane = new Plane();
 //    }
 
 //    public Plane Plane { get; set; }
 
-//    public RootPiece DeepClone()
+//    public PieceRoot DeepClone()
 //    {
-//        return new RootPiece
+//        return new PieceRoot
 //        {
 //            Plane = Plane.DeepClone()
 //        };
@@ -453,18 +460,18 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class DiagramPiece : IDeepCloneable<DiagramPiece>, IEntity
+//public class PieceDiagram : IDeepCloneable<PieceDiagram>, IEntity
 //{
-//    public DiagramPiece()
+//    public PieceDiagram()
 //    {
 //        Point = new ScreenPoint();
 //    }
 
 //    public ScreenPoint Point { get; set; }
 
-//    public DiagramPiece DeepClone()
+//    public PieceDiagram DeepClone()
 //    {
-//        return new DiagramPiece
+//        return new PieceDiagram
 //        {
 //            Point = Point.DeepClone()
 //        };
@@ -488,13 +495,13 @@ namespace Semio.Grasshopper;
 //        Id = "";
 //        Type = new TypeId();
 //        Root = null;
-//        Diagram = new DiagramPiece();
+//        Diagram = new PieceDiagram();
 //    }
 
 //    public string Id { get; set; }
 //    public TypeId Type { get; set; }
-//    public RootPiece? Root { get; set; }
-//    public DiagramPiece Diagram { get; set; }
+//    public PieceRoot? Root { get; set; }
+//    public PieceDiagram Diagram { get; set; }
 
 //    public Piece DeepClone()
 //    {
@@ -546,18 +553,18 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class TypePieceSide : IDeepCloneable<TypePieceSide>, IEntity
+//public class SidePieceType : IDeepCloneable<SidePieceType>, IEntity
 //{
-//    public TypePieceSide()
+//    public SidePieceType()
 //    {
 //        Port = new PortId();
 //    }
 
 //    public PortId Port { get; set; }
 
-//    public TypePieceSide DeepClone()
+//    public SidePieceType DeepClone()
 //    {
-//        return new TypePieceSide
+//        return new SidePieceType
 //        {
 //            Port = Port.DeepClone()
 //        };
@@ -574,20 +581,20 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class PieceSide : IDeepCloneable<PieceSide>, IEntity
+//public class SidePiece : IDeepCloneable<SidePiece>, IEntity
 //{
-//    public PieceSide()
+//    public SidePiece()
 //    {
 //        Id = "";
-//        Type = new TypePieceSide();
+//        Type = new SidePieceType();
 //    }
 
 //    public string Id { get; set; }
-//    public TypePieceSide Type { get; set; }
+//    public SidePieceType Type { get; set; }
 
-//    public PieceSide DeepClone()
+//    public SidePiece DeepClone()
 //    {
-//        return new PieceSide
+//        return new SidePiece
 //        {
 //            Id = Id,
 //            Type = Type.DeepClone()
@@ -609,10 +616,10 @@ namespace Semio.Grasshopper;
 //{
 //    public Side()
 //    {
-//        Piece = new PieceSide();
+//        Piece = new SidePiece();
 //    }
 
-//    public PieceSide Piece { get; set; }
+//    public SidePiece Piece { get; set; }
 
 //    public Side DeepClone()
 //    {
@@ -634,34 +641,34 @@ namespace Semio.Grasshopper;
 //}
 
 
-//public class Attraction : IDeepCloneable<Attraction>, IEntity
+//public class Connection : IDeepCloneable<Connection>, IEntity
 //{
-//    public Attraction()
+//    public Connection()
 //    {
-//        Attracting = new Side();
-//        Attracted = new Side();
+//        Connecting = new Side();
+//        Connected = new Side();
 //    }
 
-//    public Side Attracting { get; set; }
-//    public Side Attracted { get; set; }
+//    public Side Connecting { get; set; }
+//    public Side Connected { get; set; }
 
-//    public Attraction DeepClone()
+//    public Connection DeepClone()
 //    {
-//        return new Attraction
+//        return new Connection
 //        {
-//            Attracting = Attracting.DeepClone(),
-//            Attracted = Attracted.DeepClone()
+//            Connecting = Connecting.DeepClone(),
+//            Connected = Connected.DeepClone()
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Attraction(Attracting({Attracting}),Attracted({Attracted}))";
+//        return $"Connection(Connecting({Connecting}),Connected({Connected}))";
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Attracting.IsInvalid() || Attracted.IsInvalid() || Attracting.Piece.Id == Attracted.Piece.Id;
+//        return Connecting.IsInvalid() || Connected.IsInvalid() || Connecting.Piece.Id == Connected.Piece.Id;
 //    }
 //}
 
@@ -675,7 +682,7 @@ namespace Semio.Grasshopper;
 //        Variant = "";
 //        Unit = "";
 //        Pieces = new List<Piece>();
-//        Attractions = new List<Attraction>();
+//        Connections = new List<Connection>();
 //        Qualities = new List<Quality>();
 //    }
 
@@ -685,7 +692,7 @@ namespace Semio.Grasshopper;
 //    public string Variant { get; set; }
 //    public string Unit { get; set; }
 //    public List<Piece> Pieces { get; set; }
-//    public List<Attraction> Attractions { get; set; }
+//    public List<Connection> Connections { get; set; }
 //    public List<Quality> Qualities { get; set; }
 
 //    public Formation DeepClone()
@@ -698,7 +705,7 @@ namespace Semio.Grasshopper;
 //            Variant = Variant,
 //            Unit = Unit,
 //            Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
-//            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone())),
+//            Connections = new List<Connection>(Connections.Select(a => a.DeepClone())),
 //            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
 //        };
 //    }
@@ -710,7 +717,7 @@ namespace Semio.Grasshopper;
 
 //    public bool IsInvalid()
 //    {
-//        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Attractions.Any(a => a.IsInvalid()) ||
+//        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Connections.Any(a => a.IsInvalid()) ||
 //               Qualities.Any(q => q.IsInvalid());
 //    }
 //}
@@ -746,18 +753,18 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class TypePieceObject : IDeepCloneable<TypePieceObject>, IEntity
+//public class ObjectPieceType : IDeepCloneable<ObjectPieceType>, IEntity
 //{
-//    public TypePieceObject()
+//    public ObjectPieceType()
 //    {
 //        Representations = new List<Representation>();
 //    }
 
 //    public List<Representation> Representations { get; set; }
 
-//    public TypePieceObject DeepClone()
+//    public ObjectPieceType DeepClone()
 //    {
-//        return new TypePieceObject
+//        return new ObjectPieceType
 //        {
 //            Representations = new List<Representation>(Representations.Select(f => f.DeepClone()))
 //        };
@@ -774,20 +781,20 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class PieceObject : IDeepCloneable<PieceObject>, IEntity
+//public class ObjectPiece : IDeepCloneable<ObjectPiece>, IEntity
 //{
-//    public PieceObject()
+//    public ObjectPiece()
 //    {
 //        Id = "";
-//        Type = new TypePieceObject();
+//        Type = new ObjectPieceType();
 //    }
 
 //    public string Id { get; set; }
-//    public TypePieceObject Type { get; set; }
+//    public ObjectPieceType Type { get; set; }
 
-//    public PieceObject DeepClone()
+//    public ObjectPiece DeepClone()
 //    {
-//        return new PieceObject
+//        return new ObjectPiece
 //        {
 //            Id = Id,
 //            Type = Type.DeepClone()
@@ -806,18 +813,18 @@ namespace Semio.Grasshopper;
 //}
 
 
-//public class ParentObject : IDeepCloneable<ParentObject>, IEntity
+//public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
 //{
-//    public ParentObject()
+//    public ObjectParent()
 //    {
 //        Piece = new PieceId();
 //    }
 
 //    public PieceId Piece { get; set; }
 
-//    public ParentObject DeepClone()
+//    public ObjectParent DeepClone()
 //    {
-//        return new ParentObject
+//        return new ObjectParent
 //        {
 //            Piece = Piece.DeepClone()
 //        };
@@ -838,14 +845,14 @@ namespace Semio.Grasshopper;
 //{
 //    public Object()
 //    {
-//        Piece = new PieceObject();
+//        Piece = new ObjectPiece();
 //        Plane = new Plane();
 //        Parent = null;
 //    }
 
-//    public PieceObject Piece { get; set; }
+//    public ObjectPiece Piece { get; set; }
 //    public Plane Plane { get; set; }
-//    public ParentObject? Parent { get; set; }
+//    public ObjectParent? Parent { get; set; }
 
 //    public Object DeepClone()
 //    {
@@ -906,6 +913,7 @@ namespace Semio.Grasshopper;
 //        Description = "";
 //        Icon = "";
 //        Url = "";
+//        Homepage = "";
 //        Types = new List<Type>();
 //        Formations = new List<Formation>();
 //    }
@@ -914,6 +922,7 @@ namespace Semio.Grasshopper;
 //    public string Description { get; set; }
 //    public string Icon { get; set; }
 //    public string Url { get; set; }
+//    public string Homepage { get; set; }
 //    public List<Type> Types { get; set; }
 //    public List<Formation> Formations { get; set; }
 
@@ -925,6 +934,7 @@ namespace Semio.Grasshopper;
 //            Description = Description,
 //            Icon = Icon,
 //            Url = Url,
+//            Homepage = Homepage,
 //            Types = new List<Type>(Types.Select(t => t.DeepClone())),
 //            Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
 //        };
@@ -947,6 +957,7 @@ namespace Semio.Grasshopper;
 //    public string? Description { get; set; }
 //    public string? Icon { get; set; }
 //    public string? Url { get; set; }
+//    public string? Homepage { get; set; }
 
 //    public KitMetadata DeepClone()
 //    {
@@ -955,6 +966,7 @@ namespace Semio.Grasshopper;
 //        if (Description != null) kitMetadata.Description = Description;
 //        if (Icon != null) kitMetadata.Icon = Icon;
 //        if (Url != null) kitMetadata.Url = Url;
+//        if (Homepage != null) kitMetadata.Homepage = Homepage;
 //        return kitMetadata;
 //    }
 
@@ -968,7 +980,6 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
-
 #endregion
 
 #region Utility
@@ -1008,6 +1019,17 @@ public static class Utility
             throw new ArgumentException("Invalid unit system", nameof(unitSystem));
         return unit;
     }
+
+    public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
+    {
+        var thetaRad = Rhino.RhinoMath.ToRadians(theta);
+        var orientation = Transform.Rotation(Vector3d.YAxis, yAxis, Point3d.Origin);
+        var rotation = Transform.Rotation(thetaRad, yAxis, Point3d.Origin);
+        var xAxis = Vector3d.XAxis;
+        xAxis.Transform(rotation * orientation);
+        return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
+
+    }
 }
 
 #endregion
@@ -1016,6 +1038,35 @@ public static class Utility
 
 public static class RhinoConverter
 {
+    public static Rhino.Geometry.Point3d convert(this Point point)
+    {
+        return new Rhino.Geometry.Point3d(point.X, point.Y, point.Z);
+    }
+
+    public static Point convert(this Rhino.Geometry.Point3d point)
+    {
+        return new Point
+        {
+            X = (float)point.X,
+            Y = (float)point.Y,
+            Z = (float)point.Z
+        };
+    }
+
+    public static Rhino.Geometry.Vector3d convert(this Vector vector)
+    {
+        return new Rhino.Geometry.Vector3d(vector.X, vector.Y, vector.Z);
+    }
+
+    public static Vector convert(this Rhino.Geometry.Vector3d vector)
+    {
+        return new Vector
+        {
+            X = (float)vector.X,
+            Y = (float)vector.Y,
+            Z = (float)vector.Z
+        };
+    }
     public static Rhino.Geometry.Plane convert(this Plane plane)
     {
         return new Rhino.Geometry.Plane(
@@ -1193,11 +1244,7 @@ public class PortGoo : GH_Goo<Port>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
         {
-            object ptr = new GH_Plane(new Rhino.Geometry.Plane(
-                new Point3d(Value.Plane.Origin.X, Value.Plane.Origin.Y, Value.Plane.Origin.Z),
-                new Vector3d(Value.Plane.XAxis.X, Value.Plane.XAxis.Y, Value.Plane.XAxis.Z),
-                new Vector3d(Value.Plane.YAxis.X, Value.Plane.YAxis.Y, Value.Plane.YAxis.Z)
-            ));
+            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
             target = (Q)ptr;
             return true;
         }
@@ -1219,34 +1266,16 @@ public class PortGoo : GH_Goo<Port>
         var plane = new Rhino.Geometry.Plane();
         if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
         {
-            Value.Plane = new Plane
-            {
-                Origin = new Point
-                {
-                    X = (float)plane.OriginX,
-                    Y = (float)plane.OriginY,
-                    Z = (float)plane.OriginZ
-                },
-                XAxis = new Vector
-                {
-                    X = (float)plane.XAxis.X,
-                    Y = (float)plane.XAxis.Y,
-                    Z = (float)plane.XAxis.Z
-                },
-                YAxis = new Vector
-                {
-                    X = (float)plane.YAxis.X,
-                    Y = (float)plane.YAxis.Y,
-                    Z = (float)plane.YAxis.Z
-                }
-            };
+            Value.Point = plane.Origin.convert();
+            Value.Direction = plane.YAxis.convert();
+
             return true;
         }
 
         string str = null;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
         {
-            Value.Plane = str.Deserialize<Plane>();
+            Value = str.Deserialize<Port>();
             return true;
         }
 
@@ -1540,7 +1569,7 @@ public class SideGoo : GH_Goo<Side>
         {
             Value = new Side
             {
-                Piece = new PieceSide
+                Piece = new SidePiece
                 {
                     Id = str
                 }
@@ -1551,7 +1580,7 @@ public class SideGoo : GH_Goo<Side>
         {
             Value = new Side
             {
-                Piece = new PieceSide
+                Piece = new SidePiece
                 {
                     Id = piece.Id
                 }
@@ -1563,25 +1592,25 @@ public class SideGoo : GH_Goo<Side>
     }
 }
 
-public class AttractionGoo : GH_Goo<Attraction>
+public class ConnectionGoo : GH_Goo<Connection>
 {
-    public AttractionGoo()
+    public ConnectionGoo()
     {
-        Value = new Attraction();
+        Value = new Connection();
     }
 
-    public AttractionGoo(Attraction attraction)
+    public ConnectionGoo(Connection connection)
     {
-        Value = attraction;
+        Value = connection;
     }
 
     public override bool IsValid { get; }
-    public override string TypeName => "Attraction";
+    public override string TypeName => "Connection";
     public override string TypeDescription { get; }
 
     public override IGH_Goo Duplicate()
     {
-        return new AttractionGoo(Value.DeepClone());
+        return new ConnectionGoo(Value.DeepClone());
     }
 
     public override string ToString()
@@ -1591,13 +1620,13 @@ public class AttractionGoo : GH_Goo<Attraction>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Attraction", Value.Serialize());
+        writer.SetString("Connection", Value.Serialize());
         return base.Write(writer);
     }
 
     public override bool Read(GH_IReader reader)
     {
-        Value = reader.GetString("Attraction").Deserialize<Attraction>();
+        Value = reader.GetString("Connection").Deserialize<Connection>();
         return base.Read(reader);
     }
 }
@@ -1901,22 +1930,22 @@ public class SideParam : SemioPersistentParam<SideGoo>
     }
 }
 
-public class AttractionParam : SemioPersistentParam<AttractionGoo>
+public class ConnectionParam : SemioPersistentParam<ConnectionGoo>
 {
-    public AttractionParam() : base("Attraction", "At", "", "semio", "Params")
+    public ConnectionParam() : base("Connection", "Co", "", "semio", "Params")
     {
     }
 
     public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
 
-    protected override Bitmap Icon => Resources.attraction_24x24;
+    protected override Bitmap Icon => Resources.connection_24x24;
 
-    protected override GH_GetterResult Prompt_Singular(ref AttractionGoo value)
+    protected override GH_GetterResult Prompt_Singular(ref ConnectionGoo value)
     {
         throw new NotImplementedException();
     }
 
-    protected override GH_GetterResult Prompt_Plural(ref List<AttractionGoo> values)
+    protected override GH_GetterResult Prompt_Plural(ref List<ConnectionGoo> values)
     {
         throw new NotImplementedException();
     }
@@ -2134,11 +2163,13 @@ public class PortComponent : SemioComponent
         pManager[0].Optional = true;
         pManager.AddTextParameter("Id", "Id?", "Optional id of the port.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt", "Point of the port.", GH_ParamAccess.item);
         pManager[2].Optional = true;
+        pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
+        pManager[3].Optional = true;
         pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
             GH_ParamAccess.list);
-        pManager[3].Optional = true;
+        pManager[4].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2146,7 +2177,8 @@ public class PortComponent : SemioComponent
         pManager.AddParameter(new PortParam(), "Port", "Po",
             "Constructed or modified port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id", "Id of the port.", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Plane", "Pl", "Plane of the port.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt", "Point of the port.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
         pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
             GH_ParamAccess.list);
     }
@@ -2155,30 +2187,44 @@ public class PortComponent : SemioComponent
     {
         var portGoo = new PortGoo();
         var id = "";
-        var planeGeo = new Rhino.Geometry.Plane();
+        var pointGeo = new Rhino.Geometry.Point3d();
+        var directionGeo = new Rhino.Geometry.Vector3d();
         var locatorGoos = new List<LocatorGoo>();
 
         if (DA.GetData(0, ref portGoo))
             portGoo = portGoo.Duplicate() as PortGoo;
         if (DA.GetData(1, ref id))
             portGoo.Value.Id = id;
-        if (DA.GetData(2, ref planeGeo))
-            portGoo.Value.Plane = planeGeo.convert();
-        if (DA.GetDataList(3, locatorGoos))
+        if (DA.GetData(2, ref pointGeo))
+            portGoo.Value.Point = pointGeo.convert();
+        if (DA.GetData(3, ref directionGeo))
+            portGoo.Value.Direction = directionGeo.convert();
+        if (DA.GetDataList(4, locatorGoos))
             portGoo.Value.Locators = locatorGoos.Select(s => s.Value).ToList();
 
         var isValidInput = true;
-        if (portGoo.Value.Plane.IsInvalid())
+        if (portGoo.Value.Point.IsInvalid())
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a plane.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a point.");
+            isValidInput = false;
+        }
+        if (portGoo.Value.Direction.IsInvalid())
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a direction.");
+            isValidInput = false;
+        }
+        if (portGoo.Value.Direction.IsZero())
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The direction needs to point somewhere.");
             isValidInput = false;
         }
         if (!isValidInput) return;
 
         DA.SetData(0, portGoo.Duplicate());
         DA.SetData(1, portGoo.Value.Id);
-        DA.SetData(2, portGoo.Value.Plane.convert());
-        DA.SetDataList(3, portGoo.Value.Locators.Select(s => new LocatorGoo(s.DeepClone()
+        DA.SetData(2, portGoo.Value.Point.convert());
+        DA.SetData(3, portGoo.Value.Direction.convert());
+        DA.SetDataList(4, portGoo.Value.Locators.Select(s => new LocatorGoo(s.DeepClone()
         )));
     }
 }
@@ -2208,6 +2254,8 @@ public class QualityComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddTextParameter("Unit", "Un?", " Optional unit of the quality.", GH_ParamAccess.item);
         pManager[3].Optional = true;
+        pManager.AddTextParameter("Definition", "Df?", "Optional definition of the quality.", GH_ParamAccess.item);
+        pManager[4].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2218,6 +2266,7 @@ public class QualityComponent : SemioComponent
         pManager.AddTextParameter("Value", "Va?", "Optional value of the quality. No value means true.",
             GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Un?", "Optional unit of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "Optional definition of the quality.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2226,6 +2275,7 @@ public class QualityComponent : SemioComponent
         var name = "";
         var value = "";
         var unit = "";
+        var definition = "";
 
         if (DA.GetData(0, ref qualityGoo))
             qualityGoo = qualityGoo.Duplicate() as QualityGoo;
@@ -2235,6 +2285,8 @@ public class QualityComponent : SemioComponent
             qualityGoo.Value.Value = value;
         if (DA.GetData(3, ref unit))
             qualityGoo.Value.Unit = unit;
+        if (DA.GetData(4, ref definition))
+            qualityGoo.Value.Definition = definition;
 
         var isValidInput = true;
         if (qualityGoo.Value.Name == "")
@@ -2242,13 +2294,13 @@ public class QualityComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A quality needs a name.");
             isValidInput = false;
         }
-
         if (!isValidInput) return;
 
         DA.SetData(0, qualityGoo.Duplicate());
         DA.SetData(1, qualityGoo.Value.Name);
         DA.SetData(2, qualityGoo.Value.Value);
         DA.SetData(3, qualityGoo.Value.Unit);
+        DA.SetData(4, qualityGoo.Value.Definition);
     }
 }
 
@@ -2287,7 +2339,7 @@ public class TypeComponent : SemioComponent
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
         pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the type. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between types and variants or make fast performance assessments.",
+            "Optional qualities of the type. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
         pManager[8].Optional = true;
     }
@@ -2306,7 +2358,7 @@ public class TypeComponent : SemioComponent
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
             GH_ParamAccess.list);
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between types and variants or make fast performance assessments.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
     }
 
@@ -2477,7 +2529,7 @@ public class PieceComponent : SemioComponent
             GH_ParamAccess.item);
         pManager[3].Optional = true;
         pManager.AddPlaneParameter("Root Plane", "RtPn?",
-            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never attracted.",
+            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
         pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
@@ -2495,7 +2547,7 @@ public class PieceComponent : SemioComponent
         pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager.AddPlaneParameter("Root Plane", "RtPl?",
-            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never attracted.",
+            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
             GH_ParamAccess.item);
         pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
             "Screen point of the piece in the diagram.",
@@ -2520,7 +2572,7 @@ public class PieceComponent : SemioComponent
         if (DA.GetData(3, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
         if (DA.GetData(4, ref rootPlane))
-            pieceGoo.Value.Root = new RootPiece { Plane = rootPlane.convert() };
+            pieceGoo.Value.Root = new PieceRoot { Plane = rootPlane.convert() };
         if (DA.GetData(5, ref screenPointGoo))
             pieceGoo.Value.Diagram.Point = screenPointGoo.Value;
 
@@ -2609,77 +2661,90 @@ public class SideComponent : SemioComponent
     }
 }
 
-public class AttractionComponent : SemioComponent
+public class ConnectionComponent : SemioComponent
 {
-    public AttractionComponent()
-        : base("Model Attraction", "~Atr",
-            "Construct, deconstruct or modify an attraction.",
+    public ConnectionComponent()
+        : base("Model Connection", "~Con",
+            "Construct, deconstruct or modify an connection.",
             "semio", "Modelling")
     {
     }
 
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
 
-    protected override Bitmap Icon => Resources.attraction_modify_24x24;
+    protected override Bitmap Icon => Resources.connection_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new AttractionParam(), "Attraction", "At?",
-            "Optional attraction to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionParam(), "Connection", "Co?",
+            "Optional connection to deconstruct or modify.", GH_ParamAccess.item);
         pManager[0].Optional = true;
-        pManager.AddParameter(new SideParam(), "Attracting Side", "AnSd", "Attracting side of the attraction.",
+        pManager.AddParameter(new SideParam(), "Connected Side", "CdSd", "Connected side of the connection.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddParameter(new SideParam(), "Attracted Side", "AdSd", "Attracted side of the attraction.",
+        pManager.AddParameter(new SideParam(), "Connecting Side", "CgSd", "Connecting side of the connection.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
+        pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
+            GH_ParamAccess.item);
+        pManager[3].Optional = true;
+        pManager.AddNumberParameter("Rotation", "Rt?", "Optional rotation (degree around the port direction) of the connection.",
+            GH_ParamAccess.item);
+        pManager[4].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new AttractionParam(), "Attraction", "At",
-            "Constructed or modified attraction.", GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Attracting Side", "AnSd", "Attracting side of the attraction.",
+        pManager.AddParameter(new ConnectionParam(), "Connection", "Co",
+            "Constructed or modified connection.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connected Side", "CdSd", "Connected side of the connection.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Attracted Side", "AdSd", "Attracted side of the attraction.",
+        pManager.AddParameter(new SideParam(), "Connecting Side", "CgSd", "Connecting side of the connection.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "Optional rotation (degree around the port direction) of the connection.",
             GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var attractionGoo = new AttractionGoo();
-        var attractingSideGoo = new SideGoo();
-        var attractedSideGoo = new SideGoo();
+        var connectionGoo = new ConnectionGoo();
+        var connectedSideGoo = new SideGoo();
+        var connectingSideGoo = new SideGoo();
+        var offset = 0.0;
+        var rotation = 0.0;
 
-        if (DA.GetData(0, ref attractionGoo))
-            attractionGoo = attractionGoo.Duplicate() as AttractionGoo;
-        if (DA.GetData(1, ref attractingSideGoo)) attractionGoo.Value.Attracting = attractingSideGoo.Value;
-        if (DA.GetData(2, ref attractedSideGoo)) attractionGoo.Value.Attracted = attractedSideGoo.Value;
+        if (DA.GetData(0, ref connectionGoo))
+            connectionGoo = connectionGoo.Duplicate() as ConnectionGoo;
+        if (DA.GetData(1, ref connectedSideGoo)) connectionGoo.Value.Connected = connectedSideGoo.Value;
+        if (DA.GetData(2, ref connectingSideGoo)) connectionGoo.Value.Connecting = connectingSideGoo.Value;
+        if (DA.GetData(3, ref offset)) connectionGoo.Value.Offset = (float)offset;
+        if (DA.GetData(4, ref rotation)) connectionGoo.Value.Rotation = (float)rotation;
 
         var isValidInput = true;
-        if (attractionGoo.Value.Attracting.IsInvalid())
+        if (connectionGoo.Value.Connected.IsInvalid())
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An attraction needs an attracting side.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connected side.");
             isValidInput = false;
         }
-
-        if (attractionGoo.Value.Attracted.IsInvalid())
+        if (connectionGoo.Value.Connecting.IsInvalid())
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An attraction needs an attracted side.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connecting side.");
             isValidInput = false;
         }
-
-        if (attractionGoo.Value.Attracting.Piece.Id != "" && attractionGoo.Value.Attracting.Piece.Id == attractionGoo.Value.Attracted.Piece.Id)
+        if (connectionGoo.Value.Connecting.Piece.Id != "" && connectionGoo.Value.Connected.Piece.Id == connectionGoo.Value.Connecting.Piece.Id)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "An attraction cannot attract itself.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "An connection cannot attract itself.");
             isValidInput = false;
         }
-
         if (!isValidInput) return;
 
-        DA.SetData(0, attractionGoo.Duplicate());
-        DA.SetData(1, new SideGoo(attractionGoo.Value.Attracting.DeepClone()));
-        DA.SetData(2, new SideGoo(attractionGoo.Value.Attracted?.DeepClone()));
+        DA.SetData(0, connectionGoo.Duplicate());
+        DA.SetData(1, new SideGoo(connectionGoo.Value.Connected?.DeepClone()));
+        DA.SetData(2, new SideGoo(connectionGoo.Value.Connecting.DeepClone()));
+        DA.SetData(3, connectionGoo.Value.Offset);
+        DA.SetData(4, connectionGoo.Value.Rotation);
     }
 }
 
@@ -2699,7 +2764,7 @@ public class FormationComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo?",
-            "Optional formation to deconstruct or modify.", GH_ParamAccess.item);
+            "Optional formation to deconstruct or modify. A formation is a collection of pieces that are connected.", GH_ParamAccess.item);
         pManager[0].Optional = true;
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager[1].Optional = true;
@@ -2713,11 +2778,11 @@ public class FormationComponent : SemioComponent
         pManager[5].Optional = true;
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
         pManager[6].Optional = true;
-        pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the formation.",
             GH_ParamAccess.list);
         pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the formation. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between formations and variants or make fast performance assessments.",
+            "Optional qualities of the formation. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
         pManager[8].Optional = true;
     }
@@ -2725,16 +2790,16 @@ public class FormationComponent : SemioComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Constructed or modified formation.", GH_ParamAccess.item);
+            "Constructed or modified formation. A formation is a collection of pieces that are connected.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttractionParam(), "Attractions", "At+", "Attractions of the formation.",
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the formation.",
             GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. Qualities are high-level information that help in the decision making process. They can be used during designing to switch between formations and variants or make fast performance assessments.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
     }
 
@@ -2747,7 +2812,7 @@ public class FormationComponent : SemioComponent
         var variant = "";
         var unit = "";
         var pieceGoos = new List<PieceGoo>();
-        var attractionGoos = new List<AttractionGoo>();
+        var connectionGoos = new List<ConnectionGoo>();
         var qualityGoos = new List<QualityGoo>();
 
         if(DA.GetData(0, ref formationGoo))
@@ -2775,8 +2840,8 @@ public class FormationComponent : SemioComponent
 
         if (DA.GetDataList(6, pieceGoos))
             formationGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
-        if (DA.GetDataList(7, attractionGoos))
-            formationGoo.Value.Attractions = attractionGoos.Select(a => a.Value).ToList();
+        if (DA.GetDataList(7, connectionGoos))
+            formationGoo.Value.Connections = connectionGoos.Select(a => a.Value).ToList();
         if (DA.GetDataList(8, qualityGoos))
             formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
@@ -2815,7 +2880,7 @@ public class FormationComponent : SemioComponent
         DA.SetData(4, formationGoo.Value.Variant);
         DA.SetData(5, formationGoo.Value.Unit);
         DA.SetDataList(6, formationGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
-        DA.SetDataList(7, formationGoo.Value.Attractions.Select(a => new AttractionGoo(a.DeepClone())));
+        DA.SetDataList(7, formationGoo.Value.Connections.Select(a => new ConnectionGoo(a.DeepClone())));
         DA.SetDataList(8, formationGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
     }
 }
@@ -2929,12 +2994,13 @@ public class LoadKitComponent : EngineComponent
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit", GH_ParamAccess.list);
-        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit",
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit.",
             GH_ParamAccess.list);
     }
 
@@ -2974,8 +3040,9 @@ public class LoadKitComponent : EngineComponent
         DA.SetData(1, kit.Description);
         DA.SetData(2, kit.Icon);
         DA.SetData(3, kit.Url);
-        DA.SetDataList(4, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
-        DA.SetDataList(5, kit.Formations.Select(f => new FormationGoo(f.DeepClone())));
+        DA.SetData(4, kit.Homepage);
+        DA.SetDataList(5, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
+        DA.SetDataList(6, kit.Formations.Select(f => new FormationGoo(f.DeepClone())));
         
     }
 }
@@ -2995,22 +3062,24 @@ public class CreateKitComponent : EngineComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit", GH_ParamAccess.list);
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
         pManager[4].Optional = true;
-        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit",
-            GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
         pManager[5].Optional = true;
+        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit.",
+            GH_ParamAccess.list);
+        pManager[6].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will take the current directory from which the Grasshopper script is executed.",
             GH_ParamAccess.item);
-        pManager[6].Optional = true;
+        pManager[7].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Create the kit.", GH_ParamAccess.item, false);
     }
 
@@ -3025,6 +3094,7 @@ public class CreateKitComponent : EngineComponent
         var description = "";
         var icon = "";
         var url = "";
+        var homepage = "";
         var typeGoos = new List<TypeGoo>();
         var formationGoos = new List<FormationGoo>();
         var path = "";
@@ -3034,13 +3104,14 @@ public class CreateKitComponent : EngineComponent
         DA.GetData(1, ref description);
         DA.GetData(2, ref icon);
         DA.GetData(3, ref url);
-        DA.GetDataList(4, typeGoos);
-        DA.GetDataList(5, formationGoos);
-        if (!DA.GetData(6, ref path))
+        DA.GetData(4, ref homepage);
+        DA.GetDataList(5, typeGoos);
+        DA.GetDataList(6, formationGoos);
+        if (!DA.GetData(7, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
-        DA.GetData(7, ref run);
+        DA.GetData(8, ref run);
 
         if (!run)
         {
@@ -3054,6 +3125,7 @@ public class CreateKitComponent : EngineComponent
             Description = description,
             Icon = icon,
             Url = url,
+            Homepage = homepage,
             Types = typeGoos.Select(t => t.Value).ToList(),
             Formations = formationGoos.Select(f => f.Value).ToList()
         };

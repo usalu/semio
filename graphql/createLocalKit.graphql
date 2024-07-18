@@ -17,22 +17,16 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
           tags
         }
         ports {
-          plane {
-            origin {
-              x
-              y
-              z
-            }
-            xAxis {
-              x
-              y
-              z
-            }
-            yAxis {
-              x
-              y
-              z
-            }
+          id
+          point {
+            x
+            y
+            z
+          }
+          direction {
+            x
+            y
+            z
           }
           locators {
             group
@@ -43,6 +37,7 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
           name
           value
           unit
+          definition
         }
       }
       formations {
@@ -83,33 +78,29 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
             }
           }
         }
-        attractions {
-          attracting {
+        connections {
+          connected {
             piece {
               id
               type {
                 port {
-                  locators {
-                    group
-                    subgroup
-                  }
+                  id
                 }
               }
             }
           }
-          attracted {
+          connecting {
             piece {
               id
               type {
                 port {
-                  locators {
-                    subgroup
-                    group
-                  }
+                  id
                 }
               }
             }
           }
+          offset
+          rotation
         }
       }
     }

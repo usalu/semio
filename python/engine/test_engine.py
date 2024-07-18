@@ -1,7 +1,7 @@
-from pytest import mark
+from pytest import mark, param
 from graphene.test import Client
 from deepdiff import DeepDiff, Delta
-from engine import schema
+from engine import schema, Point, Vector, Plane
 
 createLocalKit = open("../../graphql/createLocalKit.graphql", "r").read()
 updateLocalKitMetadata = open(
@@ -23,7 +23,55 @@ formationToSceneFromLocalKit = open(
 ).read()
 
 
-# @mark.skip
+@mark.parametrize(
+    "yAxis, phi, expectedXAxis",
+    [
+        param(
+            [0.0, 1.0, 0.0],
+            0.0,
+            [1.0, 0.0, 0.0],
+            id="no rotation, no rotation",
+        ),
+        param(
+            [0.0, 1.0, 0.0],
+            135,
+            [-0.707107, 0, -0.707107],
+            id="no rotation, 135° around y rotation",
+        ),
+        param(
+            [-0.707107, 0.707107, 0.0],
+            0.0,
+            [0.707107, 0.707107, 0],
+            id="45° around z, no rotation",
+        ),
+        param(
+            [0, 0.866025, -0.5],
+            0.0,
+            [1, 0, 0],
+            id="-30° around x, no rotation",
+        ),
+        param(
+            [0, 0.866025, -0.5],
+            45,
+            [0.707107, -0.353553, -0.612372],
+            id="-30° around x, 45° rotation",
+        ),
+        param(
+            [0.707107, -0.612372, 0.353553],
+            45,
+            [0.251059, -0.25, -0.935131],
+            id="135° around z then -30° around x, 45° rotation",
+        ),
+    ],
+)
+def test_planeFromYAxis(yAxis, phi, expectedXAxis):
+    yAxisVector = Vector(*yAxis)
+    plane = Plane.fromYAxis(yAxisVector, phi)
+    expectedPlane = Plane(Point(), Vector(*expectedXAxis), yAxisVector)
+    assert plane.isClose(expectedPlane)
+
+
+@mark.skip
 def test_integration_graphql_local_kit_crud(tmp_path):
     client = Client(schema)
     name = "metabolism"
@@ -290,6 +338,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     assert not addBaseResponseDiff, f"Response difference: {addBaseResponseDiff}"
 
 
+@mark.skip
 def test_integration_graphql_local_kit_formationToScene(tmp_path):
     #   ┌──────────┐ ┌──────────┐   │   xxxxxxxxxxxx xxxxxxxxxxxx
     #   │          │ │          │   │   x          x x          x

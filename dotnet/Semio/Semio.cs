@@ -26,6 +26,7 @@ using Semio.Properties;
 //  error: LoadLocalKitError
 //}
 
+//"""🗃️ A kit is a collection of types and formations."""
 //type Kit
 //{
 //name: String!
@@ -34,6 +35,7 @@ using Semio.Properties;
 //  createdAt: DateTime!
 //  lastUpdateAt: DateTime!
 //  url: String!
+//  homepage: String!
 //  types: [Type!]!
 //  formations: [Formation!]!
 //}
@@ -45,6 +47,9 @@ using Semio.Properties;
 //"""
 //scalar DateTime
 
+//"""
+//🧩 A type is a reusable element that can be connected with other types over ports.
+//"""
 //type Type {
 //  name: String!
 //  description: String!
@@ -60,6 +65,9 @@ using Semio.Properties;
 //  pieces: [Piece!]!
 //}
 
+//"""
+//💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
+//"""
 //type Representation
 //{
 //url: String!
@@ -68,36 +76,40 @@ using Semio.Properties;
 //  tags: [String!]!
 //}
 
+//"""
+//🔌 A port is a conceptual connection point (with a direction) of a type.
+//"""
 //type Port
 //{
-//plane: Plane
-//  type: Type
-//  locators: [Locator!]!
-//  attractings: [Attraction!]!
-//  attracteds: [Attraction!]!
-//  id: String!
-//}
-
-//type Plane
-//{
-//port: Port
-//  rootPiece: Piece
-//  origin: Point!
-//  xAxis: Vector!
-//  yAxis: Vector!
-//}
-
-//type Piece
-//{
 //type: Type
-//  formation: Formation
-//  attractings: [Attraction!]!
-//  attracteds: [Attraction!]!
+//  locators: [Locator!]!
+//  connecteds: [Connection!]!
+//  connectings: [Connection!]!
 //  id: String!
-//  root: RootPiece!
-//  diagram: DiagramPiece!
+//  point: Point!
+//  direction: Vector!
+//  plane: Plane!
 //}
 
+//"""🗺️ A locator is meta-data for grouping ports."""
+//type Locator
+//{
+//group: String!
+//  subgroup: String!
+//  port: Port
+//}
+
+//"""🖇️ A connection between two pieces of a formation."""
+//type Connection
+//{
+//offset: Float!
+//  rotation: Float!
+//  formation: Formation
+//  connected: Side!
+//  connecting: Side!
+//}
+
+//"""🏙️ A formation is a collection of pieces that are connected."""
 //type Formation
 //{
 //name: String!
@@ -109,63 +121,37 @@ using Semio.Properties;
 //  lastUpdateAt: DateTime!
 //  kit: Kit
 //  pieces: [Piece!]!
-//  attractions: [Attraction!]!
+//  connections: [Connection!]!
 //  qualities: [Quality!]!
 //}
 
-//type Attraction
+//"""⭕ A piece is a 3d-instance of a type in a formation."""
+//type Piece
 //{
-//formation: Formation
-//  attracting: Side!
-//  attracted: Side!
-//}
-
-//"""A side of an attraction."""
-//type Side
-//{
-//piece: PieceSide!
-//}
-
-//"""The piece of a side of an attraction."""
-//type PieceSide
-//{
-//id: String!
-//  type: TypePieceSide!
-//}
-
-//"""The port of a type of a piece of a side of an attraction."""
-//type TypePieceSide
-//{
-//port: Port
-//}
-
-//type Quality
-//{
-//name: String!
-//  value: String!
-//  unit: String!
-//  type: Type
+//type: Type
 //  formation: Formation
+//  connectings: [Connection!]!
+//  connecteds: [Connection!]!
+//  id: String!
+//  root: PieceRoot
+//  diagram: PieceDiagram!
 //}
 
-//"""The plane of the root piece of a formation."""
-//type RootPiece
+//"""🌱 The root information of a piece."""
+//type PieceRoot
 //{
 //plane: Plane!
 //}
 
-//"""The point of a diagram of a piece."""
-//type DiagramPiece
+//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+//type Plane
 //{
-//point: ScreenPoint!
+//origin: Point!
+//  xAxis: Vector!
+//  yAxis: Vector!
 //}
 
-//type ScreenPoint
-//{
-//x: Int!
-//  y: Int!
-//}
-
+//"""✖️ A 3d-point (xyz) of floating point numbers."""
 //type Point
 //{
 //x: Float!
@@ -173,6 +159,7 @@ using Semio.Properties;
 //  z: Float!
 //}
 
+//"""➡️ A 3d-vector (xyz) of floating point numbers."""
 //type Vector
 //{
 //x: Float!
@@ -180,11 +167,51 @@ using Semio.Properties;
 //  z: Float!
 //}
 
-//type Locator
+//"""✏️ The diagram information of a piece."""
+//type PieceDiagram
 //{
-//group: String!
-//  subgroup: String!
-//  port: Port
+//point: ScreenPoint!
+//}
+
+//"""📺 A 2d-point (xy) of integers in screen coordinate system."""
+//type ScreenPoint
+//{
+//x: Int!
+//  y: Int!
+//}
+
+//"""📏 A quality is meta-data for decision making."""
+//type Quality
+//{
+//name: String!
+//  value: String!
+//  unit: String!
+//  definition: String!
+//  type: Type
+//  formation: Formation
+//}
+
+//"""🧱 A side of a piece in a connection."""
+//type Side
+//{
+//piece: SidePiece!
+//  offset: Float!
+//  rotation: Float!
+//}
+
+//"""
+//⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+//"""
+//type SidePiece
+//{
+//id: String!
+//  type: SidePieceType!
+//}
+
+//"""🧩 The type information of a piece of a side."""
+//type SidePieceType
+//{
+//port: Port
 //}
 
 //enum LoadLocalKitError
@@ -201,16 +228,20 @@ using Semio.Properties;
 //  error: FormationToSceneFromLocalKitResponseError
 //}
 
+//"""🌆 A scene is a collection of objects."""
 //type Scene
 //{
 //    objects: [Object]!
 //  formation: Formation
 //}
 
+//"""
+//🗿 An object is a piece with a plane and a parent object (unless the piece is a root).
+//"""
 //type Object
 //{
-//    piece: Piece
-//  plane: Plane
+//    plane: Plane!
+//  piece: Piece
 //  parent: Object
 //}
 
@@ -229,10 +260,11 @@ using Semio.Properties;
 //  FORMATION_DOES_NOT_EXIST
 //}
 
+//"""🏙️ A formation is identified by a name and optional variant."""
 //input FormationIdInput
 //{
 //    name: String!
-//  variant: String
+//  variant: String = ""
 //}
 
 //type Mutation
@@ -267,28 +299,36 @@ using Semio.Properties;
 //  KIT_INPUT_IS_INVALID
 //}
 
+//"""🗃️ A kit is a collection of types and formations."""
 //input KitInput
 //{
 //    name: String!
 //  description: String
 //  icon: String
 //  url: String
+//  homepage: String
 //  types: [TypeInput!]
 //    formations: [FormationInput!]
 //}
 
+//"""
+//🧩 A type is a reusable element that can be connected with other types over ports.
+//"""
 //input TypeInput
 //{
 //    name: String!
 //  description: String
 //  icon: String
-//  variant: String
+//  variant: String = ""
 //  unit: String!
 //  representations: [RepresentationInput!]!
 //  ports: [PortInput!]!
 //  qualities: [QualityInput!]
 //}
 
+//"""
+//💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
+//"""
 //input RepresentationInput
 //{
 //    url: String!
@@ -296,13 +336,85 @@ using Semio.Properties;
 //  tags: [String!]
 //}
 
+//"""
+//🔌 A port is a conceptual connection point (with a direction) of a type.
+//"""
 //input PortInput
 //{
-//    id: String
-//  plane: PlaneInput!
+//    id: String = ""
+//  point: PointInput!
+//  direction: VectorInput!
 //  locators: [LocatorInput!]
 //}
 
+//"""✖️ A 3d-point (xyz) of floating point numbers."""
+//input PointInput
+//{
+//    x: Float = 0
+//  y: Float = 0
+//  z: Float = 0
+//}
+
+//"""➡️ A 3d-vector (xyz) of floating point numbers."""
+//input VectorInput
+//{
+//    x: Float = 0
+//  y: Float = 0
+//  z: Float = 0
+//}
+
+//"""🗺️ A locator is meta-data for grouping ports."""
+//input LocatorInput
+//{
+//    group: String!
+//  subgroup: String
+//}
+
+//"""📏 A quality is meta-data for decision making."""
+//input QualityInput
+//{
+//    name: String!
+//  value: String
+//  unit: String
+//  definition: String
+//}
+
+//"""🏙️ A formation is a collection of pieces that are connected."""
+//input FormationInput
+//{
+//    name: String!
+//  description: String
+//  icon: String
+//  variant: String = ""
+//  unit: String!
+//  pieces: [PieceInput!]!
+//  connections: [ConnectionInput!]!
+//  qualities: [QualityInput!]
+//}
+
+//"""⭕ A piece is a 3d-instance of a type in a formation."""
+//input PieceInput
+//{
+//    id: String!
+//  type: TypeIdInput!
+//  root: PieceRootInput = null
+//  diagram: PieceDiagramInput!
+//}
+
+//"""🧩 A type is identified by a name and variant (empty=default)."""
+//input TypeIdInput
+//{
+//    name: String!
+//  variant: String = ""
+//}
+
+//"""🌱 The root information of a piece."""
+//input PieceRootInput
+//{
+//    plane: PlaneInput!
+//}
+
+//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 //input PlaneInput
 //{
 //    origin: PointInput!
@@ -310,100 +422,53 @@ using Semio.Properties;
 //  yAxis: VectorInput!
 //}
 
-//input PointInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input VectorInput
-//{
-//    x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//input LocatorInput
-//{
-//    group: String!
-//  subgroup: String
-//}
-
-//input QualityInput
-//{
-//    name: String!
-//  value: String
-//  unit: String
-//}
-
-//input FormationInput
-//{
-//    name: String!
-//  description: String
-//  icon: String
-//  variant: String
-//  unit: String!
-//  pieces: [PieceInput!]!
-//  attractions: [AttractionInput!]!
-//  qualities: [QualityInput!]
-//}
-
-//input PieceInput
-//{
-//    id: String!
-//  type: TypeIdInput!
-//  root: RootPieceInput = null
-//  diagram: DiagramPieceInput!
-//}
-
-//input TypeIdInput
-//{
-//    name: String!
-//  variant: String
-//}
-
-//input RootPieceInput
-//{
-//    plane: PlaneInput!
-//}
-
-//input DiagramPieceInput
+//"""✏️ The diagram information of a piece."""
+//input PieceDiagramInput
 //{
 //    point: ScreenPointInput!
 //}
 
+//"""📺 A 2d-point (xy) of integers in screen coordinate system."""
 //input ScreenPointInput
 //{
-//    x: Int!
-//  y: Int!
+//    x: Int = 0
+//  y: Int = 0
 //}
 
-//input AttractionInput
+//"""🖇️ A connection between two pieces of a formation."""
+//input ConnectionInput
 //{
-//    attracting: SideInput!
-//  attracted: SideInput!
+//    connecting: SideInput!
+//  connected: SideInput!
+//  offset: Float = 0
+//  rotation: Float = 0
 //}
 
+//"""🧱 A side of a piece in a connection."""
 //input SideInput
 //{
-//    piece: PieceSideInput!
+//    piece: SidePieceInput!
 //}
 
-//input PieceSideInput
+//"""
+//⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+//"""
+//input SidePieceInput
 //{
 //    id: String!
-//  type: TypePieceSideInput = null
+//  type: SidePieceTypeInput = null
 //}
 
-//input TypePieceSideInput
+//"""🧩 The type information of a piece of a side."""
+//input SidePieceTypeInput
 //{
 //    port: PortIdInput = null
 //}
 
+//"""🔌 A port is identified by an id (emtpy=default))."""
 //input PortIdInput
 //{
-//    id: String
+//    id: String = ""
 //}
 
 //type UpdateLocalKitMetadataMutation
@@ -427,12 +492,14 @@ using Semio.Properties;
 //  KIT_METADATA_IS_INVALID
 //}
 
+//"""🗃️ Meta-data of a kit."""
 //input KitMetadataInput
 //{
 //    name: String
 //  description: String
 //  icon: String
 //  url: String
+//  homepage: String
 //}
 
 //type DeleteLocalKitMutation
@@ -779,11 +846,13 @@ public class Port : IDeepCloneable<Port>, IEntity
     public Port()
     {
         Id = "";
-        Plane = new Plane();
+        Point = new Point();
+        Direction = new Vector();
         Locators = new List<Locator>();
     }
     public string Id { get; set; } 
-    public Plane Plane { get; set; }
+    public Point Point { get; set; }
+    public Vector Direction { get; set; }
     public List<Locator> Locators { get; set; }
 
     public Port DeepClone()
@@ -791,7 +860,8 @@ public class Port : IDeepCloneable<Port>, IEntity
         return new Port
         {
             Id = Id,
-            Plane = Plane.DeepClone(),
+            Point = Point.DeepClone(),
+            Direction = Direction.DeepClone(),
             Locators = new List<Locator>(Locators.Select(s => s.DeepClone()))
         };
     }
@@ -803,7 +873,7 @@ public class Port : IDeepCloneable<Port>, IEntity
 
     public bool IsInvalid()
     {
-        return Id == "" || Plane.IsInvalid() || Locators.Any(s => s.IsInvalid());
+        return Id == "" || Point.IsInvalid() || Direction.IsInvalid() || Locators.Any(s => s.IsInvalid());
     }
 }
 
@@ -843,11 +913,13 @@ public class Quality : IDeepCloneable<Quality>, IEntity
         Name = "";
         Value = "";
         Unit = "";
+        Definition = "";
     }
 
     public string Name { get; set; }
     public string Value { get; set; }
     public string Unit { get; set; }
+    public string Definition { get; set; }
 
     public Quality DeepClone()
     {
@@ -855,7 +927,8 @@ public class Quality : IDeepCloneable<Quality>, IEntity
         {
             Name = Name,
             Value = Value,
-            Unit = Unit
+            Unit = Unit,
+            Definition = Definition
         };
     }
 
@@ -951,18 +1024,18 @@ public class TypeId : IDeepCloneable<TypeId>, IEntity
     }
 }
 
-public class RootPiece : IDeepCloneable<RootPiece>, IEntity
+public class PieceRoot : IDeepCloneable<PieceRoot>, IEntity
 {
-    public RootPiece()
+    public PieceRoot()
     {
         Plane = new Plane();
     }
 
     public Plane Plane { get; set; }
 
-    public RootPiece DeepClone()
+    public PieceRoot DeepClone()
     {
-        return new RootPiece
+        return new PieceRoot
         {
             Plane = Plane.DeepClone()
         };
@@ -979,18 +1052,18 @@ public class RootPiece : IDeepCloneable<RootPiece>, IEntity
     }
 }
 
-public class DiagramPiece : IDeepCloneable<DiagramPiece>, IEntity
+public class PieceDiagram : IDeepCloneable<PieceDiagram>, IEntity
 {
-    public DiagramPiece()
+    public PieceDiagram()
     {
         Point = new ScreenPoint();
     }
 
     public ScreenPoint Point { get; set; }
 
-    public DiagramPiece DeepClone()
+    public PieceDiagram DeepClone()
     {
-        return new DiagramPiece
+        return new PieceDiagram
         {
             Point = Point.DeepClone()
         };
@@ -1014,13 +1087,13 @@ public class Piece : IDeepCloneable<Piece>, IEntity
         Id = "";
         Type = new TypeId();
         Root = null;
-        Diagram = new DiagramPiece();
+        Diagram = new PieceDiagram();
     }
 
     public string Id { get; set; }
     public TypeId Type { get; set; }
-    public RootPiece? Root { get; set; }
-    public DiagramPiece Diagram { get; set; }
+    public PieceRoot? Root { get; set; }
+    public PieceDiagram Diagram { get; set; }
 
     public Piece DeepClone()
     {
@@ -1072,18 +1145,18 @@ public class PieceId : IDeepCloneable<PieceId>, IEntity
     }
 }
 
-public class TypePieceSide : IDeepCloneable<TypePieceSide>, IEntity
+public class SidePieceType : IDeepCloneable<SidePieceType>, IEntity
 {
-    public TypePieceSide()
+    public SidePieceType()
     {
         Port = new PortId();
     }
 
     public PortId Port { get; set; }
 
-    public TypePieceSide DeepClone()
+    public SidePieceType DeepClone()
     {
-        return new TypePieceSide
+        return new SidePieceType
         {
             Port = Port.DeepClone()
         };
@@ -1100,20 +1173,20 @@ public class TypePieceSide : IDeepCloneable<TypePieceSide>, IEntity
     }
 }
 
-public class PieceSide : IDeepCloneable<PieceSide>, IEntity
+public class SidePiece : IDeepCloneable<SidePiece>, IEntity
 {
-    public PieceSide()
+    public SidePiece()
     {
         Id = "";
-        Type = new TypePieceSide();
+        Type = new SidePieceType();
     }
 
     public string Id { get; set; }
-    public TypePieceSide Type { get; set; }
+    public SidePieceType Type { get; set; }
 
-    public PieceSide DeepClone()
+    public SidePiece DeepClone()
     {
-        return new PieceSide
+        return new SidePiece
         {
             Id = Id,
             Type = Type.DeepClone()
@@ -1135,10 +1208,10 @@ public class Side : IDeepCloneable<Side>, IEntity
 {
     public Side()
     {
-        Piece = new PieceSide();
+        Piece = new SidePiece();
     }
 
-    public PieceSide Piece { get; set; }
+    public SidePiece Piece { get; set; }
 
     public Side DeepClone()
     {
@@ -1160,34 +1233,39 @@ public class Side : IDeepCloneable<Side>, IEntity
 }
 
 
-public class Attraction : IDeepCloneable<Attraction>, IEntity
+public class Connection : IDeepCloneable<Connection>, IEntity
 {
-    public Attraction()
+    public Connection()
     {
-        Attracting = new Side();
-        Attracted = new Side();
+        Connected = new Side();
+        Connecting = new Side();
+        Offset = 0;
+        Rotation = 0;
     }
+    public Side Connected { get; set; }
+    public Side Connecting { get; set; }
+    public float Offset { get; set; }
+    public float Rotation { get; set; }
 
-    public Side Attracting { get; set; }
-    public Side Attracted { get; set; }
-
-    public Attraction DeepClone()
+    public Connection DeepClone()
     {
-        return new Attraction
+        return new Connection
         {
-            Attracting = Attracting.DeepClone(),
-            Attracted = Attracted.DeepClone()
+            Connected = Connected.DeepClone(),
+            Connecting = Connecting.DeepClone(),
+            Offset = Offset,
+            Rotation = Rotation
         };
     }
 
     public override string ToString()
     {
-        return $"Attraction(Attracting({Attracting}),Attracted({Attracted}))";
+        return $"Connection(Connected({Connected}),Connecting({Connecting}),Offset:{Offset},Rotation:{Rotation})";
     }
 
     public bool IsInvalid()
     {
-        return Attracting.IsInvalid() || Attracted.IsInvalid() || Attracting.Piece.Id == Attracted.Piece.Id;
+        return Connecting.IsInvalid() || Connected.IsInvalid() || Connecting.Piece.Id == Connected.Piece.Id;
     }
 }
 
@@ -1201,7 +1279,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
         Variant = "";
         Unit = "";
         Pieces = new List<Piece>();
-        Attractions = new List<Attraction>();
+        Connections = new List<Connection>();
         Qualities = new List<Quality>();
     }
 
@@ -1211,7 +1289,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
     public string Variant { get; set; }
     public string Unit { get; set; }
     public List<Piece> Pieces { get; set; }
-    public List<Attraction> Attractions { get; set; }
+    public List<Connection> Connections { get; set; }
     public List<Quality> Qualities { get; set; }
 
     public Formation DeepClone()
@@ -1224,7 +1302,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
             Variant = Variant,
             Unit = Unit,
             Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
-            Attractions = new List<Attraction>(Attractions.Select(a => a.DeepClone())),
+            Connections = new List<Connection>(Connections.Select(a => a.DeepClone())),
             Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
         };
     }
@@ -1236,7 +1314,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
 
     public bool IsInvalid()
     {
-        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Attractions.Any(a => a.IsInvalid()) ||
+        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Connections.Any(a => a.IsInvalid()) ||
                Qualities.Any(q => q.IsInvalid());
     }
 }
@@ -1272,18 +1350,18 @@ public class FormationId : IDeepCloneable<FormationId>, IEntity
     }
 }
 
-public class TypePieceObject : IDeepCloneable<TypePieceObject>, IEntity
+public class ObjectPieceType : IDeepCloneable<ObjectPieceType>, IEntity
 {
-    public TypePieceObject()
+    public ObjectPieceType()
     {
         Representations = new List<Representation>();
     }
 
     public List<Representation> Representations { get; set; }
 
-    public TypePieceObject DeepClone()
+    public ObjectPieceType DeepClone()
     {
-        return new TypePieceObject
+        return new ObjectPieceType
         {
             Representations = new List<Representation>(Representations.Select(f => f.DeepClone()))
         };
@@ -1300,20 +1378,20 @@ public class TypePieceObject : IDeepCloneable<TypePieceObject>, IEntity
     }
 }
 
-public class PieceObject : IDeepCloneable<PieceObject>, IEntity
+public class ObjectPiece : IDeepCloneable<ObjectPiece>, IEntity
 {
-    public PieceObject()
+    public ObjectPiece()
     {
         Id = "";
-        Type = new TypePieceObject();
+        Type = new ObjectPieceType();
     }
 
     public string Id { get; set; }
-    public TypePieceObject Type { get; set; }
+    public ObjectPieceType Type { get; set; }
 
-    public PieceObject DeepClone()
+    public ObjectPiece DeepClone()
     {
-        return new PieceObject
+        return new ObjectPiece
         {
             Id = Id,
             Type = Type.DeepClone()
@@ -1332,18 +1410,18 @@ public class PieceObject : IDeepCloneable<PieceObject>, IEntity
 }
 
 
-public class ParentObject : IDeepCloneable<ParentObject>, IEntity
+public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
 {
-    public ParentObject()
+    public ObjectParent()
     {
         Piece = new PieceId();
     }
 
     public PieceId Piece { get; set; }
 
-    public ParentObject DeepClone()
+    public ObjectParent DeepClone()
     {
-        return new ParentObject
+        return new ObjectParent
         {
             Piece = Piece.DeepClone()
         };
@@ -1364,14 +1442,14 @@ public class Object : IDeepCloneable<Object>, IEntity
 {
     public Object()
     {
-        Piece = new PieceObject();
+        Piece = new ObjectPiece();
         Plane = new Plane();
         Parent = null;
     }
 
-    public PieceObject Piece { get; set; }
+    public ObjectPiece Piece { get; set; }
     public Plane Plane { get; set; }
-    public ParentObject? Parent { get; set; }
+    public ObjectParent? Parent { get; set; }
 
     public Object DeepClone()
     {
@@ -1432,6 +1510,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
         Description = "";
         Icon = "";
         Url = "";
+        Homepage = "";
         Types = new List<Type>();
         Formations = new List<Formation>();
     }
@@ -1440,6 +1519,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
     public string Description { get; set; }
     public string Icon { get; set; }
     public string Url { get; set; }
+    public string Homepage { get; set; }
     public List<Type> Types { get; set; }
     public List<Formation> Formations { get; set; }
 
@@ -1451,6 +1531,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
             Description = Description,
             Icon = Icon,
             Url = Url,
+            Homepage = Homepage,
             Types = new List<Type>(Types.Select(t => t.DeepClone())),
             Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
         };
@@ -1473,6 +1554,7 @@ public class KitMetadata : IDeepCloneable<KitMetadata>, IEntity
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Url { get; set; }
+    public string? Homepage { get; set; }
 
     public KitMetadata DeepClone()
     {
@@ -1481,6 +1563,7 @@ public class KitMetadata : IDeepCloneable<KitMetadata>, IEntity
         if (Description != null) kitMetadata.Description = Description;
         if (Icon != null) kitMetadata.Icon = Icon;
         if (Url != null) kitMetadata.Url = Url;
+        if (Homepage != null) kitMetadata.Homepage = Homepage;
         return kitMetadata;
     }
 

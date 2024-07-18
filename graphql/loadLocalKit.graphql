@@ -5,6 +5,7 @@ query LoadLocalKit($directory: String!) {
       description
       icon
       url
+      homepage
       types {
         name
         description
@@ -18,22 +19,15 @@ query LoadLocalKit($directory: String!) {
         }
         ports {
           id
-          plane {
-            origin {
-              x
-              y
-              z
-            }
-            xAxis {
-              x
-              y
-              z
-            }
-            yAxis {
-              x
-              y
-              z
-            }
+          point {
+            x
+            y
+            z
+          }
+          direction {
+            x
+            y
+            z
           }
           locators {
             group
@@ -44,6 +38,7 @@ query LoadLocalKit($directory: String!) {
           name
           value
           unit
+          definition
         }
       }
       formations {
@@ -84,8 +79,8 @@ query LoadLocalKit($directory: String!) {
             }
           }
         }
-        attractions {
-          attracting {
+        connections {
+          connected {
             piece {
               id
               type {
@@ -95,7 +90,7 @@ query LoadLocalKit($directory: String!) {
               }
             }
           }
-          attracted {
+          connecting {
             piece {
               id
               type {
@@ -105,6 +100,8 @@ query LoadLocalKit($directory: String!) {
               }
             }
           }
+          offset
+          rotation
         }
       }
     }

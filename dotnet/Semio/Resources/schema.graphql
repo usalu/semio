@@ -8,6 +8,7 @@ type LoadLocalKitResponse {
   error: LoadLocalKitError
 }
 
+"""🗃️ A kit is a collection of types and formations."""
 type Kit {
   name: String!
   description: String!
@@ -15,6 +16,7 @@ type Kit {
   createdAt: DateTime!
   lastUpdateAt: DateTime!
   url: String!
+  homepage: String!
   types: [Type!]!
   formations: [Formation!]!
 }
@@ -26,6 +28,9 @@ value as specified by
 """
 scalar DateTime
 
+"""
+🧩 A type is a reusable element that can be connected with other types over ports.
+"""
 type Type {
   name: String!
   description: String!
@@ -41,6 +46,9 @@ type Type {
   pieces: [Piece!]!
 }
 
+"""
+💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
+"""
 type Representation {
   url: String!
   lod: String!
@@ -48,33 +56,37 @@ type Representation {
   tags: [String!]!
 }
 
+"""
+🔌 A port is a conceptual connection point (with a direction) of a type.
+"""
 type Port {
-  plane: Plane
   type: Type
   locators: [Locator!]!
-  attractings: [Attraction!]!
-  attracteds: [Attraction!]!
+  connecteds: [Connection!]!
+  connectings: [Connection!]!
   id: String!
+  point: Point!
+  direction: Vector!
+  plane: Plane!
 }
 
-type Plane {
+"""🗺️ A locator is meta-data for grouping ports."""
+type Locator {
+  group: String!
+  subgroup: String!
   port: Port
-  rootPiece: Piece
-  origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
 }
 
-type Piece {
-  type: Type
+"""🖇️ A connection between two pieces of a formation."""
+type Connection {
+  offset: Float!
+  rotation: Float!
   formation: Formation
-  attractings: [Attraction!]!
-  attracteds: [Attraction!]!
-  id: String!
-  root: RootPiece!
-  diagram: DiagramPiece!
+  connected: Side!
+  connecting: Side!
 }
 
+"""🏙️ A formation is a collection of pieces that are connected."""
 type Formation {
   name: String!
   description: String!
@@ -85,70 +97,83 @@ type Formation {
   lastUpdateAt: DateTime!
   kit: Kit
   pieces: [Piece!]!
-  attractions: [Attraction!]!
+  connections: [Connection!]!
   qualities: [Quality!]!
 }
 
-type Attraction {
-  formation: Formation
-  attracting: Side!
-  attracted: Side!
-}
-
-"""A side of an attraction."""
-type Side {
-  piece: PieceSide!
-}
-
-"""The piece of a side of an attraction."""
-type PieceSide {
-  id: String!
-  type: TypePieceSide!
-}
-
-"""The port of a type of a piece of a side of an attraction."""
-type TypePieceSide {
-  port: Port
-}
-
-type Quality {
-  name: String!
-  value: String!
-  unit: String!
+"""⭕ A piece is a 3d-instance of a type in a formation."""
+type Piece {
   type: Type
   formation: Formation
+  connectings: [Connection!]!
+  connecteds: [Connection!]!
+  id: String!
+  root: PieceRoot
+  diagram: PieceDiagram!
 }
 
-"""The plane of the root piece of a formation."""
-type RootPiece {
+"""🌱 The root information of a piece."""
+type PieceRoot {
   plane: Plane!
 }
 
-"""The point of a diagram of a piece."""
-type DiagramPiece {
-  point: ScreenPoint!
+"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+type Plane {
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
 }
 
-type ScreenPoint {
-  x: Int!
-  y: Int!
-}
-
+"""✖️ A 3d-point (xyz) of floating point numbers."""
 type Point {
   x: Float!
   y: Float!
   z: Float!
 }
 
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
 type Vector {
   x: Float!
   y: Float!
   z: Float!
 }
 
-type Locator {
-  group: String!
-  subgroup: String!
+"""✏️ The diagram information of a piece."""
+type PieceDiagram {
+  point: ScreenPoint!
+}
+
+"""📺 A 2d-point (xy) of integers in screen coordinate system."""
+type ScreenPoint {
+  x: Int!
+  y: Int!
+}
+
+"""📏 A quality is meta-data for decision making."""
+type Quality {
+  name: String!
+  value: String!
+  unit: String!
+  definition: String!
+  type: Type
+  formation: Formation
+}
+
+"""🧱 A side of a piece in a connection."""
+type Side {
+  piece: SidePiece!
+}
+
+"""
+⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+"""
+type SidePiece {
+  id: String!
+  type: SidePieceType!
+}
+
+"""🧩 The type information of a piece of a side."""
+type SidePieceType {
   port: Port
 }
 
@@ -164,14 +189,18 @@ type FormationToSceneFromLocalKitResponse {
   error: FormationToSceneFromLocalKitResponseError
 }
 
+"""🌆 A scene is a collection of objects."""
 type Scene {
   objects: [Object]!
   formation: Formation
 }
 
+"""
+🗿 An object is a piece with a plane and a parent object (unless the piece is a root).
+"""
 type Object {
+  plane: Plane!
   piece: Piece
-  plane: Plane
   parent: Object
 }
 
@@ -188,9 +217,10 @@ enum FormationToSceneFromLocalKitResponseErrorCode {
   FORMATION_DOES_NOT_EXIST
 }
 
+"""🏙️ A formation is identified by a name and optional variant."""
 input FormationIdInput {
   name: String!
-  variant: String
+  variant: String = ""
 }
 
 type Mutation {
@@ -221,123 +251,156 @@ enum CreateLocalKitErrorCode {
   KIT_INPUT_IS_INVALID
 }
 
+"""🗃️ A kit is a collection of types and formations."""
 input KitInput {
   name: String!
   description: String
   icon: String
   url: String
+  homepage: String
   types: [TypeInput!]
   formations: [FormationInput!]
 }
 
+"""
+🧩 A type is a reusable element that can be connected with other types over ports.
+"""
 input TypeInput {
   name: String!
   description: String
   icon: String
-  variant: String
+  variant: String = ""
   unit: String!
   representations: [RepresentationInput!]!
   ports: [PortInput!]!
   qualities: [QualityInput!]
 }
 
+"""
+💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
+"""
 input RepresentationInput {
   url: String!
   lod: String
   tags: [String!]
 }
 
+"""
+🔌 A port is a conceptual connection point (with a direction) of a type.
+"""
 input PortInput {
-  id: String!
-  plane: PlaneInput!
+  id: String = ""
+  point: PointInput!
+  direction: VectorInput!
   locators: [LocatorInput!]
 }
 
+"""✖️ A 3d-point (xyz) of floating point numbers."""
+input PointInput {
+  x: Float = 0
+  y: Float = 0
+  z: Float = 0
+}
+
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
+input VectorInput {
+  x: Float = 0
+  y: Float = 0
+  z: Float = 0
+}
+
+"""🗺️ A locator is meta-data for grouping ports."""
+input LocatorInput {
+  group: String!
+  subgroup: String
+}
+
+"""📏 A quality is meta-data for decision making."""
+input QualityInput {
+  name: String!
+  value: String
+  unit: String
+  definition: String
+}
+
+"""🏙️ A formation is a collection of pieces that are connected."""
+input FormationInput {
+  name: String!
+  description: String
+  icon: String
+  variant: String = ""
+  unit: String!
+  pieces: [PieceInput!]!
+  connections: [ConnectionInput!]!
+  qualities: [QualityInput!]
+}
+
+"""⭕ A piece is a 3d-instance of a type in a formation."""
+input PieceInput {
+  id: String!
+  type: TypeIdInput!
+  root: PieceRootInput = null
+  diagram: PieceDiagramInput!
+}
+
+"""🧩 A type is identified by a name and variant (empty=default)."""
+input TypeIdInput {
+  name: String!
+  variant: String = ""
+}
+
+"""🌱 The root information of a piece."""
+input PieceRootInput {
+  plane: PlaneInput!
+}
+
+"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 input PlaneInput {
   origin: PointInput!
   xAxis: VectorInput!
   yAxis: VectorInput!
 }
 
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input LocatorInput {
-  group: String!
-  subgroup: String
-}
-
-input QualityInput {
-  name: String!
-  value: String
-  unit: String
-}
-
-input FormationInput {
-  name: String!
-  description: String
-  icon: String
-  variant: String
-  unit: String!
-  pieces: [PieceInput!]!
-  attractions: [AttractionInput!]!
-  qualities: [QualityInput!]
-}
-
-input PieceInput {
-  id: String!
-  type: TypeIdInput!
-  root: RootPieceInput = null
-  diagram: DiagramPieceInput!
-}
-
-input TypeIdInput {
-  name: String!
-  variant: String
-}
-
-input RootPieceInput {
-  plane: PlaneInput!
-}
-
-input DiagramPieceInput {
+"""✏️ The diagram information of a piece."""
+input PieceDiagramInput {
   point: ScreenPointInput!
 }
 
+"""📺 A 2d-point (xy) of integers in screen coordinate system."""
 input ScreenPointInput {
-  x: Int!
-  y: Int!
+  x: Int = 0
+  y: Int = 0
 }
 
-input AttractionInput {
-  attracting: SideInput!
-  attracted: SideInput!
+"""🖇️ A connection between two pieces of a formation."""
+input ConnectionInput {
+  connecting: SideInput!
+  connected: SideInput!
+  offset: Float = 0
+  rotation: Float = 0
 }
 
+"""🧱 A side of a piece in a connection."""
 input SideInput {
-  piece: PieceSideInput!
+  piece: SidePieceInput!
 }
 
-input PieceSideInput {
+"""
+⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+"""
+input SidePieceInput {
   id: String!
-  type: TypePieceSideInput!
+  type: SidePieceTypeInput = null
 }
 
-input TypePieceSideInput {
-  port: PortIdInput!
+"""🧩 The type information of a piece of a side."""
+input SidePieceTypeInput {
+  port: PortIdInput = null
 }
 
+"""🔌 A port is identified by an id (emtpy=default))."""
 input PortIdInput {
-  id: String!
+  id: String = ""
 }
 
 type UpdateLocalKitMetadataMutation {
@@ -358,11 +421,13 @@ enum UpdateLocalKitMetadataErrorCode {
   KIT_METADATA_IS_INVALID
 }
 
+"""🗃️ Meta-data of a kit."""
 input KitMetadataInput {
   name: String
   description: String
   icon: String
   url: String
+  homepage: String
 }
 
 type DeleteLocalKitMutation {

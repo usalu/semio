@@ -13,7 +13,7 @@ public class Semio_GrasshopperInfo : GH_AssemblyInfo
     public override Bitmap AssemblyIcon => Resources.semio_24x24;
     public override string Description => "Grasshopper user interface for semio.";
     public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
-    public override string Version => "2.1.2";
+    public override string Version => "2.2.0";
     public override string AuthorName => "Ueli Saluz";
     public override string AuthorContact => "semio-community@posteo.org";
 }

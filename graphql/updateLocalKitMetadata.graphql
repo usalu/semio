@@ -5,6 +5,7 @@ mutation UpdateLocalKitMetadata($directory: String!, $kit: KitMetadataInput!) {
       description
       icon
       url
+      homepage
     }
     error {
       code

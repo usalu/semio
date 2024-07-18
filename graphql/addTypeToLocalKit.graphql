@@ -13,22 +13,15 @@ mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
         }
         ports {
           id
-          plane {
-            origin {
-              x
-              y
-              z
-            }
-            xAxis {
-              x
-              y
-              z
-            }
-            yAxis {
-              x
-              y
-              z
-            }
+          point {
+            x
+            y
+            z
+          }
+          direction {
+            x
+            y
+            z
           }
           locators {
             group
@@ -39,8 +32,9 @@ mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
           name
           value
           unit
+          definition
         }
-      }
+		}
     error {
       code
       message

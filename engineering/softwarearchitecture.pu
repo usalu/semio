@@ -1,0 +1,105 @@
+@startuml "software architecture"
+skinparam linetype ortho
+
+interface Artifact {
+    name : String
+    description : String
+    icon : String
+}
+
+class Kit {
+    url : String
+    homepage : String
+}
+
+class Type {
+}
+
+class Representation{
+    url : String
+    lod : String
+    tags: String[]
+}
+
+class Point {
+    x : Float
+    y : Float
+    z : Float
+}
+
+class Vector {
+    x : Float
+    y : Float
+    z : Float
+}
+
+class Plane {
+}
+
+class Port {
+    id : String
+}
+
+class Quality {
+    name : String
+    value : String
+    unit : String
+    definition : String
+}
+
+class Locator {
+    group : String
+    subgroup : String
+}
+
+class Piece{
+    id : String
+}
+
+class Root {
+
+}
+
+class Connection {
+    offset : Float
+    rotation : Float
+}
+
+class Side {
+
+}
+
+class Formation {
+}
+
+
+Kit *-- "0..*" Type
+Kit *-- "0..*" Formation
+Representation "1..*" --* Type
+Type *-- "1..*" Port
+Type *-- "0..*" Quality
+Formation *-- "1..*" Piece
+Piece *-- "0..1" Root
+Root *-- Plane
+Formation *-- "0..*" Connection
+Formation *-- "0..*" Quality
+Connection *-- Side : connected
+Connection *-- Side : connecting
+
+Port *-- Plane
+Port *-- "0..*"  Locator
+Point --*  Plane : origin
+Plane *-- Vector : x_axis
+Plane *-- Vector : y_axis
+Plane *-- Vector : normal
+
+Type <-- Piece
+Piece <-- Side
+Port <-- Side
+
+Artifact <|-- Kit
+Artifact <|-- Type
+Artifact <|-- Formation
+
+
+@enduml

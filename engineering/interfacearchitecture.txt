@@ -1,0 +1,110 @@
+kit : !Kit{
+    name : !String
+    description : ?String
+    icon : ?String
+    url : ?String
+    homepage : ?String
+    types : +[
+        name : !String
+        description : ?String
+        icon : ?String
+        variant : ?String
+        unit : !String
+        representations : +[
+            url : !String
+            lod : ?String
+            tags : *[String]
+        ]
+        ports : +[
+            id : !String
+            point : !{
+                x : !Float
+                y : !Float
+                z : !Float
+            }
+            direction : !{
+                x : !Float
+                y : !Float
+                z : !Float
+            }
+            locators : *[
+                group : !String
+                subgroup : !String
+            ]
+        ]
+        qualities : *[
+            name : !String
+            value : !String
+            unit : ?String
+            definition : ?String
+        ]
+    ]
+    formations : +[
+        name : !String
+        description : ?String
+        icon : ?String
+        variant : ?String
+        unit : !String
+        pieces : ![
+            id : !String
+            type : !{
+                name : !String
+                variant : ?String
+            }
+            root : ?{
+                plane : !{
+                    origin : !{
+                        x : !Float
+                        y : !Float
+                        z : !Float
+                    }
+                    x_axis : !{
+                        x : !Float
+                        y : !Float
+                        z : !Float
+                    }
+                    y_axis : !{
+                        x : !Float
+                        y : !Float
+                        z : !Float
+                    }
+                }
+            }
+            diagram : ?{
+                point :  !{
+                    x : !Integer
+                    y : !Integer
+                }
+            }
+        ]
+        connections : +[
+            connected : !{
+                piece : !{
+                    id : !String
+                    type : !{
+                        port : !{
+                            id : !String
+                        }
+                    }
+                }
+            }
+            connecting : !{
+                piece : !{
+                    id : !String
+                    type : !{
+                        port : !{
+                            id : !String
+                        }
+                    }
+                }
+            }
+            rotation : ?Float
+            offset : ?Float
+        ]
+        qualities : *[
+            name : !String
+            value : !String
+            unit : ?String
+        ]
+    ]
+}

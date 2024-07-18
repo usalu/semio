@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="119" height="20" role="img"
+    aria-label="powered by: C#">
+    <title>powered by: C#</title>
+    <g shape-rendering="crispEdges">
+        <rect width="92" height="20" fill="#555" />
+        <rect x="92" width="27" height="20" fill="#512bd4" />
+    </g>
+    <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif"
+        text-rendering="geometricPrecision" font-size="110">
+        <image x="5" y="3" width="14" height="14"
+            xlink:href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJ3aGl0ZXNtb2tlIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QyM8L3RpdGxlPjxwYXRoIGQ9Ik0xLjE5NCA3LjU0M3Y4LjkxM2MwIDEuMTAzLjU4OCAyLjEyMiAxLjU0NCAyLjY3NGw3LjcxOCA0LjQ1NmEzLjA4NiAzLjA4NiAwIDAgMCAzLjA4OCAwbDcuNzE4LTQuNDU2YTMuMDg3IDMuMDg3IDAgMCAwIDEuNTQ0LTIuNjc0VjcuNTQzYTMuMDg0IDMuMDg0IDAgMCAwLTEuNTQ0LTIuNjczTDEzLjU0NC40MTRhMy4wODYgMy4wODYgMCAwIDAtMy4wODggMEwyLjczOCA0Ljg3YTMuMDg1IDMuMDg1IDAgMCAwLTEuNTQ0IDIuNjczWm01LjQwMyAyLjkxNHYzLjA4N2EuNzcuNzcgMCAwIDAgLjc3Mi43NzIuNzczLjc3MyAwIDAgMCAuNzcyLS43NzIuNzczLjc3MyAwIDAgMSAxLjMxNy0uNTQ2Ljc3NS43NzUgMCAwIDEgLjIyNi41NDYgMi4zMTQgMi4zMTQgMCAxIDEtNC42MzEgMHYtMy4wODdjMC0uNjE1LjI0NC0xLjIwMy42NzktMS42MzdhMi4zMTIgMi4zMTIgMCAwIDEgMy4yNzQgMGMuNDM0LjQzNC42NzggMS4wMjMuNjc4IDEuNjM3YS43NjkuNzY5IDAgMCAxLS4yMjYuNTQ1Ljc2Ny43NjcgMCAwIDEtMS4wOTEgMCAuNzcuNzcgMCAwIDEtLjIyNi0uNTQ1Ljc3Ljc3IDAgMCAwLS43NzItLjc3Mi43NzEuNzcxIDAgMCAwLS43NzIuNzcyWm0xMi4zNSAzLjA4N2EuNzcuNzcgMCAwIDEtLjc3Mi43NzJoLS43NzJ2Ljc3MmEuNzczLjc3MyAwIDAgMS0xLjU0NCAwdi0uNzcyaC0xLjU0NHYuNzcyYS43NzMuNzczIDAgMCAxLTEuMzE3LjU0Ni43NzUuNzc1IDAgMCAxLS4yMjYtLjU0NnYtLjc3MkgxMmEuNzcxLjc3MSAwIDEgMSAwLTEuNTQ0aC43NzJ2LTEuNTQzSDEyYS43Ny43NyAwIDEgMSAwLTEuNTQ0aC43NzJ2LS43NzJhLjc3My43NzMgMCAwIDEgMS4zMTctLjU0Ni43NzUuNzc1IDAgMCAxIC4yMjYuNTQ2di43NzJoMS41NDR2LS43NzJhLjc3My43NzMgMCAwIDEgMS41NDQgMHYuNzcyaC43NzJhLjc3Mi43NzIgMCAwIDEgMCAxLjU0NGgtLjc3MnYxLjU0M2guNzcyYS43NzYuNzc2IDAgMCAxIC43NzIuNzcyWm0tMy4wODgtMi4zMTVoLTEuNTQ0djEuNTQzaDEuNTQ0di0xLjU0M1oiLz48L3N2Zz4=" />
+        <text x="555" y="140" transform="scale(.1)" fill="#fff" textLength="650">powered by</text><text x="1045" y="140"
+            transform="scale(.1)" fill="#fff" textLength="170">C#</text>
+    </g>
+</svg>

@@ -38,28 +38,30 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
             }
           }
       }
-      attractions {
-        attracting {
-          piece {
-            id
-            type {
-              port {
-                id
+      connections {
+          connected {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
               }
             }
           }
-        }
-        attracted {
-          piece {
-            id
-            type {
-              port {
-                id
+          connecting {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
               }
             }
           }
+          offset
+          rotation
         }
-      }
     }
     error {
       code

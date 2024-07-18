@@ -71,20 +71,8 @@ That's it!
 
 ## Examples
 
-You can download the examples from the [latest release](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip).
+You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/main/examples/metabolism/README.md).
 
-
-### Nakagin Capsule Tower
-
-### Requirements
-- Rhino model units need to be set to `Meter`.
-
-
-At least in semio, the iconic capsule tower(s) will keep on existing!
-![Nakagin Capsule Tower](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/grasshopper.gif)
-
-Ever wanted to change the capsules or the shaft with one click? While having different level of details?
-![Nakagin Capsule Tower Variants](https://raw.githubusercontent.com/usalu/semio/main/docs/examples/nakagincapsuletower/variants.png)
 
 # How does semio work?
 

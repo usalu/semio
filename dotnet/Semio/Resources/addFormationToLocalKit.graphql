@@ -12,29 +12,56 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
           name
           variant
         }
-      }
-      attractions {
-        attracting {
-          piece {
-            id
-            type {
-              port {
-                id
+        root {
+            plane {
+              origin {
+                x
+                y
+                z
+              }
+              xAxis {
+                x
+                y
+                z
+              }
+              yAxis {
+                x
+                y
+                z
               }
             }
           }
-        }
-        attracted {
-          piece {
-            id
-            type {
-              port {
-                id
+          diagram {
+            point {
+              x
+              y
+            }
+          }
+      }
+      connections {
+          connected {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
               }
             }
           }
+          connecting {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
+              }
+            }
+          }
+          offset
+          rotation
         }
-      }
     }
     error {
       code
