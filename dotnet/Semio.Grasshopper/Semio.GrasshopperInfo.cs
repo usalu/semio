@@ -17,6 +17,7 @@ public class Semio_GrasshopperInfo : GH_AssemblyInfo
     public override string AuthorName => "Ueli Saluz";
     public override string AuthorContact => "semio-community@posteo.org";
 }
+
 public class SemioCategoryIcon : GH_AssemblyPriority
 {
     public override GH_LoadingInstruction PriorityLoad()

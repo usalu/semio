@@ -7553,9 +7553,9 @@ const sampleKit = {
           }
         }
       ],
-      attractions: [
+      connections: [
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "CowardlySchapendoes841",
               type: {
@@ -7570,7 +7570,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7587,7 +7587,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "CowardlySchapendoes841",
               type: {
@@ -7602,7 +7602,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -7619,7 +7619,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7634,7 +7634,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ThinHippopotamus423",
               type: {
@@ -7651,7 +7651,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -7666,7 +7666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MadlyConey795",
               type: {
@@ -7683,7 +7683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7706,7 +7706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SolidHeron340",
               type: {
@@ -7723,7 +7723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7746,7 +7746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SecretiveLeopardseal287",
               type: {
@@ -7763,7 +7763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7786,7 +7786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PuffyCatfish395",
               type: {
@@ -7803,7 +7803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7826,7 +7826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MiniatureSunbittern419",
               type: {
@@ -7843,7 +7843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7866,7 +7866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SlowFinch497",
               type: {
@@ -7883,7 +7883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7906,7 +7906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FlagrantBoa174",
               type: {
@@ -7923,7 +7923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7946,7 +7946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "IncompetentAurochs281",
               type: {
@@ -7963,7 +7963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -7986,7 +7986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FluffyFlyingsquirrel17",
               type: {
@@ -8003,7 +8003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8026,7 +8026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BonyBoar961",
               type: {
@@ -8043,7 +8043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8066,7 +8066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UsedCub797",
               type: {
@@ -8083,7 +8083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8106,7 +8106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SteadyAbalone625",
               type: {
@@ -8123,7 +8123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8146,7 +8146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SilkyNightheron743",
               type: {
@@ -8163,7 +8163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8186,7 +8186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AbhorrentStarling544",
               type: {
@@ -8203,7 +8203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8226,7 +8226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HurtPheasant541",
               type: {
@@ -8243,7 +8243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8266,7 +8266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MeekHoki392",
               type: {
@@ -8283,7 +8283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8306,7 +8306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LethalMyna174",
               type: {
@@ -8323,7 +8323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8346,7 +8346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BashfulAmurminnow563",
               type: {
@@ -8363,7 +8363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8386,7 +8386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SpiffyPolarbear154",
               type: {
@@ -8403,7 +8403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8426,7 +8426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UltraSmelts713",
               type: {
@@ -8443,7 +8443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8466,7 +8466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BlindOyster551",
               type: {
@@ -8483,7 +8483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8506,7 +8506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BestGiantschnauzer105",
               type: {
@@ -8523,7 +8523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8546,7 +8546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MeatyGemsbok156",
               type: {
@@ -8563,7 +8563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8586,7 +8586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "StickyZebrafinch838",
               type: {
@@ -8603,7 +8603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8626,7 +8626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BerserkMeadowhawk244",
               type: {
@@ -8643,7 +8643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8666,7 +8666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AbjectJabiru130",
               type: {
@@ -8683,7 +8683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8706,7 +8706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MountainousGermanshepherd964",
               type: {
@@ -8723,7 +8723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8746,7 +8746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MaterialNauplius848",
               type: {
@@ -8763,7 +8763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8786,7 +8786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HardCopperhead485",
               type: {
@@ -8803,7 +8803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8826,7 +8826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LeanYnambu602",
               type: {
@@ -8843,7 +8843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8866,7 +8866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ExultantManxcat708",
               type: {
@@ -8883,7 +8883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8906,7 +8906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DutifulSpiketail603",
               type: {
@@ -8923,7 +8923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8946,7 +8946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AwkwardBumblebee771",
               type: {
@@ -8963,7 +8963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -8986,7 +8986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ArcticBoto329",
               type: {
@@ -9003,7 +9003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9026,7 +9026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "OverdueAcaciarat725",
               type: {
@@ -9043,7 +9043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9066,7 +9066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "WhimsicalSongbird425",
               type: {
@@ -9083,7 +9083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9106,7 +9106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "WingedDotterel237",
               type: {
@@ -9123,7 +9123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9146,7 +9146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "GoldenMantisray505",
               type: {
@@ -9163,7 +9163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9186,7 +9186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ObeseTegus499",
               type: {
@@ -9203,7 +9203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9226,7 +9226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "OutlyingFrog357",
               type: {
@@ -9243,7 +9243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9266,7 +9266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "StainedPupfish90",
               type: {
@@ -9283,7 +9283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9306,7 +9306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FancyCheetah998",
               type: {
@@ -9323,7 +9323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9346,7 +9346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ImaginaryKittiwake855",
               type: {
@@ -9363,7 +9363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9386,7 +9386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ChiefCopperhead915",
               type: {
@@ -9403,7 +9403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9426,7 +9426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FascinatedMajungatholus889",
               type: {
@@ -9443,7 +9443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9466,7 +9466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RequiredAlpaca68",
               type: {
@@ -9483,7 +9483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9506,7 +9506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LastGoa230",
               type: {
@@ -9523,7 +9523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9546,7 +9546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CircularShorebird528",
               type: {
@@ -9563,7 +9563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9586,7 +9586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HallowedChital355",
               type: {
@@ -9603,7 +9603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9626,7 +9626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RightfulTerrier113",
               type: {
@@ -9643,7 +9643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9666,7 +9666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LonePlanthopper612",
               type: {
@@ -9683,7 +9683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9706,7 +9706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "VisibleWoodborer638",
               type: {
@@ -9723,7 +9723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9746,7 +9746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BowedYucker17",
               type: {
@@ -9763,7 +9763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9786,7 +9786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "InsecureNag799",
               type: {
@@ -9803,7 +9803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9826,7 +9826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AquaticSwordfish164",
               type: {
@@ -9843,7 +9843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9866,7 +9866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "OurLeonberger899",
               type: {
@@ -9883,7 +9883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9906,7 +9906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AgitatedHamadryad482",
               type: {
@@ -9923,7 +9923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9946,7 +9946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DownrightElkhound157",
               type: {
@@ -9963,7 +9963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -9986,7 +9986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DailyPiedstarling237",
               type: {
@@ -10003,7 +10003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10026,7 +10026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BreezyGoosefish652",
               type: {
@@ -10043,7 +10043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10066,7 +10066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CumbersomeBandicoot22",
               type: {
@@ -10083,7 +10083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10106,7 +10106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PiquantSiskin104",
               type: {
@@ -10123,7 +10123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10146,7 +10146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SpontaneousRainbowfish68",
               type: {
@@ -10163,7 +10163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10186,7 +10186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "YummyGazelle673",
               type: {
@@ -10203,7 +10203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10226,7 +10226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PushyCarp243",
               type: {
@@ -10243,7 +10243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10266,7 +10266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "OverdueCurl285",
               type: {
@@ -10283,7 +10283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10306,7 +10306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HushedCrustacean689",
               type: {
@@ -10323,7 +10323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10346,7 +10346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ToothsomeMallard223",
               type: {
@@ -10363,7 +10363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10386,7 +10386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DevilishGlassfish353",
               type: {
@@ -10403,7 +10403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10426,7 +10426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SparseJacana451",
               type: {
@@ -10443,7 +10443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10466,7 +10466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CylindricalSquid97",
               type: {
@@ -10483,7 +10483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10506,7 +10506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SinfulMassasauga767",
               type: {
@@ -10523,7 +10523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10546,7 +10546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "IdenticalPoodle860",
               type: {
@@ -10563,7 +10563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10586,7 +10586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "WrathfulPony916",
               type: {
@@ -10603,7 +10603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10626,7 +10626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RingedYellowhammer92",
               type: {
@@ -10643,7 +10643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10666,7 +10666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ChivalrousImago604",
               type: {
@@ -10683,7 +10683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10706,7 +10706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "WhoppingOxpecker569",
               type: {
@@ -10723,7 +10723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10746,7 +10746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RebelMara725",
               type: {
@@ -10763,7 +10763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10786,7 +10786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "InfantileKingsnake150",
               type: {
@@ -10803,7 +10803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10826,7 +10826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LowlySpringtail166",
               type: {
@@ -10843,7 +10843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10866,7 +10866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HospitableInepython987",
               type: {
@@ -10883,7 +10883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10906,7 +10906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SpiritedShihtzu326",
               type: {
@@ -10923,7 +10923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10946,7 +10946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "QuarrelsomeIslandcanary721",
               type: {
@@ -10963,7 +10963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -10986,7 +10986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HeadyDraughthorse812",
               type: {
@@ -11003,7 +11003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -11026,7 +11026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UrbanPtarmigan897",
               type: {
@@ -11043,7 +11043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -11066,7 +11066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "WhisperingCrocodile272",
               type: {
@@ -11083,7 +11083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -11106,7 +11106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BlankGlowworm699",
               type: {
@@ -11123,7 +11123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -11146,7 +11146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FruitfulStonefly52",
               type: {
@@ -11163,7 +11163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "ProudMynah941",
               type: {
@@ -11186,7 +11186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AccurateCusimanse330",
               type: {
@@ -11203,7 +11203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11226,7 +11226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UniformMantid574",
               type: {
@@ -11243,7 +11243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11266,7 +11266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FineBarracuda230",
               type: {
@@ -11283,7 +11283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11306,7 +11306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ForegoingAcouchi516",
               type: {
@@ -11323,7 +11323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11346,7 +11346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CraftySlothbear953",
               type: {
@@ -11363,7 +11363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11386,7 +11386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DispensableLlama199",
               type: {
@@ -11403,7 +11403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11426,7 +11426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RaspyWreckfish32",
               type: {
@@ -11443,7 +11443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11466,7 +11466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ScratchyGoldfish395",
               type: {
@@ -11483,7 +11483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11506,7 +11506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CanineMolesnake909",
               type: {
@@ -11523,7 +11523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11546,7 +11546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UnhappyGrub868",
               type: {
@@ -11563,7 +11563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11586,7 +11586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DescriptiveGlasslizard981",
               type: {
@@ -11603,7 +11603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11626,7 +11626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "JudiciousOxen732",
               type: {
@@ -11643,7 +11643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11666,7 +11666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PrimeColt961",
               type: {
@@ -11683,7 +11683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11706,7 +11706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LowQuagga17",
               type: {
@@ -11723,7 +11723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11746,7 +11746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PristineScorpion186",
               type: {
@@ -11763,7 +11763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11786,7 +11786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FantasticRainbowfish852",
               type: {
@@ -11803,7 +11803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11826,7 +11826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UltraMonarch771",
               type: {
@@ -11843,7 +11843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11866,7 +11866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "VigilantSpringpeeper326",
               type: {
@@ -11883,7 +11883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11906,7 +11906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SmilingWaterstrider509",
               type: {
@@ -11923,7 +11923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11946,7 +11946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ZestyVampirebat158",
               type: {
@@ -11963,7 +11963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -11986,7 +11986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AliveAntbear261",
               type: {
@@ -12003,7 +12003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12026,7 +12026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SecretHare172",
               type: {
@@ -12043,7 +12043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12066,7 +12066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RotatingOctopus669",
               type: {
@@ -12083,7 +12083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12106,7 +12106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AdoredFantail424",
               type: {
@@ -12123,7 +12123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12146,7 +12146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SynonymousGuineafowl95",
               type: {
@@ -12163,7 +12163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12186,7 +12186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DefeatedMonkey388",
               type: {
@@ -12203,7 +12203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12226,7 +12226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AcridHoneybadger166",
               type: {
@@ -12243,7 +12243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12266,7 +12266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PointedGosling788",
               type: {
@@ -12283,7 +12283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12306,7 +12306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ScentedCattledog229",
               type: {
@@ -12323,7 +12323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12346,7 +12346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "TameTamarin483",
               type: {
@@ -12363,7 +12363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12386,7 +12386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ThinkableDarwinsfox897",
               type: {
@@ -12403,7 +12403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12426,7 +12426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FatRaptors755",
               type: {
@@ -12443,7 +12443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12466,7 +12466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UnadvisedMandrill5",
               type: {
@@ -12483,7 +12483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12506,7 +12506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PoorHarpseal18",
               type: {
@@ -12523,7 +12523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12546,7 +12546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AbortiveGoral231",
               type: {
@@ -12563,7 +12563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12586,7 +12586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PlasticSetter8",
               type: {
@@ -12603,7 +12603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12626,7 +12626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "RealBilby174",
               type: {
@@ -12643,7 +12643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12666,7 +12666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PastoralWombat366",
               type: {
@@ -12683,7 +12683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12706,7 +12706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "EtherealRacer964",
               type: {
@@ -12723,7 +12723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12746,7 +12746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MustyCottontail808",
               type: {
@@ -12763,7 +12763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12786,7 +12786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ShutNumbat484",
               type: {
@@ -12803,7 +12803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12826,7 +12826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AdorableMantid286",
               type: {
@@ -12843,7 +12843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12866,7 +12866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "VulgarYellowthroat175",
               type: {
@@ -12883,7 +12883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12906,7 +12906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "GullibleAidi472",
               type: {
@@ -12923,7 +12923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12946,7 +12946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MagentaLeonberger993",
               type: {
@@ -12963,7 +12963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -12986,7 +12986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DidacticReptile18",
               type: {
@@ -13003,7 +13003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13026,7 +13026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MereHake580",
               type: {
@@ -13043,7 +13043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13066,7 +13066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "EverlastingEyra142",
               type: {
@@ -13083,7 +13083,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13106,7 +13106,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HumiliatingVelvetworm177",
               type: {
@@ -13123,7 +13123,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13146,7 +13146,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ArrogantWaterbuck979",
               type: {
@@ -13163,7 +13163,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13186,7 +13186,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FunnyQuelea243",
               type: {
@@ -13203,7 +13203,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13226,7 +13226,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "BigGoldeneye919",
               type: {
@@ -13243,7 +13243,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13266,7 +13266,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PeriodicVulpesvulpes847",
               type: {
@@ -13283,7 +13283,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13306,7 +13306,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ThoughtlessBlackfish195",
               type: {
@@ -13323,7 +13323,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13346,7 +13346,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CandidNudibranch278",
               type: {
@@ -13363,7 +13363,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13386,7 +13386,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "FranticTattler688",
               type: {
@@ -13403,7 +13403,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13426,7 +13426,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MisguidedTriceratops788",
               type: {
@@ -13443,7 +13443,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13466,7 +13466,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "LovableAlpaca817",
               type: {
@@ -13483,7 +13483,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13506,7 +13506,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "AmbitiousStonefly839",
               type: {
@@ -13523,7 +13523,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13546,7 +13546,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MediocreVelociraptor707",
               type: {
@@ -13563,7 +13563,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13586,7 +13586,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ShimmeringNutria785",
               type: {
@@ -13603,7 +13603,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13626,7 +13626,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DerangedRainbowtrout438",
               type: {
@@ -13643,7 +13643,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13666,7 +13666,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "SubtleFantail625",
               type: {
@@ -13683,7 +13683,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13706,7 +13706,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "PalatableSquid933",
               type: {
@@ -13723,7 +13723,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13746,7 +13746,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "HarmlessSponge364",
               type: {
@@ -13763,7 +13763,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13786,7 +13786,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "DullSaiga459",
               type: {
@@ -13803,7 +13803,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13826,7 +13826,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "UnequalKinglet62",
               type: {
@@ -13843,7 +13843,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13866,7 +13866,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ModestMullet344",
               type: {
@@ -13883,7 +13883,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13906,7 +13906,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "MotionlessLemonshark447",
               type: {
@@ -13923,7 +13923,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13946,7 +13946,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "StripedLemonshark620",
               type: {
@@ -13963,7 +13963,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -13986,7 +13986,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "ThoughtlessZander366",
               type: {
@@ -14003,7 +14003,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -14026,7 +14026,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "CourageousFossa980",
               type: {
@@ -14043,7 +14043,7 @@ const sampleKit = {
           }
         },
         {
-          attracting: {
+          connecting: {
             piece: {
               id: "XylographicLhasaapso275",
               type: {
@@ -14066,7 +14066,7 @@ const sampleKit = {
               }
             }
           },
-          attracted: {
+          connected: {
             piece: {
               id: "GuardedPlainsqueaker760",
               type: {

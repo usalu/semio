@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
@@ -14,6 +13,7 @@ using Semio.Properties;
 // TODO: Add a more detailed message system when a model is invalid.
 
 #region Copilot
+
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
@@ -596,6 +596,7 @@ using Semio.Properties;
 //  NO_PERMISSION_TO_MODIFY_KIT
 //  FORMATION_DOES_NOT_EXIST
 //}
+
 #endregion
 
 #region Utility
@@ -725,7 +726,6 @@ public class ScreenPoint : IDeepCloneable<ScreenPoint>, IEntity
     {
         return false;
     }
-
 }
 
 public class Point : IDeepCloneable<Point>, IEntity
@@ -850,7 +850,8 @@ public class Port : IDeepCloneable<Port>, IEntity
         Direction = new Vector();
         Locators = new List<Locator>();
     }
-    public string Id { get; set; } 
+
+    public string Id { get; set; }
     public Point Point { get; set; }
     public Vector Direction { get; set; }
     public List<Locator> Locators { get; set; }
@@ -868,7 +869,7 @@ public class Port : IDeepCloneable<Port>, IEntity
 
     public override string ToString()
     {
-        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
+        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
     }
 
     public bool IsInvalid()
@@ -896,7 +897,7 @@ public class PortId : IDeepCloneable<PortId>, IEntity
 
     public override string ToString()
     {
-        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
+        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
     }
 
     public bool IsInvalid()
@@ -1242,6 +1243,7 @@ public class Connection : IDeepCloneable<Connection>, IEntity
         Offset = 0;
         Rotation = 0;
     }
+
     public Side Connected { get; set; }
     public Side Connecting { get; set; }
     public float Offset { get; set; }
@@ -1479,6 +1481,7 @@ public class Scene : IDeepCloneable<Scene>, IEntity
         Formation = new FormationId();
         Objects = new List<Object>();
     }
+
     public FormationId Formation { get; set; }
     public List<Object> Objects { get; set; }
 

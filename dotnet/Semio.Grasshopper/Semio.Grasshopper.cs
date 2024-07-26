@@ -11,7 +11,6 @@ using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino;
-using Rhino.Collections;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
 
@@ -28,6 +27,7 @@ namespace Semio.Grasshopper;
 // The invalid check happen twice and code is duplicated.
 
 #region Copilot
+
 //public interface IDeepCloneable<T>
 //{
 //    T DeepClone();
@@ -312,7 +312,6 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
-
 
 //public class Quality : IDeepCloneable<Quality>, IEntity
 //{
@@ -640,7 +639,6 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-
 //public class Connection : IDeepCloneable<Connection>, IEntity
 //{
 //    public Connection()
@@ -812,7 +810,6 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-
 //public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
 //{
 //    public ObjectParent()
@@ -980,6 +977,7 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
+
 #endregion
 
 #region Utility
@@ -1022,13 +1020,12 @@ public static class Utility
 
     public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
     {
-        var thetaRad = Rhino.RhinoMath.ToRadians(theta);
+        var thetaRad = RhinoMath.ToRadians(theta);
         var orientation = Transform.Rotation(Vector3d.YAxis, yAxis, Point3d.Origin);
         var rotation = Transform.Rotation(thetaRad, yAxis, Point3d.Origin);
         var xAxis = Vector3d.XAxis;
         xAxis.Transform(rotation * orientation);
         return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
-
     }
 }
 
@@ -1038,12 +1035,12 @@ public static class Utility
 
 public static class RhinoConverter
 {
-    public static Rhino.Geometry.Point3d convert(this Point point)
+    public static Point3d convert(this Point point)
     {
-        return new Rhino.Geometry.Point3d(point.X, point.Y, point.Z);
+        return new Point3d(point.X, point.Y, point.Z);
     }
 
-    public static Point convert(this Rhino.Geometry.Point3d point)
+    public static Point convert(this Point3d point)
     {
         return new Point
         {
@@ -1053,12 +1050,12 @@ public static class RhinoConverter
         };
     }
 
-    public static Rhino.Geometry.Vector3d convert(this Vector vector)
+    public static Vector3d convert(this Vector vector)
     {
-        return new Rhino.Geometry.Vector3d(vector.X, vector.Y, vector.Z);
+        return new Vector3d(vector.X, vector.Y, vector.Z);
     }
 
-    public static Vector convert(this Rhino.Geometry.Vector3d vector)
+    public static Vector convert(this Vector3d vector)
     {
         return new Vector
         {
@@ -1067,6 +1064,7 @@ public static class RhinoConverter
             Z = (float)vector.Z
         };
     }
+
     public static Rhino.Geometry.Plane convert(this Plane plane)
     {
         return new Rhino.Geometry.Plane(
@@ -1576,6 +1574,7 @@ public class SideGoo : GH_Goo<Side>
             };
             return true;
         }
+
         if (source is Piece piece)
         {
             Value = new Side
@@ -2167,7 +2166,8 @@ public class PortComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
+        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*",
+            "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
             GH_ParamAccess.list);
         pManager[4].Optional = true;
     }
@@ -2179,7 +2179,8 @@ public class PortComponent : SemioComponent
         pManager.AddTextParameter("Id", "Id", "Id of the port.", GH_ParamAccess.item);
         pManager.AddPointParameter("Point", "Pt", "Point of the port.", GH_ParamAccess.item);
         pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
-        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*", "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
+        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*",
+            "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
             GH_ParamAccess.list);
     }
 
@@ -2187,8 +2188,8 @@ public class PortComponent : SemioComponent
     {
         var portGoo = new PortGoo();
         var id = "";
-        var pointGeo = new Rhino.Geometry.Point3d();
-        var directionGeo = new Rhino.Geometry.Vector3d();
+        var pointGeo = new Point3d();
+        var directionGeo = new Vector3d();
         var locatorGoos = new List<LocatorGoo>();
 
         if (DA.GetData(0, ref portGoo))
@@ -2208,16 +2209,19 @@ public class PortComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a point.");
             isValidInput = false;
         }
+
         if (portGoo.Value.Direction.IsInvalid())
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a direction.");
             isValidInput = false;
         }
+
         if (portGoo.Value.Direction.IsZero())
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The direction needs to point somewhere.");
             isValidInput = false;
         }
+
         if (!isValidInput) return;
 
         DA.SetData(0, portGoo.Duplicate());
@@ -2294,6 +2298,7 @@ public class QualityComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A quality needs a name.");
             isValidInput = false;
         }
+
         if (!isValidInput) return;
 
         DA.SetData(0, qualityGoo.Duplicate());
@@ -2328,10 +2333,13 @@ public class TypeComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
+        pManager.AddTextParameter("Variant", "Vn?",
+            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
-        pManager.AddTextParameter("Unit", "Ut", "Unit of the type. By default the document unit is used. Otherwise meters will be used.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut",
+            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
+            GH_ParamAccess.item);
         pManager[5].Optional = true;
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
             GH_ParamAccess.list);
@@ -2351,14 +2359,17 @@ public class TypeComponent : SemioComponent
         pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the type. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?",
+            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut",
             "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
             GH_ParamAccess.item);
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
             GH_ParamAccess.list);
         pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the type. A quality is meta-data for decision making.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+            "Optional qualities of the type. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
     }
 
@@ -2525,7 +2536,8 @@ public class PieceComponent : SemioComponent
         pManager[1].Optional = true;
         pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece. No variant means the default variant.",
+        pManager.AddTextParameter("Type Variant", "TyVn?",
+            "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager[3].Optional = true;
         pManager.AddPlaneParameter("Root Plane", "RtPn?",
@@ -2544,7 +2556,8 @@ public class PieceComponent : SemioComponent
             "Constructed or modified piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "TyVn?", "Optional variant of the type of the piece. No variant means the default variant.",
+        pManager.AddTextParameter("Type Variant", "TyVn?",
+            "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager.AddPlaneParameter("Root Plane", "RtPl?",
             "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
@@ -2621,7 +2634,8 @@ public class SideComponent : SemioComponent
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
-                       "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.", GH_ParamAccess.item);
+            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            GH_ParamAccess.item);
         pManager[2].Optional = true;
     }
 
@@ -2631,7 +2645,8 @@ public class SideComponent : SemioComponent
             "Constructed or modified side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
         pManager.AddParameter(new LocatorParam(), "Piece Type Port Id", "PcTyPoId?",
-            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.", GH_ParamAccess.item);
+            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2653,6 +2668,7 @@ public class SideComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs a piece id.");
             isValidInput = false;
         }
+
         if (!isValidInput) return;
 
         DA.SetData(0, sideGoo.Duplicate());
@@ -2688,7 +2704,8 @@ public class ConnectionComponent : SemioComponent
         pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
             GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddNumberParameter("Rotation", "Rt?", "Optional rotation (degree around the port direction) of the connection.",
+        pManager.AddNumberParameter("Rotation", "Rt?",
+            "Optional rotation (degree around the port direction) of the connection.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
     }
@@ -2703,7 +2720,8 @@ public class ConnectionComponent : SemioComponent
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?", "Optional rotation (degree around the port direction) of the connection.",
+        pManager.AddNumberParameter("Rotation", "Rt?",
+            "Optional rotation (degree around the port direction) of the connection.",
             GH_ParamAccess.item);
     }
 
@@ -2728,16 +2746,20 @@ public class ConnectionComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connected side.");
             isValidInput = false;
         }
+
         if (connectionGoo.Value.Connecting.IsInvalid())
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connecting side.");
             isValidInput = false;
         }
-        if (connectionGoo.Value.Connecting.Piece.Id != "" && connectionGoo.Value.Connected.Piece.Id == connectionGoo.Value.Connecting.Piece.Id)
+
+        if (connectionGoo.Value.Connecting.Piece.Id != "" &&
+            connectionGoo.Value.Connected.Piece.Id == connectionGoo.Value.Connecting.Piece.Id)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "An connection cannot attract itself.");
             isValidInput = false;
         }
+
         if (!isValidInput) return;
 
         DA.SetData(0, connectionGoo.Duplicate());
@@ -2764,7 +2786,8 @@ public class FormationComponent : SemioComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo?",
-            "Optional formation to deconstruct or modify. A formation is a collection of pieces that are connected.", GH_ParamAccess.item);
+            "Optional formation to deconstruct or modify. A formation is a collection of pieces that are connected.",
+            GH_ParamAccess.item);
         pManager[0].Optional = true;
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager[1].Optional = true;
@@ -2772,7 +2795,9 @@ public class FormationComponent : SemioComponent
         pManager[2].Optional = true;
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?",
+            "Optional variant of the formation. No variant means the default variant. There can be only one default variant.",
+            GH_ParamAccess.item);
         pManager[4].Optional = true;
         pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager[5].Optional = true;
@@ -2790,16 +2815,20 @@ public class FormationComponent : SemioComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Constructed or modified formation. A formation is a collection of pieces that are connected.", GH_ParamAccess.item);
+            "Constructed or modified formation. A formation is a collection of pieces that are connected.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Vn?", "Optional variant of the formation. No variant means the default variant. There can be only one default variant.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?",
+            "Optional variant of the formation. No variant means the default variant. There can be only one default variant.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
         pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the formation.",
             GH_ParamAccess.list);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "Optional qualities of the formation. A quality is meta-data for decision making.",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+            "Optional qualities of the formation. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
     }
 
@@ -2815,7 +2844,7 @@ public class FormationComponent : SemioComponent
         var connectionGoos = new List<ConnectionGoo>();
         var qualityGoos = new List<QualityGoo>();
 
-        if(DA.GetData(0, ref formationGoo))
+        if (DA.GetData(0, ref formationGoo))
             formationGoo = formationGoo.Duplicate() as FormationGoo;
         if (DA.GetData(1, ref name))
             formationGoo.Value.Name = name;
@@ -2954,19 +2983,31 @@ public abstract class EngineComponent : SemioComponent
     protected override void BeforeSolveInstance()
     {
         base.BeforeSolveInstance();
-        Process[] processes = Process.GetProcessesByName("semio-engine");
-        if (processes.Length == 0){
-            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "semio-engine.exe");
+        var processes = Process.GetProcessesByName("semio-engine");
+        if (processes.Length == 0)
+        {
+            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                "semio-engine.exe");
             var engine = Process.Start(path);
             // lightweight way to kill child process when parent process is killed
             // https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed#4657392
-            AppDomain.CurrentDomain.DomainUnload += (s, e) => { engine.Kill(); engine.WaitForExit(); };
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => { engine.Kill(); engine.WaitForExit(); };
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => { engine.Kill(); engine.WaitForExit(); };
+            AppDomain.CurrentDomain.DomainUnload += (s, e) =>
+            {
+                engine.Kill();
+                engine.WaitForExit();
+            };
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                engine.Kill();
+                engine.WaitForExit();
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                engine.Kill();
+                engine.WaitForExit();
+            };
         }
-            
-
-    }    
+    }
 }
 
 public class LoadKitComponent : EngineComponent
@@ -3016,10 +3057,7 @@ public class LoadKitComponent : EngineComponent
                 : Directory.GetCurrentDirectory();
 
         DA.GetData(1, ref run);
-        if (!run)
-        {
-            return;
-        }
+        if (!run) return;
 
         var response = new Api().LoadLocalKit(path);
         if (response == null)
@@ -3043,7 +3081,6 @@ public class LoadKitComponent : EngineComponent
         DA.SetData(4, kit.Homepage);
         DA.SetDataList(5, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
         DA.SetDataList(6, kit.Formations.Select(f => new FormationGoo(f.DeepClone())));
-        
     }
 }
 
@@ -3249,14 +3286,14 @@ public class AddTypeComponent : EngineComponent
         var path = "";
         var run = false;
 
-        if(DA.GetData(0, ref typeGoo))
+        if (DA.GetData(0, ref typeGoo))
             typeGoo = typeGoo.Duplicate() as TypeGoo;
         if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
         DA.GetData(2, ref run);
-        
+
         if (!run)
         {
             DA.SetData(0, false);
@@ -3373,7 +3410,8 @@ public class RemoveTypeComponent : EngineComponent
         pManager.AddTextParameter("Type Name", "TyNa",
             "Name of the type to remove from the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Variant", "TyVn?",
-                       "Optional variant of the type to remove from the kit. No variant will remove the default variant.", GH_ParamAccess.item);
+            "Optional variant of the type to remove from the kit. No variant will remove the default variant.",
+            GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3451,7 +3489,8 @@ public class RemoveFormationComponent : EngineComponent
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of the formation to remove from the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to remove from the kit. No variant will remove the default variant.", GH_ParamAccess.item);
+            "Optional variant of the formation to remove from the kit. No variant will remove the default variant.",
+            GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
@@ -3922,7 +3961,8 @@ public class GetSceneComponent : SemioComponent
         pManager.AddTextParameter("Formation Name", "FoNa",
             "Name of formation to convert to a scene.", GH_ParamAccess.item);
         pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to convert to a scene. No variant will convert the default variant.", GH_ParamAccess.item);
+            "Optional variant of the formation to convert to a scene. No variant will convert the default variant.",
+            GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",

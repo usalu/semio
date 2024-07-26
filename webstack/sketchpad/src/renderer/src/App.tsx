@@ -42,10 +42,11 @@ import {
     Tooltip,
     Modal,
     FloatButton,
-    Badge
+    InputNumber,
+    Slider
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
-import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color } from 'three'
+import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color, Vector3 } from 'three'
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
@@ -55,8 +56,8 @@ import {
     GizmoViewport,
     TransformControls,
     Grid,
+    Sphere,
     Line as DreiLine,
-    Cone as DreiCone,
     Box as DreiBox,
     Stage
 } from '@react-three/drei'
@@ -76,24 +77,33 @@ import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } fro
 import { nanoid } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-    Attraction,
-    AttractionInput,
+    Connection,
+    ConnectionInput,
     Formation,
     FormationIdInput,
     FormationInput,
     Piece,
     PieceInput,
     Plane,
-    PlaneInput,
-    Point,
     Port,
     PortInput,
     Representation,
     Type,
     TypeIdInput,
-    TypeInput,
-    Vector
+    TypeInput
 } from './semio.d'
+import {
+    Hierarchy,
+    vectorToVector3,
+    pointToVector3,
+    TOLERANCE,
+    radians,
+    transformToPlane,
+    convertVectorToVector3,
+    convertPointToVector3,
+    planeToTransform,
+    threeToSemioRotation
+} from './semio'
 import { convertPlaneToTransform, convertTransformToPlane, formationToHierarchies } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
@@ -117,7 +127,6 @@ import {
     selectPorts,
     ISelectionFormation
 } from './store'
-import { n } from 'vitest/dist/reporters-LqC_WI4d'
 import { ThemeConfig } from 'antd/lib'
 
 // Copilot
@@ -128,541 +137,597 @@ import { ThemeConfig } from 'antd/lib'
 // export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 // export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 // export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-
+// /** All built-in and custom scalars, mapped to their actual values */
 // export type Scalars = {
-//   ID: { input: string; output: string; }
-//   String: { input: string; output: string; }
-//   Boolean: { input: boolean; output: boolean; }
-//   Int: { input: number; output: number; }
-//   Float: { input: number; output: number; }
-//   /**
-//    * The `DateTime` scalar type represents a DateTime
-//    * value as specified by
-//    * [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
-//    */
-//   DateTime: { input: any; output: any; }
+//     ID: { input: string; output: string; }
+//     String: { input: string; output: string; }
+//     Boolean: { input: boolean; output: boolean; }
+//     Int: { input: number; output: number; }
+//     Float: { input: number; output: number; }
+//     /**
+//      * The `DateTime` scalar type represents a DateTime
+//      * value as specified by
+//      * [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+//      */
+//     DateTime: { input: any; output: any; }
 // };
 
 // export type Query = {
-//   __typename?: 'Query';
-//   loadLocalKit?: Maybe<LoadLocalKitResponse>;
-//   formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
+//     __typename?: 'Query';
+//     loadLocalKit?: Maybe<LoadLocalKitResponse>;
+//     formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
 // };
+
 
 // export type QueryLoadLocalKitArgs = {
-//   directory: Scalars['String']['input'];
+//     directory: Scalars['String']['input'];
 // };
 
+
 // export type QueryFormationToSceneFromLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   formationIdInput: FormationIdInput;
+//     directory: Scalars['String']['input'];
+//     formationIdInput: FormationIdInput;
 // };
 
 // export type LoadLocalKitResponse = {
-//   __typename?: 'LoadLocalKitResponse';
-//   kit?: Maybe<Kit>;
-//   error?: Maybe<LoadLocalKitError>;
+//     __typename?: 'LoadLocalKitResponse';
+//     kit?: Maybe<Kit>;
+//     error?: Maybe<LoadLocalKitError>;
 // };
 
+// /** 🗃️ A kit is a collection of types and formations. */
 // export type Kit = {
-//   __typename?: 'Kit';
-//   name: Scalars['String']['output'];
-//   description: Scalars['String']['output'];
-//   icon: Scalars['String']['output'];
-//   createdAt: Scalars['DateTime']['output'];
-//   lastUpdateAt: Scalars['DateTime']['output'];
-//   url: Scalars['String']['output'];
-//   types: Array<Type>;
-//   formations: Array<Formation>;
+//     __typename?: 'Kit';
+//     name: Scalars['String']['output'];
+//     description: Scalars['String']['output'];
+//     icon: Scalars['String']['output'];
+//     createdAt: Scalars['DateTime']['output'];
+//     lastUpdateAt: Scalars['DateTime']['output'];
+//     url: Scalars['String']['output'];
+//     homepage: Scalars['String']['output'];
+//     types: Array<Type>;
+//     formations: Array<Formation>;
 // };
 
+// /** 🧩 A type is a reusable element that can be connected with other types over ports. */
 // export type Type = {
-//   __typename?: 'Type';
-//   name: Scalars['String']['output'];
-//   description: Scalars['String']['output'];
-//   icon: Scalars['String']['output'];
-//   variant: Scalars['String']['output'];
-//   unit: Scalars['String']['output'];
-//   createdAt: Scalars['DateTime']['output'];
-//   lastUpdateAt: Scalars['DateTime']['output'];
-//   kit?: Maybe<Kit>;
-//   representations: Array<Representation>;
-//   ports: Array<Port>;
-//   qualities: Array<Quality>;
-//   pieces: Array<Piece>;
+//     __typename?: 'Type';
+//     name: Scalars['String']['output'];
+//     description: Scalars['String']['output'];
+//     icon: Scalars['String']['output'];
+//     variant: Scalars['String']['output'];
+//     unit: Scalars['String']['output'];
+//     createdAt: Scalars['DateTime']['output'];
+//     lastUpdateAt: Scalars['DateTime']['output'];
+//     kit?: Maybe<Kit>;
+//     representations: Array<Representation>;
+//     ports: Array<Port>;
+//     qualities: Array<Quality>;
+//     pieces: Array<Piece>;
 // };
 
+// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
 // export type Representation = {
-//   __typename?: 'Representation';
-//   url: Scalars['String']['output'];
-//   lod: Scalars['String']['output'];
-//   type?: Maybe<Type>;
-//   tags: Array<Scalars['String']['output']>;
+//     __typename?: 'Representation';
+//     url: Scalars['String']['output'];
+//     lod: Scalars['String']['output'];
+//     type?: Maybe<Type>;
+//     tags: Array<Scalars['String']['output']>;
 // };
 
+// /** 🔌 A port is a conceptual connection point (with a direction) of a type. */
 // export type Port = {
-//   __typename?: 'Port';
-//   plane?: Maybe<Plane>;
-//   type?: Maybe<Type>;
-//   locators: Array<Locator>;
-//   attractings: Array<Attraction>;
-//   attracteds: Array<Attraction>;
-//   id: Scalars['String']['output'];
+//     __typename?: 'Port';
+//     type?: Maybe<Type>;
+//     locators: Array<Locator>;
+//     connecteds: Array<Connection>;
+//     connectings: Array<Connection>;
+//     id: Scalars['String']['output'];
+//     point: Point;
+//     direction: Vector;
+//     plane: Plane;
 // };
 
-// export type Plane = {
-//   __typename?: 'Plane';
-//   port?: Maybe<Port>;
-//   rootPiece?: Maybe<Piece>;
-//   origin: Point;
-//   xAxis: Vector;
-//   yAxis: Vector;
-// };
-
-// export type Piece = {
-//   __typename?: 'Piece';
-//   type?: Maybe<Type>;
-//   formation?: Maybe<Formation>;
-//   attractings: Array<Attraction>;
-//   attracteds: Array<Attraction>;
-//   id: Scalars['String']['output'];
-//   root: RootPiece;
-//   diagram: DiagramPiece;
-// };
-
-// export type Formation = {
-//   __typename?: 'Formation';
-//   name: Scalars['String']['output'];
-//   description: Scalars['String']['output'];
-//   icon: Scalars['String']['output'];
-//   variant: Scalars['String']['output'];
-//   unit: Scalars['String']['output'];
-//   createdAt: Scalars['DateTime']['output'];
-//   lastUpdateAt: Scalars['DateTime']['output'];
-//   kit?: Maybe<Kit>;
-//   pieces: Array<Piece>;
-//   attractions: Array<Attraction>;
-//   qualities: Array<Quality>;
-// };
-
-// export type Attraction = {
-//   __typename?: 'Attraction';
-//   formation?: Maybe<Formation>;
-//   attracting: Side;
-//   attracted: Side;
-// };
-
-// /** A side of an attraction. */
-// export type Side = {
-//   __typename?: 'Side';
-//   piece: PieceSide;
-// };
-
-// /** The piece of a side of an attraction. */
-// export type PieceSide = {
-//   __typename?: 'PieceSide';
-//   id: Scalars['String']['output'];
-//   type: TypePieceSide;
-// };
-
-// /** The port of a type of a piece of a side of an attraction. */
-// export type TypePieceSide = {
-//   __typename?: 'TypePieceSide';
-//   port?: Maybe<Port>;
-// };
-
-// export type Quality = {
-//   __typename?: 'Quality';
-//   name: Scalars['String']['output'];
-//   value: Scalars['String']['output'];
-//   unit: Scalars['String']['output'];
-//   type?: Maybe<Type>;
-//   formation?: Maybe<Formation>;
-// };
-
-// /** The plane of the root piece of a formation. */
-// export type RootPiece = {
-//   __typename?: 'RootPiece';
-//   plane: Plane;
-// };
-
-// /** The point of a diagram of a piece. */
-// export type DiagramPiece = {
-//   __typename?: 'DiagramPiece';
-//   point: ScreenPoint;
-// };
-
-// export type ScreenPoint = {
-//   __typename?: 'ScreenPoint';
-//   x: Scalars['Int']['output'];
-//   y: Scalars['Int']['output'];
-// };
-
-// export type Point = {
-//   __typename?: 'Point';
-//   x: Scalars['Float']['output'];
-//   y: Scalars['Float']['output'];
-//   z: Scalars['Float']['output'];
-// };
-
-// export type Vector = {
-//   __typename?: 'Vector';
-//   x: Scalars['Float']['output'];
-//   y: Scalars['Float']['output'];
-//   z: Scalars['Float']['output'];
-// };
-
+// /** 🗺️ A locator is meta-data for grouping ports. */
 // export type Locator = {
-//   __typename?: 'Locator';
-//   group: Scalars['String']['output'];
-//   subgroup: Scalars['String']['output'];
-//   port?: Maybe<Port>;
+//     __typename?: 'Locator';
+//     group: Scalars['String']['output'];
+//     subgroup: Scalars['String']['output'];
+//     port?: Maybe<Port>;
+// };
+
+// /** 🖇️ A connection between two pieces of a formation. */
+// export type Connection = {
+//     __typename?: 'Connection';
+//     offset: Scalars['Float']['output'];
+//     rotation: Scalars['Float']['output'];
+//     formation?: Maybe<Formation>;
+//     connected: Side;
+//     connecting: Side;
+// };
+
+// /** 🏙️ A formation is a collection of pieces that are connected. */
+// export type Formation = {
+//     __typename?: 'Formation';
+//     name: Scalars['String']['output'];
+//     description: Scalars['String']['output'];
+//     icon: Scalars['String']['output'];
+//     variant: Scalars['String']['output'];
+//     unit: Scalars['String']['output'];
+//     createdAt: Scalars['DateTime']['output'];
+//     lastUpdateAt: Scalars['DateTime']['output'];
+//     kit?: Maybe<Kit>;
+//     pieces: Array<Piece>;
+//     connections: Array<Connection>;
+//     qualities: Array<Quality>;
+// };
+
+// /** ⭕ A piece is a 3d-instance of a type in a formation. */
+// export type Piece = {
+//     __typename?: 'Piece';
+//     type?: Maybe<Type>;
+//     formation?: Maybe<Formation>;
+//     connectings: Array<Connection>;
+//     connecteds: Array<Connection>;
+//     id: Scalars['String']['output'];
+//     root?: Maybe<PieceRoot>;
+//     diagram: PieceDiagram;
+// };
+
+// /** 🌱 The root information of a piece. */
+// export type PieceRoot = {
+//     __typename?: 'PieceRoot';
+//     plane: Plane;
+// };
+
+// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
+// export type Plane = {
+//     __typename?: 'Plane';
+//     origin: Point;
+//     xAxis: Vector;
+//     yAxis: Vector;
+// };
+
+// /** ✖️ A 3d-point (xyz) of floating point numbers. */
+// export type Point = {
+//     __typename?: 'Point';
+//     x: Scalars['Float']['output'];
+//     y: Scalars['Float']['output'];
+//     z: Scalars['Float']['output'];
+// };
+
+// /** ➡️ A 3d-vector (xyz) of floating point numbers. */
+// export type Vector = {
+//     __typename?: 'Vector';
+//     x: Scalars['Float']['output'];
+//     y: Scalars['Float']['output'];
+//     z: Scalars['Float']['output'];
+// };
+
+// /** ✏️ The diagram information of a piece. */
+// export type PieceDiagram = {
+//     __typename?: 'PieceDiagram';
+//     point: ScreenPoint;
+// };
+
+// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+// export type ScreenPoint = {
+//     __typename?: 'ScreenPoint';
+//     x: Scalars['Int']['output'];
+//     y: Scalars['Int']['output'];
+// };
+
+// /** 📏 A quality is meta-data for decision making. */
+// export type Quality = {
+//     __typename?: 'Quality';
+//     name: Scalars['String']['output'];
+//     value: Scalars['String']['output'];
+//     unit: Scalars['String']['output'];
+//     definition: Scalars['String']['output'];
+//     type?: Maybe<Type>;
+//     formation?: Maybe<Formation>;
+// };
+
+// /** 🧱 A side of a piece in a connection. */
+// export type Side = {
+//     __typename?: 'Side';
+//     piece: SidePiece;
+// };
+
+// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// export type SidePiece = {
+//     __typename?: 'SidePiece';
+//     id: Scalars['String']['output'];
+//     type: SidePieceType;
+// };
+
+// /** 🧩 The type information of a piece of a side. */
+// export type SidePieceType = {
+//     __typename?: 'SidePieceType';
+//     port?: Maybe<Port>;
 // };
 
 // export enum LoadLocalKitError {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 // }
 
 // export type FormationToSceneFromLocalKitResponse = {
-//   __typename?: 'FormationToSceneFromLocalKitResponse';
-//   scene?: Maybe<Scene>;
-//   error?: Maybe<FormationToSceneFromLocalKitResponseError>;
+//     __typename?: 'FormationToSceneFromLocalKitResponse';
+//     scene?: Maybe<Scene>;
+//     error?: Maybe<FormationToSceneFromLocalKitResponseError>;
 // };
 
+// /** 🌆 A scene is a collection of objects. */
 // export type Scene = {
-//   __typename?: 'Scene';
-//   objects: Array<Maybe<Object>>;
-//   formation?: Maybe<Formation>;
+//     __typename?: 'Scene';
+//     objects: Array<Maybe<Object>>;
+//     formation?: Maybe<Formation>;
 // };
 
+// /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
 // export type Object = {
-//   __typename?: 'Object';
-//   piece?: Maybe<Piece>;
-//   plane?: Maybe<Plane>;
-//   parent?: Maybe<Object>;
+//     __typename?: 'Object';
+//     plane: Plane;
+//     piece?: Maybe<Piece>;
+//     parent?: Maybe<Object>;
 // };
 
 // export type FormationToSceneFromLocalKitResponseError = {
-//   __typename?: 'FormationToSceneFromLocalKitResponseError';
-//   code: FormationToSceneFromLocalKitResponseErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'FormationToSceneFromLocalKitResponseError';
+//     code: FormationToSceneFromLocalKitResponseErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum FormationToSceneFromLocalKitResponseErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
-//   FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
+//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
 // }
 
+// /** 🏙️ A formation is identified by a name and optional variant. */
 // export type FormationIdInput = {
-//   name: Scalars['String']['input'];
-//   variant?: InputMaybe<Scalars['String']['input']>;
+//     name: Scalars['String']['input'];
+//     variant?: InputMaybe<Scalars['String']['input']>;
 // };
 
 // export type Mutation = {
-//   __typename?: 'Mutation';
-//   createLocalKit?: Maybe<CreateLocalKitMutation>;
-//   updateLocalKitMetadata?: Maybe<UpdateLocalKitMetadataMutation>;
-//   deleteLocalKit?: Maybe<DeleteLocalKitMutation>;
-//   addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>;
-//   removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>;
-//   addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>;
-//   removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>;
+//     __typename?: 'Mutation';
+//     createLocalKit?: Maybe<CreateLocalKitMutation>;
+//     updateLocalKitMetadata?: Maybe<UpdateLocalKitMetadataMutation>;
+//     deleteLocalKit?: Maybe<DeleteLocalKitMutation>;
+//     addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>;
+//     removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>;
+//     addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>;
+//     removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>;
 // };
+
 
 // export type MutationCreateLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   kitInput: KitInput;
+//     directory: Scalars['String']['input'];
+//     kitInput: KitInput;
 // };
+
 
 // export type MutationUpdateLocalKitMetadataArgs = {
-//   directory: Scalars['String']['input'];
-//   kitMetadataInput: KitMetadataInput;
+//     directory: Scalars['String']['input'];
+//     kitMetadataInput: KitMetadataInput;
 // };
+
 
 // export type MutationDeleteLocalKitArgs = {
-//   directory: Scalars['String']['input'];
+//     directory: Scalars['String']['input'];
 // };
+
 
 // export type MutationAddTypeToLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   typeInput: TypeInput;
+//     directory: Scalars['String']['input'];
+//     typeInput: TypeInput;
 // };
+
 
 // export type MutationRemoveTypeFromLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   typeId: TypeIdInput;
+//     directory: Scalars['String']['input'];
+//     typeId: TypeIdInput;
 // };
+
 
 // export type MutationAddFormationToLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   formationInput: FormationInput;
+//     directory: Scalars['String']['input'];
+//     formationInput: FormationInput;
 // };
 
+
 // export type MutationRemoveFormationFromLocalKitArgs = {
-//   directory: Scalars['String']['input'];
-//   formationId: FormationIdInput;
+//     directory: Scalars['String']['input'];
+//     formationId: FormationIdInput;
 // };
 
 // export type CreateLocalKitMutation = {
-//   __typename?: 'CreateLocalKitMutation';
-//   kit?: Maybe<Kit>;
-//   error?: Maybe<CreateLocalKitError>;
+//     __typename?: 'CreateLocalKitMutation';
+//     kit?: Maybe<Kit>;
+//     error?: Maybe<CreateLocalKitError>;
 // };
 
 // export type CreateLocalKitError = {
-//   __typename?: 'CreateLocalKitError';
-//   code: CreateLocalKitErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'CreateLocalKitError';
+//     code: CreateLocalKitErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum CreateLocalKitErrorCode {
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryAlreadyContainsAKit = 'DIRECTORY_ALREADY_CONTAINS_A_KIT',
-//   NoPermissionToCreateDirectory = 'NO_PERMISSION_TO_CREATE_DIRECTORY',
-//   NoPermissionToCreateKit = 'NO_PERMISSION_TO_CREATE_KIT',
-//   KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryAlreadyContainsAKit = 'DIRECTORY_ALREADY_CONTAINS_A_KIT',
+//     NoPermissionToCreateDirectory = 'NO_PERMISSION_TO_CREATE_DIRECTORY',
+//     NoPermissionToCreateKit = 'NO_PERMISSION_TO_CREATE_KIT',
+//     KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
 // }
 
+// /** 🗃️ A kit is a collection of types and formations. */
 // export type KitInput = {
-//   name: Scalars['String']['input'];
-//   description?: InputMaybe<Scalars['String']['input']>;
-//   icon?: InputMaybe<Scalars['String']['input']>;
-//   url?: InputMaybe<Scalars['String']['input']>;
-//   types?: InputMaybe<Array<TypeInput>>;
-//   formations?: InputMaybe<Array<FormationInput>>;
+//     name: Scalars['String']['input'];
+//     description?: InputMaybe<Scalars['String']['input']>;
+//     icon?: InputMaybe<Scalars['String']['input']>;
+//     url?: InputMaybe<Scalars['String']['input']>;
+//     homepage?: InputMaybe<Scalars['String']['input']>;
+//     types?: InputMaybe<Array<TypeInput>>;
+//     formations?: InputMaybe<Array<FormationInput>>;
 // };
 
+// /** 🧩 A type is a reusable element that can be connected with other types over ports. */
 // export type TypeInput = {
-//   name: Scalars['String']['input'];
-//   description?: InputMaybe<Scalars['String']['input']>;
-//   icon?: InputMaybe<Scalars['String']['input']>;
-//   variant?: InputMaybe<Scalars['String']['input']>;
-//   unit: Scalars['String']['input'];
-//   representations: Array<RepresentationInput>;
-//   ports: Array<PortInput>;
-//   qualities?: InputMaybe<Array<QualityInput>>;
+//     name: Scalars['String']['input'];
+//     description?: InputMaybe<Scalars['String']['input']>;
+//     icon?: InputMaybe<Scalars['String']['input']>;
+//     variant?: InputMaybe<Scalars['String']['input']>;
+//     unit: Scalars['String']['input'];
+//     representations: Array<RepresentationInput>;
+//     ports: Array<PortInput>;
+//     qualities?: InputMaybe<Array<QualityInput>>;
 // };
 
+// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
 // export type RepresentationInput = {
-//   url: Scalars['String']['input'];
-//   lod?: InputMaybe<Scalars['String']['input']>;
-//   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+//     url: Scalars['String']['input'];
+//     lod?: InputMaybe<Scalars['String']['input']>;
+//     tags?: InputMaybe<Array<Scalars['String']['input']>>;
 // };
 
+// /** 🔌 A port is a conceptual connection point (with a direction) of a type. */
 // export type PortInput = {
-//   id?: InputMaybe<Scalars['String']['input']>;
-//   plane: PlaneInput;
-//   locators?: InputMaybe<Array<LocatorInput>>;
+//     id?: InputMaybe<Scalars['String']['input']>;
+//     point: PointInput;
+//     direction: VectorInput;
+//     locators?: InputMaybe<Array<LocatorInput>>;
 // };
 
-// export type PlaneInput = {
-//   origin: PointInput;
-//   xAxis: VectorInput;
-//   yAxis: VectorInput;
-// };
-
+// /** ✖️ A 3d-point (xyz) of floating point numbers. */
 // export type PointInput = {
-//   x: Scalars['Float']['input'];
-//   y: Scalars['Float']['input'];
-//   z: Scalars['Float']['input'];
+//     x?: InputMaybe<Scalars['Float']['input']>;
+//     y?: InputMaybe<Scalars['Float']['input']>;
+//     z?: InputMaybe<Scalars['Float']['input']>;
 // };
 
+// /** ➡️ A 3d-vector (xyz) of floating point numbers. */
 // export type VectorInput = {
-//   x: Scalars['Float']['input'];
-//   y: Scalars['Float']['input'];
-//   z: Scalars['Float']['input'];
+//     x?: InputMaybe<Scalars['Float']['input']>;
+//     y?: InputMaybe<Scalars['Float']['input']>;
+//     z?: InputMaybe<Scalars['Float']['input']>;
 // };
 
+// /** 🗺️ A locator is meta-data for grouping ports. */
 // export type LocatorInput = {
-//   group: Scalars['String']['input'];
-//   subgroup?: InputMaybe<Scalars['String']['input']>;
+//     group: Scalars['String']['input'];
+//     subgroup?: InputMaybe<Scalars['String']['input']>;
 // };
 
+// /** 📏 A quality is meta-data for decision making. */
 // export type QualityInput = {
-//   name: Scalars['String']['input'];
-//   value?: InputMaybe<Scalars['String']['input']>;
-//   unit?: InputMaybe<Scalars['String']['input']>;
+//     name: Scalars['String']['input'];
+//     value?: InputMaybe<Scalars['String']['input']>;
+//     unit?: InputMaybe<Scalars['String']['input']>;
+//     definition?: InputMaybe<Scalars['String']['input']>;
 // };
 
+// /** 🏙️ A formation is a collection of pieces that are connected. */
 // export type FormationInput = {
-//   name: Scalars['String']['input'];
-//   description?: InputMaybe<Scalars['String']['input']>;
-//   icon?: InputMaybe<Scalars['String']['input']>;
-//   variant?: InputMaybe<Scalars['String']['input']>;
-//   unit: Scalars['String']['input'];
-//   pieces: Array<PieceInput>;
-//   attractions: Array<AttractionInput>;
-//   qualities?: InputMaybe<Array<QualityInput>>;
+//     name: Scalars['String']['input'];
+//     description?: InputMaybe<Scalars['String']['input']>;
+//     icon?: InputMaybe<Scalars['String']['input']>;
+//     variant?: InputMaybe<Scalars['String']['input']>;
+//     unit: Scalars['String']['input'];
+//     pieces: Array<PieceInput>;
+//     connections: Array<ConnectionInput>;
+//     qualities?: InputMaybe<Array<QualityInput>>;
 // };
 
+// /** ⭕ A piece is a 3d-instance of a type in a formation. */
 // export type PieceInput = {
-//   id: Scalars['String']['input'];
-//   type: TypeIdInput;
-//   root?: InputMaybe<RootPieceInput>;
-//   diagram: DiagramPieceInput;
+//     id: Scalars['String']['input'];
+//     type: TypeIdInput;
+//     root?: InputMaybe<PieceRootInput>;
+//     diagram: PieceDiagramInput;
 // };
 
+// /** 🧩 A type is identified by a name and variant (empty=default). */
 // export type TypeIdInput = {
-//   name: Scalars['String']['input'];
-//   variant?: InputMaybe<Scalars['String']['input']>;
+//     name: Scalars['String']['input'];
+//     variant?: InputMaybe<Scalars['String']['input']>;
 // };
 
-// export type RootPieceInput = {
-//   plane: PlaneInput;
+// /** 🌱 The root information of a piece. */
+// export type PieceRootInput = {
+//     plane: PlaneInput;
 // };
 
-// export type DiagramPieceInput = {
-//   point: ScreenPointInput;
+// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
+// export type PlaneInput = {
+//     origin: PointInput;
+//     xAxis: VectorInput;
+//     yAxis: VectorInput;
 // };
 
+// /** ✏️ The diagram information of a piece. */
+// export type PieceDiagramInput = {
+//     point: ScreenPointInput;
+// };
+
+// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
 // export type ScreenPointInput = {
-//   x: Scalars['Int']['input'];
-//   y: Scalars['Int']['input'];
+//     x?: InputMaybe<Scalars['Int']['input']>;
+//     y?: InputMaybe<Scalars['Int']['input']>;
 // };
 
-// export type AttractionInput = {
-//   attracting: SideInput;
-//   attracted: SideInput;
+// /** 🖇️ A connection between two pieces of a formation. */
+// export type ConnectionInput = {
+//     connecting: SideInput;
+//     connected: SideInput;
+//     offset?: InputMaybe<Scalars['Float']['input']>;
+//     rotation?: InputMaybe<Scalars['Float']['input']>;
 // };
 
+// /** 🧱 A side of a piece in a connection. */
 // export type SideInput = {
-//   piece: PieceSideInput;
+//     piece: SidePieceInput;
 // };
 
-// export type PieceSideInput = {
-//   id: Scalars['String']['input'];
-//   type?: InputMaybe<TypePieceSideInput>;
+// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// export type SidePieceInput = {
+//     id: Scalars['String']['input'];
+//     type?: InputMaybe<SidePieceTypeInput>;
 // };
 
-// export type TypePieceSideInput = {
-//   port?: InputMaybe<PortIdInput>;
+// /** 🧩 The type information of a piece of a side. */
+// export type SidePieceTypeInput = {
+//     port?: InputMaybe<PortIdInput>;
 // };
 
+// /** 🔌 A port is identified by an id (emtpy=default)). */
 // export type PortIdInput = {
-//   id?: InputMaybe<Scalars['String']['input']>;
+//     id?: InputMaybe<Scalars['String']['input']>;
 // };
 
 // export type UpdateLocalKitMetadataMutation = {
-//   __typename?: 'UpdateLocalKitMetadataMutation';
-//   kit?: Maybe<Kit>;
-//   error?: Maybe<UpdateLocalKitMetadataError>;
+//     __typename?: 'UpdateLocalKitMetadataMutation';
+//     kit?: Maybe<Kit>;
+//     error?: Maybe<UpdateLocalKitMetadataError>;
 // };
 
 // export type UpdateLocalKitMetadataError = {
-//   __typename?: 'UpdateLocalKitMetadataError';
-//   code: UpdateLocalKitMetadataErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'UpdateLocalKitMetadataError';
+//     code: UpdateLocalKitMetadataErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum UpdateLocalKitMetadataErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToUpdateKit = 'NO_PERMISSION_TO_UPDATE_KIT',
-//   KitMetadataIsInvalid = 'KIT_METADATA_IS_INVALID'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToUpdateKit = 'NO_PERMISSION_TO_UPDATE_KIT',
+//     KitMetadataIsInvalid = 'KIT_METADATA_IS_INVALID'
 // }
 
+// /** 🗃️ Meta-data of a kit. */
 // export type KitMetadataInput = {
-//   name?: InputMaybe<Scalars['String']['input']>;
-//   description?: InputMaybe<Scalars['String']['input']>;
-//   icon?: InputMaybe<Scalars['String']['input']>;
-//   url?: InputMaybe<Scalars['String']['input']>;
+//     name?: InputMaybe<Scalars['String']['input']>;
+//     description?: InputMaybe<Scalars['String']['input']>;
+//     icon?: InputMaybe<Scalars['String']['input']>;
+//     url?: InputMaybe<Scalars['String']['input']>;
+//     homepage?: InputMaybe<Scalars['String']['input']>;
 // };
 
 // export type DeleteLocalKitMutation = {
-//   __typename?: 'DeleteLocalKitMutation';
-//   error?: Maybe<DeleteLocalKitError>;
+//     __typename?: 'DeleteLocalKitMutation';
+//     error?: Maybe<DeleteLocalKitError>;
 // };
 
 // export enum DeleteLocalKitError {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToDeleteKit = 'NO_PERMISSION_TO_DELETE_KIT'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToDeleteKit = 'NO_PERMISSION_TO_DELETE_KIT'
 // }
 
 // export type AddTypeToLocalKitMutation = {
-//   __typename?: 'AddTypeToLocalKitMutation';
-//   type?: Maybe<Type>;
-//   error?: Maybe<AddTypeToLocalKitError>;
+//     __typename?: 'AddTypeToLocalKitMutation';
+//     type?: Maybe<Type>;
+//     error?: Maybe<AddTypeToLocalKitError>;
 // };
 
 // export type AddTypeToLocalKitError = {
-//   __typename?: 'AddTypeToLocalKitError';
-//   code: AddTypeToLocalKitErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'AddTypeToLocalKitError';
+//     code: AddTypeToLocalKitErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum AddTypeToLocalKitErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//   TypeInputIsInvalid = 'TYPE_INPUT_IS_INVALID'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//     TypeInputIsInvalid = 'TYPE_INPUT_IS_INVALID'
 // }
 
 // export type RemoveTypeFromLocalKitMutation = {
-//   __typename?: 'RemoveTypeFromLocalKitMutation';
-//   error?: Maybe<RemoveTypeFromLocalKitError>;
+//     __typename?: 'RemoveTypeFromLocalKitMutation';
+//     error?: Maybe<RemoveTypeFromLocalKitError>;
 // };
 
 // export type RemoveTypeFromLocalKitError = {
-//   __typename?: 'RemoveTypeFromLocalKitError';
-//   code: RemoveTypeFromLocalKitErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'RemoveTypeFromLocalKitError';
+//     code: RemoveTypeFromLocalKitErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum RemoveTypeFromLocalKitErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//   TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
-//   FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//     TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
+//     FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
 // }
 
 // export type AddFormationToLocalKitMutation = {
-//   __typename?: 'AddFormationToLocalKitMutation';
-//   formation?: Maybe<Formation>;
-//   error?: Maybe<AddFormationToLocalKitError>;
+//     __typename?: 'AddFormationToLocalKitMutation';
+//     formation?: Maybe<Formation>;
+//     error?: Maybe<AddFormationToLocalKitError>;
 // };
 
 // export type AddFormationToLocalKitError = {
-//   __typename?: 'AddFormationToLocalKitError';
-//   code: AddFormationToLocalKitErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'AddFormationToLocalKitError';
+//     code: AddFormationToLocalKitErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum AddFormationToLocalKitErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//   FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//     FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
 // }
 
 // export type RemoveFormationFromLocalKitMutation = {
-//   __typename?: 'RemoveFormationFromLocalKitMutation';
-//   error?: Maybe<RemoveFormationFromLocalKitError>;
+//     __typename?: 'RemoveFormationFromLocalKitMutation';
+//     error?: Maybe<RemoveFormationFromLocalKitError>;
 // };
 
 // export type RemoveFormationFromLocalKitError = {
-//   __typename?: 'RemoveFormationFromLocalKitError';
-//   code: RemoveFormationFromLocalKitErrorCode;
-//   message?: Maybe<Scalars['String']['output']>;
+//     __typename?: 'RemoveFormationFromLocalKitError';
+//     code: RemoveFormationFromLocalKitErrorCode;
+//     message?: Maybe<Scalars['String']['output']>;
 // };
 
 // export enum RemoveFormationFromLocalKitErrorCode {
-//   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
-//   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
-//   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
-//   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//   FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
+//     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
+//     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
+//     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
+//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
 // }
 
 const { Header, Content, Footer, Sider } = Layout
@@ -817,6 +882,10 @@ const sketchpadTheme = {
         Tooltip: {},
     }
 } as ThemeConfig
+
+const Label = ({ children, className }: { children: ReactNode; className?: string }): JSX.Element => {
+    return <span className={`text-lightGrey ${className}`}>{children}</span>
+}
 
 class SeededRandom {
     private seed: number
@@ -1036,16 +1105,16 @@ const ArtifactAvatar = ({
     const [data, kind] = getIconData(icon)
     const draggableProps = draggableId
         ? (() => {
-              const { attributes, listeners, setNodeRef } = useDraggable({
-                  id: draggableId
-              })
+            const { attributes, listeners, setNodeRef } = useDraggable({
+                id: draggableId
+            })
 
-              return {
-                  ref: setNodeRef,
-                  ...listeners,
-                  ...attributes
-              }
-          })()
+            return {
+                ref: setNodeRef,
+                ...listeners,
+                ...attributes
+            }
+        })()
         : {}
 
     switch (kind) {
@@ -1109,14 +1178,15 @@ const Gizmo = (): JSX.Element => {
         <GizmoHelper
             alignment="bottom-right"
             margin={[80, 80]}
-            >
+        >
             <GizmoViewport
                 labels={['X', 'Z', '-Y']}
                 axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-                // font="Anta"
-                />
+            // font="Anta"
+            />
         </GizmoHelper>
-)}
+    )
+}
 
 interface PlaneThreeProps {
     plane: Plane
@@ -1129,7 +1199,7 @@ const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
     const groupRef = useRef();
     useEffect(() => {
         if (groupRef.current) {
-            const transform = convertPlaneToTransform(plane, true)
+            const transform = planeToTransform(plane)
             groupRef.current.applyMatrix4(transform)
         }
     }, [])
@@ -1137,76 +1207,76 @@ const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
         <group name="plane" ref={groupRef}>
             <DreiLine
                 // name="x-axis"
-                points = {[[0, 0, 0],[1, 0, 0]]}
+                points={[[0, 0, 0], [1, 0, 0]]}
                 color={colors.primary}
-                lineWidth={lineWidth*2}
+                lineWidth={lineWidth * 2}
             />
             <DreiLine
                 // name="y-axis"
-                points = {[[0, 0, 0],[0, 0, -1]]}
+                points={[[0, 0, 0], [0, 0, -1]]}
                 color={colors.secondary}
-                lineWidth={lineWidth*2}
+                lineWidth={lineWidth * 2}
             />
             <DreiLine
                 // name="z-axis"
-                points = {[[0, 0, 0],[0, 1, 0]]}
+                points={[[0, 0, 0], [0, 1, 0]]}
                 color={colors.tertiary}
-                lineWidth={lineWidth*2}
+                lineWidth={lineWidth * 2}
             />
             <DreiLine
-                points = {[[-1,0,-1],[1,0,-1]]}	color={colors.grey}
+                points={[[-1, 0, -1], [1, 0, -1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,-1],[-1,0,1]]}	color={colors.grey}
+                points={[[-1, 0, -1], [-1, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,-0.666667],[1,0,-0.666667]]}	color={colors.grey}
+                points={[[-1, 0, -0.666667], [1, 0, -0.666667]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,-0.333333],[1,0,-0.333333]]}	color={colors.grey}
+                points={[[-1, 0, -0.333333], [1, 0, -0.333333]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,0.333333],[1,0,0.333333]]}	color={colors.grey}
+                points={[[-1, 0, 0.333333], [1, 0, 0.333333]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,0.666667],[1,0,0.666667]]}	color={colors.grey}
+                points={[[-1, 0, 0.666667], [1, 0, 0.666667]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,1],[1,0,1]]}	color={colors.grey}
+                points={[[-1, 0, 1], [1, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-0.666667,0,-1],[-0.666667,0,1]]}	color={colors.grey}
+                points={[[-0.666667, 0, -1], [-0.666667, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-0.333333,0,-1],[-0.333333,0,1]]}	color={colors.grey}
+                points={[[-0.333333, 0, -1], [-0.333333, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[0.333333,0,-1],[0.333333,0,1]]}	color={colors.grey}
+                points={[[0.333333, 0, -1], [0.333333, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[0.666667,0,-1],[0.666667,0,1]]}	color={colors.grey}
+                points={[[0.666667, 0, -1], [0.666667, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[1,0,-1],[1,0,1]]}	color={colors.grey}
+                points={[[1, 0, -1], [1, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[0,0,0],[0,0,1]]}	color={colors.grey}
+                points={[[0, 0, 0], [0, 0, 1]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiLine
-                points = {[[-1,0,0],[0,0,0]]}	color={colors.grey}
+                points={[[-1, 0, 0], [0, 0, 0]]} color={colors.grey}
                 lineWidth={lineWidth}
             />
             <DreiBox
@@ -1220,20 +1290,32 @@ const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
             />
         </group>
     )
-  }
-  
+}
+
 interface PortThreeProps {
     port: Port | PortInput
     selected: boolean
-    onSelect: (portId: string ,event: ThreeEvent<MouseEvent>) => void
+    onClick: (event: ThreeEvent<MouseEvent>) => void
 }
 
-const PortThree = ({ port, selected, onSelect }: PortThreeProps): JSX.Element => {
-    const onSelectPlane = (event: ThreeEvent<MouseEvent>) : void => {
-        onSelect(port.id, event)
-    }
+const PortThree = ({ port, selected, onClick }: PortThreeProps): JSX.Element => {
+    const point = convertPointToVector3(port.point)
+    const direction = convertVectorToVector3(port.direction)
+    const groupRef = useRef()
+
     return (
-        <PlaneThree plane={port.plane} onSelect={onSelectPlane} lineWidth={selected ? 3 : 1}/>
+        <group name="port" ref={groupRef} onClick={onClick}>
+            <Sphere
+                args={[selected ? 0.2 : 0.1]}
+                position={point.toArray()}
+                material={new MeshBasicMaterial({ color: new Color(selected ? colors.primary : colors.grey) })}
+            />
+            <DreiLine
+                points={[point.toArray(), new Vector3().addVectors(point, direction).toArray()]} color={colors.light}
+                color={colors.light}
+                lineWidth={selected ? 3 : 1}
+            />
+        </group>
     )
 }
 
@@ -1259,7 +1341,7 @@ const RepresentationThree = ({ representation, id, color, plane }: Representatio
             }
         })
         if (plane) {
-            const transform = convertPlaneToTransform(plane)
+            const transform = convertPlaneToTransform(plane).premultiply(threeToSemioRotation())
             clone.applyMatrix4(transform)
         }
         return clone
@@ -1272,29 +1354,28 @@ RepresentationThree.displayName = 'Representation'
 
 interface PortSelectorProps {
     type: Type | TypeInput
-    onChangePortId: (portId: string) => void
+    selectedPortId: string
+    onSelect: (portId: string) => void
 }
 
-const PortSelector = ({ type, onChangePortId }: PortSelectorProps): JSX.Element => {
+const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JSX.Element => {
     const ports = type.ports
-
-    const [selectedPortId, setSelectedPortId] = useState('')
 
     return (
         <div className="w-[350px] h-[350px]">
             <Canvas>
                 <OrbitControls makeDefault />
-                <Gizmo/>
-                <Stage center={{disable:true}} environment={null}>
+                <Gizmo />
+                <Stage center={{ disable: true }} environment={null}>
                     <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
                     {ports.map((port) => (
                         <PortThree
                             key={port.id}
                             port={port}
                             selected={selectedPortId === port.id}
-                            onSelect={(portId, event) => {
-                                setSelectedPortId(portId)
-                                onChangePortId(portId)
+                            onClick={(e) => {
+                                onSelect(port.id)
+                                e.stopPropagation()
                             }}
                         />
                     ))}
@@ -1304,92 +1385,144 @@ const PortSelector = ({ type, onChangePortId }: PortSelectorProps): JSX.Element 
     )
 }
 
-interface AttractionPreview{
-    attractingType: Type | TypeInput
-    attractedType: Type | TypeInput
-    attraction: Attraction | AttractionInput
+interface ConnectionPreview {
+    connectingType: Type | TypeInput
+    connectedType: Type | TypeInput
+    connection: Connection | ConnectionInput
 }
 
-const AttractionPreview = ({ attractingType, attractedType, attraction }: AttractionPreview): JSX.Element => {
-    const attractingPort = 
-        attraction ? attractingType.ports.find((port) => port.id === attraction.attracting.piece.type?.port?.id) : null
-    const attractedPort = 
-        attraction ? attractedType.ports.find((port) => port.id === attraction.attracted.piece.type?.port?.id) : null
+const ConnectionPreview = ({ connectingType, connectedType, connection }: ConnectionPreview): JSX.Element => {
+    const connectedPort = connectedType.ports.find((port) => port.id === connection.connected.piece.type?.port?.id)
+    const connectingPort = connectingType.ports.find((port) => port.id === connection.connecting.piece.type?.port?.id)
 
-    const parentTransform = attractingPort ? convertPlaneToTransform(attractingPort.plane) : new Matrix4()
-    const childTransform = attractedPort ? convertPlaneToTransform(attractedPort.plane).invert() : new Matrix4()
-    const attractedPlane = convertTransformToPlane(parentTransform.multiply(childTransform))
+    const invertedConnectingDirection = vectorToVector3(connectingPort.direction).negate()
+    const connectedDirection = vectorToVector3(connectedPort.direction)
+    const rotation = new Matrix4()
+    const orientAxis = new Vector3().crossVectors(invertedConnectingDirection, connectedDirection)
+    if (orientAxis.length() > TOLERANCE) {
+        const orient = new Matrix4().makeRotationAxis(orientAxis.normalize(), invertedConnectingDirection.angleTo(connectedDirection))
+        rotation.premultiply(orient)
+    }
+    if (connection.rotation !== 0) {
+        const rotate = new Matrix4().makeRotationAxis(connectedDirection, radians(connection.rotation))
+        rotation.premultiply(rotate)
+    }
+    const centerConnecting = new Matrix4().makeTranslation(pointToVector3(connectingPort.point).negate())
+    const moveToConnected = new Matrix4().makeTranslation(pointToVector3(connectedPort.point))
+    const transform = new Matrix4()
+    transform.premultiply(centerConnecting)
+    transform.premultiply(rotation)
+    if (connection.offset !== 0) {
+        const offset = new Matrix4().makeTranslation(connectedDirection.clone().multiplyScalar(connection.offset))
+        transform.premultiply(offset)
+    }
+    transform.premultiply(moveToConnected)
+    const connectedPlane = transformToPlane(transform)
     return (
         <div className="w-[700px] h-[700px]">
             <Canvas>
                 <OrbitControls makeDefault />
-                <Gizmo/>
-                <Stage center={{disable:true}} environment={null}>
-                { attraction ?
-                    <group>
-                    { attractingPort ?
-                        <RepresentationThree
-                            id='attracting'
-                            representation={attractingType.representations.find((r) => r.url.endsWith('.glb'))}
-                        /> : null }
-                    { attractedPort ?
-                            <RepresentationThree
-                                id='attracted'
-                                representation={attractedType.representations.find((r) => r.url.endsWith('.glb'))}
-                                plane = {attractedPlane}
-                            /> : null }
-                    </group>
-                 : null}
-                 </Stage>
+                <Gizmo />
+                <Stage center={{ disable: true }} environment={null}>
+                    <RepresentationThree
+                        id='connecting'
+                        representation={connectingType.representations.find((r) => r.url.endsWith('.glb'))}
+                    />
+                    <RepresentationThree
+                        id='connected'
+                        representation={connectedType.representations.find((r) => r.url.endsWith('.glb'))}
+                        plane={connectedPlane}
+                    />
+                </Stage>
             </Canvas>
         </div>
     )
 }
 
-interface AttractionBuilderProps {
-    attractingType: Type | TypeInput
-    attractedType: Type | TypeInput
-    onAttractionChange: (attraction: AttractionInput) => void
+const findDefaultOrFirstPort = (type: Type | TypeInput): Port | PortInput => {
+    return type.ports.find((port) => port.id === '') ?? type.ports[0]
 }
 
-const AttractionBuilder = ({ attractingType, attractedType, onAttractionChange }: AttractionBuilderProps): JSX.Element => {
-    const [attractingPortId, setAttractingPortId] = useState('')
-    const [attractedPortId, setAttractedPortId] = useState('')
+interface ConnectionBuilderProps {
+    connectingType: Type | TypeInput
+    connectedType: Type | TypeInput
+    onConnectionChange: (connection: ConnectionInput) => void
+}
 
-    const attraction = {
-        attracting: {
+const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }: ConnectionBuilderProps): JSX.Element => {
+    const [connectingPortId, setConnectingPortId] = useState(findDefaultOrFirstPort(connectingType).id)
+    const [connectedPortId, setConnectedPortId] = useState(findDefaultOrFirstPort(connectedType).id)
+    const [offset, setOffset] = useState(0)
+    const [rotation, setRotation] = useState(0)
+
+    const onRotationChange: InputNumberProps['onChange'] = (newValue) => {
+        setRotation(newValue as number);
+    };
+
+    const connection = {
+        connecting: {
             piece: {
                 type: {
                     port: {
-                        id: attractingPortId
+                        id: connectingPortId
                     }
                 }
             }
         },
-        attracted: {
+        connected: {
             piece: {
                 type: {
                     port: {
-                        id: attractedPortId
+                        id: connectedPortId
                     }
                 }
             }
-        }
-    } as AttractionInput
+        },
+        offset,
+        rotation
+    } as ConnectionInput
 
     useEffect(() => {
-        onAttractionChange(attraction)
-    }, [attractingType, attractedType, attractingPortId, attractedPortId])
+        onConnectionChange(connection)
+    }, [connectingType, connectedType, connectingPortId, connectedPortId])
 
     return (
         <Flex>
             <Flex vertical>
-                <PortSelector type={attractingType} onChangePortId={setAttractingPortId} />
-                <Divider className="m-0"/>
-                <PortSelector type={attractedType} onChangePortId={setAttractedPortId} />
+                <PortSelector type={connectingType} onSelect={setConnectingPortId} selectedPortId={connectingPortId} />
+                <Divider className="m-0" />
+                <PortSelector type={connectedType} onSelect={setConnectedPortId} selectedPortId={connectedPortId} />
+                <Flex>
+                    <Label>Offset</Label>
+                    <InputNumber
+                        value={offset}
+                        onChange={(value) => setOffset(value)}
+                    />
+                </Flex>
+                <Row>
+                    <Col span={12}>
+                        <Slider
+                            min={-360}
+                            max={360}
+                            onChange={onRotationChange}
+                            value={typeof rotation === 'number' ? rotation : 0}
+                        />
+                    </Col>
+                    <Col span={4}>
+                        <InputNumber
+                            min={-360}
+                            max={360}
+                            style={{ margin: '0 16px' }}
+                            value={rotation}
+                            onChange={onRotationChange}
+                        />
+                    </Col>
+                </Row>
             </Flex>
             <Divider className="h-auto" type="vertical" />
-            <AttractionPreview attractingType={attractingType} attractedType={attractedType} attraction={attraction} />
+            <Flex vertical>
+                <ConnectionPreview connectingType={connectingType} connectedType={connectedType} connection={connection} />
+            </Flex>
         </Flex>
     )
 }
@@ -1416,10 +1549,10 @@ const GraphConfig = {
     },
     NodeSubtypes: {},
     EdgeTypes: {
-        attraction: {
-            shapeId: '#attraction',
+        connection: {
+            shapeId: '#connection',
             shape: (
-                <symbol viewBox="0 0 50 50" id="attraction" key="0">
+                <symbol viewBox="0 0 50 50" id="connection" key="0">
                     {/* <circle cx="25" cy="25" r="8" fill="currentColor"> </circle> */}
                 </symbol>
             )
@@ -1431,8 +1564,8 @@ interface IPieceNode extends INode {
     piece: Piece | PieceInput
 }
 
-interface IAttractionEdge extends IEdge {
-    attraction: Attraction | AttractionInput
+interface IConnectionEdge extends IEdge {
+    connection: Connection | ConnectionInput
 }
 
 export interface IDraft extends IGraphInput {
@@ -1440,7 +1573,7 @@ export interface IDraft extends IGraphInput {
     description?: string
     icon?: string
     nodes: IPieceNode[]
-    edges: IAttractionEdge[]
+    edges: IConnectionEdge[]
 }
 
 const NODE_KEY = 'id' // Allows D3 to correctly update DOM
@@ -1455,22 +1588,22 @@ const transformPieceToNode = (piece: Piece | PieceInput): IPieceNode => {
         piece
     }
 }
-const transformAttractionToEdge = (attraction: Attraction | AttractionInput): IAttractionEdge => {
+const transformConnectionToEdge = (connection: Connection | ConnectionInput): IConnectionEdge => {
     return {
-        source: attraction.attracting.piece.id,
-        target: attraction.attracted.piece.id,
-        // label_from: attraction.attracting.piece.type?.port?.id === '' ? ' ' : attraction.attracting.piece.type?.port?.id,
-        // label_to: attraction.attracted.piece.type?.port?.id === '' ? ' ' : attraction.attracted.piece.type?.port?.id,
-        handleTooltipText: attraction.attracting.piece.type?.port?.id + ' -> ' + attraction.attracted.piece.type?.port?.id,
-        type: 'attraction',
-        attraction
+        source: connection.connecting.piece.id,
+        target: connection.connected.piece.id,
+        // label_from: connection.connecting.piece.type?.port?.id === '' ? ' ' : connection.connecting.piece.type?.port?.id,
+        // label_to: connection.connected.piece.type?.port?.id === '' ? ' ' : connection.connected.piece.type?.port?.id,
+        handleTooltipText: connection.connecting.piece.type?.port?.id + ' -> ' + connection.connected.piece.type?.port?.id,
+        type: 'connection',
+        connection
     }
 }
 
 const transformFormationToGraph = (formation: Formation | FormationInput): IDraft => {
     const nodes = formation.pieces.map((piece) => transformPieceToNode(piece))
 
-    const edges = formation.attractions.map((attraction) => transformAttractionToEdge(attraction))
+    const edges = formation.connections.map((connection) => transformConnectionToEdge(connection))
 
     return {
         nodes,
@@ -1487,12 +1620,12 @@ const transformSelectionToGraph = (formation: Formation | FormationInput, select
             nodes.set(piece.id, transformPieceToNode(piece))
         }
     })
-    selection.attractionsPiecesIds.forEach(([sourceId, targetId]) => {
-        const attraction = formation.attractions.find(
-            (a) => a.attracting.piece.id === sourceId && a.attracted.piece.id === targetId
+    selection.connectionsPiecesIds.forEach(([sourceId, targetId]) => {
+        const connection = formation.connections.find(
+            (a) => a.connecting.piece.id === sourceId && a.connected.piece.id === targetId
         )
-        if (attraction) {
-            edges.set(`${sourceId}_${targetId}`, transformAttractionToEdge(attraction))
+        if (connection) {
+            edges.set(`${sourceId}_${targetId}`, transformConnectionToEdge(connection))
         }
     })
     return { nodes, edges }
@@ -1501,7 +1634,7 @@ const transformSelectionToGraph = (formation: Formation | FormationInput, select
 interface DiagramEditorProps {
     piece: PieceInput
     onPieceEdit: (piece: PieceInput) => Promise<PieceInput>
-    onAttractionEdit: (attraction: AttractionInput) => AttractionInput
+    onConnectionEdit: (connection: ConnectionInput) => ConnectionInput
     className?: string
 }
 
@@ -1531,12 +1664,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         id: 'diagramEditor'
     })
 
-    const [isAttractionBuilderOpen, setIsAttractionBuilderOpen] = useState(false);
-    const [attractingType, setAttractingType] = useState<Type | TypeInput | null>(null)
-    const [attractingPieceId, setAttractingPieceId] = useState<string | null>(null)
-    const [attractedType, setAttractedType] = useState<Type | TypeInput | null>(null)
-    const [attractedPieceId, setAttractedPieceId] = useState<string | null>(null)
-    const [attraction, setAttraction] = useState<AttractionInput | null>(null)
+    const [isConnectionBuilderOpen, setIsConnectionBuilderOpen] = useState(false);
+    const [connectingType, setConnectingType] = useState<Type | TypeInput | null>(null)
+    const [connectingPieceId, setConnectingPieceId] = useState<string | null>(null)
+    const [connectedType, setConnectedType] = useState<Type | TypeInput | null>(null)
+    const [connectedPieceId, setConnectedPieceId] = useState<string | null>(null)
+    const [connection, setConnection] = useState<ConnectionInput | null>(null)
 
     const zoomToFit = () => {
         if (graphViewRef.current) {
@@ -1550,30 +1683,30 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         zoomToFit
     }))
 
-    const showAttractionBuilder = () => {
-        setIsAttractionBuilderOpen(true)
+    const showConnectionBuilder = () => {
+        setIsConnectionBuilderOpen(true)
     }
-    
-    const handleAttractionBuilderFinished = () => {
+
+    const handleConnectionBuilderFinished = () => {
         dispatch(
             updateFormation({
                 id: formationView.id,
                 formation: {
                     ...formationRef.current,
-                    attractions: [
-                        ...formationRef.current.attractions,
+                    connections: [
+                        ...formationRef.current.connections,
                         {
-                            ...attraction,
-                            attracting: {
+                            ...connection,
+                            connecting: {
                                 piece: {
-                                    ...attraction.attracting.piece,
-                                    id: attractingPieceId
+                                    ...connection.connecting.piece,
+                                    id: connectingPieceId
                                 }
                             },
-                            attracted: {
+                            connected: {
                                 piece: {
-                                    ...attraction.attracted.piece,
-                                    id: attractedPieceId
+                                    ...connection.connected.piece,
+                                    id: connectedPieceId
                                 }
                             }
                         }
@@ -1581,30 +1714,30 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 } as FormationInput
             })
         )
-        setAttractingType(null)
-        setAttractingPieceId(null)
-        setAttractedType(null)
-        setAttractedPieceId(null)
-        setAttraction(null)
-        setIsAttractionBuilderOpen(false)
+        setConnectingType(null)
+        setConnectingPieceId(null)
+        setConnectedType(null)
+        setConnectedPieceId(null)
+        setConnection(null)
+        setIsConnectionBuilderOpen(false)
     }
-    
-    const handleAttractionBuilderCanceled = () => {
-        setAttractingType(null)
-        setAttractingPieceId(null)
-        setAttractedType(null)
-        setAttractedPieceId(null)
-        setAttraction(null)
-        setIsAttractionBuilderOpen(false)
+
+    const handleConnectionBuilderCanceled = () => {
+        setConnectingType(null)
+        setConnectingPieceId(null)
+        setConnectedType(null)
+        setConnectedPieceId(null)
+        setConnection(null)
+        setIsConnectionBuilderOpen(false)
     }
 
     const onSelect = (newSelection: SelectionT, event?: any): void => {
         if (event == null && !newSelection.nodes && !newSelection.edges) {
-            dispatch(updateFormationSelection(formationViewId, [],[]))
+            dispatch(updateFormationSelection(formationViewId, [], []))
             return
         }
-        // Remove the previously selected pieces and attractions from the selectionState if they are in the new selection.
-        // Add the new selected pieces and attractions if they were not in the previous selection.
+        // Remove the previously selected pieces and connections from the selectionState if they are in the new selection.
+        // Add the new selected pieces and connections if they were not in the previous selection.
         const selectedPiecesIds = formationView.selection.piecesIds.slice()
         if (newSelection.nodes) {
             newSelection.nodes.forEach((node) => {
@@ -1615,26 +1748,26 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 }
             })
         }
-        const selectedAttractionsIds = formationView.selection.attractionsPiecesIds.slice()
+        const selectedConnectionsIds = formationView.selection.connectionsPiecesIds.slice()
         if (newSelection.edges) {
             newSelection.edges.forEach((edge) => {
                 if (
-                    formationView.selection.attractionsPiecesIds.some(
+                    formationView.selection.connectionsPiecesIds.some(
                         ([source, target]) => source === edge.source && target === edge.target
                     )
                 ) {
-                    selectedAttractionsIds.splice(
-                        selectedAttractionsIds.findIndex(
+                    selectedConnectionsIds.splice(
+                        selectedConnectionsIds.findIndex(
                             ([source, target]) => source === edge.source && target === edge.target
                         ),
                         1
                     )
                 } else {
-                    selectedAttractionsIds.push([edge.source, edge.target])
+                    selectedConnectionsIds.push([edge.source, edge.target])
                 }
             })
         }
-        dispatch(updateFormationSelection(formationViewId, selectedPiecesIds, selectedAttractionsIds))
+        dispatch(updateFormationSelection(formationViewId, selectedPiecesIds, selectedConnectionsIds))
     }
 
     const onCreateNode = (x: number, y: number, event: any): void => {
@@ -1649,7 +1782,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                             id: Generator.generateRandomId(x + y),
                             type: event.piece.type,
                             diagram: {
-                                point: { x:Math.round(x), y:Math.round(y) }
+                                point: { x: Math.round(x), y: Math.round(y) }
                             }
                         } as PieceInput
                     ]
@@ -1673,14 +1806,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         pieces: formationRef.current.pieces.map((p) =>
                             p.id === node.id
                                 ? {
-                                      ...p,
-                                      diagram: {
-                                          point: {
-                                              x: Math.round(updatedNodePosition?.x ?? node.x),
-                                              y: Math.round(updatedNodePosition?.y ?? node.y)
-                                          }
-                                      }
-                                  }
+                                    ...p,
+                                    diagram: {
+                                        point: {
+                                            x: Math.round(updatedNodePosition?.x ?? node.x),
+                                            y: Math.round(updatedNodePosition?.y ?? node.y)
+                                        }
+                                    }
+                                }
                                 : p
                         )
                     } as FormationInput
@@ -1690,13 +1823,13 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     }
 
     const onCreateEdge = (sourceNode: INode, targetNode: INode): void => {
-        const attractingPieceType = types.get(sourceNode.piece.type.name).get(sourceNode.piece.type.variant ?? '')
-        const attractedPieceType = types.get(targetNode.piece.type.name).get(targetNode.piece.type.variant ?? '')
-        setAttractingType(attractingPieceType)
-        setAttractingPieceId(sourceNode.id)
-        setAttractedType(attractedPieceType)
-        setAttractedPieceId(targetNode.id)
-        showAttractionBuilder()
+        const connectingPieceType = types.get(sourceNode.piece.type.name).get(sourceNode.piece.type.variant ?? '')
+        const connectedPieceType = types.get(targetNode.piece.type.name).get(targetNode.piece.type.variant ?? '')
+        setConnectingType(connectingPieceType)
+        setConnectingPieceId(sourceNode.id)
+        setConnectedType(connectedPieceType)
+        setConnectedPieceId(targetNode.id)
+        showConnectionBuilder()
     }
 
     const onDeleteSelected = (selected: SelectionT) => {
@@ -1709,12 +1842,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     pieces: formationRef.current.pieces.filter(
                         (piece) => !selected.nodes?.has(piece.id)
                     ),
-                    attractions: formationRef.current.attractions.filter(
-                        (attraction) =>
+                    connections: formationRef.current.connections.filter(
+                        (connection) =>
                             !selected.edges?.has(
-                                `${attraction.attracting.piece.id}_${attraction.attracted.piece.id}`
-                            ) && !selected.nodes?.has(attraction.attracting.piece.id) 
-                            && !selected.nodes?.has(attraction.attracted.piece.id)
+                                `${connection.connecting.piece.id}_${connection.connected.piece.id}`
+                            ) && !selected.nodes?.has(connection.connecting.piece.id)
+                            && !selected.nodes?.has(connection.connected.piece.id)
                     )
                 } as FormationInput
             })
@@ -1737,7 +1870,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         }
                     }
                 })),
-                attractions: edgesToCopy.map((edge) => edge.attraction)
+                connections: edgesToCopy.map((edge) => edge.connection)
             }
             navigator.clipboard
                 .writeText(JSON.stringify(formationSnippetToCopy))
@@ -1756,7 +1889,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 pieces: formationSnippet.pieces.map((piece) => {
                     const x = Math.round(xyCoords?.x + piece.diagram.point.x)
                     const y = Math.round(xyCoords?.y + piece.diagram.point.y)
-                    const id = Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
+                    const id = piece.id + "##" + Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
                     oldPieceToNewPiece.set(piece.id, id)
                     return {
                         ...piece,
@@ -1766,20 +1899,20 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         }
                     }
                 }),
-                attractions: formationSnippet.attractions.map((attraction) => ({
-                    ...attraction,
-                    attracting: {
-                        ...attraction.attracting,
+                connections: formationSnippet.connections.map((connection) => ({
+                    ...connection,
+                    connecting: {
+                        ...connection.connecting,
                         piece: {
-                            ...attraction.attracting.piece,
-                            id: oldPieceToNewPiece.get(attraction.attracting.piece.id)
+                            ...connection.connecting.piece,
+                            id: oldPieceToNewPiece.get(connection.connecting.piece.id)
                         }
                     },
-                    attracted: {
-                        ...attraction.attracted,
+                    connected: {
+                        ...connection.connected,
                         piece: {
-                            ...attraction.attracted.piece,
-                            id: oldPieceToNewPiece.get(attraction.attracted.piece.id)
+                            ...connection.connected.piece,
+                            id: oldPieceToNewPiece.get(connection.connected.piece.id)
                         }
                     }
                 }))
@@ -1798,9 +1931,9 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                             ...formationRef.current.pieces,
                             ...placedFormationSnippet.pieces
                         ],
-                        attractions: [
-                            ...formationRef.current.attractions,
-                            ...placedFormationSnippet.attractions
+                        connections: [
+                            ...formationRef.current.connections,
+                            ...placedFormationSnippet.connections
                         ]
                     } as FormationInput
                 } as FormationView)
@@ -1821,7 +1954,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         return false
     }
 
-    const onContextMenu = (x: number, y: number, event: any): void => {}
+    const onContextMenu = (x: number, y: number, event: any): void => { }
 
     const renderNodeText = (
         data: IPieceNode,
@@ -1875,7 +2008,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const newFormationPieces = formationSnippet.pieces.map((piece) => {
                 const x = Math.round(svgX + piece.diagram.point.x)
                 const y = Math.round(svgY + piece.diagram.point.y)
-                const id = Generator.generateRandomId()
+                const id = piece.id + "##" + Generator.generateRandomId()
                 idMap.set(piece.id, id)
                 return {
                     ...piece,
@@ -1888,20 +2021,20 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     }
                 }
             })
-            const newFormationAttractions = formationSnippet.attractions.map((attraction) => ({
-                ...attraction,
-                attracted: {
-                    ...attraction.attracted,
+            const newFormationConnections = formationSnippet.connections.map((connection) => ({
+                ...connection,
+                connected: {
+                    ...connection.connected,
                     piece: {
-                        ...attraction.attracted.piece,
-                        id: idMap.get(attraction.attracted.piece.id)
+                        ...connection.connected.piece,
+                        id: idMap.get(connection.connected.piece.id)
                     }
                 },
-                attracting: {
-                    ...attraction.attracting,
+                connecting: {
+                    ...connection.connecting,
                     piece: {
-                        ...attraction.attracting.piece,
-                        id: idMap.get(attraction.attracting.piece.id)
+                        ...connection.connecting.piece,
+                        id: idMap.get(connection.connecting.piece.id)
                     }
                 }
             }))
@@ -1911,7 +2044,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     formation: {
                         ...formationRef.current,
                         pieces: [...formationRef.current.pieces, ...newFormationPieces],
-                        attractions: [...formationRef.current.attractions, ...newFormationAttractions]
+                        connections: [...formationRef.current.connections, ...newFormationConnections]
                     }
                 })
             )
@@ -1944,14 +2077,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     gridDotSize={0}
                     nodeSize={100}
                     edgeHandleSize={200}
-                    edgeArrowSize={4}
+                    edgeArrowSize={0.01}
                     // rotateEdgeHandle={false}
                     minZoom={0.1}
                     maxZoom={4}
                     showGraphControls={false}
                     canSwapEdge={canSwapEdge}
                     onSwapEdge={onSwapEdge}
-                    onArrowClicked={(selectedEdge: IEdge): void => {}}
+                    onArrowClicked={(selectedEdge: IEdge): void => { }}
                     onSelect={onSelect}
                     onCreateNode={onCreateNode}
                     onUpdateNode={onUpdateNode}
@@ -1965,16 +2098,16 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             </div>
             <Modal
                 width={1200}
-                title="New attraction"
-                open={isAttractionBuilderOpen}
-                onOk={handleAttractionBuilderFinished}
-                onCancel={handleAttractionBuilderCanceled}
+                title="New connection"
+                open={isConnectionBuilderOpen}
+                onOk={handleConnectionBuilderFinished}
+                onCancel={handleConnectionBuilderCanceled}
                 mask={false}>
-                {attractingType && attractedType ? (
-                    <AttractionBuilder
-                        attractingType={attractingType}
-                        attractedType={attractedType}
-                        onAttractionChange={setAttraction}
+                {connectingType && connectedType ? (
+                    <ConnectionBuilder
+                        connectingType={connectingType}
+                        connectedType={connectedType}
+                        onConnectionChange={setConnection}
                     />
                 ) : null}
             </Modal>
@@ -2027,18 +2160,18 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
                 const pieceId = getGroupNameFromClickEventGroupObject(e.eventObject)
                 if (formationView.selection.piecesIds.includes(pieceId)) {
                     dispatch(
-                        updateFormationSelection(formationViewId, 
+                        updateFormationSelection(formationViewId,
                             formationView.selection.piecesIds.filter(
                                 (id) => id !== pieceId
                             ),
-                            formationView.selection.attractionsPiecesIds
+                            formationView.selection.connectionsPiecesIds
                         )
                     )
                 } else {
                     dispatch(
-                        updateFormationSelection(formationViewId, 
+                        updateFormationSelection(formationViewId,
                             [...formationView.selection.piecesIds, pieceId],
-                            formationView.selection.attractionsPiecesIds
+                            formationView.selection.connectionsPiecesIds
                         )
                     )
                 }
@@ -2054,7 +2187,7 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
                 color={selected ? colors.primary : undefined}
             />
         </ThreeSelect>
-)
+    )
 }
 
 PieceThree.displayName = 'PieceThree'
@@ -2075,7 +2208,8 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
     const groupRef = useRef();
     useEffect(() => {
         if (groupRef.current) {
-            groupRef.current.applyMatrix4(hierarchy.transform)
+            const transform = planeToTransform(hierarchy.plane)
+            groupRef.current.applyMatrix4(transform)
         }
     }, [])
 
@@ -2095,7 +2229,7 @@ interface FormationThreeProps {
     transformationMode?: string
 }
 
-const FormationThree = ({ transformationMode='translate' }: FormationThreeProps) => {
+const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProps) => {
     const dispatch = useDispatch()
     const { formationViewId, kitDirectory } = useContext(EditorContext)
     const formationView = useSelector((state: RootState) => selectFormationView(state, formationViewId))
@@ -2112,54 +2246,54 @@ const FormationThree = ({ transformationMode='translate' }: FormationThreeProps)
         <group name={formationToString(formationView.formation)} >
             {hierarchies.map((hierarchy, i) => (
                 selectedHierarchyRootPiecesIds.includes(hierarchy.pieceId) ? (
-                        <TransformControls 
-                            key={i}
-                            ref={transformControlRef}
-                            mode={transformationMode}
-                            onMouseUp={(event) => {
-                                const transformControlMatrix = new Matrix4();
-                                switch (transformationMode) {
-                                    case 'translate':
-                                        transformControlMatrix.setPosition(transformControlRef.current.offset);
-                                        break;
-                                    case 'rotate':
-                                        transformControlMatrix.makeRotationFromQuaternion(transformControlRef.current.tempQuaternion);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                dispatch(updateFormation({
-                                    id: formationViewId,
-                                    formation: {
-                                        ...formationView.formation,
-                                        pieces: formationView.formation.pieces.map((piece) =>
-                                            selectedHierarchyRootPiecesIds.includes(piece.id)
-                                                ? {
-                                                      ...piece,
-                                                      root: {
-                                                          plane: convertTransformToPlane(
-                                                            convertPlaneToTransform(
-                                                                    piece.root?.plane ?? {
-                                                                        origin: { x: 0, y: 0, z: 0 },
-                                                                        xAxis: { x: 1, y: 0, z: 0 },
-                                                                        yAxis: { x: 0, y: 1, z: 0 }
-                                                                })
-                                                            .premultiply(transformControlMatrix))
-                                                      }
-                                                  }
-                                                : piece
-                                        )
-                                    }
-                                }))
-                                }
+                    <TransformControls
+                        key={i}
+                        ref={transformControlRef}
+                        mode={transformationMode}
+                        onMouseUp={(event) => {
+                            const transformControlMatrix = new Matrix4();
+                            switch (transformationMode) {
+                                case 'translate':
+                                    transformControlMatrix.setPosition(transformControlRef.current.offset);
+                                    break;
+                                case 'rotate':
+                                    transformControlMatrix.makeRotationFromQuaternion(transformControlRef.current.tempQuaternion);
+                                    break;
+                                default:
+                                    break;
                             }
-                        >
-                            <HierarchyThree hierarchy={hierarchy} />
-                        </TransformControls>
-                    ) : (
-                        <HierarchyThree key={i} hierarchy={hierarchy} />
-                    )
-                
+                            dispatch(updateFormation({
+                                id: formationViewId,
+                                formation: {
+                                    ...formationView.formation,
+                                    pieces: formationView.formation.pieces.map((piece) =>
+                                        selectedHierarchyRootPiecesIds.includes(piece.id)
+                                            ? {
+                                                ...piece,
+                                                root: {
+                                                    plane: convertTransformToPlane(
+                                                        convertPlaneToTransform(
+                                                            piece.root?.plane ?? {
+                                                                origin: { x: 0, y: 0, z: 0 },
+                                                                xAxis: { x: 1, y: 0, z: 0 },
+                                                                yAxis: { x: 0, y: 1, z: 0 }
+                                                            })
+                                                            .premultiply(transformControlMatrix))
+                                                }
+                                            }
+                                            : piece
+                                    )
+                                }
+                            }))
+                        }
+                        }
+                    >
+                        <HierarchyThree hierarchy={hierarchy} />
+                    </TransformControls>
+                ) : (
+                    <HierarchyThree key={i} hierarchy={hierarchy} />
+                )
+
             ))}
         </group>
     )
@@ -2170,7 +2304,7 @@ FormationThree.displayName = 'FormationThree'
 interface ShapeEditorProps {
 }
 
-const ShapeEditor = ({}: ShapeEditorProps) => {
+const ShapeEditor = ({ }: ShapeEditorProps) => {
     const { formationViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
@@ -2179,40 +2313,40 @@ const ShapeEditor = ({}: ShapeEditorProps) => {
     return (
         <div className="h-full relative">
             <FloatButton.Group className="absolute right-4 top-4" >
-            {/* TODO: Fix hacky repositioning of icons */}
-            <FloatButton 
-                icon={
-                    <div className="-ml-[2.5px]">
-                        <OpenWithIcon />
-                    </div>
-                } 
-                badge={{ dot:transformationMode==='translate', color: colors.primary }}
-                onClick={() => setTransformationMode('translate')}
-            />
-            <FloatButton 
-                icon={
-                    <div className="-ml-[2.5px]">
-                        <ThreeSixtyIcon />
-                    </div>
-                } 
-                badge={{ dot:transformationMode==='rotate', color: colors.primary }}
-                onClick={() => setTransformationMode('rotate')}
-            />
+                {/* TODO: Fix hacky repositioning of icons */}
+                <FloatButton
+                    icon={
+                        <div className="-ml-[2.5px]">
+                            <OpenWithIcon />
+                        </div>
+                    }
+                    badge={{ dot: transformationMode === 'translate', color: colors.primary }}
+                    onClick={() => setTransformationMode('translate')}
+                />
+                <FloatButton
+                    icon={
+                        <div className="-ml-[2.5px]">
+                            <ThreeSixtyIcon />
+                        </div>
+                    }
+                    badge={{ dot: transformationMode === 'rotate', color: colors.primary }}
+                    onClick={() => setTransformationMode('rotate')}
+                />
             </FloatButton.Group>
             <Canvas
                 // shadows
                 // orthographic={true}
-                onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [],[]))}
+                onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [], []))}
             >
                 <Suspense fallback={null}>
-                    <Stage center={{disable:true}} environment={null}>
+                    <Stage center={{ disable: true }} environment={null}>
                         <FormationThree transformationMode={transformationMode} />
                     </Stage>
                     {/* <ambientLight color={colors.light} intensity={1} /> */}
                 </Suspense>
                 <OrbitControls makeDefault />
-                <Gizmo/>
-                <Grid infiniteGrid={true} sectionColor={colors.lightGrey}/>
+                <Gizmo />
+                <Grid infiniteGrid={true} sectionColor={colors.lightGrey} />
             </Canvas>
         </div>
     )
@@ -2616,15 +2750,15 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
             section: 'Files',
             perform: () => {
                 // TODO: Inject method and remove direct ipcRenderer call
-                window.electron.ipcRenderer.invoke('add-local-formation', kitDirectory,formationRef.current).then((result) => {
-                    const {formation, error} = result
+                window.electron.ipcRenderer.invoke('add-local-formation', kitDirectory, formationRef.current).then((result) => {
+                    const { formation, error } = result
                     if (error) {
                         message.error(error.code)
                     } else {
                         message.success('Formation saved')
                     }
                 })
-                
+
             }
         },
         // {
@@ -2816,7 +2950,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                 ]}
                             />
                         </Sider>
-                        <EditorContext.Provider value={{kitDirectory, formationViewId:viewId, blobUrls}}>
+                        <EditorContext.Provider value={{ kitDirectory, formationViewId: viewId, blobUrls }}>
                             <Content>
                                 <DiagramEditor
                                     ref={diagramEditorRef}
@@ -2824,7 +2958,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                             </Content>
                             <Divider className="h-full top-0" type="vertical" />
                             <Content>
-                                <ShapeEditor/>
+                                <ShapeEditor />
                             </Content>
                             {createPortal(
                                 <DragOverlay>
@@ -2853,7 +2987,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                         vertical={true}
                                         className="p-2 font-normal text-lightGrey normal-case"
                                     >
-                                        <div className="p-0">Level of Details</div>
+                                        <Label className="p-0">Level of Details</Label>
                                         <Select
                                             className="p-1"
                                             mode="multiple"
@@ -2870,7 +3004,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                 }
                                             ]}
                                         />
-                                        <div className="p-0">Tags</div>
+                                        <Label className="p-0">Tags</Label>
                                         <Select
                                             className="p-1"
                                             mode="multiple"
@@ -2981,8 +3115,8 @@ const ArtifactWizard = ({
                     {kitDirectory
                         ? kitDirectory
                         : onOpenDirectoryStatus === 'loading'
-                          ? 'Loading...'
-                          : 'Open Directory'}
+                            ? 'Loading...'
+                            : 'Open Directory'}
                 </Button>
             </Form.Item>
             <Form.Item<IArtifactView>
@@ -3060,7 +3194,7 @@ const ArtifactWindow = ({
                             variant: '',
                             unit: 'm',
                             pieces: [],
-                            attractions: [],
+                            connections: [],
                             qualities: []
                         } as FormationInput
                     } as FormationView)

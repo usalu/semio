@@ -44,6 +44,7 @@ export type LoadLocalKitResponse = {
   error?: Maybe<LoadLocalKitError>;
 };
 
+/** 🗃️ A kit is a collection of types and formations. */
 export type Kit = {
   __typename?: 'Kit';
   name: Scalars['String']['output'];
@@ -52,10 +53,12 @@ export type Kit = {
   createdAt: Scalars['DateTime']['output'];
   lastUpdateAt: Scalars['DateTime']['output'];
   url: Scalars['String']['output'];
+  homepage: Scalars['String']['output'];
   types: Array<Type>;
   formations: Array<Formation>;
 };
 
+/** 🧩 A type is a reusable element that can be connected with other types over ports. */
 export type Type = {
   __typename?: 'Type';
   name: Scalars['String']['output'];
@@ -72,6 +75,7 @@ export type Type = {
   pieces: Array<Piece>;
 };
 
+/** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
 export type Representation = {
   __typename?: 'Representation';
   url: Scalars['String']['output'];
@@ -80,36 +84,38 @@ export type Representation = {
   tags: Array<Scalars['String']['output']>;
 };
 
+/** 🔌 A port is a conceptual connection point (with a direction) of a type. */
 export type Port = {
   __typename?: 'Port';
-  plane?: Maybe<Plane>;
   type?: Maybe<Type>;
   locators: Array<Locator>;
-  attractings: Array<Attraction>;
-  attracteds: Array<Attraction>;
+  connecteds: Array<Connection>;
+  connectings: Array<Connection>;
   id: Scalars['String']['output'];
+  point: Point;
+  direction: Vector;
+  plane: Plane;
 };
 
-export type Plane = {
-  __typename?: 'Plane';
+/** 🗺️ A locator is meta-data for grouping ports. */
+export type Locator = {
+  __typename?: 'Locator';
+  group: Scalars['String']['output'];
+  subgroup: Scalars['String']['output'];
   port?: Maybe<Port>;
-  rootPiece?: Maybe<Piece>;
-  origin: Point;
-  xAxis: Vector;
-  yAxis: Vector;
 };
 
-export type Piece = {
-  __typename?: 'Piece';
-  type?: Maybe<Type>;
+/** 🖇️ A connection between two pieces of a formation. */
+export type Connection = {
+  __typename?: 'Connection';
+  offset: Scalars['Float']['output'];
+  rotation: Scalars['Float']['output'];
   formation?: Maybe<Formation>;
-  attractings: Array<Attraction>;
-  attracteds: Array<Attraction>;
-  id: Scalars['String']['output'];
-  root: RootPiece;
-  diagram: DiagramPiece;
+  connected: Side;
+  connecting: Side;
 };
 
+/** 🏙️ A formation is a collection of pieces that are connected. */
 export type Formation = {
   __typename?: 'Formation';
   name: Scalars['String']['output'];
@@ -121,63 +127,37 @@ export type Formation = {
   lastUpdateAt: Scalars['DateTime']['output'];
   kit?: Maybe<Kit>;
   pieces: Array<Piece>;
-  attractions: Array<Attraction>;
+  connections: Array<Connection>;
   qualities: Array<Quality>;
 };
 
-export type Attraction = {
-  __typename?: 'Attraction';
-  formation?: Maybe<Formation>;
-  attracting: Side;
-  attracted: Side;
-};
-
-/** A side of an attraction. */
-export type Side = {
-  __typename?: 'Side';
-  piece: PieceSide;
-};
-
-/** The piece of a side of an attraction. */
-export type PieceSide = {
-  __typename?: 'PieceSide';
-  id: Scalars['String']['output'];
-  type: TypePieceSide;
-};
-
-/** The port of a type of a piece of a side of an attraction. */
-export type TypePieceSide = {
-  __typename?: 'TypePieceSide';
-  port?: Maybe<Port>;
-};
-
-export type Quality = {
-  __typename?: 'Quality';
-  name: Scalars['String']['output'];
-  value: Scalars['String']['output'];
-  unit: Scalars['String']['output'];
+/** ⭕ A piece is a 3d-instance of a type in a formation. */
+export type Piece = {
+  __typename?: 'Piece';
   type?: Maybe<Type>;
   formation?: Maybe<Formation>;
+  connectings: Array<Connection>;
+  connecteds: Array<Connection>;
+  id: Scalars['String']['output'];
+  root?: Maybe<PieceRoot>;
+  diagram: PieceDiagram;
 };
 
-/** The plane of the root piece of a formation. */
-export type RootPiece = {
-  __typename?: 'RootPiece';
+/** 🌱 The root information of a piece. */
+export type PieceRoot = {
+  __typename?: 'PieceRoot';
   plane: Plane;
 };
 
-/** The point of a diagram of a piece. */
-export type DiagramPiece = {
-  __typename?: 'DiagramPiece';
-  point: ScreenPoint;
+/** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
+export type Plane = {
+  __typename?: 'Plane';
+  origin: Point;
+  xAxis: Vector;
+  yAxis: Vector;
 };
 
-export type ScreenPoint = {
-  __typename?: 'ScreenPoint';
-  x: Scalars['Int']['output'];
-  y: Scalars['Int']['output'];
-};
-
+/** ✖️ A 3d-point (xyz) of floating point numbers. */
 export type Point = {
   __typename?: 'Point';
   x: Scalars['Float']['output'];
@@ -185,6 +165,7 @@ export type Point = {
   z: Scalars['Float']['output'];
 };
 
+/** ➡️ A 3d-vector (xyz) of floating point numbers. */
 export type Vector = {
   __typename?: 'Vector';
   x: Scalars['Float']['output'];
@@ -192,10 +173,46 @@ export type Vector = {
   z: Scalars['Float']['output'];
 };
 
-export type Locator = {
-  __typename?: 'Locator';
-  group: Scalars['String']['output'];
-  subgroup: Scalars['String']['output'];
+/** ✏️ The diagram information of a piece. */
+export type PieceDiagram = {
+  __typename?: 'PieceDiagram';
+  point: ScreenPoint;
+};
+
+/** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+export type ScreenPoint = {
+  __typename?: 'ScreenPoint';
+  x: Scalars['Int']['output'];
+  y: Scalars['Int']['output'];
+};
+
+/** 📏 A quality is meta-data for decision making. */
+export type Quality = {
+  __typename?: 'Quality';
+  name: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+  unit: Scalars['String']['output'];
+  definition: Scalars['String']['output'];
+  type?: Maybe<Type>;
+  formation?: Maybe<Formation>;
+};
+
+/** 🧱 A side of a piece in a connection. */
+export type Side = {
+  __typename?: 'Side';
+  piece: SidePiece;
+};
+
+/** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+export type SidePiece = {
+  __typename?: 'SidePiece';
+  id: Scalars['String']['output'];
+  type: SidePieceType;
+};
+
+/** 🧩 The type information of a piece of a side. */
+export type SidePieceType = {
+  __typename?: 'SidePieceType';
   port?: Maybe<Port>;
 };
 
@@ -212,16 +229,18 @@ export type FormationToSceneFromLocalKitResponse = {
   error?: Maybe<FormationToSceneFromLocalKitResponseError>;
 };
 
+/** 🌆 A scene is a collection of objects. */
 export type Scene = {
   __typename?: 'Scene';
   objects: Array<Maybe<Object>>;
   formation?: Maybe<Formation>;
 };
 
+/** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
 export type Object = {
   __typename?: 'Object';
+  plane: Plane;
   piece?: Maybe<Piece>;
-  plane?: Maybe<Plane>;
   parent?: Maybe<Object>;
 };
 
@@ -239,6 +258,7 @@ export enum FormationToSceneFromLocalKitResponseErrorCode {
   FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
 }
 
+/** 🏙️ A formation is identified by a name and optional variant. */
 export type FormationIdInput = {
   name: Scalars['String']['input'];
   variant?: InputMaybe<Scalars['String']['input']>;
@@ -316,15 +336,18 @@ export enum CreateLocalKitErrorCode {
   KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
 }
 
+/** 🗃️ A kit is a collection of types and formations. */
 export type KitInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   url?: InputMaybe<Scalars['String']['input']>;
+  homepage?: InputMaybe<Scalars['String']['input']>;
   types?: InputMaybe<Array<TypeInput>>;
   formations?: InputMaybe<Array<FormationInput>>;
 };
 
+/** 🧩 A type is a reusable element that can be connected with other types over ports. */
 export type TypeInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
@@ -336,47 +359,50 @@ export type TypeInput = {
   qualities?: InputMaybe<Array<QualityInput>>;
 };
 
+/** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
 export type RepresentationInput = {
   url: Scalars['String']['input'];
   lod?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+/** 🔌 A port is a conceptual connection point (with a direction) of a type. */
 export type PortInput = {
   id?: InputMaybe<Scalars['String']['input']>;
-  plane: PlaneInput;
+  point: PointInput;
+  direction: VectorInput;
   locators?: InputMaybe<Array<LocatorInput>>;
 };
 
-export type PlaneInput = {
-  origin: PointInput;
-  xAxis: VectorInput;
-  yAxis: VectorInput;
-};
-
+/** ✖️ A 3d-point (xyz) of floating point numbers. */
 export type PointInput = {
-  x: Scalars['Float']['input'];
-  y: Scalars['Float']['input'];
-  z: Scalars['Float']['input'];
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
+  z?: InputMaybe<Scalars['Float']['input']>;
 };
 
+/** ➡️ A 3d-vector (xyz) of floating point numbers. */
 export type VectorInput = {
-  x: Scalars['Float']['input'];
-  y: Scalars['Float']['input'];
-  z: Scalars['Float']['input'];
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
+  z?: InputMaybe<Scalars['Float']['input']>;
 };
 
+/** 🗺️ A locator is meta-data for grouping ports. */
 export type LocatorInput = {
   group: Scalars['String']['input'];
   subgroup?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** 📏 A quality is meta-data for decision making. */
 export type QualityInput = {
   name: Scalars['String']['input'];
   value?: InputMaybe<Scalars['String']['input']>;
   unit?: InputMaybe<Scalars['String']['input']>;
+  definition?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** 🏙️ A formation is a collection of pieces that are connected. */
 export type FormationInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
@@ -384,53 +410,72 @@ export type FormationInput = {
   variant?: InputMaybe<Scalars['String']['input']>;
   unit: Scalars['String']['input'];
   pieces: Array<PieceInput>;
-  attractions: Array<AttractionInput>;
+  connections: Array<ConnectionInput>;
   qualities?: InputMaybe<Array<QualityInput>>;
 };
 
+/** ⭕ A piece is a 3d-instance of a type in a formation. */
 export type PieceInput = {
   id: Scalars['String']['input'];
   type: TypeIdInput;
-  root?: InputMaybe<RootPieceInput>;
-  diagram: DiagramPieceInput;
+  root?: InputMaybe<PieceRootInput>;
+  diagram: PieceDiagramInput;
 };
 
+/** 🧩 A type is identified by a name and variant (empty=default). */
 export type TypeIdInput = {
   name: Scalars['String']['input'];
   variant?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type RootPieceInput = {
+/** 🌱 The root information of a piece. */
+export type PieceRootInput = {
   plane: PlaneInput;
 };
 
-export type DiagramPieceInput = {
+/** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
+export type PlaneInput = {
+  origin: PointInput;
+  xAxis: VectorInput;
+  yAxis: VectorInput;
+};
+
+/** ✏️ The diagram information of a piece. */
+export type PieceDiagramInput = {
   point: ScreenPointInput;
 };
 
+/** 📺 A 2d-point (xy) of integers in screen coordinate system. */
 export type ScreenPointInput = {
-  x: Scalars['Int']['input'];
-  y: Scalars['Int']['input'];
+  x?: InputMaybe<Scalars['Int']['input']>;
+  y?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type AttractionInput = {
-  attracting: SideInput;
-  attracted: SideInput;
+/** 🖇️ A connection between two pieces of a formation. */
+export type ConnectionInput = {
+  connecting: SideInput;
+  connected: SideInput;
+  offset?: InputMaybe<Scalars['Float']['input']>;
+  rotation?: InputMaybe<Scalars['Float']['input']>;
 };
 
+/** 🧱 A side of a piece in a connection. */
 export type SideInput = {
-  piece: PieceSideInput;
+  piece: SidePieceInput;
 };
 
-export type PieceSideInput = {
+/** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+export type SidePieceInput = {
   id: Scalars['String']['input'];
-  type?: InputMaybe<TypePieceSideInput>;
+  type?: InputMaybe<SidePieceTypeInput>;
 };
 
-export type TypePieceSideInput = {
+/** 🧩 The type information of a piece of a side. */
+export type SidePieceTypeInput = {
   port?: InputMaybe<PortIdInput>;
 };
 
+/** 🔌 A port is identified by an id (emtpy=default)). */
 export type PortIdInput = {
   id?: InputMaybe<Scalars['String']['input']>;
 };
@@ -455,11 +500,13 @@ export enum UpdateLocalKitMetadataErrorCode {
   KitMetadataIsInvalid = 'KIT_METADATA_IS_INVALID'
 }
 
+/** 🗃️ Meta-data of a kit. */
 export type KitMetadataInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   url?: InputMaybe<Scalars['String']['input']>;
+  homepage?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type DeleteLocalKitMutation = {

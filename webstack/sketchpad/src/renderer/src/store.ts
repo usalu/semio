@@ -2,7 +2,7 @@ import { enableMapSet } from 'immer'
 enableMapSet()
 
 import { PayloadAction, configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio'
+import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio.d'
 
 export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
     if (!directory) {
@@ -209,7 +209,7 @@ export class TypeView implements IArtifactView {
 
 export interface ISelectionFormation {
     piecesIds: string[]
-    attractionsPiecesIds: [string, string][] // [attractingPieceId, attractedPieceId]
+    connectionsPiecesIds: [string, string][] // [connectingPieceId, connectedPieceId]
 }
 
 export class FormationView implements IArtifactView {
@@ -226,9 +226,9 @@ export class FormationView implements IArtifactView {
             variant: '',
             unit: 'm',
             pieces: [],
-            attractions: []
+            connections: []
         },
-        selection: ISelectionFormation = { piecesIds: [], attractionsPiecesIds: [] }
+        selection: ISelectionFormation = { piecesIds: [], connectionsPiecesIds: [] }
     ) {
         this.id = id
         this.kitDirectory = kitDirectory
@@ -282,7 +282,7 @@ export const viewsSlice = createSlice({
                         id,
                         kitDirectory,
                         formation,
-                        selection: selection ?? { piecesIds: [], attractionsPiecesIds: [] }
+                        selection: selection ?? { piecesIds: [], connectionsPiecesIds: [] }
                     })
                 }
             },
@@ -325,7 +325,7 @@ export const viewsSlice = createSlice({
                 action: PayloadAction<{
                     id: string
                     piecesIds: string[] | null | undefined,
-                    attractionsPiecesIds: [string, string][] | null | undefined
+                    connectionsPiecesIds: [string, string][] | null | undefined
                 }>
             ) => {
                 const formationView = state.views.find(
@@ -335,22 +335,22 @@ export const viewsSlice = createSlice({
                     if (action.payload.piecesIds) {
                         formationView.selection.piecesIds = action.payload.piecesIds
                     }
-                    if (action.payload.attractionsPiecesIds) {
-                        formationView.selection.attractionsPiecesIds =
-                            action.payload.attractionsPiecesIds
+                    if (action.payload.connectionsPiecesIds) {
+                        formationView.selection.connectionsPiecesIds =
+                            action.payload.connectionsPiecesIds
                     }
                 }
             },
             prepare: (
                 id: string,
                 piecesIds: string[] | null | undefined = null,
-                attractionsPiecesIds: [string, string][] | null | undefined = null,
+                connectionsPiecesIds: [string, string][] | null | undefined = null,
             ) => {
                 return {
                     payload: {
                         id,
                         piecesIds: piecesIds,
-                        attractionsPiecesIds: attractionsPiecesIds
+                        connectionsPiecesIds: connectionsPiecesIds
                     }
                 }
             }

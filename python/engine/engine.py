@@ -2698,7 +2698,7 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     return kit
 
 
-def hierarchiesFromFormation(formation: Formation) -> List[Hierarchy]:
+def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
     nodes = list((piece.localId, {"piece": piece}) for piece in formation.pieces)
     edges = (
         (
@@ -2732,15 +2732,17 @@ def hierarchiesFromFormation(formation: Formation) -> List[Hierarchy]:
             parentPort = connection.connected.piece.type.port if connectedIsParent else connection.connecting.piece.type.port
             childPort = connection.connecting.piece.type.port if connectedIsParent else connection.connected.piece.type.port
             orient = Transform.fromDirections(childPort.direction.revert(), parentPort.direction)
-            rotate = Transform.fromAngle(parentPort.direction, connection.rotation)
-            rotation = rotate.after(orient)
-            centerConnecting = childPort.point.toVector().revert()
-            moveToConnected = parentPort.point.toVector()
-            transform = rotation.after(centerConnecting.toTransform())
+            rotation = orient
+            if connection.rotation != 0.0:
+                rotate = Transform.fromAngle(parentPort.direction, connection.rotation)
+                rotation = rotate.after(orient)
+            centerConnecting = childPort.point.toVector().revert().toTransform()
+            moveToConnected = parentPort.point.toVector().toTransform()
+            transform = rotation.after(centerConnecting)
             if connection.offset != 0.0:
                 offset = parentPort.direction.amplify(connection.offset).toTransform()
                 transform = offset.after(transform)
-            transform = moveToConnected.toTransform().after(transform)
+            transform = moveToConnected.after(transform)
             hierarchy = Hierarchy(
                 piece=component.nodes[child]["piece"],
                 transform=transform,
@@ -2779,7 +2781,7 @@ def sceneFromFormationInSession(
     except AttributeError:
         variant = ""
     formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
-    hierarchies = hierarchiesFromFormation(formation)
+    hierarchies = formationToHierarchies(formation)
     scene = Scene(formation=formation, objects=[])
     for hierarchy in hierarchies:
         addObjectsToScene(

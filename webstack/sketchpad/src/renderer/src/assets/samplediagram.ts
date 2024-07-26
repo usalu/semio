@@ -141,12 +141,12 @@ const sampleDiagram = {
         {
             source: 'b',
             target: 's',
-            type: 'attraction',
+            type: 'connection',
             label_from: 'c:0',
             label_to: 'b:t',
             handleTooltipText: 'core(0) to bottom',
-            attraction: {
-                attracting: {
+            connection: {
+                connecting: {
                     piece: {
                         id: 'b',
                         type: {
@@ -161,7 +161,7 @@ const sampleDiagram = {
                         }
                     }
                 },
-                attracted: {
+                connected: {
                     piece: {
                         id: 's',
                         type: {
@@ -181,12 +181,12 @@ const sampleDiagram = {
         {
             source: 's',
             target: 'cp',
-            type: 'attraction',
+            type: 'connection',
             label_from: 't:t',
             label_to: 'b:t',
             handleTooltipText: 'top to bottom',
-            attraction: {
-                attracting: {
+            connection: {
+                connecting: {
                     piece: {
                         id: 's',
                         type: {
@@ -201,7 +201,7 @@ const sampleDiagram = {
                         }
                     }
                 },
-                attracted: {
+                connected: {
                     piece: {
                         id: 'cp',
                         type: {
