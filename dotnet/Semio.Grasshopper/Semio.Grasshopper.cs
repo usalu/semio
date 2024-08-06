@@ -27,7 +27,6 @@ namespace Semio.Grasshopper;
 // The invalid check happen twice and code is duplicated.
 
 #region Copilot
-
 //public interface IDeepCloneable<T>
 //{
 //    T DeepClone();
@@ -44,11 +43,13 @@ namespace Semio.Grasshopper;
 //    public Representation()
 //    {
 //        Url = "";
+//        Mime = "";
 //        Lod = "";
 //        Tags = new List<string>();
 //    }
 
 //    public string Url { get; set; }
+//    public string Mime { get; set; }
 //    public string Lod { get; set; }
 //    public List<string> Tags { get; set; }
 
@@ -57,6 +58,7 @@ namespace Semio.Grasshopper;
 //        return new Representation
 //        {
 //            Url = Url,
+//            Mime = Mime,
 //            Lod = Lod,
 //            Tags = new List<string>(Tags)
 //        };
@@ -133,7 +135,6 @@ namespace Semio.Grasshopper;
 //    {
 //        return false;
 //    }
-
 //}
 
 //public class Point : IDeepCloneable<Point>, IEntity
@@ -258,6 +259,7 @@ namespace Semio.Grasshopper;
 //        Direction = new Vector();
 //        Locators = new List<Locator>();
 //    }
+
 //    public string Id { get; set; }
 //    public Point Point { get; set; }
 //    public Vector Direction { get; set; }
@@ -276,7 +278,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
+//        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -304,7 +306,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Port(" + (Id != "" ? $"Id:{Id})" : ")");
+//        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -312,6 +314,7 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
+
 
 //public class Quality : IDeepCloneable<Quality>, IEntity
 //{
@@ -639,29 +642,36 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
+
 //public class Connection : IDeepCloneable<Connection>, IEntity
 //{
 //    public Connection()
 //    {
-//        Connecting = new Side();
 //        Connected = new Side();
+//        Connecting = new Side();
+//        Offset = 0;
+//        Rotation = 0;
 //    }
 
-//    public Side Connecting { get; set; }
 //    public Side Connected { get; set; }
+//    public Side Connecting { get; set; }
+//    public float Offset { get; set; }
+//    public float Rotation { get; set; }
 
 //    public Connection DeepClone()
 //    {
 //        return new Connection
 //        {
+//            Connected = Connected.DeepClone(),
 //            Connecting = Connecting.DeepClone(),
-//            Connected = Connected.DeepClone()
+//            Offset = Offset,
+//            Rotation = Rotation
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Connection(Connecting({Connecting}),Connected({Connected}))";
+//        return $"Connection(Connected({Connected}),Connecting({Connecting}),Offset:{Offset},Rotation:{Rotation})";
 //    }
 
 //    public bool IsInvalid()
@@ -810,6 +820,7 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
+
 //public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
 //{
 //    public ObjectParent()
@@ -879,6 +890,7 @@ namespace Semio.Grasshopper;
 //        Formation = new FormationId();
 //        Objects = new List<Object>();
 //    }
+
 //    public FormationId Formation { get; set; }
 //    public List<Object> Objects { get; set; }
 
@@ -977,7 +989,6 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
-
 #endregion
 
 #region Utility
@@ -2027,13 +2038,15 @@ public class RepresentationComponent : SemioComponent
         pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
+        pManager.AddTextParameter("Mime" , "Mm", "Mime type of the representation.", GH_ParamAccess.item);
+        pManager[2].Optional = true;
         pManager.AddTextParameter("Level of Detail", "Ld?",
             "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \nThere can be only one default representation per type.",
             GH_ParamAccess.item);
-        pManager[2].Optional = true;
+        pManager[3].Optional = true;
         pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list,
             new List<string>());
-        pManager[3].Optional = true;
+        pManager[4].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2042,6 +2055,7 @@ public class RepresentationComponent : SemioComponent
             "Constructed or modified representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
             GH_ParamAccess.item);
+        pManager.AddTextParameter("Mime", "Mm", "Mime type of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("LoD", "Ld?",
             "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \\nThere can be only one default representation per type.",
             GH_ParamAccess.item);
@@ -2052,6 +2066,7 @@ public class RepresentationComponent : SemioComponent
     {
         var representationGoo = new RepresentationGoo();
         var url = "";
+        var mime = "";
         var lod = "";
         var tags = new List<string>();
 
@@ -2059,9 +2074,16 @@ public class RepresentationComponent : SemioComponent
             representationGoo = representationGoo.Duplicate() as RepresentationGoo;
         if (DA.GetData(1, ref url))
             representationGoo.Value.Url = url;
-        if (DA.GetData(2, ref lod))
+        if (!DA.GetData(2, ref mime))
+        {
+            if (representationGoo.Value.Mime == "")
+                representationGoo.Value.Mime = MimeParser.ParseFromUrl(representationGoo.Value.Url);
+        }
+        else
+            representationGoo.Value.Mime = mime;
+        if (DA.GetData(3, ref lod))
             representationGoo.Value.Lod = lod;
-        if (DA.GetDataList(3, tags))
+        if (DA.GetDataList(4, tags))
             representationGoo.Value.Tags = tags;
 
         var isValidInput = true;
@@ -2070,13 +2092,18 @@ public class RepresentationComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A representation needs an url.");
             isValidInput = false;
         }
-
+        if (representationGoo.Value.Mime == "")
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The mime type couldn't be guessed by the url. Please provide it.");
+            isValidInput = false;
+        }
         if (!isValidInput) return;
 
         DA.SetData(0, representationGoo.Duplicate());
         DA.SetData(1, representationGoo.Value.Url);
-        DA.SetData(2, representationGoo.Value.Lod);
-        DA.SetDataList(3, representationGoo.Value.Tags);
+        DA.SetData(2, representationGoo.Value.Mime);
+        DA.SetData(3, representationGoo.Value.Lod);
+        DA.SetDataList(4, representationGoo.Value.Tags);
     }
 }
 
@@ -4038,7 +4065,7 @@ public class FilterSceneComponent : SemioComponent
         pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Formats", "Ft*", "Optional formats of the representations in the scene.",
+        pManager.AddTextParameter("Mimes", "Mm*", "Optional mimes of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
@@ -4060,17 +4087,17 @@ public class FilterSceneComponent : SemioComponent
         var sceneGoo = new SceneGoo();
         var lods = new List<string>();
         var tags = new List<string>();
-        var formats = new List<string>();
+        var mimes = new List<string>();
 
         DA.GetData(0, ref sceneGoo);
         DA.GetDataList(1, lods);
         DA.GetDataList(2, tags);
-        DA.GetDataList(3, formats);
+        DA.GetDataList(3, mimes);
 
         // filter the representations of the scene
         // if lods are used, only the representations with the specified lods are returned
         // if tags are used, each representations must have at least one of the specified tags
-        // if formats are used, only the representations with the specified formats are returned
+        // if mimes are used, only the representations with the specified mimes are returned
         var representations = sceneGoo.Value.Objects
             .Select(o => o.Piece.Type.Representations
                 .First(r =>
@@ -4085,9 +4112,8 @@ public class FilterSceneComponent : SemioComponent
                         if (!r.Tags.Any(t => tags.Contains(t)))
                             return false;
                     }
-
-                    if (formats.Count > 0)
-                        if (!formats.Contains(Path.GetExtension(r.Url)))
+                    if (mimes.Count > 0)
+                        if (!mimes.Contains(r.Mime))
                             return false;
                     return true;
                 })).ToList();

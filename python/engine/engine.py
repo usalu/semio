@@ -33,17 +33,16 @@ semio engine.
 
 from argparse import ArgumentParser
 import os
-import sys
 import logging  # for uvicorn in pyinstaller
 from os import remove
 from pathlib import Path
-from multiprocessing import Process, freeze_support, set_start_method
+from multiprocessing import freeze_support
 from functools import lru_cache
-from time import sleep
 from typing import Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
-from numpy import ndarray, asarray, eye, dot, cross, cos, sin, radians, degrees
+from json import dumps
+from numpy import ndarray, asarray, eye, dot, cross, radians, degrees
 from pytransform3d.transformations import (
     concat,
     invert_transform,
@@ -53,7 +52,6 @@ from pytransform3d.transformations import (
     vector_to_direction,
 )
 from pytransform3d.rotations import (
-    matrix_from_two_vectors,
     matrix_from_axis_angle,
     axis_angle_from_matrix,
     axis_angle_from_two_directions,
@@ -64,9 +62,8 @@ from networkx import (
     connected_components,
 )
 from pint import UnitRegistry
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_serializer
 from sqlalchemy import (
-    Boolean,
     String,
     Text,
     Float,
@@ -76,6 +73,7 @@ from sqlalchemy import (
     CheckConstraint,
     UniqueConstraint,
     event,
+    inspect,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -118,6 +116,23 @@ HOST = "127.0.0.1"
 PORT = 5052
 TOLERANCE = 1e-5
 SIGNIFICANT_DIGITS = 5
+
+MIMES = {
+    ".stl": "model/stl",
+    ".obj": "model/obj",
+    ".glb": "model/gltf-binary",
+    ".gltf": "model/gltf+json",
+    ".3dm": "model/vnd.3dm",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".zip": "application/zip",
+    ".json": "application/json",
+    ".csv": "text/csv",
+    ".txt": "text/plain",
+}
 
 ureg = UnitRegistry()
 
@@ -280,6 +295,19 @@ class Tag(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+def parseMimeFromUrl(url: str) -> str:
+    """🔍 Parse the mime type from the URL.
+
+    Args:
+        url (str): The URL.
+
+    Returns:
+        str: The mime type.
+    """
+    try:
+        return MIMES[Path(url).suffix]
+    except KeyError:
+        return "application/octet-stream"
 
 class Representation(Base):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
@@ -289,6 +317,10 @@ class Representation(Base):
     url: Mapped[str] = mapped_column(
         String(URL_LENGTH_MAX),
         CheckConstraint("length(url) > 0", name="urlSet"),
+    )
+    mime: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(mime) > 0", name="mimeSet"),
     )
     # level of detail/development/design/...
     # "" means the defaut lod.
@@ -310,7 +342,7 @@ class Representation(Base):
     #     return hash(self.url)
 
     def __repr__(self) -> str:
-        return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, typeId={self.typeId!r}, tags={self.tags!r})"
+        return f"Representation(id={self.id!r}, url={self.url!r}, mime={self.mime!r}, lod={self.lod!r}, typeId={self.typeId!r}, tags={self.tags!r})"
 
     def __str__(self) -> str:
         return f"Representation(id={str(self.id)}, typeId={str(self.typeId)})"
@@ -469,7 +501,7 @@ class Point(BaseModel):
     def __iter__(self):
         return iter((self.x, self.y, self.z))
 
-    def isClose(self, other: "Point", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
@@ -528,7 +560,7 @@ class Vector(BaseModel):
     def amplify(self, factor: float) -> "Vector":
         return Vector(self.x * factor, self.y * factor, self.z * factor)
 
-    def isClose(self, other: "Vector", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
@@ -594,11 +626,11 @@ class Plane(BaseModel):
             raise ValidationError("The x-axis and y-axis must be orthogonal.")
         super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
-    def isClose(self, other: "Plane", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
         return (
-            self.origin.isClose(other.origin, tol)
-            and self.xAxis.isClose(other.xAxis, tol)
-            and self.yAxis.isClose(other.yAxis, tol)
+            self.origin.isCloseTo(other.origin, tol)
+            and self.xAxis.isCloseTo(other.xAxis, tol)
+            and self.yAxis.isCloseTo(other.yAxis, tol)
         )
 
     @property
@@ -668,10 +700,12 @@ class Transform(ndarray):
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
     @property
-    def rotation(self) -> Rotation:
+    def rotation(self) -> Rotation | None:
         """🔄 The rotation part of the transform."""
         rotationMatrix = self[:3, :3]
         axisAngle = axis_angle_from_matrix(rotationMatrix)
+        if axisAngle[3] == 0:
+            return None
         return Rotation(
             axis=Vector(
                 float(axisAngle[0]), 
@@ -685,6 +719,13 @@ class Transform(ndarray):
     def translation(self) -> Vector:
         """➡️ The translation part of the transform."""
         return Vector(*self[:3, 3])
+    
+    # for pydantic
+    def dict(self) -> Dict[str, Union[Rotation, Vector]]:
+        return {
+            "rotation": self.rotation,
+            "translation": self.translation,
+        }
 
     def after(self, before: "Transform") -> "Transform":
         """✖️ Apply this transform after another transform.
@@ -769,7 +810,7 @@ class Transform(ndarray):
 
     @staticmethod
     def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
-        if startDirection.isClose(endDirection):
+        if startDirection.isCloseTo(endDirection):
             return Transform()
         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
@@ -1040,6 +1081,11 @@ def receive_after_update(mapper, connection, target):
 def receive_after_update(mapper, connection, target):
     target.type.lastUpdateAt = datetime.now()
 
+class TypeId(BaseModel):
+    """🧩 A type is identified by a name and variant (empty=default)."""
+
+    name: str
+    variant: str = ""
 
 class PieceRoot(BaseModel):
     """🌱 The root information of a piece."""
@@ -1076,8 +1122,8 @@ class Piece(Base):
     rootPlaneYAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneYAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneYAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    diagramPointX: Mapped[int] = mapped_column(Float())
-    diagramPointY: Mapped[int] = mapped_column(Float())
+    diagramPointX: Mapped[int] = mapped_column()
+    diagramPointY: Mapped[int] = mapped_column()
     formationId: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
     connectings: Mapped[List["Connection"]] = relationship(
@@ -1154,6 +1200,15 @@ class Piece(Base):
     def diagram(self) -> PieceDiagram:
         return PieceDiagram(point=ScreenPoint(self.diagramPointX, self.diagramPointY))
 
+    # for pydantic
+    def dict(self) -> Dict[str, Union[PieceRoot, PieceDiagram]]:
+        return {
+            "id": self.localId,
+            "type": TypeId(name=self.type.name, variant=self.type.variant),
+            "root": self.root if self.root else None,
+            "diagram": self.diagram,
+        }
+    
     # @property
     # def parent(self) -> Entity:
     #     return self.formation
@@ -1416,6 +1471,14 @@ class Hierarchy(BaseModel):
     piece: Piece
     transform: Transform
     children: Optional[List["Hierarchy"]]
+
+    @field_serializer('piece')
+    def serialize_piece(self, piece: Piece, _info):
+        return piece.dict()
+    
+    @field_serializer('transform')
+    def serialize_transform(self, transform: Transform, _info):
+        return transform.dict()
 
 
 class Object(BaseModel):
@@ -1883,6 +1946,7 @@ class RepresentationInput(InputObjectType):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
 
     url = NonNull(graphene.String)
+    mime = graphene.String()
     lod = graphene.String()
     tags = graphene.List(NonNull(graphene.String))
 
@@ -1967,11 +2031,11 @@ class TypeInput(InputObjectType):
     qualities = graphene.List(NonNull(QualityInput))
 
 
-class TypeIdInput(InputObjectType):
+class TypeIdInput(PydanticInputObjectType):
     """🧩 A type is identified by a name and variant (empty=default)."""
 
-    name = NonNull(graphene.String)
-    variant = graphene.String(default_value="")
+    class Meta:
+        model = TypeId
 
 
 class PieceRootInput(PydanticInputObjectType):
@@ -2212,7 +2276,7 @@ class RepresentationAlreadyExists(AlreadyExists):
         super().__init__(newRepresentation, oldRepresentation)
 
     def __str__(self):
-        return f"Representation with url: {self.new.url!r} already exists: {str(self.representation)}"
+        return f"Representation with url: {self.new.url!r} already exists: {str(self.existing)}"
 
 
 class PortAlreadyExists(AlreadyExists):
@@ -2349,12 +2413,19 @@ def addRepresentationInputToSession(
     except AttributeError:
         lod = ""
     try:
+        mime = representationInput.mime if representationInput.mime is not None else ""
+    except AttributeError:
+        mime = ""
+    if mime == "":
+        mime = parseMimeFromUrl(representationInput.url)
+    try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
-        raise RepresentationAlreadyExists(representation)
+        raise RepresentationAlreadyExists(representationInput,representation)
     except RepresentationNotFound:
         pass
     representation = Representation(
         url=representationInput.url,
+        mime=mime,
         lod=lod,
         typeId=type.id,
     )
@@ -2736,13 +2807,13 @@ def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
             if connection.rotation != 0.0:
                 rotate = Transform.fromAngle(parentPort.direction, connection.rotation)
                 rotation = rotate.after(orient)
-            centerConnecting = childPort.point.toVector().revert().toTransform()
-            moveToConnected = parentPort.point.toVector().toTransform()
-            transform = rotation.after(centerConnecting)
+            centerChild = childPort.point.toVector().revert().toTransform()
+            moveToParent = parentPort.point.toVector().toTransform()
+            transform = rotation.after(centerChild)
             if connection.offset != 0.0:
                 offset = parentPort.direction.amplify(connection.offset).toTransform()
                 transform = offset.after(transform)
-            transform = moveToConnected.after(transform)
+            transform = moveToParent.after(transform)
             hierarchy = Hierarchy(
                 piece=component.nodes[child]["piece"],
                 transform=transform,
@@ -2751,6 +2822,9 @@ def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
             component.nodes[child]["hierarchy"] = hierarchy
             component.nodes[parent]["hierarchy"].children.append(hierarchy)
         hierarchies.append(rootHierarchy)
+        with open("../../local/engine_hierarchy.json", "w") as file:
+            file.write(rootHierarchy.model_dump_json())
+
     return hierarchies
 
 

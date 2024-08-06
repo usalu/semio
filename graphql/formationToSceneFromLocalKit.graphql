@@ -14,6 +14,7 @@ query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdI
           type {
             representations {
               url
+              mime
               lod
               tags
             }

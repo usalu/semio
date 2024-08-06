@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "engine"
-version = "2.0.0"
+version = "2.0.1"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 maintainers = ["Ueli Saluz <semio-community@posteo.org>"]
@@ -16,8 +16,8 @@ starlette = "^0.37.1"
 graphene = "^3.3"
 graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
 starlette-graphene3 = "^0.6.0"
-pydantic = "^1"
-graphene-pydantic = "^0.4.2"
+pydantic = ">=2.0"
+graphene-pydantic = "^0.6.1"
 pint = "^0.24.1"
 networkx = "^3.2.1"
 pytransform3d = "^3.5.0"

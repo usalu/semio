@@ -13,7 +13,6 @@ using Semio.Properties;
 // TODO: Add a more detailed message system when a model is invalid.
 
 #region Copilot
-
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
@@ -71,6 +70,7 @@ using Semio.Properties;
 //type Representation
 //{
 //url: String!
+//  mime: String!
 //  lod: String!
 //  type: Type
 //  tags: [String!]!
@@ -195,8 +195,6 @@ using Semio.Properties;
 //type Side
 //{
 //piece: SidePiece!
-//  offset: Float!
-//  rotation: Float!
 //}
 
 //"""
@@ -332,6 +330,7 @@ using Semio.Properties;
 //input RepresentationInput
 //{
 //    url: String!
+//  mime: String
 //  lod: String
 //  tags: [String!]
 //}
@@ -596,7 +595,6 @@ using Semio.Properties;
 //  NO_PERMISSION_TO_MODIFY_KIT
 //  FORMATION_DOES_NOT_EXIST
 //}
-
 #endregion
 
 #region Utility
@@ -614,6 +612,38 @@ public static class Generator
         adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
         animal = char.ToUpper(animal[0]) + animal.Substring(1);
         return $"{adjective}{animal}{number}";
+    }
+}
+
+public static class MimeParser
+{
+    public static string ParseFromUrl(string url)
+    {
+        var mimes = new Dictionary<string, string>
+        {
+            {".stl", "model/stl"},
+            {".obj", "model/obj"},
+            {".glb", "model/gltf-binary"},
+            {".gltf", "model/gltf+json"},
+            {".3dm", "model/vnd.3dm"},
+            {".png", "image/png"},
+            {".jpg", "image/jpeg"},
+            {".jpeg", "image/jpeg"},
+            {".svg", "image/svg+xml"},
+            {".pdf", "application/pdf"},
+            {".zip", "application/zip"},
+            {".json", "application/json"},
+            {".csv", "text/csv"},
+            {".txt", "text/plain"}
+        };
+        try
+        {
+            return mimes[System.IO.Path.GetExtension(url)];
+        }
+        catch (KeyNotFoundException)
+        {
+            return "application/octet-stream";
+        }
     }
 }
 
@@ -637,11 +667,13 @@ public class Representation : IDeepCloneable<Representation>, IEntity
     public Representation()
     {
         Url = "";
+        Mime = "";
         Lod = "";
         Tags = new List<string>();
     }
 
     public string Url { get; set; }
+    public string Mime { get; set; }
     public string Lod { get; set; }
     public List<string> Tags { get; set; }
 
@@ -650,6 +682,7 @@ public class Representation : IDeepCloneable<Representation>, IEntity
         return new Representation
         {
             Url = Url,
+            Mime = Mime,
             Lod = Lod,
             Tags = new List<string>(Tags)
         };
@@ -662,7 +695,7 @@ public class Representation : IDeepCloneable<Representation>, IEntity
 
     public bool IsInvalid()
     {
-        return Url == "";
+        return Url == "" || Mime == "";
     }
 }
 

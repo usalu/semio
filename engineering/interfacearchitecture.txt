@@ -12,6 +12,7 @@ kit : !Kit{
         unit : !String
         representations : +[
             url : !String
+            mime : !String
             lod : ?String
             tags : *[String]
         ]

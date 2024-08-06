@@ -2,7 +2,7 @@ import { enableMapSet } from 'immer'
 enableMapSet()
 
 import { PayloadAction, configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio.d'
+import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio'
 
 export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
     if (!directory) {

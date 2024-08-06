@@ -13,6 +13,7 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
         unit
         representations {
           url
+          mime
           lod
           tags
         }

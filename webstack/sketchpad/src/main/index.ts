@@ -1,6 +1,6 @@
-import { readFileSync, writeFile } from 'fs'
+import { readFileSync } from 'fs'
 import { join } from 'path'
-import { app, shell, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { GraphQLClient, gql } from 'graphql-request'
 import icon from '../../resources/icon.png?asset'
@@ -113,6 +113,7 @@ app.whenReady().then(() => {
                         unit
                         representations {
                             url
+                            mime
                             lod
                             tags
                         }

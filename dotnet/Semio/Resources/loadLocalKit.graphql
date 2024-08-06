@@ -14,6 +14,7 @@ query LoadLocalKit($directory: String!) {
         unit
         representations {
           url
+          mime
           lod
           tags
         }
