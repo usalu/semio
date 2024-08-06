@@ -94,17 +94,11 @@ import {
 } from './semio.d'
 import {
     Hierarchy,
-    vectorToVector3,
-    pointToVector3,
     TOLERANCE,
     radians,
-    transformToPlane,
-    convertVectorToVector3,
-    convertPointToVector3,
-    planeToTransform,
-    threeToSemioRotation
+    threeToSemioRotation,
+    formationToHierarchies
 } from './semio'
-import { convertPlaneToTransform, convertTransformToPlane, formationToHierarchies } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
 import {

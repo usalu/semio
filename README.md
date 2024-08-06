@@ -80,7 +80,7 @@ Just to view a design, you suddenly dependen on servers, licenses and companies.
 
 Is there really no alternative?
 
-Well, if one agent (person or robot) can at most work only on one file, then we need to make sure that not more than one agent works on the same file. 
+Well, if one agent (person or robot) can at most work only on one file, then we need to make sure that not more than one agent works on the same file 🔀
 
 But how?
 
@@ -117,12 +117,12 @@ The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 
 ![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
 
-[sketchpad](https://github.com/usalu/semio/releases/download/r24.08-1/sketchpad.exe) needs no installation. Just unpack the folder and run it. If you run sketchpad without Grasshopper then you need to manually download and start the [engine](https://github.com/usalu/semio/releases/download/r24.08-1/engine.zip) 🏎️
+[sketchpad](https://github.com/usalu/semio/releases/download/r24.08-1/sketchpad.exe) needs no installation. Just download and run it. If you run sketchpad without Grasshopper then you need to manually download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.08-1/engine.zip) 🏎️
 > NOTE: The binaries are not signed (yet). Therefor Windows might give a warning.
 
 That's it!
 
-# Examples
+## Examples
 
 You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.08-1/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/main/examples/metabolism/README.md) 👀
 
@@ -131,5 +131,4 @@ You can download the latest [examples](https://github.com/usalu/semio/releases/d
 # Contribution
 
 New platforms wait to be reached, bugs wait to be found, examples wait to be created, documentation waits to be written, ...
-
 Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues) or take a look under the [project site](https://github.com/users/usalu/projects/2) 👋

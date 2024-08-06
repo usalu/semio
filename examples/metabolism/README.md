@@ -30,7 +30,7 @@ Based on this formalization the design can be synthesized the following:
     </picture>
 </p>
 
-### Practice .. yey
+### Practice ... yey
 
 A bit overwhelmed? Just take a look at the Grasshopper script `nakagin-capule-tower.gh`💡
 

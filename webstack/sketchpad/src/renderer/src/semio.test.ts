@@ -1,5 +1,5 @@
 import { convertPlaneToTransform, convertTransformToPlane } from './semio'
-import { Plane } from './semio.d'
+import { Plane } from './semio'
 import { Matrix4 } from 'three'
 import { expect, test } from 'vitest'
 

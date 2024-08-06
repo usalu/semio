@@ -469,7 +469,7 @@ class Point(BaseModel):
     def __iter__(self):
         return iter((self.x, self.y, self.z))
 
-    def isClose(self, other: "Point", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
@@ -528,7 +528,7 @@ class Vector(BaseModel):
     def amplify(self, factor: float) -> "Vector":
         return Vector(self.x * factor, self.y * factor, self.z * factor)
 
-    def isClose(self, other: "Vector", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
@@ -594,11 +594,11 @@ class Plane(BaseModel):
             raise ValidationError("The x-axis and y-axis must be orthogonal.")
         super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
-    def isClose(self, other: "Plane", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
         return (
-            self.origin.isClose(other.origin, tol)
-            and self.xAxis.isClose(other.xAxis, tol)
-            and self.yAxis.isClose(other.yAxis, tol)
+            self.origin.isCloseTo(other.origin, tol)
+            and self.xAxis.isCloseTo(other.xAxis, tol)
+            and self.yAxis.isCloseTo(other.yAxis, tol)
         )
 
     @property
@@ -769,7 +769,7 @@ class Transform(ndarray):
 
     @staticmethod
     def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
-        if startDirection.isClose(endDirection):
+        if startDirection.isCloseTo(endDirection):
             return Transform()
         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
@@ -2736,13 +2736,13 @@ def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
             if connection.rotation != 0.0:
                 rotate = Transform.fromAngle(parentPort.direction, connection.rotation)
                 rotation = rotate.after(orient)
-            centerConnecting = childPort.point.toVector().revert().toTransform()
-            moveToConnected = parentPort.point.toVector().toTransform()
-            transform = rotation.after(centerConnecting)
+            centerChild = childPort.point.toVector().revert().toTransform()
+            moveToParent = parentPort.point.toVector().toTransform()
+            transform = rotation.after(centerChild)
             if connection.offset != 0.0:
                 offset = parentPort.direction.amplify(connection.offset).toTransform()
                 transform = offset.after(transform)
-            transform = moveToConnected.after(transform)
+            transform = moveToParent.after(transform)
             hierarchy = Hierarchy(
                 piece=component.nodes[child]["piece"],
                 transform=transform,
