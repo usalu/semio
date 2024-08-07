@@ -43,7 +43,8 @@ import {
     Modal,
     FloatButton,
     InputNumber,
-    Slider
+    Slider,
+    InputNumberProps
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
 import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color, Vector3 } from 'three'
@@ -58,7 +59,7 @@ import {
     Grid,
     Sphere,
     Line as DreiLine,
-    Box as DreiBox,
+    // Box as DreiBox,
     Stage
 } from '@react-three/drei'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -84,7 +85,6 @@ import {
     FormationInput,
     Piece,
     PieceInput,
-    Plane,
     Port,
     PortInput,
     Representation,
@@ -97,7 +97,13 @@ import {
     TOLERANCE,
     radians,
     threeToSemioRotation,
-    formationToHierarchies
+    formationToHierarchies,
+    Point,
+    Vector,
+    Plane,
+    Transform,
+    semioToThreeRotation,
+    CoordinateSystem,
 } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
@@ -906,7 +912,7 @@ class SeededRandom {
 }
 
 class Generator {
-    public static generateRandomId(seed: number | undefined): string {
+    public static generateRandomId(seed?: number | undefined): string {
         if (seed === undefined) {
             seed = Math.floor(Math.random() * 1000000)
         }
@@ -923,11 +929,23 @@ class Generator {
     }
 }
 
-const typeToString = (type: Type | TypeInput | TypeIdInput): string => {
-    return `${type.name}##(${type.variant})`
+const SEPARATOR = "::"
+const kindNameAndVariantToString = (kind: string, name: string, variant?: string): string => {
+    return `${kind}${SEPARATOR}${name}${SEPARATOR}${variant}`
 }
-const formationToString = (formation: Formation | FormationInput | FormationIdInput): string => {
-    return `${formation.name}##(${formation.variant})`
+const typeToIdString = (type: Type): string => {
+    return kindNameAndVariantToString("type", type.name, type.variant)
+}
+const formationToIdString = (formation: Formation): string => {
+    return kindNameAndVariantToString("formation", formation.name, formation.variant)
+}
+const typeToHumanString = (type: Type | TypeInput | TypeIdInput): string => {
+    const { name, variant } = type
+    return `Type(Name: ${name}${variant ? ` Variant(Name: ${variant})` : ''})`
+}
+const formationToHumanString = (formation: Formation | FormationInput | FormationIdInput): string => {
+    const { name, variant } = formation
+    return `Formation(Name: ${name}${variant ? ` Variant(Name: ${variant})` : ''})`
 }
 
 function tinyKeyStringToHuman(string: string): string {
@@ -1182,109 +1200,138 @@ const Gizmo = (): JSX.Element => {
     )
 }
 
-interface PlaneThreeProps {
-    plane: Plane
-    lineWidth?: number
-    onSelect: (event: ThreeEvent<MouseEvent>) => void
+interface SemioCanvasProps {
+    children: React.ReactNode
+    onPointerMissed?: (event: MouseEvent) => void
 }
 
-const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
-    if (!lineWidth) lineWidth = 1
-    const groupRef = useRef();
+const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Element => {
+    const groupRef = useRef()
     useEffect(() => {
         if (groupRef.current) {
-            const transform = planeToTransform(plane)
-            groupRef.current.applyMatrix4(transform)
+            groupRef.current.applyMatrix4(semioToThreeRotation())
         }
     }, [])
     return (
-        <group name="plane" ref={groupRef}>
-            <DreiLine
-                // name="x-axis"
-                points={[[0, 0, 0], [1, 0, 0]]}
-                color={colors.primary}
-                lineWidth={lineWidth * 2}
-            />
-            <DreiLine
-                // name="y-axis"
-                points={[[0, 0, 0], [0, 0, -1]]}
-                color={colors.secondary}
-                lineWidth={lineWidth * 2}
-            />
-            <DreiLine
-                // name="z-axis"
-                points={[[0, 0, 0], [0, 1, 0]]}
-                color={colors.tertiary}
-                lineWidth={lineWidth * 2}
-            />
-            <DreiLine
-                points={[[-1, 0, -1], [1, 0, -1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, -1], [-1, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, -0.666667], [1, 0, -0.666667]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, -0.333333], [1, 0, -0.333333]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, 0.333333], [1, 0, 0.333333]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, 0.666667], [1, 0, 0.666667]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, 1], [1, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-0.666667, 0, -1], [-0.666667, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-0.333333, 0, -1], [-0.333333, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[0.333333, 0, -1], [0.333333, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[0.666667, 0, -1], [0.666667, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[1, 0, -1], [1, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[0, 0, 0], [0, 0, 1]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiLine
-                points={[[-1, 0, 0], [0, 0, 0]]} color={colors.grey}
-                lineWidth={lineWidth}
-            />
-            <DreiBox
-                args={[2.0, 1.0, 2.0]}
-                position={[0, 0.5, 0]}
-                material={new MeshBasicMaterial({ transparent: true, opacity: 0 })}
-                onClick={(event) => {
-                    onSelect(event)
-                    event.stopPropagation()
-                }}
-            />
-        </group>
+        <Canvas
+            // orthographic={true}
+            shadows={false}
+            onPointerMissed={onPointerMissed}
+        >
+            <OrbitControls makeDefault />
+            <Gizmo />
+            <Stage center={{ disable: true }} environment={null} />
+            <Grid infiniteGrid={true} sectionColor={colors.lightGrey} />
+            <Suspense fallback={null}>
+                <group ref={groupRef}>{children}</group>
+            </Suspense>
+        </Canvas>
     )
 }
+
+// interface PlaneThreeProps {
+//     plane: Plane
+//     lineWidth?: number
+//     onSelect: (event: ThreeEvent<MouseEvent>) => void
+// }
+
+// const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
+//     if (!lineWidth) lineWidth = 1
+//     const groupRef = useRef();
+//     useEffect(() => {
+//         if (groupRef.current) {
+//             const transform = planeToTransform(plane)
+//             groupRef.current.applyMatrix4(transform)
+//         }
+//     }, [])
+//     return (
+//         <group name="plane" ref={groupRef}>
+//             <DreiLine
+//                 // name="x-axis"
+//                 points={[[0, 0, 0], [1, 0, 0]]}
+//                 color={colors.primary}
+//                 lineWidth={lineWidth * 2}
+//             />
+//             <DreiLine
+//                 // name="y-axis"
+//                 points={[[0, 0, 0], [0, 0, -1]]}
+//                 color={colors.secondary}
+//                 lineWidth={lineWidth * 2}
+//             />
+//             <DreiLine
+//                 // name="z-axis"
+//                 points={[[0, 0, 0], [0, 1, 0]]}
+//                 color={colors.tertiary}
+//                 lineWidth={lineWidth * 2}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, -1], [1, 0, -1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, -1], [-1, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, -0.666667], [1, 0, -0.666667]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, -0.333333], [1, 0, -0.333333]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, 0.333333], [1, 0, 0.333333]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, 0.666667], [1, 0, 0.666667]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, 1], [1, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-0.666667, 0, -1], [-0.666667, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-0.333333, 0, -1], [-0.333333, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[0.333333, 0, -1], [0.333333, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[0.666667, 0, -1], [0.666667, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[1, 0, -1], [1, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[0, 0, 0], [0, 0, 1]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiLine
+//                 points={[[-1, 0, 0], [0, 0, 0]]} color={colors.grey}
+//                 lineWidth={lineWidth}
+//             />
+//             <DreiBox
+//                 args={[2.0, 1.0, 2.0]}
+//                 position={[0, 0.5, 0]}
+//                 material={new MeshBasicMaterial({ transparent: true, opacity: 0 })}
+//                 onClick={(event) => {
+//                     onSelect(event)
+//                     event.stopPropagation()
+//                 }}
+//             />
+//         </group>
+//     )
+// }
 
 interface PortThreeProps {
     port: Port | PortInput
@@ -1293,8 +1340,8 @@ interface PortThreeProps {
 }
 
 const PortThree = ({ port, selected, onClick }: PortThreeProps): JSX.Element => {
-    const point = convertPointToVector3(port.point)
-    const direction = convertVectorToVector3(port.direction)
+    const point = Point.parse(port.point)
+    const direction = Vector.parse(port.direction)
     const groupRef = useRef()
 
     return (
@@ -1305,7 +1352,7 @@ const PortThree = ({ port, selected, onClick }: PortThreeProps): JSX.Element => 
                 material={new MeshBasicMaterial({ color: new Color(selected ? colors.primary : colors.grey) })}
             />
             <DreiLine
-                points={[point.toArray(), new Vector3().addVectors(point, direction).toArray()]} color={colors.light}
+                points={[point.toArray(), new Vector3().addVectors(point, direction).toArray()]}
                 color={colors.light}
                 lineWidth={selected ? 3 : 1}
             />
@@ -1317,14 +1364,18 @@ interface RepresentationThreeProps {
     representation: Representation
     color?: string
     id?: string
-    plane?: Plane
+    transform?: Transform // in semio coordinates
 }
 
-const RepresentationThree = ({ representation, id, color, plane }: RepresentationThreeProps): JSX.Element => {
+const RepresentationThree = ({ representation, id, color, transform }: RepresentationThreeProps): JSX.Element => {
     const { blobUrls } = useContext(EditorContext)
     const representationThreeScene = useMemo(() => {
         const clone = useLoader(GLTFLoader, blobUrls[representation.url]).scene.clone()
-        clone.traverse((object) => {
+        clone.applyMatrix4(threeToSemioRotation())
+        return clone
+    }, [representation.url])
+    useMemo(() => {
+        representationThreeScene.traverse((object) => {
             if (object instanceof Mesh) {
                 const meshColor = color ? new Color(color) : new Color(colors.lightGrey)
                 object.material = new MeshBasicMaterial({ color: meshColor })
@@ -1334,12 +1385,14 @@ const RepresentationThree = ({ representation, id, color, plane }: Representatio
                 object.material = new LineBasicMaterial({ color: lineColor })
             }
         })
-        if (plane) {
-            const transform = convertPlaneToTransform(plane).premultiply(threeToSemioRotation())
-            clone.applyMatrix4(transform)
+    }, [color])
+    useMemo(() => {
+        if (transform) {
+            representationThreeScene.matrix = new Transform()
+            representationThreeScene.updateMatrix()
+            representationThreeScene.applyMatrix4(transform)
         }
-        return clone
-    }, [representation.url, color, plane]);
+    }, [transform])
     representationThreeScene.name = id
     return <primitive object={representationThreeScene} />
 }
@@ -1357,25 +1410,22 @@ const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JS
 
     return (
         <div className="w-[350px] h-[350px]">
-            <Canvas>
-                <OrbitControls makeDefault />
-                <Gizmo />
-                <Stage center={{ disable: true }} environment={null}>
-                    <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
-                    {ports.map((port) => (
-                        <PortThree
-                            key={port.id}
-                            port={port}
-                            selected={selectedPortId === port.id}
-                            onClick={(e) => {
-                                onSelect(port.id)
-                                e.stopPropagation()
-                            }}
-                        />
-                    ))}
-                </Stage>
-            </Canvas>
-        </div>
+            <SemioCanvas>
+                {/* TODO: Proper filtering */}
+                <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
+                {ports.map((port) => (
+                    <PortThree
+                        key={port.id}
+                        port={port}
+                        selected={selectedPortId === port.id}
+                        onClick={(e) => {
+                            onSelect(port.id)
+                            e.stopPropagation()
+                        }}
+                    />
+                ))}
+            </SemioCanvas>
+        </div >
     )
 }
 
@@ -1386,49 +1436,42 @@ interface ConnectionPreview {
 }
 
 const ConnectionPreview = ({ connectingType, connectedType, connection }: ConnectionPreview): JSX.Element => {
-    const connectedPort = connectedType.ports.find((port) => port.id === connection.connected.piece.type?.port?.id)
-    const connectingPort = connectingType.ports.find((port) => port.id === connection.connecting.piece.type?.port?.id)
-
-    const invertedConnectingDirection = vectorToVector3(connectingPort.direction).negate()
-    const connectedDirection = vectorToVector3(connectedPort.direction)
-    const rotation = new Matrix4()
-    const orientAxis = new Vector3().crossVectors(invertedConnectingDirection, connectedDirection)
-    if (orientAxis.length() > TOLERANCE) {
-        const orient = new Matrix4().makeRotationAxis(orientAxis.normalize(), invertedConnectingDirection.angleTo(connectedDirection))
-        rotation.premultiply(orient)
-    }
+    const parentPort = connectedType.ports.find((port) => port.id === connection.connected.piece.type?.port?.id)
+    const childPort = connectingType.ports.find((port) => port.id === connection.connecting.piece.type?.port?.id)
+    const parentDirection = Vector.parse(parentPort.direction)
+    const childDirection = Vector.parse(childPort.direction)
+    const parentPoint = Point.parse(parentPort.point)
+    const childPoint = Point.parse(childPort.point)
+    const orient = Transform.fromDirections(childDirection.negate(), parentDirection)
+    let rotation = orient
     if (connection.rotation !== 0) {
-        const rotate = new Matrix4().makeRotationAxis(connectedDirection, radians(connection.rotation))
-        rotation.premultiply(rotate)
+        const rotate = Transform.fromAngle(parentDirection, connection.rotation)
+        rotation = rotate.after(orient)
     }
-    const centerConnecting = new Matrix4().makeTranslation(pointToVector3(connectingPort.point).negate())
-    const moveToConnected = new Matrix4().makeTranslation(pointToVector3(connectedPort.point))
-    const transform = new Matrix4()
-    transform.premultiply(centerConnecting)
-    transform.premultiply(rotation)
+    const centerChild = childPoint.toVector().negate().toTransform()
+    const moveToParent = parentPoint.toVector().toTransform()
+    let transform = new Transform()
+    transform = rotation.after(centerChild)
     if (connection.offset !== 0) {
-        const offset = new Matrix4().makeTranslation(connectedDirection.clone().multiplyScalar(connection.offset))
-        transform.premultiply(offset)
+        const offset = parentDirection.clone().multiplyScalar(connection.offset).toTransform()
+        transform = offset.after(transform)
     }
-    transform.premultiply(moveToConnected)
-    const connectedPlane = transformToPlane(transform)
+    transform = moveToParent.after(transform)
     return (
         <div className="w-[700px] h-[700px]">
-            <Canvas>
-                <OrbitControls makeDefault />
-                <Gizmo />
-                <Stage center={{ disable: true }} environment={null}>
-                    <RepresentationThree
-                        id='connecting'
-                        representation={connectingType.representations.find((r) => r.url.endsWith('.glb'))}
-                    />
-                    <RepresentationThree
-                        id='connected'
-                        representation={connectedType.representations.find((r) => r.url.endsWith('.glb'))}
-                        plane={connectedPlane}
-                    />
-                </Stage>
-            </Canvas>
+            <SemioCanvas>
+                <RepresentationThree
+                    id='connected'
+                    // TODO: Proper filtering
+                    representation={connectedType.representations.find((r) => r.url.endsWith('.glb'))}
+                />
+                <RepresentationThree
+                    id='connected'
+                    // TODO: Proper filtering
+                    representation={connectingType.representations.find((r) => r.url.endsWith('.glb'))}
+                    transform={transform}
+                />
+            </SemioCanvas>
         </div>
     )
 }
@@ -1883,7 +1926,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 pieces: formationSnippet.pieces.map((piece) => {
                     const x = Math.round(xyCoords?.x + piece.diagram.point.x)
                     const y = Math.round(xyCoords?.y + piece.diagram.point.y)
-                    const id = piece.id + "##" + Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
+                    const id = piece.id + SEPARATOR + Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
                     oldPieceToNewPiece.set(piece.id, id)
                     return {
                         ...piece,
@@ -2002,7 +2045,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const newFormationPieces = formationSnippet.pieces.map((piece) => {
                 const x = Math.round(svgX + piece.diagram.point.x)
                 const y = Math.round(svgY + piece.diagram.point.y)
-                const id = piece.id + "##" + Generator.generateRandomId()
+                const id = piece.id + SEPARATOR + Generator.generateRandomId()
                 idMap.set(piece.id, id)
                 return {
                     ...piece,
@@ -2195,15 +2238,14 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
     const formationView = useSelector((state: RootState) =>
         selectFormationView(state, formationViewId)
     )
-    const piece = formationView.formation.pieces.find((p) => p.id === hierarchy.pieceId)
+    const piece = formationView.formation.pieces.find((p) => p.id === hierarchy.piece.id)
     const selected = formationView.selection.piecesIds.includes(piece.id)
     if (!piece) return null
 
     const groupRef = useRef();
     useEffect(() => {
         if (groupRef.current) {
-            const transform = planeToTransform(hierarchy.plane)
-            groupRef.current.applyMatrix4(transform)
+            groupRef.current.applyMatrix4(hierarchy.transform)
         }
     }, [])
 
@@ -2236,10 +2278,12 @@ const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProp
     }, [formationView.formation, ports]);
     const transformControlRef = useRef(null)
 
+    const groupRef = useRef()
+
     return (
-        <group name={formationToString(formationView.formation)} >
+        <group name={formationToIdString(formationView.formation)} ref={groupRef}>
             {hierarchies.map((hierarchy, i) => (
-                selectedHierarchyRootPiecesIds.includes(hierarchy.pieceId) ? (
+                selectedHierarchyRootPiecesIds.includes(hierarchy.piece.id) ? (
                     <TransformControls
                         key={i}
                         ref={transformControlRef}
@@ -2265,14 +2309,7 @@ const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProp
                                             ? {
                                                 ...piece,
                                                 root: {
-                                                    plane: convertTransformToPlane(
-                                                        convertPlaneToTransform(
-                                                            piece.root?.plane ?? {
-                                                                origin: { x: 0, y: 0, z: 0 },
-                                                                xAxis: { x: 1, y: 0, z: 0 },
-                                                                yAxis: { x: 0, y: 1, z: 0 }
-                                                            })
-                                                            .premultiply(transformControlMatrix))
+                                                    plane: Plane.parse(piece.root?.plane).toThree().transform(transformControlMatrix).toSemio()
                                                 }
                                             }
                                             : piece
@@ -2289,7 +2326,7 @@ const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProp
                 )
 
             ))}
-        </group>
+        </group >
     )
 }
 
@@ -2327,21 +2364,11 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                     onClick={() => setTransformationMode('rotate')}
                 />
             </FloatButton.Group>
-            <Canvas
-                // shadows
-                // orthographic={true}
+            <SemioCanvas
                 onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [], []))}
             >
-                <Suspense fallback={null}>
-                    <Stage center={{ disable: true }} environment={null}>
-                        <FormationThree transformationMode={transformationMode} />
-                    </Stage>
-                    {/* <ambientLight color={colors.light} intensity={1} /> */}
-                </Suspense>
-                <OrbitControls makeDefault />
-                <Gizmo />
-                <Grid infiniteGrid={true} sectionColor={colors.lightGrey} />
-            </Canvas>
+                <FormationThree transformationMode={transformationMode} />
+            </SemioCanvas>
         </div>
     )
 }
@@ -2362,262 +2389,262 @@ function getItem(
     } as MenuItem
 }
 
-const SemioIcon = (props) => (
-    <svg width={48} height={48} overflow="visible" viewBox="0 0 99.95 99.921" {...props}>
-        {'-->'}
-        <g
-            style={{
-                stroke: '#000',
-                strokeWidth: 1,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        >
-            <g
-                style={{
-                    fill: '#fa9500',
-                    fillOpacity: 1,
-                    stroke: '#000',
-                    strokeWidth: 1,
-                    strokeDasharray: 'none',
-                    strokeOpacity: 1
-                }}
-            >
-                <path
-                    fillOpacity={0}
-                    stroke="none"
-                    d="M94.789 41.727v77.939l19.984-19.985V41.727Z"
-                    style={{
-                        fill: '#fa9500',
-                        fillOpacity: 1,
-                        stroke: 'none',
-                        strokeWidth: 0.489687,
-                        strokeDasharray: 'none',
-                        strokeOpacity: 1
-                    }}
-                    transform="translate(-94.789 -19.745)"
-                />
-            </g>
-            <g
-                fillOpacity={0}
-                stroke="none"
-                style={{
-                    fill: '#ff344f',
-                    fillOpacity: 1,
-                    stroke: '#000',
-                    strokeWidth: 1,
-                    strokeDasharray: 'none',
-                    strokeOpacity: 1
-                }}
-            >
-                <path
-                    d="m194.71 119.666.03-98.535-19.985 19.979-.03 78.556zM94.789 19.745h98.51l-19.984 19.984H94.79Z"
-                    style={{
-                        fill: '#ff344f',
-                        fillOpacity: 1,
-                        stroke: 'none',
-                        strokeWidth: 0.489687,
-                        strokeDasharray: 'none',
-                        strokeOpacity: 1
-                    }}
-                    transform="translate(-94.789 -19.745)"
-                />
-            </g>
-            <g
-                fillOpacity={0}
-                stroke="none"
-                style={{
-                    fill: '#00a69d',
-                    fillOpacity: 1,
-                    stroke: '#000',
-                    strokeWidth: 1,
-                    strokeDasharray: 'none',
-                    strokeOpacity: 1
-                }}
-            >
-                <path
-                    d="m134.757 119.666 19.984-19.985h17.987v19.985zM134.757 79.697l19.984-19.984h17.987v19.984z"
-                    style={{
-                        fill: '#00a69d',
-                        fillOpacity: 1,
-                        stroke: 'none',
-                        strokeWidth: 0.489687,
-                        strokeDasharray: 'none',
-                        strokeOpacity: 1
-                    }}
-                    transform="translate(-94.789 -19.745)"
-                />
-            </g>
-        </g>
-    </svg>
-)
+// const SemioIcon = (props) => (
+//     <svg width={48} height={48} overflow="visible" viewBox="0 0 99.95 99.921" {...props}>
+//         {'-->'}
+//         <g
+//             style={{
+//                 stroke: '#000',
+//                 strokeWidth: 1,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         >
+//             <g
+//                 style={{
+//                     fill: '#fa9500',
+//                     fillOpacity: 1,
+//                     stroke: '#000',
+//                     strokeWidth: 1,
+//                     strokeDasharray: 'none',
+//                     strokeOpacity: 1
+//                 }}
+//             >
+//                 <path
+//                     fillOpacity={0}
+//                     stroke="none"
+//                     d="M94.789 41.727v77.939l19.984-19.985V41.727Z"
+//                     style={{
+//                         fill: '#fa9500',
+//                         fillOpacity: 1,
+//                         stroke: 'none',
+//                         strokeWidth: 0.489687,
+//                         strokeDasharray: 'none',
+//                         strokeOpacity: 1
+//                     }}
+//                     transform="translate(-94.789 -19.745)"
+//                 />
+//             </g>
+//             <g
+//                 fillOpacity={0}
+//                 stroke="none"
+//                 style={{
+//                     fill: '#ff344f',
+//                     fillOpacity: 1,
+//                     stroke: '#000',
+//                     strokeWidth: 1,
+//                     strokeDasharray: 'none',
+//                     strokeOpacity: 1
+//                 }}
+//             >
+//                 <path
+//                     d="m194.71 119.666.03-98.535-19.985 19.979-.03 78.556zM94.789 19.745h98.51l-19.984 19.984H94.79Z"
+//                     style={{
+//                         fill: '#ff344f',
+//                         fillOpacity: 1,
+//                         stroke: 'none',
+//                         strokeWidth: 0.489687,
+//                         strokeDasharray: 'none',
+//                         strokeOpacity: 1
+//                     }}
+//                     transform="translate(-94.789 -19.745)"
+//                 />
+//             </g>
+//             <g
+//                 fillOpacity={0}
+//                 stroke="none"
+//                 style={{
+//                     fill: '#00a69d',
+//                     fillOpacity: 1,
+//                     stroke: '#000',
+//                     strokeWidth: 1,
+//                     strokeDasharray: 'none',
+//                     strokeOpacity: 1
+//                 }}
+//             >
+//                 <path
+//                     d="m134.757 119.666 19.984-19.985h17.987v19.985zM134.757 79.697l19.984-19.984h17.987v19.984z"
+//                     style={{
+//                         fill: '#00a69d',
+//                         fillOpacity: 1,
+//                         stroke: 'none',
+//                         strokeWidth: 0.489687,
+//                         strokeDasharray: 'none',
+//                         strokeOpacity: 1
+//                     }}
+//                     transform="translate(-94.789 -19.745)"
+//                 />
+//             </g>
+//         </g>
+//     </svg>
+// )
 
-const DesignIcon = (props) => (
-    <svg width={48} height={48} {...props}>
-        <defs>
-            <marker
-                id="a"
-                markerHeight={0.6}
-                markerWidth={0.6}
-                orient="auto-start-reverse"
-                preserveAspectRatio="xMidYMid"
-                refX={0}
-                refY={0}
-                style={{
-                    overflow: 'visible'
-                }}
-                viewBox="0 0 1 1"
-            >
-                <path
-                    d="m5.77 0-8.65 5V-5Z"
-                    style={{
-                        fill: colors.light,
-                        fillRule: 'evenodd',
-                        stroke: colors.light,
-                        strokeWidth: '1pt'
-                    }}
-                    transform="scale(.5)"
-                />
-            </marker>
-        </defs>
-        <circle
-            cx={15.031}
-            cy={10.763}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-        <circle
-            cx={15.031}
-            cy={35.829}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-        <circle
-            cx={34.916}
-            cy={24}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-        <path
-            d="M15.03 30.822V17.878"
-            style={{
-                fill: 'none',
-                fillRule: 'evenodd',
-                stroke: colors.light,
-                strokeWidth: '.927333px',
-                strokeLinecap: 'butt',
-                strokeLinejoin: 'miter',
-                strokeMiterlimit: 4,
-                strokeOpacity: 1,
-                markerEnd: 'url(#a)'
-            }}
-        />
-    </svg>
-)
+// const DesignIcon = (props) => (
+//     <svg width={48} height={48} {...props}>
+//         <defs>
+//             <marker
+//                 id="a"
+//                 markerHeight={0.6}
+//                 markerWidth={0.6}
+//                 orient="auto-start-reverse"
+//                 preserveAspectRatio="xMidYMid"
+//                 refX={0}
+//                 refY={0}
+//                 style={{
+//                     overflow: 'visible'
+//                 }}
+//                 viewBox="0 0 1 1"
+//             >
+//                 <path
+//                     d="m5.77 0-8.65 5V-5Z"
+//                     style={{
+//                         fill: colors.light,
+//                         fillRule: 'evenodd',
+//                         stroke: colors.light,
+//                         strokeWidth: '1pt'
+//                     }}
+//                     transform="scale(.5)"
+//                 />
+//             </marker>
+//         </defs>
+//         <circle
+//             cx={15.031}
+//             cy={10.763}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//         <circle
+//             cx={15.031}
+//             cy={35.829}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//         <circle
+//             cx={34.916}
+//             cy={24}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//         <path
+//             d="M15.03 30.822V17.878"
+//             style={{
+//                 fill: 'none',
+//                 fillRule: 'evenodd',
+//                 stroke: colors.light,
+//                 strokeWidth: '.927333px',
+//                 strokeLinecap: 'butt',
+//                 strokeLinejoin: 'miter',
+//                 strokeMiterlimit: 4,
+//                 strokeOpacity: 1,
+//                 markerEnd: 'url(#a)'
+//             }}
+//         />
+//     </svg>
+// )
 
-const FormationIcon = (props) => (
-    <svg width={48} height={48} {...props}>
-        <defs>
-            <marker
-                id="a"
-                markerHeight={0.6}
-                markerWidth={0.6}
-                orient="auto-start-reverse"
-                preserveAspectRatio="xMidYMid"
-                refX={0}
-                refY={0}
-                style={{
-                    overflow: 'visible'
-                }}
-                viewBox="0 0 1 1"
-            >
-                <path
-                    d="m5.77 0-8.65 5V-5Z"
-                    style={{
-                        fill: colors.light,
-                        fillRule: 'evenodd',
-                        stroke: colors.light,
-                        strokeWidth: '1pt'
-                    }}
-                    transform="scale(.5)"
-                />
-            </marker>
-        </defs>
-        <circle
-            cx={24}
-            cy={11.739}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-        <circle
-            cx={24}
-            cy={36.806}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-        <path
-            d="M24 31.799V18.855"
-            style={{
-                fill: 'none',
-                fillRule: 'evenodd',
-                stroke: colors.light,
-                strokeWidth: '.927333px',
-                strokeLinecap: 'butt',
-                strokeLinejoin: 'miter',
-                strokeMiterlimit: 4,
-                strokeOpacity: 1,
-                markerEnd: 'url(#a)'
-            }}
-        />
-    </svg>
-)
+// const FormationIcon = (props) => (
+//     <svg width={48} height={48} {...props}>
+//         <defs>
+//             <marker
+//                 id="a"
+//                 markerHeight={0.6}
+//                 markerWidth={0.6}
+//                 orient="auto-start-reverse"
+//                 preserveAspectRatio="xMidYMid"
+//                 refX={0}
+//                 refY={0}
+//                 style={{
+//                     overflow: 'visible'
+//                 }}
+//                 viewBox="0 0 1 1"
+//             >
+//                 <path
+//                     d="m5.77 0-8.65 5V-5Z"
+//                     style={{
+//                         fill: colors.light,
+//                         fillRule: 'evenodd',
+//                         stroke: colors.light,
+//                         strokeWidth: '1pt'
+//                     }}
+//                     transform="scale(.5)"
+//                 />
+//             </marker>
+//         </defs>
+//         <circle
+//             cx={24}
+//             cy={11.739}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//         <circle
+//             cx={24}
+//             cy={36.806}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//         <path
+//             d="M24 31.799V18.855"
+//             style={{
+//                 fill: 'none',
+//                 fillRule: 'evenodd',
+//                 stroke: colors.light,
+//                 strokeWidth: '.927333px',
+//                 strokeLinecap: 'butt',
+//                 strokeLinejoin: 'miter',
+//                 strokeMiterlimit: 4,
+//                 strokeOpacity: 1,
+//                 markerEnd: 'url(#a)'
+//             }}
+//         />
+//     </svg>
+// )
 
-const TypeIcon = (props) => (
-    <svg width={48} height={48} {...props}>
-        <circle
-            cx={24}
-            cy={24}
-            r={5.007}
-            style={{
-                fill: 'none',
-                stroke: colors.light,
-                strokeWidth: 0.733,
-                strokeDasharray: 'none',
-                strokeOpacity: 1
-            }}
-        />
-    </svg>
-)
+// const TypeIcon = (props) => (
+//     <svg width={48} height={48} {...props}>
+//         <circle
+//             cx={24}
+//             cy={24}
+//             r={5.007}
+//             style={{
+//                 fill: 'none',
+//                 stroke: colors.light,
+//                 strokeWidth: 0.733,
+//                 strokeDasharray: 'none',
+//                 strokeOpacity: 1
+//             }}
+//         />
+//     </svg>
+// )
 
 interface FormationWindowProps {
     viewId: string
@@ -2663,23 +2690,23 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
     const [activeDraggedArtifactKind, setActiveDraggedArtifactKind] = useState('') // type, formation or ''
 
     useEffect(() => {
-        const separatorIndex = activeDraggedArtifactId.indexOf('##')
-        const artifactType = activeDraggedArtifactId.substring(0, separatorIndex)
-        const artifactId = activeDraggedArtifactId.substring(separatorIndex + 2)
-        switch (artifactType) {
+        const separatorIndex = activeDraggedArtifactId.indexOf(SEPARATOR)
+        const artifactKind = activeDraggedArtifactId.substring(0, separatorIndex)
+        const artifactId = activeDraggedArtifactId.substring(separatorIndex + SEPARATOR.length)
+        switch (artifactKind) {
             case 'type': {
-                const typeNameSeparatorIndex = artifactId.indexOf('##')
+                const typeNameSeparatorIndex = artifactId.indexOf(SEPARATOR)
                 const typeName = artifactId.substring(0, typeNameSeparatorIndex)
-                const typeVariant = artifactId.substring(typeNameSeparatorIndex + 2)
+                const typeVariant = artifactId.substring(typeNameSeparatorIndex + SEPARATOR.length)
                 const type = types.get(typeName)?.get(typeVariant ?? '')
                 setActiveDraggedArtifact(type)
                 setActiveDraggedArtifactKind('type')
                 break
             }
             case 'formation': {
-                const formationNameSeparatorIndex = artifactId.indexOf('##')
+                const formationNameSeparatorIndex = artifactId.indexOf(SEPARATOR)
                 const formationName = artifactId.substring(0, formationNameSeparatorIndex)
-                const formationVariant = artifactId.substring(formationNameSeparatorIndex + 2)
+                const formationVariant = artifactId.substring(formationNameSeparatorIndex + SEPARATOR.length)
                 const formation = formations.get(formationName)?.get(formationVariant ?? '')
                 setActiveDraggedArtifact(formation)
                 setActiveDraggedArtifactKind('formation')
@@ -2826,9 +2853,9 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                                             <ArtifactAvatar
                                                                                 key={
                                                                                     'type' +
-                                                                                    '##' +
+                                                                                    SEPARATOR +
                                                                                     typeName +
-                                                                                    '##' +
+                                                                                    SEPARATOR +
                                                                                     typeVariant
                                                                                 }
                                                                                 icon={type.icon}
@@ -2847,9 +2874,9 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                                                 }
                                                                                 draggableId={
                                                                                     'type' +
-                                                                                    '##' +
+                                                                                    SEPARATOR +
                                                                                     typeName +
-                                                                                    '##' +
+                                                                                    SEPARATOR +
                                                                                     typeVariant
                                                                                 }
                                                                             ></ArtifactAvatar>
@@ -2903,16 +2930,16 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                                                 <ArtifactAvatar
                                                                                     key={
                                                                                         'formation' +
-                                                                                        '##' +
+                                                                                        SEPARATOR +
                                                                                         formationName +
-                                                                                        '##' +
+                                                                                        SEPARATOR +
                                                                                         formationVariant
                                                                                     }
                                                                                     draggableId={
                                                                                         'formation' +
-                                                                                        '##' +
+                                                                                        SEPARATOR +
                                                                                         formationName +
-                                                                                        '##' +
+                                                                                        SEPARATOR +
                                                                                         formationVariant
                                                                                     }
                                                                                     icon={
