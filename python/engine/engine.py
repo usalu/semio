@@ -33,17 +33,16 @@ semio engine.
 
 from argparse import ArgumentParser
 import os
-import sys
 import logging  # for uvicorn in pyinstaller
 from os import remove
 from pathlib import Path
-from multiprocessing import Process, freeze_support, set_start_method
+from multiprocessing import freeze_support
 from functools import lru_cache
-from time import sleep
 from typing import Optional, Dict, Protocol, List, Union
 from datetime import datetime
 from urllib.parse import urlparse
-from numpy import ndarray, asarray, eye, dot, cross, cos, sin, radians, degrees
+from json import dumps
+from numpy import ndarray, asarray, eye, dot, cross, radians, degrees
 from pytransform3d.transformations import (
     concat,
     invert_transform,
@@ -53,7 +52,6 @@ from pytransform3d.transformations import (
     vector_to_direction,
 )
 from pytransform3d.rotations import (
-    matrix_from_two_vectors,
     matrix_from_axis_angle,
     axis_angle_from_matrix,
     axis_angle_from_two_directions,
@@ -64,9 +62,8 @@ from networkx import (
     connected_components,
 )
 from pint import UnitRegistry
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_serializer
 from sqlalchemy import (
-    Boolean,
     String,
     Text,
     Float,
@@ -668,10 +665,12 @@ class Transform(ndarray):
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
     @property
-    def rotation(self) -> Rotation:
+    def rotation(self) -> Rotation | None:
         """🔄 The rotation part of the transform."""
         rotationMatrix = self[:3, :3]
         axisAngle = axis_angle_from_matrix(rotationMatrix)
+        if axisAngle[3] == 0:
+            return None
         return Rotation(
             axis=Vector(
                 float(axisAngle[0]), 
@@ -685,6 +684,13 @@ class Transform(ndarray):
     def translation(self) -> Vector:
         """➡️ The translation part of the transform."""
         return Vector(*self[:3, 3])
+    
+    # for pydantic
+    def dict(self) -> Dict[str, Union[Rotation, Vector]]:
+        return {
+            "rotation": self.rotation,
+            "translation": self.translation,
+        }
 
     def after(self, before: "Transform") -> "Transform":
         """✖️ Apply this transform after another transform.
@@ -1040,6 +1046,11 @@ def receive_after_update(mapper, connection, target):
 def receive_after_update(mapper, connection, target):
     target.type.lastUpdateAt = datetime.now()
 
+class TypeId(BaseModel):
+    """🧩 A type is identified by a name and variant (empty=default)."""
+
+    name: str
+    variant: str = ""
 
 class PieceRoot(BaseModel):
     """🌱 The root information of a piece."""
@@ -1076,8 +1087,8 @@ class Piece(Base):
     rootPlaneYAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneYAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneYAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    diagramPointX: Mapped[int] = mapped_column(Float())
-    diagramPointY: Mapped[int] = mapped_column(Float())
+    diagramPointX: Mapped[int] = mapped_column()
+    diagramPointY: Mapped[int] = mapped_column()
     formationId: Mapped[int] = mapped_column(ForeignKey("formation.id"))
     formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
     connectings: Mapped[List["Connection"]] = relationship(
@@ -1154,6 +1165,15 @@ class Piece(Base):
     def diagram(self) -> PieceDiagram:
         return PieceDiagram(point=ScreenPoint(self.diagramPointX, self.diagramPointY))
 
+    # for pydantic
+    def dict(self) -> Dict[str, Union[PieceRoot, PieceDiagram]]:
+        return {
+            "id": self.localId,
+            "type": TypeId(name=self.type.name, variant=self.type.variant),
+            "root": self.root if self.root else None,
+            "diagram": self.diagram,
+        }
+    
     # @property
     # def parent(self) -> Entity:
     #     return self.formation
@@ -1416,6 +1436,14 @@ class Hierarchy(BaseModel):
     piece: Piece
     transform: Transform
     children: Optional[List["Hierarchy"]]
+
+    @field_serializer('piece')
+    def serialize_piece(self, piece: Piece, _info):
+        return piece.dict()
+    
+    @field_serializer('transform')
+    def serialize_transform(self, transform: Transform, _info):
+        return transform.dict()
 
 
 class Object(BaseModel):
@@ -1967,11 +1995,11 @@ class TypeInput(InputObjectType):
     qualities = graphene.List(NonNull(QualityInput))
 
 
-class TypeIdInput(InputObjectType):
+class TypeIdInput(PydanticInputObjectType):
     """🧩 A type is identified by a name and variant (empty=default)."""
 
-    name = NonNull(graphene.String)
-    variant = graphene.String(default_value="")
+    class Meta:
+        model = TypeId
 
 
 class PieceRootInput(PydanticInputObjectType):
@@ -2751,6 +2779,9 @@ def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
             component.nodes[child]["hierarchy"] = hierarchy
             component.nodes[parent]["hierarchy"].children.append(hierarchy)
         hierarchies.append(rootHierarchy)
+        with open("../../local/engine_hierarchy.json", "w") as file:
+            file.write(rootHierarchy.model_dump_json())
+
     return hierarchies
 
 

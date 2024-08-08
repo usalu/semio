@@ -43,11 +43,11 @@ Let me start by what semio is **not**:
     > In semio you **link** drawings.
 - EnergyPlus, TRYNSIS, Modellica, … A simulation tool ☀️
     > In semio you **link** models and results.
-- Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Nextcloud, … A cloud tool ☁️
-    > In semio you **link** files acros a folder.
+- Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Nextcloud, … A CDE tool ☁️
+    > In semio you **link** urls.
 - IFC, Speckle, BHoM, … A data tool 📄
     > In semio you **link** design knowledge.
-- Hypar, Victor, Fusion, CadQuery, … A parametric tool 🎛️
+- Hypar, Viktor, Fusion, CadQuery, … A parametric tool 🎛️
     > In semio you **link** static pieces.
 
 So, what **is** semio?

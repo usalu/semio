@@ -47,7 +47,7 @@ import {
     InputNumberProps
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
-import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color, Vector3 } from 'three'
+import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color, Vector3, Object3DEventMap, Group } from 'three'
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
@@ -74,7 +74,7 @@ import FolderSharpIcon from '@mui/icons-material/FolderSharp'
 import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp'
 import OpenWithIcon from '@mui/icons-material/OpenWith'
 import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty'
-import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from '@dnd-kit/core'
 import { nanoid } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -929,23 +929,23 @@ class Generator {
     }
 }
 
-const SEPARATOR = "::"
+const SEPARATOR = '::'
 const kindNameAndVariantToString = (kind: string, name: string, variant?: string): string => {
     return `${kind}${SEPARATOR}${name}${SEPARATOR}${variant}`
 }
 const typeToIdString = (type: Type): string => {
-    return kindNameAndVariantToString("type", type.name, type.variant)
+    return kindNameAndVariantToString('type', type.name, type.variant)
 }
 const formationToIdString = (formation: Formation): string => {
-    return kindNameAndVariantToString("formation", formation.name, formation.variant)
+    return kindNameAndVariantToString('formation', formation.name, formation.variant)
 }
 const typeToHumanString = (type: Type | TypeInput | TypeIdInput): string => {
     const { name, variant } = type
-    return `Type(Name: ${name}${variant ? ` Variant(Name: ${variant})` : ''})`
+    return `${name}${variant ? ` (${variant})` : ''}`
 }
 const formationToHumanString = (formation: Formation | FormationInput | FormationIdInput): string => {
     const { name, variant } = formation
-    return `Formation(Name: ${name}${variant ? ` Variant(Name: ${variant})` : ''})`
+    return `${name}${variant ? ` (${variant})` : ''}`
 }
 
 function tinyKeyStringToHuman(string: string): string {
@@ -978,9 +978,9 @@ const ResultItem = forwardRef(
                 (ancestor) => ancestor.id === currentRootActionId
             )
             // +1 removes the currentRootAction; e.g.
-            // if we are on the "Set theme" parent action,
-            // the UI should not display "Set theme… > Dark"
-            // but rather just "Dark"
+            // if we are on the 'Set theme' parent action,
+            // the UI should not display 'Set theme… > Dark'
+            // but rather just 'Dark'
             return action.ancestors.slice(index + 1)
         }, [action.ancestors, currentRootActionId])
 
@@ -989,7 +989,7 @@ const ResultItem = forwardRef(
                 ref={ref}
                 className={`flex justify-between px-4 rounded-md  ${active ? 'bg-primary text-dark' : 'bg-dark bg-opacity-50 text-light'}`}
             >
-                <div className="description">
+                <div className='description'>
                     {action.icon && action.icon}
                     <div>
                         <div>
@@ -1006,7 +1006,7 @@ const ResultItem = forwardRef(
                     </div>
                 </div>
                 {action.shortcut?.length ? (
-                    <div className="shortcut">
+                    <div className='shortcut'>
                         {action.shortcut.map((sc) => (
                             <kbd key={sc}>{tinyKeyStringToHuman(sc)}</kbd>
                         ))}
@@ -1043,10 +1043,10 @@ function RenderResults({ className }: RenderResultsProps): JSX.Element {
 function CommandBar(): JSX.Element {
     return (
         <KBarPortal>
-            <KBarPositioner className="backdrop-blur-sm">
-                <KBarAnimator className="w-2/3">
-                    <KBarSearch className="w-full bg-light border-none p-4 rounded-2xl placeholder:text-dark focus:bg-primary focus:outline-none focus:placeholder:text-light selection:bg-secondary" />
-                    <RenderResults className=" bg-light bg-opacity-50 rounded-md px-2 py-1 box-content" />
+            <KBarPositioner className='backdrop-blur-sm'>
+                <KBarAnimator className='w-2/3'>
+                    <KBarSearch className='w-full bg-light border-none p-4 rounded-2xl placeholder:text-dark focus:bg-primary focus:outline-none focus:placeholder:text-light selection:bg-secondary' />
+                    <RenderResults className=' bg-light bg-opacity-50 rounded-md px-2 py-1 box-content' />
                 </KBarAnimator>
             </KBarPositioner>
         </KBarPortal>
@@ -1132,7 +1132,7 @@ const ArtifactAvatar = ({
     switch (kind) {
         case IconKind.Svg:
             return (
-                <Tooltip placement="right" title={description}>
+                <Tooltip placement='right' title={description}>
                     <Avatar
                         className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
                         size={38}
@@ -1140,15 +1140,15 @@ const ArtifactAvatar = ({
                     >
                         <SVG
                             src={turnBlackAndWhiteSvgSemiotic(data, isSelected)}
-                            width="32"
-                            height="32"
+                            width='32'
+                            height='32'
                         />
                     </Avatar>
                 </Tooltip>
             )
         case IconKind.Image:
             return (
-                <Tooltip placement="right" title={description}>
+                <Tooltip placement='right' title={description}>
                     <Avatar
                         className={`cursor-pointer ${isSelected ? 'bg-primary opacity-50' : 'bg-light opacity-100'}`}
                         src={data}
@@ -1159,7 +1159,7 @@ const ArtifactAvatar = ({
             )
         case IconKind.Text:
             return (
-                <Tooltip placement="right" title={description}>
+                <Tooltip placement='right' title={description}>
                     <Avatar
                         className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
                         size={38}
@@ -1188,30 +1188,41 @@ const getGroupNameFromClickEventGroupObject = (o: any): string => {
 const Gizmo = (): JSX.Element => {
     return (
         <GizmoHelper
-            alignment="bottom-right"
+            alignment='bottom-right'
             margin={[80, 80]}
         >
             <GizmoViewport
                 labels={['X', 'Z', '-Y']}
                 axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-            // font="Anta"
+            // font='Anta'
             />
         </GizmoHelper>
     )
 }
 
+interface PointThreeProps {
+    point: Point
+    color: string
+    size: number
+}
+
+const PointThree = ({ point, color, size }: PointThreeProps): JSX.Element => {
+    return (
+        <Sphere
+            args={[size / 2]}
+            position={point.toArray()}
+            material={new MeshBasicMaterial({ color: new Color(color) })}
+        />
+    )
+}
+
+
 interface SemioCanvasProps {
     children: React.ReactNode
     onPointerMissed?: (event: MouseEvent) => void
 }
-
+// TODO: Refactor to extend Canvas: https://docs.pmnd.rs/react-three-fiber/tutorials/typescript#extending-threeelements
 const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Element => {
-    const groupRef = useRef()
-    useEffect(() => {
-        if (groupRef.current) {
-            groupRef.current.applyMatrix4(semioToThreeRotation())
-        }
-    }, [])
     return (
         <Canvas
             // orthographic={true}
@@ -1220,12 +1231,19 @@ const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Eleme
         >
             <OrbitControls makeDefault />
             <Gizmo />
-            <Stage center={{ disable: true }} environment={null} />
             <Grid infiniteGrid={true} sectionColor={colors.lightGrey} />
-            <Suspense fallback={null}>
-                <group ref={groupRef}>{children}</group>
-            </Suspense>
-        </Canvas>
+            <Stage center={{ disable: true }} environment={null}>
+                <Suspense fallback={null}>
+                    <group
+                        matrix={semioToThreeRotation().toArray()}
+                        matrixAutoUpdate={false}
+                    >
+                        {/* <PointThree point={new Point(0, 0, 0)} color={colors.light} size={0.1} /> */}
+                        {children}
+                    </group>
+                </Suspense>
+            </Stage>
+        </Canvas >
     )
 }
 
@@ -1245,21 +1263,21 @@ const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Eleme
 //         }
 //     }, [])
 //     return (
-//         <group name="plane" ref={groupRef}>
+//         <group name='plane' ref={groupRef}>
 //             <DreiLine
-//                 // name="x-axis"
+//                 // name='x-axis'
 //                 points={[[0, 0, 0], [1, 0, 0]]}
 //                 color={colors.primary}
 //                 lineWidth={lineWidth * 2}
 //             />
 //             <DreiLine
-//                 // name="y-axis"
+//                 // name='y-axis'
 //                 points={[[0, 0, 0], [0, 0, -1]]}
 //                 color={colors.secondary}
 //                 lineWidth={lineWidth * 2}
 //             />
 //             <DreiLine
-//                 // name="z-axis"
+//                 // name='z-axis'
 //                 points={[[0, 0, 0], [0, 1, 0]]}
 //                 color={colors.tertiary}
 //                 lineWidth={lineWidth * 2}
@@ -1342,15 +1360,13 @@ interface PortThreeProps {
 const PortThree = ({ port, selected, onClick }: PortThreeProps): JSX.Element => {
     const point = Point.parse(port.point)
     const direction = Vector.parse(port.direction)
-    const groupRef = useRef()
 
     return (
-        <group name="port" ref={groupRef} onClick={onClick}>
-            <Sphere
-                args={[selected ? 0.2 : 0.1]}
-                position={point.toArray()}
-                material={new MeshBasicMaterial({ color: new Color(selected ? colors.primary : colors.grey) })}
-            />
+        <group name='port' onClick={onClick}>
+            <PointThree
+                point={point}
+                color={selected ? colors.primary : colors.grey}
+                size={selected ? 0.2 : 0.1} />
             <DreiLine
                 points={[point.toArray(), new Vector3().addVectors(point, direction).toArray()]}
                 color={colors.light}
@@ -1388,9 +1404,8 @@ const RepresentationThree = ({ representation, id, color, transform }: Represent
     }, [color])
     useMemo(() => {
         if (transform) {
-            representationThreeScene.matrix = new Transform()
-            representationThreeScene.updateMatrix()
-            representationThreeScene.applyMatrix4(transform)
+            representationThreeScene.matrix = transform
+            representationThreeScene.matrixAutoUpdate = false
         }
     }, [transform])
     representationThreeScene.name = id
@@ -1409,7 +1424,7 @@ const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JS
     const ports = type.ports
 
     return (
-        <div className="w-[350px] h-[350px]">
+        <div className='w-[350px] h-[350px]'>
             <SemioCanvas>
                 {/* TODO: Proper filtering */}
                 <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
@@ -1430,12 +1445,12 @@ const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JS
 }
 
 interface ConnectionPreview {
-    connectingType: Type | TypeInput
     connectedType: Type | TypeInput
+    connectingType: Type | TypeInput
     connection: Connection | ConnectionInput
 }
 
-const ConnectionPreview = ({ connectingType, connectedType, connection }: ConnectionPreview): JSX.Element => {
+const ConnectionPreview = ({ connectedType, connectingType, connection }: ConnectionPreview): JSX.Element => {
     const parentPort = connectedType.ports.find((port) => port.id === connection.connected.piece.type?.port?.id)
     const childPort = connectingType.ports.find((port) => port.id === connection.connecting.piece.type?.port?.id)
     const parentDirection = Vector.parse(parentPort.direction)
@@ -1458,7 +1473,7 @@ const ConnectionPreview = ({ connectingType, connectedType, connection }: Connec
     }
     transform = moveToParent.after(transform)
     return (
-        <div className="w-[700px] h-[700px]">
+        <div className='w-[700px] h-[700px]'>
             <SemioCanvas>
                 <RepresentationThree
                     id='connected'
@@ -1466,7 +1481,7 @@ const ConnectionPreview = ({ connectingType, connectedType, connection }: Connec
                     representation={connectedType.representations.find((r) => r.url.endsWith('.glb'))}
                 />
                 <RepresentationThree
-                    id='connected'
+                    id='connecting'
                     // TODO: Proper filtering
                     representation={connectingType.representations.find((r) => r.url.endsWith('.glb'))}
                     transform={transform}
@@ -1527,7 +1542,7 @@ const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }
         <Flex>
             <Flex vertical>
                 <PortSelector type={connectingType} onSelect={setConnectingPortId} selectedPortId={connectingPortId} />
-                <Divider className="m-0" />
+                <Divider className='m-0' />
                 <PortSelector type={connectedType} onSelect={setConnectedPortId} selectedPortId={connectedPortId} />
                 <Flex>
                     <Label>Offset</Label>
@@ -1556,7 +1571,7 @@ const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }
                     </Col>
                 </Row>
             </Flex>
-            <Divider className="h-auto" type="vertical" />
+            <Divider className='h-auto' type='vertical' />
             <Flex vertical>
                 <ConnectionPreview connectingType={connectingType} connectedType={connectedType} connection={connection} />
             </Flex>
@@ -1572,14 +1587,14 @@ const GraphConfig = {
             shapeId: '#piece',
             shape: (
                 <symbol
-                    className="piece"
-                    viewBox="0 0 50 50"
-                    height="40"
-                    width="40"
-                    id="piece"
-                    key="0"
+                    className='piece'
+                    viewBox='0 0 50 50'
+                    height='40'
+                    width='40'
+                    id='piece'
+                    key='0'
                 >
-                    <circle cx="25" cy="25" r="24"></circle>
+                    <circle cx='25' cy='25' r='24'></circle>
                 </symbol>
             )
         }
@@ -1589,8 +1604,8 @@ const GraphConfig = {
         connection: {
             shapeId: '#connection',
             shape: (
-                <symbol viewBox="0 0 50 50" id="connection" key="0">
-                    {/* <circle cx="25" cy="25" r="8" fill="currentColor"> </circle> */}
+                <symbol viewBox='0 0 50 50' id='connection' key='0'>
+                    {/* <circle cx='25' cy='25' r='8' fill='currentColor'> </circle> */}
                 </symbol>
             )
         }
@@ -1816,7 +1831,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     pieces: [
                         ...formationRef.current.pieces,
                         {
-                            id: Generator.generateRandomId(x + y),
+                            id: Generator.generateRandomId(x - y),
                             type: event.piece.type,
                             diagram: {
                                 point: { x: Math.round(x), y: Math.round(y) }
@@ -1926,7 +1941,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 pieces: formationSnippet.pieces.map((piece) => {
                     const x = Math.round(xyCoords?.x + piece.diagram.point.x)
                     const y = Math.round(xyCoords?.y + piece.diagram.point.y)
-                    const id = piece.id + SEPARATOR + Generator.generateRandomId((Math.floor(x) << 16) ^ Math.floor(y))
+                    const id = piece.id + SEPARATOR + Generator.generateRandomId(x - y)
                     oldPieceToNewPiece.set(piece.id, id)
                     return {
                         ...piece,
@@ -2000,7 +2015,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     ): SVGProps<SVGGElement> => {
         const type = types.get(data.piece.type.name)?.get(data.piece.type.variant ?? '')
         return (
-            <foreignObject x="-19" y="-19" width="38" height="38">
+            <foreignObject x='-19' y='-19' width='38' height='38'>
                 <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                     <ArtifactAvatar
                         icon={type.icon}
@@ -2035,17 +2050,24 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         }
     }
 
-    const onDropFormationSnippet = (x: number, y: number, formationSnippet: Formation | FormationInput) => {
+    const onDropFormationSnippet = (
+        formationSnippet: Formation | FormationInput,
+        x?: number | undefined,
+        y?: number | undefined,
+        existingFormation?: Formation | FormationInput | null | undefined) => {
         if (graphViewRef.current) {
             const viewTransfrom = graphViewRef.current.state.viewTransform
             const svgX = -1 * ((viewTransfrom.x - x) / viewTransfrom.k)
             const svgY = -1 * ((viewTransfrom.y - y) / viewTransfrom.k)
 
+            const areAllIdsUnique = formationSnippet.pieces.every((piece) => {
+                return !(existingFormation?.pieces.some((existingPiece) => existingPiece.id === piece.id) ?? true)
+            })
             const idMap = new Map<string, string>()
             const newFormationPieces = formationSnippet.pieces.map((piece) => {
                 const x = Math.round(svgX + piece.diagram.point.x)
                 const y = Math.round(svgY + piece.diagram.point.y)
-                const id = piece.id + SEPARATOR + Generator.generateRandomId()
+                const id = areAllIdsUnique ? piece.id : piece.id + SEPARATOR + Generator.generateRandomId(x - y)
                 idMap.set(piece.id, id)
                 return {
                     ...piece,
@@ -2095,7 +2117,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     return (
         <>
             <div
-                id="formation-editor"
+                id='formation-editor'
                 className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
                 ref={setNodeRef}
             >
@@ -2135,7 +2157,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             </div>
             <Modal
                 width={1200}
-                title="New connection"
+                title='New connection'
                 open={isConnectionBuilderOpen}
                 onOk={handleConnectionBuilderFinished}
                 onCancel={handleConnectionBuilderCanceled}
@@ -2183,7 +2205,7 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
         <ThreeSelect
             multiple
             box
-            border="1px solid #fff"
+            border='1px solid #fff'
             // onChange={(selected): void => {
             //         console.log('selection starting', selected)
             //     }}
@@ -2342,12 +2364,12 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
     const [transformationMode, setTransformationMode] = useState('translate')
 
     return (
-        <div className="h-full relative">
-            <FloatButton.Group className="absolute right-4 top-4" >
+        <div className='h-full relative'>
+            <FloatButton.Group className='absolute right-4 top-4' >
                 {/* TODO: Fix hacky repositioning of icons */}
                 <FloatButton
                     icon={
-                        <div className="-ml-[2.5px]">
+                        <div className='-ml-[2.5px]'>
                             <OpenWithIcon />
                         </div>
                     }
@@ -2356,7 +2378,7 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                 />
                 <FloatButton
                     icon={
-                        <div className="-ml-[2.5px]">
+                        <div className='-ml-[2.5px]'>
                             <ThreeSixtyIcon />
                         </div>
                     }
@@ -2390,7 +2412,7 @@ function getItem(
 }
 
 // const SemioIcon = (props) => (
-//     <svg width={48} height={48} overflow="visible" viewBox="0 0 99.95 99.921" {...props}>
+//     <svg width={48} height={48} overflow='visible' viewBox='0 0 99.95 99.921' {...props}>
 //         {'-->'}
 //         <g
 //             style={{
@@ -2412,8 +2434,8 @@ function getItem(
 //             >
 //                 <path
 //                     fillOpacity={0}
-//                     stroke="none"
-//                     d="M94.789 41.727v77.939l19.984-19.985V41.727Z"
+//                     stroke='none'
+//                     d='M94.789 41.727v77.939l19.984-19.985V41.727Z'
 //                     style={{
 //                         fill: '#fa9500',
 //                         fillOpacity: 1,
@@ -2422,12 +2444,12 @@ function getItem(
 //                         strokeDasharray: 'none',
 //                         strokeOpacity: 1
 //                     }}
-//                     transform="translate(-94.789 -19.745)"
+//                     transform='translate(-94.789 -19.745)'
 //                 />
 //             </g>
 //             <g
 //                 fillOpacity={0}
-//                 stroke="none"
+//                 stroke='none'
 //                 style={{
 //                     fill: '#ff344f',
 //                     fillOpacity: 1,
@@ -2438,7 +2460,7 @@ function getItem(
 //                 }}
 //             >
 //                 <path
-//                     d="m194.71 119.666.03-98.535-19.985 19.979-.03 78.556zM94.789 19.745h98.51l-19.984 19.984H94.79Z"
+//                     d='m194.71 119.666.03-98.535-19.985 19.979-.03 78.556zM94.789 19.745h98.51l-19.984 19.984H94.79Z'
 //                     style={{
 //                         fill: '#ff344f',
 //                         fillOpacity: 1,
@@ -2447,12 +2469,12 @@ function getItem(
 //                         strokeDasharray: 'none',
 //                         strokeOpacity: 1
 //                     }}
-//                     transform="translate(-94.789 -19.745)"
+//                     transform='translate(-94.789 -19.745)'
 //                 />
 //             </g>
 //             <g
 //                 fillOpacity={0}
-//                 stroke="none"
+//                 stroke='none'
 //                 style={{
 //                     fill: '#00a69d',
 //                     fillOpacity: 1,
@@ -2463,7 +2485,7 @@ function getItem(
 //                 }}
 //             >
 //                 <path
-//                     d="m134.757 119.666 19.984-19.985h17.987v19.985zM134.757 79.697l19.984-19.984h17.987v19.984z"
+//                     d='m134.757 119.666 19.984-19.985h17.987v19.985zM134.757 79.697l19.984-19.984h17.987v19.984z'
 //                     style={{
 //                         fill: '#00a69d',
 //                         fillOpacity: 1,
@@ -2472,7 +2494,7 @@ function getItem(
 //                         strokeDasharray: 'none',
 //                         strokeOpacity: 1
 //                     }}
-//                     transform="translate(-94.789 -19.745)"
+//                     transform='translate(-94.789 -19.745)'
 //                 />
 //             </g>
 //         </g>
@@ -2483,27 +2505,27 @@ function getItem(
 //     <svg width={48} height={48} {...props}>
 //         <defs>
 //             <marker
-//                 id="a"
+//                 id='a'
 //                 markerHeight={0.6}
 //                 markerWidth={0.6}
-//                 orient="auto-start-reverse"
-//                 preserveAspectRatio="xMidYMid"
+//                 orient='auto-start-reverse'
+//                 preserveAspectRatio='xMidYMid'
 //                 refX={0}
 //                 refY={0}
 //                 style={{
 //                     overflow: 'visible'
 //                 }}
-//                 viewBox="0 0 1 1"
+//                 viewBox='0 0 1 1'
 //             >
 //                 <path
-//                     d="m5.77 0-8.65 5V-5Z"
+//                     d='m5.77 0-8.65 5V-5Z'
 //                     style={{
 //                         fill: colors.light,
 //                         fillRule: 'evenodd',
 //                         stroke: colors.light,
 //                         strokeWidth: '1pt'
 //                     }}
-//                     transform="scale(.5)"
+//                     transform='scale(.5)'
 //                 />
 //             </marker>
 //         </defs>
@@ -2544,7 +2566,7 @@ function getItem(
 //             }}
 //         />
 //         <path
-//             d="M15.03 30.822V17.878"
+//             d='M15.03 30.822V17.878'
 //             style={{
 //                 fill: 'none',
 //                 fillRule: 'evenodd',
@@ -2564,27 +2586,27 @@ function getItem(
 //     <svg width={48} height={48} {...props}>
 //         <defs>
 //             <marker
-//                 id="a"
+//                 id='a'
 //                 markerHeight={0.6}
 //                 markerWidth={0.6}
-//                 orient="auto-start-reverse"
-//                 preserveAspectRatio="xMidYMid"
+//                 orient='auto-start-reverse'
+//                 preserveAspectRatio='xMidYMid'
 //                 refX={0}
 //                 refY={0}
 //                 style={{
 //                     overflow: 'visible'
 //                 }}
-//                 viewBox="0 0 1 1"
+//                 viewBox='0 0 1 1'
 //             >
 //                 <path
-//                     d="m5.77 0-8.65 5V-5Z"
+//                     d='m5.77 0-8.65 5V-5Z'
 //                     style={{
 //                         fill: colors.light,
 //                         fillRule: 'evenodd',
 //                         stroke: colors.light,
 //                         strokeWidth: '1pt'
 //                     }}
-//                     transform="scale(.5)"
+//                     transform='scale(.5)'
 //                 />
 //             </marker>
 //         </defs>
@@ -2613,7 +2635,7 @@ function getItem(
 //             }}
 //         />
 //         <path
-//             d="M24 31.799V18.855"
+//             d='M24 31.799V18.855'
 //             style={{
 //                 fill: 'none',
 //                 fillRule: 'evenodd',
@@ -2653,6 +2675,7 @@ interface FormationWindowProps {
 
 const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.Element => {
     const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
+    if (!formationView) return <div>Formation not found</div>
     const formationRef = useRef(formationView.formation)
     useEffect(() => {
         formationRef.current = formationView.formation;
@@ -2737,7 +2760,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                 case 'formation': {
                     const formationToDrop = formations.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
                     if (formationToDrop) {
-                        diagramEditorRef.current.onDropFormationSnippet(relativeX, relativeY, formationToDrop)
+                        diagramEditorRef.current.onDropFormationSnippet(formationToDrop, relativeX, relativeY, formationView.formation)
                     }
                 }
             }
@@ -2799,25 +2822,25 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
     return (
         <KBarProvider actions={actions}>
             <CommandBar />
-            <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
-                <Col className="flex items-center">
+            <Row className='items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey'>
+                <Col className='flex items-center'>
                     {/* TODO: Add icons for main menu and tools */}
                 </Col>
-                <Col className="flex items-center">
+                <Col className='flex items-center'>
                     <Breadcrumb>
                         <Breadcrumb.Item>{kit.name}</Breadcrumb.Item>
                         <Breadcrumb.Item>Formations</Breadcrumb.Item>
-                        <Breadcrumb.Item>{formationView?.formation.name}</Breadcrumb.Item>
+                        <Breadcrumb.Item>{formationToHumanString(formationView?.formation)}</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
-                <Col className="flex items-center">{/* TODO: Add icons for sharing, etc */}</Col>
+                <Col className='flex items-center'>{/* TODO: Add icons for sharing, etc */}</Col>
             </Row>
             <Layout style={{ flex: 1 }}>
                 <Layout>
                     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-                        <Sider width="240px" className="border-r-thin border-lightGrey">
+                        <Sider width='240px' className='border-r-thin border-lightGrey'>
                             <Collapse
-                                className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+                                className='p-3 border-b-thin border-lightGrey font-thin uppercase'
                                 defaultActiveKey={['types', 'formations']}
                                 items={[
                                     {
@@ -2825,7 +2848,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                         label: 'Types',
                                         children: (
                                             <Collapse
-                                                className="p-2 font-normal text-lightGrey normal-case"
+                                                className='p-2 font-normal text-lightGrey normal-case'
                                                 defaultActiveKey={Array.from(types.keys())}
                                                 items={Array.from(types.entries())
                                                     .sort()
@@ -2834,8 +2857,8 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                         label: typeName,
                                                         children: (
                                                             <Space
-                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                                                                direction="vertical"
+                                                                className='h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1'
+                                                                direction='vertical'
                                                                 size={10}
                                                                 style={{
                                                                     gridTemplateColumns:
@@ -2893,7 +2916,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                         label: 'Formations',
                                         children: (
                                             <Collapse
-                                                className="p-2 font-normal text-lightGrey normal-case"
+                                                className='p-2 font-normal text-lightGrey normal-case'
                                                 defaultActiveKey={Array.from(formations.keys())}
                                                 items={Array.from(formations.entries())
                                                     .sort()
@@ -2906,8 +2929,8 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                             label: formationName,
                                                             children: (
                                                                 <Space
-                                                                    className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                                                                    direction="vertical"
+                                                                    className='h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1'
+                                                                    direction='vertical'
                                                                     size={10}
                                                                     style={{
                                                                         gridTemplateColumns:
@@ -2977,7 +3000,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                     ref={diagramEditorRef}
                                 />
                             </Content>
-                            <Divider className="h-full top-0" type="vertical" />
+                            <Divider className='h-full top-0' type='vertical' />
                             <Content>
                                 <ShapeEditor />
                             </Content>
@@ -2995,9 +3018,9 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                         </EditorContext.Provider>
                     </DndContext>
                 </Layout>
-                <Sider className="border-l-thin border-lightGrey" width="240">
+                <Sider className='border-l-thin border-lightGrey' width='240'>
                     <Collapse
-                        className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+                        className='p-3 border-b-thin border-lightGrey font-thin uppercase'
                         defaultActiveKey={['scene']}
                         items={[
                             {
@@ -3006,14 +3029,14 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                 children: (
                                     <Flex
                                         vertical={true}
-                                        className="p-2 font-normal text-lightGrey normal-case"
+                                        className='p-2 font-normal text-lightGrey normal-case'
                                     >
-                                        <Label className="p-0">Level of Details</Label>
+                                        <Label className='p-0'>Level of Details</Label>
                                         <Select
-                                            className="p-1"
-                                            mode="multiple"
+                                            className='p-1'
+                                            mode='multiple'
                                             allowClear
-                                            placeholder="Select"
+                                            placeholder='Select'
                                             options={[
                                                 {
                                                     label: '1to500',
@@ -3025,12 +3048,12 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                 }
                                             ]}
                                         />
-                                        <Label className="p-0">Tags</Label>
+                                        <Label className='p-0'>Tags</Label>
                                         <Select
-                                            className="p-1"
-                                            mode="multiple"
+                                            className='p-1'
+                                            mode='multiple'
                                             allowClear
-                                            placeholder="Select"
+                                            placeholder='Select'
                                             options={[
                                                 {
                                                     label: 'volume',
@@ -3051,9 +3074,9 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                 children: (
                                     <Flex
                                         vertical={true}
-                                        className="p-2 text-lightGrey normal-case"
+                                        className='p-2 text-lightGrey normal-case'
                                     >
-                                        <div className="p-0">
+                                        <div className='p-0'>
                                             This will change based on the Selection.
                                         </div>
                                     </Flex>
@@ -3065,7 +3088,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
             </Layout>
             {/* <Footer className='p-0'>
                     <div style={{ height: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="flex items-center">
+                        <div className='flex items-center'>
                         </div>
                     </div>
                 </Footer> */}
@@ -3109,16 +3132,16 @@ const ArtifactWizard = ({
 
     return (
         <Form
-            className="p-3"
+            className='p-3'
             form={form}
-            name="Artifact Wizard"
+            name='Artifact Wizard'
             initialValues={{ remember: true }}
             onFinish={onFinish}
-            autoComplete="off"
+            autoComplete='off'
         >
             <Form.Item<IArtifactView>
-                label="Kind"
-                name="kind"
+                label='Kind'
+                name='kind'
                 rules={[{ required: true, message: 'What artifact do you want to create?' }]}
                 initialValue={ViewKind.Formation}
             >
@@ -3128,8 +3151,8 @@ const ArtifactWizard = ({
                 </Radio.Group>
             </Form.Item>
             <Form.Item<IArtifactView>
-                label="Kit Directory"
-                name="kitDirectory"
+                label='Kit Directory'
+                name='kitDirectory'
                 rules={[{ required: true, message: 'In what directory is the kit?' }]}
             >
                 <Button onClick={onOpenDirectoryFromButton} icon={<FolderSharpIcon />}>
@@ -3141,23 +3164,23 @@ const ArtifactWizard = ({
                 </Button>
             </Form.Item>
             <Form.Item<IArtifactView>
-                label="Name"
-                name="name"
+                label='Name'
+                name='name'
                 initialValue={'Untitled'}
                 rules={[{ required: true, message: 'Every artifacts needs a name.' }]}
             >
                 <Input />
             </Form.Item>
-            <Form.Item<IArtifactView> label="Description" name="description">
+            <Form.Item<IArtifactView> label='Description' name='description'>
                 <Input />
             </Form.Item>
-            <Form.Item<IArtifactView> label="Icon" name="icon">
+            <Form.Item<IArtifactView> label='Icon' name='icon'>
                 <Button onClick={onOpenFileFromButton} icon={<FileUploadSharpIcon />}>
                     {onOpenFileStatus === 'loading' ? 'Loading...' : 'Upload Icon'}
                 </Button>
             </Form.Item>
             <Form.Item>
-                <Button htmlType="submit" className="bg-lightGrey text-dark">
+                <Button htmlType='submit' className='bg-lightGrey text-dark'>
                     Create
                 </Button>
             </Form.Item>
@@ -3275,7 +3298,7 @@ const App = ({
     const [activeTab, setActiveTab] = useState('home')
 
     return (
-        <div className="h-screen w-screen">
+        <div className='h-screen w-screen'>
 
             <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                 <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -3290,8 +3313,8 @@ const App = ({
                             }}
                         >
                             <Tabs
-                                className="p-0 flex items-center"
-                                type="editable-card"
+                                className='p-0 flex items-center'
+                                type='editable-card'
                                 style={{
                                     WebkitAppRegion: 'no-drag'
                                 }}
@@ -3307,7 +3330,7 @@ const App = ({
                                         if (activeTab === targetKey) setActiveTab('home')
                                     }
                                 }}
-                                defaultActiveKey="home"
+                                defaultActiveKey='home'
                                 items={[
                                     {
                                         key: 'home',
@@ -3388,7 +3411,7 @@ const App = ({
                         </div>
                     </Header>
                     {activeTab === 'home' ? (
-                        <div className="h-full flex items-center justify-center text-lightGrey text-2xl">
+                        <div className='h-full flex items-center justify-center text-lightGrey text-2xl'>
                             Click + to add a new artifact.
                         </div>
                     ) : (

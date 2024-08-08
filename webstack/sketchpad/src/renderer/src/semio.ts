@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape'
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Quaternion, Vector3 } from 'three'
 import {
     Point as IPoint,
     Vector as IVector,
@@ -619,6 +619,14 @@ export enum CoordinateSystem {
     THREE = 'THREE',
 }
 
+export const radians = (degrees: number): number => {
+    return degrees * (Math.PI / 180)
+}
+
+export const degrees = (radians: number): number => {
+    return radians * (180 / Math.PI)
+}
+
 export class Point extends Vector3 {
 
     constructor(x: number = 0, y: number = 0, z: number = 0) {
@@ -840,6 +848,13 @@ export class Rotation {
     toTransform(): Transform {
         return Transform.fromRotation(this)
     }
+
+    toJSON(): object | null {
+        return this.angle === 0 ? null : {
+            axis: this.axis,
+            angle: this.angle
+        }
+    }
 }
 
 export class Transform extends Matrix4 {
@@ -870,11 +885,13 @@ export class Transform extends Matrix4 {
             axis = axisUnnormalized
         }
         const normalizedAxis = axis.normalize()
-        return new Rotation(normalizedAxis, angle)
+        return new Rotation(normalizedAxis, degrees(angle))
     }
 
     get translation(): Vector {
-        return new Vector(this[12], this[13], this[14])
+        const translation = new Vector()
+        this.decompose(translation, new Quaternion(), new Vector())
+        return translation
     }
 
     after(before: Transform): Transform {
@@ -940,6 +957,28 @@ export class Transform extends Matrix4 {
         const yAxis = new Vector(this[4], this[5], this[6])
         return new Plane(origin, xAxis, yAxis)
     }
+
+    toJSON(): object {
+        return {
+            rotation: this.rotation,
+            translation: this.translation
+        }
+    }
+
+    static parse(object: Transform | string | null | undefined): Transform {
+        if (object === undefined || object === null) {
+            return new Transform()
+        }
+        if (object instanceof Transform) {
+            return object
+        }
+        if (typeof object === 'string') {
+            const { rotation, translation } = JSON.parse(object)
+            return new Transform().makeRotationAxis(Vector.parse(rotation.axis), radians(rotation.angle)).setPosition(Vector.parse(translation))
+        }
+        return new Transform().makeRotationAxis(Vector.parse(object.rotation.axis), radians(object.rotation.angle)).setPosition(Vector.parse(object.translation))
+    }
+
 }
 
 export const semioToThreeRotation = (): Transform => {
@@ -959,15 +998,19 @@ export const threeToSemioRotation = (): Transform => {
 }
 
 
-export const radians = (degrees: number): number => {
-    return degrees * (Math.PI / 180)
-}
-
-export type Hierarchy = {
+class Hierarchy {
     piece: Piece | PieceInput
     transform: Transform
     children: Hierarchy[]
+
+    constructor(piece: Piece | PieceInput, transform?: Transform | null | undefined, children?: Hierarchy[] | null | undefined) {
+        this.piece = piece
+        this.transform = transform ?? new Transform()
+        this.children = children ?? []
+    }
 }
+
+export default Hierarchy;
 
 // Reference in Python:
 // def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
@@ -1051,11 +1094,7 @@ export const formationToHierarchies = (
             .filter((node) => formation.pieces.find((p) => p.id === node.id()).root)
         const root = roots.length === 0 ? component.nodes()[0] : roots[0]
         const rootPiece = formation.pieces.find((p) => p.id === root.id())
-        const rootHierarchy: Hierarchy = {
-            piece: rootPiece,
-            transform: new Transform(),
-            children: []
-        }
+        const rootHierarchy = new Hierarchy(rootPiece)
         hierarchies.push(rootHierarchy)
         const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
         pieceIdToHierarchy[rootHierarchy.piece.id] = rootHierarchy
@@ -1107,17 +1146,14 @@ export const formationToHierarchies = (
                         transform = offset.after(transform)
                     }
                     transform = moveToParent.after(transform)
-                    const hierarchy = {
-                        piece: childPiece,
-                        transform,
-                        children: []
-                    }
+                    const hierarchy = new Hierarchy(childPiece, transform)
                     // console.log(hierarchy, transform.toPlane(), rotation, centerChild, moveToParent)
                     pieceIdToHierarchy[childPiece.id] = hierarchy
                     pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
                 }
             }
         )
+        console.log(JSON.stringify(rootHierarchy))
     })
     return hierarchies
 }
