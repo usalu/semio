@@ -2417,7 +2417,7 @@ def addRepresentationInputToSession(
     except AttributeError:
         mime = ""
     if mime == "":
-        mime = parseMimeFromUrl(representation.url)
+        mime = parseMimeFromUrl(representationInput.url)
     try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
         raise RepresentationAlreadyExists(representation)

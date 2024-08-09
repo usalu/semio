@@ -2076,7 +2076,8 @@ public class RepresentationComponent : SemioComponent
             representationGoo.Value.Url = url;
         if (!DA.GetData(2, ref mime))
         {
-            representationGoo.Value.Mime = MimeParser.ParseFromUrl(url);
+            if (representationGoo.Value.Mime == "")
+                representationGoo.Value.Mime = MimeParser.ParseFromUrl(representationGoo.Value.Url);
         }
         else
             representationGoo.Value.Mime = mime;
@@ -4064,7 +4065,7 @@ public class FilterSceneComponent : SemioComponent
         pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Formats", "Ft*", "Optional formats of the representations in the scene.",
+        pManager.AddTextParameter("Mimes", "Mm*", "Optional mimes of the representations in the scene.",
             GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
@@ -4086,17 +4087,17 @@ public class FilterSceneComponent : SemioComponent
         var sceneGoo = new SceneGoo();
         var lods = new List<string>();
         var tags = new List<string>();
-        var formats = new List<string>();
+        var mimes = new List<string>();
 
         DA.GetData(0, ref sceneGoo);
         DA.GetDataList(1, lods);
         DA.GetDataList(2, tags);
-        DA.GetDataList(3, formats);
+        DA.GetDataList(3, mimes);
 
         // filter the representations of the scene
         // if lods are used, only the representations with the specified lods are returned
         // if tags are used, each representations must have at least one of the specified tags
-        // if formats are used, only the representations with the specified formats are returned
+        // if mimes are used, only the representations with the specified mimes are returned
         var representations = sceneGoo.Value.Objects
             .Select(o => o.Piece.Type.Representations
                 .First(r =>
@@ -4111,9 +4112,8 @@ public class FilterSceneComponent : SemioComponent
                         if (!r.Tags.Any(t => tags.Contains(t)))
                             return false;
                     }
-
-                    if (formats.Count > 0)
-                        if (!formats.Contains(Path.GetExtension(r.Url)))
+                    if (mimes.Count > 0)
+                        if (!mimes.Contains(r.Mime))
                             return false;
                     return true;
                 })).ToList();
