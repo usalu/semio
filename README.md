@@ -17,7 +17,7 @@
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main/badges/poweredbycsharp.svg" alt="C#"></a>
     <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/badges/poweredbytypescript.svg" alt="Typescript"></a>
     <br/>
-    <i>Collaborative, scalable and cross-platform designing.</i>
+    <i>Typological, non-linear and ai-boosted designing.</i>
 </p>
 <br/>
 
@@ -64,39 +64,7 @@ If you design storeys, walls, windows, slabs, roofs by moving them around, chang
 
 If you design atmospheres based on hand drawn sketches, eager to find the right shape based on surfaces with one-of-each-kind morphology, then you should stick to your 3d tool ❌
 
-If you design typologies which you iteratively detail and you want to test systems where you are tinkering about rules and exceptions, then you should use semio ✅
-
-## Are you out of your mind?
-
-But wait a second, FILES 🤯 We live in the 21. century! Cloud-only object-based level 3 BIM collaboration is so much smoother!
-
-It is true, you can even follow the cursors of your collegues and see how they pan and scroll 📺
-
-But are these unique features worth paying the price when designing architecture?
-
-Just to view a design, you suddenly dependen on servers, licenses and companies. Giving up dozens of tools which work on files for editing, sharing, access control, versioning, backups, automation, ...
-
-> In fact, files are the best supported objects in computers 🏆 
-
-Is there really no alternative?
-
-Well, if one agent (person or robot) can at most work only on one file, then we need to make sure that not more than one agent works on the same file 🔀
-
-But how?
-
-We need to set boundaries 🧩
-
-> 3d modelling tools have geometry as its units. 
-> BIM tools have building elements as its units.
-> Automation tools have arbitrary structured data as its units. 
-
-It wouldn't make any sense to say that one designer works on one surface, another one on one wall, another one on a json 🐜
-
-How do designers collaborate anyway?
-
-Well, mostly through an architectural concept that turns a design into a system of pieces 🕸️
-
-And this is what semio is about. Making the implicit explicit in order create boundaries across files where humans and robots can work together 🚀
+If you design typologies which you iteratively detail and you want to test systems where you are tinkering about rules, exceptions and metrics then you should use semio ✅
 
 # Getting started
 > Currently the user interfaces are compiled for Windows only.
