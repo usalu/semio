@@ -122,7 +122,7 @@ MIMES = {
     ".obj": "model/obj",
     ".glb": "model/gltf-binary",
     ".gltf": "model/gltf+json",
-    ".3dm": "model/vnd.rhino.3dm",
+    ".3dm": "model/vnd.3dm",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -295,7 +295,7 @@ class Tag(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
-def parseMimeTypeFromUrl(url: str) -> str:
+def parseMimeFromUrl(url: str) -> str:
     """🔍 Parse the mime type from the URL.
 
     Args:
@@ -2417,7 +2417,7 @@ def addRepresentationInputToSession(
     except AttributeError:
         mime = ""
     if mime == "":
-        mime = parseMimeTypeFromUrl(representation.url)
+        mime = parseMimeFromUrl(representation.url)
     try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
         raise RepresentationAlreadyExists(representation)

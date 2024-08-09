@@ -2074,11 +2074,15 @@ public class RepresentationComponent : SemioComponent
             representationGoo = representationGoo.Duplicate() as RepresentationGoo;
         if (DA.GetData(1, ref url))
             representationGoo.Value.Url = url;
-        if (DA.GetData(2, ref mime))
+        if (!DA.GetData(2, ref mime))
+        {
+            representationGoo.Value.Mime = MimeParser.ParseFromUrl(url);
+        }
+        else
             representationGoo.Value.Mime = mime;
-        if (DA.GetData(2, ref lod))
+        if (DA.GetData(3, ref lod))
             representationGoo.Value.Lod = lod;
-        if (DA.GetDataList(3, tags))
+        if (DA.GetDataList(4, tags))
             representationGoo.Value.Tags = tags;
 
         var isValidInput = true;
@@ -2087,7 +2091,11 @@ public class RepresentationComponent : SemioComponent
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A representation needs an url.");
             isValidInput = false;
         }
-
+        if (representationGoo.Value.Mime == "")
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The mime type couldn't be guessed by the url. Please provide it.");
+            isValidInput = false;
+        }
         if (!isValidInput) return;
 
         DA.SetData(0, representationGoo.Duplicate());

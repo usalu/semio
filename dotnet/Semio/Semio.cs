@@ -615,6 +615,38 @@ public static class Generator
     }
 }
 
+public static class MimeParser
+{
+    public static string ParseFromUrl(string url)
+    {
+        var mimes = new Dictionary<string, string>
+        {
+            {".stl", "model/stl"},
+            {".obj", "model/obj"},
+            {".glb", "model/gltf-binary"},
+            {".gltf", "model/gltf+json"},
+            {".3dm", "model/vnd.3dm"},
+            {".png", "image/png"},
+            {".jpg", "image/jpeg"},
+            {".jpeg", "image/jpeg"},
+            {".svg", "image/svg+xml"},
+            {".pdf", "application/pdf"},
+            {".zip", "application/zip"},
+            {".json", "application/json"},
+            {".csv", "text/csv"},
+            {".txt", "text/plain"}
+        };
+        try
+        {
+            return mimes[System.IO.Path.GetExtension(url)];
+        }
+        catch (KeyNotFoundException)
+        {
+            return "application/octet-stream";
+        }
+    }
+}
+
 #endregion
 
 #region Models
@@ -663,7 +695,7 @@ public class Representation : IDeepCloneable<Representation>, IEntity
 
     public bool IsInvalid()
     {
-        return Url == "";
+        return Url == "" || Mime == "";
     }
 }
 
