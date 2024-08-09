@@ -113,6 +113,7 @@ app.whenReady().then(() => {
                         unit
                         representations {
                             url
+                            mime
                             lod
                             tags
                         }

@@ -73,6 +73,7 @@ from sqlalchemy import (
     CheckConstraint,
     UniqueConstraint,
     event,
+    inspect,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -115,6 +116,23 @@ HOST = "127.0.0.1"
 PORT = 5052
 TOLERANCE = 1e-5
 SIGNIFICANT_DIGITS = 5
+
+MIMES = {
+    ".stl": "model/stl",
+    ".obj": "model/obj",
+    ".glb": "model/gltf-binary",
+    ".gltf": "model/gltf+json",
+    ".3dm": "model/vnd.rhino.3dm",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".zip": "application/zip",
+    ".json": "application/json",
+    ".csv": "text/csv",
+    ".txt": "text/plain",
+}
 
 ureg = UnitRegistry()
 
@@ -277,6 +295,19 @@ class Tag(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+def parseMimeTypeFromUrl(url: str) -> str:
+    """🔍 Parse the mime type from the URL.
+
+    Args:
+        url (str): The URL.
+
+    Returns:
+        str: The mime type.
+    """
+    try:
+        return MIMES[Path(url).suffix]
+    except KeyError:
+        return "application/octet-stream"
 
 class Representation(Base):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
@@ -286,6 +317,10 @@ class Representation(Base):
     url: Mapped[str] = mapped_column(
         String(URL_LENGTH_MAX),
         CheckConstraint("length(url) > 0", name="urlSet"),
+    )
+    mime: Mapped[str] = mapped_column(
+        String(NAME_LENGTH_MAX),
+        CheckConstraint("length(mime) > 0", name="mimeSet"),
     )
     # level of detail/development/design/...
     # "" means the defaut lod.
@@ -307,7 +342,7 @@ class Representation(Base):
     #     return hash(self.url)
 
     def __repr__(self) -> str:
-        return f"Representation(id={self.id!r}, url={self.url!r}, lod={self.lod!r}, typeId={self.typeId!r}, tags={self.tags!r})"
+        return f"Representation(id={self.id!r}, url={self.url!r}, mime={self.mime!r}, lod={self.lod!r}, typeId={self.typeId!r}, tags={self.tags!r})"
 
     def __str__(self) -> str:
         return f"Representation(id={str(self.id)}, typeId={str(self.typeId)})"
@@ -1911,6 +1946,7 @@ class RepresentationInput(InputObjectType):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
 
     url = NonNull(graphene.String)
+    mime = graphene.String()
     lod = graphene.String()
     tags = graphene.List(NonNull(graphene.String))
 
@@ -2377,12 +2413,19 @@ def addRepresentationInputToSession(
     except AttributeError:
         lod = ""
     try:
+        mime = representationInput.mime if representationInput.mime is not None else ""
+    except AttributeError:
+        mime = ""
+    if mime == "":
+        mime = parseMimeTypeFromUrl(representation.url)
+    try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
         raise RepresentationAlreadyExists(representation)
     except RepresentationNotFound:
         pass
     representation = Representation(
         url=representationInput.url,
+        mime=mime,
         lod=lod,
         typeId=type.id,
     )

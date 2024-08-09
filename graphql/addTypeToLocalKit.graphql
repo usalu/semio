@@ -8,6 +8,7 @@ mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
         unit
         representations {
           url
+          mime
           lod
           tags
         }

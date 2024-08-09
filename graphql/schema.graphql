@@ -51,6 +51,7 @@ type Type {
 """
 type Representation {
   url: String!
+  mime: String!
   lod: String!
   type: Type
   tags: [String!]!
@@ -281,6 +282,7 @@ input TypeInput {
 """
 input RepresentationInput {
   url: String!
+  mime: String
   lod: String
   tags: [String!]
 }

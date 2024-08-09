@@ -17,6 +17,7 @@ class Type {
 
 class Representation{
     url : String
+    mime : String
     lod : String
     tags: String[]
 }
