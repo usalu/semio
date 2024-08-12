@@ -86,14 +86,14 @@ The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 
 ![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
 
-[sketchpad](https://github.com/usalu/semio/releases/download/r24.08-1/sketchpad.exe) needs no installation. Just download and run it. If you run sketchpad without Grasshopper then you need to manually download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.08-1/engine.zip) 🏎️
+[sketchpad](https://github.com/usalu/semio/releases/download/r24.08-2/sketchpad.exe) needs no installation. Just download and run it. If you run sketchpad without Grasshopper then you need to download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.08-2/engine.zip) 🏎️
 > NOTE: The binaries are not signed (yet). Therefore Windows might give a warning.
 
 That's it!
 
 ## Examples
 
-You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.08-1/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/main/examples/metabolism/README.md) 👀
+You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.08-2/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/main/examples/metabolism/README.md) 👀
 
 
 # Contribution

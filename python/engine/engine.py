@@ -2276,7 +2276,7 @@ class RepresentationAlreadyExists(AlreadyExists):
         super().__init__(newRepresentation, oldRepresentation)
 
     def __str__(self):
-        return f"Representation with url: {self.new.url!r} already exists: {str(self.representation)}"
+        return f"Representation with url: {self.new.url!r} already exists: {str(self.existing)}"
 
 
 class PortAlreadyExists(AlreadyExists):
@@ -2420,7 +2420,7 @@ def addRepresentationInputToSession(
         mime = parseMimeFromUrl(representationInput.url)
     try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
-        raise RepresentationAlreadyExists(representation)
+        raise RepresentationAlreadyExists(representationInput,representation)
     except RepresentationNotFound:
         pass
     representation = Representation(

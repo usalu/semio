@@ -35,13 +35,10 @@ Based on this formalization the design can be synthesized the following:
 A bit overwhelmed? Just take a look at the Grasshopper script `nakagin-capule-tower.gh`💡
 
 #### Requirements
-- Grasshopper plugin: Elefront
-    > Just use the Rhino Package Manager to install it.
+- Rhino 8
 - Rhino model units need to be set to `Meter`.
 
-> Have you already discovered the futuristic version?
-
-When analyzing the folder structure you see that there is a special subfolder `.semio` on the root level. This folder is what turns a normal directory into a kit ⬆️
+When analyzing the folder structure you see that there is a special file `.semio/kit.sqlite3` on the root level. This file is what turns a normal directory into a `kit` ⬆️
 
 ```
 │   nakagin-capsule-tower.gh
@@ -69,6 +66,6 @@ When analyzing the folder structure you see that there is a special subfolder `.
         ...
 ```
 
-How the rest of folder is structured is free. As long as the urls resolve to the actual files, you are free choose what ever structure you like. Here the files were grouped after type.
+#### Speckle, ... what? I thought semio is about files 📂
 
-> Did you know that you can change the level of detail? There is a 1to200 version!
+Looking closely at the `types`, you see that some `representation` are not linking to local files but instead they link to speckle models. You are free to use whatever storage, collaboration and version environment you like (Speckle, Git, Nextcloud, Spline, ...). As long as the `url` (Unique Resource Locator) leads to a resource and you know how to fetch it, you can use all the advantages of semio 🕸️
