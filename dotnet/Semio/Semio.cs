@@ -258,7 +258,7 @@ using Semio.Properties;
 //  FORMATION_DOES_NOT_EXIST
 //}
 
-//"""🏙️ A formation is identified by a name and optional variant."""
+//"""🏙️ A formation is identified by a name and optional variant inside a kit."""
 //input FormationIdInput
 //{
 //    name: String!
@@ -400,7 +400,7 @@ using Semio.Properties;
 //  diagram: PieceDiagramInput!
 //}
 
-//"""🧩 A type is identified by a name and variant (empty=default)."""
+//"""🧩 A type is identified by a name and variant (empty=default) inside a kit."""
 //input TypeIdInput
 //{
 //    name: String!

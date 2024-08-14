@@ -83,6 +83,7 @@ from sqlalchemy.orm import (
     sessionmaker,
     Session,
     validates,
+    object_session,
 )
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 import graphene
@@ -151,7 +152,7 @@ class SpecificationError(SemioException):
 
 
 class InvalidURL(ValueError, SpecificationError):
-    """🚫🔗 The URL is not valid. An url must have the form:
+    """🔗 The URL is not valid. An url must have the form:
     scheme://netloc/path;parameters?query#fragment."""
 
     def __init__(self, url: str) -> None:
@@ -162,7 +163,7 @@ class InvalidURL(ValueError, SpecificationError):
 
 
 class InvalidDatabase(SemioException):
-    """🚫💾 The state of the database is somehow invalid.
+    """💾 The state of the database is somehow invalid.
     Check the constraints and the insert validators.
     """
 
@@ -174,7 +175,7 @@ class InvalidDatabase(SemioException):
 
 
 class InvalidBackend(SemioException):
-    """🚫🖥️ The backend processed something wrong. Check the order of operations."""
+    """🖥️ The backend processed something wrong. Check the order of operations."""
 
     def __init__(self, message: str) -> None:
         self.message = message
@@ -258,6 +259,8 @@ class Tag(Base):
         "Representation", back_populates="_tags"
     )
 
+    __table_args__ = (UniqueConstraint("value", "representationId"),)
+
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Tag):
     #         raise NotImplementedError()
@@ -295,6 +298,7 @@ class Tag(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+
 def parseMimeFromUrl(url: str) -> str:
     """🔍 Parse the mime type from the URL.
 
@@ -308,6 +312,7 @@ def parseMimeFromUrl(url: str) -> str:
         return MIMES[Path(url).suffix]
     except KeyError:
         return "application/octet-stream"
+
 
 class Representation(Base):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
@@ -331,7 +336,7 @@ class Representation(Base):
         Tag, back_populates="representation", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (UniqueConstraint("typeId", "url"),)
+    __table_args__ = (UniqueConstraint("url", "typeId"),)
 
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Representation):
@@ -365,6 +370,29 @@ class Representation(Base):
     def tags(self, tags: List[str]):
         self._tags = [Tag(value=tag) for tag in tags]
 
+    @staticmethod
+    def validate_unique_mime_lod_tags(session, mime, lod, tags):
+        existing = session.query(Representation).filter_by(mime=mime, lod=lod).all()
+        for rep in existing:
+            if set(rep.tags) == set(tags):
+                raise ValueError(
+                    "The combination of mime, lod, and tags must be unique."
+                )
+
+    @staticmethod
+    def before_insert(mapper, connection, target):
+        session = object_session(target)
+        target.validate_unique_mime_lod_tags(
+            session, target.mime, target.lod, target.tags
+        )
+
+    @staticmethod
+    def before_update(mapper, connection, target):
+        session = object_session(target)
+        target.validate_unique_mime_lod_tags(
+            session, target.mime, target.lod, target.tags
+        )
+
     # @property
     # def parent(self) -> Entity:
     #     return self.type
@@ -386,6 +414,16 @@ class Representation(Base):
     #     return [self.parent] + self.children if self.children else []
 
 
+event.listen(Representation, "before_insert", Representation.before_insert)
+event.listen(Representation, "before_update", Representation.before_update)
+
+
+class LocatorId(BaseModel):
+    """🗺️ A locator is identified by a group."""
+
+    group: str
+
+
 class Locator(Base):
     """🗺️ A locator is meta-data for grouping ports."""
 
@@ -402,6 +440,8 @@ class Locator(Base):
     subgroup: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
     portId: Mapped[int] = mapped_column(ForeignKey("port.id"), primary_key=True)
     port: Mapped["Port"] = relationship("Port", back_populates="locators")
+
+    __table_args__ = (UniqueConstraint("group", "portId"),)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Locator):
@@ -440,10 +480,12 @@ class Locator(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+
 def prettyNumber(number: float) -> str:
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
+
 
 class ScreenPoint(BaseModel):
     """📺 A 2d-point (xy) of integers in screen coordinate system."""
@@ -480,10 +522,14 @@ class Point(BaseModel):
         super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
-    
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
+
     def __repr__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
 
     def __len__(self):
         return 3
@@ -507,10 +553,10 @@ class Point(BaseModel):
             and abs(self.y - other.y) < tol
             and abs(self.z - other.z) < tol
         )
-    
+
     def transform(self, transform: "Transform") -> "Point":
         return Transform.transformPoint(transform, self)
-    
+
     def toVector(self) -> "Vector":
         return Vector(self.x, self.y, self.z)
 
@@ -526,10 +572,14 @@ class Vector(BaseModel):
         super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
-    
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
+
     def __repr__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
 
     def __len__(self):
         return 3
@@ -546,17 +596,17 @@ class Vector(BaseModel):
 
     def __iter__(self):
         return iter((self.x, self.y, self.z))
-    
+
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
     @property
     def length(self) -> float:
         return (self.x**2 + self.y**2 + self.z**2) ** 0.5
-    
+
     def revert(self) -> "Vector":
         return Vector(-self.x, -self.y, -self.z)
-    
+
     def amplify(self, factor: float) -> "Vector":
         return Vector(self.x * factor, self.y * factor, self.z * factor)
 
@@ -579,10 +629,10 @@ class Vector(BaseModel):
 
     def transform(self, transform: "Transform") -> "Vector":
         return Transform.transformVector(transform, self)
-    
+
     def toPoint(self) -> "Point":
         return Point(self.x, self.y, self.z)
-    
+
     def toTransform(self) -> "Transform":
         return Transform.fromTranslation(self)
 
@@ -694,7 +744,7 @@ class Transform(ndarray):
     def __str__(self) -> str:
         rounded_self = self.round()
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
-    
+
     def __repr__(self) -> str:
         rounded_self = self.round()
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
@@ -707,19 +757,15 @@ class Transform(ndarray):
         if axisAngle[3] == 0:
             return None
         return Rotation(
-            axis=Vector(
-                float(axisAngle[0]), 
-                float(axisAngle[1]), 
-                float(axisAngle[2])
-            ), 
-            angle=float(degrees(axisAngle[3]))
+            axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
+            angle=float(degrees(axisAngle[3])),
         )
-    
+
     @property
     def translation(self) -> Vector:
         """➡️ The translation part of the transform."""
         return Vector(*self[:3, 3])
-    
+
     # for pydantic
     def dict(self) -> Dict[str, Union[Rotation, Vector]]:
         return {
@@ -785,7 +831,10 @@ class Transform(ndarray):
     @staticmethod
     def fromRotation(rotation: Rotation) -> "Transform":
         return Transform(
-            transform_from(matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))), Vector())
+            transform_from(
+                matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
+                Vector(),
+            )
         )
 
     @staticmethod
@@ -829,6 +878,12 @@ class Transform(ndarray):
                 self[2, 1],
             ),
         )
+
+
+class PortId(BaseModel):
+    """🔌 A port is identified by an id inside a type."""
+
+    id: str
 
 
 class Port(Base):
@@ -914,6 +969,12 @@ class Port(Base):
     #     return [self.parent] + self.children + self.referencedBy
 
 
+class QualityId(BaseModel):
+    """📏 A quality is identified by an name inside a type."""
+
+    name: str
+
+
 class Quality(Base):
     """📏 A quality is meta-data for decision making."""
 
@@ -940,11 +1001,11 @@ class Quality(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("name", "typeId", "formationId"),
         CheckConstraint(
             "typeId IS NOT NULL AND formationId IS NULL OR typeId IS NULL AND formationId IS NOT NULL",
             name="typeOrFormationSet",
         ),
-        UniqueConstraint("name", "typeId", "formationId"),
     )
 
     # def __eq__(self, other: object) -> bool:
@@ -1034,6 +1095,8 @@ class Type(Base):
     )
     pieces: Mapped[List["Piece"]] = relationship("Piece", back_populates="type")
 
+    __table_args__ = (UniqueConstraint("name", "variant", "kitId"),)
+
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Type):
     #         raise NotImplementedError()
@@ -1081,11 +1144,13 @@ def receive_after_update(mapper, connection, target):
 def receive_after_update(mapper, connection, target):
     target.type.lastUpdateAt = datetime.now()
 
+
 class TypeId(BaseModel):
-    """🧩 A type is identified by a name and variant (empty=default)."""
+    """🧩 A type is identified by a name and variant (empty=default) inside a kit."""
 
     name: str
     variant: str = ""
+
 
 class PieceRoot(BaseModel):
     """🌱 The root information of a piece."""
@@ -1208,7 +1273,7 @@ class Piece(Base):
             "root": self.root if self.root else None,
             "diagram": self.diagram,
         }
-    
+
     # @property
     # def parent(self) -> Entity:
     #     return self.formation
@@ -1228,6 +1293,12 @@ class Piece(Base):
     # @property
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent] + self.references + self.referencedBy
+
+
+class PieceId(BaseModel):
+    """⭕ A piece is identified by an id inside a formation."""
+
+    id: int
 
 
 class SidePieceType(BaseModel):
@@ -1294,6 +1365,7 @@ class Connection(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("connectedPieceId", "connectingPieceId", "formationId"),
         CheckConstraint(
             "connectingPieceId != connectedPieceId",
             name="noReflexiveConnection",
@@ -1330,7 +1402,7 @@ class Connection(Base):
                 ),
             )
         )
-    
+
     @property
     def connecting(self) -> Side:
         return Side(
@@ -1341,7 +1413,6 @@ class Connection(Base):
                 ),
             )
         )
-
 
     # @property
     # def parent(self) -> Entity:
@@ -1367,6 +1438,26 @@ class Connection(Base):
     # @property
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent] + self.references
+
+
+class ConnectionIdSide(BaseModel):
+    """🖇️ A side is identified by the id of piece."""
+
+    piece: PieceId
+
+
+class ConnectionId(BaseModel):
+    """🖇️ A connection is identified by the ids of the connected pieces."""
+
+    connected: ConnectionIdSide
+    connecting: ConnectionIdSide
+
+
+class FormationId(BaseModel):
+    """🏙️ A formation is identified by a name and a variant (empty=default) inside a kit."""
+
+    name: str
+    variant: str = ""
 
 
 # TODO: Add complex validation before insert with networkx such as:
@@ -1409,6 +1500,8 @@ class Formation(Base):
     qualities: Mapped[List[Quality]] = relationship(
         Quality, back_populates="formation", cascade="all, delete-orphan"
     )
+
+    __table_args__ = (UniqueConstraint("name", "variant", "kitId"),)
 
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Formation):
@@ -1472,11 +1565,11 @@ class Hierarchy(BaseModel):
     transform: Transform
     children: Optional[List["Hierarchy"]]
 
-    @field_serializer('piece')
+    @field_serializer("piece")
     def serialize_piece(self, piece: Piece, _info):
         return piece.dict()
-    
-    @field_serializer('transform')
+
+    @field_serializer("transform")
     def serialize_transform(self, transform: Transform, _info):
         return transform.dict()
 
@@ -2032,7 +2125,7 @@ class TypeInput(InputObjectType):
 
 
 class TypeIdInput(PydanticInputObjectType):
-    """🧩 A type is identified by a name and variant (empty=default)."""
+    """🧩 A type is identified by a name and variant (empty=default) inside a kit."""
 
     class Meta:
         model = TypeId
@@ -2112,7 +2205,7 @@ class FormationInput(InputObjectType):
 
 class FormationIdInput(InputObjectType):
     # Duplicate docstring because not automatically generated by InputObjectType
-    """🏙️ A formation is identified by a name and optional variant."""
+    """🏙️ A formation is identified by a name and optional variant inside a kit."""
 
     name = NonNull(graphene.String)
     variant = graphene.String(default_value="")
@@ -2160,90 +2253,79 @@ ConnectionLike = Connection | ConnectionNode | ConnectionInput
 FormationLike = Formation | FormationNode | FormationInput
 KitLike = Kit | KitNode | KitInput
 
+
 class NotFound(SpecificationError):
-    def __init__(self, id, pythonType) -> None:
+    def __init__(self, id) -> None:
         self.id = id
-        self.pythonType = pythonType
+
+
+class NotFoundForParent(NotFound):
+    def __init__(self, id, parent) -> None:
+        super().__init__(id)
+        self.parent = parent
+
+
+class RepresentationNotFound(NotFoundForParent):
+    def __init__(self, url: str, type: Type) -> None:
+        super().__init__(url, type)
 
     def __str__(self):
-        return f"{self.id} ({self.pythonType}) not found."
+        return f"Representation with url:({self.id}) not found for {self.parent.client__str__()}"
 
 
-class RepresentationNotFound(NotFound):
-    def __init__(self, type, url) -> None:
-        super().__init__(url, Representation)
-        self.type = type
-        self.url = url
+class LocatorNotFound(NotFound):
+    def __init__(self, group: str, port: Port) -> None:
+        super().__init__(group, port)
 
     def __str__(self):
-        return f"Representation({self.url}) not found for type: {self.type.client__str__()}"
+        return (
+            f"Locator with group: {self.id} not found for {self.parent.client__str__()}"
+        )
 
 
 class PortNotFound(NotFound):
-    def __init__(self, type, id) -> None:
-        super().__init__(id, Port)
-        self.type = type
-        self.id = id
+    def __init__(self, id, type) -> None:
+        super().__init__(id, type)
 
     def __str__(self):
-        return f"Port({self.id}) not found for type: {self.type.client__str__()}."
+        return f"Port with id: {self.id} not found for {self.parent.client__str__()}"
 
 
-class TypeNotFound(NotFound):
-    def __init__(self, name) -> None:
-        super().__init__(name, Type)
-        self.name = name
-
-    def __str__(self):
-        return f"Type({self.name}) not found."
-
-
-class QualitiesDontMatchType(TypeNotFound):
-    def __init__(
-        self, name, qualityInputs: List[QualityInput], types: List[Type]
-    ) -> None:
-        super().__init__(name, Quality)
-        self.qualityInputs = qualityInputs
-        self.types = types
+class TypeNotFound(NotFoundForParent):
+    def __init__(self, id: TypeId | TypeIdInput, kit: KitLike) -> None:
+        super().__init__(id, kit)
 
     def __str__(self):
-        return f"Qualities({self.qualityInputs}) don't match any type with name {self.name}: {client__str__List(self.types)}"
+        if self.id.variant == "":
+            return f"Type with name: {self.id.name!r} and default variant not found for {self.parent.client__str__()}"
+        return f"Type with name: {self.id.name!r} and variant: {self.id.variant!r} not found for {self.parent.client__str__()}"
 
 
-class TooLittleQualitiesToMatchExcactlyType(QualitiesDontMatchType):
-    def __str__(self):
-        return f"Too little qualities ({self.qualityInputs}) to match exactly one type name {self.name}: {client__str__List(self.types)}"
-
-
-class PieceNotFound(NotFound):
-    def __init__(self, formation, localId) -> None:
-        super().__init__(localId, Piece)
-        self.formation = formation
-        self.localId = localId
+class PieceNotFound(NotFoundForParent):
+    def __init__(self, id: str, formation: FormationLike) -> None:
+        super().__init__(id, formation)
 
     def __str__(self):
-        return f"Piece({self.localId}) not found. Please check that the local id is correct and that the piece is part of the formation {self.formation.client__str__()}."
+        return f"Piece with id: {self.id} not found for {self.parent.client__str__()}"
 
 
-class ConnectionNotFound(NotFound):
-    def __init__(self, formation, connected, connecting) -> None:
-        super().__init__((connected,connecting), Connection)
-        self.formation = formation
-        self.connected = connected
-        self.connecting = connecting
+class ConnectionNotFound(NotFoundForParent):
+    def __init__(self, connectionId: ConnectionId, formation: FormationLike) -> None:
+        super().__init__(connectionId, formation)
 
     def __str__(self):
-        return f"Connection with connected piece id ({self.connected}) and connecting piece id ({self.connecting}) not found in formation {self.formation.client__str__()}"
+        return f"Connection with connected piece id: {self.connectionId.connected.piece.id} and connecting piece id: {self.connectionId.connecting.piece.id} not found for {self.parent.client__str__()}"
 
 
 class FormationNotFound(NotFound):
-    def __init__(self, name, variant = "") -> None:
-        super().__init__(name, Formation)
-        self.name = name
-        self.variant = variant
+    def __init__(self, formationId: FormationId, kit: KitLike) -> None:
+        super().__init__(formationId, kit)
 
     def __str__(self):
-        return f"Formation({(self.name + ":" + self.variant) if self.variant!="" else self.name}) not found."
+        if self.id.variant == "":
+            return f"Formation with name: {self.id.name!r} and default variant not found for {self.parent.client__str__()}"
+        return f"Formation with name: {self.id.name!r} and variant: {self.id.variant!r} not found for {self.parent.client__str__()}"
+
 
 class KitNotFound(NotFound):
     def __init__(self, name) -> None:
@@ -2267,65 +2349,71 @@ class AlreadyExists(SpecificationError):
         self.new = new
         self.existing = existing
 
-    def __str__(self):
-        return f"{str(self.new)} already exists: {str(self.existing)}"
-
 
 class RepresentationAlreadyExists(AlreadyExists):
-    def __init__(self, newRepresentation : RepresentationLike, oldRepresentation) -> None:
-        super().__init__(newRepresentation, oldRepresentation)
+    def __init__(
+        self,
+        newRepresentation: RepresentationLike,
+        existingRepresentation: RepresentationLike,
+    ) -> None:
+        super().__init__(newRepresentation, existingRepresentation)
 
     def __str__(self):
-        return f"Representation with url: {self.new.url!r} already exists: {str(self.existing)}"
+        return f"Representation with url: {self.new.url!r} already exists."
+
+
+class LocatorAlreadyExists(AlreadyExists):
+    def __init__(self, newLocator: LocatorLike, existingLocator: LocatorLike) -> None:
+        super().__init__(newLocator, existingLocator)
+
+    def __str__(self):
+        return f"Locator with group: {self.new.group!r} already exists."
 
 
 class PortAlreadyExists(AlreadyExists):
-    def __init__(self, id) -> None:
-        super().__init__(id, id)
+    def __init__(self, newPort: PortLike, existingPort: PortLike) -> None:
+        super().__init__(newPort, existingPort)
 
     def __str__(self):
-        return f"Port with id: {self.id!r} already exists."
+        return f"Port with id: {self.new.id!r} already exists."
 
 
 class ConnectionAlreadyExists(AlreadyExists):
-    def __init__(self, connection: Connection, existingConnection: Connection) -> None:
-        super().__init__(
-            (connection.connecting.piece.id, connection.connected.piece.id),
-            existingConnection,
-        )
-        self.connection = connection
+    def __init__(
+        self, newConnection: ConnectionLike, existingConnection: ConnectionLike
+    ) -> None:
+        super().__init__(newConnection, existingConnection)
 
     def __str__(self):
-        return f"Connection with connecting piece id ({self.connection.connecting.piece.id}) and connected piece id ({self.connection.connected.piece.id}) already exists: {self.existing.client__str__()}"
+        return f"Connection with connecting piece id ({self.new.connecting.piece.id}) and connected piece id ({self.new.connected.piece.id}) already exists."
 
 
 class DocumentAlreadyExists(AlreadyExists):
-    def __init__(self, document) -> None:
-        super().__init__(document.name, document)
-        self.document = document
-
-    def __str__(self):
-        return f"Artifact ({self.document.name}) already exists: {str(self.document)}"
+    pass
 
 
 class TypeAlreadyExists(DocumentAlreadyExists):
-    def __init__(self, type) -> None:
-        super().__init__(type)
-        self.type = type
+    def __init__(self, newType: TypeLike, existingType: TypeLike) -> None:
+        super().__init__(newType, existingType)
 
     def __str__(self):
-        return f"Type ({self.type.name}) already exists: {str(self.type)}"
+        if self.new.variant == "":
+            return (
+                f"Type with name: {self.new.name!r} and default variant already exists."
+            )
+        return f"Type with name: {self.new.name!r} and variant: {self.new.variant!r} already exists."
 
 
 class FormationAlreadyExists(DocumentAlreadyExists):
-    def __init__(self, formation) -> None:
-        super().__init__(formation)
-        self.formation = formation
+    def __init__(
+        self, newFormation: FormationLike, existingFormation: FormationLike
+    ) -> None:
+        super().__init__(newFormation, existingFormation)
 
     def __str__(self):
-        return (
-            f"Formation ({self.formation.name}) already exists: {str(self.formation)}"
-        )
+        if self.new.variant == "":
+            return f"Formation with name: {self.new.name!r} and default variant already exists."
+        return f"Formation with name: {self.new.name!r} and variant: {self.new.variant!r} already exists."
 
 
 def getMainKit(session: Session) -> Kit:
@@ -2346,6 +2434,19 @@ def getRepresentationByUrl(session: Session, type: Type, url: str) -> Representa
             raise InvalidDatabase(
                 f"Found multiple representations {representationsWithSameUrl.all()!r} for {str(type)} and url: {url}"
             )
+
+
+def getLocatorByGroup(session: Session, port: Port, group: str) -> Locator:
+    try:
+        locator = (
+            session.query(Locator).filter_by(portId=port.id, group=group).one_or_none()
+        )
+    except MultipleResultsFound as e:
+        raise InvalidDatabase(
+            f"Found multiple locators with group {group} for port {port}"
+        ) from e
+    if not locator:
+        raise LocatorNotFound(port, group)
 
 
 def getTypeByNameAndVariant(session: Session, name: str, variant: str) -> Type:
@@ -2418,17 +2519,19 @@ def addRepresentationInputToSession(
         mime = ""
     if mime == "":
         mime = parseMimeFromUrl(representationInput.url)
-    try:
-        representation = getRepresentationByUrl(session, type, representationInput.url)
-        raise RepresentationAlreadyExists(representationInput,representation)
-    except RepresentationNotFound:
-        pass
     representation = Representation(
         url=representationInput.url,
         mime=mime,
         lod=lod,
         typeId=type.id,
     )
+    try:
+        existingRepresentation = getRepresentationByUrl(
+            session, type, representationInput.url
+        )
+        raise RepresentationAlreadyExists(representation, existingRepresentation)
+    except RepresentationNotFound:
+        pass
     session.add(representation)
     session.flush()
     for tagInput in representationInput.tags or []:
@@ -2449,6 +2552,11 @@ def addLocatorInputToSession(
     except AttributeError:
         subgroup = ""
     locator = Locator(group=locatorInput.group, subgroup=subgroup, portId=port.id)
+    try:
+        existingLocator = session.query(Locator).filter_by(portId=port.id).one_or_none()
+        raise LocatorAlreadyExists(locator, existingLocator)
+    except LocatorNotFound:
+        pass
     session.add(locator)
     session.flush()
     return locator
@@ -2645,7 +2753,9 @@ def addConnectionInputToSession(
         offset = 0.0
     try:
         rotation = (
-            connectionInput.rotation % 360 if connectionInput.rotation is not None else 0.0
+            connectionInput.rotation % 360
+            if connectionInput.rotation is not None
+            else 0.0
         )
         if rotation < 0.0:
             rotation = rotation + 360.0
@@ -2682,13 +2792,6 @@ def addFormationInputToSession(
         variant = formationInput.variant if formationInput.variant is not None else ""
     except AttributeError:
         variant = ""
-    try:
-        existingFormation = getFormationByNameAndVariant(
-            session, formationInput.name, variant
-        )
-        raise FormationAlreadyExists(existingFormation)
-    except FormationNotFound:
-        pass
     formation = Formation(
         name=formationInput.name,
         description=description,
@@ -2697,6 +2800,13 @@ def addFormationInputToSession(
         unit=formationInput.unit,
         kitId=kit.id,
     )
+    try:
+        existingFormation = getFormationByNameAndVariant(
+            session, formationInput.name, variant
+        )
+        raise FormationAlreadyExists(formation, existingFormation)
+    except FormationNotFound:
+        pass
     session.add(formation)
     session.flush()
     localIdToPiece: Dict[str, Piece] = {}
@@ -2800,9 +2910,19 @@ def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
         for parent, child in bfs_tree(component, source=root).edges():
             connection = component[parent][child]["connection"]
             connectedIsParent = connection.connected.piece.id == parent
-            parentPort = connection.connected.piece.type.port if connectedIsParent else connection.connecting.piece.type.port
-            childPort = connection.connecting.piece.type.port if connectedIsParent else connection.connected.piece.type.port
-            orient = Transform.fromDirections(childPort.direction.revert(), parentPort.direction)
+            parentPort = (
+                connection.connected.piece.type.port
+                if connectedIsParent
+                else connection.connecting.piece.type.port
+            )
+            childPort = (
+                connection.connecting.piece.type.port
+                if connectedIsParent
+                else connection.connected.piece.type.port
+            )
+            orient = Transform.fromDirections(
+                childPort.direction.revert(), parentPort.direction
+            )
             rotation = orient
             if connection.rotation != 0.0:
                 rotate = Transform.fromAngle(parentPort.direction, connection.rotation)

@@ -40,7 +40,7 @@ entity Type {
     *kitId : int <<FK>>
 }
 note right of Type
-    name and variant is unique.
+    name and variant are unique.
     variant="" means default.
 end note
 
@@ -54,8 +54,10 @@ entity Representation {
     *typeId : int <<FK>>
 }
 note right of Representation
-    url is unique.
+    url and typeId are unique.
     lod="" means default.
+    mime, lod, tags and typeId
+    are unique.
 end note
 
 entity Tag {
@@ -63,6 +65,11 @@ entity Tag {
     ..
     *representationId : int <<PK,FK>>
 }
+note right of Tag
+    portId and group
+    is unique.
+end note
+
 
 entity Port {
     *id : int <<PK,generated>>
@@ -81,7 +88,7 @@ entity Port {
 }
 note right of Port
     localId and typeId
-    is unique.
+    are unique.
     localId="" means default.
 end note
 
@@ -113,6 +120,8 @@ entity Locator {
     *portId : int <<PK,FK>>
 }
 note right of Locator
+    portId and group
+    are unique.
     subgroup is optional
     (can be set to "").
 end note
@@ -142,7 +151,7 @@ entity Piece {
 }
 note right of Piece
     localId and formationId
-    is unique.
+    are unique.
     root plane can only be set
     when piece is root.
     Otherwise all values are null.
@@ -180,7 +189,7 @@ entity Formation {
     *kitId : int <<FK>>
 }
 note right of Formation
-    name and variant is unique.
+    name and variant are unique.
     variant="" means default.
 end note
 
