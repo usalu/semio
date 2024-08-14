@@ -30,6 +30,7 @@ semio engine.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
 # TODO: Add constraint to formations that at least 2 pieces and 1 connection are required.
 # TODO: Make uvicorn pyinstaller multiprocessing work. Then qt can be integrated again for system tray.
+# TODO: object_session refactor in order move crud functions to the classes.
 
 from argparse import ArgumentParser
 import os
@@ -258,8 +259,6 @@ class Tag(Base):
     representation: Mapped["Representation"] = relationship(
         "Representation", back_populates="_tags"
     )
-
-    __table_args__ = (UniqueConstraint("value", "representationId"),)
 
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Tag):
@@ -916,8 +915,13 @@ class Port(Base):
         back_populates="connectingPieceTypePort",
     )
 
-    # TODO: Add a constraint that the plane normal must be normalized.
-    __table_args__ = (UniqueConstraint("localId", "typeId"),)
+    __table_args__ = (
+        UniqueConstraint("localId", "typeId"),
+        CheckConstraint(
+            f"ABS(directionX*directionX + directionY*directionY + directionZ*directionZ - 1) <= {TOLERANCE}",
+            name="directionNormalized",
+        ),
+    )
 
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, Port):
@@ -1055,6 +1059,13 @@ class Quality(Base):
     #     return [self.parent]
 
 
+class TypeId(BaseModel):
+    """🧩 A type is identified by a name and variant (empty=default) inside a kit."""
+
+    name: str
+    variant: str = ""
+
+
 class Type(Base):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
@@ -1143,13 +1154,6 @@ def receive_after_update(mapper, connection, target):
 @event.listens_for(Port, "after_update")
 def receive_after_update(mapper, connection, target):
     target.type.lastUpdateAt = datetime.now()
-
-
-class TypeId(BaseModel):
-    """🧩 A type is identified by a name and variant (empty=default) inside a kit."""
-
-    name: str
-    variant: str = ""
 
 
 class PieceRoot(BaseModel):
@@ -1298,7 +1302,7 @@ class Piece(Base):
 class PieceId(BaseModel):
     """⭕ A piece is identified by an id inside a formation."""
 
-    id: int
+    id: str
 
 
 class SidePieceType(BaseModel):
@@ -2317,7 +2321,7 @@ class ConnectionNotFound(NotFoundForParent):
         return f"Connection with connected piece id: {self.connectionId.connected.piece.id} and connecting piece id: {self.connectionId.connecting.piece.id} not found for {self.parent.client__str__()}"
 
 
-class FormationNotFound(NotFound):
+class FormationNotFound(NotFoundForParent):
     def __init__(self, formationId: FormationId, kit: KitLike) -> None:
         super().__init__(formationId, kit)
 
@@ -2329,7 +2333,7 @@ class FormationNotFound(NotFound):
 
 class KitNotFound(NotFound):
     def __init__(self, name) -> None:
-        super().__init__(name, Kit)
+        super().__init__(name)
         self.name = name
 
     def __str__(self):
@@ -2500,7 +2504,13 @@ def getConnectionByPieceIds(
         .first()
     )
     if not connection:
-        raise ConnectionNotFound(connectedPieceId, connectingPieceId, formation)
+        raise ConnectionNotFound(
+            ConnectionId(
+                connected=ConnectionIdSide(piece=PieceId(id=connectedPieceId)),
+                connecting=ConnectionIdSide(piece=PieceId(id=connectingPieceId)),
+            ),
+            formation,
+        )
     return connection
 
 

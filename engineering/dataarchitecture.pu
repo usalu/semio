@@ -24,8 +24,9 @@ entity Kit {
     *homePage : string
 }
 note left of Kit
+    name is unique.
     url is unique.
-    url is optional
+    url is optional.
     (can be set to "").
     homePage is optional
     (can be set to "").
@@ -40,7 +41,8 @@ entity Type {
     *kitId : int <<FK>>
 }
 note right of Type
-    name and variant are unique.
+    name, variant and kitId
+    are unique.
     variant="" means default.
 end note
 
@@ -67,7 +69,7 @@ entity Tag {
 }
 note right of Tag
     portId and group
-    is unique.
+    are unique.
 end note
 
 
@@ -106,6 +108,8 @@ entity Quality {
 note bottom of Quality
     Either typeId or formationId
     must be set.
+    name, typeId and formationId
+    are unique.
     value="" means true.
     unit is optional
     (can be set to "").
@@ -120,7 +124,7 @@ entity Locator {
     *portId : int <<PK,FK>>
 }
 note right of Locator
-    portId and group
+    group and portId
     are unique.
     subgroup is optional
     (can be set to "").
@@ -158,11 +162,11 @@ note right of Piece
 end note
 
 entity Connection {
-    *connectingPieceId : int <<PK,FK>>
-    *connectingPieceTypePortId : int <<FK>>
-    ..
     *connectedPieceId : int <<PK,FK>>
     *connectedPieceTypePortId : int <<FK>>
+    ..
+    *connectingPieceId : int <<PK,FK>>
+    *connectingPieceTypePortId : int <<FK>>
     ..
     *offset : float
     *rotation : float
