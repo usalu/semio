@@ -1641,12 +1641,14 @@ const transformPieceToNode = (piece: Piece | PieceInput): IPieceNode => {
     }
 }
 const transformConnectionToEdge = (connection: Connection | ConnectionInput): IConnectionEdge => {
+    const sourceLabel = (connection.connected.piece.type?.port?.id ?? '') === '' ? '""' : connection.connected.piece.type?.port?.id
+    const targetLabel = (connection.connecting.piece.type?.port?.id ?? '') === '' ? '""' : connection.connecting.piece.type?.port?.id
     return {
-        source: connection.connecting.piece.id,
-        target: connection.connected.piece.id,
-        // label_from: connection.connecting.piece.type?.port?.id === '' ? ' ' : connection.connecting.piece.type?.port?.id,
-        // label_to: connection.connected.piece.type?.port?.id === '' ? ' ' : connection.connected.piece.type?.port?.id,
-        handleTooltipText: connection.connecting.piece.type?.port?.id + ' -> ' + connection.connected.piece.type?.port?.id,
+        source: connection.connected.piece.id,
+        target: connection.connecting.piece.id,
+        // label_from: sourceLabel,
+        // label_to: targetLabel,
+        handleTooltipText: sourceLabel + ' - ' + targetLabel,
         type: 'connection',
         connection
     }
