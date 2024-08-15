@@ -1,0 +1,193 @@
+from pathlib import Path
+from typing import List, Optional
+from graphene_pydantic import PydanticInputObjectType
+from graphene_sqlalchemy import SQLAlchemyObjectType
+from sqlmodel import SQLModel, Field as SQLField, Session, create_engine, Relationship
+from sqlalchemy import CheckConstraint, UniqueConstraint, String as SQLString
+from graphene import (
+    Schema,
+    Mutation,
+    ObjectType,
+    InputObjectType,
+    Field as GraphField,
+    NonNull,
+    String as GraphString,
+)
+
+NAME_LENGTH_MAX = 100
+
+
+class TagModel(SQLModel):
+    """🏷️ A tag is meta-data for grouping representations."""
+
+    __tablename__ = "tag"
+
+    value: str = SQLField(
+        SQLString(NAME_LENGTH_MAX),
+        CheckConstraint("length(value) > 0", name="valueSet"),
+        primary_key=True,
+    )
+    representationId: int = SQLField(
+        foreign_key=("representation.id"), primary_key=True
+    )
+    representation: "RepresentationModel" = Relationship(
+        "RepresentationModel", back_populates="_tags"
+    )
+
+
+class RepresentationModel(SQLModel, table=True):
+    """💾 A representation is a link to a file that describes a type for a unique combinarion of level of detail, tags and mime."""
+
+    __tablename__ = "representation"
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    url: str
+    _tags: list[TagModel] = Relationship(
+        back_populates="representation", cascade="all, delete-orphan"
+    )
+    __table_args__ = (UniqueConstraint("url"),)
+
+    @property
+    def tags(self) -> List[str]:
+        return [tag.value for tag in self._tags or []]
+
+    @tags.setter
+    def tags(self, tags: List[str]):
+        self._tags = [TagModel(value=tag) for tag in tags]
+
+
+# class Type(SQLModel):
+#     """🧩 A type is a reusable element that can be connected with other types over ports."""
+
+#     __tablename__ = "type"
+
+#     id: Optional[int] = SQLField(default=None, primary_key=True)
+#     name: str = SQLField(
+#         SQLString(NAME_LENGTH_MAX),
+#         CheckConstraint("length(name) > 0", name="nameSet"),
+#     )
+#     description: str
+#     icon: str
+#     variant: str = mapped_column(String(NAME_LENGTH_MAX))
+#     createdAt: datetime = mapped_column(
+#         DateTime(), default=datetime.now(), nullable=False
+#     )
+#     lastUpdateAt: Mapped[datetime] = mapped_column(
+#         DateTime(), default=datetime.now(), nullable=False, onupdate=datetime.now()
+#     )
+#     kitId: Mapped[int] = mapped_column(ForeignKey("kit.id"))
+#     kit: Mapped["Kit"] = relationship("Kit", back_populates="types")
+#     representations: Mapped[List[Representation]] = relationship(
+#         Representation, back_populates="type", cascade="all, delete-orphan"
+#     )
+#     ports: Mapped[List[Port]] = relationship(
+#         "Port", back_populates="type", cascade="all, delete-orphan"
+#     )
+#     qualities: Mapped[List[Quality]] = relationship(
+#         Quality, back_populates="type", cascade="all, delete-orphan"
+#     )
+#     pieces: Mapped[List["Piece"]] = relationship("Piece", back_populates="type")
+
+#     __table_args__ = (UniqueConstraint("name", "variant", "kitId"),)
+
+#     # def __eq__(self, other: object) -> bool:
+#     #     if not isinstance(other, Type):
+#     #         raise NotImplementedError()
+#     #     return self.name == other.name and self.variant == other.variant
+
+#     # def __hash__(self) -> int:
+#     #     return hash((self.name, self.variant))
+
+#     def __repr__(self) -> str:
+#         return f"Type(id={self.id!r}, name={self.name}, description={self.description}, icon={self.icon}, variant={self.variant} unit={self.unit}, kitId={self.kitId!r}, representations={self.representations!r}, ports={self.ports!r}, qualities={self.qualities!r}, pieces={self.pieces!r})"
+
+#     def __str__(self) -> str:
+#         return f"Type(id={str(self.id)}, kitId={str(self.kitId)})"
+
+#     def client__str__(self) -> str:
+#         return f"Type(name={self.name}, variant={self.variant})"
+
+#     # @property
+#     # def parent(self) -> Entity:
+#     #     return self.kit
+
+#     # @property
+#     # def children(self) -> List[Entity]:
+#     #     return self.representations + self.ports + self.qualities  # type: ignore
+
+#     # @property
+#     # def references(self) -> List[Entity]:
+#     #     return []
+
+#     # @property
+#     # def referencedBy(self) -> List[Entity]:
+#     #     return [self.pieces]  # type: ignore
+
+#     # @property
+#     # def relatedTo(self) -> List[Entity]:
+#     #     return [self.parent] + self.children + self.referencedBy
+
+
+# @event.listens_for(Representation, "after_update")
+# def receive_after_update(mapper, connection, target):
+#     target.type.lastUpdateAt = datetime.now()
+
+
+# @event.listens_for(Port, "after_update")
+# def receive_after_update(mapper, connection, target):
+#     target.type.lastUpdateAt = datetime.now()
+
+
+class RepresentationInput(PydanticInputObjectType):
+    # Duplicate docstring because not automatically generated by InputObjectType
+
+    class Meta:
+        model = RepresentationModel
+
+
+class RepresentationNode(SQLAlchemyObjectType):
+    # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
+    """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
+
+    class Meta:
+        model = RepresentationModel
+        name = "Representation"
+        exclude_fields = (
+            "id",
+            "_tags",
+            "typeId",
+        )
+
+    tags = NonNull(GraphList(GraphNonNull(GraphString)))
+
+    def resolve_tags(representation: RepresentationModel, info):
+        return representation.tags
+
+
+class LoadLocalRepresentationsResponse(ObjectType):
+    representations = GraphField(RepresentationNode)
+
+
+class Query(ObjectType):
+    loadLocalRepresentations = GraphField(
+        LoadLocalRepresentationsResponse, directory=NonNull(GraphString)
+    )
+
+    def resolve_loadLocalRepresentations(self, info, directory: GraphString):
+        directory = Path(directory)
+        session = getLocalSession(directory)
+        kit = getMainKit(session)
+        return LoadLocalKitResponse(kit=kit)
+
+
+r1 = RepresentationModel(url="https://www.google.com")
+r2 = RepresentationModel(url="https://www.yahoo.com")
+r3 = RepresentationModel(url="https://www.yahoo.com")
+
+
+engine = create_engine("sqlite:///test.sqlite3")
+SQLModel.metadata.create_all(engine)
+with Session(engine) as session:
+    session.add(r1)
+    session.add(r2)
+    session.add(r3)
+    session.commit()

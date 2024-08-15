@@ -22,6 +22,7 @@ pint = "^0.24.1"
 networkx = "^3.2.1"
 pytransform3d = "^3.5.0"
 # pyside6 = "^6.7.2"
+sqlmodel = "^0.0.21"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.1"

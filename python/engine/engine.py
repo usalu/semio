@@ -94,6 +94,7 @@ from graphene_sqlalchemy import (
 )
 from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
 from uvicorn import run
+from sqlmodel import SQLModel, Field as SQLModelField
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler
 
