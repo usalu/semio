@@ -88,7 +88,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 import graphene
-from graphene import Schema, Mutation, ObjectType, InputObjectType, Field, NonNull
+from graphene import Schema, ObjectType, InputObjectType, Field, NonNull
 from graphene_sqlalchemy import (
     SQLAlchemyObjectType,
 )

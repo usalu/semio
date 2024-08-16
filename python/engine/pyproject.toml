@@ -24,6 +24,7 @@ pytransform3d = "^3.5.0"
 # pyside6 = "^6.7.2"
 sqlmodel = "^0.0.21"
 
+fastapi = {extras = ["standard"], version = "^0.112.1"}
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.1"
 deepdiff = "^6.7.1"
