@@ -62,26 +62,15 @@ class A(SQLModel, table=True):
     b: Union["B", None] = Relationship(back_populates="a_s")
 
 
-class ANode(SQLAlchemyObjectType):
-    class Meta:
-        model = A
-
-    b = graphene.Field(lambda: BNode)
-
-    def resolve_b(self, info):
-        return self.b
-
-
-class AInput(PydanticInputObjectType):
-    class Meta:
-        model = A
-
-
 class B(SQLModel, table=True):
     id: Optional[int] = ModelField(default=None, primary_key=True)
     bar: str
-    # a: list[A] = ModelField(default_factory=list)
     a_s: List[A] = Relationship(back_populates="b")
+
+
+class ANode(SQLAlchemyObjectType):
+    class Meta:
+        model = A
 
 
 class BNode(SQLAlchemyObjectType):
@@ -89,10 +78,10 @@ class BNode(SQLAlchemyObjectType):
     class Meta:
         model = B
 
-    a_s = graphene.List(ANode)
 
-    def resolve_a_s(self, info):
-        return self.a_s
+class AInput(PydanticInputObjectType):
+    class Meta:
+        model = A
 
 
 class BInput(PydanticInputObjectType):
@@ -171,7 +160,7 @@ class Mutation(ObjectType):
 
 schema = Schema(
     query=Query,
-    mutation=Mutation,
+    # mutation=Mutation,
 )
 with open("schema.graphql", "w", encoding="utf-8") as f:
     f.write(str(schema))

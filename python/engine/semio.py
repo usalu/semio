@@ -42,7 +42,7 @@ NAME_LENGTH_MAX = 100
 
 @lru_cache(maxsize=100)
 def getLocalSession(path: str) -> Session:
-    engine = create_engine("sqlite:///" + path)
+    engine = create_engine("sqlite:///" + path, echo=True)
     SQLModel.metadata.create_all(engine)
     return sessionmaker(bind=engine)()
 
@@ -86,11 +86,14 @@ class Representation(RepresentationBase, table=True):
         default=None,
         exclude=True,
     )
-    id: str = ModelField(
+    # Can't use the name 'id' because of bug
+    # https://github.com/graphql-python/graphene-sqlalchemy/issues/412
+    id_: str = ModelField(
+        alias="id",
         sa_column=Column(
             "localId",
             SQLString(NAME_LENGTH_MAX),
-        )
+        ),
     )
 
     _tags: list[Tag] = Relationship(
@@ -120,19 +123,6 @@ class RepresentationOutput(RepresentationBase):
 
     id: str = ""
     tags: list[str] = ModelField(default_factory=list)
-
-
-class RepresentationNode(PydanticObjectType):
-
-    class Meta:
-        model = Representation
-        name = "Representation"
-
-
-class RepresentationInput(PydanticInputObjectType):
-
-    class Meta:
-        model = Representation
 
 
 class TypeBase(ArtifactModel):
@@ -172,31 +162,6 @@ class TypeOutput(TypeBase):
     representations: list[RepresentationOutput] = ModelField(default_factory=list)
 
 
-class TypeNode(PydanticObjectType):
-    class Meta:
-        model = Type
-        name = "Type"
-
-
-class TypeInput(PydanticInputObjectType):
-    class Meta:
-        model = Type
-
-
-class CreateType(graphene.Mutation):
-    class Arguments:
-        type = GraphNonNull(TypeInput)
-
-    type = GraphField(TypeNode)
-
-    def mutate(self, info, directory, type: TypeInput):
-        session = getLocalSession("engine2.sqlite3")
-        type = Type(**type.dict())
-        session.add(type)
-        session.commit()
-        return CreateType(type=type)
-
-
 def create_db_and_tables():
     path = Path("engine2.sqlite3")
     try:
@@ -230,6 +195,53 @@ def getAllTypes():
     # types_dict = [type.model_dump() for type in types]
     # return types_dict
     return types
+
+
+# ---GraphQL---
+
+
+class RepresentationNode(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Representation
+        name = "Representation"
+        exclude_fields = ("pk", "id_", "_tags", "typePk")
+
+    id = GraphString()
+
+    def resolve_id(self, info):
+        return self.id_
+
+
+class RepresentationInput(PydanticInputObjectType):
+    class Meta:
+        model = Representation
+
+
+class TypeNode(SQLAlchemyObjectType):
+    class Meta:
+        model = Type
+        name = "Type"
+        exclude_fields = ("pk",)
+
+
+class TypeInput(PydanticInputObjectType):
+    class Meta:
+        model = Type
+
+
+class CreateType(graphene.Mutation):
+    class Arguments:
+        type = GraphNonNull(TypeInput)
+
+    type = GraphField(TypeNode)
+
+    def mutate(self, info, directory, type: TypeInput):
+        session = getLocalSession("engine2.sqlite3")
+        type = Type(**type.dict())
+        session.add(type)
+        session.commit()
+        return CreateType(type=type)
 
 
 class TypesResponse(ObjectType):
