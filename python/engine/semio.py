@@ -17,7 +17,7 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.orm import sessionmaker, Session, validates, object_session
-from pydantic import computed_field
+from pydantic import BaseModel, computed_field
 from fastapi import FastAPI
 from graphene import (
     Schema,
@@ -48,10 +48,13 @@ def getLocalSession(path: str) -> Session:
 
 
 class ArtifactModel(SQLModel):
-
     name: str
     description: str = ""
     icon: str = ""
+
+
+class VariableArtifactModel(ArtifactModel):
+    variant: str = ""
 
 
 class Tag(SQLModel, table=True):
@@ -111,12 +114,16 @@ class Representation(RepresentationBase, table=True):
     def tags(self, tags: list[str]):
         self._tags = [Tag(value=tag) for tag in tags]
 
+    @property
+    def id(self) -> str:
+        return self.id_
+
     @validates("url")
     def validate_url(self, key: str, url: str):
         return url
 
 
-class RepresentationOutput(RepresentationBase):
+class RepresentationSkeleton(RepresentationBase):
 
     class Config:
         title = "Representation"
@@ -125,14 +132,12 @@ class RepresentationOutput(RepresentationBase):
     tags: list[str] = ModelField(default_factory=list)
 
 
-class TypeBase(ArtifactModel):
-    """🧩 A type is a reusable element that can be connected with other types over ports."""
-
-    variant: str = ""
-    # __table_args__ = (UniqueConstraint("name", "variant", "kitId"),)
+class TypeBase(VariableArtifactModel):
+    group: str = ModelField(default="", max_length=NAME_LENGTH_MAX)
 
 
 class Type(TypeBase, table=True):
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     __tablename__ = "type"
 
@@ -145,21 +150,20 @@ class Type(TypeBase, table=True):
         default=None,
         exclude=True,
     )
-    group: str = ModelField(
-        "", sa_column=Column("group_name", SQLString(NAME_LENGTH_MAX))
-    )
     representations: list[Representation] = Relationship(
         back_populates="type",
         cascade_delete=True,
     )
 
+    # __table_args__ = (UniqueConstraint("name", "variant", "kitId"),)
 
-class TypeOutput(TypeBase):
+
+class TypeSkeleton(TypeBase):
 
     class Config:
         title = "Type"
 
-    representations: list[RepresentationOutput] = ModelField(default_factory=list)
+    representations: list[RepresentationSkeleton] = ModelField(default_factory=list)
 
 
 def create_db_and_tables():
@@ -210,12 +214,12 @@ class RepresentationNode(SQLAlchemyObjectType):
     id = GraphString()
 
     def resolve_id(self, info):
-        return self.id_
+        return self.id
 
 
 class RepresentationInput(PydanticInputObjectType):
     class Meta:
-        model = Representation
+        model = RepresentationSkeleton
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -227,7 +231,7 @@ class TypeNode(SQLAlchemyObjectType):
 
 class TypeInput(PydanticInputObjectType):
     class Meta:
-        model = Type
+        model = TypeSkeleton
 
 
 class CreateType(graphene.Mutation):
@@ -270,7 +274,7 @@ fastapi_app = FastAPI()
 
 
 @fastapi_app.get("/types")
-async def read_root() -> list[TypeOutput]:
+async def read_root() -> list[TypeSkeleton]:
     return getAllTypes()
 
 
