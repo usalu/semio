@@ -2,7 +2,7 @@ from typing import List
 from uuid import uuid4
 from semio import (
     Transformation,
-    Formation,
+    Design,
     Host,
     Parameter,
     Piece,
@@ -21,7 +21,7 @@ from semio import (
 #     WEST = "west"
 #
 # @transformation("tower placement", "Place a tower on a base", "🏭")
-# def tower_placement(formation: Formation, id: str, storeys: int, orientation: Orientation) -> Formation:
+# def tower_placement(formation: Design, id: str, storeys: int, orientation: Orientation) -> Design:
 #    ...
 
 
@@ -30,7 +30,7 @@ class TowerPlacement(Transformation):
     description = "Place a tower on a base"
     icon = "🏭"
 
-    def transform(formation: Formation, parameters: List[Parameter]) -> Formation:
+    def transform(design: Design, parameters: List[Parameter]) -> Design:
         # Parameters
         id = [p for p in parameters if p.name == "id"]
         if len(id) < 1:
@@ -51,9 +51,9 @@ class TowerPlacement(Transformation):
             raise ValueError("More than one orientation in parameters")
         orientation = orientation[0]
         # LHS
-        base = [p for p in formation.pieces if p.name == "base"]
+        base = [p for p in design.pieces if p.name == "base"]
         if len(base) == 0:
-            raise ValueError("No base in formation")
+            raise ValueError("No base in design")
         base = base[0]
         # RHS
         shaft = Piece(
@@ -68,10 +68,10 @@ class TowerPlacement(Transformation):
             ),
         )
         # TODO: Add capital piece
-        formation.pieces.append(shaft)
+        design.pieces.append(shaft)
         # TODO: Add base shaft attraction
         # TODO: Add shaft head attraction
-        return formation
+        return design
 
 
 metabolismHost = Host(transformations=[TowerPlacement]).run()

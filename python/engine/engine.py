@@ -28,7 +28,7 @@ semio engine.
 #       ❔graphene_pydantic
 # TODO: Uniformize naming.
 # TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Add constraint to formations that at least 2 pieces and 1 connection are required.
+# TODO: Add constraint to designs that at least 2 pieces and 1 connection are required.
 # TODO: Make uvicorn pyinstaller multiprocessing work. Then qt can be integrated again for system tray.
 
 from argparse import ArgumentParser
@@ -43,7 +43,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from json import dumps
 from numpy import ndarray, asarray, eye, dot, cross, radians, degrees
-from pytransform3d.transformations import (
+from pytransform3d.transdesigns import (
     concat,
     invert_transform,
     transform_from,
@@ -677,7 +677,7 @@ class Rotation(BaseModel):
 
 
 class Transform(ndarray):
-    """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
+    """▦ A 4x4 translation and rotation transdesign matrix (no scaling or shearing)."""
 
     def __new__(cls, input_array=None):
         if input_array is None:
@@ -932,19 +932,19 @@ class Quality(Base):
     definition: Mapped[str] = mapped_column(Text())
     typeId: Mapped[Optional[int]] = mapped_column(ForeignKey("type.id"), nullable=True)
     type: Mapped["Type"] = relationship("Type", back_populates="qualities")
-    formationId: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("formation.id"), nullable=True
+    designId: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("design.id"), nullable=True
     )
-    formation: Mapped["Formation"] = relationship(
-        "Formation", back_populates="qualities"
+    design: Mapped["Design"] = relationship(
+        "Design", back_populates="qualities"
     )
 
     __table_args__ = (
         CheckConstraint(
-            "typeId IS NOT NULL AND formationId IS NULL OR typeId IS NULL AND formationId IS NOT NULL",
-            name="typeOrFormationSet",
+            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
+            name="typeOrDesignSet",
         ),
-        UniqueConstraint("name", "typeId", "formationId"),
+        UniqueConstraint("name", "typeId", "designId"),
     )
 
     # def __eq__(self, other: object) -> bool:
@@ -965,17 +965,17 @@ class Quality(Base):
     #     return hash((self.name, self.value, self.unit))
 
     def __repr__(self) -> str:
-        return f"Quality(id={self.id!r}, name={self.name}, value={self.value}, unit={self.unit}, definition={self.definition} typeId={self.typeId!r}, formationId={self.formationId!r})"
+        return f"Quality(id={self.id!r}, name={self.name}, value={self.value}, unit={self.unit}, definition={self.definition} typeId={self.typeId!r}, designId={self.designId!r})"
 
     def __str__(self) -> str:
-        return f"Quality(id={str(self.id)}, typeId={str(self.typeId)}, formationId={str(self.formationId)})"
+        return f"Quality(id={str(self.id)}, typeId={str(self.typeId)}, designId={str(self.designId)})"
 
     def client__str__(self) -> str:
         return f"Quality(name={self.name})"
 
     # @property
     # def parent(self) -> Entity:
-    #     return self.type if self.typeId else self.formation
+    #     return self.type if self.typeId else self.design
 
     # @property
     # def children(self) -> List[Entity]:
@@ -1088,19 +1088,19 @@ class TypeId(BaseModel):
     variant: str = ""
 
 class PieceRoot(BaseModel):
-    """🌱 The root information of a piece."""
+    """🌱 The root indesign of a piece."""
 
     plane: Plane
 
 
 class PieceDiagram(BaseModel):
-    """✏️ The diagram information of a piece."""
+    """✏️ The diagram indesign of a piece."""
 
     point: ScreenPoint
 
 
 class Piece(Base):
-    """⭕ A piece is a 3d-instance of a type in a formation."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     __tablename__ = "piece"
 
@@ -1112,7 +1112,7 @@ class Piece(Base):
     typeId: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
     # When the piece is a root piece, the root plane is set.
-    # Plane coordinates are in the units of the formation.
+    # Plane coordinates are in the units of the design.
     rootPlaneOriginX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneOriginY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     rootPlaneOriginZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
@@ -1124,8 +1124,8 @@ class Piece(Base):
     rootPlaneYAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     diagramPointX: Mapped[int] = mapped_column()
     diagramPointY: Mapped[int] = mapped_column()
-    formationId: Mapped[int] = mapped_column(ForeignKey("formation.id"))
-    formation: Mapped["Formation"] = relationship("Formation", back_populates="pieces")
+    designId: Mapped[int] = mapped_column(ForeignKey("design.id"))
+    design: Mapped["Design"] = relationship("Design", back_populates="pieces")
     connectings: Mapped[List["Connection"]] = relationship(
         "Connection",
         foreign_keys="[Connection.connectingPieceId]",
@@ -1138,7 +1138,7 @@ class Piece(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("localId", "formationId"),
+        UniqueConstraint("localId", "designId"),
         CheckConstraint(
             """
             (
@@ -1164,10 +1164,10 @@ class Piece(Base):
     #     return hash(self.localId)
 
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, localId={self.localId}, typeId={self.typeId!r}, rootPlaneOriginX={self.rootPlaneOriginX!r}, rootPlaneOriginY={self.rootPlaneOriginY!r}, rootPlaneOriginZ={self.rootPlaneOriginZ!r}, rootPlaneXAxisX={self.rootPlaneXAxisX!r}, rootPlaneXAxisY={self.rootPlaneXAxisY!r}, rootPlaneXAxisZ={self.rootPlaneXAxisZ!r}, rootPlaneYAxisX={self.rootPlaneYAxisX!r}, rootPlaneYAxisY={self.rootPlaneYAxisY!r}, rootPlaneYAxisZ={self.rootPlaneYAxisZ!r}, diagramPointX={self.diagramPointX!r}, diagramPointY={self.diagramPointY!r}, formationId={self.formationId!r})"
+        return f"Piece(id={self.id!r}, localId={self.localId}, typeId={self.typeId!r}, rootPlaneOriginX={self.rootPlaneOriginX!r}, rootPlaneOriginY={self.rootPlaneOriginY!r}, rootPlaneOriginZ={self.rootPlaneOriginZ!r}, rootPlaneXAxisX={self.rootPlaneXAxisX!r}, rootPlaneXAxisY={self.rootPlaneXAxisY!r}, rootPlaneXAxisZ={self.rootPlaneXAxisZ!r}, rootPlaneYAxisX={self.rootPlaneYAxisX!r}, rootPlaneYAxisY={self.rootPlaneYAxisY!r}, rootPlaneYAxisZ={self.rootPlaneYAxisZ!r}, diagramPointX={self.diagramPointX!r}, diagramPointY={self.diagramPointY!r}, designId={self.designId!r})"
 
     def __str__(self) -> str:
-        return f"Piece(id={str(self.id)}, formationId={str(self.formationId)})"
+        return f"Piece(id={str(self.id)}, designId={str(self.designId)})"
 
     def client__str__(self) -> str:
         return f"Piece(id={self.localId})"
@@ -1211,7 +1211,7 @@ class Piece(Base):
     
     # @property
     # def parent(self) -> Entity:
-    #     return self.formation
+    #     return self.design
 
     # @property
     # def children(self) -> List[Entity]:
@@ -1231,7 +1231,7 @@ class Piece(Base):
 
 
 class SidePieceType(BaseModel):
-    """🧩 The type information of a piece of a side."""
+    """🧩 The type indesign of a piece of a side."""
 
     class Config:
         arbitrary_types_allowed = True
@@ -1240,7 +1240,7 @@ class SidePieceType(BaseModel):
 
 
 class SidePiece(BaseModel):
-    """⭕ The piece information of a side. A piece is identified by an id (emtpy=default))."""
+    """⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default))."""
 
     id: str
     type: SidePieceType
@@ -1253,7 +1253,7 @@ class Side(BaseModel):
 
 
 class Connection(Base):
-    """🖇️ A connection between two pieces of a formation."""
+    """🖇️ A connection between two pieces of a design."""
 
     __tablename__ = "connection"
 
@@ -1281,16 +1281,16 @@ class Connection(Base):
         foreign_keys=[connectingPieceTypePortId],
         back_populates="connectings",
     )
-    # Offset (unit of formation) in normal direction of the connected piece.
+    # Offset (unit of design) in normal direction of the connected piece.
     offset: Mapped[float] = mapped_column(Float())
     # Rotation (degree) around the normal of the connected piece.
     rotation: Mapped[float] = mapped_column(
         Float(),
         CheckConstraint("rotation >= 0 AND rotation < 360", name="normalisedRotation"),
     )
-    formationId: Mapped[int] = mapped_column(ForeignKey("formation.id"))
-    formation: Mapped["Formation"] = relationship(
-        "Formation", back_populates="connections"
+    designId: Mapped[int] = mapped_column(ForeignKey("design.id"))
+    design: Mapped["Design"] = relationship(
+        "Design", back_populates="connections"
     )
 
     __table_args__ = (
@@ -1312,10 +1312,10 @@ class Connection(Base):
     #     return hash((self.connectingPiece, self.connectedPiece))
 
     def __repr__(self) -> str:
-        return f"Connection(connectedPieceId={self.connectedPieceId!r}, connectingPieceTypePortId={self.connectingPieceTypePortId!r}, connectingPieceId={self.connectingPieceId!r}, connectedPieceTypePortId={self.connectedPieceTypePortId!r}, offset={self.offset!r}, rotation={self.rotation!r}, formationId={self.formationId!r})"
+        return f"Connection(connectedPieceId={self.connectedPieceId!r}, connectingPieceTypePortId={self.connectingPieceTypePortId!r}, connectingPieceId={self.connectingPieceId!r}, connectedPieceTypePortId={self.connectedPieceTypePortId!r}, offset={self.offset!r}, rotation={self.rotation!r}, designId={self.designId!r})"
 
     def __str__(self) -> str:
-        return f"Connection(connectedPieceId={str(self.connectedPieceId)}, connectingPieceId={str(self.connectingPieceId)}, formationId={str(self.formationId)})"
+        return f"Connection(connectedPieceId={str(self.connectedPieceId)}, connectingPieceId={str(self.connectingPieceId)}, designId={str(self.designId)})"
 
     def client__str__(self) -> str:
         return f"Connection(connectedPieceId={self.connected.piece.id}, connectingPieceId={self.connecting.piece.id})"
@@ -1345,7 +1345,7 @@ class Connection(Base):
 
     # @property
     # def parent(self) -> Entity:
-    #     return self.formation
+    #     return self.design
 
     # @property
     # def children(self) -> List[Entity]:
@@ -1371,10 +1371,10 @@ class Connection(Base):
 
 # TODO: Add complex validation before insert with networkx such as:
 #       - only root pieces can have a plane.
-class Formation(Base):
-    """🏙️ A formation is a collection of pieces that are connected."""
+class Design(Base):
+    """🏙️ A design is a collection of pieces that are connected."""
 
-    __tablename__ = "formation"
+    __tablename__ = "design"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(
@@ -1399,30 +1399,30 @@ class Formation(Base):
         DateTime(), default=datetime.now(), nullable=False, onupdate=datetime.now()
     )
     kitId: Mapped[int] = mapped_column(ForeignKey("kit.id"))
-    kit: Mapped["Kit"] = relationship("Kit", back_populates="formations")
+    kit: Mapped["Kit"] = relationship("Kit", back_populates="designs")
     pieces: Mapped[List[Piece]] = relationship(
-        back_populates="formation", cascade="all, delete-orphan"
+        back_populates="design", cascade="all, delete-orphan"
     )
     connections: Mapped[List[Connection]] = relationship(
-        back_populates="formation", cascade="all, delete-orphan"
+        back_populates="design", cascade="all, delete-orphan"
     )
     qualities: Mapped[List[Quality]] = relationship(
-        Quality, back_populates="formation", cascade="all, delete-orphan"
+        Quality, back_populates="design", cascade="all, delete-orphan"
     )
 
     # def __eq__(self, other: object) -> bool:
-    #     if not isinstance(other, Formation):
+    #     if not isinstance(other, Design):
     #         raise NotImplementedError()
     #     return is_isomorphic(self, other)
 
     def __repr__(self) -> str:
-        return f"Formation(id={self.id!r}, name={self.name!r}, description={self.description!r}, icon={self.icon!r}, variant={self.variant!r}, kitId={self.kitId!r}, pieces={self.pieces!r}, connections={self.connections!r}, qualities={self.qualities!r})"
+        return f"Design(id={self.id!r}, name={self.name!r}, description={self.description!r}, icon={self.icon!r}, variant={self.variant!r}, kitId={self.kitId!r}, pieces={self.pieces!r}, connections={self.connections!r}, qualities={self.qualities!r})"
 
     def __str__(self) -> str:
-        return f"Formation(id={str(self.id)}, kitId={str(self.kitId)})"
+        return f"Design(id={str(self.id)}, kitId={str(self.kitId)})"
 
     def client__str__(self) -> str:
-        return f"Formation(name={self.name}, qualities={client__str__List(self.qualities)})"
+        return f"Design(name={self.name}, qualities={client__str__List(self.qualities)})"
 
     # @property
     # def parent(self) -> Entity:
@@ -1447,21 +1447,21 @@ class Formation(Base):
 
 @event.listens_for(Piece, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.formation.lastUpdateAt = datetime.now()
+    target.design.lastUpdateAt = datetime.now()
 
 
 @event.listens_for(Connection, "after_update")
 def receive_after_update(mapper, connection, target):
-    target.formation.lastUpdateAt = datetime.now()
+    target.design.lastUpdateAt = datetime.now()
 
 
-# Both Type and Formation can own qualities
+# Both Type and Design can own qualities
 @event.listens_for(Quality, "after_update")
 def receive_after_update(mapper, connection, target):
     if target.typeId:
         target.type.lastUpdateAt = datetime.now()
     else:
-        target.formation.lastUpdateAt = datetime.now()
+        target.design.lastUpdateAt = datetime.now()
 
 
 class Hierarchy(BaseModel):
@@ -1494,12 +1494,12 @@ class Scene(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    formation: Formation
+    design: Design
     objects: List[Object]
 
 
 class Kit(Base):
-    """🗃️ A kit is a collection of types and formations."""
+    """🗃️ A kit is a collection of types and designs."""
 
     __tablename__ = "kit"
 
@@ -1525,7 +1525,7 @@ class Kit(Base):
     types: Mapped[List[Type]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
-    formations: Mapped[List[Formation]] = relationship(
+    designs: Mapped[List[Design]] = relationship(
         back_populates="kit", cascade="all, delete-orphan"
     )
 
@@ -1540,7 +1540,7 @@ class Kit(Base):
     #     return hash(self.name)
 
     def __repr__(self) -> str:
-        return f"Kit(id={self.id!r}, name={self.name!r}), description={self.description!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, formations={self.formations!r})"
+        return f"Kit(id={self.id!r}, name={self.name!r}), description={self.description!r}, icon={self.icon!r}, url={self.url!r}, types={self.types!r}, designs={self.designs!r})"
 
     def __str__(self) -> str:
         return f"Kit(id={str(self.id)})"
@@ -1554,7 +1554,7 @@ class Kit(Base):
 
     # @property
     # def children(self) -> List[Entity]:
-    #     return self.types + self.formations  # type: ignore
+    #     return self.types + self.designs  # type: ignore
 
     # @property
     # def references(self) -> List[Entity]:
@@ -1742,7 +1742,7 @@ class QualityNode(SQLAlchemyObjectType):
     class Meta:
         model = Quality
         name = "Quality"
-        exclude_fields = ("id", "typeId", "formationId")
+        exclude_fields = ("id", "typeId", "designId")
 
 
 class TypeNode(SQLAlchemyObjectType):
@@ -1761,7 +1761,7 @@ class TypeNode(SQLAlchemyObjectType):
 
 class SidePieceTypeNode(PydanticObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """🧩 The type information of a piece of a side."""
+    """🧩 The type indesign of a piece of a side."""
 
     class Meta:
         model = SidePieceType
@@ -1784,7 +1784,7 @@ class PieceRootNode(PydanticObjectType):
 
 class PieceDiagramNode(PydanticObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """✏️ The diagram information of a piece."""
+    """✏️ The diagram indesign of a piece."""
 
     class Meta:
         model = PieceDiagram
@@ -1793,7 +1793,7 @@ class PieceDiagramNode(PydanticObjectType):
 
 class PieceNode(SQLAlchemyObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """⭕ A piece is a 3d-instance of a type in a formation."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     class Meta:
         model = Piece
@@ -1813,7 +1813,7 @@ class PieceNode(SQLAlchemyObjectType):
             "rootPlaneYAxisZ",
             "diagramPointX",
             "diagramPointY",
-            "formationId",
+            "designId",
         )
 
     id = graphene.Field(NonNull(graphene.String))
@@ -1833,7 +1833,7 @@ class PieceNode(SQLAlchemyObjectType):
 
 class SidePieceNode(PydanticObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """⭕ The piece information of a side. A piece is identified by an id (emtpy=default))."""
+    """⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default))."""
 
     class Meta:
         name = "SidePiece"
@@ -1851,7 +1851,7 @@ class SideNode(PydanticObjectType):
 
 class ConnectionNode(SQLAlchemyObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """🖇️ A connection between two pieces of a formation."""
+    """🖇️ A connection between two pieces of a design."""
 
     class Meta:
         model = Connection
@@ -1865,7 +1865,7 @@ class ConnectionNode(SQLAlchemyObjectType):
             "connectingPiece",
             "connectingPieceTypePortId",
             "connectingPieceTypePort",
-            "formationId",
+            "designId",
         )
 
     connected = NonNull(SideNode)
@@ -1878,13 +1878,13 @@ class ConnectionNode(SQLAlchemyObjectType):
         return connection.connecting
 
 
-class FormationNode(SQLAlchemyObjectType):
+class DesignNode(SQLAlchemyObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """🏙️ A formation is a collection of pieces that are connected."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     class Meta:
-        model = Formation
-        name = "Formation"
+        model = Design
+        name = "Design"
         # interfaces = (ArtifactNode,)
         exclude_fields = (
             "id",
@@ -1921,18 +1921,18 @@ class SceneNode(PydanticObjectType):
     class Meta:
         model = Scene
         name = "Scene"
-        # formation is not a Pydanctic model and needs to be resolved manually
-        exclude_fields = ("formation",)
+        # design is not a Pydanctic model and needs to be resolved manually
+        exclude_fields = ("design",)
 
-    formation = graphene.Field(FormationNode)
+    design = graphene.Field(DesignNode)
 
-    def resolve_formation(scene: Scene, info):
-        return scene.formation
+    def resolve_design(scene: Scene, info):
+        return scene.design
 
 
 class KitNode(SQLAlchemyObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """🗃️ A kit is a collection of types and formations."""
+    """🗃️ A kit is a collection of types and designs."""
 
     class Meta:
         model = Kit
@@ -2039,7 +2039,7 @@ class TypeIdInput(PydanticInputObjectType):
 
 
 class PieceRootInput(PydanticInputObjectType):
-    """🌱 The root information of a piece."""
+    """🌱 The root indesign of a piece."""
 
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
 
@@ -2049,7 +2049,7 @@ class PieceRootInput(PydanticInputObjectType):
 
 class PieceDiagramInput(PydanticInputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
-    """✏️ The diagram information of a piece."""
+    """✏️ The diagram indesign of a piece."""
 
     class Meta:
         model = PieceDiagram
@@ -2057,7 +2057,7 @@ class PieceDiagramInput(PydanticInputObjectType):
 
 class PieceInput(InputObjectType):
     # Duplicate docstring because not automatically generated by nputObjectType
-    """⭕ A piece is a 3d-instance of a type in a formation."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     id = NonNull(graphene.String)
     type = NonNull(TypeIdInput)
@@ -2067,13 +2067,13 @@ class PieceInput(InputObjectType):
 
 class SidePieceTypeInput(InputObjectType):
     # Duplicate docstring because not automatically generated by InputObjectType
-    """🧩 The type information of a piece of a side."""
+    """🧩 The type indesign of a piece of a side."""
     port = graphene.Field(PortIdInput)
 
 
 class SidePieceInput(InputObjectType):
     # Duplicate docstring because not automatically generated by InputObjectType
-    """⭕ The piece information of a side. A piece is identified by an id (emtpy=default))."""
+    """⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default))."""
 
     id = NonNull(graphene.String)
     type = graphene.Field(SidePieceTypeInput)
@@ -2088,7 +2088,7 @@ class SideInput(InputObjectType):
 
 class ConnectionInput(InputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
-    """🖇️ A connection between two pieces of a formation."""
+    """🖇️ A connection between two pieces of a design."""
 
     connecting = NonNull(SideInput)
     connected = NonNull(SideInput)
@@ -2096,9 +2096,9 @@ class ConnectionInput(InputObjectType):
     rotation = graphene.Float(default_value=0.0)
 
 
-class FormationInput(InputObjectType):
+class DesignInput(InputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
-    """🏙️ A formation is a collection of pieces that are connected."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     name = NonNull(graphene.String)
     description = graphene.String()
@@ -2110,9 +2110,9 @@ class FormationInput(InputObjectType):
     qualities = graphene.List(NonNull(QualityInput))
 
 
-class FormationIdInput(InputObjectType):
+class DesignIdInput(InputObjectType):
     # Duplicate docstring because not automatically generated by InputObjectType
-    """🏙️ A formation is identified by a name and optional variant."""
+    """🏙️ A design is identified by a name and optional variant."""
 
     name = NonNull(graphene.String)
     variant = graphene.String(default_value="")
@@ -2120,7 +2120,7 @@ class FormationIdInput(InputObjectType):
 
 class KitInput(InputObjectType):
     # Duplicate docstring because not automatically generated by InputObjectType
-    """🗃️ A kit is a collection of types and formations."""
+    """🗃️ A kit is a collection of types and designs."""
 
     name = NonNull(graphene.String)
     description = graphene.String()
@@ -2128,7 +2128,7 @@ class KitInput(InputObjectType):
     url = graphene.String()
     homepage = graphene.String()
     types = graphene.List(NonNull(TypeInput))
-    formations = graphene.List(NonNull(FormationInput))
+    designs = graphene.List(NonNull(DesignInput))
 
 
 class KitMetadataInput(InputObjectType):
@@ -2157,7 +2157,7 @@ SidePieceTypeLike = SidePieceType | SidePieceTypeNode | SidePieceTypeInput
 SidePieceLike = SidePiece | SidePieceNode | SidePieceInput
 SideLike = Side | SideNode | SideInput
 ConnectionLike = Connection | ConnectionNode | ConnectionInput
-FormationLike = Formation | FormationNode | FormationInput
+DesignLike = Design | DesignNode | DesignInput
 KitLike = Kit | KitNode | KitInput
 
 class NotFound(SpecificationError):
@@ -2216,34 +2216,34 @@ class TooLittleQualitiesToMatchExcactlyType(QualitiesDontMatchType):
 
 
 class PieceNotFound(NotFound):
-    def __init__(self, formation, localId) -> None:
+    def __init__(self, design, localId) -> None:
         super().__init__(localId, Piece)
-        self.formation = formation
+        self.design = design
         self.localId = localId
 
     def __str__(self):
-        return f"Piece({self.localId}) not found. Please check that the local id is correct and that the piece is part of the formation {self.formation.client__str__()}."
+        return f"Piece({self.localId}) not found. Please check that the local id is correct and that the piece is part of the design {self.design.client__str__()}."
 
 
 class ConnectionNotFound(NotFound):
-    def __init__(self, formation, connected, connecting) -> None:
+    def __init__(self, design, connected, connecting) -> None:
         super().__init__((connected,connecting), Connection)
-        self.formation = formation
+        self.design = design
         self.connected = connected
         self.connecting = connecting
 
     def __str__(self):
-        return f"Connection with connected piece id ({self.connected}) and connecting piece id ({self.connecting}) not found in formation {self.formation.client__str__()}"
+        return f"Connection with connected piece id ({self.connected}) and connecting piece id ({self.connecting}) not found in design {self.design.client__str__()}"
 
 
-class FormationNotFound(NotFound):
+class DesignNotFound(NotFound):
     def __init__(self, name, variant = "") -> None:
-        super().__init__(name, Formation)
+        super().__init__(name, Design)
         self.name = name
         self.variant = variant
 
     def __str__(self):
-        return f"Formation({(self.name + ":" + self.variant) if self.variant!="" else self.name}) not found."
+        return f"Design({(self.name + ":" + self.variant) if self.variant!="" else self.name}) not found."
 
 class KitNotFound(NotFound):
     def __init__(self, name) -> None:
@@ -2317,14 +2317,14 @@ class TypeAlreadyExists(DocumentAlreadyExists):
         return f"Type ({self.type.name}) already exists: {str(self.type)}"
 
 
-class FormationAlreadyExists(DocumentAlreadyExists):
-    def __init__(self, formation) -> None:
-        super().__init__(formation)
-        self.formation = formation
+class DesignAlreadyExists(DocumentAlreadyExists):
+    def __init__(self, design) -> None:
+        super().__init__(design)
+        self.design = design
 
     def __str__(self):
         return (
-            f"Formation ({self.formation.name}) already exists: {str(self.formation)}"
+            f"Design ({self.design.name}) already exists: {str(self.design)}"
         )
 
 
@@ -2360,20 +2360,20 @@ def getTypeByNameAndVariant(session: Session, name: str, variant: str) -> Type:
     return type
 
 
-def getFormationByNameAndVariant(
+def getDesignByNameAndVariant(
     session: Session, name: str, variant: str = ""
-) -> Formation:
+) -> Design:
     try:
-        formation = (
-            session.query(Formation).filter_by(name=name, variant=variant).one_or_none()
+        design = (
+            session.query(Design).filter_by(name=name, variant=variant).one_or_none()
         )
     except MultipleResultsFound as e:
         raise InvalidDatabase(
-            f"Found multiple formations with name {name} and variant {variant}"
+            f"Found multiple designs with name {name} and variant {variant}"
         ) from e
-    if not formation:
-        raise FormationNotFound(name, variant)
-    return formation
+    if not design:
+        raise DesignNotFound(name, variant)
+    return design
 
 
 def getPortById(session: Session, type: Type, portId: str) -> Port:
@@ -2385,7 +2385,7 @@ def getPortById(session: Session, type: Type, portId: str) -> Port:
 
 def getConnectionByPieceIds(
     session: Session,
-    formation: Formation,
+    design: Design,
     connectedPieceId: str,
     connectingPieceId: str,
 ) -> Connection:
@@ -2394,12 +2394,12 @@ def getConnectionByPieceIds(
         .filter_by(
             connectedPieceId=connectedPieceId,
             connectingPieceId=connectingPieceId,
-            formationId=formation.id,
+            designId=design.id,
         )
         .first()
     )
     if not connection:
-        raise ConnectionNotFound(connectedPieceId, connectingPieceId, formation)
+        raise ConnectionNotFound(connectedPieceId, connectingPieceId, design)
     return connection
 
 
@@ -2483,7 +2483,7 @@ def addPortInputToSession(session: Session, type: Type, portInput: PortInput) ->
 
 def addQualityInputToSession(
     session: Session,
-    owner: Type | Formation,
+    owner: Type | Design,
     qualityInput: QualityInput,
 ) -> Quality:
     try:
@@ -2501,14 +2501,14 @@ def addQualityInputToSession(
     except AttributeError:
         definition = ""
     typeId = owner.id if isinstance(owner, Type) else None
-    formationId = owner.id if isinstance(owner, Formation) else None
+    designId = owner.id if isinstance(owner, Design) else None
     quality = Quality(
         name=qualityInput.name,
         value=value,
         unit=unit,
         definition=definition,
         typeId=typeId,
-        formationId=formationId,
+        designId=designId,
     )
     session.add(quality)
     session.flush()
@@ -2555,7 +2555,7 @@ def addTypeInputToSession(session: Session, kit: Kit, typeInput: TypeInput) -> T
 
 
 def addPieceInputToSession(
-    session: Session, formation: Formation, pieceInput: PieceInput
+    session: Session, design: Design, pieceInput: PieceInput
 ) -> Piece:
     try:
         variant = pieceInput.type.variant if pieceInput.type.variant is not None else ""
@@ -2567,7 +2567,7 @@ def addPieceInputToSession(
         typeId=type.id,
         diagramPointX=pieceInput.diagram.point.x,
         diagramPointY=pieceInput.diagram.point.y,
-        formationId=formation.id,
+        designId=design.id,
     )
     try:
         piece.rootPlaneOriginX = pieceInput.root.plane.origin.x
@@ -2588,7 +2588,7 @@ def addPieceInputToSession(
 
 def addConnectionInputToSession(
     session: Session,
-    formation: Formation,
+    design: Design,
     connectionInput: ConnectionInput,
     localIdToPiece: dict,
 ) -> Connection:
@@ -2614,7 +2614,7 @@ def addConnectionInputToSession(
         # it raises a proper IntegrityError
         existingConnection = getConnectionByPieceIds(
             session,
-            formation,
+            design,
             connectionInput.connected.piece.id,
             connectionInput.connecting.piece.id,
         )
@@ -2624,11 +2624,11 @@ def addConnectionInputToSession(
     try:
         connectingPiece = localIdToPiece[connectionInput.connecting.piece.id]
     except KeyError:
-        raise PieceNotFound(formation, connectionInput.connecting.piece.id)
+        raise PieceNotFound(design, connectionInput.connecting.piece.id)
     try:
         connectedPiece = localIdToPiece[connectionInput.connected.piece.id]
     except KeyError:
-        raise PieceNotFound(formation, connectionInput.connected.piece.id)
+        raise PieceNotFound(design, connectionInput.connected.piece.id)
     connectingPieceTypePort = getPortById(
         session,
         connectingPiece.type,
@@ -2658,58 +2658,58 @@ def addConnectionInputToSession(
         connectingPieceTypePortId=connectingPieceTypePort.id,
         offset=offset,
         rotation=rotation,
-        formationId=formation.id,
+        designId=design.id,
     )
     session.add(connection)
     session.flush()
     return connection
 
 
-def addFormationInputToSession(
-    session: Session, kit: Kit, formationInput: FormationInput
+def addDesignInputToSession(
+    session: Session, kit: Kit, designInput: DesignInput
 ):
     try:
         description = (
-            formationInput.description if formationInput.description is not None else ""
+            designInput.description if designInput.description is not None else ""
         )
     except AttributeError:
         description = ""
     try:
-        icon = formationInput.icon if formationInput.icon is not None else ""
+        icon = designInput.icon if designInput.icon is not None else ""
     except AttributeError:
         icon = ""
     try:
-        variant = formationInput.variant if formationInput.variant is not None else ""
+        variant = designInput.variant if designInput.variant is not None else ""
     except AttributeError:
         variant = ""
     try:
-        existingFormation = getFormationByNameAndVariant(
-            session, formationInput.name, variant
+        existingDesign = getDesignByNameAndVariant(
+            session, designInput.name, variant
         )
-        raise FormationAlreadyExists(existingFormation)
-    except FormationNotFound:
+        raise DesignAlreadyExists(existingDesign)
+    except DesignNotFound:
         pass
-    formation = Formation(
-        name=formationInput.name,
+    design = Design(
+        name=designInput.name,
         description=description,
         icon=icon,
         variant=variant,
-        unit=formationInput.unit,
+        unit=designInput.unit,
         kitId=kit.id,
     )
-    session.add(formation)
+    session.add(design)
     session.flush()
     localIdToPiece: Dict[str, Piece] = {}
-    for pieceInput in formationInput.pieces or []:
-        piece = addPieceInputToSession(session, formation, pieceInput)
+    for pieceInput in designInput.pieces or []:
+        piece = addPieceInputToSession(session, design, pieceInput)
         localIdToPiece[pieceInput.id] = piece
-    for connectionInput in formationInput.connections or []:
+    for connectionInput in designInput.connections or []:
         connection = addConnectionInputToSession(
-            session, formation, connectionInput, localIdToPiece
+            session, design, connectionInput, localIdToPiece
         )
-    for qualityInput in formationInput.qualities or []:
-        quality = addQualityInputToSession(session, formation, qualityInput)
-    return formation
+    for qualityInput in designInput.qualities or []:
+        quality = addQualityInputToSession(session, design, qualityInput)
+    return design
 
 
 def addKitInputToSession(session: Session, kitInput: KitInput):
@@ -2739,8 +2739,8 @@ def addKitInputToSession(session: Session, kitInput: KitInput):
     session.flush()
     for typeInput in kitInput.types or []:
         type = addTypeInputToSession(session, kit, typeInput)
-    for formationInput in kitInput.formations or []:
-        formation = addFormationInputToSession(session, kit, formationInput)
+    for designInput in kitInput.designs or []:
+        design = addDesignInputToSession(session, kit, designInput)
     return kit
 
 
@@ -2769,15 +2769,15 @@ def updateKitMetadataInSession(session: Session, kitMetadata: KitMetadataInput):
     return kit
 
 
-def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
-    nodes = list((piece.localId, {"piece": piece}) for piece in formation.pieces)
+def designToHierarchies(design: Design) -> List[Hierarchy]:
+    nodes = list((piece.localId, {"piece": piece}) for piece in design.pieces)
     edges = (
         (
             connection.connecting.piece.id,
             connection.connected.piece.id,
             {"connection": connection},
         )
-        for connection in formation.connections
+        for connection in design.connections
     )
     graph = Graph()
     graph.add_nodes_from(nodes)
@@ -2845,18 +2845,18 @@ def addObjectsToScene(
         addObjectsToScene(scene, object, child, transformedPlane)
 
 
-def sceneFromFormationInSession(
-    session: Session, formationIdInput: FormationIdInput
+def sceneFromDesignInSession(
+    session: Session, designIdInput: DesignIdInput
 ) -> "Scene":
     try:
         variant = (
-            formationIdInput.variant if formationIdInput.variant is not None else ""
+            designIdInput.variant if designIdInput.variant is not None else ""
         )
     except AttributeError:
         variant = ""
-    formation = getFormationByNameAndVariant(session, formationIdInput.name, variant)
-    hierarchies = formationToHierarchies(formation)
-    scene = Scene(formation=formation, objects=[])
+    design = getDesignByNameAndVariant(session, designIdInput.name, variant)
+    hierarchies = designToHierarchies(design)
+    scene = Scene(design=design, objects=[])
     for hierarchy in hierarchies:
         addObjectsToScene(
             scene,
@@ -3129,7 +3129,7 @@ class RemoveTypeFromLocalKitErrorCode(graphene.Enum):
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
     TYPE_DOES_NOT_EXIST = "type_does_not_exist"
-    FORMATION_DEPENDS_ON_TYPE = "formation_depends_on_type"
+    FORMATION_DEPENDS_ON_TYPE = "design_depends_on_type"
 
 
 class RemoveTypeFromLocalKitErrorNode(ObjectType):
@@ -3202,49 +3202,49 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
         return RemoveTypeFromLocalKitMutation()
 
 
-class AddFormationToLocalKitErrorCode(graphene.Enum):
+class AddDesignToLocalKitErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
-    FORMATION_INPUT_IS_INVALID = "formation_input_is_invalid"
+    FORMATION_INPUT_IS_INVALID = "design_input_is_invalid"
 
 
-class AddFormationToLocalKitErrorNode(ObjectType):
+class AddDesignToLocalKitErrorNode(ObjectType):
     class Meta:
-        name = "AddFormationToLocalKitError"
+        name = "AddDesignToLocalKitError"
 
-    code = NonNull(AddFormationToLocalKitErrorCode)
+    code = NonNull(AddDesignToLocalKitErrorCode)
     message = graphene.String()
 
 
-class AddFormationToLocalKitMutation(graphene.Mutation):
+class AddDesignToLocalKitMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
-        formationInput = NonNull(FormationInput)
+        designInput = NonNull(DesignInput)
 
-    formation = Field(FormationNode)
-    error = Field(AddFormationToLocalKitErrorNode)
+    design = Field(DesignNode)
+    error = Field(AddDesignToLocalKitErrorNode)
 
-    def mutate(self, info, directory, formationInput):
+    def mutate(self, info, directory, designInput):
         directory = Path(directory)
         if not directory.exists():
-            return AddFormationToLocalKitMutation(
-                error=AddFormationToLocalKitErrorNode(
-                    code=AddFormationToLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
+            return AddDesignToLocalKitMutation(
+                error=AddDesignToLocalKitErrorNode(
+                    code=AddDesignToLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST
                 )
             )
         if not directory.is_dir():
-            return AddFormationToLocalKitMutation(
-                error=AddFormationToLocalKitErrorNode(
-                    code=AddFormationToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+            return AddDesignToLocalKitMutation(
+                error=AddDesignToLocalKitErrorNode(
+                    code=AddDesignToLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return AddFormationToLocalKitMutation(
-                error=AddFormationToLocalKitErrorNode(
-                    code=AddFormationToLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+            return AddDesignToLocalKitMutation(
+                error=AddDesignToLocalKitErrorNode(
+                    code=AddDesignToLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
                 )
             )
         kitFileFullPath = kitFile.resolve()
@@ -3259,20 +3259,20 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
         except NoMainKit:
             raise Exception("Main kit not found.")
         try:
-            formation = addFormationInputToSession(session, kit, formationInput)
+            design = addDesignInputToSession(session, kit, designInput)
         except SpecificationError as e:
             session.rollback()
-            return AddFormationToLocalKitMutation(
-                error=AddFormationToLocalKitErrorNode(
-                    code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+            return AddDesignToLocalKitMutation(
+                error=AddDesignToLocalKitErrorNode(
+                    code=AddDesignToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
                     message=str(e),
                 )
             )
         except IntegrityError as e:
             session.rollback()
-            return AddFormationToLocalKitMutation(
-                error=AddFormationToLocalKitErrorNode(
-                    code=AddFormationToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+            return AddDesignToLocalKitMutation(
+                error=AddDesignToLocalKitErrorNode(
+                    code=AddDesignToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
                     message=str(
                         "Sorry, I didn't have time to write you a nice error message. For now I can only give you the technical description of what is wrong: "
                         + str(e)
@@ -3280,51 +3280,51 @@ class AddFormationToLocalKitMutation(graphene.Mutation):
                 )
             )
         session.commit()
-        return AddFormationToLocalKitMutation(formation=formation)
+        return AddDesignToLocalKitMutation(design=design)
 
 
-class RemoveFormationFromLocalKitErrorCode(graphene.Enum):
+class RemoveDesignFromLocalKitErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
-    FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
+    FORMATION_DOES_NOT_EXIST = "design_does_not_exist"
 
 
-class RemoveFormationFromLocalKitErrorNode(ObjectType):
+class RemoveDesignFromLocalKitErrorNode(ObjectType):
     class Meta:
-        name = "RemoveFormationFromLocalKitError"
+        name = "RemoveDesignFromLocalKitError"
 
-    code = NonNull(RemoveFormationFromLocalKitErrorCode)
+    code = NonNull(RemoveDesignFromLocalKitErrorCode)
     message = graphene.String()
 
 
-class RemoveFormationFromLocalKitMutation(graphene.Mutation):
+class RemoveDesignFromLocalKitMutation(graphene.Mutation):
     class Arguments:
         directory = NonNull(graphene.String)
-        formationId = NonNull(FormationIdInput)
+        designId = NonNull(DesignIdInput)
 
-    error = Field(RemoveFormationFromLocalKitErrorNode)
+    error = Field(RemoveDesignFromLocalKitErrorNode)
 
-    def mutate(self, info, directory, formationId):
+    def mutate(self, info, directory, designId):
         directory = Path(directory)
         if not directory.exists():
-            return RemoveFormationFromLocalKitMutation(
-                error=RemoveFormationFromLocalKitErrorNode(
-                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST,
+            return RemoveDesignFromLocalKitMutation(
+                error=RemoveDesignFromLocalKitErrorNode(
+                    code=RemoveDesignFromLocalKitErrorCode.DIRECTORY_DOES_NOT_EXIST,
                 )
             )
         if not directory.is_dir():
-            return RemoveFormationFromLocalKitMutation(
-                error=RemoveFormationFromLocalKitErrorNode(
-                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
+            return RemoveDesignFromLocalKitMutation(
+                error=RemoveDesignFromLocalKitErrorNode(
+                    code=RemoveDesignFromLocalKitErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY,
                 )
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return RemoveFormationFromLocalKitMutation(
-                error=RemoveFormationFromLocalKitErrorNode(
-                    code=RemoveFormationFromLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
+            return RemoveDesignFromLocalKitMutation(
+                error=RemoveDesignFromLocalKitErrorNode(
+                    code=RemoveDesignFromLocalKitErrorCode.DIRECTORY_HAS_NO_KIT
                 ),
             )
         kitFileFullPath = kitFile.resolve()
@@ -3340,19 +3340,19 @@ class RemoveFormationFromLocalKitMutation(graphene.Mutation):
             raise Exception("Main kit not found.")
         try:
             try:
-                variant = formationId.variant if formationId.variant is not None else ""
+                variant = designId.variant if designId.variant is not None else ""
             except AttributeError:
                 variant = ""
-            formation = getFormationByNameAndVariant(session, formationId.name, variant)
-        except FormationNotFound:
-            return RemoveFormationFromLocalKitMutation(
-                error=RemoveFormationFromLocalKitErrorNode(
-                    code=RemoveFormationFromLocalKitErrorCode.FORMATION_DOES_NOT_EXIST
+            design = getDesignByNameAndVariant(session, designId.name, variant)
+        except DesignNotFound:
+            return RemoveDesignFromLocalKitMutation(
+                error=RemoveDesignFromLocalKitErrorNode(
+                    code=RemoveDesignFromLocalKitErrorCode.FORMATION_DOES_NOT_EXIST
                 ),
             )
-        session.delete(formation)
+        session.delete(design)
         session.commit()
-        return RemoveFormationFromLocalKitMutation()
+        return RemoveDesignFromLocalKitMutation()
 
 
 class LoadLocalKitError(graphene.Enum):
@@ -3367,33 +3367,33 @@ class LoadLocalKitResponse(ObjectType):
     error = Field(LoadLocalKitError)
 
 
-class FormationToSceneFromLocalKitResponseErrorCode(graphene.Enum):
+class DesignToSceneFromLocalKitResponseErrorCode(graphene.Enum):
     DIRECTORY_DOES_NOT_EXIST = "directory_does_not_exist"
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_READ_KIT = "no_permission_to_read_kit"
-    FORMATION_DOES_NOT_EXIST = "formation_does_not_exist"
+    FORMATION_DOES_NOT_EXIST = "design_does_not_exist"
 
 
-class FormationToSceneFromLocalKitResponseErrorNode(ObjectType):
+class DesignToSceneFromLocalKitResponseErrorNode(ObjectType):
     class Meta:
-        name = "FormationToSceneFromLocalKitResponseError"
+        name = "DesignToSceneFromLocalKitResponseError"
 
-    code = NonNull(FormationToSceneFromLocalKitResponseErrorCode)
+    code = NonNull(DesignToSceneFromLocalKitResponseErrorCode)
     message = graphene.String()
 
 
-class FormationToSceneFromLocalKitResponse(ObjectType):
+class DesignToSceneFromLocalKitResponse(ObjectType):
     scene = Field(SceneNode)
-    error = Field(FormationToSceneFromLocalKitResponseErrorNode)
+    error = Field(DesignToSceneFromLocalKitResponseErrorNode)
 
 
 class Query(ObjectType):
     loadLocalKit = Field(LoadLocalKitResponse, directory=NonNull(graphene.String))
-    formationToSceneFromLocalKit = Field(
-        FormationToSceneFromLocalKitResponse,
+    designToSceneFromLocalKit = Field(
+        DesignToSceneFromLocalKitResponse,
         directory=NonNull(graphene.String),
-        formationIdInput=NonNull(FormationIdInput),
+        designIdInput=NonNull(DesignIdInput),
     )
 
     def resolve_loadLocalKit(self, info, directory: graphene.String):
@@ -3418,27 +3418,27 @@ class Query(ObjectType):
             return LoadLocalKitResponse(error=LoadLocalKitError.DIRECTORY_HAS_NO_KIT)
         return LoadLocalKitResponse(kit=kit)
 
-    def resolve_formationToSceneFromLocalKit(
-        self, info, directory, formationIdInput: FormationIdInput
+    def resolve_designToSceneFromLocalKit(
+        self, info, directory, designIdInput: DesignIdInput
     ):
         directory = Path(directory)
         if not directory.exists():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
+            return DesignToSceneFromLocalKitResponse(
+                error=DesignToSceneFromLocalKitResponseErrorNode(
+                    code=DesignToSceneFromLocalKitResponseErrorCode.DIRECTORY_DOES_NOT_EXIST
                 )
             )
         if not directory.is_dir():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
+            return DesignToSceneFromLocalKitResponse(
+                error=DesignToSceneFromLocalKitResponseErrorNode(
+                    code=DesignToSceneFromLocalKitResponseErrorCode.DIRECTORY_IS_NOT_A_DIRECTORY
                 )
             )
         kitFile = directory.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
         if not kitFile.exists():
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
+            return DesignToSceneFromLocalKitResponse(
+                error=DesignToSceneFromLocalKitResponseErrorNode(
+                    code=DesignToSceneFromLocalKitResponseErrorCode.DIRECTORY_HAS_NO_KIT
                 )
             )
         kitFileFullPath = kitFile.resolve()
@@ -3449,14 +3449,14 @@ class Query(ObjectType):
             os._exit(1)
         session = getLocalSession(directory)
         try:
-            scene = sceneFromFormationInSession(session, formationIdInput)
-        except FormationNotFound:
-            return FormationToSceneFromLocalKitResponse(
-                error=FormationToSceneFromLocalKitResponseErrorNode(
-                    code=FormationToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
+            scene = sceneFromDesignInSession(session, designIdInput)
+        except DesignNotFound:
+            return DesignToSceneFromLocalKitResponse(
+                error=DesignToSceneFromLocalKitResponseErrorNode(
+                    code=DesignToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
                 )
             )
-        return FormationToSceneFromLocalKitResponse(scene=scene)
+        return DesignToSceneFromLocalKitResponse(scene=scene)
 
 
 class Mutation(ObjectType):
@@ -3465,8 +3465,8 @@ class Mutation(ObjectType):
     deleteLocalKit = DeleteLocalKitMutation.Field()
     addTypeToLocalKit = AddTypeToLocalKitMutation.Field()
     removeTypeFromLocalKit = RemoveTypeFromLocalKitMutation.Field()
-    addFormationToLocalKit = AddFormationToLocalKitMutation.Field()
-    removeFormationFromLocalKit = RemoveFormationFromLocalKitMutation.Field()
+    addDesignToLocalKit = AddDesignToLocalKitMutation.Field()
+    removeDesignFromLocalKit = RemoveDesignFromLocalKitMutation.Field()
 
 
 schema = Schema(

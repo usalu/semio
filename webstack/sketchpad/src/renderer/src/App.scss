@@ -18,21 +18,19 @@
     box-shadow: none !important;
 }
 
-#formation-editor {
-    
+#design-editor {
     .view-wrapper {
         @apply bg-dark;
         .arrow {
-            @apply fill-light ;
+            @apply fill-light;
         }
-
     }
 
     .node {
         .shape {
             @apply fill-light;
 
-            >use.node {
+            > use.node {
                 @apply fill-light stroke-none;
 
                 &.selected {
@@ -65,6 +63,5 @@
         &.selected {
             @apply stroke-primary;
         }
-
     }
 }

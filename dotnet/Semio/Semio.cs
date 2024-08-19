@@ -16,7 +16,7 @@ using Semio.Properties;
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
-//  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+//  designToSceneFromLocalKit(directory: String!, designIdInput: DesignIdInput!): DesignToSceneFromLocalKitResponse
 //}
 
 //type LoadLocalKitResponse
@@ -25,7 +25,7 @@ using Semio.Properties;
 //  error: LoadLocalKitError
 //}
 
-//"""🗃️ A kit is a collection of types and formations."""
+//"""🗃️ A kit is a collection of types and designs."""
 //type Kit
 //{
 //name: String!
@@ -36,7 +36,7 @@ using Semio.Properties;
 //  url: String!
 //  homepage: String!
 //  types: [Type!]!
-//  formations: [Formation!]!
+//  designs: [Design!]!
 //}
 
 //"""
@@ -99,18 +99,18 @@ using Semio.Properties;
 //  port: Port
 //}
 
-//"""🖇️ A connection between two pieces of a formation."""
+//"""🖇️ A connection between two pieces of a design."""
 //type Connection
 //{
 //offset: Float!
 //  rotation: Float!
-//  formation: Formation
+//  design: Design
 //  connected: Side!
 //  connecting: Side!
 //}
 
-//"""🏙️ A formation is a collection of pieces that are connected."""
-//type Formation
+//"""🏙️ A design is a collection of pieces that are connected."""
+//type Design
 //{
 //name: String!
 //  description: String!
@@ -125,11 +125,11 @@ using Semio.Properties;
 //  qualities: [Quality!]!
 //}
 
-//"""⭕ A piece is a 3d-instance of a type in a formation."""
+//"""⭕ A piece is a 3d-instance of a type in a design."""
 //type Piece
 //{
 //type: Type
-//  formation: Formation
+//  design: Design
 //  connectings: [Connection!]!
 //  connecteds: [Connection!]!
 //  id: String!
@@ -137,7 +137,7 @@ using Semio.Properties;
 //  diagram: PieceDiagram!
 //}
 
-//"""🌱 The root information of a piece."""
+//"""🌱 The root indesign of a piece."""
 //type PieceRoot
 //{
 //plane: Plane!
@@ -167,7 +167,7 @@ using Semio.Properties;
 //  z: Float!
 //}
 
-//"""✏️ The diagram information of a piece."""
+//"""✏️ The diagram indesign of a piece."""
 //type PieceDiagram
 //{
 //point: ScreenPoint!
@@ -188,7 +188,7 @@ using Semio.Properties;
 //  unit: String!
 //  definition: String!
 //  type: Type
-//  formation: Formation
+//  design: Design
 //}
 
 //"""🧱 A side of a piece in a connection."""
@@ -198,7 +198,7 @@ using Semio.Properties;
 //}
 
 //"""
-//⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+//⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
 //"""
 //type SidePiece
 //{
@@ -206,7 +206,7 @@ using Semio.Properties;
 //  type: SidePieceType!
 //}
 
-//"""🧩 The type information of a piece of a side."""
+//"""🧩 The type indesign of a piece of a side."""
 //type SidePieceType
 //{
 //port: Port
@@ -220,17 +220,17 @@ using Semio.Properties;
 //  NO_PERMISSION_TO_READ_KIT
 //}
 
-//type FormationToSceneFromLocalKitResponse
+//type DesignToSceneFromLocalKitResponse
 //{
 //    scene: Scene
-//  error: FormationToSceneFromLocalKitResponseError
+//  error: DesignToSceneFromLocalKitResponseError
 //}
 
 //"""🌆 A scene is a collection of objects."""
 //type Scene
 //{
 //    objects: [Object]!
-//  formation: Formation
+//  design: Design
 //}
 
 //"""
@@ -243,13 +243,13 @@ using Semio.Properties;
 //  parent: Object
 //}
 
-//type FormationToSceneFromLocalKitResponseError
+//type DesignToSceneFromLocalKitResponseError
 //{
-//    code: FormationToSceneFromLocalKitResponseErrorCode!
+//    code: DesignToSceneFromLocalKitResponseErrorCode!
 //  message: String
 //}
 
-//enum FormationToSceneFromLocalKitResponseErrorCode
+//enum DesignToSceneFromLocalKitResponseErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -258,8 +258,8 @@ using Semio.Properties;
 //  FORMATION_DOES_NOT_EXIST
 //}
 
-//"""🏙️ A formation is identified by a name and optional variant."""
-//input FormationIdInput
+//"""🏙️ A design is identified by a name and optional variant."""
+//input DesignIdInput
 //{
 //    name: String!
 //  variant: String = ""
@@ -272,8 +272,8 @@ using Semio.Properties;
 //  deleteLocalKit(directory: String!): DeleteLocalKitMutation
 //  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
 //  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
-//  addFormationToLocalKit(directory: String!, formationInput: FormationInput!): AddFormationToLocalKitMutation
-//  removeFormationFromLocalKit(directory: String!, formationId: FormationIdInput!): RemoveFormationFromLocalKitMutation
+//  addDesignToLocalKit(directory: String!, designInput: DesignInput!): AddDesignToLocalKitMutation
+//  removeDesignFromLocalKit(directory: String!, designId: DesignIdInput!): RemoveDesignFromLocalKitMutation
 //}
 
 //type CreateLocalKitMutation
@@ -297,7 +297,7 @@ using Semio.Properties;
 //  KIT_INPUT_IS_INVALID
 //}
 
-//"""🗃️ A kit is a collection of types and formations."""
+//"""🗃️ A kit is a collection of types and designs."""
 //input KitInput
 //{
 //    name: String!
@@ -306,7 +306,7 @@ using Semio.Properties;
 //  url: String
 //  homepage: String
 //  types: [TypeInput!]
-//    formations: [FormationInput!]
+//    designs: [DesignInput!]
 //}
 
 //"""
@@ -378,8 +378,8 @@ using Semio.Properties;
 //  definition: String
 //}
 
-//"""🏙️ A formation is a collection of pieces that are connected."""
-//input FormationInput
+//"""🏙️ A design is a collection of pieces that are connected."""
+//input DesignInput
 //{
 //    name: String!
 //  description: String
@@ -391,7 +391,7 @@ using Semio.Properties;
 //  qualities: [QualityInput!]
 //}
 
-//"""⭕ A piece is a 3d-instance of a type in a formation."""
+//"""⭕ A piece is a 3d-instance of a type in a design."""
 //input PieceInput
 //{
 //    id: String!
@@ -407,7 +407,7 @@ using Semio.Properties;
 //  variant: String = ""
 //}
 
-//"""🌱 The root information of a piece."""
+//"""🌱 The root indesign of a piece."""
 //input PieceRootInput
 //{
 //    plane: PlaneInput!
@@ -421,7 +421,7 @@ using Semio.Properties;
 //  yAxis: VectorInput!
 //}
 
-//"""✏️ The diagram information of a piece."""
+//"""✏️ The diagram indesign of a piece."""
 //input PieceDiagramInput
 //{
 //    point: ScreenPointInput!
@@ -434,7 +434,7 @@ using Semio.Properties;
 //  y: Int = 0
 //}
 
-//"""🖇️ A connection between two pieces of a formation."""
+//"""🖇️ A connection between two pieces of a design."""
 //input ConnectionInput
 //{
 //    connecting: SideInput!
@@ -450,7 +450,7 @@ using Semio.Properties;
 //}
 
 //"""
-//⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+//⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
 //"""
 //input SidePieceInput
 //{
@@ -458,7 +458,7 @@ using Semio.Properties;
 //  type: SidePieceTypeInput = null
 //}
 
-//"""🧩 The type information of a piece of a side."""
+//"""🧩 The type indesign of a piece of a side."""
 //input SidePieceTypeInput
 //{
 //    port: PortIdInput = null
@@ -555,19 +555,19 @@ using Semio.Properties;
 //  FORMATION_DEPENDS_ON_TYPE
 //}
 
-//type AddFormationToLocalKitMutation
+//type AddDesignToLocalKitMutation
 //{
-//    formation: Formation
-//  error: AddFormationToLocalKitError
+//    design: Design
+//  error: AddDesignToLocalKitError
 //}
 
-//type AddFormationToLocalKitError
+//type AddDesignToLocalKitError
 //{
-//    code: AddFormationToLocalKitErrorCode!
+//    code: AddDesignToLocalKitErrorCode!
 //  message: String
 //}
 
-//enum AddFormationToLocalKitErrorCode
+//enum AddDesignToLocalKitErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -576,18 +576,18 @@ using Semio.Properties;
 //  FORMATION_INPUT_IS_INVALID
 //}
 
-//type RemoveFormationFromLocalKitMutation
+//type RemoveDesignFromLocalKitMutation
 //{
-//    error: RemoveFormationFromLocalKitError
+//    error: RemoveDesignFromLocalKitError
 //}
 
-//type RemoveFormationFromLocalKitError
+//type RemoveDesignFromLocalKitError
 //{
-//    code: RemoveFormationFromLocalKitErrorCode!
+//    code: RemoveDesignFromLocalKitErrorCode!
 //  message: String
 //}
 
-//enum RemoveFormationFromLocalKitErrorCode
+//enum RemoveDesignFromLocalKitErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -1304,9 +1304,9 @@ public class Connection : IDeepCloneable<Connection>, IEntity
     }
 }
 
-public class Formation : IDeepCloneable<Formation>, IEntity
+public class Design : IDeepCloneable<Design>, IEntity
 {
-    public Formation()
+    public Design()
     {
         Name = "";
         Description = "";
@@ -1327,9 +1327,9 @@ public class Formation : IDeepCloneable<Formation>, IEntity
     public List<Connection> Connections { get; set; }
     public List<Quality> Qualities { get; set; }
 
-    public Formation DeepClone()
+    public Design DeepClone()
     {
-        return new Formation
+        return new Design
         {
             Name = Name,
             Description = Description,
@@ -1344,7 +1344,7 @@ public class Formation : IDeepCloneable<Formation>, IEntity
 
     public override string ToString()
     {
-        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
+        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1354,9 +1354,9 @@ public class Formation : IDeepCloneable<Formation>, IEntity
     }
 }
 
-public class FormationId : IDeepCloneable<FormationId>, IEntity
+public class DesignId : IDeepCloneable<DesignId>, IEntity
 {
-    public FormationId()
+    public DesignId()
     {
         Name = "";
         Variant = "";
@@ -1365,9 +1365,9 @@ public class FormationId : IDeepCloneable<FormationId>, IEntity
     public string Name { get; set; }
     public string Variant { get; set; }
 
-    public FormationId DeepClone()
+    public DesignId DeepClone()
     {
-        return new FormationId
+        return new DesignId
         {
             Name = Name,
             Variant = Variant
@@ -1376,7 +1376,7 @@ public class FormationId : IDeepCloneable<FormationId>, IEntity
 
     public override string ToString()
     {
-        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
+        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
     }
 
     public bool IsInvalid()
@@ -1511,30 +1511,30 @@ public class Scene : IDeepCloneable<Scene>, IEntity
 {
     public Scene()
     {
-        Formation = new FormationId();
+        Design = new DesignId();
         Objects = new List<Object>();
     }
 
-    public FormationId Formation { get; set; }
+    public DesignId Design { get; set; }
     public List<Object> Objects { get; set; }
 
     public Scene DeepClone()
     {
         return new Scene
         {
-            Formation = Formation.DeepClone(),
+            Design = Design.DeepClone(),
             Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
         };
     }
 
     public override string ToString()
     {
-        return $"Scene({Formation})";
+        return $"Scene({Design})";
     }
 
     public bool IsInvalid()
     {
-        return Formation.IsInvalid() || Objects.Any(o => o.IsInvalid());
+        return Design.IsInvalid() || Objects.Any(o => o.IsInvalid());
     }
 }
 
@@ -1548,7 +1548,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
         Url = "";
         Homepage = "";
         Types = new List<Type>();
-        Formations = new List<Formation>();
+        Designs = new List<Design>();
     }
 
     public string Name { get; set; }
@@ -1557,7 +1557,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
     public string Url { get; set; }
     public string Homepage { get; set; }
     public List<Type> Types { get; set; }
-    public List<Formation> Formations { get; set; }
+    public List<Design> Designs { get; set; }
 
     public Kit DeepClone()
     {
@@ -1569,7 +1569,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
             Url = Url,
             Homepage = Homepage,
             Types = new List<Type>(Types.Select(t => t.DeepClone())),
-            Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
+            Designs = new List<Design>(Designs.Select(f => f.DeepClone()))
         };
     }
 
@@ -1580,7 +1580,7 @@ public class Kit : IDeepCloneable<Kit>, IEntity
 
     public bool IsInvalid()
     {
-        return Name == "" || Types.Any(t => t.IsInvalid()) || Formations.Any(f => f.IsInvalid());
+        return Name == "" || Types.Any(t => t.IsInvalid()) || Designs.Any(f => f.IsInvalid());
     }
 }
 
@@ -1774,7 +1774,7 @@ public class RemoveTypeFromLocalKitResponseContainer
     public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
 }
 
-public enum AddFormationToLocalKitErrorCode
+public enum AddDesignToLocalKitErrorCode
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_IS_NOT_A_DIRECTORY,
@@ -1783,24 +1783,24 @@ public enum AddFormationToLocalKitErrorCode
     FORMATION_INPUT_IS_INVALID
 }
 
-public class AddFormationToLocalKitError
+public class AddDesignToLocalKitError
 {
-    public AddFormationToLocalKitErrorCode Code { get; set; }
+    public AddDesignToLocalKitErrorCode Code { get; set; }
     public string Message { get; set; }
 }
 
-public class AddFormationToLocalKitResponse
+public class AddDesignToLocalKitResponse
 {
-    public Formation? Formation { get; set; }
-    public AddFormationToLocalKitError? Error { get; set; }
+    public Design? Design { get; set; }
+    public AddDesignToLocalKitError? Error { get; set; }
 }
 
-public class AddFormationToLocalKitResponseContainer
+public class AddDesignToLocalKitResponseContainer
 {
-    public AddFormationToLocalKitResponse AddFormationToLocalKit { get; set; }
+    public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
 }
 
-public enum RemoveFormationFromLocalKitErrorCode
+public enum RemoveDesignFromLocalKitErrorCode
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_IS_NOT_A_DIRECTORY,
@@ -1809,23 +1809,23 @@ public enum RemoveFormationFromLocalKitErrorCode
     FORMATION_DOES_NOT_EXIST
 }
 
-public class RemoveFormationFromLocalKitError
+public class RemoveDesignFromLocalKitError
 {
-    public RemoveFormationFromLocalKitErrorCode Code { get; set; }
+    public RemoveDesignFromLocalKitErrorCode Code { get; set; }
     public string Message { get; set; }
 }
 
-public class RemoveFormationFromLocalKitResponse
+public class RemoveDesignFromLocalKitResponse
 {
-    public RemoveFormationFromLocalKitError? Error { get; set; }
+    public RemoveDesignFromLocalKitError? Error { get; set; }
 }
 
-public class RemoveFormationFromLocalKitResponseContainer
+public class RemoveDesignFromLocalKitResponseContainer
 {
-    public RemoveFormationFromLocalKitResponse RemoveFormationFromLocalKit { get; set; }
+    public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
 }
 
-public enum FormationToSceneFromLocalKitResponseErrorCode
+public enum DesignToSceneFromLocalKitResponseErrorCode
 {
     DIRECTORY_DOES_NOT_EXIST,
     DIRECTORY_IS_NOT_A_DIRECTORY,
@@ -1834,21 +1834,21 @@ public enum FormationToSceneFromLocalKitResponseErrorCode
     FORMATION_DOES_NOT_EXIST
 }
 
-public class FormationToSceneFromLocalKitResponseError
+public class DesignToSceneFromLocalKitResponseError
 {
-    public FormationToSceneFromLocalKitResponseErrorCode Code { get; set; }
+    public DesignToSceneFromLocalKitResponseErrorCode Code { get; set; }
     public string Message { get; set; }
 }
 
-public class FormationToSceneFromLocalKitResponse
+public class DesignToSceneFromLocalKitResponse
 {
     public Scene? Scene { get; set; }
-    public FormationToSceneFromLocalKitResponseError? Error { get; set; }
+    public DesignToSceneFromLocalKitResponseError? Error { get; set; }
 }
 
-public class FormationToSceneFromLocalKitResponseContainer
+public class DesignToSceneFromLocalKitResponseContainer
 {
-    public FormationToSceneFromLocalKitResponse FormationToSceneFromLocalKit { get; set; }
+    public DesignToSceneFromLocalKitResponse DesignToSceneFromLocalKit { get; set; }
 }
 
 public class Api : ICloneable
@@ -1960,44 +1960,44 @@ public class Api : ICloneable
         return response.Data.RemoveTypeFromLocalKit;
     }
 
-    public AddFormationToLocalKitResponse? AddFormationToLocalKit(string directory, Formation formation)
+    public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
     {
         var query = new GraphQLRequest
         {
-            Query = Resources.addFormationToLocalKit,
-            OperationName = "AddFormationToLocalKit",
-            Variables = new { directory, formation }
+            Query = Resources.addDesignToLocalKit,
+            OperationName = "AddDesignToLocalKit",
+            Variables = new { directory, design }
         };
-        var response = Client.SendQueryAsync<AddFormationToLocalKitResponseContainer>(query).Result;
+        var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
-        return response.Data.AddFormationToLocalKit;
+        return response.Data.AddDesignToLocalKit;
     }
 
-    public RemoveFormationFromLocalKitResponse? RemoveFormationFromLocalKit(string directory, FormationId formation)
+    public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
     {
         var query = new GraphQLRequest
         {
-            Query = Resources.removeFormationFromLocalKit,
-            OperationName = "RemoveFormationFromLocalKit",
-            Variables = new { directory, formation }
+            Query = Resources.removeDesignFromLocalKit,
+            OperationName = "RemoveDesignFromLocalKit",
+            Variables = new { directory, design }
         };
-        var response = Client.SendQueryAsync<RemoveFormationFromLocalKitResponseContainer>(query).Result;
+        var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
-        return response.Data.RemoveFormationFromLocalKit;
+        return response.Data.RemoveDesignFromLocalKit;
     }
 
-    public FormationToSceneFromLocalKitResponse? FormationToSceneFromLocalKit(string directory,
-        FormationId formation)
+    public DesignToSceneFromLocalKitResponse? DesignToSceneFromLocalKit(string directory,
+        DesignId design)
     {
         var query = new GraphQLRequest
         {
-            Query = Resources.formationToSceneFromLocalKit,
-            OperationName = "FormationToSceneFromLocalKit",
-            Variables = new { directory, formation }
+            Query = Resources.designToSceneFromLocalKit,
+            OperationName = "DesignToSceneFromLocalKit",
+            Variables = new { directory, design }
         };
-        var response = Client.SendQueryAsync<FormationToSceneFromLocalKitResponseContainer>(query).Result;
+        var response = Client.SendQueryAsync<DesignToSceneFromLocalKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
-        return response.Data.FormationToSceneFromLocalKit;
+        return response.Data.DesignToSceneFromLocalKit;
     }
 }
 

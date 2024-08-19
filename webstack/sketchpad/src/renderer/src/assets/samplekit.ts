@@ -6389,7 +6389,7 @@ const sampleKit = {
       ]
     }
   ],
-  formations: [
+  designs: [
     {
       name: "Nakagin Capsule Tower",
       description: "The former Nakagin Capsule Tower from Tokyio.",

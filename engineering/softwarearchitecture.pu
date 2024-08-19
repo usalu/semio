@@ -70,20 +70,20 @@ class Side {
 
 }
 
-class Formation {
+class Design {
 }
 
 
 Kit *-- "0..*" Type
-Kit *-- "0..*" Formation
+Kit *-- "0..*" Design
 Representation "1..*" --* Type
 Type *-- "1..*" Port
 Type *-- "0..*" Quality
-Formation *-- "1..*" Piece
+Design *-- "1..*" Piece
 Piece *-- "0..1" Root
 Root *-- Plane
-Formation *-- "0..*" Connection
-Formation *-- "0..*" Quality
+Design *-- "0..*" Connection
+Design *-- "0..*" Quality
 Connection *-- Side : connected
 Connection *-- Side : connecting
 
@@ -100,7 +100,7 @@ Port <-- Side
 
 Artifact <|-- Kit
 Artifact <|-- Type
-Artifact <|-- Formation
+Artifact <|-- Design
 
 
 @enduml

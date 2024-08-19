@@ -1,6 +1,6 @@
-mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
-  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
-    formation {
+mutation AddDesignToLocalKit($directory: String!, $design: DesignInput!) {
+  addDesignToLocalKit(directory: $directory, designInput: $design) {
+    design {
       name
       description
       icon
@@ -13,55 +13,55 @@ mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!
           variant
         }
         root {
-            plane {
-              origin {
-                x
-                y
-                z
-              }
-              xAxis {
-                x
-                y
-                z
-              }
-              yAxis {
-                x
-                y
-                z
-              }
-            }
-          }
-          diagram {
-            point {
+          plane {
+            origin {
               x
               y
+              z
+            }
+            xAxis {
+              x
+              y
+              z
+            }
+            yAxis {
+              x
+              y
+              z
             }
           }
+        }
+        diagram {
+          point {
+            x
+            y
+          }
+        }
       }
       connections {
-          connected {
-            piece {
-              id
-              type {
-                port {
-                  id
-                }
+        connected {
+          piece {
+            id
+            type {
+              port {
+                id
               }
             }
           }
-          connecting {
-            piece {
-              id
-              type {
-                port {
-                  id
-                }
-              }
-            }
-          }
-          offset
-          rotation
         }
+        connecting {
+          piece {
+            id
+            type {
+              port {
+                id
+              }
+            }
+          }
+        }
+        offset
+        rotation
+      }
     }
     error {
       code

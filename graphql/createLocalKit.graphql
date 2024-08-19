@@ -41,7 +41,7 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
           definition
         }
       }
-      formations {
+      designs {
         name
         description
         icon

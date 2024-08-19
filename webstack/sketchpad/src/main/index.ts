@@ -141,7 +141,7 @@ app.whenReady().then(() => {
                             definition
                         }
                     }
-                    formations {
+                    designs {
                         name
                         description
                         icon
@@ -220,9 +220,9 @@ app.whenReady().then(() => {
   })
 
   const ADD_FORMATION_TO_LOCAL_KIT = gql`
-        mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
-            addFormationToLocalKit(directory: $directory, formationInput: $formation) {
-                formation {
+        mutation AddDesignToLocalKit($directory: String!, $design: DesignInput!) {
+            addDesignToLocalKit(directory: $directory, designInput: $design) {
+                design {
                     name
                     description
                     icon
@@ -292,15 +292,15 @@ app.whenReady().then(() => {
             }
         }
     `
-  ipcMain.handle('add-local-formation', async (event, directory, formation) => {
+  ipcMain.handle('add-local-design', async (event, directory, design) => {
     if (!directory) {
       return
     }
-    const { addFormationToLocalKit } = await client.request(ADD_FORMATION_TO_LOCAL_KIT, {
+    const { addDesignToLocalKit } = await client.request(ADD_FORMATION_TO_LOCAL_KIT, {
       directory,
-      formation
+      design
     })
-    return addFormationToLocalKit
+    return addDesignToLocalKit
   })
 
   ipcMain.handle('get-file-buffer', async (event, filePath, directory = undefined) => {

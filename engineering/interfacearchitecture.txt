@@ -40,7 +40,7 @@ kit : !Kit{
             definition : ?String
         ]
     ]
-    formations : +[
+    designs : +[
         name : !String
         description : ?String
         icon : ?String
