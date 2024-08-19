@@ -1,10 +1,7 @@
-query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
-  formationToSceneFromLocalKit(
-    directory: $directory
-    formationIdInput: $formation
-  ) {
+query DesignToSceneFromLocalKit($directory: String!, $design: DesignIdInput!) {
+  designToSceneFromLocalKit(directory: $directory, designIdInput: $design) {
     scene {
-      formation {
+      design {
         name
         variant
       }
@@ -44,7 +41,7 @@ query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdI
         }
       }
     }
-    error{
+    error {
       code
       message
     }

@@ -6,12 +6,6 @@
             "driver": "SQLite",
             "database": "../../examples/metabolism/.semio/kit.sqlite3",
             "name": "metabolism"
-        },
-        {
-            "previewLimit": 50,
-            "driver": "SQLite",
-            "name": "test",
-            "database": "../../examples/kit1/.semio/kit.sqlite3"
         }
     ],
     "editor.formatOnSave": true,
@@ -22,7 +16,12 @@
         "--attribute-naming-style=camelCase",
         "--class-naming-style=PascalCase" // Assuming you want classes in PascalCase
     ],
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    // "[json]": {
+    //     "editor.defaultFormatter": "esbenp.prettier-vscode"
+    // },
     "python.defaultInterpreterPath": ".venv/bin/python",
     "python.analysis.typeCheckingMode": "off",
     "python.testing.pytestEnabled": true,

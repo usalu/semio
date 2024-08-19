@@ -4,8 +4,8 @@ import {
     Point as TPoint,
     Vector as TVector,
     Plane as TPlane,
-    Formation,
-    FormationInput,
+    Design,
+    DesignInput,
     Piece as TPiece,
     PieceInput,
     Port,
@@ -39,7 +39,7 @@ export const TOLERANCE = 1e-5
 // export type Query = {
 //     __typename?: 'Query'
 //     loadLocalKit?: Maybe<LoadLocalKitResponse>
-//     formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>
+//     designToSceneFromLocalKit?: Maybe<DesignToSceneFromLocalKitResponse>
 // }
 
 
@@ -48,9 +48,9 @@ export const TOLERANCE = 1e-5
 // }
 
 
-// export type QueryFormationToSceneFromLocalKitArgs = {
+// export type QueryDesignToSceneFromLocalKitArgs = {
 //     directory: Scalars['String']['input']
-//     formationIdInput: FormationIdInput
+//     designIdInput: DesignIdInput
 // }
 
 // export type LoadLocalKitResponse = {
@@ -59,7 +59,7 @@ export const TOLERANCE = 1e-5
 //     error?: Maybe<LoadLocalKitError>
 // }
 
-// /** 🗃️ A kit is a collection of types and formations. */
+// /** 🗃️ A kit is a collection of types and designs. */
 // export type Kit = {
 //     __typename?: 'Kit'
 //     name: Scalars['String']['output']
@@ -70,7 +70,7 @@ export const TOLERANCE = 1e-5
 //     url: Scalars['String']['output']
 //     homepage: Scalars['String']['output']
 //     types: Array<Type>
-//     formations: Array<Formation>
+//     designs: Array<Design>
 // }
 
 // /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -120,19 +120,19 @@ export const TOLERANCE = 1e-5
 //     port?: Maybe<Port>
 // }
 
-// /** 🖇️ A connection between two pieces of a formation. */
+// /** 🖇️ A connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection'
 //     offset: Scalars['Float']['output']
 //     rotation: Scalars['Float']['output']
-//     formation?: Maybe<Formation>
+//     design?: Maybe<Design>
 //     connected: Side
 //     connecting: Side
 // }
 
-// /** 🏙️ A formation is a collection of pieces that are connected. */
-// export type Formation = {
-//     __typename?: 'Formation'
+// /** 🏙️ A design is a collection of pieces that are connected. */
+// export type Design = {
+//     __typename?: 'Design'
 //     name: Scalars['String']['output']
 //     description: Scalars['String']['output']
 //     icon: Scalars['String']['output']
@@ -146,11 +146,11 @@ export const TOLERANCE = 1e-5
 //     qualities: Array<Quality>
 // }
 
-// /** ⭕ A piece is a 3d-instance of a type in a formation. */
+// /** ⭕ A piece is a 3d-instance of a type in a design. */
 // export type Piece = {
 //     __typename?: 'Piece'
 //     type?: Maybe<Type>
-//     formation?: Maybe<Formation>
+//     design?: Maybe<Design>
 //     connectings: Array<Connection>
 //     connecteds: Array<Connection>
 //     id: Scalars['String']['output']
@@ -158,7 +158,7 @@ export const TOLERANCE = 1e-5
 //     diagram: PieceDiagram
 // }
 
-// /** 🌱 The root information of a piece. */
+// /** 🌱 The root indesign of a piece. */
 // export type PieceRoot = {
 //     __typename?: 'PieceRoot'
 //     plane: Plane
@@ -188,13 +188,13 @@ export const TOLERANCE = 1e-5
 //     z: Scalars['Float']['output']
 // }
 
-// /** ✏️ The diagram information of a piece. */
+// /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagram = {
 //     __typename?: 'PieceDiagram'
 //     point: ScreenPoint
 // }
 
-// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+// /** 📺 A 2d-point (xy) of integers in screen plane. */
 // export type ScreenPoint = {
 //     __typename?: 'ScreenPoint'
 //     x: Scalars['Int']['output']
@@ -209,7 +209,7 @@ export const TOLERANCE = 1e-5
 //     unit: Scalars['String']['output']
 //     definition: Scalars['String']['output']
 //     type?: Maybe<Type>
-//     formation?: Maybe<Formation>
+//     design?: Maybe<Design>
 // }
 
 // /** 🧱 A side of a piece in a connection. */
@@ -218,14 +218,14 @@ export const TOLERANCE = 1e-5
 //     piece: SidePiece
 // }
 
-// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// /** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 // export type SidePiece = {
 //     __typename?: 'SidePiece'
 //     id: Scalars['String']['output']
 //     type: SidePieceType
 // }
 
-// /** 🧩 The type information of a piece of a side. */
+// /** 🧩 The type indesign of a piece of a side. */
 // export type SidePieceType = {
 //     __typename?: 'SidePieceType'
 //     port?: Maybe<Port>
@@ -238,17 +238,17 @@ export const TOLERANCE = 1e-5
 //     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 // }
 
-// export type FormationToSceneFromLocalKitResponse = {
-//     __typename?: 'FormationToSceneFromLocalKitResponse'
+// export type DesignToSceneFromLocalKitResponse = {
+//     __typename?: 'DesignToSceneFromLocalKitResponse'
 //     scene?: Maybe<Scene>
-//     error?: Maybe<FormationToSceneFromLocalKitResponseError>
+//     error?: Maybe<DesignToSceneFromLocalKitResponseError>
 // }
 
 // /** 🌆 A scene is a collection of objects. */
 // export type Scene = {
 //     __typename?: 'Scene'
 //     objects: Array<Maybe<Object>>
-//     formation?: Maybe<Formation>
+//     design?: Maybe<Design>
 // }
 
 // /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
@@ -259,22 +259,22 @@ export const TOLERANCE = 1e-5
 //     parent?: Maybe<Object>
 // }
 
-// export type FormationToSceneFromLocalKitResponseError = {
-//     __typename?: 'FormationToSceneFromLocalKitResponseError'
-//     code: FormationToSceneFromLocalKitResponseErrorCode
+// export type DesignToSceneFromLocalKitResponseError = {
+//     __typename?: 'DesignToSceneFromLocalKitResponseError'
+//     code: DesignToSceneFromLocalKitResponseErrorCode
 //     message?: Maybe<Scalars['String']['output']>
 // }
 
-// export enum FormationToSceneFromLocalKitResponseErrorCode {
+// export enum DesignToSceneFromLocalKitResponseErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
-//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
-// /** 🏙️ A formation is identified by a name and optional variant. */
-// export type FormationIdInput = {
+// /** 🏙️ A design is identified by a name and optional variant. */
+// export type DesignIdInput = {
 //     name: Scalars['String']['input']
 //     variant?: InputMaybe<Scalars['String']['input']>
 // }
@@ -286,8 +286,8 @@ export const TOLERANCE = 1e-5
 //     deleteLocalKit?: Maybe<DeleteLocalKitMutation>
 //     addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>
 //     removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>
-//     addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>
-//     removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>
+//     addDesignToLocalKit?: Maybe<AddDesignToLocalKitMutation>
+//     removeDesignFromLocalKit?: Maybe<RemoveDesignFromLocalKitMutation>
 // }
 
 
@@ -320,15 +320,15 @@ export const TOLERANCE = 1e-5
 // }
 
 
-// export type MutationAddFormationToLocalKitArgs = {
+// export type MutationAddDesignToLocalKitArgs = {
 //     directory: Scalars['String']['input']
-//     formationInput: FormationInput
+//     designInput: DesignInput
 // }
 
 
-// export type MutationRemoveFormationFromLocalKitArgs = {
+// export type MutationRemoveDesignFromLocalKitArgs = {
 //     directory: Scalars['String']['input']
-//     formationId: FormationIdInput
+//     designId: DesignIdInput
 // }
 
 // export type CreateLocalKitMutation = {
@@ -351,7 +351,7 @@ export const TOLERANCE = 1e-5
 //     KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
 // }
 
-// /** 🗃️ A kit is a collection of types and formations. */
+// /** 🗃️ A kit is a collection of types and designs. */
 // export type KitInput = {
 //     name: Scalars['String']['input']
 //     description?: InputMaybe<Scalars['String']['input']>
@@ -359,7 +359,7 @@ export const TOLERANCE = 1e-5
 //     url?: InputMaybe<Scalars['String']['input']>
 //     homepage?: InputMaybe<Scalars['String']['input']>
 //     types?: InputMaybe<Array<TypeInput>>
-//     formations?: InputMaybe<Array<FormationInput>>
+//     designs?: InputMaybe<Array<DesignInput>>
 // }
 
 // /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -417,8 +417,8 @@ export const TOLERANCE = 1e-5
 //     definition?: InputMaybe<Scalars['String']['input']>
 // }
 
-// /** 🏙️ A formation is a collection of pieces that are connected. */
-// export type FormationInput = {
+// /** 🏙️ A design is a collection of pieces that are connected. */
+// export type DesignInput = {
 //     name: Scalars['String']['input']
 //     description?: InputMaybe<Scalars['String']['input']>
 //     icon?: InputMaybe<Scalars['String']['input']>
@@ -429,7 +429,7 @@ export const TOLERANCE = 1e-5
 //     qualities?: InputMaybe<Array<QualityInput>>
 // }
 
-// /** ⭕ A piece is a 3d-instance of a type in a formation. */
+// /** ⭕ A piece is a 3d-instance of a type in a design. */
 // export type PieceInput = {
 //     id: Scalars['String']['input']
 //     type: TypeIdInput
@@ -443,7 +443,7 @@ export const TOLERANCE = 1e-5
 //     variant?: InputMaybe<Scalars['String']['input']>
 // }
 
-// /** 🌱 The root information of a piece. */
+// /** 🌱 The root indesign of a piece. */
 // export type PieceRootInput = {
 //     plane: PlaneInput
 // }
@@ -455,18 +455,18 @@ export const TOLERANCE = 1e-5
 //     yAxis: VectorInput
 // }
 
-// /** ✏️ The diagram information of a piece. */
+// /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagramInput = {
 //     point: ScreenPointInput
 // }
 
-// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+// /** 📺 A 2d-point (xy) of integers in screen plane. */
 // export type ScreenPointInput = {
 //     x?: InputMaybe<Scalars['Int']['input']>
 //     y?: InputMaybe<Scalars['Int']['input']>
 // }
 
-// /** 🖇️ A connection between two pieces of a formation. */
+// /** 🖇️ A connection between two pieces of a design. */
 // export type ConnectionInput = {
 //     connecting: SideInput
 //     connected: SideInput
@@ -479,13 +479,13 @@ export const TOLERANCE = 1e-5
 //     piece: SidePieceInput
 // }
 
-// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// /** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 // export type SidePieceInput = {
 //     id: Scalars['String']['input']
 //     type?: InputMaybe<SidePieceTypeInput>
 // }
 
-// /** 🧩 The type information of a piece of a side. */
+// /** 🧩 The type indesign of a piece of a side. */
 // export type SidePieceTypeInput = {
 //     port?: InputMaybe<PortIdInput>
 // }
@@ -572,49 +572,49 @@ export const TOLERANCE = 1e-5
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
 //     TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
-//     FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+//     DesignDependsOnType = 'DESIGN_DEPENDS_ON_TYPE'
 // }
 
-// export type AddFormationToLocalKitMutation = {
-//     __typename?: 'AddFormationToLocalKitMutation'
-//     formation?: Maybe<Formation>
-//     error?: Maybe<AddFormationToLocalKitError>
+// export type AddDesignToLocalKitMutation = {
+//     __typename?: 'AddDesignToLocalKitMutation'
+//     design?: Maybe<Design>
+//     error?: Maybe<AddDesignToLocalKitError>
 // }
 
-// export type AddFormationToLocalKitError = {
-//     __typename?: 'AddFormationToLocalKitError'
-//     code: AddFormationToLocalKitErrorCode
+// export type AddDesignToLocalKitError = {
+//     __typename?: 'AddDesignToLocalKitError'
+//     code: AddDesignToLocalKitErrorCode
 //     message?: Maybe<Scalars['String']['output']>
 // }
 
-// export enum AddFormationToLocalKitErrorCode {
+// export enum AddDesignToLocalKitErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+//     DesignInputIsInvalid = 'DESIGN_INPUT_IS_INVALID'
 // }
 
-// export type RemoveFormationFromLocalKitMutation = {
-//     __typename?: 'RemoveFormationFromLocalKitMutation'
-//     error?: Maybe<RemoveFormationFromLocalKitError>
+// export type RemoveDesignFromLocalKitMutation = {
+//     __typename?: 'RemoveDesignFromLocalKitMutation'
+//     error?: Maybe<RemoveDesignFromLocalKitError>
 // }
 
-// export type RemoveFormationFromLocalKitError = {
-//     __typename?: 'RemoveFormationFromLocalKitError'
-//     code: RemoveFormationFromLocalKitErrorCode
+// export type RemoveDesignFromLocalKitError = {
+//     __typename?: 'RemoveDesignFromLocalKitError'
+//     code: RemoveDesignFromLocalKitErrorCode
 //     message?: Maybe<Scalars['String']['output']>
 // }
 
-// export enum RemoveFormationFromLocalKitErrorCode {
+// export enum RemoveDesignFromLocalKitErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
-export enum CoordinateSystem {
+export enum Plane {
     SEMIO = 'SEMIO',
     THREE = 'THREE',
 }
@@ -1022,15 +1022,15 @@ class Hierarchy {
 export default Hierarchy;
 
 // Reference in Python:
-// def formationToHierarchies(formation: Formation) -> List[Hierarchy]:
-//     nodes = list((piece.localId, {"piece": piece}) for piece in formation.pieces)
+// def designToHierarchies(design: Design) -> List[Hierarchy]:
+//     nodes = list((piece.localId, {"piece": piece}) for piece in design.pieces)
 //     edges = (
 //         (
 //             connection.connecting.piece.id,
 //             connection.connected.piece.id,
 //             {"connection": connection},
 //         )
-//         for connection in formation.connections
+//         for connection in design.connections
 //     )
 //     graph = Graph()
 //     graph.add_nodes_from(nodes)
@@ -1076,17 +1076,17 @@ export default Hierarchy;
 //             component.nodes[parent]["hierarchy"].children.append(hierarchy)
 //         hierarchies.append(rootHierarchy)
 //     return hierarchies
-export const formationToHierarchies = (
-    formation: Formation | FormationInput,
+export const designToHierarchies = (
+    design: Design | DesignInput,
     ports: Map<string, Map<string, Map<string, Port>>> // typeName -> typeVariant -> portId -> port
 ): Hierarchy[] => {
-    if (formation.pieces.length === 0) return []
+    if (design.pieces.length === 0) return []
     const cy = cytoscape({
         elements: {
-            nodes: formation.pieces.map((piece) => ({
+            nodes: design.pieces.map((piece) => ({
                 data: { id: piece.id, label: piece.id }
             })),
-            edges: formation.connections.map((connection) => ({
+            edges: design.connections.map((connection) => ({
                 data: {
                     id: `${connection.connecting.piece.id}-${connection.connected.piece.id}`,
                     source: connection.connected.piece.id,
@@ -1100,9 +1100,9 @@ export const formationToHierarchies = (
     components.forEach((component) => {
         const roots = component
             .nodes()
-            .filter((node) => formation.pieces.find((p) => p.id === node.id()).root)
+            .filter((node) => design.pieces.find((p) => p.id === node.id()).root)
         const root = roots.length === 0 ? component.nodes()[0] : roots[0]
-        const rootPiece = formation.pieces.find((p) => p.id === root.id())
+        const rootPiece = design.pieces.find((p) => p.id === root.id())
         const rootHierarchy = new Hierarchy(rootPiece)
         hierarchies.push(rootHierarchy)
         const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
@@ -1114,14 +1114,14 @@ export const formationToHierarchies = (
                     if (depth === 0) return
                     const parentId = u.id()
                     const childId = v.id()
-                    const connection = formation.connections.find(
+                    const connection = design.connections.find(
                         (connection) =>
                             connection.connected.piece.id === e.source().id() &&
                             connection.connecting.piece.id === e.target().id()
                     )
                     const connectedIsParent = connection.connected.piece.id === parentId
-                    const parentPiece = formation.pieces.find((p) => p.id === parentId)
-                    const childPiece = formation.pieces.find((p) => p.id === childId)
+                    const parentPiece = design.pieces.find((p) => p.id === parentId)
+                    const childPiece = design.pieces.find((p) => p.id === childId)
                     const parentPortId = connectedIsParent
                         ? connection.connected.piece?.type.port?.id
                         : connection.connecting.piece?.type.port?.id

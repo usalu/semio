@@ -42,7 +42,7 @@ query LoadLocalKit($directory: String!) {
           definition
         }
       }
-      formations {
+      designs {
         name
         description
         icon

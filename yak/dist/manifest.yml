@@ -1,10 +1,10 @@
 ---
 name: semio
-version: 2.2.1
+version: 2.3.0
 authors:
   - Ueli Saluz
 description: >
-  Typological, non-linear and ai-boosted designing.
+  ✏️Typological, non-linear and ai-boosted designing.
 url: https://github.com/usalu/semio
 icon: icon.png
 keywords:

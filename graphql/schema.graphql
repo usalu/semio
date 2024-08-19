@@ -1,6 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
-  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+  designToSceneFromLocalKit(directory: String!, designIdInput: DesignIdInput!): DesignToSceneFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -8,7 +8,7 @@ type LoadLocalKitResponse {
   error: LoadLocalKitError
 }
 
-"""🗃️ A kit is a collection of types and formations."""
+"""🗃️ A kit is a collection of types and designs."""
 type Kit {
   name: String!
   description: String!
@@ -18,7 +18,7 @@ type Kit {
   url: String!
   homepage: String!
   types: [Type!]!
-  formations: [Formation!]!
+  designs: [Design!]!
 }
 
 """
@@ -78,17 +78,17 @@ type Locator {
   port: Port
 }
 
-"""🖇️ A connection between two pieces of a formation."""
+"""🖇️ A connection between two pieces of a design."""
 type Connection {
   offset: Float!
   rotation: Float!
-  formation: Formation
+  design: Design
   connected: Side!
   connecting: Side!
 }
 
-"""🏙️ A formation is a collection of pieces that are connected."""
-type Formation {
+"""🏙️ A design is a collection of pieces that are connected."""
+type Design {
   name: String!
   description: String!
   icon: String!
@@ -102,10 +102,10 @@ type Formation {
   qualities: [Quality!]!
 }
 
-"""⭕ A piece is a 3d-instance of a type in a formation."""
+"""⭕ A piece is a 3d-instance of a type in a design."""
 type Piece {
   type: Type
-  formation: Formation
+  design: Design
   connectings: [Connection!]!
   connecteds: [Connection!]!
   id: String!
@@ -113,7 +113,7 @@ type Piece {
   diagram: PieceDiagram!
 }
 
-"""🌱 The root information of a piece."""
+"""🌱 A root piece in a design."""
 type PieceRoot {
   plane: Plane!
 }
@@ -139,12 +139,12 @@ type Vector {
   z: Float!
 }
 
-"""✏️ The diagram information of a piece."""
+"""✏️ The diagram indesign of a piece."""
 type PieceDiagram {
   point: ScreenPoint!
 }
 
-"""📺 A 2d-point (xy) of integers in screen coordinate system."""
+"""📺 A 2d-point (xy) of integers in screen plane."""
 type ScreenPoint {
   x: Int!
   y: Int!
@@ -157,7 +157,7 @@ type Quality {
   unit: String!
   definition: String!
   type: Type
-  formation: Formation
+  design: Design
 }
 
 """🧱 A side of a piece in a connection."""
@@ -166,14 +166,14 @@ type Side {
 }
 
 """
-⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
 """
 type SidePiece {
   id: String!
   type: SidePieceType!
 }
 
-"""🧩 The type information of a piece of a side."""
+"""🧩 The type indesign of a piece of a side."""
 type SidePieceType {
   port: Port
 }
@@ -185,15 +185,15 @@ enum LoadLocalKitError {
   NO_PERMISSION_TO_READ_KIT
 }
 
-type FormationToSceneFromLocalKitResponse {
+type DesignToSceneFromLocalKitResponse {
   scene: Scene
-  error: FormationToSceneFromLocalKitResponseError
+  error: DesignToSceneFromLocalKitResponseError
 }
 
 """🌆 A scene is a collection of objects."""
 type Scene {
   objects: [Object]!
-  formation: Formation
+  design: Design
 }
 
 """
@@ -205,21 +205,21 @@ type Object {
   parent: Object
 }
 
-type FormationToSceneFromLocalKitResponseError {
-  code: FormationToSceneFromLocalKitResponseErrorCode!
+type DesignToSceneFromLocalKitResponseError {
+  code: DesignToSceneFromLocalKitResponseErrorCode!
   message: String
 }
 
-enum FormationToSceneFromLocalKitResponseErrorCode {
+enum DesignToSceneFromLocalKitResponseErrorCode {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_READ_KIT
-  FORMATION_DOES_NOT_EXIST
+  DESIGN_DOES_NOT_EXIST
 }
 
-"""🏙️ A formation is identified by a name and optional variant."""
-input FormationIdInput {
+"""🏙️ A design is identified by a name and optional variant."""
+input DesignIdInput {
   name: String!
   variant: String = ""
 }
@@ -230,8 +230,8 @@ type Mutation {
   deleteLocalKit(directory: String!): DeleteLocalKitMutation
   addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
   removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
-  addFormationToLocalKit(directory: String!, formationInput: FormationInput!): AddFormationToLocalKitMutation
-  removeFormationFromLocalKit(directory: String!, formationId: FormationIdInput!): RemoveFormationFromLocalKitMutation
+  addDesignToLocalKit(designInput: DesignInput!, directory: String!): AddDesignToLocalKitMutation
+  removeDesignFromLocalKit(designId: DesignIdInput!, directory: String!): RemoveDesignFromLocalKitMutation
 }
 
 type CreateLocalKitMutation {
@@ -252,7 +252,7 @@ enum CreateLocalKitErrorCode {
   KIT_INPUT_IS_INVALID
 }
 
-"""🗃️ A kit is a collection of types and formations."""
+"""🗃️ A kit is a collection of types and designs."""
 input KitInput {
   name: String!
   description: String
@@ -260,7 +260,7 @@ input KitInput {
   url: String
   homepage: String
   types: [TypeInput!]
-  formations: [FormationInput!]
+  designs: [DesignInput!]
 }
 
 """
@@ -325,8 +325,8 @@ input QualityInput {
   definition: String
 }
 
-"""🏙️ A formation is a collection of pieces that are connected."""
-input FormationInput {
+"""🏙️ A design is a collection of pieces that are connected."""
+input DesignInput {
   name: String!
   description: String
   icon: String
@@ -337,7 +337,7 @@ input FormationInput {
   qualities: [QualityInput!]
 }
 
-"""⭕ A piece is a 3d-instance of a type in a formation."""
+"""⭕ A piece is a 3d-instance of a type in a design."""
 input PieceInput {
   id: String!
   type: TypeIdInput!
@@ -351,7 +351,7 @@ input TypeIdInput {
   variant: String = ""
 }
 
-"""🌱 The root information of a piece."""
+"""🌱 The root of a piece is a plane."""
 input PieceRootInput {
   plane: PlaneInput!
 }
@@ -363,18 +363,18 @@ input PlaneInput {
   yAxis: VectorInput!
 }
 
-"""✏️ The diagram information of a piece."""
+"""✏️ The diagram indesign of a piece."""
 input PieceDiagramInput {
   point: ScreenPointInput!
 }
 
-"""📺 A 2d-point (xy) of integers in screen coordinate system."""
+"""📺 A 2d-point (xy) of integers in screen plane."""
 input ScreenPointInput {
   x: Int = 0
   y: Int = 0
 }
 
-"""🖇️ A connection between two pieces of a formation."""
+"""🖇️ A connection between two pieces of a design."""
 input ConnectionInput {
   connecting: SideInput!
   connected: SideInput!
@@ -388,14 +388,14 @@ input SideInput {
 }
 
 """
-⭕ The piece information of a side. A piece is identified by an id (emtpy=default)).
+⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
 """
 input SidePieceInput {
   id: String!
   type: SidePieceTypeInput = null
 }
 
-"""🧩 The type information of a piece of a side."""
+"""🧩 The type indesign of a piece of a side."""
 input SidePieceTypeInput {
   port: PortIdInput = null
 }
@@ -475,40 +475,40 @@ enum RemoveTypeFromLocalKitErrorCode {
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
   TYPE_DOES_NOT_EXIST
-  FORMATION_DEPENDS_ON_TYPE
+  DESIGN_DEPENDS_ON_TYPE
 }
 
-type AddFormationToLocalKitMutation {
-  formation: Formation
-  error: AddFormationToLocalKitError
+type AddDesignToLocalKitMutation {
+  design: Design
+  error: AddDesignToLocalKitError
 }
 
-type AddFormationToLocalKitError {
-  code: AddFormationToLocalKitErrorCode!
+type AddDesignToLocalKitError {
+  code: AddDesignToLocalKitErrorCode!
   message: String
 }
 
-enum AddFormationToLocalKitErrorCode {
+enum AddDesignToLocalKitErrorCode {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
-  FORMATION_INPUT_IS_INVALID
+  DESIGN_INPUT_IS_INVALID
 }
 
-type RemoveFormationFromLocalKitMutation {
-  error: RemoveFormationFromLocalKitError
+type RemoveDesignFromLocalKitMutation {
+  error: RemoveDesignFromLocalKitError
 }
 
-type RemoveFormationFromLocalKitError {
-  code: RemoveFormationFromLocalKitErrorCode!
+type RemoveDesignFromLocalKitError {
+  code: RemoveDesignFromLocalKitErrorCode!
   message: String
 }
 
-enum RemoveFormationFromLocalKitErrorCode {
+enum RemoveDesignFromLocalKitErrorCode {
   DIRECTORY_DOES_NOT_EXIST
   DIRECTORY_IS_NOT_A_DIRECTORY
   DIRECTORY_HAS_NO_KIT
   NO_PERMISSION_TO_MODIFY_KIT
-  FORMATION_DOES_NOT_EXIST
+  DESIGN_DOES_NOT_EXIST
 }

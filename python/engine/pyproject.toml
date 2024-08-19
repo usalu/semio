@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "engine"
-version = "2.0.1"
+version = "3.0.0"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 maintainers = ["Ueli Saluz <semio-community@posteo.org>"]

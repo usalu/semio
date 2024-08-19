@@ -26,7 +26,7 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   loadLocalKit?: Maybe<LoadLocalKitResponse>;
-  formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
+  designToSceneFromLocalKit?: Maybe<DesignToSceneFromLocalKitResponse>;
 };
 
 
@@ -35,9 +35,9 @@ export type QueryLoadLocalKitArgs = {
 };
 
 
-export type QueryFormationToSceneFromLocalKitArgs = {
+export type QueryDesignToSceneFromLocalKitArgs = {
   directory: Scalars['String']['input'];
-  formationIdInput: FormationIdInput;
+  designIdInput: DesignIdInput;
 };
 
 export type LoadLocalKitResponse = {
@@ -46,7 +46,7 @@ export type LoadLocalKitResponse = {
   error?: Maybe<LoadLocalKitError>;
 };
 
-/** 🗃️ A kit is a collection of types and formations. */
+/** 🗃️ A kit is a collection of types and designs. */
 export type Kit = {
   __typename?: 'Kit';
   name: Scalars['String']['output'];
@@ -57,7 +57,7 @@ export type Kit = {
   url: Scalars['String']['output'];
   homepage: Scalars['String']['output'];
   types: Array<Type>;
-  formations: Array<Formation>;
+  designs: Array<Design>;
 };
 
 /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -108,19 +108,19 @@ export type Locator = {
   port?: Maybe<Port>;
 };
 
-/** 🖇️ A connection between two pieces of a formation. */
+/** 🖇️ A connection between two pieces of a design. */
 export type Connection = {
   __typename?: 'Connection';
   offset: Scalars['Float']['output'];
   rotation: Scalars['Float']['output'];
-  formation?: Maybe<Formation>;
+  design?: Maybe<Design>;
   connected: Side;
   connecting: Side;
 };
 
-/** 🏙️ A formation is a collection of pieces that are connected. */
-export type Formation = {
-  __typename?: 'Formation';
+/** 🏙️ A design is a collection of pieces that are connected. */
+export type Design = {
+  __typename?: 'Design';
   name: Scalars['String']['output'];
   description: Scalars['String']['output'];
   icon: Scalars['String']['output'];
@@ -134,11 +134,11 @@ export type Formation = {
   qualities: Array<Quality>;
 };
 
-/** ⭕ A piece is a 3d-instance of a type in a formation. */
+/** ⭕ A piece is a 3d-instance of a type in a design. */
 export type Piece = {
   __typename?: 'Piece';
   type?: Maybe<Type>;
-  formation?: Maybe<Formation>;
+  design?: Maybe<Design>;
   connectings: Array<Connection>;
   connecteds: Array<Connection>;
   id: Scalars['String']['output'];
@@ -146,7 +146,7 @@ export type Piece = {
   diagram: PieceDiagram;
 };
 
-/** 🌱 The root information of a piece. */
+/** 🌱 The root indesign of a piece. */
 export type PieceRoot = {
   __typename?: 'PieceRoot';
   plane: Plane;
@@ -176,13 +176,13 @@ export type Vector = {
   z: Scalars['Float']['output'];
 };
 
-/** ✏️ The diagram information of a piece. */
+/** ✏️ The diagram indesign of a piece. */
 export type PieceDiagram = {
   __typename?: 'PieceDiagram';
   point: ScreenPoint;
 };
 
-/** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+/** 📺 A 2d-point (xy) of integers in screen plane. */
 export type ScreenPoint = {
   __typename?: 'ScreenPoint';
   x: Scalars['Int']['output'];
@@ -197,7 +197,7 @@ export type Quality = {
   unit: Scalars['String']['output'];
   definition: Scalars['String']['output'];
   type?: Maybe<Type>;
-  formation?: Maybe<Formation>;
+  design?: Maybe<Design>;
 };
 
 /** 🧱 A side of a piece in a connection. */
@@ -206,14 +206,14 @@ export type Side = {
   piece: SidePiece;
 };
 
-/** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+/** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 export type SidePiece = {
   __typename?: 'SidePiece';
   id: Scalars['String']['output'];
   type: SidePieceType;
 };
 
-/** 🧩 The type information of a piece of a side. */
+/** 🧩 The type indesign of a piece of a side. */
 export type SidePieceType = {
   __typename?: 'SidePieceType';
   port?: Maybe<Port>;
@@ -226,17 +226,17 @@ export enum LoadLocalKitError {
   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 }
 
-export type FormationToSceneFromLocalKitResponse = {
-  __typename?: 'FormationToSceneFromLocalKitResponse';
+export type DesignToSceneFromLocalKitResponse = {
+  __typename?: 'DesignToSceneFromLocalKitResponse';
   scene?: Maybe<Scene>;
-  error?: Maybe<FormationToSceneFromLocalKitResponseError>;
+  error?: Maybe<DesignToSceneFromLocalKitResponseError>;
 };
 
 /** 🌆 A scene is a collection of objects. */
 export type Scene = {
   __typename?: 'Scene';
   objects: Array<Maybe<Object>>;
-  formation?: Maybe<Formation>;
+  design?: Maybe<Design>;
 };
 
 /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
@@ -247,22 +247,22 @@ export type Object = {
   parent?: Maybe<Object>;
 };
 
-export type FormationToSceneFromLocalKitResponseError = {
-  __typename?: 'FormationToSceneFromLocalKitResponseError';
-  code: FormationToSceneFromLocalKitResponseErrorCode;
+export type DesignToSceneFromLocalKitResponseError = {
+  __typename?: 'DesignToSceneFromLocalKitResponseError';
+  code: DesignToSceneFromLocalKitResponseErrorCode;
   message?: Maybe<Scalars['String']['output']>;
 };
 
-export enum FormationToSceneFromLocalKitResponseErrorCode {
+export enum DesignToSceneFromLocalKitResponseErrorCode {
   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
   NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
-  FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+  DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 }
 
-/** 🏙️ A formation is identified by a name and optional variant. */
-export type FormationIdInput = {
+/** 🏙️ A design is identified by a name and optional variant. */
+export type DesignIdInput = {
   name: Scalars['String']['input'];
   variant?: InputMaybe<Scalars['String']['input']>;
 };
@@ -274,8 +274,8 @@ export type Mutation = {
   deleteLocalKit?: Maybe<DeleteLocalKitMutation>;
   addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>;
   removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>;
-  addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>;
-  removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>;
+  addDesignToLocalKit?: Maybe<AddDesignToLocalKitMutation>;
+  removeDesignFromLocalKit?: Maybe<RemoveDesignFromLocalKitMutation>;
 };
 
 
@@ -308,15 +308,15 @@ export type MutationRemoveTypeFromLocalKitArgs = {
 };
 
 
-export type MutationAddFormationToLocalKitArgs = {
+export type MutationAddDesignToLocalKitArgs = {
   directory: Scalars['String']['input'];
-  formationInput: FormationInput;
+  designInput: DesignInput;
 };
 
 
-export type MutationRemoveFormationFromLocalKitArgs = {
+export type MutationRemoveDesignFromLocalKitArgs = {
   directory: Scalars['String']['input'];
-  formationId: FormationIdInput;
+  designId: DesignIdInput;
 };
 
 export type CreateLocalKitMutation = {
@@ -339,7 +339,7 @@ export enum CreateLocalKitErrorCode {
   KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
 }
 
-/** 🗃️ A kit is a collection of types and formations. */
+/** 🗃️ A kit is a collection of types and designs. */
 export type KitInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
@@ -347,7 +347,7 @@ export type KitInput = {
   url?: InputMaybe<Scalars['String']['input']>;
   homepage?: InputMaybe<Scalars['String']['input']>;
   types?: InputMaybe<Array<TypeInput>>;
-  formations?: InputMaybe<Array<FormationInput>>;
+  designs?: InputMaybe<Array<DesignInput>>;
 };
 
 /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -406,8 +406,8 @@ export type QualityInput = {
   definition?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** 🏙️ A formation is a collection of pieces that are connected. */
-export type FormationInput = {
+/** 🏙️ A design is a collection of pieces that are connected. */
+export type DesignInput = {
   name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
@@ -418,7 +418,7 @@ export type FormationInput = {
   qualities?: InputMaybe<Array<QualityInput>>;
 };
 
-/** ⭕ A piece is a 3d-instance of a type in a formation. */
+/** ⭕ A piece is a 3d-instance of a type in a design. */
 export type PieceInput = {
   id: Scalars['String']['input'];
   type: TypeIdInput;
@@ -432,7 +432,7 @@ export type TypeIdInput = {
   variant?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** 🌱 The root information of a piece. */
+/** 🌱 The root indesign of a piece. */
 export type PieceRootInput = {
   plane: PlaneInput;
 };
@@ -444,18 +444,18 @@ export type PlaneInput = {
   yAxis: VectorInput;
 };
 
-/** ✏️ The diagram information of a piece. */
+/** ✏️ The diagram indesign of a piece. */
 export type PieceDiagramInput = {
   point: ScreenPointInput;
 };
 
-/** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+/** 📺 A 2d-point (xy) of integers in screen plane. */
 export type ScreenPointInput = {
   x?: InputMaybe<Scalars['Int']['input']>;
   y?: InputMaybe<Scalars['Int']['input']>;
 };
 
-/** 🖇️ A connection between two pieces of a formation. */
+/** 🖇️ A connection between two pieces of a design. */
 export type ConnectionInput = {
   connecting: SideInput;
   connected: SideInput;
@@ -468,13 +468,13 @@ export type SideInput = {
   piece: SidePieceInput;
 };
 
-/** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+/** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 export type SidePieceInput = {
   id: Scalars['String']['input'];
   type?: InputMaybe<SidePieceTypeInput>;
 };
 
-/** 🧩 The type information of a piece of a side. */
+/** 🧩 The type indesign of a piece of a side. */
 export type SidePieceTypeInput = {
   port?: InputMaybe<PortIdInput>;
 };
@@ -561,44 +561,44 @@ export enum RemoveTypeFromLocalKitErrorCode {
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
   TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
-  FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+  DesignDependsOnType = 'DESIGN_DEPENDS_ON_TYPE'
 }
 
-export type AddFormationToLocalKitMutation = {
-  __typename?: 'AddFormationToLocalKitMutation';
-  formation?: Maybe<Formation>;
-  error?: Maybe<AddFormationToLocalKitError>;
+export type AddDesignToLocalKitMutation = {
+  __typename?: 'AddDesignToLocalKitMutation';
+  design?: Maybe<Design>;
+  error?: Maybe<AddDesignToLocalKitError>;
 };
 
-export type AddFormationToLocalKitError = {
-  __typename?: 'AddFormationToLocalKitError';
-  code: AddFormationToLocalKitErrorCode;
+export type AddDesignToLocalKitError = {
+  __typename?: 'AddDesignToLocalKitError';
+  code: AddDesignToLocalKitErrorCode;
   message?: Maybe<Scalars['String']['output']>;
 };
 
-export enum AddFormationToLocalKitErrorCode {
+export enum AddDesignToLocalKitErrorCode {
   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-  FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+  DesignInputIsInvalid = 'DESIGN_INPUT_IS_INVALID'
 }
 
-export type RemoveFormationFromLocalKitMutation = {
-  __typename?: 'RemoveFormationFromLocalKitMutation';
-  error?: Maybe<RemoveFormationFromLocalKitError>;
+export type RemoveDesignFromLocalKitMutation = {
+  __typename?: 'RemoveDesignFromLocalKitMutation';
+  error?: Maybe<RemoveDesignFromLocalKitError>;
 };
 
-export type RemoveFormationFromLocalKitError = {
-  __typename?: 'RemoveFormationFromLocalKitError';
-  code: RemoveFormationFromLocalKitErrorCode;
+export type RemoveDesignFromLocalKitError = {
+  __typename?: 'RemoveDesignFromLocalKitError';
+  code: RemoveDesignFromLocalKitErrorCode;
   message?: Maybe<Scalars['String']['output']>;
 };
 
-export enum RemoveFormationFromLocalKitErrorCode {
+export enum RemoveDesignFromLocalKitErrorCode {
   DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
   DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
   DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
   NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-  FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+  DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 }

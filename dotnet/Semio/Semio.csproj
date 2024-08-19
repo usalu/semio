@@ -68,18 +68,19 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\addFormationToLocalKit.graphql" />
+    <None Include="Resources\addDesignToLocalKit.graphql" />
     <None Include="Resources\addTypeToLocalKit.graphql" />
     <None Include="Resources\adjectives.json" />
     <None Include="Resources\animals.json" />
     <None Include="Resources\createLocalKit.graphql" />
     <None Include="Resources\deleteLocalKit.graphql" />
-    <None Include="Resources\formationToSceneFromLocalKit.graphql" />
+    <None Include="Resources\designToSceneFromLocalKit.graphql" />
     <None Include="Resources\loadLocalKit.graphql" />
-    <None Include="Resources\removeFormationFromLocalKit.graphql" />
+    <None Include="Resources\removeDesignFromLocalKit.graphql" />
     <None Include="Resources\removeTypeFromLocalKit.graphql" />
     <None Include="Resources\schema.graphql" />
     <None Include="Resources\updateLocalKitMetadata.graphql" />

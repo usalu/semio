@@ -40,7 +40,8 @@ entity Type {
     *kitId : int <<FK>>
 }
 note right of Type
-    name and variant is unique.
+    name and variant
+    are unique together.
     variant="" means default.
 end note
 
@@ -54,7 +55,8 @@ entity Representation {
     *typeId : int <<FK>>
 }
 note right of Representation
-    url is unique.
+    mime, lod and tags
+    are unique together.
     lod="" means default.
 end note
 
@@ -81,7 +83,7 @@ entity Port {
 }
 note right of Port
     localId and typeId
-    is unique.
+    are unique together.
     localId="" means default.
 end note
 
@@ -94,10 +96,10 @@ entity Quality {
     *definition : string
     ..
     typeId : int <<FK>>
-    formationId : int <<FK>>
+    designId : int <<FK>>
 }
 note bottom of Quality
-    Either typeId or formationId
+    Either typeId or designId
     must be set.
     value="" means true.
     unit is optional
@@ -138,11 +140,11 @@ entity Piece {
     *diagramPointX : int
     *diagramPointY : int
     ..
-    *formationId : int <<FK>>
+    *designId : int <<FK>>
 }
 note right of Piece
-    localId and formationId
-    is unique.
+    localId and designId
+    are unique together.
     root plane can only be set
     when piece is root.
     Otherwise all values are null.
@@ -158,7 +160,7 @@ entity Connection {
     *offset : float
     *rotation : float
     ..
-    *formationId : int <<FK>>
+    *designId : int <<FK>>
 }
 note right of Connection
     offset is in normal 
@@ -171,7 +173,7 @@ note right of Connection
     (can be set to 0). 
 end note
 
-entity Formation {
+entity Design {
     *id : int <<PK,generated>>
     ..
     *variant : string
@@ -179,27 +181,28 @@ entity Formation {
     ..
     *kitId : int <<FK>>
 }
-note right of Formation
-    name and variant is unique.
+note right of Design
+    name and variant
+    are unique together.
     variant="" means default.
 end note
 
-Kit ||--o{ Formation
+Kit ||--o{ Design
 Kit ||--o{ Type 
 Tag }o--|| Representation
 Representation }|--|| Type
 Type ||--|{ Port
 Type ||--o{ Quality
-Formation ||--|{ Piece
-Formation ||--o{ Connection
-Formation ||--o{ Quality
+Design ||--|{ Piece
+Design ||--o{ Connection
+Design ||--o{ Quality
 Port ||--o{ Locator
 Type <-- Piece
 Piece <-- Connection
 Port <-- Connection
 
 Artifact <|-- Kit
-Artifact <|-- Formation
+Artifact <|-- Design
 Artifact <|-- Type
 
 @enduml

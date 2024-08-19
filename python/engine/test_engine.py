@@ -12,14 +12,14 @@ addTypeToLocalKit = open("../../graphql/addTypeToLocalKit.graphql", "r").read()
 removeTypeFromLocalKit = open(
     "../../graphql/removeTypeFromLocalKit.graphql", "r"
 ).read()
-addFormationToLocalKit = open(
-    "../../graphql/addFormationToLocalKit.graphql", "r"
+addDesignToLocalKit = open(
+    "../../graphql/addDesignToLocalKit.graphql", "r"
 ).read()
-removeFormationFromLocalKit = open(
-    "../../graphql/removeFormationFromLocalKit.graphql", "r"
+removeDesignFromLocalKit = open(
+    "../../graphql/removeDesignFromLocalKit.graphql", "r"
 ).read()
-formationToSceneFromLocalKit = open(
-    "../../graphql/formationToSceneFromLocalKit.graphql", "r"
+designToSceneFromLocalKit = open(
+    "../../graphql/designToSceneFromLocalKit.graphql", "r"
 ).read()
 
 
@@ -292,7 +292,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
         "icon": icon,
         "url": url,
         "types": types,
-        "formations": [nakaginCapsuleTower],
+        "designs": [nakaginCapsuleTower],
     }
     createResponse = client.execute(
         createLocalKit, variables={"directory": str(tmp_path), "kit": kit}
@@ -314,7 +314,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     removeShaftResponseExpected = {
         "data": {
             "removeTypeFromLocalKit": {
-                "error": {"code": "FORMATION_DEPENDS_ON_TYPE", "message": None},
+                "error": {"code": "DESIGN_DEPENDS_ON_TYPE", "message": None},
             }
         }
     }
@@ -339,7 +339,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
 
 
 @mark.skip
-def test_integration_graphql_local_kit_formationToScene(tmp_path):
+def test_integration_graphql_local_kit_designToScene(tmp_path):
     #   ┌──────────┐ ┌──────────┐   │   xxxxxxxxxxxx xxxxxxxxxxxx
     #   │          │ │          │   │   x          x x          x
     # ┌─▼─┐        │ │        ┌─▼─┐ │ ┌───┐        x x        ┌───┐
@@ -396,8 +396,8 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
         "qualities": None,
     }
 
-    formation1 = {
-        "name": "formation1",
+    design1 = {
+        "name": "design1",
         "description": None,
         "icon": None,
         "pieces": [
@@ -595,8 +595,8 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
         "qualities": None,
     }
 
-    formation1Id = {
-        "name": "formation1",
+    design1Id = {
+        "name": "design1",
     }
     scene1 = {
         "objects": [
@@ -734,7 +734,7 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
     kit = {
         "name": "kit1",
         "types": [type1],
-        "formations": [formation1],
+        "designs": [design1],
     }
     createLocalKitResponse = client.execute(
         createLocalKit,
@@ -744,24 +744,24 @@ def test_integration_graphql_local_kit_formationToScene(tmp_path):
         },
     )
     assert not createLocalKitResponse.get("errors"), f"Errors: {createLocalKitResponse}"
-    formation1ToSceneResponse = client.execute(
-        formationToSceneFromLocalKit,
-        variables={"directory": str(tmp_path), "formation": formation1Id},
+    design1ToSceneResponse = client.execute(
+        designToSceneFromLocalKit,
+        variables={"directory": str(tmp_path), "design": design1Id},
     )
-    formation1ToSceneResponseExpected = {
+    design1ToSceneResponseExpected = {
         "data": {
-            "formationToSceneFromLocalKit": {
+            "designToSceneFromLocalKit": {
                 "scene": scene1,
                 "error": None,
             }
         }
     }
-    formation1ToSceneResponseDiff = DeepDiff(
-        formation1ToSceneResponse,
-        formation1ToSceneResponseExpected,
+    design1ToSceneResponseDiff = DeepDiff(
+        design1ToSceneResponse,
+        design1ToSceneResponseExpected,
         math_epsilon=0.0001,
         ignore_numeric_type_changes=True,
     )
     assert (
-        not formation1ToSceneResponseDiff
-    ), f"Response difference: {formation1ToSceneResponseDiff}"
+        not design1ToSceneResponseDiff
+    ), f"Response difference: {design1ToSceneResponseDiff}"

@@ -680,9 +680,9 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class Formation : IDeepCloneable<Formation>, IEntity
+//public class Design : IDeepCloneable<Design>, IEntity
 //{
-//    public Formation()
+//    public Design()
 //    {
 //        Name = "";
 //        Description = "";
@@ -703,9 +703,9 @@ namespace Semio.Grasshopper;
 //    public List<Connection> Connections { get; set; }
 //    public List<Quality> Qualities { get; set; }
 
-//    public Formation DeepClone()
+//    public Design DeepClone()
 //    {
-//        return new Formation
+//        return new Design
 //        {
 //            Name = Name,
 //            Description = Description,
@@ -720,7 +720,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
+//        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -730,9 +730,9 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class FormationId : IDeepCloneable<FormationId>, IEntity
+//public class DesignId : IDeepCloneable<DesignId>, IEntity
 //{
-//    public FormationId()
+//    public DesignId()
 //    {
 //        Name = "";
 //        Variant = "";
@@ -741,9 +741,9 @@ namespace Semio.Grasshopper;
 //    public string Name { get; set; }
 //    public string Variant { get; set; }
 
-//    public FormationId DeepClone()
+//    public DesignId DeepClone()
 //    {
-//        return new FormationId
+//        return new DesignId
 //        {
 //            Name = Name,
 //            Variant = Variant
@@ -752,7 +752,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Formation(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
+//        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
 //    }
 
 //    public bool IsInvalid()
@@ -887,30 +887,30 @@ namespace Semio.Grasshopper;
 //{
 //    public Scene()
 //    {
-//        Formation = new FormationId();
+//        Design = new DesignId();
 //        Objects = new List<Object>();
 //    }
 
-//    public FormationId Formation { get; set; }
+//    public DesignId Design { get; set; }
 //    public List<Object> Objects { get; set; }
 
 //    public Scene DeepClone()
 //    {
 //        return new Scene
 //        {
-//            Formation = Formation.DeepClone(),
+//            Design = Design.DeepClone(),
 //            Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
 //        };
 //    }
 
 //    public override string ToString()
 //    {
-//        return $"Scene({Formation})";
+//        return $"Scene({Design})";
 //    }
 
 //    public bool IsInvalid()
 //    {
-//        return Formation.IsInvalid() || Objects.Any(o => o.IsInvalid());
+//        return Design.IsInvalid() || Objects.Any(o => o.IsInvalid());
 //    }
 //}
 
@@ -924,7 +924,7 @@ namespace Semio.Grasshopper;
 //        Url = "";
 //        Homepage = "";
 //        Types = new List<Type>();
-//        Formations = new List<Formation>();
+//        Designs = new List<Design>();
 //    }
 
 //    public string Name { get; set; }
@@ -933,7 +933,7 @@ namespace Semio.Grasshopper;
 //    public string Url { get; set; }
 //    public string Homepage { get; set; }
 //    public List<Type> Types { get; set; }
-//    public List<Formation> Formations { get; set; }
+//    public List<Design> Designs { get; set; }
 
 //    public Kit DeepClone()
 //    {
@@ -945,7 +945,7 @@ namespace Semio.Grasshopper;
 //            Url = Url,
 //            Homepage = Homepage,
 //            Types = new List<Type>(Types.Select(t => t.DeepClone())),
-//            Formations = new List<Formation>(Formations.Select(f => f.DeepClone()))
+//            Designs = new List<Design>(Designs.Select(f => f.DeepClone()))
 //        };
 //    }
 
@@ -956,7 +956,7 @@ namespace Semio.Grasshopper;
 
 //    public bool IsInvalid()
 //    {
-//        return Name == "" || Types.Any(t => t.IsInvalid()) || Formations.Any(f => f.IsInvalid());
+//        return Name == "" || Types.Any(t => t.IsInvalid()) || Designs.Any(f => f.IsInvalid());
 //    }
 //}
 
@@ -1642,25 +1642,25 @@ public class ConnectionGoo : GH_Goo<Connection>
 }
 
 // TODO: Implement cast with type
-public class FormationGoo : GH_Goo<Formation>
+public class DesignGoo : GH_Goo<Design>
 {
-    public FormationGoo()
+    public DesignGoo()
     {
-        Value = new Formation();
+        Value = new Design();
     }
 
-    public FormationGoo(Formation formation)
+    public DesignGoo(Design design)
     {
-        Value = formation;
+        Value = design;
     }
 
     public override bool IsValid { get; }
-    public override string TypeName => "Formation";
+    public override string TypeName => "Design";
     public override string TypeDescription { get; }
 
     public override IGH_Goo Duplicate()
     {
-        return new FormationGoo(Value.DeepClone());
+        return new DesignGoo(Value.DeepClone());
     }
 
     public override string ToString()
@@ -1670,13 +1670,13 @@ public class FormationGoo : GH_Goo<Formation>
 
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString("Formation", Value.Serialize());
+        writer.SetString("Design", Value.Serialize());
         return base.Write(writer);
     }
 
     public override bool Read(GH_IReader reader)
     {
-        Value = reader.GetString("Formation").Deserialize<Formation>();
+        Value = reader.GetString("Design").Deserialize<Design>();
         return base.Read(reader);
     }
 }
@@ -1961,22 +1961,22 @@ public class ConnectionParam : SemioPersistentParam<ConnectionGoo>
     }
 }
 
-public class FormationParam : SemioPersistentParam<FormationGoo>
+public class DesignParam : SemioPersistentParam<DesignGoo>
 {
-    public FormationParam() : base("Formation", "Fo", "", "semio", "Params")
+    public DesignParam() : base("Design", "Dn", "", "semio", "Params")
     {
     }
 
     public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
 
-    protected override Bitmap Icon => Resources.formation_24x24;
+    protected override Bitmap Icon => Resources.design_24x24;
 
-    protected override GH_GetterResult Prompt_Singular(ref FormationGoo value)
+    protected override GH_GetterResult Prompt_Singular(ref DesignGoo value)
     {
         throw new NotImplementedException();
     }
 
-    protected override GH_GetterResult Prompt_Plural(ref List<FormationGoo> values)
+    protected override GH_GetterResult Prompt_Plural(ref List<DesignGoo> values)
     {
         throw new NotImplementedException();
     }
@@ -1998,6 +1998,27 @@ public class SceneParam : SemioPersistentParam<SceneGoo>
     }
 
     protected override GH_GetterResult Prompt_Plural(ref List<SceneGoo> values)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class KitParam : SemioPersistentParam<KitGoo>
+{
+    public KitParam() : base("Kit", "Kt", "", "semio", "Params")
+    {
+    }
+
+    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
+
+    protected override Bitmap Icon => Resources.kit_24x24;
+
+    protected override GH_GetterResult Prompt_Singular(ref KitGoo value)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override GH_GetterResult Prompt_Plural(ref List<KitGoo> values)
     {
         throw new NotImplementedException();
     }
@@ -2038,7 +2059,7 @@ public class RepresentationComponent : SemioComponent
         pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Mime" , "Mm", "Mime type of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Mime", "Mm", "Mime type of the representation.", GH_ParamAccess.item);
         pManager[2].Optional = true;
         pManager.AddTextParameter("Level of Detail", "Ld?",
             "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \nThere can be only one default representation per type.",
@@ -2586,7 +2607,7 @@ public class PieceComponent : SemioComponent
         pManager.AddTextParameter("Type Variant", "TyVn?",
             "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Root Plane", "RtPl?",
+        pManager.AddPlaneParameter("Root Plane", "RtPn?",
             "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
             GH_ParamAccess.item);
         pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
@@ -2797,71 +2818,71 @@ public class ConnectionComponent : SemioComponent
     }
 }
 
-public class FormationComponent : SemioComponent
+public class DesignComponent : SemioComponent
 {
-    public FormationComponent()
-        : base("Model Formation", "~For",
-            "Construct, deconstruct or modify a formation.",
+    public DesignComponent()
+        : base("Model Design", "~Dsn",
+            "Construct, deconstruct or modify a design.",
             "semio", "Modelling")
     {
     }
 
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
 
-    protected override Bitmap Icon => Resources.formation_modify_24x24;
+    protected override Bitmap Icon => Resources.design_modify_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new FormationParam(), "Formation", "Fo?",
-            "Optional formation to deconstruct or modify. A formation is a collection of pieces that are connected.",
+        pManager.AddParameter(new DesignParam(), "Design", "Dn?",
+            "Optional design to deconstruct or modify. A design is a collection of pieces that are connected.",
             GH_ParamAccess.item);
         pManager[0].Optional = true;
-        pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "Name of the design.", GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the design.", GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the design.", GH_ParamAccess.item);
         pManager[3].Optional = true;
         pManager.AddTextParameter("Variant", "Vn?",
-            "Optional variant of the formation. No variant means the default variant. There can be only one default variant.",
+            "Optional variant of the design. No variant means the default variant. There can be only one default variant.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
-        pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the design.", GH_ParamAccess.item);
         pManager[5].Optional = true;
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the design.", GH_ParamAccess.list);
         pManager[6].Optional = true;
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the formation.",
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the design.",
             GH_ParamAccess.list);
         pManager[7].Optional = true;
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the formation. A quality is meta-data for decision making.",
+            "Optional qualities of the design. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
         pManager[8].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Constructed or modified formation. A formation is a collection of pieces that are connected.",
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Constructed or modified design. A design is a collection of pieces that are connected.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Na", "Name of the formation.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the formation.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "Name of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the design.", GH_ParamAccess.item);
         pManager.AddTextParameter("Variant", "Vn?",
-            "Optional variant of the formation. No variant means the default variant. There can be only one default variant.",
+            "Optional variant of the design. No variant means the default variant. There can be only one default variant.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Ut", "Unit of the formation.", GH_ParamAccess.item);
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the formation.", GH_ParamAccess.list);
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the formation.",
+        pManager.AddTextParameter("Unit", "Ut", "Unit of the design.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the design.",
             GH_ParamAccess.list);
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "Optional qualities of the formation. A quality is meta-data for decision making.",
+            "Optional qualities of the design. A quality is meta-data for decision making.",
             GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var formationGoo = new FormationGoo();
+        var designGoo = new DesignGoo();
         var name = "";
         var description = "";
         var icon = "";
@@ -2871,75 +2892,173 @@ public class FormationComponent : SemioComponent
         var connectionGoos = new List<ConnectionGoo>();
         var qualityGoos = new List<QualityGoo>();
 
-        if (DA.GetData(0, ref formationGoo))
-            formationGoo = formationGoo.Duplicate() as FormationGoo;
+        if (DA.GetData(0, ref designGoo))
+            designGoo = designGoo.Duplicate() as DesignGoo;
         if (DA.GetData(1, ref name))
-            formationGoo.Value.Name = name;
+            designGoo.Value.Name = name;
         if (DA.GetData(2, ref description))
-            formationGoo.Value.Description = description;
+            designGoo.Value.Description = description;
         if (DA.GetData(3, ref icon))
-            formationGoo.Value.Icon = icon;
+            designGoo.Value.Icon = icon;
         if (DA.GetData(4, ref variant))
-            formationGoo.Value.Variant = variant;
+            designGoo.Value.Variant = variant;
         if (!DA.GetData(5, ref unit))
             try
             {
                 var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                formationGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+                designGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
             }
             catch (Exception e)
             {
-                formationGoo.Value.Unit = "m";
+                designGoo.Value.Unit = "m";
             }
         else
-            formationGoo.Value.Unit = unit;
+            designGoo.Value.Unit = unit;
 
         if (DA.GetDataList(6, pieceGoos))
-            formationGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
+            designGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
         if (DA.GetDataList(7, connectionGoos))
-            formationGoo.Value.Connections = connectionGoos.Select(a => a.Value).ToList();
+            designGoo.Value.Connections = connectionGoos.Select(a => a.Value).ToList();
         if (DA.GetDataList(8, qualityGoos))
-            formationGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
+            designGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
         var isValidInput = true;
-        if (formationGoo.Value.Name == "")
+        if (designGoo.Value.Name == "")
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs a name.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs a name.");
             isValidInput = false;
         }
 
         // currently impossible
-        if (formationGoo.Value.Unit == "")
+        if (designGoo.Value.Unit == "")
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs a unit.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs a unit.");
             isValidInput = false;
         }
 
-        if (!Utility.IsValidUnit(formationGoo.Value.Unit))
+        if (!Utility.IsValidUnit(designGoo.Value.Unit))
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
             isValidInput = false;
         }
 
-        if (formationGoo.Value.Pieces.Count == 0)
+        if (designGoo.Value.Pieces.Count == 0)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A formation needs at least one piece.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs at least one piece.");
             isValidInput = false;
         }
 
         if (!isValidInput) return;
 
-        DA.SetData(0, formationGoo.Duplicate());
-        DA.SetData(1, formationGoo.Value.Name);
-        DA.SetData(2, formationGoo.Value.Description);
-        DA.SetData(3, formationGoo.Value.Icon);
-        DA.SetData(4, formationGoo.Value.Variant);
-        DA.SetData(5, formationGoo.Value.Unit);
-        DA.SetDataList(6, formationGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
-        DA.SetDataList(7, formationGoo.Value.Connections.Select(a => new ConnectionGoo(a.DeepClone())));
-        DA.SetDataList(8, formationGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+        DA.SetData(0, designGoo.Duplicate());
+        DA.SetData(1, designGoo.Value.Name);
+        DA.SetData(2, designGoo.Value.Description);
+        DA.SetData(3, designGoo.Value.Icon);
+        DA.SetData(4, designGoo.Value.Variant);
+        DA.SetData(5, designGoo.Value.Unit);
+        DA.SetDataList(6, designGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
+        DA.SetDataList(7, designGoo.Value.Connections.Select(a => new ConnectionGoo(a.DeepClone())));
+        DA.SetDataList(8, designGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
     }
 }
+
+public class KitComponent : SemioComponent
+{
+    public KitComponent()
+        : base("Model Kit", "~Kit",
+            "Construct, deconstruct or modify a kit.",
+            "semio", "Modelling")
+    {
+    }
+
+    public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+
+    protected override Bitmap Icon => Resources.kit_modify_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Ki?",
+            "Optional kit to deconstruct or modify.",
+            GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
+        pManager[3].Optional = true;
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
+        pManager[4].Optional = true;
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
+        pManager[5].Optional = true;
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Types of the kit.", GH_ParamAccess.list);
+        pManager[6].Optional = true;
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Designs of the kit.", GH_ParamAccess.list);
+        pManager[7].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Ki",
+            "Constructed or modified kit.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Optional designs of the kit.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var kitGoo = new KitGoo();
+        var name = "";
+        var description = "";
+        var icon = "";
+        var url = "";
+        var homepage = "";
+        var typeGoos = new List<TypeGoo>();
+        var designGoos = new List<DesignGoo>();
+
+        if (DA.GetData(0, ref kitGoo))
+            kitGoo = kitGoo.Duplicate() as KitGoo;
+        if (DA.GetData(1, ref name))
+            kitGoo.Value.Name = name;
+        if (DA.GetData(2, ref description))
+            kitGoo.Value.Description = description;
+        if (DA.GetData(3, ref icon))
+            kitGoo.Value.Icon = icon;
+        if (DA.GetData(4, ref url))
+            kitGoo.Value.Url = url;
+        if (DA.GetData(5, ref homepage))
+            kitGoo.Value.Homepage = homepage;
+        if (DA.GetDataList(6, typeGoos))
+            kitGoo.Value.Types = typeGoos.Select(t => t.Value).ToList();
+        if (DA.GetDataList(7, designGoos))
+            kitGoo.Value.Designs = designGoos.Select(d => d.Value).ToList();
+
+        var isValidInput = true;
+        if (kitGoo.Value.Name == "")
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A kit needs a name.");
+            isValidInput = false;
+        }
+
+        if (!isValidInput) return;
+
+        DA.SetData(0, kitGoo.Duplicate());
+        DA.SetData(1, kitGoo.Value.Name);
+        DA.SetData(2, kitGoo.Value.Description);
+        DA.SetData(3, kitGoo.Value.Icon);
+        DA.SetData(4, kitGoo.Value.Url);
+        DA.SetData(5, kitGoo.Value.Homepage);
+        DA.SetDataList(6, kitGoo.Value.Types.Select(t => new TypeGoo(t.DeepClone())));
+        DA.SetDataList(7, kitGoo.Value.Designs.Select(d => new DesignGoo(d.DeepClone())));
+    }
+}
+
 
 public class RandomIdsComponent : SemioComponent
 {
@@ -3062,14 +3181,7 @@ public class LoadKitComponent : EngineComponent
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
-        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit.",
-            GH_ParamAccess.list);
+        pManager.AddParameter(new KitParam());
     }
 
 
@@ -3101,13 +3213,7 @@ public class LoadKitComponent : EngineComponent
 
         var kit = response.Kit;
 
-        DA.SetData(0, kit.Name);
-        DA.SetData(1, kit.Description);
-        DA.SetData(2, kit.Icon);
-        DA.SetData(3, kit.Url);
-        DA.SetData(4, kit.Homepage);
-        DA.SetDataList(5, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
-        DA.SetDataList(6, kit.Formations.Select(f => new FormationGoo(f.DeepClone())));
+        DA.SetData(0, new KitGoo(kit));
     }
 }
 
@@ -3126,24 +3232,11 @@ public class CreateKitComponent : EngineComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-        pManager[3].Optional = true;
-        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-        pManager[4].Optional = true;
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
-        pManager[5].Optional = true;
-        pManager.AddParameter(new FormationParam(), "Formations", "Fo*", "Optional formations of the kit.",
-            GH_ParamAccess.list);
-        pManager[6].Optional = true;
+        pManager.AddParameter(new KitParam());
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will take the current directory from which the Grasshopper script is executed.",
             GH_ParamAccess.item);
-        pManager[7].Optional = true;
+        pManager[1].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Create the kit.", GH_ParamAccess.item, false);
     }
 
@@ -3154,28 +3247,16 @@ public class CreateKitComponent : EngineComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var name = "";
-        var description = "";
-        var icon = "";
-        var url = "";
-        var homepage = "";
-        var typeGoos = new List<TypeGoo>();
-        var formationGoos = new List<FormationGoo>();
+        var kitGoo = new KitGoo();
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref name);
-        DA.GetData(1, ref description);
-        DA.GetData(2, ref icon);
-        DA.GetData(3, ref url);
-        DA.GetData(4, ref homepage);
-        DA.GetDataList(5, typeGoos);
-        DA.GetDataList(6, formationGoos);
-        if (!DA.GetData(7, ref path))
+        DA.GetData(0, ref kitGoo);
+        if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
-        DA.GetData(8, ref run);
+        DA.GetData(2, ref run);
 
         if (!run)
         {
@@ -3183,18 +3264,7 @@ public class CreateKitComponent : EngineComponent
             return;
         }
 
-        var kit = new Kit
-        {
-            Name = name,
-            Description = description,
-            Icon = icon,
-            Url = url,
-            Homepage = homepage,
-            Types = typeGoos.Select(t => t.Value).ToList(),
-            Formations = formationGoos.Select(f => f.Value).ToList()
-        };
-
-        var response = new Api().CreateLocalKit(path, kit);
+        var response = new Api().CreateLocalKit(path, kitGoo.Value);
         if (response == null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
@@ -3346,44 +3416,44 @@ public class AddTypeComponent : EngineComponent
     }
 }
 
-public class AddFormationComponent : EngineComponent
+public class AddDesignComponent : EngineComponent
 {
-    public AddFormationComponent()
-        : base("Add Formation", "+For",
-            "Add a formation to a kit.",
+    public AddDesignComponent()
+        : base("Add Design", "+Dsn",
+            "Add a design to a kit.",
             "semio", "Loading/Saving")
     {
     }
 
     public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
 
-    protected override Bitmap Icon => Resources.formation_add_24x24;
+    protected override Bitmap Icon => Resources.design_add_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Formation to add to the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to add to the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Add the formation to the kit.", GH_ParamAccess.item, false);
+        pManager.AddBooleanParameter("Run", "R", "Add the design to the kit.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was added to the kit.",
+        pManager.AddBooleanParameter("Success", "Sc", "True if the design was added to the kit.",
             GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var formationGoo = new FormationGoo();
+        var designGoo = new DesignGoo();
         var path = "";
         var run = false;
 
-        if (DA.GetData(0, ref formationGoo))
-            formationGoo = formationGoo.Duplicate() as FormationGoo;
+        if (DA.GetData(0, ref designGoo))
+            designGoo = designGoo.Duplicate() as DesignGoo;
         if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3396,7 +3466,7 @@ public class AddFormationComponent : EngineComponent
             return;
         }
 
-        var response = new Api().AddFormationToLocalKit(path, formationGoo.Value);
+        var response = new Api().AddDesignToLocalKit(path, designGoo.Value);
         if (response == null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
@@ -3498,49 +3568,49 @@ public class RemoveTypeComponent : EngineComponent
     }
 }
 
-public class RemoveFormationComponent : EngineComponent
+public class RemoveDesignComponent : EngineComponent
 {
-    public RemoveFormationComponent()
-        : base("Remove Formation", "-For",
-            "Remove a formation from a kit.",
+    public RemoveDesignComponent()
+        : base("Remove Design", "-Dsn",
+            "Remove a design from a kit.",
             "semio", "Loading/Saving")
     {
     }
 
     public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
 
-    protected override Bitmap Icon => Resources.formation_remove_24x24;
+    protected override Bitmap Icon => Resources.design_remove_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Formation Name", "FoNa",
-            "Name of the formation to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to remove from the kit. No variant will remove the default variant.",
+        pManager.AddTextParameter("Design Name", "DnNa",
+            "Name of the design to remove from the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design Variant", "DnVn?",
+            "Optional variant of the design to remove from the kit. No variant will remove the default variant.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Remove the formation from the kit.", GH_ParamAccess.item, false);
+        pManager.AddBooleanParameter("Run", "R", "Remove the design from the kit.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the formation was removed from the kit.",
+        pManager.AddBooleanParameter("Success", "Sc", "True if the design was removed from the kit.",
             GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var formationName = "";
-        var formationVariant = "";
+        var designName = "";
+        var designVariant = "";
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref formationName);
-        DA.GetData(1, ref formationVariant);
+        DA.GetData(0, ref designName);
+        DA.GetData(1, ref designVariant);
         if (!DA.GetData(2, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -3553,12 +3623,12 @@ public class RemoveFormationComponent : EngineComponent
             return;
         }
 
-        var formation = new FormationId
+        var design = new DesignId
         {
-            Name = formationName,
-            Variant = formationVariant
+            Name = designName,
+            Variant = designVariant
         };
-        var response = new Api().RemoveFormationFromLocalKit(path, formation);
+        var response = new Api().RemoveDesignFromLocalKit(path, design);
         if (response == null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
@@ -3733,36 +3803,36 @@ public class SerializeTypeComponent : SemioComponent
     }
 }
 
-public class SerializeFormationComponent : SemioComponent
+public class SerializeDesignComponent : SemioComponent
 {
-    public SerializeFormationComponent()
-        : base("Serialize Formation", ">For",
-            "Serialize a formation.",
+    public SerializeDesignComponent()
+        : base("Serialize Design", ">For",
+            "Serialize a design.",
             "semio", "Scripting")
     {
     }
 
     public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
 
-    protected override Bitmap Icon => Resources.formation_serialize_24x24;
+    protected override Bitmap Icon => Resources.design_serialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Formation to serialize.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to serialize.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var formationGoo = new FormationGoo();
+        var designGoo = new DesignGoo();
 
-        DA.GetData(0, ref formationGoo);
-        var text = formationGoo.Value.Serialize();
+        DA.GetData(0, ref designGoo);
+        var text = designGoo.Value.Serialize();
         var textBytes = Encoding.UTF8.GetBytes(text);
         var base64Text = Convert.ToBase64String(textBytes);
 
@@ -3888,28 +3958,28 @@ public class DeserializeTypeComponent : SemioComponent
     }
 }
 
-public class DeserializeFormationComponent : SemioComponent
+public class DeserializeDesignComponent : SemioComponent
 {
-    public DeserializeFormationComponent()
-        : base("Deserialize Formation", "<For",
-            "Deserialize a formation.",
+    public DeserializeDesignComponent()
+        : base("Deserialize Design", "<For",
+            "Deserialize a design.",
             "semio", "Scripting")
     {
     }
 
     public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
 
-    protected override Bitmap Icon => Resources.formation_deserialize_24x24;
+    protected override Bitmap Icon => Resources.design_deserialize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized formation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new FormationParam(), "Formation", "Fo",
-            "Deserialized formation.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Deserialized design.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -3920,9 +3990,9 @@ public class DeserializeFormationComponent : SemioComponent
         var textBytes = Convert.FromBase64String(base64Text);
         var text = Encoding.UTF8.GetString(textBytes);
 
-        var formation = text.Deserialize<Formation>();
+        var design = text.Deserialize<Design>();
 
-        DA.SetData(0, new FormationGoo(formation));
+        DA.SetData(0, new DesignGoo(design));
     }
 }
 
@@ -3974,7 +4044,7 @@ public class GetSceneComponent : SemioComponent
 {
     public GetSceneComponent()
         : base("GetScene", "!Scn",
-            "Get a scene from a formation.",
+            "Get a scene from a design.",
             "semio", "Viewing")
     {
     }
@@ -3985,17 +4055,17 @@ public class GetSceneComponent : SemioComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Formation Name", "FoNa",
-            "Name of formation to convert to a scene.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Formation Variant", "FoVn?",
-            "Optional variant of the formation to convert to a scene. No variant will convert the default variant.",
+        pManager.AddTextParameter("Design Name", "DnNa",
+            "Name of design to convert to a scene.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design Variant", "DnVn?",
+            "Optional variant of the design to convert to a scene. No variant will convert the default variant.",
             GH_ParamAccess.item);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
         pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Convert the formation to a scene.", GH_ParamAccess.item, false);
+        pManager.AddBooleanParameter("Run", "R", "Convert the design to a scene.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -4005,13 +4075,13 @@ public class GetSceneComponent : SemioComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var formationName = "";
-        var formationVariant = "";
+        var designName = "";
+        var designVariant = "";
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref formationName);
-        DA.GetData(1, ref formationVariant);
+        DA.GetData(0, ref designName);
+        DA.GetData(1, ref designVariant);
         if (!DA.GetData(2, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
@@ -4020,10 +4090,10 @@ public class GetSceneComponent : SemioComponent
 
         if (!run) return;
 
-        var response = new Api().FormationToSceneFromLocalKit(path, new FormationId
+        var response = new Api().DesignToSceneFromLocalKit(path, new DesignId
         {
-            Name = formationName,
-            Variant = formationVariant
+            Name = designName,
+            Variant = designVariant
         });
         if (response == null)
         {
@@ -4076,9 +4146,9 @@ public class FilterSceneComponent : SemioComponent
             "Representation of the objects of the scene.", GH_ParamAccess.list);
         pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
         pManager.AddTextParameter("Pieces Ids", "PcId+",
-            "Ids of the pieces from the formation that correspond to the objects of the scene.", GH_ParamAccess.list);
+            "Ids of the pieces from the design that correspond to the objects of the scene.", GH_ParamAccess.list);
         pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
-            "Ids of the parent pieces from the formation that correspond to the objects of the scene.",
+            "Ids of the parent pieces from the design that correspond to the objects of the scene.",
             GH_ParamAccess.list);
     }
 

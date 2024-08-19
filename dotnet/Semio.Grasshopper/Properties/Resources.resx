@@ -130,23 +130,23 @@
   <data name="encode_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\encode_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_add_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_add_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_add_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_add_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_remove_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_remove_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_remove_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_remove_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="formation_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\formation_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="design_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\design_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="id_random_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\id_random_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -165,6 +165,9 @@
   </data>
   <data name="kit_load_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\kit_load_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="kit_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\kit_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="piece_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\piece_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

@@ -8,10 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Semio.Properties {
+namespace Semio.Properties
+{
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,48 +23,56 @@ namespace Semio.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
-        
+    internal class Resources
+    {
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal Resources()
+        {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        internal static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Semio.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
-            get {
+        internal static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to mutation AddFormationToLocalKit($directory: String!, $formation: FormationInput!) {
-        ///  addFormationToLocalKit(directory: $directory, formationInput: $formation) {
-        ///    formation {
+        ///   Looks up a localized string similar to mutation AddDesignToLocalKit($directory: String!, $design: DesignInput!) {
+        ///  addDesignToLocalKit(directory: $directory, designInput: $design) {
+        ///    design {
         ///      name
         ///      description
         ///      icon
@@ -85,12 +94,14 @@ namespace Semio.Properties {
         ///            type {
         ///              port  [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string addFormationToLocalKit {
-            get {
-                return ResourceManager.GetString("addFormationToLocalKit", resourceCulture);
+        internal static string addDesignToLocalKit
+        {
+            get
+            {
+                return ResourceManager.GetString("addDesignToLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to mutation AddTypeToLocalKit($directory: String!, $type: TypeInput!) {
         ///  addTypeToLocalKit(directory: $directory, typeInput: $type) {
@@ -120,30 +131,36 @@ namespace Semio.Properties {
         ///            y
         ///            z [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string addTypeToLocalKit {
-            get {
+        internal static string addTypeToLocalKit
+        {
+            get
+            {
                 return ResourceManager.GetString("addTypeToLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to [&quot;cowardly&quot;, &quot;xylographic&quot;, &quot;dynamic&quot;, &quot;xenophobic&quot;, &quot;distant&quot;, &quot;lost&quot;, &quot;quick&quot;, &quot;zippy&quot;, &quot;trim&quot;, &quot;living&quot;, &quot;eager&quot;, &quot;infantile&quot;, &quot;worn&quot;, &quot;live&quot;, &quot;knowing&quot;, &quot;next&quot;, &quot;zesty&quot;, &quot;utter&quot;, &quot;rusty&quot;, &quot;formal&quot;, &quot;quizzical&quot;, &quot;knobby&quot;, &quot;little&quot;, &quot;amazing&quot;, &quot;vigilant&quot;, &quot;primary&quot;, &quot;meaty&quot;, &quot;phony&quot;, &quot;quixotic&quot;, &quot;mute&quot;, &quot;young&quot;, &quot;jolly&quot;, &quot;key&quot;, &quot;positive&quot;, &quot;miniature&quot;, &quot;mild&quot;, &quot;winged&quot;, &quot;cheerful&quot;, &quot;flashy&quot;, &quot;habitual&quot;, &quot;oceanic&quot;, &quot;alike&quot;, &quot;knotty&quot;, &quot;holistic&quot;, &quot;xylophonic&quot;, &quot;generous&quot;, &quot;quarterly&quot;, &quot;yielding&quot;, &quot;aquatic&quot;, [rest of string wa....
         /// </summary>
-        internal static string adjectives {
-            get {
+        internal static string adjectives
+        {
+            get
+            {
                 return ResourceManager.GetString("adjectives", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to [&quot;cowbird&quot;, &quot;kite&quot;, &quot;hoopoe&quot;, &quot;vulture&quot;, &quot;whapuku&quot;, &quot;yearling&quot;, &quot;narwhal&quot;, &quot;nandu&quot;, &quot;cassowary&quot;, &quot;cooter&quot;, &quot;iguana&quot;, &quot;spoonbill&quot;, &quot;waterstrider&quot;, &quot;davidstiger&quot;, &quot;erne&quot;, &quot;shark&quot;, &quot;pachyderm&quot;, &quot;diplodocus&quot;, &quot;jerboa&quot;, &quot;invisiblerail&quot;, &quot;dipper&quot;, &quot;tick&quot;, &quot;junco&quot;, &quot;frenchbulldog&quot;, &quot;nightingale&quot;, &quot;moa&quot;, &quot;cutworm&quot;, &quot;goosefish&quot;, &quot;bullfrog&quot;, &quot;urutu&quot;, &quot;jay&quot;, &quot;nightjar&quot;, &quot;zander&quot;, &quot;redhead&quot;, &quot;rockrat&quot;, &quot;bittern&quot;, &quot;coqui&quot;, &quot;tilefish&quot;, &quot;xantus&quot;, &quot;woodborer&quot;, &quot;xeme&quot;, &quot;nyala&quot;, &quot;guanaco&quot;, &quot;foxhound&quot;, &quot;jabiru&quot;, &quot;aurochs&quot;, &quot;k [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string animals {
-            get {
+        internal static string animals
+        {
+            get
+            {
                 return ResourceManager.GetString("animals", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
         ///  createLocalKit(directory: $directory, kitInput: $kit) {
@@ -172,12 +189,14 @@ namespace Semio.Properties {
         ///              x
         ///              [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string createLocalKit {
-            get {
+        internal static string createLocalKit
+        {
+            get
+            {
                 return ResourceManager.GetString("createLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to mutation DeleteLocalKit($directory: String!) {
         ///  deleteLocalKit(directory: $directory) {
@@ -185,17 +204,19 @@ namespace Semio.Properties {
         ///  }
         ///}.
         /// </summary>
-        internal static string deleteLocalKit {
-            get {
+        internal static string deleteLocalKit
+        {
+            get
+            {
                 return ResourceManager.GetString("deleteLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to query FormationToSceneFromLocalKit($directory: String!, $formation: FormationIdInput!) {
-        ///  formationToSceneFromLocalKit(
+        ///   Looks up a localized string similar to query DesignToSceneFromLocalKit($directory: String!, $design: DesignIdInput!) {
+        ///  designToSceneFromLocalKit(
         ///    directory: $directory
-        ///    formationIdInput: $formation
+        ///    designIdInput: $design
         ///  ) {
         ///    scene {
         ///      objects {
@@ -218,12 +239,14 @@ namespace Semio.Properties {
         ///          xAxis {
         /// [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string formationToSceneFromLocalKit {
-            get {
-                return ResourceManager.GetString("formationToSceneFromLocalKit", resourceCulture);
+        internal static string designToSceneFromLocalKit
+        {
+            get
+            {
+                return ResourceManager.GetString("designToSceneFromLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to query LoadLocalKit($directory: String!) {
         ///  loadLocalKit(directory: $directory) {
@@ -256,15 +279,17 @@ namespace Semio.Properties {
         ///            yAxis {
         ///             [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string loadLocalKit {
-            get {
+        internal static string loadLocalKit
+        {
+            get
+            {
                 return ResourceManager.GetString("loadLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to mutation RemoveFormationFromLocalKit($directory: String!, $formation: FormationIdInput!) {
-        ///  removeFormationFromLocalKit(directory: $directory, formationId: $formation) {
+        ///   Looks up a localized string similar to mutation RemoveDesignFromLocalKit($directory: String!, $design: DesignIdInput!) {
+        ///  removeDesignFromLocalKit(directory: $directory, designId: $design) {
         ///    error {
         ///      code
         ///      message
@@ -272,12 +297,14 @@ namespace Semio.Properties {
         ///  }
         ///}.
         /// </summary>
-        internal static string removeFormationFromLocalKit {
-            get {
-                return ResourceManager.GetString("removeFormationFromLocalKit", resourceCulture);
+        internal static string removeDesignFromLocalKit
+        {
+            get
+            {
+                return ResourceManager.GetString("removeDesignFromLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to mutation RemoveTypeFromLocalKit($directory: String!, $type: TypeIdInput!) {
         ///  removeTypeFromLocalKit(directory: $directory, typeId: $type) {
@@ -288,16 +315,18 @@ namespace Semio.Properties {
         ///  }
         ///}.
         /// </summary>
-        internal static string removeTypeFromLocalKit {
-            get {
+        internal static string removeTypeFromLocalKit
+        {
+            get
+            {
                 return ResourceManager.GetString("removeTypeFromLocalKit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to type Query {
         ///  loadLocalKit(directory: String!): LoadLocalKitResponse
-        ///  formationToSceneFromLocalKit(directory: String!, formationIdInput: FormationIdInput!): FormationToSceneFromLocalKitResponse
+        ///  designToSceneFromLocalKit(directory: String!, designIdInput: DesignIdInput!): DesignToSceneFromLocalKitResponse
         ///}
         ///
         ///type LoadLocalKitResponse {
@@ -313,17 +342,19 @@ namespace Semio.Properties {
         ///  modifiedAt: DateTime!
         ///  url: String
         ///  types: [Type!]!
-        ///  formations: [Formation!]!
+        ///  designs: [Design!]!
         ///  parent: Artifact
         ///  children: [Artifact!]!
         ///  referen [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string schema {
-            get {
+        internal static string schema
+        {
+            get
+            {
                 return ResourceManager.GetString("schema", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to mutation UpdateLocalKitMetadata($directory: String!, $kit: KitMetadataInput!) {
         ///  updateLocalKitMetadata(directory: $directory, kitMetadataInput: $kit) {
@@ -340,8 +371,10 @@ namespace Semio.Properties {
         ///  }
         ///}.
         /// </summary>
-        internal static string updateLocalKitMetadata {
-            get {
+        internal static string updateLocalKitMetadata
+        {
+            get
+            {
                 return ResourceManager.GetString("updateLocalKitMetadata", resourceCulture);
             }
         }

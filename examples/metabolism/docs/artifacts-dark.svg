@@ -2185,7 +2185,7 @@ text.f11 {font-family:nf0;font-size:9.96264px}
 <text class='f1' x='179.070338' y='55.928163' transform='matrix(1 0 0 1 201.165 543.4957)'>🪞</text>
 <text class='f8' x='189.667318' y='55.928163' transform='matrix(1 0 0 1 201.165 543.4957)'>mirror</text>
 <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>✈ </text>
-<text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>plane[</text>
+<text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>coordinateSystem[</text>
 <text class='f1' x='213.851834' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>↕ </text>
 <rect x='213.851834' y='66.072176' height='.338711' width='8.853518' transform='matrix(1 0 0 1 201.165 543.4957)'/>
 <text class='f8' x='222.705352' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>,</text>

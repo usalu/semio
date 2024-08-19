@@ -80,9 +80,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
     Connection,
     ConnectionInput,
-    Formation,
-    FormationIdInput,
-    FormationInput,
+    Design,
+    DesignIdInput,
+    DesignInput,
     Piece,
     PieceInput,
     Port,
@@ -97,13 +97,13 @@ import {
     TOLERANCE,
     radians,
     threeToSemioRotation,
-    formationToHierarchies,
+    designToHierarchies,
     Point,
     Vector,
     Plane,
     Transform,
     semioToThreeRotation,
-    CoordinateSystem,
+    Plane,
 } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
@@ -114,18 +114,18 @@ import {
     selectKit,
     selectTypes,
     selectViews,
-    selectFormationView,
-    FormationView,
+    selectDesignView,
+    DesignView,
     IArtifactView,
     ViewKind,
     selectView,
     TypeView,
-    selectFormations,
+    selectDesigns,
     selectType,
-    updateFormation,
-    updateFormationSelection,
+    updateDesign,
+    updateDesignSelection,
     selectPorts,
-    ISelectionFormation
+    ISelectionDesign
 } from './store'
 import { ThemeConfig } from 'antd/lib'
 
@@ -155,7 +155,7 @@ import { ThemeConfig } from 'antd/lib'
 // export type Query = {
 //     __typename?: 'Query';
 //     loadLocalKit?: Maybe<LoadLocalKitResponse>;
-//     formationToSceneFromLocalKit?: Maybe<FormationToSceneFromLocalKitResponse>;
+//     designToSceneFromLocalKit?: Maybe<DesignToSceneFromLocalKitResponse>;
 // };
 
 
@@ -164,9 +164,9 @@ import { ThemeConfig } from 'antd/lib'
 // };
 
 
-// export type QueryFormationToSceneFromLocalKitArgs = {
+// export type QueryDesignToSceneFromLocalKitArgs = {
 //     directory: Scalars['String']['input'];
-//     formationIdInput: FormationIdInput;
+//     designIdInput: DesignIdInput;
 // };
 
 // export type LoadLocalKitResponse = {
@@ -175,7 +175,7 @@ import { ThemeConfig } from 'antd/lib'
 //     error?: Maybe<LoadLocalKitError>;
 // };
 
-// /** 🗃️ A kit is a collection of types and formations. */
+// /** 🗃️ A kit is a collection of types and designs. */
 // export type Kit = {
 //     __typename?: 'Kit';
 //     name: Scalars['String']['output'];
@@ -186,7 +186,7 @@ import { ThemeConfig } from 'antd/lib'
 //     url: Scalars['String']['output'];
 //     homepage: Scalars['String']['output'];
 //     types: Array<Type>;
-//     formations: Array<Formation>;
+//     designs: Array<Design>;
 // };
 
 // /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -236,19 +236,19 @@ import { ThemeConfig } from 'antd/lib'
 //     port?: Maybe<Port>;
 // };
 
-// /** 🖇️ A connection between two pieces of a formation. */
+// /** 🖇️ A connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection';
 //     offset: Scalars['Float']['output'];
 //     rotation: Scalars['Float']['output'];
-//     formation?: Maybe<Formation>;
+//     design?: Maybe<Design>;
 //     connected: Side;
 //     connecting: Side;
 // };
 
-// /** 🏙️ A formation is a collection of pieces that are connected. */
-// export type Formation = {
-//     __typename?: 'Formation';
+// /** 🏙️ A design is a collection of pieces that are connected. */
+// export type Design = {
+//     __typename?: 'Design';
 //     name: Scalars['String']['output'];
 //     description: Scalars['String']['output'];
 //     icon: Scalars['String']['output'];
@@ -262,11 +262,11 @@ import { ThemeConfig } from 'antd/lib'
 //     qualities: Array<Quality>;
 // };
 
-// /** ⭕ A piece is a 3d-instance of a type in a formation. */
+// /** ⭕ A piece is a 3d-instance of a type in a design. */
 // export type Piece = {
 //     __typename?: 'Piece';
 //     type?: Maybe<Type>;
-//     formation?: Maybe<Formation>;
+//     design?: Maybe<Design>;
 //     connectings: Array<Connection>;
 //     connecteds: Array<Connection>;
 //     id: Scalars['String']['output'];
@@ -274,7 +274,7 @@ import { ThemeConfig } from 'antd/lib'
 //     diagram: PieceDiagram;
 // };
 
-// /** 🌱 The root information of a piece. */
+// /** 🌱 The root indesign of a piece. */
 // export type PieceRoot = {
 //     __typename?: 'PieceRoot';
 //     plane: Plane;
@@ -304,13 +304,13 @@ import { ThemeConfig } from 'antd/lib'
 //     z: Scalars['Float']['output'];
 // };
 
-// /** ✏️ The diagram information of a piece. */
+// /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagram = {
 //     __typename?: 'PieceDiagram';
 //     point: ScreenPoint;
 // };
 
-// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+// /** 📺 A 2d-point (xy) of integers in screen plane. */
 // export type ScreenPoint = {
 //     __typename?: 'ScreenPoint';
 //     x: Scalars['Int']['output'];
@@ -325,7 +325,7 @@ import { ThemeConfig } from 'antd/lib'
 //     unit: Scalars['String']['output'];
 //     definition: Scalars['String']['output'];
 //     type?: Maybe<Type>;
-//     formation?: Maybe<Formation>;
+//     design?: Maybe<Design>;
 // };
 
 // /** 🧱 A side of a piece in a connection. */
@@ -334,14 +334,14 @@ import { ThemeConfig } from 'antd/lib'
 //     piece: SidePiece;
 // };
 
-// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// /** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 // export type SidePiece = {
 //     __typename?: 'SidePiece';
 //     id: Scalars['String']['output'];
 //     type: SidePieceType;
 // };
 
-// /** 🧩 The type information of a piece of a side. */
+// /** 🧩 The type indesign of a piece of a side. */
 // export type SidePieceType = {
 //     __typename?: 'SidePieceType';
 //     port?: Maybe<Port>;
@@ -354,17 +354,17 @@ import { ThemeConfig } from 'antd/lib'
 //     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT'
 // }
 
-// export type FormationToSceneFromLocalKitResponse = {
-//     __typename?: 'FormationToSceneFromLocalKitResponse';
+// export type DesignToSceneFromLocalKitResponse = {
+//     __typename?: 'DesignToSceneFromLocalKitResponse';
 //     scene?: Maybe<Scene>;
-//     error?: Maybe<FormationToSceneFromLocalKitResponseError>;
+//     error?: Maybe<DesignToSceneFromLocalKitResponseError>;
 // };
 
 // /** 🌆 A scene is a collection of objects. */
 // export type Scene = {
 //     __typename?: 'Scene';
 //     objects: Array<Maybe<Object>>;
-//     formation?: Maybe<Formation>;
+//     design?: Maybe<Design>;
 // };
 
 // /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
@@ -375,22 +375,22 @@ import { ThemeConfig } from 'antd/lib'
 //     parent?: Maybe<Object>;
 // };
 
-// export type FormationToSceneFromLocalKitResponseError = {
-//     __typename?: 'FormationToSceneFromLocalKitResponseError';
-//     code: FormationToSceneFromLocalKitResponseErrorCode;
+// export type DesignToSceneFromLocalKitResponseError = {
+//     __typename?: 'DesignToSceneFromLocalKitResponseError';
+//     code: DesignToSceneFromLocalKitResponseErrorCode;
 //     message?: Maybe<Scalars['String']['output']>;
 // };
 
-// export enum FormationToSceneFromLocalKitResponseErrorCode {
+// export enum DesignToSceneFromLocalKitResponseErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
-//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
-// /** 🏙️ A formation is identified by a name and optional variant. */
-// export type FormationIdInput = {
+// /** 🏙️ A design is identified by a name and optional variant. */
+// export type DesignIdInput = {
 //     name: Scalars['String']['input'];
 //     variant?: InputMaybe<Scalars['String']['input']>;
 // };
@@ -402,8 +402,8 @@ import { ThemeConfig } from 'antd/lib'
 //     deleteLocalKit?: Maybe<DeleteLocalKitMutation>;
 //     addTypeToLocalKit?: Maybe<AddTypeToLocalKitMutation>;
 //     removeTypeFromLocalKit?: Maybe<RemoveTypeFromLocalKitMutation>;
-//     addFormationToLocalKit?: Maybe<AddFormationToLocalKitMutation>;
-//     removeFormationFromLocalKit?: Maybe<RemoveFormationFromLocalKitMutation>;
+//     addDesignToLocalKit?: Maybe<AddDesignToLocalKitMutation>;
+//     removeDesignFromLocalKit?: Maybe<RemoveDesignFromLocalKitMutation>;
 // };
 
 
@@ -436,15 +436,15 @@ import { ThemeConfig } from 'antd/lib'
 // };
 
 
-// export type MutationAddFormationToLocalKitArgs = {
+// export type MutationAddDesignToLocalKitArgs = {
 //     directory: Scalars['String']['input'];
-//     formationInput: FormationInput;
+//     designInput: DesignInput;
 // };
 
 
-// export type MutationRemoveFormationFromLocalKitArgs = {
+// export type MutationRemoveDesignFromLocalKitArgs = {
 //     directory: Scalars['String']['input'];
-//     formationId: FormationIdInput;
+//     designId: DesignIdInput;
 // };
 
 // export type CreateLocalKitMutation = {
@@ -467,7 +467,7 @@ import { ThemeConfig } from 'antd/lib'
 //     KitInputIsInvalid = 'KIT_INPUT_IS_INVALID'
 // }
 
-// /** 🗃️ A kit is a collection of types and formations. */
+// /** 🗃️ A kit is a collection of types and designs. */
 // export type KitInput = {
 //     name: Scalars['String']['input'];
 //     description?: InputMaybe<Scalars['String']['input']>;
@@ -475,7 +475,7 @@ import { ThemeConfig } from 'antd/lib'
 //     url?: InputMaybe<Scalars['String']['input']>;
 //     homepage?: InputMaybe<Scalars['String']['input']>;
 //     types?: InputMaybe<Array<TypeInput>>;
-//     formations?: InputMaybe<Array<FormationInput>>;
+//     designs?: InputMaybe<Array<DesignInput>>;
 // };
 
 // /** 🧩 A type is a reusable element that can be connected with other types over ports. */
@@ -533,8 +533,8 @@ import { ThemeConfig } from 'antd/lib'
 //     definition?: InputMaybe<Scalars['String']['input']>;
 // };
 
-// /** 🏙️ A formation is a collection of pieces that are connected. */
-// export type FormationInput = {
+// /** 🏙️ A design is a collection of pieces that are connected. */
+// export type DesignInput = {
 //     name: Scalars['String']['input'];
 //     description?: InputMaybe<Scalars['String']['input']>;
 //     icon?: InputMaybe<Scalars['String']['input']>;
@@ -545,7 +545,7 @@ import { ThemeConfig } from 'antd/lib'
 //     qualities?: InputMaybe<Array<QualityInput>>;
 // };
 
-// /** ⭕ A piece is a 3d-instance of a type in a formation. */
+// /** ⭕ A piece is a 3d-instance of a type in a design. */
 // export type PieceInput = {
 //     id: Scalars['String']['input'];
 //     type: TypeIdInput;
@@ -559,7 +559,7 @@ import { ThemeConfig } from 'antd/lib'
 //     variant?: InputMaybe<Scalars['String']['input']>;
 // };
 
-// /** 🌱 The root information of a piece. */
+// /** 🌱 The root indesign of a piece. */
 // export type PieceRootInput = {
 //     plane: PlaneInput;
 // };
@@ -571,18 +571,18 @@ import { ThemeConfig } from 'antd/lib'
 //     yAxis: VectorInput;
 // };
 
-// /** ✏️ The diagram information of a piece. */
+// /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagramInput = {
 //     point: ScreenPointInput;
 // };
 
-// /** 📺 A 2d-point (xy) of integers in screen coordinate system. */
+// /** 📺 A 2d-point (xy) of integers in screen plane. */
 // export type ScreenPointInput = {
 //     x?: InputMaybe<Scalars['Int']['input']>;
 //     y?: InputMaybe<Scalars['Int']['input']>;
 // };
 
-// /** 🖇️ A connection between two pieces of a formation. */
+// /** 🖇️ A connection between two pieces of a design. */
 // export type ConnectionInput = {
 //     connecting: SideInput;
 //     connected: SideInput;
@@ -595,13 +595,13 @@ import { ThemeConfig } from 'antd/lib'
 //     piece: SidePieceInput;
 // };
 
-// /** ⭕ The piece information of a side. A piece is identified by an id (emtpy=default)). */
+// /** ⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)). */
 // export type SidePieceInput = {
 //     id: Scalars['String']['input'];
 //     type?: InputMaybe<SidePieceTypeInput>;
 // };
 
-// /** 🧩 The type information of a piece of a side. */
+// /** 🧩 The type indesign of a piece of a side. */
 // export type SidePieceTypeInput = {
 //     port?: InputMaybe<PortIdInput>;
 // };
@@ -688,46 +688,46 @@ import { ThemeConfig } from 'antd/lib'
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
 //     TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
-//     FormationDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+//     DesignDependsOnType = 'DESIGN_DEPENDS_ON_TYPE'
 // }
 
-// export type AddFormationToLocalKitMutation = {
-//     __typename?: 'AddFormationToLocalKitMutation';
-//     formation?: Maybe<Formation>;
-//     error?: Maybe<AddFormationToLocalKitError>;
+// export type AddDesignToLocalKitMutation = {
+//     __typename?: 'AddDesignToLocalKitMutation';
+//     design?: Maybe<Design>;
+//     error?: Maybe<AddDesignToLocalKitError>;
 // };
 
-// export type AddFormationToLocalKitError = {
-//     __typename?: 'AddFormationToLocalKitError';
-//     code: AddFormationToLocalKitErrorCode;
+// export type AddDesignToLocalKitError = {
+//     __typename?: 'AddDesignToLocalKitError';
+//     code: AddDesignToLocalKitErrorCode;
 //     message?: Maybe<Scalars['String']['output']>;
 // };
 
-// export enum AddFormationToLocalKitErrorCode {
+// export enum AddDesignToLocalKitErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     FormationInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+//     DesignInputIsInvalid = 'DESIGN_INPUT_IS_INVALID'
 // }
 
-// export type RemoveFormationFromLocalKitMutation = {
-//     __typename?: 'RemoveFormationFromLocalKitMutation';
-//     error?: Maybe<RemoveFormationFromLocalKitError>;
+// export type RemoveDesignFromLocalKitMutation = {
+//     __typename?: 'RemoveDesignFromLocalKitMutation';
+//     error?: Maybe<RemoveDesignFromLocalKitError>;
 // };
 
-// export type RemoveFormationFromLocalKitError = {
-//     __typename?: 'RemoveFormationFromLocalKitError';
-//     code: RemoveFormationFromLocalKitErrorCode;
+// export type RemoveDesignFromLocalKitError = {
+//     __typename?: 'RemoveDesignFromLocalKitError';
+//     code: RemoveDesignFromLocalKitErrorCode;
 //     message?: Maybe<Scalars['String']['output']>;
 // };
 
-// export enum RemoveFormationFromLocalKitErrorCode {
+// export enum RemoveDesignFromLocalKitErrorCode {
 //     DirectoryDoesNotExist = 'DIRECTORY_DOES_NOT_EXIST',
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     FormationDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
 const { Header, Content, Footer, Sider } = Layout
@@ -936,15 +936,15 @@ const kindNameAndVariantToString = (kind: string, name: string, variant?: string
 const typeToIdString = (type: Type): string => {
     return kindNameAndVariantToString('type', type.name, type.variant)
 }
-const formationToIdString = (formation: Formation): string => {
-    return kindNameAndVariantToString('formation', formation.name, formation.variant)
+const designToIdString = (design: Design): string => {
+    return kindNameAndVariantToString('design', design.name, design.variant)
 }
 const typeToHumanString = (type: Type | TypeInput | TypeIdInput): string => {
     const { name, variant } = type
     return `${name}${variant ? ` (${variant})` : ''}`
 }
-const formationToHumanString = (formation: Formation | FormationInput | FormationIdInput): string => {
-    const { name, variant } = formation
+const designToHumanString = (design: Design | DesignInput | DesignIdInput): string => {
+    const { name, variant } = design
     return `${name}${variant ? ` (${variant})` : ''}`
 }
 
@@ -1654,10 +1654,10 @@ const transformConnectionToEdge = (connection: Connection | ConnectionInput): IC
     }
 }
 
-const transformFormationToGraph = (formation: Formation | FormationInput): IDraft => {
-    const nodes = formation.pieces.map((piece) => transformPieceToNode(piece))
+const transformDesignToGraph = (design: Design | DesignInput): IDraft => {
+    const nodes = design.pieces.map((piece) => transformPieceToNode(piece))
 
-    const edges = formation.connections.map((connection) => transformConnectionToEdge(connection))
+    const edges = design.connections.map((connection) => transformConnectionToEdge(connection))
 
     return {
         nodes,
@@ -1665,17 +1665,17 @@ const transformFormationToGraph = (formation: Formation | FormationInput): IDraf
     }
 }
 
-const transformSelectionToGraph = (formation: Formation | FormationInput, selection: ISelectionFormation): SelectionT => {
+const transformSelectionToGraph = (design: Design | DesignInput, selection: ISelectionDesign): SelectionT => {
     const nodes = new Map<string, INode>()
     const edges = new Map<string, IEdge>()
     selection.piecesIds.forEach((pieceId) => {
-        const piece = formation.pieces.find((p) => p.id === pieceId)
+        const piece = design.pieces.find((p) => p.id === pieceId)
         if (piece) {
             nodes.set(piece.id, transformPieceToNode(piece))
         }
     })
     selection.connectionsPiecesIds.forEach(([sourceId, targetId]) => {
-        const connection = formation.connections.find(
+        const connection = design.connections.find(
             (a) => a.connecting.piece.id === sourceId && a.connected.piece.id === targetId
         )
         if (connection) {
@@ -1693,24 +1693,24 @@ interface DiagramEditorProps {
 }
 
 const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
-    const { formationViewId, kitDirectory } = useContext(EditorContext)
+    const { designViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
-    const formationView = useSelector((state: RootState) =>
-        selectFormationView(state, formationViewId)
+    const designView = useSelector((state: RootState) =>
+        selectDesignView(state, designViewId)
     )
-    if (!formationView) return null
-    const formationRef = useRef(formationView.formation)
+    if (!designView) return null
+    const designRef = useRef(designView.design)
     useEffect(() => {
-        formationRef.current = formationView.formation;
-    }, [formationView.formation])
+        designRef.current = designView.design;
+    }, [designView.design])
 
 
-    const graph = useMemo(() => transformFormationToGraph(formationView.formation), [formationView.formation])
+    const graph = useMemo(() => transformDesignToGraph(designView.design), [designView.design])
     const nodes = graph.nodes
     const edges = graph.edges
 
-    const selected = useMemo(() => transformSelectionToGraph(formationView.formation, formationView.selection), [formationView.formation, formationView.selection])
+    const selected = useMemo(() => transformSelectionToGraph(designView.design, designView.selection), [designView.design, designView.selection])
 
     const graphViewRef = useRef(null)
 
@@ -1733,7 +1733,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     useImperativeHandle(ref, () => ({
         onDropPiece,
-        onDropFormationSnippet,
+        onDropDesignSnippet,
         zoomToFit
     }))
 
@@ -1743,12 +1743,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     const handleConnectionBuilderFinished = () => {
         dispatch(
-            updateFormation({
-                id: formationView.id,
-                formation: {
-                    ...formationRef.current,
+            updateDesign({
+                id: designView.id,
+                design: {
+                    ...designRef.current,
                     connections: [
-                        ...formationRef.current.connections,
+                        ...designRef.current.connections,
                         {
                             ...connection,
                             connecting: {
@@ -1765,7 +1765,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                             }
                         }
                     ]
-                } as FormationInput
+                } as DesignInput
             })
         )
         setConnectingType(null)
@@ -1787,26 +1787,26 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     const onSelect = (newSelection: SelectionT, event?: any): void => {
         if (event == null && !newSelection.nodes && !newSelection.edges) {
-            dispatch(updateFormationSelection(formationViewId, [], []))
+            dispatch(updateDesignSelection(designViewId, [], []))
             return
         }
         // Remove the previously selected pieces and connections from the selectionState if they are in the new selection.
         // Add the new selected pieces and connections if they were not in the previous selection.
-        const selectedPiecesIds = formationView.selection.piecesIds.slice()
+        const selectedPiecesIds = designView.selection.piecesIds.slice()
         if (newSelection.nodes) {
             newSelection.nodes.forEach((node) => {
-                if (formationView.selection.piecesIds.includes(node.id)) {
+                if (designView.selection.piecesIds.includes(node.id)) {
                     selectedPiecesIds.splice(selectedPiecesIds.indexOf(node.id), 1)
                 } else {
                     selectedPiecesIds.push(node.id)
                 }
             })
         }
-        const selectedConnectionsIds = formationView.selection.connectionsPiecesIds.slice()
+        const selectedConnectionsIds = designView.selection.connectionsPiecesIds.slice()
         if (newSelection.edges) {
             newSelection.edges.forEach((edge) => {
                 if (
-                    formationView.selection.connectionsPiecesIds.some(
+                    designView.selection.connectionsPiecesIds.some(
                         ([source, target]) => source === edge.source && target === edge.target
                     )
                 ) {
@@ -1821,17 +1821,17 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 }
             })
         }
-        dispatch(updateFormationSelection(formationViewId, selectedPiecesIds, selectedConnectionsIds))
+        dispatch(updateDesignSelection(designViewId, selectedPiecesIds, selectedConnectionsIds))
     }
 
     const onCreateNode = (x: number, y: number, event: any): void => {
         dispatch(
-            updateFormation({
-                id: formationView.id,
-                formation: {
-                    ...formationRef.current,
+            updateDesign({
+                id: designView.id,
+                design: {
+                    ...designRef.current,
                     pieces: [
-                        ...formationRef.current.pieces,
+                        ...designRef.current.pieces,
                         {
                             id: Generator.generateRandomId(x - y),
                             type: event.piece.type,
@@ -1857,14 +1857,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         updatedNodes?: Map<string, INode> | null,
         updatedNodePosition?: IPoint
     ): void | Promise<any> => {
-        const piece = formationRef.current.pieces.find((p) => p.id === node.id)
+        const piece = designRef.current.pieces.find((p) => p.id === node.id)
         if (piece) {
             dispatch(
-                updateFormation({
-                    id: formationView.id,
-                    formation: {
-                        ...formationRef.current,
-                        pieces: formationRef.current.pieces.map((p) =>
+                updateDesign({
+                    id: designView.id,
+                    design: {
+                        ...designRef.current,
+                        pieces: designRef.current.pieces.map((p) =>
                             p.id === node.id
                                 ? {
                                     ...p,
@@ -1877,7 +1877,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                                 }
                                 : p
                         )
-                    } as FormationInput
+                    } as DesignInput
                 })
             )
         }
@@ -1894,23 +1894,23 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     }
 
     const onDeleteSelected = (selected: SelectionT) => {
-        dispatch(updateFormationSelection(formationView.id, formationView.selection.piecesIds.filter((id) => !selected.nodes?.has(id))))
+        dispatch(updateDesignSelection(designView.id, designView.selection.piecesIds.filter((id) => !selected.nodes?.has(id))))
         dispatch(
-            updateFormation({
-                id: formationView.id,
-                formation: {
-                    ...formationRef.current,
-                    pieces: formationRef.current.pieces.filter(
+            updateDesign({
+                id: designView.id,
+                design: {
+                    ...designRef.current,
+                    pieces: designRef.current.pieces.filter(
                         (piece) => !selected.nodes?.has(piece.id)
                     ),
-                    connections: formationRef.current.connections.filter(
+                    connections: designRef.current.connections.filter(
                         (connection) =>
                             !selected.edges?.has(
                                 `${connection.connecting.piece.id}_${connection.connected.piece.id}`
                             ) && !selected.nodes?.has(connection.connecting.piece.id)
                             && !selected.nodes?.has(connection.connected.piece.id)
                     )
-                } as FormationInput
+                } as DesignInput
             })
         )
     }
@@ -1921,7 +1921,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const toppestNode = nodesToCopy.reduce((prev, curr) => (prev.y < curr.y ? prev : curr))
             const leftestNode = nodesToCopy.reduce((prev, curr) => (prev.x < curr.x ? prev : curr))
             const edgesToCopy = graph.edges.filter((edge) => selected.edges?.has(`${edge.source}_${edge.target}`))
-            const formationSnippetToCopy = {
+            const designSnippetToCopy = {
                 pieces: nodesToCopy.map((node) => ({
                     ...node.piece,
                     diagram: {
@@ -1934,7 +1934,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 connections: edgesToCopy.map((edge) => edge.connection)
             }
             navigator.clipboard
-                .writeText(JSON.stringify(formationSnippetToCopy))
+                .writeText(JSON.stringify(designSnippetToCopy))
                 .then(() => {
                 })
                 .catch((err) => {
@@ -1944,10 +1944,10 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
 
     const onPasteSelected = (selected?: SelectionT | null, xyCoords?: IPoint): void => {
         navigator.clipboard.readText().then((text) => {
-            const formationSnippet = JSON.parse(text)
+            const designSnippet = JSON.parse(text)
             const oldPieceToNewPiece = new Map<string, string>()
-            const placedFormationSnippet = {
-                pieces: formationSnippet.pieces.map((piece) => {
+            const placedDesignSnippet = {
+                pieces: designSnippet.pieces.map((piece) => {
                     const x = Math.round(xyCoords?.x + piece.diagram.point.x)
                     const y = Math.round(xyCoords?.y + piece.diagram.point.y)
                     const id = piece.id + SEPARATOR + Generator.generateRandomId(x - y)
@@ -1960,7 +1960,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         }
                     }
                 }),
-                connections: formationSnippet.connections.map((connection) => ({
+                connections: designSnippet.connections.map((connection) => ({
                     ...connection,
                     connecting: {
                         ...connection.connecting,
@@ -1978,26 +1978,26 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     }
                 }))
             }
-            const newPieceIds = placedFormationSnippet.pieces.map((piece) => piece.id)
+            const newPieceIds = placedDesignSnippet.pieces.map((piece) => piece.id)
             if (newPieceIds.length !== new Set(newPieceIds).size) {
                 message.error('All pieces must have unique ids.')
                 return
             }
             dispatch(
-                updateFormation({
-                    id: formationView.id,
-                    formation: {
-                        ...formationRef.current,
+                updateDesign({
+                    id: designView.id,
+                    design: {
+                        ...designRef.current,
                         pieces: [
-                            ...formationRef.current.pieces,
-                            ...placedFormationSnippet.pieces
+                            ...designRef.current.pieces,
+                            ...placedDesignSnippet.pieces
                         ],
                         connections: [
-                            ...formationRef.current.connections,
-                            ...placedFormationSnippet.connections
+                            ...designRef.current.connections,
+                            ...placedDesignSnippet.connections
                         ]
-                    } as FormationInput
-                } as FormationView)
+                    } as DesignInput
+                } as DesignView)
             )
         })
     }
@@ -2059,21 +2059,21 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         }
     }
 
-    const onDropFormationSnippet = (
-        formationSnippet: Formation | FormationInput,
+    const onDropDesignSnippet = (
+        designSnippet: Design | DesignInput,
         x?: number | undefined,
         y?: number | undefined,
-        existingFormation?: Formation | FormationInput | null | undefined) => {
+        existingDesign?: Design | DesignInput | null | undefined) => {
         if (graphViewRef.current) {
             const viewTransfrom = graphViewRef.current.state.viewTransform
             const svgX = -1 * ((viewTransfrom.x - x) / viewTransfrom.k)
             const svgY = -1 * ((viewTransfrom.y - y) / viewTransfrom.k)
 
-            const areAllIdsUnique = formationSnippet.pieces.every((piece) => {
-                return !(existingFormation?.pieces.some((existingPiece) => existingPiece.id === piece.id) ?? true)
+            const areAllIdsUnique = designSnippet.pieces.every((piece) => {
+                return !(existingDesign?.pieces.some((existingPiece) => existingPiece.id === piece.id) ?? true)
             })
             const idMap = new Map<string, string>()
-            const newFormationPieces = formationSnippet.pieces.map((piece) => {
+            const newDesignPieces = designSnippet.pieces.map((piece) => {
                 const x = Math.round(svgX + piece.diagram.point.x)
                 const y = Math.round(svgY + piece.diagram.point.y)
                 const id = areAllIdsUnique ? piece.id : piece.id + SEPARATOR + Generator.generateRandomId(x - y)
@@ -2089,7 +2089,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     }
                 }
             })
-            const newFormationConnections = formationSnippet.connections.map((connection) => ({
+            const newDesignConnections = designSnippet.connections.map((connection) => ({
                 ...connection,
                 connected: {
                     ...connection.connected,
@@ -2107,12 +2107,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                 }
             }))
             dispatch(
-                updateFormation({
-                    id: formationView.id,
-                    formation: {
-                        ...formationRef.current,
-                        pieces: [...formationRef.current.pieces, ...newFormationPieces],
-                        connections: [...formationRef.current.connections, ...newFormationConnections]
+                updateDesign({
+                    id: designView.id,
+                    design: {
+                        ...designRef.current,
+                        pieces: [...designRef.current.pieces, ...newDesignPieces],
+                        connections: [...designRef.current.connections, ...newDesignConnections]
                     }
                 })
             )
@@ -2126,7 +2126,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     return (
         <>
             <div
-                id='formation-editor'
+                id='design-editor'
                 className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
                 ref={setNodeRef}
             >
@@ -2188,7 +2188,7 @@ DiagramEditor.displayName = 'DiagramEditor'
 // 3D Editor
 
 interface IEditorContext {
-    formationViewId: string
+    designViewId: string
     kitDirectory: string
     blobUrls: { [key: string]: string }
 }
@@ -2201,15 +2201,15 @@ interface PieceThreeProps {
 }
 
 const PieceThree = ({ piece, selected }: PieceThreeProps) => {
-    const { formationViewId, kitDirectory } = useContext(EditorContext)
+    const { designViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
-    const formationView = useSelector((state: RootState) =>
-        selectFormationView(state, formationViewId)
+    const designView = useSelector((state: RootState) =>
+        selectDesignView(state, designViewId)
     )
     const type = useSelector((state: RootState) =>
         selectType(state, kitDirectory, piece.type.name, piece.type.variant ?? '')
     )
-    const isSelected = formationView.selection.piecesIds.includes(piece.id)
+    const isSelected = designView.selection.piecesIds.includes(piece.id)
     return (
         <ThreeSelect
             multiple
@@ -2226,20 +2226,20 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
             // }}
             onClick={(e) => {
                 const pieceId = getGroupNameFromClickEventGroupObject(e.eventObject)
-                if (formationView.selection.piecesIds.includes(pieceId)) {
+                if (designView.selection.piecesIds.includes(pieceId)) {
                     dispatch(
-                        updateFormationSelection(formationViewId,
-                            formationView.selection.piecesIds.filter(
+                        updateDesignSelection(designViewId,
+                            designView.selection.piecesIds.filter(
                                 (id) => id !== pieceId
                             ),
-                            formationView.selection.connectionsPiecesIds
+                            designView.selection.connectionsPiecesIds
                         )
                     )
                 } else {
                     dispatch(
-                        updateFormationSelection(formationViewId,
-                            [...formationView.selection.piecesIds, pieceId],
-                            formationView.selection.connectionsPiecesIds
+                        updateDesignSelection(designViewId,
+                            [...designView.selection.piecesIds, pieceId],
+                            designView.selection.connectionsPiecesIds
                         )
                     )
                 }
@@ -2265,12 +2265,12 @@ interface HierarchyThreeProps {
 }
 
 const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
-    const { formationViewId } = useContext(EditorContext)
-    const formationView = useSelector((state: RootState) =>
-        selectFormationView(state, formationViewId)
+    const { designViewId } = useContext(EditorContext)
+    const designView = useSelector((state: RootState) =>
+        selectDesignView(state, designViewId)
     )
-    const piece = formationView.formation.pieces.find((p) => p.id === hierarchy.piece.id)
-    const selected = formationView.selection.piecesIds.includes(piece.id)
+    const piece = designView.design.pieces.find((p) => p.id === hierarchy.piece.id)
+    const selected = designView.selection.piecesIds.includes(piece.id)
     if (!piece) return null
 
     const groupRef = useRef();
@@ -2292,30 +2292,30 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
 
 HierarchyThree.displayName = 'HierarchyThree'
 
-interface FormationThreeProps {
+interface DesignThreeProps {
     transformationMode?: string
 }
 
-const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProps) => {
+const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => {
     const dispatch = useDispatch()
-    const { formationViewId, kitDirectory } = useContext(EditorContext)
-    const formationView = useSelector((state: RootState) => selectFormationView(state, formationViewId))
+    const { designViewId, kitDirectory } = useContext(EditorContext)
+    const designView = useSelector((state: RootState) => selectDesignView(state, designViewId))
     const ports = useSelector((state: RootState) => selectPorts(state, kitDirectory))
-    if (!formationView) return null
+    if (!designView) return null
     if (!ports) return null
-    const selectedHierarchyRootPiecesIds = formationView.selection.piecesIds
+    const selectedHierarchyRootPiecesIds = designView.selection.piecesIds
     const hierarchies = useMemo(() => {
-        return formationToHierarchies(formationView.formation, ports);
-    }, [formationView.formation, ports]);
+        return designToHierarchies(designView.design, ports);
+    }, [designView.design, ports]);
     const transformControlRef = useRef(null)
 
-    const groupRef = useRef()
-
     return (
-        <group name={formationToIdString(formationView.formation)} ref={groupRef}>
+        <group name={designToIdString(designView.design)} >
             {hierarchies.map((hierarchy, i) => (
                 selectedHierarchyRootPiecesIds.includes(hierarchy.piece.id) ? (
                     <TransformControls
+                        // matrix={semioToThreeRotation().toArray()}
+                        // matrixAutoUpdate={false}
                         key={i}
                         ref={transformControlRef}
                         mode={transformationMode}
@@ -2331,11 +2331,11 @@ const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProp
                                 default:
                                     break;
                             }
-                            dispatch(updateFormation({
-                                id: formationViewId,
-                                formation: {
-                                    ...formationView.formation,
-                                    pieces: formationView.formation.pieces.map((piece) =>
+                            dispatch(updateDesign({
+                                id: designViewId,
+                                design: {
+                                    ...designView.design,
+                                    pieces: designView.design.pieces.map((piece) =>
                                         selectedHierarchyRootPiecesIds.includes(piece.id)
                                             ? {
                                                 ...piece,
@@ -2361,16 +2361,16 @@ const FormationThree = ({ transformationMode = 'translate' }: FormationThreeProp
     )
 }
 
-FormationThree.displayName = 'FormationThree'
+DesignThree.displayName = 'DesignThree'
 
 interface ShapeEditorProps {
 }
 
 const ShapeEditor = ({ }: ShapeEditorProps) => {
-    const { formationViewId } = useContext(EditorContext)
+    const { designViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
-    const [transformationMode, setTransformationMode] = useState('translate')
+    const [transformationMode, setTransdesignMode] = useState('translate')
 
     return (
         <div className='h-full relative'>
@@ -2383,7 +2383,7 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                         </div>
                     }
                     badge={{ dot: transformationMode === 'translate', color: colors.primary }}
-                    onClick={() => setTransformationMode('translate')}
+                    onClick={() => setTransdesignMode('translate')}
                 />
                 <FloatButton
                     icon={
@@ -2392,13 +2392,13 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                         </div>
                     }
                     badge={{ dot: transformationMode === 'rotate', color: colors.primary }}
-                    onClick={() => setTransformationMode('rotate')}
+                    onClick={() => setTransdesignMode('rotate')}
                 />
             </FloatButton.Group>
             <SemioCanvas
-                onPointerMissed={() => dispatch(updateFormationSelection(formationViewId, [], []))}
+                onPointerMissed={() => dispatch(updateDesignSelection(designViewId, [], []))}
             >
-                <FormationThree transformationMode={transformationMode} />
+                <DesignThree transformationMode={transformationMode} />
             </SemioCanvas>
         </div>
     )
@@ -2591,7 +2591,7 @@ function getItem(
 //     </svg>
 // )
 
-// const FormationIcon = (props) => (
+// const DesignIcon = (props) => (
 //     <svg width={48} height={48} {...props}>
 //         <defs>
 //             <marker
@@ -2677,22 +2677,22 @@ function getItem(
 //     </svg>
 // )
 
-interface FormationWindowProps {
+interface DesignWindowProps {
     viewId: string
     kitDirectory: string
 }
 
-const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.Element => {
-    const formationView = useSelector((state: RootState) => selectFormationView(state, viewId))
-    if (!formationView) return <div>Formation not found</div>
-    const formationRef = useRef(formationView.formation)
+const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element => {
+    const designView = useSelector((state: RootState) => selectDesignView(state, viewId))
+    if (!designView) return <div>Design not found</div>
+    const designRef = useRef(designView.design)
     useEffect(() => {
-        formationRef.current = formationView.formation;
-    }, [formationView.formation])
+        designRef.current = designView.design;
+    }, [designView.design])
 
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
-    const formations = useSelector((state: RootState) => selectFormations(state, kitDirectory))
+    const designs = useSelector((state: RootState) => selectDesigns(state, kitDirectory))
 
     const [blobUrls, setBlobUrls] = useState<{ [key: string]: string }>({})
     useEffect(() => {
@@ -2718,8 +2718,8 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
     }, [kit])
 
     const [activeDraggedArtifactId, setActiveDraggedArtifactId] = useState('')
-    const [activeDraggedArtifact, setActiveDraggedArtifact] = useState<Type | Formation>()
-    const [activeDraggedArtifactKind, setActiveDraggedArtifactKind] = useState('') // type, formation or ''
+    const [activeDraggedArtifact, setActiveDraggedArtifact] = useState<Type | Design>()
+    const [activeDraggedArtifactKind, setActiveDraggedArtifactKind] = useState('') // type, design or ''
 
     useEffect(() => {
         const separatorIndex = activeDraggedArtifactId.indexOf(SEPARATOR)
@@ -2735,13 +2735,13 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                 setActiveDraggedArtifactKind('type')
                 break
             }
-            case 'formation': {
-                const formationNameSeparatorIndex = artifactId.indexOf(SEPARATOR)
-                const formationName = artifactId.substring(0, formationNameSeparatorIndex)
-                const formationVariant = artifactId.substring(formationNameSeparatorIndex + SEPARATOR.length)
-                const formation = formations.get(formationName)?.get(formationVariant ?? '')
-                setActiveDraggedArtifact(formation)
-                setActiveDraggedArtifactKind('formation')
+            case 'design': {
+                const designNameSeparatorIndex = artifactId.indexOf(SEPARATOR)
+                const designName = artifactId.substring(0, designNameSeparatorIndex)
+                const designVariant = artifactId.substring(designNameSeparatorIndex + SEPARATOR.length)
+                const design = designs.get(designName)?.get(designVariant ?? '')
+                setActiveDraggedArtifact(design)
+                setActiveDraggedArtifactKind('design')
                 break
             }
         }
@@ -2766,10 +2766,10 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                     })
                     break
                 }
-                case 'formation': {
-                    const formationToDrop = formations.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
-                    if (formationToDrop) {
-                        diagramEditorRef.current.onDropFormationSnippet(formationToDrop, relativeX, relativeY, formationView.formation)
+                case 'design': {
+                    const designToDrop = designs.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
+                    if (designToDrop) {
+                        diagramEditorRef.current.onDropDesignSnippet(designToDrop, relativeX, relativeY, designView.design)
                     }
                 }
             }
@@ -2781,8 +2781,8 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
         return <div>Kit not found</div>
     }
 
-    if (!formationView) {
-        return <div>Formation not found</div>
+    if (!designView) {
+        return <div>Design not found</div>
     }
 
     const actions = [
@@ -2803,12 +2803,12 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
             section: 'Files',
             perform: () => {
                 // TODO: Inject method and remove direct ipcRenderer call
-                window.electron.ipcRenderer.invoke('add-local-formation', kitDirectory, formationRef.current).then((result) => {
-                    const { formation, error } = result
+                window.electron.ipcRenderer.invoke('add-local-design', kitDirectory, designRef.current).then((result) => {
+                    const { design, error } = result
                     if (error) {
                         message.error(error.code)
                     } else {
-                        message.success('Formation saved')
+                        message.success('Design saved')
                     }
                 })
 
@@ -2818,7 +2818,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
         //     id: 'zoom-to-fit',
         //     name: 'Zoom to Fit',
         //     shortcut: ['$mod+t'],
-        //     keywords: 'formation',
+        //     keywords: 'design',
         //     section: 'Navigation',
         //     perform: () => {
         //         if (diagramEditorRef.current) {
@@ -2838,8 +2838,8 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                 <Col className='flex items-center'>
                     <Breadcrumb>
                         <Breadcrumb.Item>{kit.name}</Breadcrumb.Item>
-                        <Breadcrumb.Item>Formations</Breadcrumb.Item>
-                        <Breadcrumb.Item>{formationToHumanString(formationView?.formation)}</Breadcrumb.Item>
+                        <Breadcrumb.Item>Designs</Breadcrumb.Item>
+                        <Breadcrumb.Item>{designToHumanString(designView?.design)}</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
                 <Col className='flex items-center'>{/* TODO: Add icons for sharing, etc */}</Col>
@@ -2850,7 +2850,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                         <Sider width='240px' className='border-r-thin border-lightGrey'>
                             <Collapse
                                 className='p-3 border-b-thin border-lightGrey font-thin uppercase'
-                                defaultActiveKey={['types', 'formations']}
+                                defaultActiveKey={['types', 'designs']}
                                 items={[
                                     {
                                         key: 'types',
@@ -2921,21 +2921,21 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                         )
                                     },
                                     {
-                                        key: 'formations',
-                                        label: 'Formations',
+                                        key: 'designs',
+                                        label: 'Designs',
                                         children: (
                                             <Collapse
                                                 className='p-2 font-normal text-lightGrey normal-case'
-                                                defaultActiveKey={Array.from(formations.keys())}
-                                                items={Array.from(formations.entries())
+                                                defaultActiveKey={Array.from(designs.keys())}
+                                                items={Array.from(designs.entries())
                                                     .sort()
                                                     .map(
                                                         (
-                                                            [formationName, formationVariants],
+                                                            [designName, designVariants],
                                                             index
                                                         ) => ({
-                                                            key: formationName,
-                                                            label: formationName,
+                                                            key: designName,
+                                                            label: designName,
                                                             children: (
                                                                 <Space
                                                                     className='h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1'
@@ -2948,46 +2948,46 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                                                     }}
                                                                 >
                                                                     {Array.from(
-                                                                        formationVariants.entries()
+                                                                        designVariants.entries()
                                                                     )
                                                                         .sort()
                                                                         .map(
                                                                             (
                                                                                 [
-                                                                                    formationVariant,
-                                                                                    formation
+                                                                                    designVariant,
+                                                                                    design
                                                                                 ],
                                                                                 index
                                                                             ) => (
                                                                                 <ArtifactAvatar
                                                                                     key={
-                                                                                        'formation' +
+                                                                                        'design' +
                                                                                         SEPARATOR +
-                                                                                        formationName +
+                                                                                        designName +
                                                                                         SEPARATOR +
-                                                                                        formationVariant
+                                                                                        designVariant
                                                                                     }
                                                                                     draggableId={
-                                                                                        'formation' +
+                                                                                        'design' +
                                                                                         SEPARATOR +
-                                                                                        formationName +
+                                                                                        designName +
                                                                                         SEPARATOR +
-                                                                                        formationVariant
+                                                                                        designVariant
                                                                                     }
                                                                                     icon={
-                                                                                        formation.icon
+                                                                                        design.icon
                                                                                     }
                                                                                     description={
-                                                                                        formationVariant ? (
+                                                                                        designVariant ? (
                                                                                             <>
-                                                                                                {`Variant: ${formationVariant}`}
+                                                                                                {`Variant: ${designVariant}`}
                                                                                                 <br />
                                                                                                 {
-                                                                                                    formation.description
+                                                                                                    design.description
                                                                                                 }
                                                                                             </>
                                                                                         ) : (
-                                                                                            formation.description
+                                                                                            design.description
                                                                                         )
                                                                                     }
                                                                                 ></ArtifactAvatar>
@@ -3003,7 +3003,7 @@ const FormationWindow = ({ viewId, kitDirectory }: FormationWindowProps): JSX.El
                                 ]}
                             />
                         </Sider>
-                        <EditorContext.Provider value={{ kitDirectory, formationViewId: viewId, blobUrls }}>
+                        <EditorContext.Provider value={{ kitDirectory, designViewId: viewId, blobUrls }}>
                             <Content>
                                 <DiagramEditor
                                     ref={diagramEditorRef}
@@ -3152,11 +3152,11 @@ const ArtifactWizard = ({
                 label='Kind'
                 name='kind'
                 rules={[{ required: true, message: 'What artifact do you want to create?' }]}
-                initialValue={ViewKind.Formation}
+                initialValue={ViewKind.Design}
             >
                 <Radio.Group>
                     <Radio.Button value={ViewKind.Type}>Type</Radio.Button>
-                    <Radio.Button value={ViewKind.Formation}>Formation</Radio.Button>
+                    <Radio.Button value={ViewKind.Design}>Design</Radio.Button>
                 </Radio.Group>
             </Form.Item>
             <Form.Item<IArtifactView>
@@ -3234,13 +3234,13 @@ const ArtifactWindow = ({
                     } as TypeView)
                 )
                 return
-            case ViewKind.Formation:
+            case ViewKind.Design:
                 dispatch(
                     addView({
-                        kind: ViewKind.Formation,
+                        kind: ViewKind.Design,
                         kitDirectory: artifactView.kitDirectory,
                         id: artifactView.id,
-                        formation: {
+                        design: {
                             name: artifactView.name,
                             description: artifactView.description,
                             icon: artifactView.icon,
@@ -3249,8 +3249,8 @@ const ArtifactWindow = ({
                             pieces: [],
                             connections: [],
                             qualities: []
-                        } as FormationInput
-                    } as FormationView)
+                        } as DesignInput
+                    } as DesignView)
                 )
                 return
             default:
@@ -3265,9 +3265,9 @@ const ArtifactWindow = ({
                     case ViewKind.Type:
                         // return <TypeWindow viewId={viewId} kitDirectory={artifactView.kitDirectory} />
                         return <div>Soon you can create types here🥳</div>
-                    case ViewKind.Formation:
+                    case ViewKind.Design:
                         return (
-                            <FormationWindow
+                            <DesignWindow
                                 viewId={viewId}
                                 kitDirectory={artifactView.kitDirectory}
                             />
@@ -3357,9 +3357,9 @@ const App = ({
                                                         (view.type.variant
                                                             ? ` (${view.type.variant})`
                                                             : '')
-                                                        : view.formation.name +
-                                                        (view.formation.variant
-                                                            ? ` (${view.formation.variant})`
+                                                        : view.design.name +
+                                                        (view.design.variant
+                                                            ? ` (${view.design.variant})`
                                                             : '')
                                             }
                                         return {

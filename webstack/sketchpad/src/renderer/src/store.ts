@@ -2,7 +2,7 @@ import { enableMapSet } from 'immer'
 enableMapSet()
 
 import { PayloadAction, configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { Formation, FormationInput, Kit, Port, Type, TypeInput } from './semio'
+import { Design, DesignInput, Kit, Port, Type, TypeInput } from './semio'
 
 export const loadLocalKit = createAsyncThunk('loadLocalKit', async (directory: string) => {
     if (!directory) {
@@ -119,34 +119,34 @@ export const selectPorts = (
     return new Map<string, Map<string, Map<string, Port>>>()
 }
 
-export const selectFormations = (
+export const selectDesigns = (
     state: { kits: { kits: Map<string, Kit> } },
     directory: string
-): Map<string, Map<string, Formation>> => {
+): Map<string, Map<string, Design>> => {
     const kit = selectKit(state, directory)
-    if (kit && kit.formations) {
-        const formations = new Map<string, Map<string, Formation>>()
-        kit.formations.forEach((formation) => {
-            if (!formations.has(formation.name)) {
-                formations.set(formation.name, new Map<string, Formation>())
+    if (kit && kit.designs) {
+        const designs = new Map<string, Map<string, Design>>()
+        kit.designs.forEach((design) => {
+            if (!designs.has(design.name)) {
+                designs.set(design.name, new Map<string, Design>())
             }
-            formations.get(formation.name)?.set(formation.variant, formation)
+            designs.get(design.name)?.set(design.variant, design)
         })
-        return formations
+        return designs
     }
-    return new Map<string, Map<string, Formation>>()
+    return new Map<string, Map<string, Design>>()
 }
 
-export const selectFormation = (
+export const selectDesign = (
     state: { kits: { kits: Map<string, Kit> } },
     directory: string,
     name: string,
     variant: string
-): Formation | undefined => {
+): Design | undefined => {
     const kit = selectKit(state, directory)
-    if (kit && kit.formations) {
-        return kit.formations.find(
-            (formation) => formation.name === name && formation.variant === variant
+    if (kit && kit.designs) {
+        return kit.designs.find(
+            (design) => design.name === name && design.variant === variant
         )
     }
     return undefined
@@ -154,7 +154,7 @@ export const selectFormation = (
 
 export enum ViewKind {
     Type,
-    Formation
+    Design
 }
 
 export interface IArtifactView {
@@ -207,49 +207,49 @@ export class TypeView implements IArtifactView {
     }
 }
 
-export interface ISelectionFormation {
+export interface ISelectionDesign {
     piecesIds: string[]
     connectionsPiecesIds: [string, string][] // [connectingPieceId, connectedPieceId]
 }
 
-export class FormationView implements IArtifactView {
-    kind: ViewKind = ViewKind.Formation
+export class DesignView implements IArtifactView {
+    kind: ViewKind = ViewKind.Design
     id: string
     kitDirectory: string
-    formation: FormationInput
-    selection: ISelectionFormation
+    design: DesignInput
+    selection: ISelectionDesign
     constructor(
         id: string,
         kitDirectory: string,
-        formation: FormationInput = {
-            name: 'Unsaved Formation',
+        design: DesignInput = {
+            name: 'Unsaved Design',
             variant: '',
             unit: 'm',
             pieces: [],
             connections: []
         },
-        selection: ISelectionFormation = { piecesIds: [], connectionsPiecesIds: [] }
+        selection: ISelectionDesign = { piecesIds: [], connectionsPiecesIds: [] }
     ) {
         this.id = id
         this.kitDirectory = kitDirectory
-        this.formation = formation
+        this.design = design
         this.selection = selection
     }
     get name(): string {
-        return this.formation.name
+        return this.design.name
     }
     get description(): string {
-        return this.formation.description ?? ''
+        return this.design.description ?? ''
     }
     get icon(): string {
-        return this.formation.icon ?? ''
+        return this.design.icon ?? ''
     }
     toObject() {
         return {
             kind: this.kind,
             id: this.id,
             kitDirectory: this.kitDirectory,
-            formation: this.formation,
+            design: this.design,
             selection: this.selection
         }
     }
@@ -268,20 +268,20 @@ export const viewsSlice = createSlice({
                     id: string
                     kitDirectory: string
                     viewKind: ViewKind
-                    formation?: FormationInput
+                    design?: DesignInput
                     type?: TypeInput
-                    selection?: ISelectionFormation
+                    selection?: ISelectionDesign
                 }>
             ) => {
-                const { id, kitDirectory, viewKind, formation, type, selection } = action.payload
+                const { id, kitDirectory, viewKind, design, type, selection } = action.payload
                 if (viewKind === ViewKind.Type) {
                     state.views.push({ kind: viewKind, id, kitDirectory, type })
-                } else if (viewKind === ViewKind.Formation) {
+                } else if (viewKind === ViewKind.Design) {
                     state.views.push({
                         kind: viewKind,
                         id,
                         kitDirectory,
-                        formation,
+                        design,
                         selection: selection ?? { piecesIds: [], connectionsPiecesIds: [] }
                     })
                 }
@@ -292,14 +292,14 @@ export const viewsSlice = createSlice({
                         viewKind: view.kind,
                         kitDirectory: view.kitDirectory,
                         id: view.id,
-                        formation:
-                            view.kind === ViewKind.Formation
-                                ? (view as FormationView).formation
+                        design:
+                            view.kind === ViewKind.Design
+                                ? (view as DesignView).design
                                 : undefined,
                         type: view.kind === ViewKind.Type ? (view as TypeView).type : undefined,
                         selection:
-                            view.kind === ViewKind.Formation
-                                ? (view as FormationView).selection
+                            view.kind === ViewKind.Design
+                                ? (view as DesignView).selection
                                 : undefined
                     }
                 }
@@ -308,18 +308,18 @@ export const viewsSlice = createSlice({
         removeView: (state, action: PayloadAction<string>) => {
             state.views = state.views.filter((view) => view.id !== action.payload)
         },
-        updateFormation: (
+        updateDesign: (
             state,
-            action: PayloadAction<{ id: string; formation: FormationInput }>
+            action: PayloadAction<{ id: string; design: DesignInput }>
         ) => {
-            const formationView = state.views.find(
-                (view) => view.id === action.payload.id && view.kind === ViewKind.Formation
+            const designView = state.views.find(
+                (view) => view.id === action.payload.id && view.kind === ViewKind.Design
             )
-            if (formationView) {
-                formationView.formation = action.payload.formation
+            if (designView) {
+                designView.design = action.payload.design
             }
         },
-        updateFormationSelection: {
+        updateDesignSelection: {
             reducer: (
                 state,
                 action: PayloadAction<{
@@ -328,15 +328,15 @@ export const viewsSlice = createSlice({
                     connectionsPiecesIds: [string, string][] | null | undefined
                 }>
             ) => {
-                const formationView = state.views.find(
-                    (view) => view.id === action.payload.id && view.kind === ViewKind.Formation
+                const designView = state.views.find(
+                    (view) => view.id === action.payload.id && view.kind === ViewKind.Design
                 )
-                if (formationView) {
+                if (designView) {
                     if (action.payload.piecesIds) {
-                        formationView.selection.piecesIds = action.payload.piecesIds
+                        designView.selection.piecesIds = action.payload.piecesIds
                     }
                     if (action.payload.connectionsPiecesIds) {
-                        formationView.selection.connectionsPiecesIds =
+                        designView.selection.connectionsPiecesIds =
                             action.payload.connectionsPiecesIds
                     }
                 }
@@ -358,7 +358,7 @@ export const viewsSlice = createSlice({
     }
 })
 
-export const { addView, removeView, updateFormation, updateFormationSelection } = viewsSlice.actions
+export const { addView, removeView, updateDesign, updateDesignSelection } = viewsSlice.actions
 
 export const selectViews = (state: { views: { views: IArtifactView[] } }): IArtifactView[] =>
     state.views.views
@@ -368,13 +368,13 @@ export const selectView = (
     id: string
 ): IArtifactView | undefined => state.views.views.find((view) => view.id === id)
 
-export const selectFormationView = (
+export const selectDesignView = (
     state: { views: { views: IArtifactView[] } },
     id: string
-): FormationView | undefined => {
+): DesignView | undefined => {
     const view = state.views.views.find((view) => view.id === id)
-    if (view && view.kind === ViewKind.Formation) {
-        return view as FormationView
+    if (view && view.kind === ViewKind.Design) {
+        return view as DesignView
     }
     return undefined
 }

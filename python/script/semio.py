@@ -111,7 +111,7 @@ class Attraction(BaseModel):
     attracted: Side
 
 
-class Formation(BaseModel):
+class Design(BaseModel):
     name: str
     description: str
     icon: str
@@ -120,7 +120,7 @@ class Formation(BaseModel):
     qualities: List[Quality]
 
 
-class FormationId(BaseModel):
+class DesignId(BaseModel):
     name: str
     qualities: List[Quality]
 
@@ -131,7 +131,7 @@ class Kit(BaseModel):
     icon: str
     url: str
     types: List[Type]
-    formations: List[Formation]
+    designs: List[Design]
 
 
 class Parameter(BaseModel):
@@ -162,21 +162,21 @@ class Modification(Script, ABC):
 class Choreography(Script, ABC):
     @staticmethod
     @abstractmethod
-    def choreograph(parameters: List[Parameter]) -> Formation:
+    def choreograph(parameters: List[Parameter]) -> Design:
         pass
 
 
-class Transformation(Script, ABC):
+class Transdesign(Script, ABC):
     @staticmethod
     @abstractmethod
-    def transform(formation: Formation, parameters: List[Parameter]) -> Formation:
+    def transform(design: Design, parameters: List[Parameter]) -> Design:
         pass
 
 
 class Synthesis(Script, ABC):
     @staticmethod
     @abstractmethod
-    def synthesize(formation: Formation, parameters: List[Parameter]) -> Quality:
+    def synthesize(design: Design, parameters: List[Parameter]) -> Quality:
         pass
 
 
@@ -186,7 +186,7 @@ class Host(FastAPI):
         prototypes: List[Prototype] = [],
         modifications: List[Modification] = [],
         choreographies: List[Choreography] = [],
-        transformations: List[Transformation] = [],
+        transformations: List[Transdesign] = [],
         syntheses: List[Synthesis] = [],
     ):
         super().__init__(separate_input_output_schemas=False)
@@ -204,12 +204,12 @@ class Host(FastAPI):
         return {"scripts": "A description of the scripts available."}
 
     def transform(
-        self, name: str, formation: Formation, parameters: List[Parameter]
-    ) -> Formation:
-        formation = [p for p in self.transformations if p.name == name][0].transform(
-            formation, parameters
+        self, name: str, design: Design, parameters: List[Parameter]
+    ) -> Design:
+        design = [p for p in self.transformations if p.name == name][0].transform(
+            design, parameters
         )
-        return {"formation": formation}
+        return {"design": design}
 
     def run(self):
         run(self, host=SEMIO_HOST_HOST, port=SEMIO_HOST_PORT)

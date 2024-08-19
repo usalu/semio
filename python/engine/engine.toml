@@ -1,0 +1,3 @@
+version = 3
+[database]
+url = "${SEMIO_ENGINE_DATABASE_URL}"
