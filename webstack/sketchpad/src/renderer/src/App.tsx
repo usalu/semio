@@ -2293,10 +2293,10 @@ const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
 HierarchyThree.displayName = 'HierarchyThree'
 
 interface DesignThreeProps {
-    transdesignMode?: string
+    transformationMode?: string
 }
 
-const DesignThree = ({ transdesignMode = 'translate' }: DesignThreeProps) => {
+const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => {
     const dispatch = useDispatch()
     const { designViewId, kitDirectory } = useContext(EditorContext)
     const designView = useSelector((state: RootState) => selectDesignView(state, designViewId))
@@ -2318,10 +2318,10 @@ const DesignThree = ({ transdesignMode = 'translate' }: DesignThreeProps) => {
                         // matrixAutoUpdate={false}
                         key={i}
                         ref={transformControlRef}
-                        mode={transdesignMode}
+                        mode={transformationMode}
                         onMouseUp={(event) => {
                             const transformControlMatrix = new Matrix4();
-                            switch (transdesignMode) {
+                            switch (transformationMode) {
                                 case 'translate':
                                     transformControlMatrix.setPosition(transformControlRef.current.offset);
                                     break;
@@ -2370,7 +2370,7 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
     const { designViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
-    const [transdesignMode, setTransdesignMode] = useState('translate')
+    const [transformationMode, setTransdesignMode] = useState('translate')
 
     return (
         <div className='h-full relative'>
@@ -2382,7 +2382,7 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                             <OpenWithIcon />
                         </div>
                     }
-                    badge={{ dot: transdesignMode === 'translate', color: colors.primary }}
+                    badge={{ dot: transformationMode === 'translate', color: colors.primary }}
                     onClick={() => setTransdesignMode('translate')}
                 />
                 <FloatButton
@@ -2391,14 +2391,14 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                             <ThreeSixtyIcon />
                         </div>
                     }
-                    badge={{ dot: transdesignMode === 'rotate', color: colors.primary }}
+                    badge={{ dot: transformationMode === 'rotate', color: colors.primary }}
                     onClick={() => setTransdesignMode('rotate')}
                 />
             </FloatButton.Group>
             <SemioCanvas
                 onPointerMissed={() => dispatch(updateDesignSelection(designViewId, [], []))}
             >
-                <DesignThree transdesignMode={transdesignMode} />
+                <DesignThree transformationMode={transformationMode} />
             </SemioCanvas>
         </div>
     )

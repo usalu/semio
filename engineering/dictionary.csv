@@ -26,7 +26,7 @@ Sc,Scn,🌆,Scene,A scene is a collection of objects.
 Sd,Sde,🧱,Side,A side of a piece in a connection.
 SP,SPt,📺,Screen Point,A 2d-point (xy) of integers in screen coordinate system.
 Su,Suc,✅,Success,
-Tf,Trf,▦,Transform,A 4x4 translation and rotation transdesign matrix (no scaling or shearing).
+Tf,Trf,▦,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 Tg,Tag,🏷️,Tag,A tag is meta-data for grouping representations.
 Ty,Typ,🧩,Type,A type is a reusable element that can be connected with other types over ports.
 Ur,Url,🔗,Unique Resource Locator,

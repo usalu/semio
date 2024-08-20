@@ -186,7 +186,7 @@ class Host(FastAPI):
         prototypes: List[Prototype] = [],
         modifications: List[Modification] = [],
         choreographies: List[Choreography] = [],
-        transdesigns: List[Transdesign] = [],
+        transformations: List[Transdesign] = [],
         syntheses: List[Synthesis] = [],
     ):
         super().__init__(separate_input_output_schemas=False)
@@ -197,7 +197,7 @@ class Host(FastAPI):
         self.prototypes = prototypes
         self.modifications = modifications
         self.choreographies = choreographies
-        self.transdesigns = transdesigns
+        self.transformations = transformations
         self.syntheses = syntheses
 
     def read_root(self):
@@ -206,7 +206,7 @@ class Host(FastAPI):
     def transform(
         self, name: str, design: Design, parameters: List[Parameter]
     ) -> Design:
-        design = [p for p in self.transdesigns if p.name == name][0].transform(
+        design = [p for p in self.transformations if p.name == name][0].transform(
             design, parameters
         )
         return {"design": design}

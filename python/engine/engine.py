@@ -43,7 +43,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from json import dumps
 from numpy import ndarray, asarray, eye, dot, cross, radians, degrees
-from pytransform3d.transdesigns import (
+from pytransform3d.transformations import (
     concat,
     invert_transform,
     transform_from,
@@ -677,7 +677,7 @@ class Rotation(BaseModel):
 
 
 class Transform(ndarray):
-    """▦ A 4x4 translation and rotation transdesign matrix (no scaling or shearing)."""
+    """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
 
     def __new__(cls, input_array=None):
         if input_array is None:
