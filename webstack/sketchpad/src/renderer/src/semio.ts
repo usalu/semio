@@ -3,7 +3,7 @@ import { Matrix4, Quaternion, Vector3 } from 'three'
 import {
     Point as TPoint,
     Vector as TVector,
-    Plane as TPlane,
+    CoordinateSystem as TCoordinateSystem,
     Design,
     DesignInput,
     Piece as TPiece,
@@ -109,7 +109,7 @@ export const TOLERANCE = 1e-5
 //     id: Scalars['String']['output']
 //     point: Point
 //     direction: Vector
-//     plane: Plane
+//     coordinateSystem: CoordinateSystem
 // }
 
 // /** 🗺️ A locator is meta-data for grouping ports. */
@@ -161,12 +161,12 @@ export const TOLERANCE = 1e-5
 // /** 🌱 The root indesign of a piece. */
 // export type PieceRoot = {
 //     __typename?: 'PieceRoot'
-//     plane: Plane
+//     coordinateSystem: CoordinateSystem
 // }
 
-// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-// export type Plane = {
-//     __typename?: 'Plane'
+// /** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+// export type CoordinateSystem = {
+//     __typename?: 'CoordinateSystem'
 //     origin: Point
 //     xAxis: Vector
 //     yAxis: Vector
@@ -251,10 +251,10 @@ export const TOLERANCE = 1e-5
 //     design?: Maybe<Design>
 // }
 
-// /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
+// /** 🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root). */
 // export type Object = {
 //     __typename?: 'Object'
-//     plane: Plane
+//     coordinateSystem: CoordinateSystem
 //     piece?: Maybe<Piece>
 //     parent?: Maybe<Object>
 // }
@@ -445,11 +445,11 @@ export const TOLERANCE = 1e-5
 
 // /** 🌱 The root indesign of a piece. */
 // export type PieceRootInput = {
-//     plane: PlaneInput
+//     coordinateSystem: CoordinateSystemInput
 // }
 
-// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-// export type PlaneInput = {
+// /** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+// export type CoordinateSystemInput = {
 //     origin: PointInput
 //     xAxis: VectorInput
 //     yAxis: VectorInput
@@ -763,7 +763,7 @@ export class Vector extends Vector3 {
     }
 }
 
-export class Plane {
+export class CoordinateSystem {
     origin: Point
     xAxis: Vector
     yAxis: Vector
@@ -787,7 +787,7 @@ export class Plane {
         return new Vector().crossVectors(this.xAxis, this.yAxis)
     }
 
-    isCloseTo(other: Plane, tol: number = TOLERANCE): boolean {
+    isCloseTo(other: CoordinateSystem, tol: number = TOLERANCE): boolean {
         return (
             this.origin.isCloseTo(other.origin, tol) &&
             this.xAxis.isCloseTo(other.xAxis, tol) &&
@@ -795,48 +795,48 @@ export class Plane {
         )
     }
 
-    transform(transform: Transform): Plane {
-        return transform.transformPlane(this)
+    transform(transform: Transform): CoordinateSystem {
+        return transform.transformCoordinateSystem(this)
     }
 
     toTransform(): Transform {
-        return Transform.fromPlane(this)
+        return Transform.fromCoordinateSystem(this)
     }
 
-    toThree(): Plane {
+    toThree(): CoordinateSystem {
         return this.transform(semioToThreeRotation())
     }
 
-    toSemio(): Plane {
+    toSemio(): CoordinateSystem {
         return this.transform(threeToSemioRotation())
     }
 
-    static XY(): Plane {
-        return new Plane(new Point(), Vector.X(), Vector.Y())
+    static XY(): CoordinateSystem {
+        return new CoordinateSystem(new Point(), Vector.X(), Vector.Y())
     }
 
-    static fromYAxis(yAxis: Vector, theta: number = 0, origin?: Point): Plane {
+    static fromYAxis(yAxis: Vector, theta: number = 0, origin?: Point): CoordinateSystem {
         if (yAxis.length() - 1 > TOLERANCE) {
             throw new Error("The yAxis must be normalized.")
         }
         const orientation = Transform.fromDirections(Vector.Y(), yAxis)
         const rotation = Transform.fromAngle(yAxis, theta)
         const xAxis = Vector.X().applyMatrix4(rotation.multiply(orientation))
-        return new Plane(origin ?? new Point(), xAxis, yAxis)
+        return new CoordinateSystem(origin ?? new Point(), xAxis, yAxis)
     }
 
-    static parse(object?: Plane | TPlane | string | null | undefined): Plane {
+    static parse(object?: CoordinateSystem | TCoordinateSystem | string | null | undefined): CoordinateSystem {
         if (object === undefined || object === null) {
-            return new Plane()
+            return new CoordinateSystem()
         }
-        if (object instanceof Plane) {
+        if (object instanceof CoordinateSystem) {
             return object
         }
         if (typeof object === 'string') {
             const { origin, xAxis, yAxis } = JSON.parse(object)
-            return new Plane(Point.parse(origin), Vector.parse(xAxis), Vector.parse(yAxis))
+            return new CoordinateSystem(Point.parse(origin), Vector.parse(xAxis), Vector.parse(yAxis))
         }
-        return new Plane(Point.parse(object.origin), Vector.parse(object.xAxis), Vector.parse(object.yAxis))
+        return new CoordinateSystem(Point.parse(object.origin), Vector.parse(object.xAxis), Vector.parse(object.yAxis))
     }
 }
 
@@ -916,19 +916,19 @@ export class Transform extends Matrix4 {
         return new Vector(transformedVector.x, transformedVector.y, transformedVector.z)
     }
 
-    transformPlane(plane: Plane): Plane {
-        const planeTransform = Transform.fromPlane(plane)
-        const planeTransformed = planeTransform.after(this.clone())
-        return planeTransformed.toPlane()
+    transformCoordinateSystem(coordinateSystem: CoordinateSystem): CoordinateSystem {
+        const coordinateSystemTransform = Transform.fromCoordinateSystem(coordinateSystem)
+        const coordinateSystemTransformed = coordinateSystemTransform.after(this.clone())
+        return coordinateSystemTransformed.toCoordinateSystem()
     }
 
-    transform(geometry: Point | Vector | Plane): Point | Vector | Plane {
+    transform(geometry: Point | Vector | CoordinateSystem): Point | Vector | CoordinateSystem {
         if (geometry instanceof Point) {
             return this.transformPoint(geometry)
         } else if (geometry instanceof Vector) {
             return this.transformVector(geometry)
-        } else if (geometry instanceof Plane) {
-            return this.transformPlane(geometry)
+        } else if (geometry instanceof CoordinateSystem) {
+            return this.transformCoordinateSystem(geometry)
         } else {
             throw new Error("Not implemented")
         }
@@ -942,9 +942,9 @@ export class Transform extends Matrix4 {
         return new Transform().makeRotationAxis(rotation.axis, radians(rotation.angle))
     }
 
-    static fromPlane(plane: Plane): Transform {
-        return new Transform().makeBasis(plane.xAxis, plane.yAxis, plane.zAxis)
-            .setPosition(plane.origin)
+    static fromCoordinateSystem(coordinateSystem: CoordinateSystem): Transform {
+        return new Transform().makeBasis(coordinateSystem.xAxis, coordinateSystem.yAxis, coordinateSystem.zAxis)
+            .setPosition(coordinateSystem.origin)
     }
 
     static fromAngle(axis: Vector, angle: number): Transform {
@@ -959,11 +959,11 @@ export class Transform extends Matrix4 {
         return new Transform().makeRotationAxis(axisAngle.normalize(), startDirection.angleTo(endDirection))
     }
 
-    toPlane(): Plane {
+    toCoordinateSystem(): CoordinateSystem {
         const origin = new Point(this[12], this[13], this[14])
         const xAxis = new Vector(this[0], this[1], this[2])
         const yAxis = new Vector(this[4], this[5], this[6])
-        return new Plane(origin, xAxis, yAxis)
+        return new CoordinateSystem(origin, xAxis, yAxis)
     }
 
     toJSON(): object {
@@ -1156,7 +1156,7 @@ export const designToHierarchies = (
                     }
                     transform = moveToParent.after(transform)
                     const hierarchy = new Hierarchy(childPiece, transform)
-                    // console.log(hierarchy, transform.toPlane(), rotation, centerChild, moveToParent)
+                    // console.log(hierarchy, transform.toCoordinateSystem(), rotation, centerChild, moveToParent)
                     pieceIdToHierarchy[childPiece.id] = hierarchy
                     pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
                 }

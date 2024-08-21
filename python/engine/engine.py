@@ -607,8 +607,8 @@ class Vector(BaseModel):
         return Vector(z=1)
 
 
-class Plane(BaseModel):
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+class CoordinateSystem(BaseModel):
+    """◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
 
     origin: Point
     xAxis: Vector
@@ -634,7 +634,7 @@ class Plane(BaseModel):
             raise ValidationError("The x-axis and y-axis must be orthogonal.")
         super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
-    def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "CoordinateSystem", tol: float = TOLERANCE) -> bool:
         return (
             self.origin.isCloseTo(other.origin, tol)
             and self.xAxis.isCloseTo(other.xAxis, tol)
@@ -645,22 +645,22 @@ class Plane(BaseModel):
     def zAxis(self) -> Vector:
         return self.xAxis.cross(self.yAxis)
 
-    def transform(self, transform: "Transform") -> "Plane":
-        return Transform.transformPlane(transform, self)
+    def transform(self, transform: "Transform") -> "CoordinateSystem":
+        return Transform.transformCoordinateSystem(transform, self)
 
     def toTransform(self) -> "Transform":
-        return Transform.fromPlane(self)
+        return Transform.fromCoordinateSystem(self)
 
     @staticmethod
-    def XY() -> "Plane":
-        return Plane(
+    def XY() -> "CoordinateSystem":
+        return CoordinateSystem(
             origin=Point(),
             xAxis=Vector.X(),
             yAxis=Vector.Y(),
         )
 
     @staticmethod
-    def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
+    def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "CoordinateSystem":
         if abs(yAxis.length - 1) > TOLERANCE:
             raise SpecificationError("The yAxis must be normalized.")
         if origin is None:
@@ -668,7 +668,7 @@ class Plane(BaseModel):
         orientation = Transform.fromDirections(Vector.Y(), yAxis)
         rotation = Transform.fromAngle(yAxis, theta)
         xAxis = Vector.X().transform(rotation.after(orientation))
-        return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
+        return CoordinateSystem(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
 
 class Rotation(BaseModel):
@@ -757,20 +757,20 @@ class Transform(ndarray):
         transformedVector = transform(self, vector_to_direction(vector))
         return Vector(*transformedVector[:3])
 
-    def transformPlane(self, plane: Plane) -> Plane:
-        planeTransform = Transform.fromPlane(plane)
-        planeTransformed = planeTransform.after(self)
-        return Transform.toPlane(planeTransformed)
+    def transformCoordinateSystem(self, coordinateSystem: CoordinateSystem) -> CoordinateSystem:
+        coordinateSystemTransform = Transform.fromCoordinateSystem(coordinateSystem)
+        coordinateSystemTransformed = coordinateSystemTransform.after(self)
+        return Transform.toCoordinateSystem(coordinateSystemTransformed)
 
     def transform(
-        self, geometry: Union[Point, Vector, Plane]
-    ) -> Union[Point, Vector, Plane]:
+        self, geometry: Union[Point, Vector, CoordinateSystem]
+    ) -> Union[Point, Vector, CoordinateSystem]:
         if isinstance(geometry, Point):
             return self.transformPoint(geometry)
         elif isinstance(geometry, Vector):
             return self.transformVector(geometry)
-        elif isinstance(geometry, Plane):
-            return self.transformPlane(geometry)
+        elif isinstance(geometry, CoordinateSystem):
+            return self.transformCoordinateSystem(geometry)
         else:
             raise NotImplementedError()
 
@@ -797,16 +797,16 @@ class Transform(ndarray):
         )
 
     @staticmethod
-    def fromPlane(plane: Plane) -> "Transform":
-        # Assumes plane is normalized
+    def fromCoordinateSystem(coordinateSystem: CoordinateSystem) -> "Transform":
+        # Assumes coordinateSystem is normalized
         return Transform(
             transform_from(
                 [
-                    [plane.xAxis.x, plane.yAxis.x, plane.zAxis.x],
-                    [plane.xAxis.y, plane.yAxis.y, plane.zAxis.y],
-                    [plane.xAxis.z, plane.yAxis.z, plane.zAxis.z],
+                    [coordinateSystem.xAxis.x, coordinateSystem.yAxis.x, coordinateSystem.zAxis.x],
+                    [coordinateSystem.xAxis.y, coordinateSystem.yAxis.y, coordinateSystem.zAxis.y],
+                    [coordinateSystem.xAxis.z, coordinateSystem.yAxis.z, coordinateSystem.zAxis.z],
                 ],
-                plane.origin,
+                coordinateSystem.origin,
             )
         )
 
@@ -823,8 +823,8 @@ class Transform(ndarray):
         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
 
-    def toPlane(self) -> Plane:
-        return Plane(
+    def toCoordinateSystem(self) -> CoordinateSystem:
+        return CoordinateSystem(
             origin=Point(*self[:3, 3]),
             xAxis=Vector(
                 self[0, 0],
@@ -869,7 +869,7 @@ class Port(Base):
         back_populates="connectingPieceTypePort",
     )
 
-    # TODO: Add a constraint that the plane normal must be normalized.
+    # TODO: Add a constraint that the coordinateSystem normal must be normalized.
     __table_args__ = (UniqueConstraint("localId", "typeId"),)
 
     # def __eq__(self, other: object) -> bool:
@@ -881,7 +881,7 @@ class Port(Base):
     #     return hash((self.origin, self.normal))
 
     def __repr__(self) -> str:
-        return f"Port(id={self.id!r}, localId={self.localId!r}, planeOriginX={self.planeOriginX!r}, planeOriginY={self.planeOriginY!r}, planeOriginZ={self.planeOriginZ!r}, planeYAxisX={self.planeYAxisX!r}, planeYAxisY={self.planeYAxisY!r}, planeYAxisZ={self.planeYAxisZ!r}, typeId={self.typeId!r}, locators={self.locators!r})"
+        return f"Port(id={self.id!r}, localId={self.localId!r}, coordinateSystemOriginX={self.coordinateSystemOriginX!r}, coordinateSystemOriginY={self.coordinateSystemOriginY!r}, coordinateSystemOriginZ={self.coordinateSystemOriginZ!r}, coordinateSystemYAxisX={self.coordinateSystemYAxisX!r}, coordinateSystemYAxisY={self.coordinateSystemYAxisY!r}, coordinateSystemYAxisZ={self.coordinateSystemYAxisZ!r}, typeId={self.typeId!r}, locators={self.locators!r})"
 
     def __str__(self) -> str:
         return f"Port(id={str(self.id)}, typeId={str(self.typeId)})"
@@ -898,8 +898,8 @@ class Port(Base):
         return Vector(self.directionX, self.directionY, self.directionZ)
 
     @property
-    def plane(self) -> Plane:
-        return Plane.fromYAxis(self.direction, origin=self.point)
+    def coordinateSystem(self) -> CoordinateSystem:
+        return CoordinateSystem.fromYAxis(self.direction, origin=self.point)
 
     # @property
     # def parent(self) -> Entity:
@@ -1095,11 +1095,6 @@ class TypeId(BaseModel):
     name: str
     variant: str = ""
 
-class PieceRoot(BaseModel):
-    """🌱 The root indesign of a piece."""
-
-    plane: Plane
-
 
 class PieceDiagram(BaseModel):
     """✏️ The diagram indesign of a piece."""
@@ -1119,17 +1114,17 @@ class Piece(Base):
     )
     typeId: Mapped[int] = mapped_column(ForeignKey("type.id"))
     type: Mapped["Type"] = relationship("Type", back_populates="pieces")
-    # When the piece is a root piece, the root plane is set.
-    # Plane coordinates are in the units of the design.
-    rootPlaneOriginX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneOriginY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneOriginZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneXAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneXAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneXAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneYAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneYAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
-    rootPlaneYAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    # When the piece is a root piece, the root coordinateSystem is set.
+    # CoordinateSystem coordinates are in the units of the design.
+    coordinateSystemOriginX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemOriginY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemOriginZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemXAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemXAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemXAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemYAxisX: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemYAxisY: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
+    coordinateSystemYAxisZ: Mapped[Optional[float]] = mapped_column(Float(), nullable=True)
     diagramPointX: Mapped[int] = mapped_column()
     diagramPointY: Mapped[int] = mapped_column()
     designId: Mapped[int] = mapped_column(ForeignKey("design.id"))
@@ -1150,16 +1145,16 @@ class Piece(Base):
         CheckConstraint(
             """
             (
-                (rootPlaneOriginX IS NULL AND rootPlaneOriginY IS NULL AND rootPlaneOriginZ IS NULL AND
-                 rootPlaneXAxisX IS NULL AND rootPlaneXAxisY IS NULL AND rootPlaneXAxisZ IS NULL AND
-                 rootPlaneYAxisX IS NULL AND rootPlaneYAxisY IS NULL AND rootPlaneYAxisZ IS NULL)
+                (coordinateSystemOriginX IS NULL AND coordinateSystemOriginY IS NULL AND coordinateSystemOriginZ IS NULL AND
+                 coordinateSystemXAxisX IS NULL AND coordinateSystemXAxisY IS NULL AND coordinateSystemXAxisZ IS NULL AND
+                 coordinateSystemYAxisX IS NULL AND coordinateSystemYAxisY IS NULL AND coordinateSystemYAxisZ IS NULL)
             OR
-                (rootPlaneOriginX IS NOT NULL AND rootPlaneOriginY IS NOT NULL AND rootPlaneOriginZ IS NOT NULL AND
-                 rootPlaneXAxisX IS NOT NULL AND rootPlaneXAxisY IS NOT NULL AND rootPlaneXAxisZ IS NOT NULL AND
-                 rootPlaneYAxisX IS NOT NULL AND rootPlaneYAxisY IS NOT NULL AND rootPlaneYAxisZ IS NOT NULL)
+                (coordinateSystemOriginX IS NOT NULL AND coordinateSystemOriginY IS NOT NULL AND coordinateSystemOriginZ IS NOT NULL AND
+                 coordinateSystemXAxisX IS NOT NULL AND coordinateSystemXAxisY IS NOT NULL AND coordinateSystemXAxisZ IS NOT NULL AND
+                 coordinateSystemYAxisX IS NOT NULL AND coordinateSystemYAxisY IS NOT NULL AND coordinateSystemYAxisZ IS NOT NULL)
             )
             """,
-            name="rootPlaneSetOrNotSet",
+            name="coordinateSystemSetOrNotSet",
         ),
     )
 
@@ -1172,7 +1167,7 @@ class Piece(Base):
     #     return hash(self.localId)
 
     def __repr__(self) -> str:
-        return f"Piece(id={self.id!r}, localId={self.localId}, typeId={self.typeId!r}, rootPlaneOriginX={self.rootPlaneOriginX!r}, rootPlaneOriginY={self.rootPlaneOriginY!r}, rootPlaneOriginZ={self.rootPlaneOriginZ!r}, rootPlaneXAxisX={self.rootPlaneXAxisX!r}, rootPlaneXAxisY={self.rootPlaneXAxisY!r}, rootPlaneXAxisZ={self.rootPlaneXAxisZ!r}, rootPlaneYAxisX={self.rootPlaneYAxisX!r}, rootPlaneYAxisY={self.rootPlaneYAxisY!r}, rootPlaneYAxisZ={self.rootPlaneYAxisZ!r}, diagramPointX={self.diagramPointX!r}, diagramPointY={self.diagramPointY!r}, designId={self.designId!r})"
+        return f"Piece(id={self.id!r}, localId={self.localId}, typeId={self.typeId!r}, coordinateSystemOriginX={self.coordinateSystemOriginX!r}, coordinateSystemOriginY={self.coordinateSystemOriginY!r}, coordinateSystemOriginZ={self.coordinateSystemOriginZ!r}, coordinateSystemXAxisX={self.coordinateSystemXAxisX!r}, coordinateSystemXAxisY={self.coordinateSystemXAxisY!r}, coordinateSystemXAxisZ={self.coordinateSystemXAxisZ!r}, coordinateSystemYAxisX={self.coordinateSystemYAxisX!r}, coordinateSystemYAxisY={self.coordinateSystemYAxisY!r}, coordinateSystemYAxisZ={self.coordinateSystemYAxisZ!r}, diagramPointX={self.diagramPointX!r}, diagramPointY={self.diagramPointY!r}, designId={self.designId!r})"
 
     def __str__(self) -> str:
         return f"Piece(id={str(self.id)}, designId={str(self.designId)})"
@@ -1181,27 +1176,25 @@ class Piece(Base):
         return f"Piece(id={self.localId})"
 
     @property
-    def root(self) -> PieceRoot | None:
-        if self.rootPlaneOriginX is not None:
-            return PieceRoot(
-                plane=Plane(
+    def coordinateSystem(self) -> CoordinateSystem | None:
+        if self.coordinateSystemOriginX is not None:
+            return CoordinateSystem(
                     Point(
-                        self.rootPlaneOriginX,
-                        self.rootPlaneOriginY,
-                        self.rootPlaneOriginZ,
+                        self.coordinateSystemOriginX,
+                        self.coordinateSystemOriginY,
+                        self.coordinateSystemOriginZ,
                     ),
                     Vector(
-                        self.rootPlaneXAxisX,
-                        self.rootPlaneXAxisY,
-                        self.rootPlaneXAxisZ,
+                        self.coordinateSystemXAxisX,
+                        self.coordinateSystemXAxisY,
+                        self.coordinateSystemXAxisZ,
                     ),
                     Vector(
-                        self.rootPlaneYAxisX,
-                        self.rootPlaneYAxisY,
-                        self.rootPlaneYAxisZ,
+                        self.coordinateSystemYAxisX,
+                        self.coordinateSystemYAxisY,
+                        self.coordinateSystemYAxisZ,
                     ),
                 )
-            )
         return None
 
     @property
@@ -1378,7 +1371,7 @@ class Connection(Base):
 
 
 # TODO: Add complex validation before insert with networkx such as:
-#       - only root pieces can have a plane.
+#       - only root pieces can have a coordinateSystem.
 class Design(Base):
     """🏙️ A design is a collection of pieces that are connected."""
 
@@ -1395,7 +1388,7 @@ class Design(Base):
     icon: Mapped[str] = mapped_column(Text())
     # Set to "" for default variant.
     variant: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX))
-    # Unit of the root planes of the pieces.
+    # Unit of the root coordinateSystems of the pieces.
     unit: Mapped[str] = mapped_column(
         String(NAME_LENGTH_MAX),
         CheckConstraint("length(unit) > 0", name="unitSet"),
@@ -1494,7 +1487,7 @@ class Object(BaseModel):
         arbitrary_types_allowed = True
 
     piece: Piece
-    plane: Plane
+    coordinateSystem: CoordinateSystem
     parent: Optional["Object"]
 
 
@@ -1687,16 +1680,16 @@ class VectorNode(PydanticObjectType):
         name = "Vector"
 
 
-class PlaneNode(PydanticObjectType):
+class CoordinateSystemNode(PydanticObjectType):
 
     class Meta:
-        model = Plane
-        name = "Plane"
+        model = CoordinateSystem
+        name = "CoordinateSystem"
 
     zAxis: VectorNode
 
-    def resolve_port(plane: Plane, info):
-        return plane.zAxis
+    def resolve_port(coordinateSystem: CoordinateSystem, info):
+        return coordinateSystem.zAxis
 
 
 class LocatorNode(SQLAlchemyObjectType):
@@ -1731,7 +1724,7 @@ class PortNode(SQLAlchemyObjectType):
     id = graphene.Field(NonNull(graphene.String))
     point = graphene.Field(NonNull(PointNode))
     direction = graphene.Field(NonNull(VectorNode))
-    plane = graphene.Field(NonNull(PlaneNode))
+    coordinateSystem = graphene.Field(NonNull(CoordinateSystemNode))
 
     def resolve_id(port: Port, info):
         return port.localId
@@ -1742,8 +1735,8 @@ class PortNode(SQLAlchemyObjectType):
     def resolve_direction(port: Port, info):
         return port.direction
 
-    def resolve_plane(port: Port, info):
-        return port.plane
+    def resolve_coordinateSystem(port: Port, info):
+        return port.coordinateSystem
 
 
 class QualityNode(SQLAlchemyObjectType):
@@ -1813,30 +1806,30 @@ class PieceNode(SQLAlchemyObjectType):
             "id",
             "localId",
             "typeId",
-            "rootPlaneOriginX",
-            "rootPlaneOriginY",
-            "rootPlaneOriginZ",
-            "rootPlaneXAxisX",
-            "rootPlaneXAxisY",
-            "rootPlaneXAxisZ",
-            "rootPlaneYAxisX",
-            "rootPlaneYAxisY",
-            "rootPlaneYAxisZ",
+            "coordinateSystemOriginX",
+            "coordinateSystemOriginY",
+            "coordinateSystemOriginZ",
+            "coordinateSystemXAxisX",
+            "coordinateSystemXAxisY",
+            "coordinateSystemXAxisZ",
+            "coordinateSystemYAxisX",
+            "coordinateSystemYAxisY",
+            "coordinateSystemYAxisZ",
             "diagramPointX",
             "diagramPointY",
             "designId",
         )
 
     id = graphene.Field(NonNull(graphene.String))
-    root = graphene.Field(PieceRootNode)
+    coordinateSystem = graphene.Field(PieceRootNode)
     diagram = graphene.Field(NonNull(PieceDiagramNode))
 
     def resolve_id(piece: Piece, info):
         return piece.localId
 
-    def resolve_root(piece: Piece, info):
-        if piece.root is not None:
-            return piece.root
+    def resolve_coordinateSystem(piece: Piece, info):
+        if piece.coordinateSystem is not None:
+            return piece.coordinateSystem
 
     def resolve_diagram(piece: Piece, info):
         return piece.diagram
@@ -1905,7 +1898,7 @@ class DesignNode(SQLAlchemyObjectType):
 
 class ObjectNode(PydanticObjectType):
     # Duplicate docstring because not automatically generated by SQLAlchemyObjectType
-    """🗿 An object is a piece with a plane and a parent object (unless the piece is a root)."""
+    """🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root)."""
 
     class Meta:
         model = Object
@@ -1918,8 +1911,8 @@ class ObjectNode(PydanticObjectType):
     def resolve_piece(object: Object, info):
         return object.piece
 
-    def resolve_plane(object, info):
-        return object.plane
+    def resolve_coordinateSystem(object, info):
+        return object.coordinateSystem
 
     def resolve_parent(object, info):
         return object.parent
@@ -1994,12 +1987,12 @@ class VectorInput(PydanticInputObjectType):
         model = Vector
 
 
-class PlaneInput(PydanticInputObjectType):
+class CoordinateSystemInput(PydanticInputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+    """◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
 
     class Meta:
-        model = Plane
+        model = CoordinateSystem
 
 
 class PortInput(InputObjectType):
@@ -2049,15 +2042,6 @@ class TypeIdInput(PydanticInputObjectType):
         model = TypeId
 
 
-class PieceRootInput(PydanticInputObjectType):
-    """🌱 The root indesign of a piece."""
-
-    # Duplicate docstring because not automatically generated by PydanticInputObjectType
-
-    class Meta:
-        model = PieceRoot
-
-
 class PieceDiagramInput(PydanticInputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
     """✏️ The diagram indesign of a piece."""
@@ -2072,7 +2056,7 @@ class PieceInput(InputObjectType):
 
     id = NonNull(graphene.String)
     type = NonNull(TypeIdInput)
-    root = graphene.Field(PieceRootInput)
+    coordinateSystem = graphene.Field(CoordinateSystemInput)
     diagram = NonNull(PieceDiagramInput)
 
 
@@ -2156,7 +2140,7 @@ RepresentationLike = Representation | RepresentationNode | RepresentationInput
 ScreenPointLike = ScreenPoint | ScreenPointNode | ScreenPointInput
 PointLike = Point | PointNode | PointInput
 VectorLike = Vector | VectorNode | VectorInput
-PlaneLike = Plane | PlaneNode | PlaneInput
+CoordinateSystemLike = CoordinateSystem | CoordinateSystemNode | CoordinateSystemInput
 LocatorLike = Locator | LocatorNode | LocatorInput
 PortLike = Port | PortNode | PortInput
 QualityLike = Quality | QualityNode | QualityInput
@@ -2581,15 +2565,15 @@ def addPieceInputToSession(
         designId=design.id,
     )
     try:
-        piece.rootPlaneOriginX = pieceInput.root.plane.origin.x
-        piece.rootPlaneOriginY = pieceInput.root.plane.origin.y
-        piece.rootPlaneOriginZ = pieceInput.root.plane.origin.z
-        piece.rootPlaneXAxisX = pieceInput.root.plane.xAxis.x
-        piece.rootPlaneXAxisY = pieceInput.root.plane.xAxis.y
-        piece.rootPlaneXAxisZ = pieceInput.root.plane.xAxis.z
-        piece.rootPlaneYAxisX = pieceInput.root.plane.yAxis.x
-        piece.rootPlaneYAxisY = pieceInput.root.plane.yAxis.y
-        piece.rootPlaneYAxisZ = pieceInput.root.plane.yAxis.z
+        piece.coordinateSystemOriginX = pieceInput.root.coordinateSystem.origin.x
+        piece.coordinateSystemOriginY = pieceInput.root.coordinateSystem.origin.y
+        piece.coordinateSystemOriginZ = pieceInput.root.coordinateSystem.origin.z
+        piece.coordinateSystemXAxisX = pieceInput.root.coordinateSystem.xAxis.x
+        piece.coordinateSystemXAxisY = pieceInput.root.coordinateSystem.xAxis.y
+        piece.coordinateSystemXAxisZ = pieceInput.root.coordinateSystem.xAxis.z
+        piece.coordinateSystemYAxisX = pieceInput.root.coordinateSystem.yAxis.x
+        piece.coordinateSystemYAxisY = pieceInput.root.coordinateSystem.yAxis.y
+        piece.coordinateSystemYAxisZ = pieceInput.root.coordinateSystem.yAxis.z
     except AttributeError:
         pass
     session.add(piece)
@@ -2843,17 +2827,17 @@ def addObjectsToScene(
     scene: "Scene",
     parent: Object,
     hierarchy: Hierarchy,
-    plane: Plane,
+    coordinateSystem: CoordinateSystem,
 ) -> None:
-    transformedPlane = plane.transform(hierarchy.transform)
+    transformedCoordinateSystem = coordinateSystem.transform(hierarchy.transform)
     object = Object(
         piece=hierarchy.piece,
-        plane=transformedPlane,
+        coordinateSystem=transformedCoordinateSystem,
         parent=parent,
     )
     scene.objects.append(object)
     for child in hierarchy.children:
-        addObjectsToScene(scene, object, child, transformedPlane)
+        addObjectsToScene(scene, object, child, transformedCoordinateSystem)
 
 
 def sceneFromDesignInSession(
@@ -2873,7 +2857,7 @@ def sceneFromDesignInSession(
             scene,
             None,
             hierarchy,
-            hierarchy.piece.root.plane if hierarchy.piece.root else Plane.XY(),
+            hierarchy.piece.root.coordinateSystem if hierarchy.piece.root else CoordinateSystem.XY(),
         )
     return scene
 

@@ -97,7 +97,7 @@ export type Port = {
   id: Scalars['String']['output'];
   point: Point;
   direction: Vector;
-  plane: Plane;
+  coordinateSystem: CoordinateSystem;
 };
 
 /** 🗺️ A locator is meta-data for grouping ports. */
@@ -149,12 +149,12 @@ export type Piece = {
 /** 🌱 The root indesign of a piece. */
 export type PieceRoot = {
   __typename?: 'PieceRoot';
-  plane: Plane;
+  coordinateSystem: CoordinateSystem;
 };
 
-/** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-export type Plane = {
-  __typename?: 'Plane';
+/** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+export type CoordinateSystem = {
+  __typename?: 'CoordinateSystem';
   origin: Point;
   xAxis: Vector;
   yAxis: Vector;
@@ -239,10 +239,10 @@ export type Scene = {
   design?: Maybe<Design>;
 };
 
-/** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
+/** 🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root). */
 export type Object = {
   __typename?: 'Object';
-  plane: Plane;
+  coordinateSystem: CoordinateSystem;
   piece?: Maybe<Piece>;
   parent?: Maybe<Object>;
 };
@@ -434,11 +434,11 @@ export type TypeIdInput = {
 
 /** 🌱 The root indesign of a piece. */
 export type PieceRootInput = {
-  plane: PlaneInput;
+  coordinateSystem: CoordinateSystemInput;
 };
 
-/** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-export type PlaneInput = {
+/** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+export type CoordinateSystemInput = {
   origin: PointInput;
   xAxis: VectorInput;
   yAxis: VectorInput;

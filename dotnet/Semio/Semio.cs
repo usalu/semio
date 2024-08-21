@@ -88,7 +88,7 @@ using Semio.Properties;
 //  id: String!
 //  point: Point!
 //  direction: Vector!
-//  plane: Plane!
+//  coordinateSystem: CoordinateSystem!
 //}
 
 //"""🗺️ A locator is meta-data for grouping ports."""
@@ -140,11 +140,11 @@ using Semio.Properties;
 //"""🌱 The root indesign of a piece."""
 //type PieceRoot
 //{
-//plane: Plane!
+//coordinateSystem: CoordinateSystem!
 //}
 
-//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-//type Plane
+//"""◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
+//type CoordinateSystem
 //{
 //origin: Point!
 //  xAxis: Vector!
@@ -234,11 +234,11 @@ using Semio.Properties;
 //}
 
 //"""
-//🗿 An object is a piece with a plane and a parent object (unless the piece is a root).
+//🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root).
 //"""
 //type Object
 //{
-//    plane: Plane!
+//    coordinateSystem: CoordinateSystem!
 //  piece: Piece
 //  parent: Object
 //}
@@ -410,11 +410,11 @@ using Semio.Properties;
 //"""🌱 The root indesign of a piece."""
 //input PieceRootInput
 //{
-//    plane: PlaneInput!
+//    coordinateSystem: CoordinateSystemInput!
 //}
 
-//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-//input PlaneInput
+//"""◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
+//input CoordinateSystemInput
 //{
 //    origin: PointInput!
 //  xAxis: VectorInput!
@@ -839,9 +839,9 @@ public class Vector : IDeepCloneable<Vector>, IEntity
     }
 }
 
-public class Plane : IDeepCloneable<Plane>, IEntity
+public class CoordinateSystem : IDeepCloneable<CoordinateSystem>, IEntity
 {
-    public Plane()
+    public CoordinateSystem()
     {
         Origin = new Point();
         XAxis = new Vector();
@@ -852,9 +852,9 @@ public class Plane : IDeepCloneable<Plane>, IEntity
     public Vector XAxis { get; set; }
     public Vector YAxis { get; set; }
 
-    public Plane DeepClone()
+    public CoordinateSystem DeepClone()
     {
-        return new Plane
+        return new CoordinateSystem
         {
             Origin = Origin.DeepClone(),
             XAxis = XAxis.DeepClone(),
@@ -864,7 +864,7 @@ public class Plane : IDeepCloneable<Plane>, IEntity
 
     public override string ToString()
     {
-        return $"Plane(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
+        return $"CoordinateSystem(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
     }
 
     public bool IsInvalid()
@@ -1062,16 +1062,16 @@ public class PieceRoot : IDeepCloneable<PieceRoot>, IEntity
 {
     public PieceRoot()
     {
-        Plane = new Plane();
+        CoordinateSystem = new CoordinateSystem();
     }
 
-    public Plane Plane { get; set; }
+    public CoordinateSystem CoordinateSystem { get; set; }
 
     public PieceRoot DeepClone()
     {
         return new PieceRoot
         {
-            Plane = Plane.DeepClone()
+            CoordinateSystem = CoordinateSystem.DeepClone()
         };
     }
 
@@ -1082,7 +1082,7 @@ public class PieceRoot : IDeepCloneable<PieceRoot>, IEntity
 
     public bool IsInvalid()
     {
-        return Plane.IsInvalid();
+        return CoordinateSystem.IsInvalid();
     }
 }
 
@@ -1478,12 +1478,12 @@ public class Object : IDeepCloneable<Object>, IEntity
     public Object()
     {
         Piece = new ObjectPiece();
-        Plane = new Plane();
+        CoordinateSystem = new CoordinateSystem();
         Parent = null;
     }
 
     public ObjectPiece Piece { get; set; }
-    public Plane Plane { get; set; }
+    public CoordinateSystem CoordinateSystem { get; set; }
     public ObjectParent? Parent { get; set; }
 
     public Object DeepClone()
@@ -1491,7 +1491,7 @@ public class Object : IDeepCloneable<Object>, IEntity
         return new Object
         {
             Piece = Piece.DeepClone(),
-            Plane = Plane.DeepClone(),
+            CoordinateSystem = CoordinateSystem.DeepClone(),
             Parent = Parent?.DeepClone()
         };
     }
@@ -1503,7 +1503,7 @@ public class Object : IDeepCloneable<Object>, IEntity
 
     public bool IsInvalid()
     {
-        return Piece.IsInvalid() || Plane.IsInvalid() || (Parent?.IsInvalid() ?? false);
+        return Piece.IsInvalid() || CoordinateSystem.IsInvalid() || (Parent?.IsInvalid() ?? false);
     }
 }
 

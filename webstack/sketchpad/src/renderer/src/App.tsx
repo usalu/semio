@@ -100,7 +100,7 @@ import {
     designToHierarchies,
     Point,
     Vector,
-    Plane,
+    CoordinateSystem,
     Transform,
     semioToThreeRotation,
     CoordinateSystem,
@@ -225,7 +225,7 @@ import { ThemeConfig } from 'antd/lib'
 //     id: Scalars['String']['output'];
 //     point: Point;
 //     direction: Vector;
-//     plane: Plane;
+//     coordinateSystem: CoordinateSystem;
 // };
 
 // /** 🗺️ A locator is meta-data for grouping ports. */
@@ -277,12 +277,12 @@ import { ThemeConfig } from 'antd/lib'
 // /** 🌱 The root indesign of a piece. */
 // export type PieceRoot = {
 //     __typename?: 'PieceRoot';
-//     plane: Plane;
+//     coordinateSystem: CoordinateSystem;
 // };
 
-// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-// export type Plane = {
-//     __typename?: 'Plane';
+// /** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+// export type CoordinateSystem = {
+//     __typename?: 'CoordinateSystem';
 //     origin: Point;
 //     xAxis: Vector;
 //     yAxis: Vector;
@@ -367,10 +367,10 @@ import { ThemeConfig } from 'antd/lib'
 //     design?: Maybe<Design>;
 // };
 
-// /** 🗿 An object is a piece with a plane and a parent object (unless the piece is a root). */
+// /** 🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root). */
 // export type Object = {
 //     __typename?: 'Object';
-//     plane: Plane;
+//     coordinateSystem: CoordinateSystem;
 //     piece?: Maybe<Piece>;
 //     parent?: Maybe<Object>;
 // };
@@ -561,11 +561,11 @@ import { ThemeConfig } from 'antd/lib'
 
 // /** 🌱 The root indesign of a piece. */
 // export type PieceRootInput = {
-//     plane: PlaneInput;
+//     coordinateSystem: CoordinateSystemInput;
 // };
 
-// /** ◳ A plane is an origin (point) and an orientation (x-axis and y-axis). */
-// export type PlaneInput = {
+// /** ◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis). */
+// export type CoordinateSystemInput = {
 //     origin: PointInput;
 //     xAxis: VectorInput;
 //     yAxis: VectorInput;
@@ -1247,23 +1247,23 @@ const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Eleme
     )
 }
 
-// interface PlaneThreeProps {
-//     plane: Plane
+// interface CoordinateSystemThreeProps {
+//     coordinateSystem: CoordinateSystem
 //     lineWidth?: number
 //     onSelect: (event: ThreeEvent<MouseEvent>) => void
 // }
 
-// const PlaneThree = ({ plane, lineWidth, onSelect }: PlaneThreeProps) => {
+// const CoordinateSystemThree = ({ coordinateSystem, lineWidth, onSelect }: CoordinateSystemThreeProps) => {
 //     if (!lineWidth) lineWidth = 1
 //     const groupRef = useRef();
 //     useEffect(() => {
 //         if (groupRef.current) {
-//             const transform = planeToTransform(plane)
+//             const transform = coordinateSystemToTransform(coordinateSystem)
 //             groupRef.current.applyMatrix4(transform)
 //         }
 //     }, [])
 //     return (
-//         <group name='plane' ref={groupRef}>
+//         <group name='coordinateSystem' ref={groupRef}>
 //             <DreiLine
 //                 // name='x-axis'
 //                 points={[[0, 0, 0], [1, 0, 0]]}
@@ -1836,7 +1836,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                             id: Generator.generateRandomId(x - y),
                             type: event.piece.type,
                             root: {
-                                plane: {
+                                coordinateSystem: {
                                     origin: { x: 0, y: 0, z: 0 },
                                     xAxis: { x: 1, y: 0, z: 0 },
                                     yAxis: { x: 0, y: 1, z: 0 }
@@ -2340,7 +2340,7 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
                                             ? {
                                                 ...piece,
                                                 root: {
-                                                    plane: Plane.parse(piece.root?.plane).transform(transformControlMatrix)
+                                                    coordinateSystem: CoordinateSystem.parse(piece.root?.coordinateSystem).transform(transformControlMatrix)
                                                 }
                                             }
                                             : piece

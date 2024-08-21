@@ -115,7 +115,7 @@ namespace Semio.Properties
         ///        tags
         ///      }
         ///      ports {
-        ///        plane {
+        ///        coordinateSystem {
         ///          origin {
         ///            x
         ///            y
@@ -179,7 +179,7 @@ namespace Semio.Properties
         ///          tags
         ///        }
         ///        ports {
-        ///          plane {
+        ///          coordinateSystem {
         ///            origin {
         ///              x
         ///              y
@@ -230,7 +230,7 @@ namespace Semio.Properties
         ///            }
         ///          }
         ///        }
-        ///        plane {
+        ///        coordinateSystem {
         ///          origin {
         ///            x
         ///            y
@@ -265,7 +265,7 @@ namespace Semio.Properties
         ///          tags
         ///        }
         ///        ports {
-        ///          plane {
+        ///          coordinateSystem {
         ///            origin {
         ///              x
         ///              y

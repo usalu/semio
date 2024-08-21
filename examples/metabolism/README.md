@@ -56,7 +56,7 @@ Or both 🪄
 
 ![Rhino Futuristic Variant 1to200 volume](https://github.com/usalu/semio/blob/r24.08-2/examples/metabolism/docs/rhino-futuristic-variant-1to200-volume.png)
 
-In a conventional block-based approach, block instances have insertion planes and are thus not linked 🪨
+In a conventional block-based approach, block instances have insertion coordinateSystems and are thus not linked 🪨
 
 Switching from one to another variant would look either like this:
 
@@ -130,7 +130,7 @@ If you go to `http://127.0.0.1:5052/graphql/`, you can find all the data that st
             variant
           }
           root {
-            plane {
+            coordinateSystem {
               origin {
                 x
                 y

@@ -17,7 +17,7 @@ query DesignToSceneFromLocalKit($directory: String!, $design: DesignIdInput!) {
             }
           }
         }
-        plane {
+        coordinateSystem {
           origin {
             x
             y

@@ -53,7 +53,7 @@ kit : !Kit{
                 variant : ?String
             }
             root : ?{
-                plane : !{
+                coordinateSystem : !{
                     origin : !{
                         x : !Float
                         y : !Float

@@ -54,7 +54,7 @@ mutation CreateLocalKit($directory: String!, $kit: KitInput!) {
             variant
           }
           root {
-            plane {
+            coordinateSystem {
               origin {
                 x
                 y

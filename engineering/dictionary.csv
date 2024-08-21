@@ -13,10 +13,10 @@ Kt,Kit,🗃️,Kit,A kit is a collection of types and designs.
 Lc,Loc,🗺️,Locator,A locator is meta-data for grouping ports.
 Ld,Lod,🔍,Level of Detail,
 Na,Nam,📛,Name,
-Ob,Obj,🗿,Object,An object is a piece with a plane and a parent object (unless the piece is a root).
+Ob,Obj,🗿,Object,An object is a piece with a coordinateSystem and a parent object (unless the piece is a root).
 On,Ori,⌱,Origin,
 Pc,Pce,⭕,Piece,A piece is a 3d-instance of a type in a design.
-Pn,Ple,◳,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+Pn,Ple,◳,CoordinateSystem,A coordinateSystem is an origin (point) and an orientation (x-axis and y-axis).
 Po,Por,🔌,Port,A port is a connection point (with a direction) of a type.
 Pt,Pot,✖️,Point,A 3d-point (xyz) of floating point numbers.
 Qa,Qal,📏,Quality,A quality is meta-data for decision making.

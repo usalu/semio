@@ -1,7 +1,7 @@
 from pytest import mark, param
 from graphene.test import Client
 from deepdiff import DeepDiff, Delta
-from engine import schema, Point, Vector, Plane
+from engine import schema, Point, Vector, CoordinateSystem
 
 createLocalKit = open("../../graphql/createLocalKit.graphql", "r").read()
 updateLocalKitMetadata = open(
@@ -64,11 +64,11 @@ designToSceneFromLocalKit = open(
         ),
     ],
 )
-def test_planeFromYAxis(yAxis, phi, expectedXAxis):
+def test_coordinateSystemFromYAxis(yAxis, phi, expectedXAxis):
     yAxisVector = Vector(*yAxis)
-    plane = Plane.fromYAxis(yAxisVector, phi)
-    expectedPlane = Plane(Point(), Vector(*expectedXAxis), yAxisVector)
-    assert plane.isClose(expectedPlane)
+    coordinateSystem = CoordinateSystem.fromYAxis(yAxisVector, phi)
+    expectedCoordinateSystem = CoordinateSystem(Point(), Vector(*expectedXAxis), yAxisVector)
+    assert coordinateSystem.isClose(expectedCoordinateSystem)
 
 
 @mark.skip
@@ -87,7 +87,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
         ],
         "ports": [
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -97,7 +97,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
                 ],
             },
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -126,7 +126,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
         ],
         "ports": [
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -163,7 +163,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
         ],
         "ports": [
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -196,7 +196,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
         ],
         "ports": [
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -361,7 +361,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
         "representations": [{"url": "box\\geometry.3dm", "lod": None, "tags": None}],
         "ports": [
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 965.3356, "y": 600.1125, "z": 61.2654},
                     "xAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                     "yAxis": {"x": 0.5171522, "y": 0.210352287, "z": -0.8296418},
@@ -369,7 +369,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                 "locators": [{"group": "side", "subgroup": "q"}],
             },
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 402.17627, "y": 900.2018, "z": 403.443665},
                     "xAxis": {"x": -0.5171522, "y": -0.210352287, "z": 0.8296418},
                     "yAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
@@ -377,7 +377,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                 "locators": [{"group": "side", "subgroup": "r"}],
             },
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 435.771759, "y": 384.711731, "z": 910.8186},
                     "xAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
                     "yAxis": {"x": 0.5171522, "y": 0.210352287, "z": -0.8296418},
@@ -385,7 +385,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                 "locators": [{"group": "side", "subgroup": "s"}],
             },
             {
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 998.9311, "y": 84.622406, "z": 568.6403},
                     "xAxis": {"x": -0.5171522, "y": -0.210352287, "z": 0.8296418},
                     "yAxis": {"x": -0.5827684, "y": 0.796464264, "z": -0.161324874},
@@ -609,7 +609,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -625,7 +625,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -529.563843, "y": -215.400772, "z": 849.5532},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -641,7 +641,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -1126.31873, "y": 600.17865, "z": 684.356567},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -657,7 +657,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -1655.88257, "y": 384.777863, "z": 1533.90979},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -673,7 +673,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -1723.07349, "y": 1415.758, "z": 519.1599},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -689,7 +689,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -1059.12769, "y": -430.801544, "z": 1699.10645},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -705,7 +705,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -596.7548, "y": 815.5794, "z": -165.19664},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
@@ -721,7 +721,7 @@ def test_integration_graphql_local_kit_designToScene(tmp_path):
                         ]
                     },
                 },
-                "plane": {
+                "coordinateSystem": {
                     "origin": {"x": -1193.50964, "y": 1631.15881, "z": -330.39328},
                     "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
                     "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},

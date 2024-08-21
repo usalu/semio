@@ -28,7 +28,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 1.3,
               y: -1.25,
@@ -115,7 +115,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -1.3,
               y: -1.25,
@@ -197,7 +197,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 1.3,
               y: -1.25,
@@ -284,7 +284,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -1.3,
               y: -1.25,
@@ -366,7 +366,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.45,
               y: -2.1,
@@ -453,7 +453,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.45,
               y: -2.1,
@@ -535,7 +535,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.45,
               y: -2.1,
@@ -622,7 +622,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.45,
               y: -2.1,
@@ -709,7 +709,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0,
               y: 0,
@@ -801,7 +801,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -18.6,
               y: -7.7,
@@ -826,7 +826,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -7.5,
               y: -7.7,
@@ -908,7 +908,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0,
               y: 0,
@@ -933,7 +933,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0,
               y: 0,
@@ -958,7 +958,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -991,7 +991,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -1024,7 +1024,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -1057,7 +1057,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -1090,7 +1090,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -1123,7 +1123,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -1156,7 +1156,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -1189,7 +1189,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -1222,7 +1222,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -1255,7 +1255,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -1288,7 +1288,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -1321,7 +1321,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -1354,7 +1354,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -1387,7 +1387,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -1420,7 +1420,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -1453,7 +1453,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -1486,7 +1486,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -1519,7 +1519,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -1552,7 +1552,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -1585,7 +1585,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -1618,7 +1618,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -1651,7 +1651,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -1684,7 +1684,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -1717,7 +1717,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -1750,7 +1750,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -1783,7 +1783,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -1816,7 +1816,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -1849,7 +1849,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -1882,7 +1882,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -1915,7 +1915,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -1948,7 +1948,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -1981,7 +1981,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -2014,7 +2014,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -2047,7 +2047,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -2080,7 +2080,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -2113,7 +2113,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -2146,7 +2146,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -2179,7 +2179,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -2212,7 +2212,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -2245,7 +2245,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -2278,7 +2278,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -2311,7 +2311,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -2344,7 +2344,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -2377,7 +2377,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -2410,7 +2410,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -2443,7 +2443,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -2476,7 +2476,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -2509,7 +2509,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -2542,7 +2542,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -2575,7 +2575,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -2608,7 +2608,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -2641,7 +2641,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -2674,7 +2674,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -2707,7 +2707,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -2740,7 +2740,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -2773,7 +2773,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -2806,7 +2806,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -2839,7 +2839,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -2872,7 +2872,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -2905,7 +2905,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -2938,7 +2938,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -2971,7 +2971,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -3004,7 +3004,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -3037,7 +3037,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -3070,7 +3070,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -3103,7 +3103,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -3136,7 +3136,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -3169,7 +3169,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -3202,7 +3202,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -3235,7 +3235,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -3268,7 +3268,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -3301,7 +3301,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -3334,7 +3334,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -3367,7 +3367,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -3400,7 +3400,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -3433,7 +3433,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -3466,7 +3466,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -3499,7 +3499,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -3532,7 +3532,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -3565,7 +3565,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -3598,7 +3598,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -3631,7 +3631,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -3664,7 +3664,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -3697,7 +3697,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -3730,7 +3730,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -3763,7 +3763,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -3796,7 +3796,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -3829,7 +3829,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -3924,7 +3924,7 @@ const sampleKit = {
       ],
       ports: [
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0,
               y: 0,
@@ -3949,7 +3949,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0,
               y: 0,
@@ -3974,7 +3974,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -4007,7 +4007,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -4040,7 +4040,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -4073,7 +4073,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -4106,7 +4106,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -4139,7 +4139,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -4172,7 +4172,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -4205,7 +4205,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -4238,7 +4238,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -4271,7 +4271,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -4304,7 +4304,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -4337,7 +4337,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -4370,7 +4370,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -4403,7 +4403,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -4436,7 +4436,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -4469,7 +4469,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -4502,7 +4502,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -4535,7 +4535,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -4568,7 +4568,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -4601,7 +4601,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -4634,7 +4634,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -4667,7 +4667,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -4700,7 +4700,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -4733,7 +4733,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -4766,7 +4766,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -4799,7 +4799,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -4832,7 +4832,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -4865,7 +4865,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -4898,7 +4898,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -4931,7 +4931,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -4964,7 +4964,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -4997,7 +4997,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -5030,7 +5030,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -5063,7 +5063,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -5096,7 +5096,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -5129,7 +5129,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -5162,7 +5162,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -5195,7 +5195,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -5228,7 +5228,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -5261,7 +5261,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -5294,7 +5294,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -5327,7 +5327,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -5360,7 +5360,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -5393,7 +5393,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -5426,7 +5426,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -5459,7 +5459,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -5492,7 +5492,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -5525,7 +5525,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -5558,7 +5558,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -5591,7 +5591,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -5624,7 +5624,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -5657,7 +5657,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -5690,7 +5690,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -5723,7 +5723,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -5756,7 +5756,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -5789,7 +5789,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -5822,7 +5822,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -5855,7 +5855,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -5888,7 +5888,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -5921,7 +5921,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -5954,7 +5954,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -5987,7 +5987,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -6020,7 +6020,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -6053,7 +6053,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,
@@ -6086,7 +6086,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: 2.75,
@@ -6119,7 +6119,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: 0.9,
@@ -6152,7 +6152,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -2.75,
               y: -0.9,
@@ -6185,7 +6185,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: -0.9,
               y: -2.75,
@@ -6218,7 +6218,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: -2.75,
@@ -6251,7 +6251,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: -0.9,
@@ -6284,7 +6284,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 2.75,
               y: 0.9,
@@ -6317,7 +6317,7 @@ const sampleKit = {
           ]
         },
         {
-          plane: {
+          coordinateSystem: {
             origin: {
               x: 0.9,
               y: 2.75,

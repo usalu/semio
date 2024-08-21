@@ -34,7 +34,7 @@ class Vector {
     z : Float
 }
 
-class Plane {
+class CoordinateSystem {
 }
 
 class Port {
@@ -81,18 +81,18 @@ Type *-- "1..*" Port
 Type *-- "0..*" Quality
 Design *-- "1..*" Piece
 Piece *-- "0..1" Root
-Root *-- Plane
+Root *-- CoordinateSystem
 Design *-- "0..*" Connection
 Design *-- "0..*" Quality
 Connection *-- Side : connected
 Connection *-- Side : connecting
 
-Port *-- Plane
+Port *-- CoordinateSystem
 Port *-- "0..*"  Locator
-Point --*  Plane : origin
-Plane *-- Vector : x_axis
-Plane *-- Vector : y_axis
-Plane *-- Vector : normal
+Point --*  CoordinateSystem : origin
+CoordinateSystem *-- Vector : x_axis
+CoordinateSystem *-- Vector : y_axis
+CoordinateSystem *-- Vector : normal
 
 Type <-- Piece
 Piece <-- Side

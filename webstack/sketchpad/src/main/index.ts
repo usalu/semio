@@ -154,7 +154,7 @@ query LoadLocalKit($directory: String!) {
             variant
           }
           root {
-            plane {
+            coordinateSystem {
               origin {
                 x
                 y
@@ -236,7 +236,7 @@ query LoadLocalKit($directory: String!) {
                             variant
                         }
                         root {
-                            plane {
+                            coordinateSystem {
                                 origin {
                                     x
                                     y

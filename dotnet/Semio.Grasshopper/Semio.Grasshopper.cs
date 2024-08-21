@@ -215,9 +215,9 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-//public class Plane : IDeepCloneable<Plane>, IEntity
+//public class CoordinateSystem : IDeepCloneable<CoordinateSystem>, IEntity
 //{
-//    public Plane()
+//    public CoordinateSystem()
 //    {
 //        Origin = new Point();
 //        XAxis = new Vector();
@@ -228,9 +228,9 @@ namespace Semio.Grasshopper;
 //    public Vector XAxis { get; set; }
 //    public Vector YAxis { get; set; }
 
-//    public Plane DeepClone()
+//    public CoordinateSystem DeepClone()
 //    {
-//        return new Plane
+//        return new CoordinateSystem
 //        {
 //            Origin = Origin.DeepClone(),
 //            XAxis = XAxis.DeepClone(),
@@ -240,7 +240,7 @@ namespace Semio.Grasshopper;
 
 //    public override string ToString()
 //    {
-//        return $"Plane(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
+//        return $"CoordinateSystem(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
 //    }
 
 //    public bool IsInvalid()
@@ -438,16 +438,16 @@ namespace Semio.Grasshopper;
 //{
 //    public PieceRoot()
 //    {
-//        Plane = new Plane();
+//        CoordinateSystem = new CoordinateSystem();
 //    }
 
-//    public Plane Plane { get; set; }
+//    public CoordinateSystem CoordinateSystem { get; set; }
 
 //    public PieceRoot DeepClone()
 //    {
 //        return new PieceRoot
 //        {
-//            Plane = Plane.DeepClone()
+//            CoordinateSystem = CoordinateSystem.DeepClone()
 //        };
 //    }
 
@@ -458,7 +458,7 @@ namespace Semio.Grasshopper;
 
 //    public bool IsInvalid()
 //    {
-//        return Plane.IsInvalid();
+//        return CoordinateSystem.IsInvalid();
 //    }
 //}
 
@@ -854,12 +854,12 @@ namespace Semio.Grasshopper;
 //    public Object()
 //    {
 //        Piece = new ObjectPiece();
-//        Plane = new Plane();
+//        CoordinateSystem = new CoordinateSystem();
 //        Parent = null;
 //    }
 
 //    public ObjectPiece Piece { get; set; }
-//    public Plane Plane { get; set; }
+//    public CoordinateSystem CoordinateSystem { get; set; }
 //    public ObjectParent? Parent { get; set; }
 
 //    public Object DeepClone()
@@ -867,7 +867,7 @@ namespace Semio.Grasshopper;
 //        return new Object
 //        {
 //            Piece = Piece.DeepClone(),
-//            Plane = Plane.DeepClone(),
+//            CoordinateSystem = CoordinateSystem.DeepClone(),
 //            Parent = Parent?.DeepClone()
 //        };
 //    }
@@ -879,7 +879,7 @@ namespace Semio.Grasshopper;
 
 //    public bool IsInvalid()
 //    {
-//        return Piece.IsInvalid() || Plane.IsInvalid() || (Parent?.IsInvalid() ?? false);
+//        return Piece.IsInvalid() || CoordinateSystem.IsInvalid() || (Parent?.IsInvalid() ?? false);
 //    }
 //}
 
@@ -1029,7 +1029,7 @@ public static class Utility
         return unit;
     }
 
-    public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
+    public static Rhino.Geometry.Plane GetCoordinateSystemFromYAxis(Vector3d yAxis, float theta, Point3d origin)
     {
         var thetaRad = RhinoMath.ToRadians(theta);
         var orientation = Transform.Rotation(Vector3d.YAxis, yAxis, Point3d.Origin);
@@ -1076,36 +1076,36 @@ public static class RhinoConverter
         };
     }
 
-    public static Rhino.Geometry.Plane convert(this Plane plane)
+    public static Rhino.Geometry.Plane convert(this CoordinateSystem coordinateSystem)
     {
         return new Rhino.Geometry.Plane(
-            new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
-            new Vector3d(plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z),
-            new Vector3d(plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z)
+            new Point3d(coordinateSystem.Origin.X, coordinateSystem.Origin.Y, coordinateSystem.Origin.Z),
+            new Vector3d(coordinateSystem.XAxis.X, coordinateSystem.XAxis.Y, coordinateSystem.XAxis.Z),
+            new Vector3d(coordinateSystem.YAxis.X, coordinateSystem.YAxis.Y, coordinateSystem.YAxis.Z)
         );
     }
 
-    public static Plane convert(this Rhino.Geometry.Plane plane)
+    public static CoordinateSystem convert(this Rhino.Geometry.Plane coordinateSystem)
     {
-        return new Plane
+        return new CoordinateSystem
         {
             Origin = new Point
             {
-                X = (float)plane.OriginX,
-                Y = (float)plane.OriginY,
-                Z = (float)plane.OriginZ
+                X = (float)coordinateSystem.OriginX,
+                Y = (float)coordinateSystem.OriginY,
+                Z = (float)coordinateSystem.OriginZ
             },
             XAxis = new Vector
             {
-                X = (float)plane.XAxis.X,
-                Y = (float)plane.XAxis.Y,
-                Z = (float)plane.XAxis.Z
+                X = (float)coordinateSystem.XAxis.X,
+                Y = (float)coordinateSystem.XAxis.Y,
+                Z = (float)coordinateSystem.XAxis.Z
             },
             YAxis = new Vector
             {
-                X = (float)plane.YAxis.X,
-                Y = (float)plane.YAxis.Y,
-                Z = (float)plane.YAxis.Z
+                X = (float)coordinateSystem.YAxis.X,
+                Y = (float)coordinateSystem.YAxis.Y,
+                Z = (float)coordinateSystem.YAxis.Z
             }
         };
     }
@@ -1251,9 +1251,9 @@ public class PortGoo : GH_Goo<Port>
 
     public override bool CastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
+        if (typeof(Q).IsAssignableFrom(typeof(GH_CoordinateSystem)))
         {
-            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
+            object ptr = new GH_CoordinateSystem(Utility.GetCoordinateSystemFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
             target = (Q)ptr;
             return true;
         }
@@ -1272,11 +1272,11 @@ public class PortGoo : GH_Goo<Port>
     {
         if (source == null) return false;
 
-        var plane = new Rhino.Geometry.Plane();
-        if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
+        var coordinateSystem = new Rhino.Geometry.Plane();
+        if (GH_Convert.ToCoordinateSystem(source, ref coordinateSystem, GH_Conversion.Both))
         {
-            Value.Point = plane.Origin.convert();
-            Value.Direction = plane.YAxis.convert();
+            Value.Point = coordinateSystem.Origin.convert();
+            Value.Direction = coordinateSystem.YAxis.convert();
 
             return true;
         }
@@ -2588,8 +2588,8 @@ public class PieceComponent : SemioComponent
             "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
         pManager[3].Optional = true;
-        pManager.AddPlaneParameter("Root Plane", "RtPn?",
-            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
+        pManager.AddCoordinateSystemParameter("Root CoordinateSystem", "RtPn?",
+            "Root coordinateSystem of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
             GH_ParamAccess.item);
         pManager[4].Optional = true;
         pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
@@ -2607,8 +2607,8 @@ public class PieceComponent : SemioComponent
         pManager.AddTextParameter("Type Variant", "TyVn?",
             "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Root Plane", "RtPl?",
-            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
+        pManager.AddCoordinateSystemParameter("Root CoordinateSystem", "RtPl?",
+            "Root coordinateSystem of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
             GH_ParamAccess.item);
         pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
             "Screen point of the piece in the diagram.",
@@ -2621,7 +2621,7 @@ public class PieceComponent : SemioComponent
         var id = "";
         var typeName = "";
         var typeVariant = "";
-        var rootPlane = new Rhino.Geometry.Plane();
+        var rootCoordinateSystem = new Rhino.Geometry.Plane();
         var screenPointGoo = new ScreenPointGoo();
 
         if (DA.GetData(0, ref pieceGoo))
@@ -2632,8 +2632,8 @@ public class PieceComponent : SemioComponent
             pieceGoo.Value.Type.Name = typeName;
         if (DA.GetData(3, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(4, ref rootPlane))
-            pieceGoo.Value.Root = new PieceRoot { Plane = rootPlane.convert() };
+        if (DA.GetData(4, ref rootCoordinateSystem))
+            pieceGoo.Value.Root = new PieceRoot { CoordinateSystem = rootCoordinateSystem.convert() };
         if (DA.GetData(5, ref screenPointGoo))
             pieceGoo.Value.Diagram.Point = screenPointGoo.Value;
 
@@ -2656,7 +2656,7 @@ public class PieceComponent : SemioComponent
         DA.SetData(1, pieceGoo.Value.Id);
         DA.SetData(2, pieceGoo.Value.Type.Name);
         DA.SetData(3, pieceGoo.Value.Type.Variant);
-        DA.SetData(4, pieceGoo.Value.Root?.Plane.convert());
+        DA.SetData(4, pieceGoo.Value.Root?.CoordinateSystem.convert());
         DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.Diagram.Point));
     }
 }
@@ -3214,7 +3214,7 @@ public class LoadKitComponent : EngineComponent
         var kit = response.Kit;
 
         DA.SetData(0, new KitGoo(kit));
-        }
+    }
 }
 
 public class CreateKitComponent : EngineComponent
@@ -4144,7 +4144,7 @@ public class FilterSceneComponent : SemioComponent
     {
         pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+",
             "Representation of the objects of the scene.", GH_ParamAccess.list);
-        pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
+        pManager.AddCoordinateSystemParameter("CoordinateSystems", "Pl+", "CoordinateSystems of the objects of the scene.", GH_ParamAccess.list);
         pManager.AddTextParameter("Pieces Ids", "PcId+",
             "Ids of the pieces from the design that correspond to the objects of the scene.", GH_ParamAccess.list);
         pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
@@ -4187,12 +4187,12 @@ public class FilterSceneComponent : SemioComponent
                             return false;
                     return true;
                 })).ToList();
-        var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
+        var coordinateSystems = sceneGoo.Value.Objects.Select(o => o.CoordinateSystem).ToList();
         var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
         var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
 
         DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
-        DA.SetDataList(1, planes.Select(p => p.convert()));
+        DA.SetDataList(1, coordinateSystems.Select(p => p.convert()));
         DA.SetDataList(2, piecesIds);
         DA.SetDataList(3, parentsPiecesIds);
     }

@@ -1,5 +1,5 @@
-import { convertPlaneToTransform, convertTransformToPlane } from './semio'
-import { Plane } from './semio'
+import { convertCoordinateSystemToTransform, convertTransformToCoordinateSystem } from './semio'
+import { CoordinateSystem } from './semio'
 import { Matrix4 } from 'three'
 import { expect, test } from 'vitest'
 
@@ -21,10 +21,10 @@ expect.extend({
             }
         }
     },
-    toBeCloseToPlane(received: Plane, expected: Plane) {
+    toBeCloseToCoordinateSystem(received: CoordinateSystem, expected: CoordinateSystem) {
         const pass = Object.keys(received).every((key) => {
-            const val = received[key as keyof Plane]
-            const exp = expected[key as keyof Plane]
+            const val = received[key as keyof CoordinateSystem]
+            const exp = expected[key as keyof CoordinateSystem]
             if (typeof val === 'number') {
                 return Math.abs(val - exp) < Number.EPSILON
             } else {
@@ -49,13 +49,13 @@ expect.extend({
     }
 })
 
-test('convertPlaneToTransform origin', () => {
+test('convertCoordinateSystemToTransform origin', () => {
     expect(
-        convertPlaneToTransform({
+        convertCoordinateSystemToTransform({
             origin: { x: 1, y: 2, z: 3 },
             xAxis: { x: 1, y: 0, z: 0 },
             yAxis: { x: 0, y: 1, z: 0 }
-        } as Plane)
+        } as CoordinateSystem)
     ).toBeCloseToMatrix(new Matrix4().set(
         1, 0, 0, 1,
         0, 0, 1, 3,
@@ -63,27 +63,27 @@ test('convertPlaneToTransform origin', () => {
         0, 0, 0, 1))
 })
 
-test('convertTransformToPlane origin', () => {
-    expect(convertTransformToPlane(new Matrix4().set(
+test('convertTransformToCoordinateSystem origin', () => {
+    expect(convertTransformToCoordinateSystem(new Matrix4().set(
         1, 0, 0, 1,
         0, 1, 0, 3,
         0, 0, 1, -2,
         0, 0, 0, 1)
-    )).toBeCloseToPlane({
+    )).toBeCloseToCoordinateSystem({
         origin: { x: 1, y: 2, z: 3 },
         xAxis: { x: 1, y: 0, z: 0 },
         yAxis: { x: 0, y: 0, z: 1 }
-    } as Plane)
+    } as CoordinateSystem)
 }
 )
 
-test('convertPlaneToTransform zy', () => {
+test('convertCoordinateSystemToTransform zy', () => {
     expect(
-        convertPlaneToTransform({
+        convertCoordinateSystemToTransform({
             origin: { x: 0, y: 0, z: 0 },
             xAxis: { x: 0, y: 0, z: 1 },
             yAxis: { x: 0, y: 1, z: 0 }
-        } as Plane)
+        } as CoordinateSystem)
     ).toBeCloseToMatrix(new Matrix4().set(
         0, 0, -1, 0,
         1, 0, 0, 0,
@@ -91,17 +91,17 @@ test('convertPlaneToTransform zy', () => {
         0, 0, 0, 1))
 })
 
-test('convertTransformToPlane zy', () => {
-    const plane = convertTransformToPlane(new Matrix4().set(
+test('convertTransformToCoordinateSystem zy', () => {
+    const coordinateSystem = convertTransformToCoordinateSystem(new Matrix4().set(
         0, -1, 0, 0,
         1, 0, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1))
     expect(
-        plane
-    ).toBeCloseToPlane({
+        coordinateSystem
+    ).toBeCloseToCoordinateSystem({
         origin: { x: 0, y: 0, z: 0 },
         xAxis: { x: 0, y: 0, z: 1 },
         yAxis: { x: -1, y: 0, z: 0 }
-    } as Plane)
+    } as CoordinateSystem)
 })

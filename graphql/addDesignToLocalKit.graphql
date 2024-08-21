@@ -13,7 +13,7 @@ mutation AddDesignToLocalKit($directory: String!, $design: DesignInput!) {
           variant
         }
         root {
-          plane {
+          coordinateSystem {
             origin {
               x
               y

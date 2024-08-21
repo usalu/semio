@@ -53,14 +53,14 @@ class Vector(BaseModel):
     z: float
 
 
-class Plane(BaseModel):
+class CoordinateSystem(BaseModel):
     origin: Point
     x_axis: Vector
     y_axis: Vector
 
 
 class Port(BaseModel):
-    plane: Plane
+    coordinateSystem: CoordinateSystem
     locators: List[Locator]
 
 

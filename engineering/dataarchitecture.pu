@@ -123,17 +123,17 @@ entity Piece {
     *localId : string
     *typeId : int <<FK>>
     ..
-    rootPlaneOriginX : float
-    rootPlaneOriginY : float
-    rootPlaneOriginZ : float
+    rootCoordinateSystemOriginX : float
+    rootCoordinateSystemOriginY : float
+    rootCoordinateSystemOriginZ : float
     ..
-    rootPlaneXAxisX : float
-    rootPlaneXAxisY : float
-    rootPlaneXAxisZ : float
+    rootCoordinateSystemXAxisX : float
+    rootCoordinateSystemXAxisY : float
+    rootCoordinateSystemXAxisZ : float
     ..
-    rootPlaneYAxisX : float
-    rootPlaneYAxisY : float
-    rootPlaneYAxisZ : float
+    rootCoordinateSystemYAxisX : float
+    rootCoordinateSystemYAxisY : float
+    rootCoordinateSystemYAxisZ : float
     ..
     *diagramPointX : int
     *diagramPointY : int
@@ -143,7 +143,7 @@ entity Piece {
 note right of Piece
     localId and designId
     is unique.
-    root plane can only be set
+    root coordinateSystem can only be set
     when piece is root.
     Otherwise all values are null.
 end note

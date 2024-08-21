@@ -73,7 +73,7 @@ type Port {
   id: String!
   point: Point!
   direction: Vector!
-  plane: Plane!
+  coordinateSystem: CoordinateSystem!
 }
 
 """
@@ -130,13 +130,13 @@ type Piece {
 🌱 The root indesign of a piece.
 """
 type PieceRoot {
-  plane: Plane!
+  coordinateSystem: CoordinateSystem!
 }
 
 """
-◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis).
 """
-type Plane {
+type CoordinateSystem {
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
@@ -230,10 +230,10 @@ type Scene {
 }
 
 """
-🗿 An object is a piece with a plane and a parent object (unless the piece is a root).
+🗿 An object is a piece with a coordinateSystem and a parent object (unless the piece is a root).
 """
 type Object {
-  plane: Plane!
+  coordinateSystem: CoordinateSystem!
   piece: Piece
   parent: Object
 }
@@ -424,13 +424,13 @@ input TypeIdInput {
 🌱 The root indesign of a piece.
 """
 input PieceRootInput {
-  plane: PlaneInput!
+  coordinateSystem: CoordinateSystemInput!
 }
 
 """
-◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis).
 """
-input PlaneInput {
+input CoordinateSystemInput {
   origin: PointInput!
   xAxis: VectorInput!
   yAxis: VectorInput!
