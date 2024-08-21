@@ -108,6 +108,7 @@ from starlette_graphene3 import GraphQLApp, make_graphiql_handler
 
 logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
+RELEASE= "r24.09-1"
 NAME_LENGTH_MAX = 100
 URL_LENGTH_MAX = 1000
 KIT_FOLDERNAME = ".semio"
@@ -239,6 +240,13 @@ class Artifact(Entity):
 
 class Base(DeclarativeBase):
     pass
+
+class Semio(Base):
+    """ℹ️ Metadata about the semio database."""
+    __tablename__ = "semio"
+
+    release: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
+    createdAt: Mapped[datetime] = mapped_column(DateTime(), default=datetime.now(), nullable=False)
 
 
 class Tag(Base):
@@ -1604,7 +1612,10 @@ def getLocalSession(directory: str) -> Session:
     )
     Base.metadata.create_all(engine)
     # Create instance of session factory
-    return sessionmaker(bind=engine)()
+    session = sessionmaker(bind=engine)()
+    session.add(Semio(release=RELEASE))
+    session.commit()
+    return session
 
 
 # class ArtifactNode(graphene.Interface):
@@ -3129,7 +3140,7 @@ class RemoveTypeFromLocalKitErrorCode(graphene.Enum):
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
     TYPE_DOES_NOT_EXIST = "type_does_not_exist"
-    FORMATION_DEPENDS_ON_TYPE = "design_depends_on_type"
+    DESIGN_DEPENDS_ON_TYPE = "design_depends_on_type"
 
 
 class RemoveTypeFromLocalKitErrorNode(ObjectType):
@@ -3194,7 +3205,7 @@ class RemoveTypeFromLocalKitMutation(graphene.Mutation):
         if type.pieces:
             return RemoveTypeFromLocalKitMutation(
                 error=RemoveTypeFromLocalKitErrorNode(
-                    code=RemoveTypeFromLocalKitErrorCode.FORMATION_DEPENDS_ON_TYPE
+                    code=RemoveTypeFromLocalKitErrorCode.DESIGN_DEPENDS_ON_TYPE
                 ),
             )
         session.delete(type)
@@ -3207,7 +3218,7 @@ class AddDesignToLocalKitErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
-    FORMATION_INPUT_IS_INVALID = "design_input_is_invalid"
+    DESIGN_INPUT_IS_INVALID = "design_input_is_invalid"
 
 
 class AddDesignToLocalKitErrorNode(ObjectType):
@@ -3264,7 +3275,7 @@ class AddDesignToLocalKitMutation(graphene.Mutation):
             session.rollback()
             return AddDesignToLocalKitMutation(
                 error=AddDesignToLocalKitErrorNode(
-                    code=AddDesignToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+                    code=AddDesignToLocalKitErrorCode.DESIGN_INPUT_IS_INVALID,
                     message=str(e),
                 )
             )
@@ -3272,7 +3283,7 @@ class AddDesignToLocalKitMutation(graphene.Mutation):
             session.rollback()
             return AddDesignToLocalKitMutation(
                 error=AddDesignToLocalKitErrorNode(
-                    code=AddDesignToLocalKitErrorCode.FORMATION_INPUT_IS_INVALID,
+                    code=AddDesignToLocalKitErrorCode.DESIGN_INPUT_IS_INVALID,
                     message=str(
                         "Sorry, I didn't have time to write you a nice error message. For now I can only give you the technical description of what is wrong: "
                         + str(e)
@@ -3288,7 +3299,7 @@ class RemoveDesignFromLocalKitErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_MODIFY_KIT = "no_permission_to_modify_kit"
-    FORMATION_DOES_NOT_EXIST = "design_does_not_exist"
+    DESIGN_DOES_NOT_EXIST = "design_does_not_exist"
 
 
 class RemoveDesignFromLocalKitErrorNode(ObjectType):
@@ -3347,7 +3358,7 @@ class RemoveDesignFromLocalKitMutation(graphene.Mutation):
         except DesignNotFound:
             return RemoveDesignFromLocalKitMutation(
                 error=RemoveDesignFromLocalKitErrorNode(
-                    code=RemoveDesignFromLocalKitErrorCode.FORMATION_DOES_NOT_EXIST
+                    code=RemoveDesignFromLocalKitErrorCode.DESIGN_DOES_NOT_EXIST
                 ),
             )
         session.delete(design)
@@ -3372,7 +3383,7 @@ class DesignToSceneFromLocalKitResponseErrorCode(graphene.Enum):
     DIRECTORY_IS_NOT_A_DIRECTORY = "directory_is_not_a_directory"
     DIRECTORY_HAS_NO_KIT = "directory_has_no_kit"
     NO_PERMISSION_TO_READ_KIT = "no_permission_to_read_kit"
-    FORMATION_DOES_NOT_EXIST = "design_does_not_exist"
+    DESIGN_DOES_NOT_EXIST = "design_does_not_exist"
 
 
 class DesignToSceneFromLocalKitResponseErrorNode(ObjectType):
@@ -3453,7 +3464,7 @@ class Query(ObjectType):
         except DesignNotFound:
             return DesignToSceneFromLocalKitResponse(
                 error=DesignToSceneFromLocalKitResponseErrorNode(
-                    code=DesignToSceneFromLocalKitResponseErrorCode.FORMATION_DOES_NOT_EXIST
+                    code=DesignToSceneFromLocalKitResponseErrorCode.DESIGN_DOES_NOT_EXIST
                 )
             )
         return DesignToSceneFromLocalKitResponse(scene=scene)

@@ -2003,6 +2003,27 @@ public class SceneParam : SemioPersistentParam<SceneGoo>
     }
 }
 
+public class KitParam : SemioPersistentParam<KitGoo>
+{
+    public KitParam() : base("Kit", "Kt", "", "semio", "Params")
+    {
+    }
+
+    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
+
+    protected override Bitmap Icon => Resources.kit_24x24;
+
+    protected override GH_GetterResult Prompt_Singular(ref KitGoo value)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override GH_GetterResult Prompt_Plural(ref List<KitGoo> values)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 #endregion
 
 #region Components
@@ -2941,6 +2962,104 @@ public class DesignComponent : SemioComponent
     }
 }
 
+public class KitComponent : SemioComponent
+{
+    public KitComponent()
+        : base("Model Kit", "~Kit",
+            "Construct, deconstruct or modify a kit.",
+            "semio", "Modelling")
+    {
+    }
+
+    public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+
+    protected override Bitmap Icon => Resources.kit_modify_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Ki?",
+            "Optional kit to deconstruct or modify.",
+            GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
+        pManager[3].Optional = true;
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
+        pManager[4].Optional = true;
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
+        pManager[5].Optional = true;
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Types of the kit.", GH_ParamAccess.list);
+        pManager[6].Optional = true;
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Designs of the kit.", GH_ParamAccess.list);
+        pManager[7].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Ki",
+            "Constructed or modified kit.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Optional designs of the kit.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var kitGoo = new KitGoo();
+        var name = "";
+        var description = "";
+        var icon = "";
+        var url = "";
+        var homepage = "";
+        var typeGoos = new List<TypeGoo>();
+        var designGoos = new List<DesignGoo>();
+
+        if (DA.GetData(0, ref kitGoo))
+            kitGoo = kitGoo.Duplicate() as KitGoo;
+        if (DA.GetData(1, ref name))
+            kitGoo.Value.Name = name;
+        if (DA.GetData(2, ref description))
+            kitGoo.Value.Description = description;
+        if (DA.GetData(3, ref icon))
+            kitGoo.Value.Icon = icon;
+        if (DA.GetData(4, ref url))
+            kitGoo.Value.Url = url;
+        if (DA.GetData(5, ref homepage))
+            kitGoo.Value.Homepage = homepage;
+        if (DA.GetDataList(6, typeGoos))
+            kitGoo.Value.Types = typeGoos.Select(t => t.Value).ToList();
+        if (DA.GetDataList(7, designGoos))
+            kitGoo.Value.Designs = designGoos.Select(d => d.Value).ToList();
+
+        var isValidInput = true;
+        if (kitGoo.Value.Name == "")
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A kit needs a name.");
+            isValidInput = false;
+        }
+
+        if (!isValidInput) return;
+
+        DA.SetData(0, kitGoo.Duplicate());
+        DA.SetData(1, kitGoo.Value.Name);
+        DA.SetData(2, kitGoo.Value.Description);
+        DA.SetData(3, kitGoo.Value.Icon);
+        DA.SetData(4, kitGoo.Value.Url);
+        DA.SetData(5, kitGoo.Value.Homepage);
+        DA.SetDataList(6, kitGoo.Value.Types.Select(t => new TypeGoo(t.DeepClone())));
+        DA.SetDataList(7, kitGoo.Value.Designs.Select(d => new DesignGoo(d.DeepClone())));
+    }
+}
+
+
 public class RandomIdsComponent : SemioComponent
 {
     public RandomIdsComponent()
@@ -3062,14 +3181,7 @@ public class LoadKitComponent : EngineComponent
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
-        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Optional designs of the kit.",
-            GH_ParamAccess.list);
+        pManager.AddParameter(new KitParam());
     }
 
 
@@ -3101,14 +3213,8 @@ public class LoadKitComponent : EngineComponent
 
         var kit = response.Kit;
 
-        DA.SetData(0, kit.Name);
-        DA.SetData(1, kit.Description);
-        DA.SetData(2, kit.Icon);
-        DA.SetData(3, kit.Url);
-        DA.SetData(4, kit.Homepage);
-        DA.SetDataList(5, kit.Types.Select(t => new TypeGoo(t.DeepClone())));
-        DA.SetDataList(6, kit.Designs.Select(f => new DesignGoo(f.DeepClone())));
-    }
+        DA.SetData(0, new KitGoo(kit));
+        }
 }
 
 public class CreateKitComponent : EngineComponent
@@ -3126,24 +3232,11 @@ public class CreateKitComponent : EngineComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-        pManager[3].Optional = true;
-        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-        pManager[4].Optional = true;
-        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
-        pManager[5].Optional = true;
-        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Optional designs of the kit.",
-            GH_ParamAccess.list);
-        pManager[6].Optional = true;
+        pManager.AddParameter(new KitParam());
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will take the current directory from which the Grasshopper script is executed.",
             GH_ParamAccess.item);
-        pManager[7].Optional = true;
+        pManager[1].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Create the kit.", GH_ParamAccess.item, false);
     }
 
@@ -3154,28 +3247,16 @@ public class CreateKitComponent : EngineComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var name = "";
-        var description = "";
-        var icon = "";
-        var url = "";
-        var homepage = "";
-        var typeGoos = new List<TypeGoo>();
-        var designGoos = new List<DesignGoo>();
+        var kitGoo = new KitGoo();
         var path = "";
         var run = false;
 
-        DA.GetData(0, ref name);
-        DA.GetData(1, ref description);
-        DA.GetData(2, ref icon);
-        DA.GetData(3, ref url);
-        DA.GetData(4, ref homepage);
-        DA.GetDataList(5, typeGoos);
-        DA.GetDataList(6, designGoos);
-        if (!DA.GetData(7, ref path))
+        DA.GetData(0, ref kitGoo);
+        if (!DA.GetData(1, ref path))
             path = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
-        DA.GetData(8, ref run);
+        DA.GetData(2, ref run);
 
         if (!run)
         {
@@ -3183,18 +3264,7 @@ public class CreateKitComponent : EngineComponent
             return;
         }
 
-        var kit = new Kit
-        {
-            Name = name,
-            Description = description,
-            Icon = icon,
-            Url = url,
-            Homepage = homepage,
-            Types = typeGoos.Select(t => t.Value).ToList(),
-            Designs = designGoos.Select(f => f.Value).ToList()
-        };
-
-        var response = new Api().CreateLocalKit(path, kit);
+        var response = new Api().CreateLocalKit(path, kitGoo.Value);
         if (response == null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
@@ -3349,7 +3419,7 @@ public class AddTypeComponent : EngineComponent
 public class AddDesignComponent : EngineComponent
 {
     public AddDesignComponent()
-        : base("Add Design", "+For",
+        : base("Add Design", "+Dsn",
             "Add a design to a kit.",
             "semio", "Loading/Saving")
     {
@@ -3501,7 +3571,7 @@ public class RemoveTypeComponent : EngineComponent
 public class RemoveDesignComponent : EngineComponent
 {
     public RemoveDesignComponent()
-        : base("Remove Design", "-For",
+        : base("Remove Design", "-Dsn",
             "Remove a design from a kit.",
             "semio", "Loading/Saving")
     {

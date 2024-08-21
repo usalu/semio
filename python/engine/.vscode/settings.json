@@ -23,6 +23,9 @@
         "--class-naming-style=PascalCase" // Assuming you want classes in PascalCase
     ],
     "editor.defaultFormatter": "ms-python.black-formatter",
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
     "python.defaultInterpreterPath": ".venv/bin/python",
     "python.analysis.typeCheckingMode": "off",
     "python.testing.pytestEnabled": true,

@@ -314,7 +314,7 @@ def test_integration_graphql_local_kit_crud(tmp_path):
     removeShaftResponseExpected = {
         "data": {
             "removeTypeFromLocalKit": {
-                "error": {"code": "FORMATION_DEPENDS_ON_TYPE", "message": None},
+                "error": {"code": "DESIGN_DEPENDS_ON_TYPE", "message": None},
             }
         }
     }

@@ -386,7 +386,7 @@ import { ThemeConfig } from 'antd/lib'
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToReadKit = 'NO_PERMISSION_TO_READ_KIT',
-//     DesignDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
 // /** 🏙️ A design is identified by a name and optional variant. */
@@ -688,7 +688,7 @@ import { ThemeConfig } from 'antd/lib'
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
 //     TypeDoesNotExist = 'TYPE_DOES_NOT_EXIST',
-//     DesignDependsOnType = 'FORMATION_DEPENDS_ON_TYPE'
+//     DesignDependsOnType = 'DESIGN_DEPENDS_ON_TYPE'
 // }
 
 // export type AddDesignToLocalKitMutation = {
@@ -708,7 +708,7 @@ import { ThemeConfig } from 'antd/lib'
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     DesignInputIsInvalid = 'FORMATION_INPUT_IS_INVALID'
+//     DesignInputIsInvalid = 'DESIGN_INPUT_IS_INVALID'
 // }
 
 // export type RemoveDesignFromLocalKitMutation = {
@@ -727,7 +727,7 @@ import { ThemeConfig } from 'antd/lib'
 //     DirectoryIsNotADirectory = 'DIRECTORY_IS_NOT_A_DIRECTORY',
 //     DirectoryHasNoKit = 'DIRECTORY_HAS_NO_KIT',
 //     NoPermissionToModifyKit = 'NO_PERMISSION_TO_MODIFY_KIT',
-//     DesignDoesNotExist = 'FORMATION_DOES_NOT_EXIST'
+//     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
 const { Header, Content, Footer, Sider } = Layout

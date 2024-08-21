@@ -255,7 +255,7 @@ using Semio.Properties;
 //  DIRECTORY_IS_NOT_A_DIRECTORY
 //  DIRECTORY_HAS_NO_KIT
 //  NO_PERMISSION_TO_READ_KIT
-//  FORMATION_DOES_NOT_EXIST
+//  DESIGN_DOES_NOT_EXIST
 //}
 
 //"""🏙️ A design is identified by a name and optional variant."""
@@ -552,7 +552,7 @@ using Semio.Properties;
 //  DIRECTORY_HAS_NO_KIT
 //  NO_PERMISSION_TO_MODIFY_KIT
 //  TYPE_DOES_NOT_EXIST
-//  FORMATION_DEPENDS_ON_TYPE
+//  DESIGN_DEPENDS_ON_TYPE
 //}
 
 //type AddDesignToLocalKitMutation
@@ -573,7 +573,7 @@ using Semio.Properties;
 //  DIRECTORY_IS_NOT_A_DIRECTORY
 //  DIRECTORY_HAS_NO_KIT
 //  NO_PERMISSION_TO_MODIFY_KIT
-//  FORMATION_INPUT_IS_INVALID
+//  DESIGN_INPUT_IS_INVALID
 //}
 
 //type RemoveDesignFromLocalKitMutation
@@ -593,7 +593,7 @@ using Semio.Properties;
 //  DIRECTORY_IS_NOT_A_DIRECTORY
 //  DIRECTORY_HAS_NO_KIT
 //  NO_PERMISSION_TO_MODIFY_KIT
-//  FORMATION_DOES_NOT_EXIST
+//  DESIGN_DOES_NOT_EXIST
 //}
 #endregion
 
@@ -1755,7 +1755,7 @@ public enum RemoveTypeFromLocalKitErrorCode
     DIRECTORY_HAS_NO_KIT,
     NO_PERMISSION_TO_MODIFY_KIT,
     TYPE_DOES_NOT_EXIST,
-    FORMATION_DEPENDS_ON_TYPE
+    DESIGN_DEPENDS_ON_TYPE
 }
 
 public class RemoveTypeFromLocalKitError
@@ -1780,7 +1780,7 @@ public enum AddDesignToLocalKitErrorCode
     DIRECTORY_IS_NOT_A_DIRECTORY,
     DIRECTORY_HAS_NO_KIT,
     NO_PERMISSION_TO_MODIFY_KIT,
-    FORMATION_INPUT_IS_INVALID
+    DESIGN_INPUT_IS_INVALID
 }
 
 public class AddDesignToLocalKitError
@@ -1806,7 +1806,7 @@ public enum RemoveDesignFromLocalKitErrorCode
     DIRECTORY_IS_NOT_A_DIRECTORY,
     DIRECTORY_HAS_NO_KIT,
     NO_PERMISSION_TO_MODIFY_KIT,
-    FORMATION_DOES_NOT_EXIST
+    DESIGN_DOES_NOT_EXIST
 }
 
 public class RemoveDesignFromLocalKitError
@@ -1831,7 +1831,7 @@ public enum DesignToSceneFromLocalKitResponseErrorCode
     DIRECTORY_IS_NOT_A_DIRECTORY,
     DIRECTORY_HAS_NO_KIT,
     NO_PERMISSION_TO_READ_KIT,
-    FORMATION_DOES_NOT_EXIST
+    DESIGN_DOES_NOT_EXIST
 }
 
 public class DesignToSceneFromLocalKitResponseError

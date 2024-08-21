@@ -97,117 +97,118 @@ app.whenReady().then(() => {
   })
 
   const LOAD_LOCAL_KIT = gql`
-        query LoadLocalKit($directory: String!) {
-            loadLocalKit(directory: $directory) {
-                kit {
-                    name
-                    description
-                    icon
-                    url
-                    homepage
-                    types {
-                        name
-                        description
-                        icon
-                        variant
-                        unit
-                        representations {
-                            url
-                            mime
-                            lod
-                            tags
-                        }
-                        ports {
-                            id
-                            point {
-                                x
-                                y
-                                z
-                            }
-                            direction {
-                                x
-                                y
-                                z
-                            }
-                            locators {
-                                group
-                                subgroup
-                            }
-                        }
-                        qualities {
-                            name
-                            value
-                            unit
-                            definition
-                        }
-                    }
-                    designs {
-                        name
-                        description
-                        icon
-                        variant
-                        unit
-                        pieces {
-                            id
-                            type {
-                                name
-                                variant
-                            }
-                            root {
-                                plane {
-                                    origin {
-                                        x
-                                        y
-                                        z
-                                    }
-                                    xAxis {
-                                        x
-                                        y
-                                        z
-                                    }
-                                    yAxis {
-                                        x
-                                        y
-                                        z
-                                    }
-                                }
-                            }
-                            diagram {
-                                point {
-                                    x
-                                    y
-                                }
-                            }
-                        }
-                        connections {
-                            connected {
-                                piece {
-                                    id
-                                    type {
-                                        port {
-                                            id
-                                        }
-                                    }
-                                }
-                            }
-                            connecting {
-                                piece {
-                                    id
-                                    type {
-                                        port {
-                                            id
-                                        }
-                                    }
-                                }
-                            }
-                            offset
-                            rotation
-                        }
-                    }
-                }
-                error
-            }
+query LoadLocalKit($directory: String!) {
+  loadLocalKit(directory: $directory) {
+    kit {
+      name
+      description
+      icon
+      url
+      homepage
+      types {
+        name
+        description
+        icon
+        variant
+        unit
+        representations {
+          url
+          mime
+          lod
+          tags
         }
+        ports {
+          id
+          point {
+            x
+            y
+            z
+          }
+          direction {
+            x
+            y
+            z
+          }
+          locators {
+            group
+            subgroup
+          }
+        }
+        qualities {
+          name
+          value
+          unit
+          definition
+        }
+      }
+      designs {
+        name
+        description
+        icon
+        variant
+        unit
+        pieces {
+          id
+          type {
+            name
+            variant
+          }
+          root {
+            plane {
+              origin {
+                x
+                y
+                z
+              }
+              xAxis {
+                x
+                y
+                z
+              }
+              yAxis {
+                x
+                y
+                z
+              }
+            }
+          }
+          diagram {
+            point {
+              x
+              y
+            }
+          }
+        }
+        connections {
+          connected {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
+              }
+            }
+          }
+          connecting {
+            piece {
+              id
+              type {
+                port {
+                  id
+                }
+              }
+            }
+          }
+          offset
+          rotation
+        }
+      }
+    }
+    error
+  }
+}
+
     `
   const endpoint = 'http://127.0.0.1:5052/graphql'
   const client = new GraphQLClient(endpoint)
@@ -219,7 +220,7 @@ app.whenReady().then(() => {
     return response
   })
 
-  const ADD_FORMATION_TO_LOCAL_KIT = gql`
+  const ADD_DESIGN_TO_LOCAL_KIT = gql`
         mutation AddDesignToLocalKit($directory: String!, $design: DesignInput!) {
             addDesignToLocalKit(directory: $directory, designInput: $design) {
                 design {
@@ -296,7 +297,7 @@ app.whenReady().then(() => {
     if (!directory) {
       return
     }
-    const { addDesignToLocalKit } = await client.request(ADD_FORMATION_TO_LOCAL_KIT, {
+    const { addDesignToLocalKit } = await client.request(ADD_DESIGN_TO_LOCAL_KIT, {
       directory,
       design
     })
