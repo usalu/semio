@@ -16,20 +16,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
 '''
 semio.
 '''
-# TODO: Refactoring Error handling by only exposing client__str__ and not __str__.
-#       Write better error messages.
-# TODO: Check if sqlmodel can replace SQLAlchemy:
-#       ✅Constraints
-#       ❔Polymorphism
-#       ❔graphene_sqlalchemy
-#       ❔graphene_pydantic
-# TODO: Uniformize naming.
-# TODO: Check graphene_pydantic until the pull request for pydantic>2 is merged.
-# TODO: Add constraint to designs that at least 2 pieces and 1 connection are required.
-# TODO: Make uvicorn pyinstaller multiprocessing work. Then qt can be integrated again for system tray.
+# TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
+# class KitBase(sqlmodel.SQLModel):
+#     """🗃️ A kit is a collection of types and designs."""
+# class Kit(KitBase, Table, table=True):
+#     """🗃️ A kit is a collection of types and designs."""
+
+#     PLURAL = "kits"
+#     __tablename__ = "kit"
+# to:
+# class KitBase(sqlmodel.SQLModel):
+#     """🗃️ A kit is a collection of types and designs."""
+# class Kit(KitBase, Table):
+
+
 import abc
 import base64
 import enum
@@ -39,7 +43,6 @@ import functools
 import typing
 import urllib
 from datetime import datetime
-import bcrypt
 from numpy import ndarray, asarray, eye, dot, cross, radians, degrees
 from pytransform3d.transformations import (
     concat,
@@ -61,14 +64,15 @@ from networkx import (
 )
 import pint
 import pydantic
+import sqlalchemy.orm
 import sqlmodel
 import sqlalchemy
 
 
 RELEASE = 'r24.09-1'
 NAME_LENGTH_MAX = 512
-DESCRIPTION_LENGTH_MAX = 4096
 URL_LENGTH_MAX = 1024
+TEXT_LENGTH_MAX = 4096
 KIT_FOLDERNAME = '.semio'
 KIT_FILENAME = 'kit.sqlite3'
 
@@ -93,7 +97,6 @@ MIMES = {
 }
 
 ureg = pint.UnitRegistry()
-
 
 class SemioException(Exception):
     '''❗ The base class for all exceptions in semio.'''
@@ -161,21 +164,10 @@ class InvalidBackend(SemioException):
         return self.message + '\n The backend is invalid. Please report this bug.'
 
 class InvalidGuid(SemioException):
-    '''🆔 The guid is not valid. A guid must have the form:
-    KIND_ABBREVIATION:base64encoded(ENTITY_LOCAL_ID).REPEATED_PARENT_ENTITY_KIND_ABBREVIATION:base64encoded(PARENT_ENTITY_LOCAL_ID)'''
+    '''🆔 The guid is not valid. A guid is the have the rest endpoint:
+    /kits/{urlbase64encoded(KIT_LOCAL_ID)}/types/{base64encoded(TYPE_LOCAL_ID)/...'''
 
     pass
-
-def encodeToBase64(data: str) -> str:
-    byteData = data.encode("utf-8")
-    base64Bytes = base64.b64encode(byteData)
-    base64String = base64Bytes.decode("utf-8")
-    return base64String
-
-def decodeFromBase64(encoded: str) -> str:
-    base64Bytes = encoded.encode("utf-8")
-    byteData = base64.b64decode(base64Bytes)
-    return byteData.decode("utf-8")
 
 
 class StoreKind(enum.Enum):
@@ -196,6 +188,16 @@ class SSLMode(enum.Enum):
     VERIFY_CA = "verify-ca"
     VERIFY_FULL = "verify-full"
 
+
+def encode(value: str) -> str:
+    encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
+    encoded_str = encoded_bytes.decode("utf-8")
+    return encoded_str
+
+def decode(value: str) -> str:
+    decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
+    decoded_str = decoded_bytes.decode("utf-8")
+    return decoded_str
 
 def getSession(
     scheme: str, username="", password="", host="", database="", sslMode=SSLMode.REQUIRE
@@ -264,14 +266,18 @@ def getStoreKindByUrl(url: str) -> StoreKind:
     return StoreKind.DATABASE
 
 
-def getEntityByGuid(guid: str) -> 'Entity':
+def getTableByGuid(guid: str) -> 'Table':
     kindAbbreviation = guid[0:2]
     enitiesGuids = guid.split(".")
     kitGuid = enitiesGuids.pop()
     kitAbbreviation, kitUrl = kitGuid.split(":")
-    if kitAbbreviation != Kit.ABBREVIATION:
+    if kitAbbreviation != Kit.PLURAL:
         raise InvalidGuid()
     session = getSessionByUrl(kitUrl)
+
+
+class exposedProperty(property):
+    pass
 
 
 class Semio(sqlmodel.SQLModel):
@@ -283,14 +289,14 @@ class Semio(sqlmodel.SQLModel):
     createdAt: datetime = sqlmodel.Field(default_factory=datetime.now)
 
 
-class Entity(sqlmodel.SQLModel):
+class Table(sqlmodel.SQLModel):
     '''Base class for all entitites in semio.'''
 
-    ABBREVIATION: typing.ClassVar[str]
-    '''🤏 A unique abbreviation for the entity.'''
+    PLURAL: typing.ClassVar[str]
+    '''🔢 The plural of the entity.'''
 
     @abc.abstractmethod
-    def parent(self) -> typing.Union['Entity', None]:
+    def parent(self) -> typing.Union['Table', None]:
         '''👪 The parent of the entity.'''
         pass
 
@@ -305,11 +311,11 @@ class Entity(sqlmodel.SQLModel):
 
     def guid(self) -> str:
         '''🆔 A guid that let's relay identify the entity.'''
-        localId = f'{self.ABBREVIATION}:{','.join([encodeToBase64(field) for field in self.localId()])}'
-        parentId = f".{self.parent().guid()}" if self.parent() is not None else ""
-        return localId + parentId
-    
-    def fetchFromGuid(guid: str) -> 'Entity':
+        localId = f'{self.PLURAL.lower()}/{','.join([encode(field) for field in self.localId()])}'
+        parentId = f"{self.parent().guid()}/" if self.parent() is not None else "/"
+        return parentId + localId
+
+    def fetchFromGuid(guid: str) -> 'Table':
         '''🔍 Fetch the entity from the guid.'''
         pass
 
@@ -321,12 +327,12 @@ class Entity(sqlmodel.SQLModel):
         pass
 
 
-class ArtifactModel(Entity):
+class ArtifactModel(sqlmodel.SQLModel):
     '''♻️ An artifact is anything that is worth to be reused.'''
 
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. Set to '' for None.
-    description: str = sqlmodel.Field(max_length=DESCRIPTION_LENGTH_MAX, default='')
+    description: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default='')
     # Optional. Set to '' for None.
     icon: str = sqlmodel.Field(default='', max_length=URL_LENGTH_MAX)
     createdAt: datetime = sqlmodel.Field(default_factory=datetime.now)
@@ -339,7 +345,7 @@ class VariableArtifactModel(ArtifactModel):
     variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
 
 
-class Tag(Entity, table=True):
+class Tag(Table, table=True):
     '''🏷️ A tag is meta-data for grouping representations.'''
 
     __tablename__ = 'tag'
@@ -364,21 +370,21 @@ class Tag(Entity, table=True):
 
     def localId(self) -> tuple:
         return (self.value,)
-    
-    def fetchFromGuid(guid: str) -> Entity:
+
+    def fetchFromGuid(guid: str) -> Table:
         return 
 
 
-class RepresentationBase(Entity):
+class RepresentationBase(sqlmodel.SQLModel):
     url: str
     lod: str = ''
 
 
-class Representation(RepresentationBase, table=True):
+class Representation(RepresentationBase,Table, table=True):
     '''💾 A representation is a link to a file that describes a type for a unique combination of level of detail, tags and mime.'''
 
-    ABBREVIATION = 'Rp'
-    __tablename__ = 'representation'
+    PLURAL = 'representations'
+    # __tablename__ = 'representation'
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             'id',
@@ -428,15 +434,15 @@ class RepresentationSkeleton(RepresentationBase):
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class LocatorBase(Entity):
+class LocatorBase(sqlmodel.SQLModel):
     # Optional. '' means true.
     subgroup: str = sqlmodel.Field(default='', max_length=NAME_LENGTH_MAX)
 
 
-class Locator(LocatorBase, table=True):
+class Locator(LocatorBase, Table, table=True):
     '''🗺️ A locator is meta-data for grouping ports.'''
 
-    ABBREVIATION = 'Lc'
+    PLURAL = 'locators'
     __tablename__ = 'locator'
     group: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -470,7 +476,7 @@ def prettyNumber(number: float) -> str:
     return f'{number:.5f}'.rstrip('0').rstrip('.')
 
 
-class ScreenPoint(Entity):
+class ScreenPoint(Table):
     '''📺 A 2d-point (xy) of integers in screen coordinate system.'''
 
     x: int = 0
@@ -494,7 +500,7 @@ class ScreenPoint(Entity):
         return iter((self.x, self.y))
 
 
-class Point(Entity):
+class Point(Table):
     '''✖️ A 3d-point (xyz) of floating point numbers.'''
 
     x: float = 0.0
@@ -544,7 +550,7 @@ class Point(Entity):
         return Vector(self.x, self.y, self.z)
 
 
-class Vector(Entity):
+class Vector(Table):
     '''➡️ A 3d-vector (xyz) of floating point numbers.'''
 
     x: float = 0.0
@@ -632,7 +638,7 @@ class Vector(Entity):
         return Vector(z=1)
 
 
-class CoordinateSystem(Entity):
+class CoordinateSystem(Table):
     '''◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis).'''
 
     origin: Point
@@ -698,7 +704,7 @@ class CoordinateSystem(Entity):
         return CoordinateSystem(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
 
-class Rotation(Entity):
+class Rotation(Table):
     '''🔄 A rotation is an axis and an angle.'''
 
     axis: Vector
@@ -879,16 +885,16 @@ class Transform(ndarray):
         )
 
 
-class PortBase(Entity):
+class PortBase(sqlmodel.SQLModel):
     '''🔌 A port is a connection point (with a direction) of a type.'''
 
     pass
 
 
-class Port(PortBase, table=True):
+class Port(PortBase, Table, table=True):
     '''🔌 A port is a connection point (with a direction) of a type.'''
 
-    ABBREVIATION = 'Po'
+    PLURAL = 'ports'
     __tablename__ = 'port'
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -928,23 +934,31 @@ class Port(PortBase, table=True):
     locators: list[Locator] = sqlmodel.Relationship(
         back_populates='port', cascade_delete=True
     )
+    connecteds: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectedPieceTypePort",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPieceTypePortPk"}
+    )
+    connectings: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectingPieceTypePort",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPieceTypePortPk"},
+    )
 
     __table_args__ = (sqlalchemy.UniqueConstraint('localId', 'typeId'),)
 
     @property
     def point(self) -> Point:
         return Point(self.pointX, self.pointY, self.pointZ)
-    
+
     @point.setter
     def point(self, point: Point):
         self.pointX = point.x
         self.pointY = point.y
         self.pointZ = point.z
-    
+
     @property
     def direction(self) -> Vector:
         return Vector(self.directionX, self.directionY, self.directionZ)
-    
+
     @direction.setter
     def direction(self, direction: Vector):
         self.directionX = direction.x
@@ -959,15 +973,92 @@ class Port(PortBase, table=True):
     def localId(self) -> tuple:
         return (self.id_,)
 
+class PortSkeleton(PortBase):
+    class Config:
+        title = 'Port'
+
+    id: str = sqlmodel.Field(default='')
+    point: Point = sqlmodel.Field(default_factory=Point)
+    direction: Vector = sqlmodel.Field(default_factory=Vector)
+    locators: list[LocatorSkeleton] = sqlmodel.Field(default_factory=list)
+
+class PortIdSkeleton(sqlmodel.SQLModel):
+    class Config:
+        title = 'PortId'
+    
+    id: str = sqlmodel.Field(default='')
+
+class QualityBase(sqlmodel.SQLModel):
+
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
+    # Optional. '' means true.
+    value: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
+    # Optional. Set to '' for None.
+    definition: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default='')
+    # Optional. Set to '' for None.
+    unit: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
+
+
+class Quality(QualityBase, Table, table=True):
+    """📏 A quality is meta-data for decision making."""
+
+    PLURAL = 'qualities'
+    __tablename__ = 'quality'
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            'id',
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    typePk: typing.Optional[int] = sqlmodel.Field(
+        alias='typeId',
+        sa_column=sqlmodel.Column(
+            'typeId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('type.id'),
+        ),
+        default=None,
+        exclude=True,
+    )
+    type: typing.Union['Type', None] = sqlmodel.Relationship(back_populates='qualities')
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        alias='designId',
+        sa_column=sqlmodel.Column(
+            'designId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('design.id'),
+        ),
+        default=None,
+        exclude=True,
+    )
+    design: typing.Union['Design', None] = sqlmodel.Relationship(back_populates='qualities')
+    __table_args__ = (
+        sqlalchemy.CheckConstraint(
+            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
+            name="typeOrDesignSet",
+        ),
+        sqlalchemy.UniqueConstraint("name", "typeId", "designId"),
+    )
+
+    def parent(self) -> 'Type':
+        if self.type is None:
+            raise NoTypeAssigned()
+        return self.type
+
+    def localId(self) -> tuple:
+        return (self.name,)
 
 class TypeBase(VariableArtifactModel):
     pass
 
 
-class Type(TypeBase, table=True):
+class Type(TypeBase, Table, table=True):
     '''🧩 A type is a reusable element that can be connected with other types over ports.'''
 
-    ABBREVIATION = 'Ty'
+    PLURAL = 'types'
     __tablename__ = 'type'
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -983,6 +1074,7 @@ class Type(TypeBase, table=True):
         cascade_delete=True,
     )
     ports: list[Port] = sqlmodel.Relationship(back_populates='type', cascade_delete=True)
+    qualities: list[Quality] = sqlmodel.Relationship(back_populates='type', cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(
         alias='kitId',
         sa_column=sqlmodel.Column(
@@ -1012,16 +1104,282 @@ class TypeSkeleton(TypeBase):
 
     representations: list[RepresentationSkeleton] = sqlmodel.Field(default_factory=list)
 
+class PieceDiagram(Table):
+    """✏️ The diagram of a piece."""
+
+    point: ScreenPoint = sqlmodel.Field(default_factory=ScreenPoint)
+
+
+class PieceBase(sqlmodel.SQLModel):
+
+    pass
+
+class Piece(PieceBase, Table, table=True):
+    '''⭕ A piece is a 3d-instance of a type in a design.'''
+
+    PLURAL = 'pieces'
+    __tablename__ = 'piece'
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            'id',
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    id_: str = sqlmodel.Field(
+        alias='id',
+        sa_column=sqlmodel.Column(
+            'localId',
+            sqlalchemy.String(NAME_LENGTH_MAX),
+        ),
+    )
+    coordinateSystemOriginX: float = sqlmodel.Field(exclude=True)
+    coordinateSystemOriginY: float = sqlmodel.Field(exclude=True)
+    coordinateSystemOriginZ: float = sqlmodel.Field(exclude=True)
+    coordinateSystemXAxisX: float = sqlmodel.Field(exclude=True)
+    coordinateSystemXAxisY: float = sqlmodel.Field(exclude=True)
+    coordinateSystemXAxisZ: float = sqlmodel.Field(exclude=True)
+    coordinateSystemYAxisX: float = sqlmodel.Field(exclude=True)
+    coordinateSystemYAxisY: float = sqlmodel.Field(exclude=True)
+    coordinateSystemYAxisZ: float = sqlmodel.Field(exclude=True)
+    diagramPointX: float = sqlmodel.Field(exclude=True)
+    diagramPointY: float = sqlmodel.Field(exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        alias='designId',
+        sa_column=sqlmodel.Column(
+            'designId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('design.id'),
+        ),
+        default=None,
+        exclude=True,
+    )
+    design: typing.Union['Design', None] = sqlmodel.Relationship(back_populates='pieces')
+    connecteds: list["Connection"] = sqlmodel.Relationship(
+        back_populates='connectedPiece',
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
+    )
+    connectings: list["Connection"] = sqlmodel.Relationship(
+        back_populates='connectingPiece',
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
+    )
+
+    __table_args__ = (sqlalchemy.UniqueConstraint('localId', 'designId'),
+                       sqlalchemy.CheckConstraint(
+            """
+            (
+                (coordinateSystemOriginX IS NULL AND coordinateSystemOriginY IS NULL AND coordinateSystemOriginZ IS NULL AND
+                 coordinateSystemXAxisX IS NULL AND coordinateSystemXAxisY IS NULL AND coordinateSystemXAxisZ IS NULL AND
+                 coordinateSystemYAxisX IS NULL AND coordinateSystemYAxisY IS NULL AND coordinateSystemYAxisZ IS NULL)
+            OR
+                (coordinateSystemOriginX IS NOT NULL AND coordinateSystemOriginY IS NOT NULL AND coordinateSystemOriginZ IS NOT NULL AND
+                 coordinateSystemXAxisX IS NOT NULL AND coordinateSystemXAxisY IS NOT NULL AND coordinateSystemXAxisZ IS NOT NULL AND
+                 coordinateSystemYAxisX IS NOT NULL AND coordinateSystemYAxisY IS NOT NULL AND coordinateSystemYAxisZ IS NOT NULL)
+            )
+            """,
+            name="coordinateSystemSetOrNotSet",))
+
+    @property
+    def coordinateSystem(self) -> CoordinateSystem:
+        return CoordinateSystem(
+            origin=Point(self.coordinateSystemOriginX, self.coordinateSystemOriginY, self.coordinateSystemOriginZ),
+            xAxis=Vector(self.coordinateSystemXAxisX, self.coordinateSystemXAxisY, self.coordinateSystemXAxisZ),
+            yAxis=Vector(self.coordinateSystemYAxisX, self.coordinateSystemYAxisY, self.coordinateSystemYAxisZ),
+        )
+    
+    @coordinateSystem.setter
+    def coordinateSystem(self, coordinateSystem: CoordinateSystem):
+        self.coordinateSystemOriginX = coordinateSystem.origin.x
+        self.coordinateSystemOriginY = coordinateSystem.origin.y
+        self.coordinateSystemOriginZ = coordinateSystem.origin.z
+        self.coordinateSystemXAxisX = coordinateSystem.xAxis.x
+        self.coordinateSystemXAxisY = coordinateSystem.xAxis.y
+        self.coordinateSystemXAxisZ = coordinateSystem.xAxis.z
+        self.coordinateSystemYAxisX = coordinateSystem.yAxis.x
+        self.coordinateSystemYAxisY = coordinateSystem.yAxis.y
+        self.coordinateSystemYAxisZ = coordinateSystem.yAxis.z
+    
+    @property
+    def diagram(self) -> PieceDiagram:
+        return PieceDiagram(point=ScreenPoint(self.diagramPointX, self.diagramPointY))
+    
+    @diagram.setter
+    def diagram(self, diagram: PieceDiagram):
+        self.diagramPointX = diagram.point.x
+        self.diagramPointY = diagram.point.y
+    
+    def parent(self) -> 'Design':
+        if self.design is None:
+            raise NoParentAssigned()
+        return self.design
+
+    def localId(self) -> tuple:
+        return (self.type.name, self.design.name, self.design.variant)
+
+
+class PieceSkeleton(PieceBase):
+    class Config:
+        title = 'Piece'
+
+
+class SidePieceType(Table):
+    port: PortIdSkeleton = sqlmodel.Field()
+
+class SidePiece(Table):
+    id_: str = sqlmodel.Field()
+    type: SidePieceType = sqlmodel.Field()
+
+class Side(Table):
+    piece: SidePiece = sqlmodel.Field()
+
+class ConnectionBase(sqlmodel.SQLModel):
+    rotation: float = sqlmodel.Field(ge=0, lt=360)
+    offset: float = sqlmodel.Field()
+
+class Connection(ConnectionBase, Table, table=True):
+    """🖇️ A connection between two pieces of a design."""
+    __tablename__ = 'connection'
+
+    connectedPiecePk: int = sqlmodel.Field(
+        alias='connectedPieceId',
+        sa_column=sqlmodel.Column(
+            'connectedPieceId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('piece.id'),
+            primary_key=True,
+        ),
+    )
+    connectedPiece: Piece = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Piece",
+            back_populates="connecteds",
+            foreign_keys="[Connection.connectedPiecePk]",
+        )
+    )
+    connectedPieceTypePortPk: int = sqlmodel.Field(
+        alias='connectedPieceTypePortId',
+        sa_column=sqlmodel.Column(
+            'connectedPieceTypePortId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('port.id'),
+            primary_key=True,
+        ),
+    )
+    connectedPieceTypePort: Port = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Port",
+            back_populates="connecteds",
+            foreign_keys="[Connection.connectedPieceTypePortPk]",
+        )
+    )
+    connectingPiecePk: int = sqlmodel.Field(
+        alias='connectingPieceId',
+        sa_column=sqlmodel.Column(
+            'connectingPieceId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('piece.id'),
+            primary_key=True,
+        ),
+    )
+    connectingPiece: Piece = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Piece",
+            back_populates="connectings",
+            foreign_keys="[Connection.connectingPiecePk]",
+        )
+    )
+    connectingPieceTypePortPk: int = sqlmodel.Field(
+        alias='connectingPieceTypePortId',
+        sa_column=sqlmodel.Column(
+            'connectingPieceTypePortId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('port.id'),
+            primary_key=True,
+        ),
+    )
+    connectingPieceTypePort: Port = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Port",
+            back_populates="connectings",
+            foreign_keys="[Connection.connectingPieceTypePortPk]",
+        )
+    )
+    designPk: int = sqlmodel.Field(
+        alias='designId',
+        sa_column=sqlmodel.Column(
+            'designId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('design.id'),
+            primary_key=True,
+        ),
+    )
+    design: 'Design' = sqlmodel.Relationship(back_populates='connections')
+    __table_args__ = (
+        sqlalchemy.CheckConstraint(
+            "connectingPieceId != connectedPieceId",
+            name="noReflexiveConnection",
+        ),
+    )
+
+    @property
+    def connected(self) -> Side:
+        return Side(piece=self.connectedPiece)
+
+
+class DesignBase(VariableArtifactModel):
+    pass
+
+
+class Design(DesignBase, Table, table=True):
+    '''🎨 A design is a collection of types and connections.'''
+
+    PLURAL = 'designs'
+    __tablename__ = 'design'
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            'id',
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    pieces: list[Piece] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
+    connections: list[Connection] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
+    qualities: list[Quality] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(
+        alias='kitId',
+        sa_column=sqlmodel.Column(
+            'kitId',
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey('kit.id'),
+        ),
+        default=None,
+        exclude=True,
+    )
+    kit: typing.Union['Kit', None] = sqlmodel.Relationship(back_populates='designs')
+
+    # __table_args__ = (sqlalchemy.UniqueConstraint('name', 'variant', 'kitPk'),)
+
+    def parent(self) -> 'Kit':
+        if self.kit is None:
+            raise NoKitAssigned()
+        return self.kit
+    
+    def localId(self) -> tuple:
+        return (self.name, self.variant)
 
 class KitBase(ArtifactModel):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default='')
     homepage: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default='')
 
 
-class Kit(KitBase, table=True):
+class Kit(KitBase, Table, table=True):
     '''🗃️ A kit is a collection of types and designs.'''
 
-    ABBREVIATION = 'Kt'
+    PLURAL = 'kits'
     __tablename__ = 'kit'
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -1033,21 +1391,11 @@ class Kit(KitBase, table=True):
         exclude=True,
     )
     types: list[Type] = sqlmodel.Relationship(back_populates='kit', cascade_delete=True)
-    # designs: list[Design] = sqlmodel.Relationship(back_populates='kit', cascade_delete=True)
-    accountPk: typing.Optional[int] = sqlmodel.Field(
-        alias='accountId',
-        sa_column=sqlmodel.Column(
-            'accountId',
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('account.id'),
-        ),
-        default=None,
-        exclude=True,
-    )
-    account: typing.Union['Account', None] = sqlmodel.Relationship(back_populates='kits')
+    designs: list[Design] = sqlmodel.Relationship(back_populates='kit', cascade_delete=True)
+   
     __table_args__ = (sqlalchemy.UniqueConstraint('name'), sqlalchemy.UniqueConstraint('url'))
 
-    def parent(self) -> 'Account':
+    def parent(self) -> None:
         return None
     
     def localId(self) -> tuple:
@@ -1060,48 +1408,6 @@ class KitSkeleton(KitBase):
 
     types: list[TypeSkeleton] = sqlmodel.Field(default_factory=list)
 
-
-class AccountBase(Entity):
-
-    pass
-
-
-class Account(AccountBase, table=True):
-    '''👤 An account for semio.'''
-
-    ABBREVIATION = 'Ac'
-    __tablename__ = 'account'
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            'id',
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    email: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
-    _password: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, name="password")
-    kits: list[Kit] = sqlmodel.Relationship(back_populates='account', cascade_delete=True)
-
-    __table_args__ = (sqlalchemy.UniqueConstraint('email'),)
-
-    def parent(self) -> None:
-        return None
-
-    def localId(self) -> tuple:
-        return (self.email,)
-
-    @property
-    def password(self) -> str:
-        raise AttributeError("Password is not readable")
-
-    @password.setter
-    def password(self, rawPassword: str) -> None:
-        self._password = bcrypt.hashpw(rawPassword.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    def verify_password(self, rawPassword: str) -> bool:
-        return bcrypt.checkpw(rawPassword.encode('utf-8'), self._password.encode('utf-8'))
 
 def create_db_and_tables():
     path = pathlib.Path('engine2.sqlite3')
