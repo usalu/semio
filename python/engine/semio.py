@@ -17,21 +17,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-'''
+"""
 semio.
-'''
+"""
 # TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
 # class KitBase(sqlmodel.SQLModel):
-#     """🗃️ A kit is a collection of types and designs."""
-# class Kit(KitBase, Table, table=True):
-#     """🗃️ A kit is a collection of types and designs."""
+#     '''🗃️ A kit is a collection of types and designs.'''
+# class Kit(KitBase, Row, table=True):
+#     '''🗃️ A kit is a collection of types and designs.'''
 
-#     PLURAL = "kits"
-#     __tablename__ = "kit"
+#     PLURAL = 'kits'
+#     __tablename__ = 'kit'
 # to:
 # class KitBase(sqlmodel.SQLModel):
-#     """🗃️ A kit is a collection of types and designs."""
-# class Kit(KitBase, Table):
+#     '''🗃️ A kit is a collection of types and designs.'''
+# class Kit(KitBase, Row):
 
 
 import abc
@@ -64,108 +64,115 @@ from networkx import (
 )
 import pint
 import pydantic
-import sqlalchemy.orm
-import sqlmodel
 import sqlalchemy
+import sqlalchemy.orm
+import sqlalchemy.ext.hybrid
+import sqlmodel
 
 
-RELEASE = 'r24.09-1'
+RELEASE = "r24.09-1"
 NAME_LENGTH_MAX = 512
 URL_LENGTH_MAX = 1024
 TEXT_LENGTH_MAX = 4096
-KIT_FOLDERNAME = '.semio'
-KIT_FILENAME = 'kit.sqlite3'
+KIT_FOLDERNAME = ".semio"
+KIT_FILENAME = "kit.sqlite3"
 
 TOLERANCE = 1e-5
 SIGNIFICANT_DIGITS = 5
 
 MIMES = {
-    '.stl': 'model/stl',
-    '.obj': 'model/obj',
-    '.glb': 'model/gltf-binary',
-    '.gltf': 'model/gltf+json',
-    '.3dm': 'model/vnd.3dm',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.svg': 'image/svg+xml',
-    '.pdf': 'application/pdf',
-    '.zip': 'application/zip',
-    '.json': 'application/json',
-    '.csv': 'text/csv',
-    '.txt': 'text/plain',
+    ".stl": "model/stl",
+    ".obj": "model/obj",
+    ".glb": "model/gltf-binary",
+    ".gltf": "model/gltf+json",
+    ".3dm": "model/vnd.3dm",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".zip": "application/zip",
+    ".json": "application/json",
+    ".csv": "text/csv",
+    ".txt": "text/plain",
 }
 
 ureg = pint.UnitRegistry()
 
+
 class SemioException(Exception):
-    '''❗ The base class for all exceptions in semio.'''
+    """❗ The base class for all exceptions in semio."""
 
     pass
 
 
 class SpecificationError(SemioException):
-    '''🚫 The base class for all specification errors.
-    A specification error is when the user input does not respect the specification.'''
+    """🚫 The base class for all specification errors.
+    A specification error is when the user input does not respect the specification."""
 
     pass
 
 
 class NoParentAssigned(SpecificationError):
-    '''👪 The entity has no parent assigned.'''
+    """👪 The entity has no parent assigned."""
 
     pass
+
 
 class NoRepresentationAssigned(NoParentAssigned):
-    '''👪 The entity has no representation assigned.'''
+    """👪 The entity has no representation assigned."""
 
     pass
+
 
 class NoTypeAssigned(NoParentAssigned):
-    '''👪 The entity has no type assigned.'''
+    """👪 The entity has no type assigned."""
 
     pass
+
 
 class NoKitAssigned(NoParentAssigned):
-    '''👪 The entity has no kit assigned.'''
+    """👪 The entity has no kit assigned."""
 
     pass
 
+
 class InvalidURL(ValueError, SpecificationError):
-    '''🔗 The URL is not valid. An url must have the form:
-    scheme://netloc/path;parameters?query#fragment.'''
+    """🔗 The URL is not valid. An url must have the form:
+    scheme://netloc/path;parameters?query#fragment."""
 
     def __init__(self, url: str) -> None:
         self.url = url
 
     def __str__(self) -> str:
-        return f'{self.url} is not a valid URL.'
+        return f"{self.url} is not a valid URL."
 
 
 class InvalidDatabase(SemioException):
-    '''💾 The state of the database is somehow invalid.
+    """💾 The state of the database is somehow invalid.
     Check the constraints and the insert validators.
-    '''
+    """
 
     def __init__(self, message: str) -> None:
         self.message = message
 
     def __str__(self) -> str:
-        return self.message + '\n The database is invalid. Please report this bug.'
+        return self.message + "\n The database is invalid. Please report this bug."
 
 
 class InvalidBackend(SemioException):
-    '''🖥️ The backend processed something wrong. Check the order of operations.'''
+    """🖥️ The backend processed something wrong. Check the order of operations."""
 
     def __init__(self, message: str) -> None:
         self.message = message
 
     def __str__(self) -> str:
-        return self.message + '\n The backend is invalid. Please report this bug.'
+        return self.message + "\n The backend is invalid. Please report this bug."
+
 
 class InvalidGuid(SemioException):
-    '''🆔 The guid is not valid. A guid is the have the rest endpoint:
-    /kits/{urlbase64encoded(KIT_LOCAL_ID)}/types/{base64encoded(TYPE_LOCAL_ID)/...'''
+    """🆔 The guid is not valid. A guid is the have the rest endpoint:
+    /kits/{urlbase64encoded(KIT_LOCAL_ID)}/types/{base64encoded(TYPE_LOCAL_ID)/..."""
 
     pass
 
@@ -176,6 +183,79 @@ class StoreKind(enum.Enum):
     DATABASE = "database"
     REST = "rest"
     GRAPHQL = "graphql"
+
+
+def encode(value: str) -> str:
+    encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
+    encoded_str = encoded_bytes.decode("utf-8")
+    return encoded_str
+
+
+def decode(value: str) -> str:
+    decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
+    decoded_str = decoded_bytes.decode("utf-8")
+    return decoded_str
+
+
+class Store(abc.ABC):
+
+    @classmethod
+    @abc.abstractmethod
+    def getRowByUrl(cls, url: str, body={}) -> "Row":
+        """🔍 Get a row from a url."""
+        pass
+
+
+class DatabaseStore(Store, abc.ABC):
+    @classmethod
+    @abc.abstractmethod
+    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
+        """🔧 Get the engine from the url."""
+        pass
+
+    @classmethod
+    def getRowByUrl(cls, url: str, body={}) -> "Row":
+        engine = cls.getEngineByUrl(url)
+        sqlmodel.SQLModel.metadata.create_all(engine)
+        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        parsedUrl = urllib.parse.urlparse(url)
+        encodedQuery = parsedUrl.path.split(f"/{Kit.PLURAL}/")[1]
+        queryParts = encodedQuery.split("/")
+        kit = session.query(Kit).filter(Kit.encodedLocalId == queryParts[0]).first()
+        kind = queryParts[-2]
+        match kind:
+            case Kit.PLURAL:
+                return kit
+            case Design.PLURAL | Piece.PLURAL | Connection.PLURAL:
+                design = kit.designs.filter(
+                    Design.encodedLocalId == queryParts[2]
+                ).first()
+                if kind == Design.PLURAL:
+                    return design
+                if kind == Piece.PLURAL:
+                    return design.pieces.filter(
+                        Piece.encodedLocalId == queryParts[4]
+                    ).first()
+                if kind == Connection.PLURAL:
+                    return design.connections.filter(
+                        Connection.encodedLocalId == queryParts[4]
+                    ).first()
+            case Type.PLURAL | Representation.PLURAL | Port.PLURAL | Locator.PLURAL:
+                type = kit.types.filter(Type.encodedLocalId == queryParts[2]).first()
+                if kind == Type.PLURAL:
+                    return type
+                if kind == Representation.PLURAL:
+                    return type.representations.filter(
+                        Representation.encodedLocalId == queryParts[4]
+                    ).first()
+                if kind == Port.PLURAL:
+                    return type.ports.filter(
+                        Port.encodedLocalId == queryParts[4]
+                    ).first()
+                if kind == Locator.PLURAL:
+                    return type.locators.filter(
+                        Locator.encodedLocalId == queryParts[4]
+                    ).first()
 
 
 class SSLMode(enum.Enum):
@@ -189,91 +269,75 @@ class SSLMode(enum.Enum):
     VERIFY_FULL = "verify-full"
 
 
-def encode(value: str) -> str:
-    encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
-    encoded_str = encoded_bytes.decode("utf-8")
-    return encoded_str
-
-def decode(value: str) -> str:
-    decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
-    decoded_str = decoded_bytes.decode("utf-8")
-    return decoded_str
-
-def getSession(
-    scheme: str, username="", password="", host="", database="", sslMode=SSLMode.REQUIRE
-) -> sqlalchemy.orm.Session:
-    match scheme:
-        case "postgresql":
-            schemeWithAdapter = "postgresql+psycopg"
-        case _:
-            schemeWithAdapter = scheme
-    connection_string = sqlalchemy.URL.create(
-        schemeWithAdapter,
-        username=username,
-        password=password,
-        host=host,
-        database=database,
-    )
-    match scheme:
-        case "sqlite":
-            engine = sqlalchemy.create_engine(connection_string)
-        case "postgresql":
-            engine = sqlalchemy.create_engine(
-                connection_string, connect_args={"sslmode": sslMode.value}
-            )
-    sqlmodel.SQLModel.metadata.create_all(engine)
-    session = sqlalchemy.orm.sessionmaker(bind=engine)()
-    return session
-
-
-def getSessionByUrl(url: str) -> sqlalchemy.orm.Session:
-    parsedUrl = urllib.parse.urlparse(url)
-    match parsedUrl.scheme:
-        case "":
-            if not parsedUrl.path.endswith(".sqlite3"):
-                if not parsedUrl.path.endswith(".semio"):
-                    path = pathlib.Path(parsedUrl.path) / KIT_FOLDERNAME / KIT_FILENAME
-                else:
-                    path = pathlib.Path(parsedUrl.path) / KIT_FILENAME
+class SqliteStore(DatabaseStore):
+    @classmethod
+    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
+        parsedUrl = urllib.parse.urlparse(url.split(f"/{Kit.PLURAL}/")[0])
+        if not parsedUrl.path.endswith(".sqlite3"):
+            if not parsedUrl.path.endswith(".semio"):
+                path = pathlib.Path(parsedUrl.path) / KIT_FOLDERNAME / KIT_FILENAME
             else:
-                path = pathlib.Path(parsedUrl.path)
-            return getSession(
-                "sqlite", parsedUrl.username, parsedUrl.password, database=str(path)
-            )
-        case "sqlite":
-            return getSession(
-                "sqlite",
-                parsedUrl.username,
-                parsedUrl.password,
-                database=parsedUrl.path[1:],
-            )
-        case _:
-            return getSession(
-                parsedUrl.scheme,
-                parsedUrl.username,
-                parsedUrl.password,
-                parsedUrl.hostname,
-                parsedUrl.path[1:],
-            )
+                path = pathlib.Path(parsedUrl.path) / KIT_FILENAME
+        else:
+            path = pathlib.Path(parsedUrl.path)
+        path = str(path)
+        connectionString = (
+            url
+            if parsedUrl.scheme == "sqlite"
+            else f"sqlite:///{path}" if not path.startswith("/") else f"sqlite://{path}"
+        )
+        return sqlalchemy.create_engine(connectionString, echo=True)
 
 
-def getStoreKindByUrl(url: str) -> StoreKind:
-    parsedUrl = urllib.parse.urlparse(url)
-    if parsedUrl.path.endswith("/graphql"):
-        return StoreKind.GRAPHQL
-    if parsedUrl.scheme == "http" or parsedUrl.scheme == "https":
-        return StoreKind.REST
-    return StoreKind.DATABASE
+class PostgresStore(DatabaseStore):
+    @classmethod
+    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
+        """🔧 Get the engine from the url. Assumes the url has the format:"""
+        parsedUrl = urllib.parse.urlparse(url)
+        connection_string = sqlalchemy.URL.create(
+            "postgresql+psycopg",
+            username=parsedUrl.username,
+            password=parsedUrl.password,
+            host=parsedUrl.hostname,
+            database=parsedUrl.path[1:],  # Remove the leading '/'
+        )
+        return sqlalchemy.create_engine(
+            connection_string,
+            connect_args={"sslmode": parsedUrl.query.get("sslmode", SSLMode.REQUIRE)},
+        )
 
 
-def getTableByGuid(guid: str) -> 'Table':
-    kindAbbreviation = guid[0:2]
-    enitiesGuids = guid.split(".")
-    kitGuid = enitiesGuids.pop()
-    kitAbbreviation, kitUrl = kitGuid.split(":")
-    if kitAbbreviation != Kit.PLURAL:
-        raise InvalidGuid()
-    session = getSessionByUrl(kitUrl)
+class RestStore(Store):
+    @classmethod
+    def getRowByUrl(cls, url: str, body={}) -> "Row":
+        raise NotImplementedError()
+
+
+class GraphqlStore(Store):
+    @classmethod
+    def getRowByUrl(cls, url: str, body={}) -> "Row":
+        raise NotImplementedError()
+
+
+def getRowByUrl(url: str) -> "Row":
+    """🔍 Get a row from a url."""
+    try:
+        return SqliteStore.getRowByUrl(url)
+    except Exception as e:
+        pass
+    try:
+        return RestStore.getRowByUrl(url)
+    except Exception as e:
+        pass
+    try:
+        return GraphqlStore.getRowByUrl(url)
+    except Exception as e:
+        pass
+    try:
+        return PostgresStore.getRowByUrl(url)
+    except Exception as e:
+        pass
+    raise InvalidURL(url)
 
 
 class exposedProperty(property):
@@ -281,46 +345,52 @@ class exposedProperty(property):
 
 
 class Semio(sqlmodel.SQLModel):
-    '''ℹ️ Metadata about the semio database.'''
+    """ℹ️ Metadata about the semio database."""
 
-    __tablename__ = 'semio'
+    __tablename__ = "semio"
 
     release: str = sqlmodel.Field(default=RELEASE, primary_key=True)
     createdAt: datetime = sqlmodel.Field(default_factory=datetime.now)
 
 
-class Table(sqlmodel.SQLModel):
-    '''Base class for all entitites in semio.'''
+class Row(sqlmodel.SQLModel):
+    """Base class for all entitites in semio."""
 
     PLURAL: typing.ClassVar[str]
-    '''🔢 The plural of the entity.'''
+    """🔢 The plural of the entity."""
 
     @abc.abstractmethod
-    def parent(self) -> typing.Union['Table', None]:
-        '''👪 The parent of the entity.'''
+    def parent(self) -> typing.Optional["Row"]:
+        """👪 The parent of the entity."""
         pass
 
+    @property
     @abc.abstractmethod
     def localId(self) -> tuple:
-        '''🆔 A tuple that identifies the entity within it's parent.'''
+        """🆔 A tuple that identifies the entity within it's parent."""
         pass
 
+    @property
+    def encodedLocalId(self) -> str:
+        """🆔 An encoded string that identifies the entity within it's parent."""
+        return ",".join([encode(field) for field in self.localId])
+
     def humanId(self) -> str:
-        '''🪪 A string that let's the user identify the entity within it's parent.'''
-        return f'{self.__class__.__name__}({', '.join(self.localId())})'
+        """🪪 A string that let's the user identify the entity within it's parent."""
+        return f"{self.__class__.__name__}({", ".join(self.localId())})"
 
     def guid(self) -> str:
-        '''🆔 A guid that let's relay identify the entity.'''
-        localId = f'{self.PLURAL.lower()}/{','.join([encode(field) for field in self.localId()])}'
-        parentId = f"{self.parent().guid()}/" if self.parent() is not None else "/"
+        """🆔 A guid that let's relay identify the entity."""
+        localId = f"{self.__class__.PLURAL.lower()}/{self.encodedLocalId}"
+        parentId = f"{self.parent().guid()}/" if self.parent() is not None else ""
         return parentId + localId
 
-    def fetchFromGuid(guid: str) -> 'Table':
-        '''🔍 Fetch the entity from the guid.'''
+    def fetchFromUrl(guid: str) -> "Row":
+        """🔍 Fetch the entity from the guid."""
         pass
 
     def existsError(self) -> SemioException:
-        '''🔍 An error that is raised when the entity already exists.'''
+        """🔍 An error that is raised when the entity already exists."""
         pass
 
     def notFoundError(self) -> SemioException:
@@ -328,66 +398,64 @@ class Table(sqlmodel.SQLModel):
 
 
 class ArtifactModel(sqlmodel.SQLModel):
-    '''♻️ An artifact is anything that is worth to be reused.'''
+    """♻️ An artifact is anything that is worth to be reused."""
 
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. Set to '' for None.
-    description: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default='')
+    description: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
-    icon: str = sqlmodel.Field(default='', max_length=URL_LENGTH_MAX)
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_MAX)
     createdAt: datetime = sqlmodel.Field(default_factory=datetime.now)
     lastUpdateAt: datetime = sqlmodel.Field(default_factory=datetime.now)
 
 
 class VariableArtifactModel(ArtifactModel):
-    '''🎚️ A variable artifact is an artifact that has variants (at least one default).'''
+    """🎚️ A variable artifact is an artifact that has variants (at least one default)."""
 
-    variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
+    variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
 
 
-class Tag(Table, table=True):
-    '''🏷️ A tag is meta-data for grouping representations.'''
+class Tag(Row, table=True):
+    """🏷️ A tag is meta-data for grouping representations."""
 
-    __tablename__ = 'tag'
+    # __tablename__ = 'tag'
     value: str = sqlmodel.Field(primary_key=True)
     representationPk: int = sqlmodel.Field(
-        alias='representationId',
+        alias="representationId",
         sa_column=sqlmodel.Column(
-            'representationId',
+            "representationId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('representation.id'),
+            sqlalchemy.ForeignKey("representation.id"),
             primary_key=True,
         ),
         default=None,
         exclude=True,
     )
-    representation: 'Representation' = sqlmodel.Relationship(back_populates='_tags')
+    representation: "Representation" = sqlmodel.Relationship(back_populates="_tags")
 
-    def parent(self) -> typing.Union['Representation', None]:
+    def parent(self) -> typing.Optional["Representation"]:
         if self.representation is None:
             raise NoRepresentationAssigned()
         return self.representation
 
+    @property
     def localId(self) -> tuple:
         return (self.value,)
-
-    def fetchFromGuid(guid: str) -> Table:
-        return 
 
 
 class RepresentationBase(sqlmodel.SQLModel):
     url: str
-    lod: str = ''
+    lod: str = ""
 
 
-class Representation(RepresentationBase,Table, table=True):
-    '''💾 A representation is a link to a file that describes a type for a unique combination of level of detail, tags and mime.'''
+class Representation(RepresentationBase, Row, table=True):
+    """💾 A representation is a link to a file that describes a type for a unique combination of level of detail, tags and mime."""
 
-    PLURAL = 'representations'
+    PLURAL = "representations"
     # __tablename__ = 'representation'
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
@@ -395,19 +463,21 @@ class Representation(RepresentationBase,Table, table=True):
         exclude=True,
     )
     _tags: list[Tag] = sqlmodel.Relationship(
-        back_populates='representation', cascade_delete=True
+        back_populates="representation", cascade_delete=True
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
-        alias='typeId',
+        alias="typeId",
         sa_column=sqlmodel.Column(
-            'typeId',
+            "typeId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('type.id'),
+            sqlalchemy.ForeignKey("type.id"),
         ),
         default=None,
         exclude=True,
     )
-    type: typing.Union['Type', None] = sqlmodel.Relationship(back_populates='representations')
+    type: typing.Optional["Type"] = sqlmodel.Relationship(
+        back_populates="representations"
+    )
 
     @property
     def tags(self) -> list[str]:
@@ -417,67 +487,72 @@ class Representation(RepresentationBase,Table, table=True):
     def tags(self, tags: list[str]):
         self._tags = [Tag(value=tag) for tag in tags]
 
-    def parent(self) -> 'Type':
+    def parent(self) -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
+    @property
     def localId(self) -> tuple:
         return (self.url,)
 
 
+class Skeleton(sqlmodel.SQLModel):
+    class Config:
+        title = __name__[:8]  # len('Skeleton') = 8
+
+
 class RepresentationSkeleton(RepresentationBase):
     class Config:
-        title = 'Representation'
+        title = "Representation"
 
-    id: str = ''
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class LocatorBase(sqlmodel.SQLModel):
     # Optional. '' means true.
-    subgroup: str = sqlmodel.Field(default='', max_length=NAME_LENGTH_MAX)
+    subgroup: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_MAX)
 
 
-class Locator(LocatorBase, Table, table=True):
-    '''🗺️ A locator is meta-data for grouping ports.'''
+class Locator(LocatorBase, Row, table=True):
+    """🗺️ A locator is meta-data for grouping ports."""
 
-    PLURAL = 'locators'
-    __tablename__ = 'locator'
+    PLURAL = "locators"
+    __tablename__ = "locator"
     group: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'groupName',
+            "groupName",
             sqlalchemy.String(NAME_LENGTH_MAX),
             primary_key=True,
         ),
     )
     portPk: typing.Optional[int] = sqlmodel.Field(
-        alias='portId',
+        alias="portId",
         sa_column=sqlmodel.Column(
-            'portId',
+            "portId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('port.id'),
+            sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
         ),
         default=None,
         exclude=True,
     )
-    port: typing.Union['Port', None] = sqlmodel.Relationship(back_populates='locators')
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="locators")
 
 
 class LocatorSkeleton(LocatorBase):
     class Config:
-        title = 'Locator'
+        title = "Locator"
 
 
 def prettyNumber(number: float) -> str:
     if number == -0.0:
         number = 0.0
-    return f'{number:.5f}'.rstrip('0').rstrip('.')
+    return f"{number:.5f}".rstrip("0").rstrip(".")
 
 
-class ScreenPoint(Table):
-    '''📺 A 2d-point (xy) of integers in screen coordinate system.'''
+class ScreenPoint(sqlmodel.SQLModel):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
     x: int = 0
     y: int = 0
@@ -494,14 +569,14 @@ class ScreenPoint(Table):
         elif key == 1:
             return self.y
         else:
-            raise IndexError('Index out of range')
+            raise IndexError("Index out of range")
 
     def __iter__(self):
         return iter((self.x, self.y))
 
 
-class Point(Table):
-    '''✖️ A 3d-point (xyz) of floating point numbers.'''
+class Point(sqlmodel.SQLModel):
+    """✖️ A 3d-point (xyz) of floating point numbers."""
 
     x: float = 0.0
     y: float = 0.0
@@ -512,12 +587,12 @@ class Point(Table):
 
     def __str__(self) -> str:
         return (
-            f'[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]'
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
         )
 
     def __repr__(self) -> str:
         return (
-            f'[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]'
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
         )
 
     def __len__(self):
@@ -531,27 +606,27 @@ class Point(Table):
         elif key == 2:
             return self.z
         else:
-            raise IndexError('Index out of range')
+            raise IndexError("Index out of range")
 
     def __iter__(self):
         return iter((self.x, self.y, self.z))
 
-    def isCloseTo(self, other: 'Point', tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
             and abs(self.z - other.z) < tol
         )
 
-    def transform(self, transform: 'Transform') -> 'Point':
+    def transform(self, transform: "Transform") -> "Point":
         return Transform.transformPoint(transform, self)
 
-    def toVector(self) -> 'Vector':
+    def toVector(self) -> "Vector":
         return Vector(self.x, self.y, self.z)
 
 
-class Vector(Table):
-    '''➡️ A 3d-vector (xyz) of floating point numbers.'''
+class Vector(sqlmodel.SQLModel):
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
     x: float = 0.0
     y: float = 0.0
@@ -562,12 +637,12 @@ class Vector(Table):
 
     def __str__(self) -> str:
         return (
-            f'[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]'
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
         )
 
     def __repr__(self) -> str:
         return (
-            f'[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]'
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
         )
 
     def __len__(self):
@@ -581,7 +656,7 @@ class Vector(Table):
         elif key == 2:
             return self.z
         else:
-            raise IndexError('Index out of range')
+            raise IndexError("Index out of range")
 
     def __iter__(self):
         return iter((self.x, self.y, self.z))
@@ -593,53 +668,53 @@ class Vector(Table):
     def length(self) -> float:
         return (self.x**2 + self.y**2 + self.z**2) ** 0.5
 
-    def revert(self) -> 'Vector':
+    def revert(self) -> "Vector":
         return Vector(-self.x, -self.y, -self.z)
 
-    def amplify(self, factor: float) -> 'Vector':
+    def amplify(self, factor: float) -> "Vector":
         return Vector(self.x * factor, self.y * factor, self.z * factor)
 
-    def isCloseTo(self, other: 'Vector', tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
         return (
             abs(self.x - other.x) < tol
             and abs(self.y - other.y) < tol
             and abs(self.z - other.z) < tol
         )
 
-    def normalize(self) -> 'Vector':
+    def normalize(self) -> "Vector":
         length = self.length
         return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
 
-    def dot(self, other: 'Vector') -> float:
+    def dot(self, other: "Vector") -> float:
         return dot(self, other)
 
-    def cross(self, other: 'Vector') -> 'Vector':
+    def cross(self, other: "Vector") -> "Vector":
         return Vector(*cross(self, other))
 
-    def transform(self, transform: 'Transform') -> 'Vector':
+    def transform(self, transform: "Transform") -> "Vector":
         return Transform.transformVector(transform, self)
 
-    def toPoint(self) -> 'Point':
+    def toPoint(self) -> "Point":
         return Point(self.x, self.y, self.z)
 
-    def toTransform(self) -> 'Transform':
+    def toTransform(self) -> "Transform":
         return Transform.fromTranslation(self)
 
     @staticmethod
-    def X() -> 'Vector':
+    def X() -> "Vector":
         return Vector(x=1)
 
     @staticmethod
-    def Y() -> 'Vector':
+    def Y() -> "Vector":
         return Vector(y=1)
 
     @staticmethod
-    def Z() -> 'Vector':
+    def Z() -> "Vector":
         return Vector(z=1)
 
 
-class CoordinateSystem(Table):
-    '''◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis).'''
+class CoordinateSystem(sqlmodel.SQLModel):
+    """◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
 
     origin: Point
     xAxis: Vector
@@ -658,14 +733,14 @@ class CoordinateSystem(Table):
         if yAxis is None:
             yAxis = Vector()
         if abs(xAxis.length - 1) > TOLERANCE:
-            raise ValidationError('The x-axis must be normalized.')
+            raise ValidationError("The x-axis must be normalized.")
         if abs(yAxis.length - 1) > TOLERANCE:
-            raise ValidationError('The y-axis must be normalized.')
+            raise ValidationError("The y-axis must be normalized.")
         if abs(xAxis.dot(yAxis)) > TOLERANCE:
-            raise ValidationError('The x-axis and y-axis must be orthogonal.')
+            raise ValidationError("The x-axis and y-axis must be orthogonal.")
         super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
-    def isCloseTo(self, other: 'CoordinateSystem', tol: float = TOLERANCE) -> bool:
+    def isCloseTo(self, other: "CoordinateSystem", tol: float = TOLERANCE) -> bool:
         return (
             self.origin.isCloseTo(other.origin, tol)
             and self.xAxis.isCloseTo(other.xAxis, tol)
@@ -676,14 +751,14 @@ class CoordinateSystem(Table):
     def zAxis(self) -> Vector:
         return self.xAxis.cross(self.yAxis)
 
-    def transform(self, transform: 'Transform') -> 'CoordinateSystem':
+    def transform(self, transform: "Transform") -> "CoordinateSystem":
         return Transform.transformCoordinateSystem(transform, self)
 
-    def toTransform(self) -> 'Transform':
+    def toTransform(self) -> "Transform":
         return Transform.fromCoordinateSystem(self)
 
     @staticmethod
-    def XY() -> 'CoordinateSystem':
+    def XY() -> "CoordinateSystem":
         return CoordinateSystem(
             origin=Point(),
             xAxis=Vector.X(),
@@ -693,9 +768,9 @@ class CoordinateSystem(Table):
     @staticmethod
     def fromYAxis(
         yAxis: Vector, theta: float = 0.0, origin: Point = None
-    ) -> 'CoordinateSystem':
+    ) -> "CoordinateSystem":
         if abs(yAxis.length - 1) > TOLERANCE:
-            raise SpecificationError('The yAxis must be normalized.')
+            raise SpecificationError("The yAxis must be normalized.")
         if origin is None:
             origin = Point()
         orientation = Transform.fromDirections(Vector.Y(), yAxis)
@@ -704,8 +779,8 @@ class CoordinateSystem(Table):
         return CoordinateSystem(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
 
-class Rotation(Table):
-    '''🔄 A rotation is an axis and an angle.'''
+class Rotation(sqlmodel.SQLModel):
+    """🔄 A rotation is an axis and an angle."""
 
     axis: Vector
     angle: float
@@ -713,12 +788,12 @@ class Rotation(Table):
     def __init__(self, axis: Vector, angle: float):
         super().__init__(axis=axis, angle=angle)
 
-    def toTransform(self) -> 'Transform':
+    def toTransform(self) -> "Transform":
         return Transform.fromRotation(self)
 
 
 class Transform(ndarray):
-    '''▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing).'''
+    """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
 
     def __new__(cls, input_array=None):
         if input_array is None:
@@ -734,15 +809,15 @@ class Transform(ndarray):
 
     def __str__(self) -> str:
         rounded_self = self.round()
-        return f'Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})'
+        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
     def __repr__(self) -> str:
         rounded_self = self.round()
-        return f'Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})'
+        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
     @property
     def rotation(self) -> Rotation | None:
-        '''🔄 The rotation part of the transform.'''
+        """🔄 The rotation part of the transform."""
         rotationMatrix = self[:3, :3]
         axisAngle = axis_angle_from_matrix(rotationMatrix)
         if axisAngle[3] == 0:
@@ -754,28 +829,28 @@ class Transform(ndarray):
 
     @property
     def translation(self) -> Vector:
-        '''➡️ The translation part of the transform.'''
+        """➡️ The translation part of the transform."""
         return Vector(*self[:3, 3])
 
     # for pydantic
     def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
         return {
-            'rotation': self.rotation,
-            'translation': self.translation,
+            "rotation": self.rotation,
+            "translation": self.translation,
         }
 
-    def after(self, before: 'Transform') -> 'Transform':
-        '''✖️ Apply this transform after another transform.
+    def after(self, before: "Transform") -> "Transform":
+        """✖️ Apply this transform after another transform.
 
         Args:
             before (Transform): Transform to apply before this transform.
 
         Returns:
             Transform: New transform.
-        '''
+        """
         return Transform(concat(before, self))
 
-    def invert(self) -> 'Transform':
+    def invert(self) -> "Transform":
         return Transform(invert_transform(self))
 
     def transformPoint(self, point: Point) -> Point:
@@ -805,11 +880,11 @@ class Transform(ndarray):
         else:
             raise NotImplementedError()
 
-    def round(self, decimals: int = SIGNIFICANT_DIGITS) -> 'Transform':
+    def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
         return Transform(super().round(decimals=decimals))
 
     @staticmethod
-    def fromTranslation(vector: Vector) -> 'Transform':
+    def fromTranslation(vector: Vector) -> "Transform":
         return Transform(
             transform_from(
                 [
@@ -822,7 +897,7 @@ class Transform(ndarray):
         )
 
     @staticmethod
-    def fromRotation(rotation: Rotation) -> 'Transform':
+    def fromRotation(rotation: Rotation) -> "Transform":
         return Transform(
             transform_from(
                 matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
@@ -831,7 +906,7 @@ class Transform(ndarray):
         )
 
     @staticmethod
-    def fromCoordinateSystem(coordinateSystem: CoordinateSystem) -> 'Transform':
+    def fromCoordinateSystem(coordinateSystem: CoordinateSystem) -> "Transform":
         # Assumes coordinateSystem is normalized
         return Transform(
             transform_from(
@@ -857,13 +932,13 @@ class Transform(ndarray):
         )
 
     @staticmethod
-    def fromAngle(axis: Vector, angle: float) -> 'Transform':
+    def fromAngle(axis: Vector, angle: float) -> "Transform":
         return Transform(
             transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
         )
 
     @staticmethod
-    def fromDirections(startDirection: Vector, endDirection: Vector) -> 'Transform':
+    def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
         if startDirection.isCloseTo(endDirection):
             return Transform()
         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
@@ -886,19 +961,19 @@ class Transform(ndarray):
 
 
 class PortBase(sqlmodel.SQLModel):
-    '''🔌 A port is a connection point (with a direction) of a type.'''
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     pass
 
 
-class Port(PortBase, Table, table=True):
-    '''🔌 A port is a connection point (with a direction) of a type.'''
+class Port(PortBase, Row, table=True):
+    """🔌 A port is a connection point (with a direction) of a type."""
 
-    PLURAL = 'ports'
-    __tablename__ = 'port'
+    PLURAL = "ports"
+    __tablename__ = "port"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
@@ -908,9 +983,9 @@ class Port(PortBase, Table, table=True):
     # Can't use the name 'id' because of bug
     # https://github.com/graphql-python/graphene-sqlalchemy/issues/412
     id_: str = sqlmodel.Field(
-        alias='id',
+        alias="id",
         sa_column=sqlmodel.Column(
-            'localId',
+            "localId",
             sqlalchemy.String(NAME_LENGTH_MAX),
         ),
     )
@@ -921,29 +996,29 @@ class Port(PortBase, Table, table=True):
     directionY: float = sqlmodel.Field(exclude=True)
     directionZ: float = sqlmodel.Field(exclude=True)
     typePk: typing.Optional[int] = sqlmodel.Field(
-        alias='typeId',
+        alias="typeId",
         sa_column=sqlmodel.Column(
-            'typeId',
+            "typeId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('type.id'),
+            sqlalchemy.ForeignKey("type.id"),
         ),
         default=None,
         exclude=True,
     )
-    type: typing.Union['Type', None] = sqlmodel.Relationship(back_populates='ports')
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
     locators: list[Locator] = sqlmodel.Relationship(
-        back_populates='port', cascade_delete=True
+        back_populates="port", cascade_delete=True
     )
     connecteds: list["Connection"] = sqlmodel.Relationship(
         back_populates="connectedPieceTypePort",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPieceTypePortPk"}
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPieceTypePortPk"},
     )
     connectings: list["Connection"] = sqlmodel.Relationship(
         back_populates="connectingPieceTypePort",
         sa_relationship_kwargs={"foreign_keys": "Connection.connectingPieceTypePortPk"},
     )
 
-    __table_args__ = (sqlalchemy.UniqueConstraint('localId', 'typeId'),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("localId", "typeId"),)
 
     @property
     def point(self) -> Point:
@@ -965,48 +1040,52 @@ class Port(PortBase, Table, table=True):
         self.directionY = direction.y
         self.directionZ = direction.z
 
-    def parent(self) -> 'Type':
+    def parent(self) -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
+    @property
     def localId(self) -> tuple:
         return (self.id_,)
 
+
 class PortSkeleton(PortBase):
     class Config:
-        title = 'Port'
+        title = "Port"
 
-    id: str = sqlmodel.Field(default='')
-    point: Point = sqlmodel.Field(default_factory=Point)
-    direction: Vector = sqlmodel.Field(default_factory=Vector)
+    id_: str = sqlmodel.Field(alias="id")
+    point: Point = sqlmodel.Field()
+    direction: Vector = sqlmodel.Field()
     locators: list[LocatorSkeleton] = sqlmodel.Field(default_factory=list)
+
 
 class PortIdSkeleton(sqlmodel.SQLModel):
     class Config:
-        title = 'PortId'
-    
-    id: str = sqlmodel.Field(default='')
+        title = "PortId"
+
+    id_: str = sqlmodel.Field(alias="id")
+
 
 class QualityBase(sqlmodel.SQLModel):
 
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. '' means true.
-    value: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
+    value: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
-    definition: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default='')
+    definition: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
-    unit: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default='')
+    unit: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
 
 
-class Quality(QualityBase, Table, table=True):
+class Quality(QualityBase, Row, table=True):
     """📏 A quality is meta-data for decision making."""
 
-    PLURAL = 'qualities'
-    __tablename__ = 'quality'
+    PLURAL = "qualities"
+    __tablename__ = "quality"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
@@ -1014,27 +1093,29 @@ class Quality(QualityBase, Table, table=True):
         exclude=True,
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
-        alias='typeId',
+        alias="typeId",
         sa_column=sqlmodel.Column(
-            'typeId',
+            "typeId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('type.id'),
+            sqlalchemy.ForeignKey("type.id"),
         ),
         default=None,
         exclude=True,
     )
-    type: typing.Union['Type', None] = sqlmodel.Relationship(back_populates='qualities')
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
     designPk: typing.Optional[int] = sqlmodel.Field(
-        alias='designId',
+        alias="designId",
         sa_column=sqlmodel.Column(
-            'designId',
+            "designId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('design.id'),
+            sqlalchemy.ForeignKey("design.id"),
         ),
         default=None,
         exclude=True,
     )
-    design: typing.Union['Design', None] = sqlmodel.Relationship(back_populates='qualities')
+    design: typing.Optional["Design"] = sqlmodel.Relationship(
+        back_populates="qualities"
+    )
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
@@ -1043,26 +1124,35 @@ class Quality(QualityBase, Table, table=True):
         sqlalchemy.UniqueConstraint("name", "typeId", "designId"),
     )
 
-    def parent(self) -> 'Type':
+    def parent(self) -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
+    @property
     def localId(self) -> tuple:
         return (self.name,)
+
+
+class QualitySkeleton(QualityBase):
+    class Config:
+        title = "Quality"
+
+    pass
+
 
 class TypeBase(VariableArtifactModel):
     pass
 
 
-class Type(TypeBase, Table, table=True):
-    '''🧩 A type is a reusable element that can be connected with other types over ports.'''
+class Type(TypeBase, Row, table=True):
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
-    PLURAL = 'types'
-    __tablename__ = 'type'
+    PLURAL = "types"
+    __tablename__ = "type"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
@@ -1070,41 +1160,47 @@ class Type(TypeBase, Table, table=True):
         exclude=True,
     )
     representations: list[Representation] = sqlmodel.Relationship(
-        back_populates='type',
+        back_populates="type",
         cascade_delete=True,
     )
-    ports: list[Port] = sqlmodel.Relationship(back_populates='type', cascade_delete=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates='type', cascade_delete=True)
+    ports: list[Port] = sqlmodel.Relationship(
+        back_populates="type", cascade_delete=True
+    )
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="type", cascade_delete=True
+    )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        alias='kitId',
+        alias="kitId",
         sa_column=sqlmodel.Column(
-            'kitId',
+            "kitId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('kit.id'),
+            sqlalchemy.ForeignKey("kit.id"),
         ),
         default=None,
         exclude=True,
     )
-    kit: typing.Union['Kit', None] = sqlmodel.Relationship(back_populates='types')
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="types")
 
     # __table_args__ = (sqlalchemy.UniqueConstraint('name', 'variant', 'kitPk'),)
 
-    def parent(self) -> 'Kit':
+    def parent(self) -> "Kit":
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
-    
+
+    @property
     def localId(self) -> tuple:
         return (self.name, self.variant)
 
 
 class TypeSkeleton(TypeBase):
     class Config:
-        title = 'Type'
+        title = "Type"
 
     representations: list[RepresentationSkeleton] = sqlmodel.Field(default_factory=list)
 
-class PieceDiagram(Table):
+
+class PieceDiagram(sqlmodel.SQLModel):
     """✏️ The diagram of a piece."""
 
     point: ScreenPoint = sqlmodel.Field(default_factory=ScreenPoint)
@@ -1114,14 +1210,15 @@ class PieceBase(sqlmodel.SQLModel):
 
     pass
 
-class Piece(PieceBase, Table, table=True):
-    '''⭕ A piece is a 3d-instance of a type in a design.'''
 
-    PLURAL = 'pieces'
-    __tablename__ = 'piece'
+class Piece(PieceBase, Row, table=True):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    PLURAL = "pieces"
+    __tablename__ = "piece"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
@@ -1129,9 +1226,9 @@ class Piece(PieceBase, Table, table=True):
         exclude=True,
     )
     id_: str = sqlmodel.Field(
-        alias='id',
+        alias="id",
         sa_column=sqlmodel.Column(
-            'localId',
+            "localId",
             sqlalchemy.String(NAME_LENGTH_MAX),
         ),
     )
@@ -1147,27 +1244,28 @@ class Piece(PieceBase, Table, table=True):
     diagramPointX: float = sqlmodel.Field(exclude=True)
     diagramPointY: float = sqlmodel.Field(exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(
-        alias='designId',
+        alias="designId",
         sa_column=sqlmodel.Column(
-            'designId',
+            "designId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('design.id'),
+            sqlalchemy.ForeignKey("design.id"),
         ),
         default=None,
         exclude=True,
     )
-    design: typing.Union['Design', None] = sqlmodel.Relationship(back_populates='pieces')
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
     connecteds: list["Connection"] = sqlmodel.Relationship(
-        back_populates='connectedPiece',
+        back_populates="connectedPiece",
         sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
     )
     connectings: list["Connection"] = sqlmodel.Relationship(
-        back_populates='connectingPiece',
+        back_populates="connectingPiece",
         sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
     )
 
-    __table_args__ = (sqlalchemy.UniqueConstraint('localId', 'designId'),
-                       sqlalchemy.CheckConstraint(
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint("localId", "designId"),
+        sqlalchemy.CheckConstraint(
             """
             (
                 (coordinateSystemOriginX IS NULL AND coordinateSystemOriginY IS NULL AND coordinateSystemOriginZ IS NULL AND
@@ -1179,16 +1277,30 @@ class Piece(PieceBase, Table, table=True):
                  coordinateSystemYAxisX IS NOT NULL AND coordinateSystemYAxisY IS NOT NULL AND coordinateSystemYAxisZ IS NOT NULL)
             )
             """,
-            name="coordinateSystemSetOrNotSet",))
+            name="coordinateSystemSetOrNotSet",
+        ),
+    )
 
     @property
     def coordinateSystem(self) -> CoordinateSystem:
         return CoordinateSystem(
-            origin=Point(self.coordinateSystemOriginX, self.coordinateSystemOriginY, self.coordinateSystemOriginZ),
-            xAxis=Vector(self.coordinateSystemXAxisX, self.coordinateSystemXAxisY, self.coordinateSystemXAxisZ),
-            yAxis=Vector(self.coordinateSystemYAxisX, self.coordinateSystemYAxisY, self.coordinateSystemYAxisZ),
+            origin=Point(
+                self.coordinateSystemOriginX,
+                self.coordinateSystemOriginY,
+                self.coordinateSystemOriginZ,
+            ),
+            xAxis=Vector(
+                self.coordinateSystemXAxisX,
+                self.coordinateSystemXAxisY,
+                self.coordinateSystemXAxisZ,
+            ),
+            yAxis=Vector(
+                self.coordinateSystemYAxisX,
+                self.coordinateSystemYAxisY,
+                self.coordinateSystemYAxisZ,
+            ),
         )
-    
+
     @coordinateSystem.setter
     def coordinateSystem(self, coordinateSystem: CoordinateSystem):
         self.coordinateSystemOriginX = coordinateSystem.origin.x
@@ -1200,56 +1312,85 @@ class Piece(PieceBase, Table, table=True):
         self.coordinateSystemYAxisX = coordinateSystem.yAxis.x
         self.coordinateSystemYAxisY = coordinateSystem.yAxis.y
         self.coordinateSystemYAxisZ = coordinateSystem.yAxis.z
-    
+
     @property
     def diagram(self) -> PieceDiagram:
         return PieceDiagram(point=ScreenPoint(self.diagramPointX, self.diagramPointY))
-    
+
     @diagram.setter
     def diagram(self, diagram: PieceDiagram):
         self.diagramPointX = diagram.point.x
         self.diagramPointY = diagram.point.y
-    
-    def parent(self) -> 'Design':
+
+    def parent(self) -> "Design":
         if self.design is None:
             raise NoParentAssigned()
         return self.design
 
+    @property
     def localId(self) -> tuple:
-        return (self.type.name, self.design.name, self.design.variant)
+        return (self.id_,)
 
 
 class PieceSkeleton(PieceBase):
-    class Config:
-        title = 'Piece'
+    id_: str = sqlmodel.Field(alias="id")
+    coordinateSystem: CoordinateSystem = sqlmodel.Field(
+        default_factory=CoordinateSystem
+    )
+    diagram: PieceDiagram = sqlmodel.Field(default_factory=PieceDiagram)
 
 
-class SidePieceType(Table):
+class PieceIdSkeleton(sqlmodel.SQLModel):
+    id_: str = sqlmodel.Field(alias="id")
+
+
+class SidePieceType(sqlmodel.SQLModel):
+    port: Port = sqlmodel.Field()
+
+
+class SidePieceTypeSkeleton(sqlmodel.SQLModel):
     port: PortIdSkeleton = sqlmodel.Field()
 
-class SidePiece(Table):
-    id_: str = sqlmodel.Field()
+
+class SidePiece(sqlmodel.SQLModel):
+    id_: str = sqlmodel.Field(alias="id")
     type: SidePieceType = sqlmodel.Field()
 
-class Side(Table):
+
+class SidePieceSkeleton(sqlmodel.SQLModel):
+    id_: str = sqlmodel.Field(alias="id")
+    type: SidePieceTypeSkeleton = sqlmodel.Field()
+
+
+class Side(sqlmodel.SQLModel):
     piece: SidePiece = sqlmodel.Field()
+
+
+class SideSkeleton(sqlmodel.SQLModel):
+    piece: SidePieceSkeleton = sqlmodel.Field()
+
 
 class ConnectionBase(sqlmodel.SQLModel):
     rotation: float = sqlmodel.Field(ge=0, lt=360)
     offset: float = sqlmodel.Field()
 
-class Connection(ConnectionBase, Table, table=True):
-    """🖇️ A connection between two pieces of a design."""
-    __tablename__ = 'connection'
 
-    connectedPiecePk: int = sqlmodel.Field(
-        alias='connectedPieceId',
+class Connection(ConnectionBase, Row, table=True):
+    """🖇️ A connection between two pieces of a design."""
+
+    PLURAL = "connections"
+    __tablename__ = "connection"
+
+    connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedPieceId",
         sa_column=sqlmodel.Column(
-            'connectedPieceId',
+            "connectedPieceId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('piece.id'),
+            sqlalchemy.ForeignKey("piece.id"),
             primary_key=True,
         ),
+        default=None,
+        exclude=True,
     )
     connectedPiece: Piece = sqlmodel.Relationship(
         sa_relationship=sqlalchemy.orm.relationship(
@@ -1258,14 +1399,16 @@ class Connection(ConnectionBase, Table, table=True):
             foreign_keys="[Connection.connectedPiecePk]",
         )
     )
-    connectedPieceTypePortPk: int = sqlmodel.Field(
-        alias='connectedPieceTypePortId',
+    connectedPieceTypePortPk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedPieceTypePortId",
         sa_column=sqlmodel.Column(
-            'connectedPieceTypePortId',
+            "connectedPieceTypePortId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('port.id'),
+            sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
         ),
+        default=None,
+        exclude=True,
     )
     connectedPieceTypePort: Port = sqlmodel.Relationship(
         sa_relationship=sqlalchemy.orm.relationship(
@@ -1274,14 +1417,16 @@ class Connection(ConnectionBase, Table, table=True):
             foreign_keys="[Connection.connectedPieceTypePortPk]",
         )
     )
-    connectingPiecePk: int = sqlmodel.Field(
-        alias='connectingPieceId',
+    connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingPieceId",
         sa_column=sqlmodel.Column(
-            'connectingPieceId',
+            "connectingPieceId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('piece.id'),
+            sqlalchemy.ForeignKey("piece.id"),
             primary_key=True,
         ),
+        exclude=True,
+        default=None,
     )
     connectingPiece: Piece = sqlmodel.Relationship(
         sa_relationship=sqlalchemy.orm.relationship(
@@ -1290,14 +1435,16 @@ class Connection(ConnectionBase, Table, table=True):
             foreign_keys="[Connection.connectingPiecePk]",
         )
     )
-    connectingPieceTypePortPk: int = sqlmodel.Field(
-        alias='connectingPieceTypePortId',
+    connectingPieceTypePortPk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingPieceTypePortId",
         sa_column=sqlmodel.Column(
-            'connectingPieceTypePortId',
+            "connectingPieceTypePortId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('port.id'),
+            sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
         ),
+        default=None,
+        exclude=True,
     )
     connectingPieceTypePort: Port = sqlmodel.Relationship(
         sa_relationship=sqlalchemy.orm.relationship(
@@ -1306,16 +1453,18 @@ class Connection(ConnectionBase, Table, table=True):
             foreign_keys="[Connection.connectingPieceTypePortPk]",
         )
     )
-    designPk: int = sqlmodel.Field(
-        alias='designId',
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        alias="designId",
         sa_column=sqlmodel.Column(
-            'designId',
+            "designId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('design.id'),
+            sqlalchemy.ForeignKey("design.id"),
             primary_key=True,
         ),
+        default=None,
+        exclude=True,
     )
-    design: 'Design' = sqlmodel.Relationship(back_populates='connections')
+    design: "Design" = sqlmodel.Relationship(back_populates="connections")
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             "connectingPieceId != connectedPieceId",
@@ -1325,114 +1474,167 @@ class Connection(ConnectionBase, Table, table=True):
 
     @property
     def connected(self) -> Side:
-        return Side(piece=self.connectedPiece)
+        return Side(
+            piece=SidePiece(
+                id_=self.connectedPiece.id,
+                type=SidePieceType(
+                    port=PortIdSkeleton(id=self.connectedPieceTypePort.id_)
+                ),
+            )
+        )
+
+    @property
+    def connecting(self) -> Side:
+        return Side(
+            piece=SidePiece(
+                id_=self.connectingPiece.id,
+                type=SidePieceType(
+                    port=PortIdSkeleton(id=self.connectingPieceTypePort.id_)
+                ),
+            )
+        )
+
+
+class ConnectionSkeleton(ConnectionBase):
+    class Config:
+        title = "Connection"
+
+    connected: Side = sqlmodel.Field()
+    connecting: Side = sqlmodel.Field()
 
 
 class DesignBase(VariableArtifactModel):
     pass
 
 
-class Design(DesignBase, Table, table=True):
-    '''🎨 A design is a collection of types and connections.'''
+class Design(DesignBase, Row, table=True):
+    """🎨 A design is a collection of types and connections."""
 
-    PLURAL = 'designs'
-    __tablename__ = 'design'
+    PLURAL = "designs"
+    __tablename__ = "design"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
         default=None,
         exclude=True,
     )
-    pieces: list[Piece] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
-    connections: list[Connection] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates='design', cascade_delete=True)
+    pieces: list[Piece] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    connections: list[Connection] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        alias='kitId',
+        alias="kitId",
         sa_column=sqlmodel.Column(
-            'kitId',
+            "kitId",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey('kit.id'),
+            sqlalchemy.ForeignKey("kit.id"),
         ),
         default=None,
         exclude=True,
     )
-    kit: typing.Union['Kit', None] = sqlmodel.Relationship(back_populates='designs')
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
     # __table_args__ = (sqlalchemy.UniqueConstraint('name', 'variant', 'kitPk'),)
 
-    def parent(self) -> 'Kit':
+    def parent(self) -> "Kit":
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
-    
+
+    @property
     def localId(self) -> tuple:
         return (self.name, self.variant)
 
+
+class DesignSkeleton(DesignBase):
+    class Config:
+        title = "Design"
+
+    pieces: list[PieceSkeleton] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionSkeleton] = sqlmodel.Field(default_factory=list)
+
+
 class KitBase(ArtifactModel):
-    url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default='')
-    homepage: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default='')
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
+    homepage: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
 
 
-class Kit(KitBase, Table, table=True):
-    '''🗃️ A kit is a collection of types and designs.'''
+class Kit(KitBase, Row, table=True):
+    """🗃️ A kit is a collection of types and designs."""
 
-    PLURAL = 'kits'
-    __tablename__ = 'kit'
+    PLURAL = "kits"
+    __tablename__ = "kit"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            'id',
+            "id",
             sqlalchemy.Integer(),
             primary_key=True,
         ),
         default=None,
         exclude=True,
     )
-    types: list[Type] = sqlmodel.Relationship(back_populates='kit', cascade_delete=True)
-    designs: list[Design] = sqlmodel.Relationship(back_populates='kit', cascade_delete=True)
-   
-    __table_args__ = (sqlalchemy.UniqueConstraint('name'), sqlalchemy.UniqueConstraint('url'))
+    types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    designs: list[Design] = sqlmodel.Relationship(
+        back_populates="kit", cascade_delete=True
+    )
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint("name"),
+        sqlalchemy.UniqueConstraint("url"),
+    )
 
     def parent(self) -> None:
         return None
-    
+
+    @property
     def localId(self) -> tuple:
-        return (self.url,)
+        return (self.name,)
+
+    def guid(self) -> str:
+        return self.url + "/" + super().guid()
+
 
 class KitSkeleton(KitBase):
 
     class Config:
-        title = 'Kit'
+        title = "Kit"
 
     types: list[TypeSkeleton] = sqlmodel.Field(default_factory=list)
 
 
 def create_db_and_tables():
-    path = pathlib.Path('engine2.sqlite3')
+    path = pathlib.Path("engine2.sqlite3")
     try:
         os.remove(path)
     except:
         pass
-    r1 = Representation(url='https://www.google.com')
+    r1 = Representation(url="https://www.google.com")
     # print(r1.guid())
-    r2 = Representation(url='https://www.yahoo.com')
-    r2.tags = ['tag1', 'tag2']
-    r2.tags = ['tag3', 'tag4']
-    r3 = Representation(id='y2', url='https://www.yahoo.com1')
-    t1 = Type(name='capsule')
+    r2 = Representation(url="https://www.yahoo.com")
+    r2.tags = ["tag1", "tag2"]
+    r2.tags = ["tag3", "tag4"]
+    r3 = Representation(id="y2", url="https://www.yahoo.com1")
+    t1 = Type(name="capsule")
     t1.representations = [r1, r2, r3]
-    k1 = Kit(name='kit1', url=str(path), types=[t1])
+    k1 = Kit(name="kit1", url=str(path), types=[t1])
     print(r1.guid())
-    engine = sqlalchemy.create_engine('sqlite:///' + str(path))
+    engine = sqlalchemy.create_engine("sqlite:///" + str(path))
     sqlmodel.SQLModel.metadata.create_all(engine)
     with sqlalchemy.orm.Session(engine) as session:
         session.add(k1)
         [r1n, r2n, r3n] = t1.representations
-        r2n.tags = ['tag5', 'tag6']
+        r2n.tags = ["tag5", "tag6"]
         session.commit()
         pass
     pass
+
 
 create_db_and_tables()
