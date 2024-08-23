@@ -185,13 +185,13 @@ class StoreKind(enum.Enum):
     GRAPHQL = "graphql"
 
 
-def encode(value: str) -> str:
+def encodeString(value: str) -> str:
     encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
     encoded_str = encoded_bytes.decode("utf-8")
     return encoded_str
 
 
-def decode(value: str) -> str:
+def decodeString(value: str) -> str:
     decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
     decoded_str = decoded_bytes.decode("utf-8")
     return decoded_str
@@ -221,41 +221,47 @@ class DatabaseStore(Store, abc.ABC):
         parsedUrl = urllib.parse.urlparse(url)
         encodedQuery = parsedUrl.path.split(f"/{Kit.PLURAL}/")[1]
         queryParts = encodedQuery.split("/")
-        kit = session.query(Kit).filter(Kit.encodedLocalId == queryParts[0]).first()
+        kit = Kit.getByLocalId(session, (queryParts[0],), decode=True)
+        if len(queryParts) == 1:
+            return kit
         kind = queryParts[-2]
         match kind:
-            case Kit.PLURAL:
-                return kit
             case Design.PLURAL | Piece.PLURAL | Connection.PLURAL:
-                design = kit.designs.filter(
-                    Design.encodedLocalId == queryParts[2]
-                ).first()
-                if kind == Design.PLURAL:
-                    return design
-                if kind == Piece.PLURAL:
-                    return design.pieces.filter(
-                        Piece.encodedLocalId == queryParts[4]
-                    ).first()
-                if kind == Connection.PLURAL:
-                    return design.connections.filter(
-                        Connection.encodedLocalId == queryParts[4]
-                    ).first()
+                designName, designVariant = decodeString(queryParts[-1])
+                designVariant = "" if designVariant == "None" else designVariant
+                design = (
+                    session.query(Design)
+                    .filter(
+                        Design.kit == kit,
+                        Design.name == designName,
+                        Design.variant == designVariant,
+                    )
+                    .one_or_none()
+                )
+                pass
             case Type.PLURAL | Representation.PLURAL | Port.PLURAL | Locator.PLURAL:
-                type = kit.types.filter(Type.encodedLocalId == queryParts[2]).first()
+                typeName, typeVariant = queryParts[2].split(",")
+                typeName = decodeString(typeName)
+                typeVariant = decodeString(typeVariant) if typeVariant else ""
+                type = (
+                    session.query(Type)
+                    .filter(Type.kit == kit, Type.name == typeName)
+                    .one_or_none()
+                )
                 if kind == Type.PLURAL:
                     return type
                 if kind == Representation.PLURAL:
-                    return type.representations.filter(
-                        Representation.encodedLocalId == queryParts[4]
-                    ).first()
-                if kind == Port.PLURAL:
-                    return type.ports.filter(
-                        Port.encodedLocalId == queryParts[4]
-                    ).first()
-                if kind == Locator.PLURAL:
-                    return type.locators.filter(
-                        Locator.encodedLocalId == queryParts[4]
-                    ).first()
+                    representationUrl = queryParts[4]
+                    representationUrl = decodeString(representationUrl)
+                    representation = (
+                        session.query(Representation)
+                        .filter(
+                            Representation.type == type,
+                            Representation.url == representationUrl,
+                        )
+                        .one_or_none()
+                    )
+                    return representation
 
 
 class SSLMode(enum.Enum):
@@ -364,16 +370,25 @@ class Row(sqlmodel.SQLModel):
         """👪 The parent of the entity."""
         pass
 
-    @property
     @abc.abstractmethod
-    def localId(self) -> tuple:
+    def localId(self, encode: bool = False) -> tuple:
         """🆔 A tuple that identifies the entity within it's parent."""
         pass
 
-    @property
-    def encodedLocalId(self) -> str:
-        """🆔 An encoded string that identifies the entity within it's parent."""
-        return ",".join([encode(field) for field in self.localId])
+    @classmethod
+    @abc.abstractmethod
+    def getByLocalId(
+        self, session: sqlalchemy.orm.Session, localId: tuple, decode: bool = False
+    ) -> "Row":
+        """🔍 Get the entity from the localId."""
+        pass
+
+    @classmethod
+    def getByGuid(cls, session: sqlalchemy.orm.Session, guid: str) -> "Row":
+        """🔍 Get the entity from the guid."""
+        parts = guid.split("/")
+        if len(parts) == 1:
+            return cls.getByLocalId(session, parts[0])
 
     def humanId(self) -> str:
         """🪪 A string that let's the user identify the entity within it's parent."""
@@ -381,26 +396,74 @@ class Row(sqlmodel.SQLModel):
 
     def guid(self) -> str:
         """🆔 A guid that let's relay identify the entity."""
-        localId = f"{self.__class__.PLURAL.lower()}/{self.encodedLocalId}"
+        localId = f"{self.__class__.PLURAL.lower()}/{self.localId(encode=True)}"
         parentId = f"{self.parent().guid()}/" if self.parent() is not None else ""
         return parentId + localId
 
-    def fetchFromUrl(guid: str) -> "Row":
-        """🔍 Fetch the entity from the guid."""
-        pass
 
-    def existsError(self) -> SemioException:
-        """🔍 An error that is raised when the entity already exists."""
-        pass
+class ValuedModel(Row):
+    value: int = sqlmodel.Field()
 
-    def notFoundError(self) -> SemioException:
-        pass
+    def localId(self, encoded: bool = False) -> tuple:
+        return (encodeString(self.value) if encoded else self.value,)
+
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "ValuedModel":
+        value = localId if isinstance(localId, str) else localId[0]
+        value = decodeString(value) if decode else value
+        return session.query(cls).filter(cls.value == value).first()
 
 
-class ArtifactModel(sqlmodel.SQLModel):
+class IdentifiedModel(Row):
+    id_: int = sqlmodel.Field(alias="id")
+
+    def localId(self, encoded: bool = False) -> tuple:
+        return (encodeString(self.id_) if encoded else self.id_,)
+
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "IdentifiedModel":
+        id_ = localId if isinstance(localId, str) else localId[0]
+        id_ = decodeString(id_) if decode else id_
+        return session.query(cls).filter(cls.id_ == id_).first()
+
+
+class UrledModel(Row):
+    url: str
+
+    def localId(self, encode: bool = False) -> tuple:
+        return (encodeString(self.url) if encode else self.url,)
+
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "UrledModel":
+        url = localId if isinstance(localId, str) else localId[0]
+        url = decodeString(url) if decode else url
+        return session.query(cls).filter(cls.url == url).first()
+
+
+class NamedModel(Row):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
+
+    def localId(self, encode: bool = False) -> tuple:
+        return (encodeString(self.name) if encode else self.name,)
+
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "NamedModel":
+        name = localId if isinstance(localId, str) else localId[0]
+        name = decodeString(name) if decode else name
+        return session.query(cls).filter(cls.name == name).first()
+
+
+class ArtifactModel(NamedModel):
     """♻️ An artifact is anything that is worth to be reused."""
 
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. Set to '' for None.
     description: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
@@ -414,8 +477,41 @@ class VariableArtifactModel(ArtifactModel):
 
     variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
 
+    def localId(self, encode: bool = False) -> tuple:
+        return (
+            encodeString(self.name) if encode else self.name,
+            encodeString(self.variant) if encode else self.variant,
+        )
 
-class Tag(Row, table=True):
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "VariableArtifactModel":
+        name = localId[0] if isinstance(localId, tuple) else localId
+        name = decodeString(name) if decode else name
+        variant = localId[1] if isinstance(localId, tuple) else ""
+        variant = decodeString(variant) if decode else variant
+        return (
+            session.query(cls).filter(cls.name == name, cls.variant == variant).first()
+        )
+
+
+class GroupedModel(Row):
+    group: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
+
+    def localId(self, encode: bool = False) -> tuple:
+        return (encodeString(self.group) if encode else self.group,)
+
+    @classmethod
+    def getByLocalId(
+        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
+    ) -> "GroupedModel":
+        group = localId if isinstance(localId, str) else localId[0]
+        group = decodeString(group) if decode else group
+        return session.query(cls).filter(cls.group == group).first()
+
+
+class Tag(ValuedModel, table=True):
     """🏷️ A tag is meta-data for grouping representations."""
 
     # __tablename__ = 'tag'
@@ -438,17 +534,13 @@ class Tag(Row, table=True):
             raise NoRepresentationAssigned()
         return self.representation
 
-    @property
-    def localId(self) -> tuple:
-        return (self.value,)
 
-
-class RepresentationBase(sqlmodel.SQLModel):
+class RepresentationBase(UrledModel):
     url: str
     lod: str = ""
 
 
-class Representation(RepresentationBase, Row, table=True):
+class Representation(RepresentationBase, table=True):
     """💾 A representation is a link to a file that describes a type for a unique combination of level of detail, tags and mime."""
 
     PLURAL = "representations"
@@ -491,10 +583,6 @@ class Representation(RepresentationBase, Row, table=True):
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
-
-    @property
-    def localId(self) -> tuple:
-        return (self.url,)
 
 
 class Skeleton(sqlmodel.SQLModel):
@@ -966,7 +1054,7 @@ class PortBase(sqlmodel.SQLModel):
     pass
 
 
-class Port(PortBase, Row, table=True):
+class Port(PortBase, IdentifiedModel, table=True):
     """🔌 A port is a connection point (with a direction) of a type."""
 
     PLURAL = "ports"
@@ -1045,10 +1133,6 @@ class Port(PortBase, Row, table=True):
             raise NoTypeAssigned()
         return self.type
 
-    @property
-    def localId(self) -> tuple:
-        return (self.id_,)
-
 
 class PortSkeleton(PortBase):
     class Config:
@@ -1067,7 +1151,7 @@ class PortIdSkeleton(sqlmodel.SQLModel):
     id_: str = sqlmodel.Field(alias="id")
 
 
-class QualityBase(sqlmodel.SQLModel):
+class QualityBase(NamedModel):
 
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. '' means true.
@@ -1129,10 +1213,6 @@ class Quality(QualityBase, Row, table=True):
             raise NoTypeAssigned()
         return self.type
 
-    @property
-    def localId(self) -> tuple:
-        return (self.name,)
-
 
 class QualitySkeleton(QualityBase):
     class Config:
@@ -1188,10 +1268,6 @@ class Type(TypeBase, Row, table=True):
             raise NoKitAssigned()
         return self.kit
 
-    @property
-    def localId(self) -> tuple:
-        return (self.name, self.variant)
-
 
 class TypeSkeleton(TypeBase):
     class Config:
@@ -1206,7 +1282,7 @@ class PieceDiagram(sqlmodel.SQLModel):
     point: ScreenPoint = sqlmodel.Field(default_factory=ScreenPoint)
 
 
-class PieceBase(sqlmodel.SQLModel):
+class PieceBase(IdentifiedModel):
 
     pass
 
@@ -1326,10 +1402,6 @@ class Piece(PieceBase, Row, table=True):
         if self.design is None:
             raise NoParentAssigned()
         return self.design
-
-    @property
-    def localId(self) -> tuple:
-        return (self.id_,)
 
 
 class PieceSkeleton(PieceBase):
@@ -1549,9 +1621,14 @@ class Design(DesignBase, Row, table=True):
             raise NoKitAssigned()
         return self.kit
 
-    @property
-    def localId(self) -> tuple:
-        return (self.name, self.variant)
+    def getByLocalId(
+        self, session: sqlalchemy.orm.Session, localId: tuple, decode: bool = False
+    ) -> "Design":
+        return (
+            session.query(Design)
+            .filter(Design.name == decodeString(localId[0]) if decode else localId[0])
+            .first()
+        )
 
 
 class DesignSkeleton(DesignBase):
@@ -1593,10 +1670,6 @@ class Kit(KitBase, Row, table=True):
 
     def parent(self) -> None:
         return None
-
-    @property
-    def localId(self) -> tuple:
-        return (self.name,)
 
     def guid(self) -> str:
         return self.url + "/" + super().guid()
