@@ -361,13 +361,31 @@ def start_engine(debug: bool = False):
 
     rest = fastapi.FastAPI()
 
+    @rest.get("/kits}")
+    async def read_kits() -> semio.KitSkeleton:
+        return semio.Kit.all()
+
     @rest.get("/kits/{kitId}")
-    async def read_kit(url) -> semio.KitSkeleton:
-        return semio.Kit.getByGuid
+    async def read_kit(kitId) -> semio.KitSkeleton:
+        return semio.Kit.getByLocalId(kitId)
+
+    @rest.get("/kits/{kitId}/types")
+    async def read_type(kitId, typeId) -> semio.TypeSkeleton:
+        return semio.Type.all(kitId)
 
     @rest.get("/kits/{kitId}/types/{typeId}")
     async def read_type(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.getKit(url)
+        return semio.Type.getByLocalId(kitId, typeId)
+
+    @rest.get("/kits/{kitId}/types/{typeId}/representations")
+    async def read_representations(kitId, typeId) -> semio.TypeSkeleton:
+        return semio.Type.all(kitId)
+
+    @rest.get("/kits/{kitId}/types/{typeId}/representations/{representationId}")
+    async def read_representation(
+        kitId, typeId, representationId
+    ) -> semio.RepresentationSkeleton:
+        return semio.Representation.getByLocalId(kitId, typeId, representationId)
 
     schema = graphene.Schema(
         query=Query,

@@ -71,9 +71,12 @@ import sqlmodel
 
 
 RELEASE = "r24.09-1"
-NAME_LENGTH_MAX = 512
+NAME_LENGTH_MAX = 64
+NAME_REGEX = r"^[a-zA-Z0-9_-]+$"
+ID_LENGTH_MAX = 128
+ID_REGEX = NAME_REGEX
 URL_LENGTH_MAX = 1024
-TEXT_LENGTH_MAX = 4096
+DESCRIPTION_LENGTH_MAX = 4096
 KIT_FOLDERNAME = ".semio"
 KIT_FILENAME = "kit.sqlite3"
 
@@ -221,7 +224,8 @@ class DatabaseStore(Store, abc.ABC):
         parsedUrl = urllib.parse.urlparse(url)
         encodedQuery = parsedUrl.path.split(f"/{Kit.PLURAL}/")[1]
         queryParts = encodedQuery.split("/")
-        kit = Kit.getByLocalId(session, (queryParts[0],), decode=True)
+        kitName = decodeString(queryParts[0])
+        kit = session.query(Kit).filter(Kit.name == kitName).one_or_none()
         if len(queryParts) == 1:
             return kit
         kind = queryParts[-2]
@@ -253,13 +257,16 @@ class DatabaseStore(Store, abc.ABC):
                 if kind == Representation.PLURAL:
                     representationUrl = queryParts[4]
                     representationUrl = decodeString(representationUrl)
-                    representation = (
-                        session.query(Representation)
-                        .filter(
-                            Representation.type == type,
-                            Representation.url == representationUrl,
-                        )
-                        .one_or_none()
+                    # representation = (
+                    #     session.query(Representation)
+                    #     .filter(
+                    #         Representation.type == type,
+                    #         Representation.url == representationUrl,
+                    #     )
+                    #     .one_or_none()
+                    # )
+                    representation = Representation.getByLocalId(
+                        session, (representationUrl,), decode=True, parent=type
                     )
                     return representation
 
@@ -360,35 +367,20 @@ class Semio(sqlmodel.SQLModel):
 
 
 class Row(sqlmodel.SQLModel):
-    """Base class for all entitites in semio."""
+    """Base class for all rows in semio."""
 
     PLURAL: typing.ClassVar[str]
     """🔢 The plural of the entity."""
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def parent(self) -> typing.Optional["Row"]:
         """👪 The parent of the entity."""
         pass
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def localId(self, encode: bool = False) -> tuple:
         """🆔 A tuple that identifies the entity within it's parent."""
         pass
-
-    @classmethod
-    @abc.abstractmethod
-    def getByLocalId(
-        self, session: sqlalchemy.orm.Session, localId: tuple, decode: bool = False
-    ) -> "Row":
-        """🔍 Get the entity from the localId."""
-        pass
-
-    @classmethod
-    def getByGuid(cls, session: sqlalchemy.orm.Session, guid: str) -> "Row":
-        """🔍 Get the entity from the guid."""
-        parts = guid.split("/")
-        if len(parts) == 1:
-            return cls.getByLocalId(session, parts[0])
 
     def humanId(self) -> str:
         """🪪 A string that let's the user identify the entity within it's parent."""
@@ -401,67 +393,33 @@ class Row(sqlmodel.SQLModel):
         return parentId + localId
 
 
-class ValuedModel(Row):
-    value: int = sqlmodel.Field()
-
-    def localId(self, encoded: bool = False) -> tuple:
-        return (encodeString(self.value) if encoded else self.value,)
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "ValuedModel":
-        value = localId if isinstance(localId, str) else localId[0]
-        value = decodeString(value) if decode else value
-        return session.query(cls).filter(cls.value == value).first()
+class Skeleton(sqlmodel.SQLModel):
+    class Config:
+        title = __name__[:8]  # len('Skeleton') = 8
 
 
-class IdentifiedModel(Row):
-    id_: int = sqlmodel.Field(alias="id")
+class IdentifiedRow(Row):
+    id_: str = sqlmodel.Field(alias="id")
 
-    def localId(self, encoded: bool = False) -> tuple:
-        return (encodeString(self.id_) if encoded else self.id_,)
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "IdentifiedModel":
-        id_ = localId if isinstance(localId, str) else localId[0]
-        id_ = decodeString(id_) if decode else id_
-        return session.query(cls).filter(cls.id_ == id_).first()
+    def localId(self, encode: bool = False) -> str:
+        return encodeString(self.id_) if encode else self.id_
 
 
-class UrledModel(Row):
-    url: str
+class UrledRow(Row):
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX)
 
-    def localId(self, encode: bool = False) -> tuple:
-        return (encodeString(self.url) if encode else self.url,)
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "UrledModel":
-        url = localId if isinstance(localId, str) else localId[0]
-        url = decodeString(url) if decode else url
-        return session.query(cls).filter(cls.url == url).first()
+    def localId(self, encode: bool = False) -> str:
+        return encodeString(self.url) if encode else self.url
 
 
-class NamedModel(Row):
+class NamedRow(Row):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
 
-    def localId(self, encode: bool = False) -> tuple:
-        return (encodeString(self.name) if encode else self.name,)
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "NamedModel":
-        name = localId if isinstance(localId, str) else localId[0]
-        name = decodeString(name) if decode else name
-        return session.query(cls).filter(cls.name == name).first()
+    def localId(self, encode: bool = False) -> str:
+        return encodeString(self.name) if encode else self.name
 
 
-class ArtifactModel(NamedModel):
+class ArtifactRow(NamedRow):
     """♻️ An artifact is anything that is worth to be reused."""
 
     # Optional. Set to '' for None.
@@ -472,46 +430,16 @@ class ArtifactModel(NamedModel):
     lastUpdateAt: datetime = sqlmodel.Field(default_factory=datetime.now)
 
 
-class VariableArtifactModel(ArtifactModel):
+class VariableArtifactRow(ArtifactRow):
     """🎚️ A variable artifact is an artifact that has variants (at least one default)."""
 
     variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
 
-    def localId(self, encode: bool = False) -> tuple:
-        return (
-            encodeString(self.name) if encode else self.name,
-            encodeString(self.variant) if encode else self.variant,
-        )
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "VariableArtifactModel":
-        name = localId[0] if isinstance(localId, tuple) else localId
-        name = decodeString(name) if decode else name
-        variant = localId[1] if isinstance(localId, tuple) else ""
-        variant = decodeString(variant) if decode else variant
-        return (
-            session.query(cls).filter(cls.name == name, cls.variant == variant).first()
-        )
+    def localId(self, encode: bool = False) -> str:
+        return f"{super().localId(encode)},{(encodeString(self.variant) if encode else self.variant)}"
 
 
-class GroupedModel(Row):
-    group: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
-
-    def localId(self, encode: bool = False) -> tuple:
-        return (encodeString(self.group) if encode else self.group,)
-
-    @classmethod
-    def getByLocalId(
-        cls, session: sqlalchemy.orm.Session, localId: tuple | str, decode: bool = False
-    ) -> "GroupedModel":
-        group = localId if isinstance(localId, str) else localId[0]
-        group = decodeString(group) if decode else group
-        return session.query(cls).filter(cls.group == group).first()
-
-
-class Tag(ValuedModel, table=True):
+class Tag(sqlmodel.SQLModel, table=True):
     """🏷️ A tag is meta-data for grouping representations."""
 
     # __tablename__ = 'tag'
@@ -534,9 +462,11 @@ class Tag(ValuedModel, table=True):
             raise NoRepresentationAssigned()
         return self.representation
 
+    def localId(self, encode: bool = False) -> tuple:
+        return (encodeString(self.value) if encode else self.value,)
 
-class RepresentationBase(UrledModel):
-    url: str
+
+class RepresentationBase(UrledRow):
     lod: str = ""
 
 
@@ -583,11 +513,6 @@ class Representation(RepresentationBase, table=True):
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
-
-
-class Skeleton(sqlmodel.SQLModel):
-    class Config:
-        title = __name__[:8]  # len('Skeleton') = 8
 
 
 class RepresentationSkeleton(RepresentationBase):
@@ -801,12 +726,17 @@ class Vector(sqlmodel.SQLModel):
         return Vector(z=1)
 
 
-class CoordinateSystem(sqlmodel.SQLModel):
-    """◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
+class CoordinateSystemBase(sqlmodel.SQLModel):
 
-    origin: Point
-    xAxis: Vector
-    yAxis: Vector
+    coordinateSystemOriginX: float = sqlmodel.Field(exclude=True)
+    coordinateSystemOriginY: float = sqlmodel.Field(exclude=True)
+    coordinateSystemOriginZ: float = sqlmodel.Field(exclude=True)
+    xAxisX: float = sqlmodel.Field(exclude=True)
+    xAxisY: float = sqlmodel.Field(exclude=True)
+    xAxisZ: float = sqlmodel.Field(exclude=True)
+    yAxisX: float = sqlmodel.Field(exclude=True)
+    yAxisY: float = sqlmodel.Field(exclude=True)
+    yAxisZ: float = sqlmodel.Field(exclude=True)
 
     def __init__(
         self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
@@ -828,16 +758,32 @@ class CoordinateSystem(sqlmodel.SQLModel):
             raise ValidationError("The x-axis and y-axis must be orthogonal.")
         super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
+    @property
+    def origin(self) -> Point:
+        return Point(
+            self.coordinateSystemOriginX,
+            self.coordinateSystemOriginY,
+            self.coordinateSystemOriginZ,
+        )
+
+    @property
+    def xAxis(self) -> Vector:
+        return Vector(
+            self.xAxisX,
+            self.xAxisY,
+            self.xAxisZ,
+        )
+
+    @property
+    def zAxis(self) -> Vector:
+        return self.xAxis.cross(self.yAxis)
+
     def isCloseTo(self, other: "CoordinateSystem", tol: float = TOLERANCE) -> bool:
         return (
             self.origin.isCloseTo(other.origin, tol)
             and self.xAxis.isCloseTo(other.xAxis, tol)
             and self.yAxis.isCloseTo(other.yAxis, tol)
         )
-
-    @property
-    def zAxis(self) -> Vector:
-        return self.xAxis.cross(self.yAxis)
 
     def transform(self, transform: "Transform") -> "CoordinateSystem":
         return Transform.transformCoordinateSystem(transform, self)
@@ -865,6 +811,20 @@ class CoordinateSystem(sqlmodel.SQLModel):
         rotation = Transform.fromAngle(yAxis, theta)
         xAxis = Vector.X().transform(rotation.after(orientation))
         return CoordinateSystem(origin=origin, xAxis=xAxis, yAxis=yAxis)
+
+
+class CoordinateSystem(sqlmodel.SQLModel):
+    """◳ A coordinate system is an origin (point) and an orientation (x-axis and y-axis)."""
+
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
 
 
 class Rotation(sqlmodel.SQLModel):
@@ -1054,7 +1014,7 @@ class PortBase(sqlmodel.SQLModel):
     pass
 
 
-class Port(PortBase, IdentifiedModel, table=True):
+class Port(PortBase, IdentifiedRow, table=True):
     """🔌 A port is a connection point (with a direction) of a type."""
 
     PLURAL = "ports"
@@ -1133,6 +1093,9 @@ class Port(PortBase, IdentifiedModel, table=True):
             raise NoTypeAssigned()
         return self.type
 
+    def localId(self, encode: bool = False) -> tuple:
+        return (encodeString(self.id_) if encode else self.id_,)
+
 
 class PortSkeleton(PortBase):
     class Config:
@@ -1151,9 +1114,8 @@ class PortIdSkeleton(sqlmodel.SQLModel):
     id_: str = sqlmodel.Field(alias="id")
 
 
-class QualityBase(NamedModel):
+class QualityBase(NamedRow):
 
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
     # Optional. '' means true.
     value: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
@@ -1221,7 +1183,7 @@ class QualitySkeleton(QualityBase):
     pass
 
 
-class TypeBase(VariableArtifactModel):
+class TypeBase(VariableArtifactRow):
     pass
 
 
@@ -1282,7 +1244,7 @@ class PieceDiagram(sqlmodel.SQLModel):
     point: ScreenPoint = sqlmodel.Field(default_factory=ScreenPoint)
 
 
-class PieceBase(IdentifiedModel):
+class PieceBase(IdentifiedRow):
 
     pass
 
@@ -1308,17 +1270,18 @@ class Piece(PieceBase, Row, table=True):
             sqlalchemy.String(NAME_LENGTH_MAX),
         ),
     )
-    coordinateSystemOriginX: float = sqlmodel.Field(exclude=True)
-    coordinateSystemOriginY: float = sqlmodel.Field(exclude=True)
-    coordinateSystemOriginZ: float = sqlmodel.Field(exclude=True)
-    coordinateSystemXAxisX: float = sqlmodel.Field(exclude=True)
-    coordinateSystemXAxisY: float = sqlmodel.Field(exclude=True)
-    coordinateSystemXAxisZ: float = sqlmodel.Field(exclude=True)
-    coordinateSystemYAxisX: float = sqlmodel.Field(exclude=True)
-    coordinateSystemYAxisY: float = sqlmodel.Field(exclude=True)
-    coordinateSystemYAxisZ: float = sqlmodel.Field(exclude=True)
-    diagramPointX: float = sqlmodel.Field(exclude=True)
-    diagramPointY: float = sqlmodel.Field(exclude=True)
+    coordinateSystemPk: typing.Optional[int] = sqlmodel.Field(
+        alias="coordinateSystemId",
+        sa_column=sqlmodel.Column(
+            "coordinateSystemId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("coordinate_system.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    diagramPointX: int = sqlmodel.Field(exclude=True)
+    diagramPointY: int = sqlmodel.Field(exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(
         alias="designId",
         sa_column=sqlmodel.Column(
@@ -1575,12 +1538,12 @@ class ConnectionSkeleton(ConnectionBase):
     connecting: Side = sqlmodel.Field()
 
 
-class DesignBase(VariableArtifactModel):
+class DesignBase(VariableArtifactRow):
     pass
 
 
 class Design(DesignBase, Row, table=True):
-    """🎨 A design is a collection of types and connections."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     PLURAL = "designs"
     __tablename__ = "design"
@@ -1639,7 +1602,7 @@ class DesignSkeleton(DesignBase):
     connections: list[ConnectionSkeleton] = sqlmodel.Field(default_factory=list)
 
 
-class KitBase(ArtifactModel):
+class KitBase(ArtifactRow):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
     homepage: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
 
