@@ -124,7 +124,7 @@ If you go to `http://127.0.0.1:5052/graphql/`, you can find all the data that st
           definition
         }
       }
-      formations {
+      designs {
         name
         description
         variant
