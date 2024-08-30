@@ -1,0 +1,7218 @@
+{
+    "name": "Test",
+    "description": "A futuristic version of the former Nakagin Capsule Tower from Tokyio.",
+    "variant": "Futuristic",
+    "unit": "m",
+    "pieces": [
+        {
+            "id": "b",
+            "type": {
+                "name": "Base",
+                "variant": "Blob"
+            },
+            "root": {
+                "plane": {
+                    "origin": {
+                        "x": -7.7,
+                        "y": 3,
+                        "z": 5.2
+                    },
+                    "xAxis": {
+                        "x": 0.9772839,
+                        "y": 0.1607873,
+                        "z": -0.1380712
+                    },
+                    "yAxis": {
+                        "x": -0.1380712,
+                        "y": 0.9772839,
+                        "z": 0.1607873
+                    }
+                }
+            },
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "ci(t(f8,b(c0)))",
+            "type": {
+                "name": "Cylindric Capital",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": -160
+                }
+            }
+        },
+        {
+            "id": "ci(t(f10,b(c1)))",
+            "type": {
+                "name": "Cylindric Capital",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 50,
+                    "y": -160
+                }
+            }
+        },
+        {
+            "id": "t(f0,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": "First Storey"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 400
+                }
+            }
+        },
+        {
+            "id": "t(f1,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 350
+                }
+            }
+        },
+        {
+            "id": "t(f2,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 300
+                }
+            }
+        },
+        {
+            "id": "t(f3,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 250
+                }
+            }
+        },
+        {
+            "id": "t(f4,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 200
+                }
+            }
+        },
+        {
+            "id": "t(f5,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 150
+                }
+            }
+        },
+        {
+            "id": "t(f6,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 100
+                }
+            }
+        },
+        {
+            "id": "t(f7,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 50
+                }
+            }
+        },
+        {
+            "id": "t(f8,b(c0))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": "Last Storey"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f0,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f1,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f2,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f3,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f4,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f5,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f6,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f7,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f8,b(c0)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "t(f0,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": "First Storey"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 420
+                }
+            }
+        },
+        {
+            "id": "t(f1,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 370
+                }
+            }
+        },
+        {
+            "id": "t(f2,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 320
+                }
+            }
+        },
+        {
+            "id": "t(f3,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 270
+                }
+            }
+        },
+        {
+            "id": "t(f4,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 220
+                }
+            }
+        },
+        {
+            "id": "t(f5,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 170
+                }
+            }
+        },
+        {
+            "id": "t(f6,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 120
+                }
+            }
+        },
+        {
+            "id": "t(f7,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 70
+                }
+            }
+        },
+        {
+            "id": "t(f8,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": 20
+                }
+            }
+        },
+        {
+            "id": "t(f9,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": -30
+                }
+            }
+        },
+        {
+            "id": "t(f10,b(c1))",
+            "type": {
+                "name": "Cylindric Tambour",
+                "variant": "Last Storey"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -50,
+                    "y": -80
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d0,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d1,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d2,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl0#d3,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "5"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d0,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "1"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "6"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl1#d1,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "2"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d0,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "7"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f0,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 165
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f1,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 115
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f2,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 65
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f3,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f4,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -35
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f5,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -85
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f6,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f7,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -185
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f8,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -235
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f9,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -285
+                }
+            }
+        },
+        {
+            "id": "cs(sl2#d1,t(f10,b(c1)))",
+            "type": {
+                "name": "Ellipsoid Capsule",
+                "variant": "4"
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": -130,
+                    "y": -335
+                }
+            }
+        },
+        {
+            "id": "br0",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": {
+                "plane": {
+                    "origin": {
+                        "x": -6.285739,
+                        "y": 46.052612,
+                        "z": 0
+                    },
+                    "xAxis": {
+                        "x": 0.7720472,
+                        "y": 2.4332154e-16,
+                        "z": 0.6355652
+                    },
+                    "yAxis": {
+                        "x": -0.5214721,
+                        "y": -0.57166713,
+                        "z": 0.6334536
+                    }
+                }
+            },
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br1",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br2",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br3",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br4",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br5",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br6",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br7",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br8",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br9",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "id": "br(sl0#d2,t(f2,b(c0)))",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": 15
+                }
+            }
+        },
+        {
+            "id": "br(sl0#d2,t(f5,b(c0)))",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -135
+                }
+            }
+        },
+        {
+            "id": "br(sl0#d2,t(f8,b(c0)))",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "root": null,
+            "diagram": {
+                "point": {
+                    "x": 130,
+                    "y": -285
+                }
+            }
+        }
+    ],
+    "connections": [
+        {
+            "connected": {
+                "piece": {
+                    "id": "b",
+                    "type": {
+                        "port": {
+                            "id": "c0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 81
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "b",
+                    "type": {
+                        "port": {
+                            "id": "c1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 270
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "ci(t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 279
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "ci(t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 90
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 3,
+            "rotation": 350
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f0,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f1,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f3,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f4,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f6,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f7,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "t"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "b"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d0,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d1,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d2,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d3"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl0#d3,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d0,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl1#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl1#d1,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d0"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d0,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f0,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f0,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f1,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f1,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f2,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f3,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f3,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f4,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f4,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f5,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f6,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f6,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f7,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f7,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f8,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f9,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f9,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f10,b(c1))",
+                    "type": {
+                        "port": {
+                            "id": "sl2#d1"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "cs(sl2#d1,t(f10,b(c1)))",
+                    "type": {
+                        "port": {
+                            "id": ""
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br0",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br1",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br1",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br2",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br2",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br3",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br3",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br4",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br4",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br5",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br5",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br6",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br6",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br7",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br7",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br8",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "br8",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br9",
+                    "type": {
+                        "port": {
+                            "id": "w"
+                        }
+                    }
+                }
+            },
+            "offset": 0,
+            "rotation": 0
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f2,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br(sl0#d2,t(f2,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f5,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br(sl0#d2,t(f5,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        },
+        {
+            "connected": {
+                "piece": {
+                    "id": "t(f8,b(c0))",
+                    "type": {
+                        "port": {
+                            "id": "sl0#d2"
+                        }
+                    }
+                }
+            },
+            "connecting": {
+                "piece": {
+                    "id": "br(sl0#d2,t(f8,b(c0)))",
+                    "type": {
+                        "port": {
+                            "id": "e"
+                        }
+                    }
+                }
+            },
+            "offset": 1.5,
+            "rotation": 75
+        }
+    ]
+}

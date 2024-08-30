@@ -1,0 +1,10 @@
+release = "r24.10-1"
+
+name_length_limit = 255
+description_length_limit = 4096
+url_length_limit = 2048
+
+tolerance = 1e-5
+
+[unregistered_mime_types]
+".3dm" = "model/vnd.3dm"
