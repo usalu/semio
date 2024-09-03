@@ -2,22 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Data.SqlTypes;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Force.DeepCloner;
-using GraphQL;
-using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using QuikGraph;
-using QuikGraph.Algorithms;
-using Semio.Properties;
 
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
 // TODO: Add a more detailed message system when a model is invalid.
+
+
+namespace Semio;
 
 #region Constants
 
@@ -31,6 +28,7 @@ public static class Constants
 #endregion
 
 #region Copilot
+
 //type Query
 //{
 //loadLocalKit(directory: String!): LoadLocalKitResponse
@@ -613,6 +611,7 @@ public static class Constants
 //  NO_PERMISSION_TO_MODIFY_KIT
 //  DESIGN_DOES_NOT_EXIST
 //}
+
 #endregion
 
 #region Utility
@@ -639,24 +638,24 @@ public static class MimeParser
     {
         var mimes = new Dictionary<string, string>
         {
-            {".stl", "model/stl"},
-            {".obj", "model/obj"},
-            {".glb", "model/gltf-binary"},
-            {".gltf", "model/gltf+json"},
-            {".3dm", "model/vnd.3dm"},
-            {".png", "image/png"},
-            {".jpg", "image/jpeg"},
-            {".jpeg", "image/jpeg"},
-            {".svg", "image/svg+xml"},
-            {".pdf", "application/pdf"},
-            {".zip", "application/zip"},
-            {".json", "application/json"},
-            {".csv", "text/csv"},
-            {".txt", "text/plain"}
+            { ".stl", "model/stl" },
+            { ".obj", "model/obj" },
+            { ".glb", "model/gltf-binary" },
+            { ".gltf", "model/gltf+json" },
+            { ".3dm", "model/vnd.3dm" },
+            { ".png", "image/png" },
+            { ".jpg", "image/jpeg" },
+            { ".jpeg", "image/jpeg" },
+            { ".svg", "image/svg+xml" },
+            { ".pdf", "application/pdf" },
+            { ".zip", "application/zip" },
+            { ".json", "application/json" },
+            { ".csv", "text/csv" },
+            { ".txt", "text/plain" }
         };
         try
         {
-            return mimes[System.IO.Path.GetExtension(url)];
+            return mimes[Path.GetExtension(url)];
         }
         catch (KeyNotFoundException)
         {
@@ -667,70 +666,145 @@ public static class MimeParser
 
 #endregion
 
-#region Models
-[AttributeUsage(AttributeTargets.Field)]
-public class PropAttribute : Attribute
+//#region Models
+//Emoji,Code,Abbreviation,Name,Description
+//🧲,Cd,Cod,Connected,The connected piece of the side.
+//🔩,Cg,Cog,Connecting,The connecting piece of the side.
+//🖇️,Co,Con,Connection,A connection between two pieces in a design.
+//💬,Dc,Dsc,Description,A human description of the {{NAME}}.
+//✏️,Dg,Dgm,Diagram,All diagram-related information of the piece.
+//📁,Di,Dir,Directory,The directory of the kit.
+//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+//🏠,Hp,Hmp,Homepage,The url of the homepage of the kit.
+//🖼️,Ic,Ico,Icon,The icon [emoji | text | image | svg] of the {{NAME}}.
+//🆔,Id,Idn,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
+//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
+//🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
+//🔍,Ld,Lod,Level of Detail,The Level of Detail/Development/Design (LoD) of the representation.
+//📛,Na,Nam,Name,The name of the {{NAME}}.
+//🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+//⌱,Og,Org,Origin,The origin of the plane.
+//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+//◳,Pn,Ple,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+//📏,Ql,Qal,Quality,A quality is meta-data for decision making.
+//💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+//🌱,Rt,Rot,Root,The root-related information of a piece.
+//🧱,Sd,Sde,Side,A side of a piece in a connection.
+//📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the diagram of the piece.
+//✅,Su,Suc,Success,{{NAME}} was successful.
+//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+//🔖,Tg,Tag,Tag,A tag is metadata for grouping representations.
+//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+//🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
+//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+//🔢,Vl,Val,Value,The value of the quality.
+//🔀,Vn,Vnt,Variant,The variant of {{NAME}}.
+
+public abstract class ConceptAttribute : ValidationAttribute
 {
-    public PropAttribute(string emoji, string abr, string short_, string description)
+    public ConceptAttribute(string emoji, string code, string abbreviation, string description)
     {
         Emoji = emoji;
-        Abr = abr;
-        Short = short_;
+        Code = code;
+        Abbreviation = abbreviation;
         Description = description;
     }
 
     public string Emoji { get; set; }
-    public string Abr { get; set; }
-    public string Short { get; set; }
+    public string Code { get; set; }
+    public string Abbreviation { get; set; }
     public string Description { get; set; }
-
-
 }
-public class IdAttribute : PropAttribute
+
+[AttributeUsage(AttributeTargets.Class)]
+public class ModelAttribute : ConceptAttribute
 {
-    public IdAttribute(string emoji, string abr, string s, string description) : base(emoji, abr, s, description)
+    public ModelAttribute(string emoji, string code, string abbreviation, string description) : base(emoji, code,
+        abbreviation, description)
     {
     }
 }
 
-public class StringListLengthAttribute : ValidationAttribute
+public enum PropImportance
 {
-    private readonly int _maxLength;
+    OPTIONAL,
+    REQUIRED,
+    ID
+}
 
-    public StringListLengthAttribute(int maxLength)
+public enum PropCollectionKind
+{
+    NONE,
+    LIST,
+    DICTIONARY
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public abstract class PropAttribute : ConceptAttribute
+{
+    public PropImportance Importance { get; set; }
+    public PropCollectionKind CollectionKind { get; set; }
+    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, PropCollectionKind collectionKind) : base(emoji, code,
+        abbreviation, description)
     {
-        _maxLength = maxLength;
+        Importance = importance;
+        CollectionKind = collectionKind;
+    }
+}
+
+public abstract class TextAttribute : PropAttribute
+{
+    public int LengthLimit { get; set; }
+
+    public TextAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance, PropCollectionKind collectionKind,int lengthLimit) : base(emoji, code,
+        abbreviation, description, importance, collectionKind)
+    {
+        LengthLimit = lengthLimit;
     }
 
     protected override ValidationResult IsValid(object value, ValidationContext validationContext)
     {
-        var list = value as List<string>;
-        if (list != null)
-        {
-            foreach (var str in list)
-            {
-                if (str.Length > _maxLength)
-                {
-                    return new ValidationResult($"Each string in the list must be at most {_maxLength} characters long.");
-                }
-            }
-        }
+        if (value is not string str)
+            throw new Exception("The value must be a string.");
+        if (str.Length == 0 && Importance != PropImportance.OPTIONAL)
+            return new ValidationResult("The text must not be empty.");
+        if (str.Length > LengthLimit)
+            return new ValidationResult(
+                $"The text must be at most {LengthLimit} characters long.");
         return ValidationResult.Success;
     }
 }
-public interface IDeepCloneable<T>
+public class NameAttribute : TextAttribute
 {
-    T DeepClone();
+    public NameAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, PropCollectionKind collectionKind = PropCollectionKind.NONE) : base(emoji, code,
+        abbreviation, description, importance, collectionKind ,Constants.NameLengthLimit)
+    {
+    }
+
 }
 
-public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
+public class UrlAttribute : TextAttribute
+{
+    public UrlAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, PropCollectionKind collectionKind = PropCollectionKind.NONE) : base(emoji, code,
+        abbreviation, description, importance,collectionKind,Constants.UrlLengthLimit)
+    {
+    }
+
+}
+
+
+public abstract class Model
 {
     public override bool Equals(object obj)
     {
         if (obj == null || GetType() != obj.GetType())
             return false;
 
-        var other = (T)obj;
+        var other = obj;
         return GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .All(prop => PropertiesAreEqual(prop, this, other));
     }
@@ -741,9 +815,7 @@ public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
         var value2 = prop.GetValue(obj2);
 
         if (value1 is IEnumerable enumerable1 && value2 is IEnumerable enumerable2)
-        {
             return enumerable1.Cast<object>().SequenceEqual(enumerable2.Cast<object>());
-        }
 
         return Equals(value1, value2);
     }
@@ -756,7 +828,7 @@ public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
             .Aggregate(17, (current, value) => current * 31 + value.GetHashCode());
     }
 
-    public static bool operator ==(Model<T> left, Model<T> right)
+    public static bool operator ==(Model left, Model right)
     {
         if (ReferenceEquals(left, right))
             return true;
@@ -767,14 +839,14 @@ public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
         return left.Equals(right);
     }
 
-    public static bool operator !=(Model<T> left, Model<T> right)
+    public static bool operator !=(Model left, Model right)
     {
         return !(left == right);
     }
 
-    public T DeepClone()
+    public Model DeepClone()
     {
-        if (DeepClonerExtensions.DeepClone(this) is not T deepClone)
+        if (DeepClonerExtensions.DeepClone(this) is not { } deepClone)
             throw new Exception("DeepClone failed.");
         return deepClone;
     }
@@ -783,586 +855,595 @@ public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
     {
         var validationErrors = new List<ValidationResult>();
         var valid = Validator.TryValidateObject(this, new ValidationContext(this), validationErrors,
-            validateAllProperties: true);
+            true);
         return (valid, validationErrors.Select(e => e.ErrorMessage).ToList());
-
     }
 }
 
-public class Representation() : Model<Representation>
+/// <summary>
+/// 💾 A representation is an url that describes a type for a certain level of detail and tags.
+/// </summary>
+[ModelAttribute("💾", "Rp", "Rep",
+    "A representation is a linked file that describes a type for a certain level of detail and tags.")]
+public class Representation : Model
+{
+    /// <summary>
+    /// 🔗 The Unique Resource Locator (URL) to another resource outside of semio.
+    /// absolute file path or a link.
+    /// </summary>
+    [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to another file outside of semio.", PropImportance.ID)]
+    public string Url { get; set; } = "";
+
+    /// <summary>
+    /// 🏷️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+    /// </summary>
+    [Name("🏷️", "Mm", "Mim", "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.", PropImportance.REQUIRED)]
+    public string Mime { get; set; } = "";
+    /// <summary>
+    /// 🔍 An optional Level of Detail/Development/Design of the representation.
+    /// </summary>
+
+    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design of the representation.")]
+    public string Lod { get; set; } = "";
+    /// <summary>
+    /// 🔖 The optional associated tags of the representation.
+    /// </summary>
+
+    [Name("🔖", "Tg*", "Tags", "The optional associated tags of the representation.", CollectionKind=PropCollectionKind.LIST)]
+    public List<string> Tags { get; set; } = new();
+}
+
+//public class Locator() : Model
+//{
+
+//    public string Group { get; set; } = "";
+//    public string Subgroup { get; set; } = "";
+
+//}
+
+//public class ScreenPoint() : Model
+//{
+//    public int X { get; set; } = 0;
+//    public int Y { get; set; } = 0;
+
+//}
+
+//public class Point() : Model
+//{
+//    public float X { get; set; } = 0;
+//    public float Y { get; set; } = 0;
+//    public float Z { get; set; } = 0;
+
+//    public bool IsZero()
+//    {
+//        return X == 0 && Y == 0 && Z == 0;
+//    }
+//}
+
+//public class Vector() : Model
+//{
+//    public float X { get; set; } = 0;
+//    public float Y { get; set; } = 0;
+//    public float Z { get; set; } = 0;
+
+//    public bool IsZero()
+//    {
+//        return X == 0 && Y == 0 && Z == 0;
+//    }
+//}
+
+//public class Plane() : Model
+//{
+//    public Point Origin { get; set; } = new();
+//    public Vector XAxis { get; set; } = new();
+//    public Vector YAxis { get; set; } = new();
+
+//}
+
+//public class Port() : Model
+//{
+//    [Id("🆔", "Id", "Idn", "Local identification of the port within the type.")]
+//    public string Id { get; set; } = "";
+//    [Required(ErrorMessage = "A port needs a point.")]
+//    public Point Point { get; set; } = new();
+//    public Vector Direction { get; set; } = new();
+//    public List<Locator> Locators { get; set; } = new();
+//}
+
+//    public class PortId() : Model
+//    {
+//        public string Id { get; set; } = "";
+
+//    }
+
+//    public class Quality() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Value { get; set; } = "";
+//        public string Unit { get; set; } = "";
+//        public string Definition { get; set; } = "";
+
+//    }
+
+//    public class Type() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Description { get; set; } = "";
+//        public string Icon { get; set; } = "";
+//        public string Variant { get; set; } = "";
+//        public string Unit { get; set; } = "";
+//        public List<Representation> Representations { get; set; } = new();
+//        public List<Port> Ports { get; set; } = new();
+//        public List<Quality> Qualities { get; set; } = new();
+
+//    }
+
+//    public class TypeId() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Variant { get; set; } = "";
+
+//    }
+
+//    public class PieceRoot() : Model
+//    {
+//        public Plane Plane { get; set; } = new();
+//    }
+
+//    public class PieceDiagram() : Model
+//    {
+//        public ScreenPoint Point { get; set; } = new();
+
+//    }
+
+//    public class Piece() : Model
+//    {
+//        public string Id { get; set; } = "";
+//        public TypeId Type { get; set; } = new();
+//        public PieceRoot? Root { get; set; } = null;
+//        public PieceDiagram Diagram { get; set; } = new();
+
+//    }
+
+//    public class PieceId() : Model
+//    {
+//        public string Id { get; set; } = "";
+
+//    }
+
+//    public class SidePieceType() : Model
+//    {
+//        public PortId Port { get; set; } = new();
+
+//    }
+
+//    public class SidePiece() : Model
+//    {
+//        public string Id { get; set; } = "";
+//        public SidePieceType Type { get; set; } = new();
+
+//    }
+
+//    public class Side() : Model
+//    {
+//        public SidePiece Piece { get; set; } = new();
+
+//    }
+
+//    public class Connection() : Model
+//    {
+//        public Side Connected { get; set; } = new();
+//        public Side Connecting { get; set; } = new();
+//        public float Offset { get; set; } = 0;
+//        public float Rotation { get; set; } = 0;
+
+//    }
+
+//    public class Design() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Description { get; set; } = "";
+//        public string Icon { get; set; } = "";
+//        public string Variant { get; set; } = "";
+//        public string Unit { get; set; } = "";
+//        public List<Piece> Pieces { get; set; } = new();
+//        public List<Connection> Connections { get; set; } = new();
+//        public List<Quality> Qualities { get; set; } = new();
+
+//    public Design Flatten(Type[] types = null)
+//    {
+//        Design flattenedDesign = this.DeepClone();
+//        if (Pieces.Count <= 1 || Connections.Count == 0)
+//            return flattenedDesign;
+//        var graph = new UndirectedGraph<string, Edge<string>>();
+//        foreach (var piece in Pieces)
+//            graph.AddVertex(piece.Id);
+//        foreach (var connection in Connections)
+//            graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+//        var root = Pieces.First(p => p.Root != null) ?? Pieces.First();
+//        var components = new Dictionary<string, int>();
+//        graph.ConnectedComponents(components);
+//        return flattenedDesign;
+
+//    }
+//}
+
+//    public class DesignId() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Variant { get; set; } = "";
+
+//    }
+
+//    public class Kit() : Model
+//    {
+//        public string Name { get; set; } = "";
+//        public string Description { get; set; } = "";
+//        public string Icon { get; set; } = "";
+//        public string Url { get; set; } = "";
+//        public string Homepage { get; set; } = "";
+//        public List<Type> Types { get; set; } = new();
+//        public List<Design> Designs { get; set; } = new();
+
+//    }
+
+//    public class KitProps : Model
+//    {
+//        public string? Name { get; set; }
+//        public string? Description { get; set; }
+//        public string? Icon { get; set; }
+//        public string? Url { get; set; }
+//        public string? Homepage { get; set; }
+//    }
+
+//    #endregion
+
+public static class Serializer
+{
+    public static string Serialize(this object obj)
     {
-        /// <summary>
-        /// 🔗 Unique Resource Locator (URL) of the representation. Either a relative file path or link. This can be a relative or absolute file path or a link.
-        /// </summary>
-        [Id("🔗", "Ur", "Url", "Unique Resource Locator (URL) of the representation. Either a relative file path or link.")]
-        [StringLength(Constants.UrlLengthLimit)]
-        [Required(ErrorMessage = "Unique Resource Locator (URL) is required.")]
-        public string Url { get; set; } = "";
-
-        [StringLength(Constants.NameLengthLimit)]
-        [Required(ErrorMessage = "Multipurpose Internet Mail Extensions (MIME) is required.")]
-        public string Mime { get; set; } = "";
-
-        [StringLength(Constants.NameLengthLimit)]
-        public string Lod { get; set; } = "";
-
-        [StringListLength(Constants.NameLengthLimit)]
-        public List<string> Tags { get; set; } = new();
-
-    }
-
-    public class Locator() : Model<Locator>
-    {
-        [Required] public string Group { get; set; } = "";
-        public string Subgroup { get; set; } = "";
-
-    }
-
-    public class ScreenPoint() : Model<ScreenPoint>
-    {
-        public int X { get; set; } = 0;
-        public int Y { get; set; } = 0;
-
-    }
-
-    public class Point() : Model<Point>
-    {
-        public float X { get; set; } = 0;
-        public float Y { get; set; } = 0;
-        public float Z { get; set; } = 0;
-
-        public bool IsZero()
-        {
-            return X == 0 && Y == 0 && Z == 0;
-        }
-    }
-
-    public class Vector() : Model<Vector>
-    {
-        public float X { get; set; } = 0;
-        public float Y { get; set; } = 0;
-        public float Z { get; set; } = 0;
-
-        public bool IsZero()
-        {
-            return X == 0 && Y == 0 && Z == 0;
-        }
-    }
-
-    public class Plane() : Model<Plane>
-    {
-        public Point Origin { get; set; } = new();
-        public Vector XAxis { get; set; } = new();
-        public Vector YAxis { get; set; } = new();
-
-    }
-
-    public class Port() : Model<Port>
-    {
-        public string Id { get; set; } = "";
-        public Point Point { get; set; } = new();
-        public Vector Direction { get; set; } = new();
-        public List<Locator> Locators { get; set; } = new();
-    }
-
-    public class PortId() : Model<PortId>
-    {
-        public string Id { get; set; } = "";
-
-    }
-
-
-    public class Quality() : Model<Quality>
-    {
-        public string Name { get; set; } = "";
-        public string Value { get; set; } = "";
-        public string Unit { get; set; } = "";
-        public string Definition { get; set; } = "";
-
-    }
-
-    public class Type() : Model<Type>
-    {
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public string Variant { get; set; } = "";
-        public string Unit { get; set; } = "";
-        public List<Representation> Representations { get; set; } = new();
-        public List<Port> Ports { get; set; } = new();
-        public List<Quality> Qualities { get; set; } = new();
-
-    }
-
-    public class TypeId() : Model<TypeId>
-    {
-        public string Name { get; set; } = "";
-        public string Variant { get; set; } = "";
-
-    }
-
-    public class PieceRoot() : Model<PieceRoot>
-    {
-        public Plane Plane { get; set; } = new();
-    }
-
-    public class PieceDiagram() : Model<PieceDiagram>
-    {
-        public ScreenPoint Point { get; set; } = new();
-
-    }
-
-    public class Piece() : Model<Piece>
-    {
-        public string Id { get; set; } = "";
-        public TypeId Type { get; set; } = new();
-        public PieceRoot? Root { get; set; } = null;
-        public PieceDiagram Diagram { get; set; } = new();
-
-    }
-
-    public class PieceId() : Model<PieceId>
-    {
-        public string Id { get; set; } = "";
-
-    }
-
-    public class SidePieceType() : Model<SidePieceType>
-    {
-        public PortId Port { get; set; } = new();
-
-    }
-
-    public class SidePiece() : Model<SidePiece>
-    {
-        public string Id { get; set; } = "";
-        public SidePieceType Type { get; set; } = new();
-
-
-    }
-
-    public class Side() : Model<Side>
-    {
-        public SidePiece Piece { get; set; } = new();
-
-    }
-
-
-    public class Connection() : Model<Connection>
-    {
-        public Side Connected { get; set; } = new();
-        public Side Connecting { get; set; } = new();
-        public float Offset { get; set; } = 0;
-        public float Rotation { get; set; } = 0;
-
-    }
-
-    public class Design() : Model<Design>
-    {
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public string Variant { get; set; } = "";
-        public string Unit { get; set; } = "";
-        public List<Piece> Pieces { get; set; } = new();
-        public List<Connection> Connections { get; set; } = new();
-        public List<Quality> Qualities { get; set; } = new();
-
-    public Design Flatten(Type[] types = null)
-    {
-        Design flattenedDesign = this.DeepClone();
-        if (Pieces.Count <= 1 || Connections.Count == 0)
-            return flattenedDesign;
-        var graph = new UndirectedGraph<string, Edge<string>>();
-        foreach (var piece in Pieces)
-            graph.AddVertex(piece.Id);
-        foreach (var connection in Connections)
-            graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
-        var root = Pieces.First(p => p.Root != null) ?? Pieces.First();
-        var components = new Dictionary<string, int>();
-        graph.ConnectedComponents(components);
-        return flattenedDesign;
-
+        return JsonConvert.SerializeObject(
+            obj, Formatting.Indented, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
     }
 }
 
-    public class DesignId() : Model<DesignId>
+public static class Deserializer
+{
+    public static T Deserialize<T>(this string json)
     {
-        public string Name { get; set; } = "";
-        public string Variant { get; set; } = "";
-
-    }
-
-
-    public class Kit() : Model<Kit>
-    {
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public string Url { get; set; } = "";
-        public string Homepage { get; set; } = "";
-        public List<Type> Types { get; set; } = new();
-        public List<Design> Designs { get; set; } = new();
-
-    }
-
-    public class KitProps : Model<KitProps>
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? Icon { get; set; }
-        public string? Url { get; set; }
-        public string? Homepage { get; set; }
-    }
-
-    #endregion
-
-    public static class Serializer
-    {
-        public static string Serialize(this object obj)
-        {
-            return JsonConvert.SerializeObject(
-                obj, Formatting.Indented, new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                });
-        }
-    }
-
-    public static class Deserializer
-    {
-        public static T Deserialize<T>(this string json)
-        {
-            return JsonConvert.DeserializeObject<T>(
-                json, new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                });
-        }
-    }
-
-    #region Api
-
-    public class LoadLocalKitResponse
-    {
-        public Kit? Kit { get; set; }
-        public string? Error { get; set; }
-    }
-
-    public class LoadLocalKitResponseContainer
-    {
-        public LoadLocalKitResponse LoadLocalKit { get; set; }
-    }
-
-    public enum CreateLocalKitErrorCode
-    {
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_ALREADY_CONTAINS_A_KIT,
-        NO_PERMISSION_TO_CREATE_DIRECTORY,
-        NO_PERMISSION_TO_CREATE_KIT,
-        KIT_INPUT_IS_INVALID
-    }
-
-    public class CreateLocalKitError
-    {
-        public CreateLocalKitErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class CreateLocalKitResponse
-    {
-        public Kit? Kit { get; set; }
-        public CreateLocalKitError? Error { get; set; }
-    }
-
-    public class CreateLocalKitResponseContainer
-    {
-        public CreateLocalKitResponse CreateLocalKit { get; set; }
-    }
-
-    public enum UpdateLocalKitPropsErrorCode
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_UPDATE_KIT,
-        KIT_METADATA_IS_INVALID
-    }
-
-    public class UpdateLocalKitPropsError
-    {
-        public UpdateLocalKitPropsErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class UpdateLocalKitPropsResponse
-    {
-        public KitProps? Kit { get; set; }
-        public UpdateLocalKitPropsError? Error { get; set; }
-    }
-
-    public class UpdateLocalKitPropsResponseContainer
-    {
-        public UpdateLocalKitPropsResponse UpdateLocalKitProps { get; set; }
-    }
-
-    public enum DeleteLocalKitError
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_DELETE_KIT
-    }
-
-    public class DeleteLocalKitResponse
-    {
-        public DeleteLocalKitError? Error { get; set; }
-    }
-
-    public class DeleteLocalKitResponseContainer
-    {
-        public DeleteLocalKitResponse DeleteLocalKit { get; set; }
-    }
-
-    public enum AddTypeToLocalKitErrorCode
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_MODIFY_KIT,
-        TYPE_INPUT_IS_INVALID
-    }
-
-    public class AddTypeToLocalKitError
-    {
-        public AddTypeToLocalKitErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class AddTypeToLocalKitResponse
-    {
-        public Type? Type { get; set; }
-        public AddTypeToLocalKitError? Error { get; set; }
-    }
-
-    public class AddTypeToLocalKitResponseContainer
-    {
-        public AddTypeToLocalKitResponse AddTypeToLocalKit { get; set; }
-    }
-
-    public enum RemoveTypeFromLocalKitErrorCode
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_MODIFY_KIT,
-        TYPE_DOES_NOT_EXIST,
-        DESIGN_DEPENDS_ON_TYPE
-    }
-
-    public class RemoveTypeFromLocalKitError
-    {
-        public RemoveTypeFromLocalKitErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class RemoveTypeFromLocalKitResponse
-    {
-        public RemoveTypeFromLocalKitError? Error { get; set; }
-    }
-
-    public class RemoveTypeFromLocalKitResponseContainer
-    {
-        public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
-    }
-
-    public enum AddDesignToLocalKitErrorCode
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_MODIFY_KIT,
-        DESIGN_INPUT_IS_INVALID
-    }
-
-    public class AddDesignToLocalKitError
-    {
-        public AddDesignToLocalKitErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class AddDesignToLocalKitResponse
-    {
-        public Design? Design { get; set; }
-        public AddDesignToLocalKitError? Error { get; set; }
-    }
-
-    public class AddDesignToLocalKitResponseContainer
-    {
-        public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
-    }
-
-    public enum RemoveDesignFromLocalKitErrorCode
-    {
-        DIRECTORY_DOES_NOT_EXIST,
-        DIRECTORY_IS_NOT_A_DIRECTORY,
-        DIRECTORY_HAS_NO_KIT,
-        NO_PERMISSION_TO_MODIFY_KIT,
-        DESIGN_DOES_NOT_EXIST
-    }
-
-    public class RemoveDesignFromLocalKitError
-    {
-        public RemoveDesignFromLocalKitErrorCode Code { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class RemoveDesignFromLocalKitResponse
-    {
-        public RemoveDesignFromLocalKitError? Error { get; set; }
-    }
-
-    public class RemoveDesignFromLocalKitResponseContainer
-    {
-        public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
-    }
-
-
-    public class Api : ICloneable
-    {
-        public Api()
-        {
-            Endpoint = "http://127.0.0.1:5052/graphql";
-            Token = "";
-            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-        }
-
-        public Api(string endpoint, string token)
-        {
-            Endpoint = endpoint;
-            Token = token;
-            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
-        }
-
-        public GraphQLHttpClient Client { get; set; }
-        public string Endpoint { get; set; }
-        public string Token { get; set; }
-
-        public object Clone()
-        {
-            return new Api(Endpoint, Token);
-        }
-
-        public override string ToString()
-        {
-            return $"Api(Endpoint: {Endpoint}, Token: {Token})";
-        }
-
-        public LoadLocalKitResponse? LoadLocalKit(string directory)
-        {
-            var query = new GraphQLRequest
+        return JsonConvert.DeserializeObject<T>(
+            json, new JsonSerializerSettings
             {
-                Query = Resources.loadLocalKit,
-                OperationName = "LoadLocalKit",
-                Variables = new { directory }
-            };
-            var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.LoadLocalKit;
-        }
-
-        public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.createLocalKit,
-                OperationName = "CreateLocalKit",
-                Variables = new { directory, kit }
-            };
-            var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.CreateLocalKit;
-        }
-
-        public UpdateLocalKitPropsResponse? UpdateLocalKitProps(string directory, KitProps kit)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.updateLocalKitMetadata,
-                OperationName = "UpdateLocalKitProps",
-                Variables = new { directory, kit }
-            };
-            var response = Client.SendQueryAsync<UpdateLocalKitPropsResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.UpdateLocalKitProps;
-        }
-
-        public DeleteLocalKitResponse? DeleteLocalKit(string directory)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.deleteLocalKit,
-                OperationName = "DeleteLocalKit",
-                Variables = new { directory }
-            };
-            var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.DeleteLocalKit;
-        }
-
-        public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.addTypeToLocalKit,
-                OperationName = "AddTypeToLocalKit",
-                Variables = new { directory, type }
-            };
-            var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.AddTypeToLocalKit;
-        }
-
-        public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.removeTypeFromLocalKit,
-                OperationName = "RemoveTypeFromLocalKit",
-                Variables = new { directory, type }
-            };
-            var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.RemoveTypeFromLocalKit;
-        }
-
-        public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.addDesignToLocalKit,
-                OperationName = "AddDesignToLocalKit",
-                Variables = new { directory, design }
-            };
-            var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.AddDesignToLocalKit;
-        }
-
-        public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
-        {
-            var query = new GraphQLRequest
-            {
-                Query = Resources.removeDesignFromLocalKit,
-                OperationName = "RemoveDesignFromLocalKit",
-                Variables = new { directory, design }
-            };
-            var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
-            if (response.Errors != null) return null;
-            return response.Data.RemoveDesignFromLocalKit;
-        }
-
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
     }
+}
+
+//    #region Api
+
+//    public class LoadLocalKitResponse
+//    {
+//        public Kit? Kit { get; set; }
+//        public string? Error { get; set; }
+//    }
+
+//    public class LoadLocalKitResponseContainer
+//    {
+//        public LoadLocalKitResponse LoadLocalKit { get; set; }
+//    }
+
+//    public enum CreateLocalKitErrorCode
+//    {
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_ALREADY_CONTAINS_A_KIT,
+//        NO_PERMISSION_TO_CREATE_DIRECTORY,
+//        NO_PERMISSION_TO_CREATE_KIT,
+//        KIT_INPUT_IS_INVALID
+//    }
+
+//    public class CreateLocalKitError
+//    {
+//        public CreateLocalKitErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class CreateLocalKitResponse
+//    {
+//        public Kit? Kit { get; set; }
+//        public CreateLocalKitError? Error { get; set; }
+//    }
+
+//    public class CreateLocalKitResponseContainer
+//    {
+//        public CreateLocalKitResponse CreateLocalKit { get; set; }
+//    }
+
+//    public enum UpdateLocalKitPropsErrorCode
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_UPDATE_KIT,
+//        KIT_METADATA_IS_INVALID
+//    }
+
+//    public class UpdateLocalKitPropsError
+//    {
+//        public UpdateLocalKitPropsErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class UpdateLocalKitPropsResponse
+//    {
+//        public KitProps? Kit { get; set; }
+//        public UpdateLocalKitPropsError? Error { get; set; }
+//    }
+
+//    public class UpdateLocalKitPropsResponseContainer
+//    {
+//        public UpdateLocalKitPropsResponse UpdateLocalKitProps { get; set; }
+//    }
+
+//    public enum DeleteLocalKitError
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_DELETE_KIT
+//    }
+
+//    public class DeleteLocalKitResponse
+//    {
+//        public DeleteLocalKitError? Error { get; set; }
+//    }
+
+//    public class DeleteLocalKitResponseContainer
+//    {
+//        public DeleteLocalKitResponse DeleteLocalKit { get; set; }
+//    }
+
+//    public enum AddTypeToLocalKitErrorCode
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_MODIFY_KIT,
+//        TYPE_INPUT_IS_INVALID
+//    }
+
+//    public class AddTypeToLocalKitError
+//    {
+//        public AddTypeToLocalKitErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class AddTypeToLocalKitResponse
+//    {
+//        public Type? Type { get; set; }
+//        public AddTypeToLocalKitError? Error { get; set; }
+//    }
+
+//    public class AddTypeToLocalKitResponseContainer
+//    {
+//        public AddTypeToLocalKitResponse AddTypeToLocalKit { get; set; }
+//    }
+
+//    public enum RemoveTypeFromLocalKitErrorCode
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_MODIFY_KIT,
+//        TYPE_DOES_NOT_EXIST,
+//        DESIGN_DEPENDS_ON_TYPE
+//    }
+
+//    public class RemoveTypeFromLocalKitError
+//    {
+//        public RemoveTypeFromLocalKitErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class RemoveTypeFromLocalKitResponse
+//    {
+//        public RemoveTypeFromLocalKitError? Error { get; set; }
+//    }
+
+//    public class RemoveTypeFromLocalKitResponseContainer
+//    {
+//        public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
+//    }
+
+//    public enum AddDesignToLocalKitErrorCode
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_MODIFY_KIT,
+//        DESIGN_INPUT_IS_INVALID
+//    }
+
+//    public class AddDesignToLocalKitError
+//    {
+//        public AddDesignToLocalKitErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class AddDesignToLocalKitResponse
+//    {
+//        public Design? Design { get; set; }
+//        public AddDesignToLocalKitError? Error { get; set; }
+//    }
+
+//    public class AddDesignToLocalKitResponseContainer
+//    {
+//        public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
+//    }
+
+//    public enum RemoveDesignFromLocalKitErrorCode
+//    {
+//        DIRECTORY_DOES_NOT_EXIST,
+//        DIRECTORY_IS_NOT_A_DIRECTORY,
+//        DIRECTORY_HAS_NO_KIT,
+//        NO_PERMISSION_TO_MODIFY_KIT,
+//        DESIGN_DOES_NOT_EXIST
+//    }
+
+//    public class RemoveDesignFromLocalKitError
+//    {
+//        public RemoveDesignFromLocalKitErrorCode Code { get; set; }
+//        public string Message { get; set; }
+//    }
+
+//    public class RemoveDesignFromLocalKitResponse
+//    {
+//        public RemoveDesignFromLocalKitError? Error { get; set; }
+//    }
+
+//    public class RemoveDesignFromLocalKitResponseContainer
+//    {
+//        public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
+//    }
 
 
-#endregion
+//    public class Api : ICloneable
+//    {
+//        public Api()
+//        {
+//            Endpoint = "http://127.0.0.1:5052/graphql";
+//            Token = "";
+//            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+//        }
+
+//        public Api(string endpoint, string token)
+//        {
+//            Endpoint = endpoint;
+//            Token = token;
+//            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+//            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+//        }
+
+//        public GraphQLHttpClient Client { get; set; }
+//        public string Endpoint { get; set; }
+//        public string Token { get; set; }
+
+//        public object Clone()
+//        {
+//            return new Api(Endpoint, Token);
+//        }
+
+//        public override string ToString()
+//        {
+//            return $"Api(Endpoint: {Endpoint}, Token: {Token})";
+//        }
+
+//        public LoadLocalKitResponse? LoadLocalKit(string directory)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.loadLocalKit,
+//                OperationName = "LoadLocalKit",
+//                Variables = new { directory }
+//            };
+//            var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.LoadLocalKit;
+//        }
+
+//        public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.createLocalKit,
+//                OperationName = "CreateLocalKit",
+//                Variables = new { directory, kit }
+//            };
+//            var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.CreateLocalKit;
+//        }
+
+//        public UpdateLocalKitPropsResponse? UpdateLocalKitProps(string directory, KitProps kit)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.updateLocalKitMetadata,
+//                OperationName = "UpdateLocalKitProps",
+//                Variables = new { directory, kit }
+//            };
+//            var response = Client.SendQueryAsync<UpdateLocalKitPropsResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.UpdateLocalKitProps;
+//        }
+
+//        public DeleteLocalKitResponse? DeleteLocalKit(string directory)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.deleteLocalKit,
+//                OperationName = "DeleteLocalKit",
+//                Variables = new { directory }
+//            };
+//            var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.DeleteLocalKit;
+//        }
+
+//        public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.addTypeToLocalKit,
+//                OperationName = "AddTypeToLocalKit",
+//                Variables = new { directory, type }
+//            };
+//            var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.AddTypeToLocalKit;
+//        }
+
+//        public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.removeTypeFromLocalKit,
+//                OperationName = "RemoveTypeFromLocalKit",
+//                Variables = new { directory, type }
+//            };
+//            var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.RemoveTypeFromLocalKit;
+//        }
+
+//        public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.addDesignToLocalKit,
+//                OperationName = "AddDesignToLocalKit",
+//                Variables = new { directory, design }
+//            };
+//            var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.AddDesignToLocalKit;
+//        }
+
+//        public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
+//        {
+//            var query = new GraphQLRequest
+//            {
+//                Query = Resources.removeDesignFromLocalKit,
+//                OperationName = "RemoveDesignFromLocalKit",
+//                Variables = new { directory, design }
+//            };
+//            var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
+//            if (response.Errors != null) return null;
+//            return response.Data.RemoveDesignFromLocalKit;
+//        }
+
+//    }
+
+
+//#endregion
