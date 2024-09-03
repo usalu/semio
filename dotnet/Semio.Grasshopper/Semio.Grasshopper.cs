@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using GH_IO.Serialization;
+using GraphQL;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino;
@@ -1160,6 +1161,11 @@ public class RepresentationGoo : ModelGoo<Representation>
 
 }
 
+public class TypeGoo : ModelGoo<Type>
+{
+
+}
+
 //public class LocatorGoo : GH_Goo<Locator>
 //{
 //    public LocatorGoo()
@@ -1817,26 +1823,13 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo,Repres
 //    }
 //}
 
-//public class TypeParam : SemioPersistentParam<TypeGoo>
-//{
-//    public TypeParam() : base("Type", "Ty", "", "semio", "Params")
-//    {
-//    }
+public class TypeParam : SemioPersistentParam<TypeGoo,Type>
+{
+    public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 
-//    public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
+    protected override Bitmap Icon => Resources.type_24x24;
 
-//    protected override Bitmap Icon => Resources.type_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref TypeGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<TypeGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
+}
 
 //public class ScreenPointParam : SemioPersistentParam<ScreenPointGoo>
 //{
@@ -1970,8 +1963,8 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo,Repres
 
 public abstract class Component : GH_Component
 {
-    public Component(string name, string nickname, string description, string category, string subcategory) : base(
-        name, nickname, description, category, subcategory)
+    public Component(string name, string nickname, string description, string subcategory) : base(
+        name, nickname, description, "semio", subcategory)
     {
     }
 }
@@ -1980,83 +1973,79 @@ public abstract class Component : GH_Component
 
 public abstract class ModelComponent<T> : Component where T : Model
 {
-    protected ModelComponent() : base($"Model {typeof(T).Name}", $"~{typeof(T).GetCustomAttribute<ModelAttribute>().Abbreviation}", $"Construct, deconstruct or modify a {typeof(T).Name.ToLower()}", "semio", "Modelling")
+    internal static ModelAttribute ModelAttribute => typeof(T).GetCustomAttribute<ModelAttribute>();
+    internal static Dictionary<string, PropertyInfo> Properties => typeof(T).GetProperties().ToDictionary(p => p.Name);
+    internal static Dictionary<string,PropAttribute> PropAttributes => typeof(T).GetProperties().ToDictionary(p => p.Name, p => p.GetCustomAttribute<PropAttribute>());
+    protected ModelComponent() : base($"Model {typeof(T).Name}", $"~{ModelAttribute.Abbreviation}", $"Construct, deconstruct or modify a {typeof(T).Name.ToLower()}",  "Modelling")
     {
+    }
+
+    protected void AddModelParameters(dynamic pManager, bool isOutput = false)
+    {
+        var modelParamType = Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + typeof(T).Name + "Param");
+        var modelParam = (IGH_Param)Activator.CreateInstance(modelParamType);
+        var description = isOutput ? $"The constructed or modified {typeof(T).Name.ToLower()}." : $"An optional {typeof(T).Name.ToLower()} to deconstruct or modify.";
+        pManager.AddParameter(modelParam, typeof(T).Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?", description, GH_ParamAccess.item);
+        
+        foreach (var kvp in Properties)
+        {
+            var name = kvp.Key;
+            var property = kvp.Value;
+            var propAttribute = PropAttributes[name];
+           
+            var isList = property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
+            var t = isList ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+
+            switch (t)
+            {
+                case var _ when t == typeof(string):
+                    pManager.AddTextParameter(name, propAttribute.Code, propAttribute.Description, isList ? GH_ParamAccess.list : GH_ParamAccess.item);
+                    break;
+                case var _ when t.IsSubclassOf(typeof(Model)):
+                    var tParamType = Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + t.Name + "Param");
+                    var tParam = (IGH_Param)Activator.CreateInstance(tParamType);
+                    pManager.AddParameter(tParam, name, propAttribute.Code, propAttribute.Description, isList ? GH_ParamAccess.list : GH_ParamAccess.item);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        if (!isOutput)
+        {
+            pManager.AddBooleanParameter("Validate", "Vd", $"Check if the {typeof(T).Name.ToLower()} is valid.", GH_ParamAccess.item, true);
+            for (var i = 0; i < pManager.ParamCount; i++)
+                ((GH_InputParamManager)pManager)[i].Optional = true;
+        }
+
     }
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        foreach (var prop in typeof(T).GetProperties())
-        {
-            var attr = prop.GetCustomAttribute<PropAttribute>();
-            if (attr != null)
-            {
-                switch (prop.PropertyType)
-                {
-                    case { } t when t == typeof(string):
-                        pManager.AddTextParameter(prop.Name, attr.Code, attr.Description, GH_ParamAccess.item);
-                        break;
-                    case { } t when t == typeof(List<string>):
-                        pManager.AddTextParameter(prop.Name, attr.Code, attr.Description, GH_ParamAccess.list);
-                        break;
-                    default:
-                        if (prop.PropertyType.IsSubclassOf(typeof(Model)))
-                        {
-                            var modelType = prop.PropertyType;
-                            var modelParamType = Assembly.GetExecutingAssembly().GetTypes().FirstOrDefault(t => t.Name == $"{modelType.Name}Param");
-                            var modelParam = (IGH_Param)Activator.CreateInstance(modelParamType);
-                            pManager.AddParameter(modelParam, prop.Name,attr.Abbreviation, attr.Description, GH_ParamAccess.item);
-                        }
-                        break;
-
-                }
-            }
-        }
-        // register all properties of the model
-        pManager.AddBooleanParameter("Validate", "V", $"Check if the {typeof(T).Name.ToLower()} is valid.", GH_ParamAccess.item, true);
-        for (var i = 0; i < pManager.ParamCount; i++)
-            pManager[i].Optional = true;
+        AddModelParameters(pManager);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        // register all properties of the model
-        foreach (var prop in typeof(T).GetProperties())
-        {
-            var attr = prop.GetCustomAttribute<PropAttribute>();
-            //if (attr != null)
-            //{
-            //    if (prop.PropertyType == typeof(string))
-            //    {
-            //        pManager.AddTextParameter(attr.Name, attr.Abbreviation, attr.Description, GH_ParamAccess.item);
-            //    }
-            //    else if (prop.PropertyType == typeof(List<string>))
-            //    {
-            //        pManager.AddTextParameter(attr.Name, attr.Abbreviation, attr.Description, GH_ParamAccess.list);
-            //    }
-            //    // Add other types as needed
-            //}
-        }
+        AddModelParameters(pManager, true);
     }
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        // get all properties of the model
 
-
-        // validate the model
+        dynamic modelGoo = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + typeof(T).Name + "Goo"));
         var validate = true;
 
-        //DA.GetData(this.Params.Output.Count-1, ref validate);
+        if (DA.GetData(0, ref modelGoo))
+            modelGoo = modelGoo.Duplicate();
 
-        //if (validate)
-        //{
-        //    var (isValid, errors) = modelGoo.Value.Validate();
-        //    foreach (var error in errors)
-        //        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, error);
-        //    if (!isValid) return;
-        //}
+        DA.GetData(this.Params.Input.Count - 1, ref validate);
 
-        //// set all properties of the model
-        //DA.SetData(0, modelGoo.Duplicate());
+        var( isValid, errors) = (Tuple<bool,List<string>>)modelGoo.Value.Validate();
+        foreach (var error in errors)
+            AddRuntimeMessage(validate ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Remark, error);
+        if (validate && !isValid) return;
+
+
+        DA.SetData(0, modelGoo.Duplicate());
     }
 
 }
@@ -2066,33 +2055,7 @@ public class RepresentationComponent : ModelComponent<Representation>
 
     protected override Bitmap Icon => Resources.representation_modify_24x24;
 
-    //protected override void RegisterInputParams(GH_InputParamManager pManager)
-    //{
-    //    pManager.AddParameter(new RepresentationParam(), "Representation", "Rp?",
-    //        "Optional representation to deconstruct or modify.", GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Url", "Ur", "",
-    //        GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Mime", "Mm", "Mime type of the representation.", GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Level of Detail", "Ld?",
-    //        "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \nThere can be only one default representation per type.",
-    //        GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list,
-    //        new List<string>());
-
-    //}
-
-    //protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    //{
-    //    pManager.AddParameter(new RepresentationParam(), "Representation", "Rp",
-    //        "Constructed or modified representation.", GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
-    //        GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Mime", "Mm", "Mime type of the representation.", GH_ParamAccess.item);
-    //    pManager.AddTextParameter("LoD", "Ld?",
-    //        "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \\nThere can be only one default representation per type.",
-    //        GH_ParamAccess.item);
-    //    pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list);
-    //}
+   
 
     //protected override void SolveInstance(IGH_DataAccess DA)
     //{
@@ -2336,157 +2299,157 @@ public class RepresentationComponent : ModelComponent<Representation>
 //    }
 //}
 
-//public class TypeComponent : Component
-//{
-//    public TypeComponent()
-//        : base("Model Type", "~Typ",
-//            "Construct, deconstruct or modify a type.",
-//            "semio", "Modelling")
-//    {
-//    }
+public class TypeComponent : ModelComponent<Type>
+{
+    //    public TypeComponent()
+    //        : base("Model Type", "~Typ",
+    //            "Construct, deconstruct or modify a type.",
+    //            "semio", "Modelling")
+    //    {
+    //    }
 
-//    public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+        public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
 
-//    protected override Bitmap Icon => Resources.type_modify_24x24;
+        protected override Bitmap Icon => Resources.type_modify_24x24;
 
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new TypeParam(), "Type", "Ty?",
-//            "Optional type to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddTextParameter("Variant", "Vn?",
-//            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
-//            GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//        pManager.AddTextParameter("Unit", "Ut",
-//            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
-//            GH_ParamAccess.item);
-//        pManager[5].Optional = true;
-//        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
-//            GH_ParamAccess.list);
-//        pManager[6].Optional = true;
-//        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-//        pManager[7].Optional = true;
-//        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-//            "Optional qualities of the type. A quality is meta-data for decision making.",
-//            GH_ParamAccess.list);
-//        pManager[8].Optional = true;
-//    }
+    //    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    //    {
+    //        pManager.AddParameter(new TypeParam(), "Type", "Ty?",
+    //            "Optional type to deconstruct or modify.", GH_ParamAccess.item);
+    //        pManager[0].Optional = true;
+    //        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
+    //        pManager[1].Optional = true;
+    //        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
+    //        pManager[2].Optional = true;
+    //        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
+    //        pManager[3].Optional = true;
+    //        pManager.AddTextParameter("Variant", "Vn?",
+    //            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
+    //            GH_ParamAccess.item);
+    //        pManager[4].Optional = true;
+    //        pManager.AddTextParameter("Unit", "Ut",
+    //            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
+    //            GH_ParamAccess.item);
+    //        pManager[5].Optional = true;
+    //        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
+    //            GH_ParamAccess.list);
+    //        pManager[6].Optional = true;
+    //        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
+    //        pManager[7].Optional = true;
+    //        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+    //            "Optional qualities of the type. A quality is meta-data for decision making.",
+    //            GH_ParamAccess.list);
+    //        pManager[8].Optional = true;
+    //    }
 
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new TypeParam(), "Type", "Ty",
-//            "Constructed or modified type.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Variant", "Vn?",
-//            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
-//            GH_ParamAccess.item);
-//        pManager.AddTextParameter("Unit", "Ut",
-//            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
-//            GH_ParamAccess.item);
-//        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
-//            GH_ParamAccess.list);
-//        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-//        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-//            "Optional qualities of the type. A quality is meta-data for decision making.",
-//            GH_ParamAccess.list);
-//    }
+    //    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    //    {
+    //        pManager.AddParameter(new TypeParam(), "Type", "Ty",
+    //            "Constructed or modified type.", GH_ParamAccess.item);
+    //        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
+    //        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
+    //        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
+    //        pManager.AddTextParameter("Variant", "Vn?",
+    //            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
+    //            GH_ParamAccess.item);
+    //        pManager.AddTextParameter("Unit", "Ut",
+    //            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
+    //            GH_ParamAccess.item);
+    //        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
+    //            GH_ParamAccess.list);
+    //        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
+    //        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+    //            "Optional qualities of the type. A quality is meta-data for decision making.",
+    //            GH_ParamAccess.list);
+    //    }
 
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var typeGoo = new TypeGoo();
-//        var name = "";
-//        var description = "";
-//        var icon = "";
-//        var variant = "";
-//        var unit = "";
-//        var representationGoos = new List<RepresentationGoo>();
-//        var portGoos = new List<PortGoo>();
-//        var qualityGoos = new List<QualityGoo>();
+    //    protected override void SolveInstance(IGH_DataAccess DA)
+    //    {
+    //        var typeGoo = new TypeGoo();
+    //        var name = "";
+    //        var description = "";
+    //        var icon = "";
+    //        var variant = "";
+    //        var unit = "";
+    //        var representationGoos = new List<RepresentationGoo>();
+    //        var portGoos = new List<PortGoo>();
+    //        var qualityGoos = new List<QualityGoo>();
 
-//        if (DA.GetData(0, ref typeGoo))
-//            typeGoo = typeGoo.Duplicate() as TypeGoo;
-//        if (DA.GetData(1, ref name))
-//            typeGoo.Value.Name = name;
-//        if (DA.GetData(2, ref description))
-//            typeGoo.Value.Description = description;
-//        if (DA.GetData(3, ref icon))
-//            typeGoo.Value.Icon = icon;
-//        if (DA.GetData(4, ref variant))
-//            typeGoo.Value.Variant = variant;
-//        if (!DA.GetData(5, ref unit))
-//            try
-//            {
-//                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-//                typeGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
-//            }
-//            catch (Exception e)
-//            {
-//                typeGoo.Value.Unit = "m";
-//            }
-//        else
-//            typeGoo.Value.Unit = unit;
+    //        if (DA.GetData(0, ref typeGoo))
+    //            typeGoo = typeGoo.Duplicate() as TypeGoo;
+    //        if (DA.GetData(1, ref name))
+    //            typeGoo.Value.Name = name;
+    //        if (DA.GetData(2, ref description))
+    //            typeGoo.Value.Description = description;
+    //        if (DA.GetData(3, ref icon))
+    //            typeGoo.Value.Icon = icon;
+    //        if (DA.GetData(4, ref variant))
+    //            typeGoo.Value.Variant = variant;
+    //        if (!DA.GetData(5, ref unit))
+    //            try
+    //            {
+    //                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
+    //                typeGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+    //            }
+    //            catch (Exception e)
+    //            {
+    //                typeGoo.Value.Unit = "m";
+    //            }
+    //        else
+    //            typeGoo.Value.Unit = unit;
 
-//        if (DA.GetDataList(6, representationGoos))
-//            typeGoo.Value.Representations = representationGoos.Select(r => r.Value).ToList();
-//        if (DA.GetDataList(7, portGoos))
-//            typeGoo.Value.Ports = portGoos.Select(p => p.Value).ToList();
-//        if (DA.GetDataList(8, qualityGoos))
-//            typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
+    //        if (DA.GetDataList(6, representationGoos))
+    //            typeGoo.Value.Representations = representationGoos.Select(r => r.Value).ToList();
+    //        if (DA.GetDataList(7, portGoos))
+    //            typeGoo.Value.Ports = portGoos.Select(p => p.Value).ToList();
+    //        if (DA.GetDataList(8, qualityGoos))
+    //            typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
 
-//        var isValidInput = true;
-//        if (typeGoo.Value.Name == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a name.");
-//            isValidInput = false;
-//        }
+    //        var isValidInput = true;
+    //        if (typeGoo.Value.Name == "")
+    //        {
+    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a name.");
+    //            isValidInput = false;
+    //        }
 
-//        // currently impossible
-//        if (typeGoo.Value.Unit == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a unit.");
-//            isValidInput = false;
-//        }
+    //        // currently impossible
+    //        if (typeGoo.Value.Unit == "")
+    //        {
+    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a unit.");
+    //            isValidInput = false;
+    //        }
 
-//        if (!Utility.IsValidUnit(typeGoo.Value.Unit))
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
-//            isValidInput = false;
-//        }
+    //        if (!Utility.IsValidUnit(typeGoo.Value.Unit))
+    //        {
+    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
+    //            isValidInput = false;
+    //        }
 
-//        if (typeGoo.Value.Representations.Count == 0)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one representation.");
-//            isValidInput = false;
-//        }
+    //        if (typeGoo.Value.Representations.Count == 0)
+    //        {
+    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one representation.");
+    //            isValidInput = false;
+    //        }
 
-//        if (typeGoo.Value.Ports.Count == 0)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one port.");
-//            isValidInput = false;
-//        }
+    //        if (typeGoo.Value.Ports.Count == 0)
+    //        {
+    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one port.");
+    //            isValidInput = false;
+    //        }
 
-//        if (!isValidInput) return;
+    //        if (!isValidInput) return;
 
-//        DA.SetData(0, typeGoo.Duplicate());
-//        DA.SetData(1, typeGoo.Value.Name);
-//        DA.SetData(2, typeGoo.Value.Description);
-//        DA.SetData(3, typeGoo.Value.Icon);
-//        DA.SetData(4, typeGoo.Value.Variant);
-//        DA.SetData(5, typeGoo.Value.Unit);
-//        DA.SetDataList(6, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
-//        DA.SetDataList(7, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
-//        DA.SetDataList(8, typeGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
-//    }
-//}
+    //        DA.SetData(0, typeGoo.Duplicate());
+    //        DA.SetData(1, typeGoo.Value.Name);
+    //        DA.SetData(2, typeGoo.Value.Description);
+    //        DA.SetData(3, typeGoo.Value.Icon);
+    //        DA.SetData(4, typeGoo.Value.Variant);
+    //        DA.SetData(5, typeGoo.Value.Unit);
+    //        DA.SetDataList(6, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
+    //        DA.SetDataList(7, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
+    //        DA.SetDataList(8, typeGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
+    //    }
+}
 
 //public class ScreenPointComponent : Component
 //{

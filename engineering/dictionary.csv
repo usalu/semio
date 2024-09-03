@@ -4,11 +4,11 @@ Emoji,Code,Abbreviation,Name,Description
 🖇️,Co,Con,Connection,A connection between two pieces in a design.
 💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
 ✏️,Dg,Dgm,Diagram,All diagram-related information of the piece.
-📁,Di,Dir,Directory,The directory of the kit.
+📁,Di?,Dir,Directory,An optional directory where to find the kit.
 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 👪,Gr,Grp,Group,The group of the locator.
-🏠,Hp,Hmp,Homepage,The url of the homepage of the kit.
-🖼️,Ic,Ico,Icon,The icon [emoji | text | image | svg] of the {{NAME}}.
+🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
+🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
 🆔,Id,Idn,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
 🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
@@ -33,5 +33,6 @@ Emoji,Code,Abbreviation,Name,Description
 🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
 Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
 ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
-🔢,Vl,Val,Value,The value of the quality.
-🔀,Vn,Vnt,Variant,The variant of {{NAME}}.
+🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
+🔢,Vl?,Val,Value,An optional value of the quality.
+🔀,Vn?,Vnt,Variant,An optional variant of the {{NAME}}.

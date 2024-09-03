@@ -671,10 +671,11 @@ public static class MimeParser
 //🧲,Cd,Cod,Connected,The connected piece of the side.
 //🔩,Cg,Cog,Connecting,The connecting piece of the side.
 //🖇️,Co,Con,Connection,A connection between two pieces in a design.
-//💬,Dc,Dsc,Description,A human description of the {{NAME}}.
+//💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
 //✏️,Dg,Dgm,Diagram,All diagram-related information of the piece.
 //📁,Di,Dir,Directory,The directory of the kit.
 //🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+//👪,Gr,Grp,Group,The group of the locator.
 //🏠,Hp,Hmp,Homepage,The url of the homepage of the kit.
 //🖼️,Ic,Ico,Icon,The icon [emoji | text | image | svg] of the {{NAME}}.
 //🆔,Id,Idn,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
@@ -692,6 +693,7 @@ public static class MimeParser
 //💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
 //🌱,Rt,Rot,Root,The root-related information of a piece.
 //🧱,Sd,Sde,Side,A side of a piece in a connection.
+//📌,SG,SGr,Subgroup,The sub-group of the locator.
 //📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the diagram of the piece.
 //✅,Su,Suc,Success,{{NAME}} was successful.
 //▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
@@ -701,7 +703,7 @@ public static class MimeParser
 //Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
 //➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
 //🔢,Vl,Val,Value,The value of the quality.
-//🔀,Vn,Vnt,Variant,The variant of {{NAME}}.
+//🔀,Vn,Vnt,Variant,An optional variant of the {{NAME}}.
 
 public abstract class ConceptAttribute : ValidationAttribute
 {
@@ -735,23 +737,15 @@ public enum PropImportance
     ID
 }
 
-public enum PropCollectionKind
-{
-    NONE,
-    LIST,
-    DICTIONARY
-}
 
 [AttributeUsage(AttributeTargets.Property)]
 public abstract class PropAttribute : ConceptAttribute
 {
     public PropImportance Importance { get; set; }
-    public PropCollectionKind CollectionKind { get; set; }
-    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, PropCollectionKind collectionKind) : base(emoji, code,
+    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance) : base(emoji, code,
         abbreviation, description)
     {
         Importance = importance;
-        CollectionKind = collectionKind;
     }
 }
 
@@ -760,8 +754,8 @@ public abstract class TextAttribute : PropAttribute
     public int LengthLimit { get; set; }
 
     public TextAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance, PropCollectionKind collectionKind,int lengthLimit) : base(emoji, code,
-        abbreviation, description, importance, collectionKind)
+        PropImportance importance, int lengthLimit) : base(emoji, code,
+        abbreviation, description, importance)
     {
         LengthLimit = lengthLimit;
     }
@@ -780,8 +774,8 @@ public abstract class TextAttribute : PropAttribute
 }
 public class NameAttribute : TextAttribute
 {
-    public NameAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, PropCollectionKind collectionKind = PropCollectionKind.NONE) : base(emoji, code,
-        abbreviation, description, importance, collectionKind ,Constants.NameLengthLimit)
+    public NameAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
+        abbreviation, description, importance,Constants.NameLengthLimit)
     {
     }
 
@@ -789,12 +783,30 @@ public class NameAttribute : TextAttribute
 
 public class UrlAttribute : TextAttribute
 {
-    public UrlAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, PropCollectionKind collectionKind = PropCollectionKind.NONE) : base(emoji, code,
-        abbreviation, description, importance,collectionKind,Constants.UrlLengthLimit)
+    public UrlAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
+        abbreviation, description, importance,Constants.UrlLengthLimit)
     {
     }
 
 }
+
+public class DescriptionAttribute : TextAttribute
+{
+    public DescriptionAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
+        abbreviation, description, importance, Constants.DescriptionLengthLimit)
+    {
+    }
+
+}
+
+public class ModelPropAttribute : PropAttribute
+{
+    public ModelPropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
+        abbreviation, description, importance)
+    {
+    }
+}
+
 
 
 public abstract class Model
@@ -863,7 +875,7 @@ public abstract class Model
 /// <summary>
 /// 💾 A representation is an url that describes a type for a certain level of detail and tags.
 /// </summary>
-[ModelAttribute("💾", "Rp", "Rep",
+[Model("💾", "Rp", "Rep",
     "A representation is a linked file that describes a type for a certain level of detail and tags.")]
 public class Representation : Model
 {
@@ -889,7 +901,7 @@ public class Representation : Model
     /// 🔖 The optional associated tags of the representation.
     /// </summary>
 
-    [Name("🔖", "Tg*", "Tags", "The optional associated tags of the representation.", CollectionKind=PropCollectionKind.LIST)]
+    [Name("🔖", "Tg*", "Tags", "The optional associated tags of the representation.")]
     public List<string> Tags { get; set; } = new();
 }
 
@@ -964,19 +976,46 @@ public class Representation : Model
 //        public string Definition { get; set; } = "";
 
 //    }
+/// <summary>
+/// 🧩 A type is a reusable element that can be connected with other types over ports.
+/// </summary>
+[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+public class Type : Model
+{
+    /// <summary>
+    /// 📛 The name of the type.
+    /// </summary>
+    [Name("📛", "Na", "Nam",  "The name of the type.",PropImportance.ID)]
+    public string Name { get; set; } = "";
+    /// <summary>
+    /// 💬 An optional human description of the type.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc", "An optional human description of the type.")]
+    public string Description { get; set; } = "";
+    /// <summary>
+    /// 🖼️ An optional icon [emoji | text | image | svg] of the type.
+    /// </summary>
+    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the type.")]
+    public string Icon { get; set; } = "";
+    /// <summary>
+    /// 🔀 An optional variant of the type.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.")]
+    public string Variant { get; set; } = "";
+    /// <summary>
+    /// Ⓜ️ The length unit for all distance-related information of the type.
+    /// </summary>
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.", PropImportance.REQUIRED)]
+    public string Unit { get; set; } = "";
+    /// <summary>
+    /// 💾 The representations of the type.
+    /// </summary>
+    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.",PropImportance.REQUIRED)]
+    public List<Representation> Representations { get; set; } = new();
+    //public List<Port> Ports { get; set; } = new();
+    //public List<Quality> Qualities { get; set; } = new();
 
-//    public class Type() : Model
-//    {
-//        public string Name { get; set; } = "";
-//        public string Description { get; set; } = "";
-//        public string Icon { get; set; } = "";
-//        public string Variant { get; set; } = "";
-//        public string Unit { get; set; } = "";
-//        public List<Representation> Representations { get; set; } = new();
-//        public List<Port> Ports { get; set; } = new();
-//        public List<Quality> Qualities { get; set; } = new();
-
-//    }
+}
 
 //    public class TypeId() : Model
 //    {
