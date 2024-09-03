@@ -153,10 +153,31 @@ namespace Semio.UnitTests
             var expectedFlattenedJson = File.ReadAllText(flattenedDesignPath);
             var expectedFlattenedDesign = JsonConvert.DeserializeObject<Design>(expectedFlattenedJson);
 
-            var flatten = design.Flatten();
+            var flattenedDesign = design.Flatten();
 
-            // Assert that the flattened design matches the expected flattened design
-            Assert.Equal(JsonConvert.SerializeObject(expectedFlattenedDesign), JsonConvert.SerializeObject(flatten));
+            Assert.Equal(expectedFlattenedDesign, flattenedDesign);
+        }
+    }
+
+    public class KitTests
+    {
+        [Theory]
+        [InlineData("../../../../tests/kit_complex.json")]
+        public void ComplexKit(string kitPath)
+        {
+            var kitJson = File.ReadAllText(kitPath);
+            var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
+            var kitDeepClone = kit.DeepClone();
+            Assert.Equal(kit, kitDeepClone);
+            Assert.Equal(JsonConvert.SerializeObject(kit), JsonConvert.SerializeObject(kitDeepClone));
+        }
+        [Theory]
+        [InlineData("../../../../tests/kit_invalid.json")]
+        public void InvalidKit(string kitPath)
+        {
+            var kitJson = File.ReadAllText(kitPath);
+            var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
+            
         }
     }
 }

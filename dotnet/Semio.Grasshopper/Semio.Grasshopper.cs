@@ -1681,45 +1681,6 @@ public class DesignGoo : GH_Goo<Design>
     }
 }
 
-public class SceneGoo : GH_Goo<Scene>
-{
-    public SceneGoo()
-    {
-        Value = new Scene();
-    }
-
-    public SceneGoo(Scene scene)
-    {
-        Value = scene;
-    }
-
-    public override bool IsValid { get; }
-    public override string TypeName => "Scene";
-    public override string TypeDescription { get; }
-
-    public override IGH_Goo Duplicate()
-    {
-        return new SceneGoo(Value.DeepClone());
-    }
-
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
-
-    public override bool Write(GH_IWriter writer)
-    {
-        writer.SetString("Scene", Value.Serialize());
-        return base.Write(writer);
-    }
-
-    public override bool Read(GH_IReader reader)
-    {
-        Value = reader.GetString("Scene").Deserialize<Scene>();
-        return base.Read(reader);
-    }
-}
-
 public class KitGoo : GH_Goo<Kit>
 {
     public KitGoo()
@@ -1982,27 +1943,6 @@ public class DesignParam : SemioPersistentParam<DesignGoo>
     }
 }
 
-public class SceneParam : SemioPersistentParam<SceneGoo>
-{
-    public SceneParam() : base("Scene", "Sn", "", "semio", "Params")
-    {
-    }
-
-    public override Guid ComponentGuid => new("7E26A3C8-4F95-485D-8288-63DC9C44E9A4");
-
-    protected override Bitmap Icon => Resources.scene_24x24;
-
-    protected override GH_GetterResult Prompt_Singular(ref SceneGoo value)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override GH_GetterResult Prompt_Plural(ref List<SceneGoo> values)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 public class KitParam : SemioPersistentParam<KitGoo>
 {
     public KitParam() : base("Kit", "Kt", "", "semio", "Params")
@@ -2028,9 +1968,9 @@ public class KitParam : SemioPersistentParam<KitGoo>
 
 #region Components
 
-public abstract class SemioComponent : GH_Component
+public abstract class Component : GH_Component
 {
-    public SemioComponent(string name, string nickname, string description, string category, string subcategory) : base(
+    public Component(string name, string nickname, string description, string category, string subcategory) : base(
         name, nickname, description, category, subcategory)
     {
     }
@@ -2038,7 +1978,19 @@ public abstract class SemioComponent : GH_Component
 
 #region Modelling
 
-public class RepresentationComponent : SemioComponent
+public abstract class ModelComponent : Component
+{
+    protected ModelComponent(string name, string nickname, string description, string category, string subcategory) : base(name, nickname, description, category, subcategory)
+    {
+    }
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddBooleanParameter("Validate", "V", "Check if the representation is valid.", GH_ParamAccess.item, true);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+}
+public class RepresentationComponent : ModelComponent
 {
     public RepresentationComponent()
         : base("Model Representation", "~Rep",
@@ -2055,19 +2007,20 @@ public class RepresentationComponent : SemioComponent
     {
         pManager.AddParameter(new RepresentationParam(), "Representation", "Rp?",
             "Optional representation to deconstruct or modify.", GH_ParamAccess.item);
-        pManager[0].Optional = true;
-        pManager.AddTextParameter("Url", "Ur", "Url of the representation. Either a relative file path or link.",
+        pManager[pManager.ParamCount - 1].Optional = true;
+        pManager.AddTextParameter("Url", "Ur", "",
             GH_ParamAccess.item);
-        pManager[1].Optional = true;
+        pManager[pManager.ParamCount - 1].Optional = true;
         pManager.AddTextParameter("Mime", "Mm", "Mime type of the representation.", GH_ParamAccess.item);
-        pManager[2].Optional = true;
+        pManager[pManager.ParamCount - 1].Optional = true;
         pManager.AddTextParameter("Level of Detail", "Ld?",
             "Optional LoD(Level of Detail / Development / Design / ...) of the representation. No LoD means default. \nThere can be only one default representation per type.",
             GH_ParamAccess.item);
-        pManager[3].Optional = true;
+        pManager[pManager.ParamCount - 1].Optional = true;
         pManager.AddTextParameter("Tags", "Tg*", "Optional tags for the representation.", GH_ParamAccess.list,
             new List<string>());
-        pManager[4].Optional = true;
+        pManager[pManager.ParamCount - 1].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -2090,6 +2043,7 @@ public class RepresentationComponent : SemioComponent
         var mime = "";
         var lod = "";
         var tags = new List<string>();
+        var validate = true;
 
         if (DA.GetData(0, ref representationGoo))
             representationGoo = representationGoo.Duplicate() as RepresentationGoo;
@@ -2106,7 +2060,12 @@ public class RepresentationComponent : SemioComponent
             representationGoo.Value.Lod = lod;
         if (DA.GetDataList(4, tags))
             representationGoo.Value.Tags = tags;
+        DA.GetData(5, ref validate);
 
+        if (validate)
+        {
+            var (isValid,errors) =representationGoo.Value.Validate();
+        }
         var isValidInput = true;
         if (representationGoo.Value.Url == "")
         {
@@ -2128,7 +2087,7 @@ public class RepresentationComponent : SemioComponent
     }
 }
 
-public class LocatorComponent : SemioComponent
+public class LocatorComponent : Component
 {
     public LocatorComponent()
         : base("Model Locator", "~Loc",
@@ -2190,7 +2149,7 @@ public class LocatorComponent : SemioComponent
     }
 }
 
-public class PortComponent : SemioComponent
+public class PortComponent : Component
 {
     public PortComponent()
         : base("Model Port", "~Por",
@@ -2281,7 +2240,7 @@ public class PortComponent : SemioComponent
     }
 }
 
-public class QualityComponent : SemioComponent
+public class QualityComponent : Component
 {
     public QualityComponent()
         : base("Model Quality", "~Qlt",
@@ -2357,7 +2316,7 @@ public class QualityComponent : SemioComponent
     }
 }
 
-public class TypeComponent : SemioComponent
+public class TypeComponent : Component
 {
     public TypeComponent()
         : base("Model Type", "~Typ",
@@ -2509,7 +2468,7 @@ public class TypeComponent : SemioComponent
     }
 }
 
-public class ScreenPointComponent : SemioComponent
+public class ScreenPointComponent : Component
 {
     public ScreenPointComponent()
         : base("Model Screen Point", "~SP",
@@ -2560,7 +2519,7 @@ public class ScreenPointComponent : SemioComponent
     }
 }
 
-public class PieceComponent : SemioComponent
+public class PieceComponent : Component
 {
     public PieceComponent()
         : base("Model Piece", "~Pce",
@@ -2661,7 +2620,7 @@ public class PieceComponent : SemioComponent
     }
 }
 
-public class SideComponent : SemioComponent
+public class SideComponent : Component
 {
     public SideComponent()
         : base("Model Side", "~Sde",
@@ -2725,7 +2684,7 @@ public class SideComponent : SemioComponent
     }
 }
 
-public class ConnectionComponent : SemioComponent
+public class ConnectionComponent : Component
 {
     public ConnectionComponent()
         : base("Model Connection", "~Con",
@@ -2818,7 +2777,7 @@ public class ConnectionComponent : SemioComponent
     }
 }
 
-public class DesignComponent : SemioComponent
+public class DesignComponent : Component
 {
     public DesignComponent()
         : base("Model Design", "~Dsn",
@@ -2962,7 +2921,7 @@ public class DesignComponent : SemioComponent
     }
 }
 
-public class KitComponent : SemioComponent
+public class KitComponent : Component
 {
     public KitComponent()
         : base("Model Kit", "~Kit",
@@ -3060,7 +3019,7 @@ public class KitComponent : SemioComponent
 }
 
 
-public class RandomIdsComponent : SemioComponent
+public class RandomIdsComponent : Component
 {
     public RandomIdsComponent()
         : base("Random Ids", "%Ids",
@@ -3119,7 +3078,7 @@ public class RandomIdsComponent : SemioComponent
 
 #region Loading/Saving
 
-public abstract class EngineComponent : SemioComponent
+public abstract class EngineComponent : Component
 {
     protected EngineComponent(string name, string nickname, string description, string category, string subcategory)
         : base(name, nickname, description, category, subcategory)
@@ -3653,7 +3612,7 @@ public class RemoveDesignComponent : EngineComponent
 
 #region Scripting
 
-public class EncodeTextComponent : SemioComponent
+public class EncodeTextComponent : Component
 {
     public EncodeTextComponent()
         : base("Encode Text", ">Txt",
@@ -3689,7 +3648,7 @@ public class EncodeTextComponent : SemioComponent
     }
 }
 
-public class DecodeTextComponent : SemioComponent
+public class DecodeTextComponent : Component
 {
     public DecodeTextComponent()
         : base("Decode Text", "<Txt",
@@ -3727,7 +3686,7 @@ public class DecodeTextComponent : SemioComponent
 
 #region Serialize
 
-public class SerializeQualityComponent : SemioComponent
+public class SerializeQualityComponent : Component
 {
     public SerializeQualityComponent()
         : base("Serialize Quality", ">Qlt",
@@ -3766,7 +3725,7 @@ public class SerializeQualityComponent : SemioComponent
     }
 }
 
-public class SerializeTypeComponent : SemioComponent
+public class SerializeTypeComponent : Component
 {
     public SerializeTypeComponent()
         : base("Serialize Type", ">Typ",
@@ -3803,7 +3762,7 @@ public class SerializeTypeComponent : SemioComponent
     }
 }
 
-public class SerializeDesignComponent : SemioComponent
+public class SerializeDesignComponent : Component
 {
     public SerializeDesignComponent()
         : base("Serialize Design", ">For",
@@ -3840,7 +3799,7 @@ public class SerializeDesignComponent : SemioComponent
     }
 }
 
-public class SerializeSceneComponent : SemioComponent
+public class SerializeSceneComponent : Component
 {
     public SerializeSceneComponent()
         : base("Serialize Scene", ">Scn",
@@ -3881,7 +3840,7 @@ public class SerializeSceneComponent : SemioComponent
 
 #region Deserialize
 
-public class DeserializeQualityComponent : SemioComponent
+public class DeserializeQualityComponent : Component
 {
     public DeserializeQualityComponent()
         : base("Deserialize Quality", "<Qlt",
@@ -3920,7 +3879,7 @@ public class DeserializeQualityComponent : SemioComponent
     }
 }
 
-public class DeserializeTypeComponent : SemioComponent
+public class DeserializeTypeComponent : Component
 {
     public DeserializeTypeComponent()
         : base("Deserialize Type", "<Typ",
@@ -3958,7 +3917,7 @@ public class DeserializeTypeComponent : SemioComponent
     }
 }
 
-public class DeserializeDesignComponent : SemioComponent
+public class DeserializeDesignComponent : Component
 {
     public DeserializeDesignComponent()
         : base("Deserialize Design", "<For",
@@ -3996,7 +3955,7 @@ public class DeserializeDesignComponent : SemioComponent
     }
 }
 
-public class DeserializeSceneComponent : SemioComponent
+public class DeserializeSceneComponent : Component
 {
     public DeserializeSceneComponent()
         : base("Deserialize Scene", "<Scn",
@@ -4040,7 +3999,7 @@ public class DeserializeSceneComponent : SemioComponent
 
 #region Viewing
 
-public class GetSceneComponent : SemioComponent
+public class GetSceneComponent : Component
 {
     public GetSceneComponent()
         : base("GetScene", "!Scn",
@@ -4111,7 +4070,7 @@ public class GetSceneComponent : SemioComponent
     }
 }
 
-public class FilterSceneComponent : SemioComponent
+public class FilterSceneComponent : Component
 {
     public FilterSceneComponent()
         : base("FilterScene", "|Scn",

@@ -1,36 +1,36 @@
-Abr,Short,Icon,Normal,Short Description
-Cd,Cod,🧲,Connected,
-Cg,Cog,🔩,Connecting,
-Co,Con,🖇️,Connection,A connection between two pieces of a design.
-Dc,Dsc,💬,Description,
-Dg,Dgm,✏️,Diagram,
-Di,Dir,📁,Directory,
-Dn,Dsn,🏙️,Design,A design is a collection of pieces that are connected
-Hp,Hop,🏠,Homepage,
-Ic,Ico,🖼️,Icon,
-Id,Idn,🆔,Identification,
-Kt,Kit,🗃️,Kit,A kit is a collection of types and designs.
-Lc,Loc,🗺️,Locator,A locator is meta-data for grouping ports.
-Ld,Lod,🔍,Level of Detail,
-Na,Nam,📛,Name,
-Ob,Obj,🗿,Object,An object is a piece with a plane and a parent object (unless the piece is a root).
-On,Ori,⌱,Origin,
-Pc,Pce,⭕,Piece,A piece is a 3d-instance of a type in a design.
-Po,Por,🔌,Port,A port is a connection point (with a direction) of a type.
-Pn,Ple,◳,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-Pt,Pot,✖️,Point,A 3d-point (xyz) of floating point numbers.
-Qa,Qal,📏,Quality,A quality is meta-data for decision making.
-Rp,Rep,💾,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-Rt,Rot,🌱,Root,The root indesign of a piece.
-Sc,Scn,🌆,Scene,A scene is a collection of objects.
-Sd,Sde,🧱,Side,A side of a piece in a connection.
-SP,SPt,📺,Screen Point,A 2d-point (xy) of integers in screen plane.
-Su,Suc,✅,Success,
-Tf,Trf,▦,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
-Tg,Tag,🏷️,Tag,A tag is meta-data for grouping representations.
-Ty,Typ,🧩,Type,A type is a reusable element that can be connected with other types over ports.
-Ur,Url,🔗,Unique Resource Locator,
-Ut,Unt,Ⓜ️,Unit,
-Vc,Vec,➡️,Vector,A 3d-vector (xyz) of floating point numbers.
-Vl,Val,🔢,Value,
-Vn,Vnt,🔀,Variant,
+Icon,Abr,Short,Normal,Description
+🧲,Cd,Cod,Connected,
+🔩,Cg,Cog,Connecting,
+🖇️,Co,Con,Connection,A connection between two pieces of a design.
+💬,Dc,Dsc,Description,
+✏️,Dg,Dgm,Diagram,
+📁,Di,Dir,Directory,
+🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected
+🏠,Hp,Hop,Homepage,
+🖼️,Ic,Ico,Icon,
+🆔,Id,Idn,Identification,
+🗃️,Kt,Kit,Kit,A kit is a collection of types and designs.
+🗺️,Lc,Loc,Locator,A locator is meta-data for grouping ports.
+🔍,Ld,Lod,Level of Detail,
+📛,Na,Nam,Name,
+🗿,Ob,Obj,Object,An object is a piece with a plane and a parent object (unless the piece is a root).
+⌱,On,Ori,Origin,
+⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+◳,Pn,Ple,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+✖️,Pt,Pot,Point,A 3d-point (xyz) of floating point numbers.
+📏,Qa,Qal,Quality,A quality is meta-data for decision making.
+💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+🌱,Rt,Rot,Root,The root indesign of a piece.
+🌆,Sc,Scn,Scene,A scene is a collection of objects.
+🧱,Sd,Sde,Side,A side of a piece in a connection.
+📺,SP,SPt,Screen Point,A 2d-point (xy) of integers in screen plane.
+✅,Su,Suc,Success,
+▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+🏷️,Tg,Tag,Tag,A tag is meta-data for grouping representations.
+🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
+Ⓜ️,Ut,Unt,Unit,
+➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+🔢,Vl,Val,Value,
+🔀,Vn,Vnt,Variant,

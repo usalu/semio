@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Reflection;
 using Force.DeepCloner;
 using GraphQL;
 using GraphQL.Client.Http;
@@ -284,7 +286,7 @@ public static class Constants
 //type Mutation
 //{
 //    createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
-//  updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
+//  updateLocalKitProps(directory: String!, kitMetadataInput: KitPropsInput!): UpdateLocalKitPropsMutation
 //  deleteLocalKit(directory: String!): DeleteLocalKitMutation
 //  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
 //  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
@@ -486,19 +488,19 @@ public static class Constants
 //    id: String = ""
 //}
 
-//type UpdateLocalKitMetadataMutation
+//type UpdateLocalKitPropsMutation
 //{
 //    kit: Kit
-//  error: UpdateLocalKitMetadataError
+//  error: UpdateLocalKitPropsError
 //}
 
-//type UpdateLocalKitMetadataError
+//type UpdateLocalKitPropsError
 //{
-//    code: UpdateLocalKitMetadataErrorCode!
+//    code: UpdateLocalKitPropsErrorCode!
 //  message: String
 //}
 
-//enum UpdateLocalKitMetadataErrorCode
+//enum UpdateLocalKitPropsErrorCode
 //{
 //    DIRECTORY_DOES_NOT_EXIST
 //  DIRECTORY_IS_NOT_A_DIRECTORY
@@ -508,7 +510,7 @@ public static class Constants
 //}
 
 //"""🗃️ Meta-data of a kit."""
-//input KitMetadataInput
+//input KitPropsInput
 //{
 //    name: String
 //  description: String
@@ -615,21 +617,21 @@ public static class Constants
 
 #region Utility
 
-public static class Generator
-{
-    public static string GenerateRandomId(int seed)
-    {
-        var adjectives = Resources.adjectives.Deserialize<List<string>>();
-        var animals = Resources.animals.Deserialize<List<string>>();
-        var random = new Random(seed);
-        var adjective = adjectives[random.Next(adjectives.Count)];
-        var animal = animals[random.Next(animals.Count)];
-        var number = random.Next(0, 999);
-        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
-        animal = char.ToUpper(animal[0]) + animal.Substring(1);
-        return $"{adjective}{animal}{number}";
-    }
-}
+//public static class Generator
+//{
+//    public static string GenerateRandomId(int seed)
+//    {
+//        var adjectives = Resources.adjectives.Deserialize<List<string>>();
+//        var animals = Resources.animals.Deserialize<List<string>>();
+//        var random = new Random(seed);
+//        var adjective = adjectives[random.Next(adjectives.Count)];
+//        var animal = animals[random.Next(animals.Count)];
+//        var number = random.Next(0, 999);
+//        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
+//        animal = char.ToUpper(animal[0]) + animal.Substring(1);
+//        return $"{adjective}{animal}{number}";
+//    }
+//}
 
 public static class MimeParser
 {
@@ -666,9 +668,29 @@ public static class MimeParser
 #endregion
 
 #region Models
-
-public class IdAttribute : Attribute
+[AttributeUsage(AttributeTargets.Field)]
+public class PropAttribute : Attribute
 {
+    public PropAttribute(string emoji, string abr, string short_, string description)
+    {
+        Emoji = emoji;
+        Abr = abr;
+        Short = short_;
+        Description = description;
+    }
+
+    public string Emoji { get; set; }
+    public string Abr { get; set; }
+    public string Short { get; set; }
+    public string Description { get; set; }
+
+
+}
+public class IdAttribute : PropAttribute
+{
+    public IdAttribute(string emoji, string abr, string s, string description) : base(emoji, abr, s, description)
+    {
+    }
 }
 
 public class StringListLengthAttribute : ValidationAttribute
@@ -701,14 +723,63 @@ public interface IDeepCloneable<T>
     T DeepClone();
 }
 
-public abstract record Base<T>() : IDeepCloneable<T> where T : Base<T>
+public abstract class Model<T>() : IDeepCloneable<T> where T : Model<T>
 {
-    public T DeepClone()
+    public override bool Equals(object obj)
     {
-        return this.DeepClone() as T;
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        var other = (T)obj;
+        return GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .All(prop => PropertiesAreEqual(prop, this, other));
     }
 
-    public (bool, List<string>) validate()
+    private bool PropertiesAreEqual(PropertyInfo prop, object obj1, object obj2)
+    {
+        var value1 = prop.GetValue(obj1);
+        var value2 = prop.GetValue(obj2);
+
+        if (value1 is IEnumerable enumerable1 && value2 is IEnumerable enumerable2)
+        {
+            return enumerable1.Cast<object>().SequenceEqual(enumerable2.Cast<object>());
+        }
+
+        return Equals(value1, value2);
+    }
+
+    public override int GetHashCode()
+    {
+        return GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Select(prop => prop.GetValue(this))
+            .Where(value => value != null)
+            .Aggregate(17, (current, value) => current * 31 + value.GetHashCode());
+    }
+
+    public static bool operator ==(Model<T> left, Model<T> right)
+    {
+        if (ReferenceEquals(left, right))
+            return true;
+
+        if (left is null || right is null)
+            return false;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Model<T> left, Model<T> right)
+    {
+        return !(left == right);
+    }
+
+    public T DeepClone()
+    {
+        if (DeepClonerExtensions.DeepClone(this) is not T deepClone)
+            throw new Exception("DeepClone failed.");
+        return deepClone;
+    }
+
+    public (bool, List<string>) Validate()
     {
         var validationErrors = new List<ValidationResult>();
         var valid = Validator.TryValidateObject(this, new ValidationContext(this), validationErrors,
@@ -716,180 +787,186 @@ public abstract record Base<T>() : IDeepCloneable<T> where T : Base<T>
         return (valid, validationErrors.Select(e => e.ErrorMessage).ToList());
 
     }
-
-public record Representation() : Base<Representation>
-{
-    [Id]
-    [StringLength(Constants.UrlLengthLimit)]
-    [Required(ErrorMessage= "Unique Resource Locator (URL) is required.")]
-    public string Url { get; set; } = "";
-    [StringLength(Constants.NameLengthLimit)]
-    [Required(ErrorMessage = "Multipurpose Internet Mail Extensions (MIME) is required.")]
-    public string Mime { get; set; } = "";
-    [StringLength(Constants.NameLengthLimit)]
-    public string Lod { get; set; } = "";
-    [StringListLength(Constants.NameLengthLimit)]
-    public List<string> Tags { get; set; } = new();
-
 }
 
-public record Locator() : Base<Locator>
-{ 
-    [Required]
-    public string Group { get; set; } = "";
-    public string Subgroup { get; set; } = "";
-
-}
-
-public record ScreenPoint() : Base<ScreenPoint>
-{
-    public int X { get; set; } = 0;
-    public int Y { get; set; } = 0;
-
-}
-
-public record Point() : Base<Point>
-{
-    public float X { get; set; } = 0;
-    public float Y { get; set; } = 0;
-    public float Z { get; set; } = 0;
-
-    public bool IsZero()
+public class Representation() : Model<Representation>
     {
-        return X == 0 && Y == 0 && Z == 0;
+        /// <summary>
+        /// 🔗 Unique Resource Locator (URL) of the representation. Either a relative file path or link. This can be a relative or absolute file path or a link.
+        /// </summary>
+        [Id("🔗", "Ur", "Url", "Unique Resource Locator (URL) of the representation. Either a relative file path or link.")]
+        [StringLength(Constants.UrlLengthLimit)]
+        [Required(ErrorMessage = "Unique Resource Locator (URL) is required.")]
+        public string Url { get; set; } = "";
+
+        [StringLength(Constants.NameLengthLimit)]
+        [Required(ErrorMessage = "Multipurpose Internet Mail Extensions (MIME) is required.")]
+        public string Mime { get; set; } = "";
+
+        [StringLength(Constants.NameLengthLimit)]
+        public string Lod { get; set; } = "";
+
+        [StringListLength(Constants.NameLengthLimit)]
+        public List<string> Tags { get; set; } = new();
+
     }
-}
 
-public record Vector() : Base<Vector>
-{
-    public float X { get; set; } = 0;
-    public float Y { get; set; } = 0;
-    public float Z { get; set; } = 0;
-
-    public bool IsZero()
+    public class Locator() : Model<Locator>
     {
-        return X == 0 && Y == 0 && Z == 0;
+        [Required] public string Group { get; set; } = "";
+        public string Subgroup { get; set; } = "";
+
     }
-}
 
-public record Plane() : Base<Plane>
-{
-    public Point Origin { get; set; } = new();
-    public Vector XAxis { get; set; } = new();
-    public Vector YAxis { get; set; } = new();
+    public class ScreenPoint() : Model<ScreenPoint>
+    {
+        public int X { get; set; } = 0;
+        public int Y { get; set; } = 0;
 
-}
+    }
 
-public record Port() : Base<Port>
-{
-    public string Id { get; set; } = "";
-    public Point Point { get; set; } = new();
-    public Vector Direction { get; set; } = new();
-    public List<Locator> Locators { get; set; } = new();
-}
+    public class Point() : Model<Point>
+    {
+        public float X { get; set; } = 0;
+        public float Y { get; set; } = 0;
+        public float Z { get; set; } = 0;
 
-public record PortId() : Base<PortId>
-{
-    public string Id { get; set; } = "";
+        public bool IsZero()
+        {
+            return X == 0 && Y == 0 && Z == 0;
+        }
+    }
 
-}
+    public class Vector() : Model<Vector>
+    {
+        public float X { get; set; } = 0;
+        public float Y { get; set; } = 0;
+        public float Z { get; set; } = 0;
 
+        public bool IsZero()
+        {
+            return X == 0 && Y == 0 && Z == 0;
+        }
+    }
 
-public record Quality() : Base<Quality>
-{
-    public string Name { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Unit { get; set; } = "";
-    public string Definition { get; set; } = "";
+    public class Plane() : Model<Plane>
+    {
+        public Point Origin { get; set; } = new();
+        public Vector XAxis { get; set; } = new();
+        public Vector YAxis { get; set; } = new();
 
-}
+    }
 
-public record Type() : Base<Type>
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Icon { get; set; } = "";
-    public string Variant { get; set; } = "";
-    public string Unit { get; set; } = "";
-    public List<Representation> Representations { get; set; } = new();
-    public List<Port> Ports { get; set; } = new();
-    public List<Quality> Qualities { get; set; } = new();
+    public class Port() : Model<Port>
+    {
+        public string Id { get; set; } = "";
+        public Point Point { get; set; } = new();
+        public Vector Direction { get; set; } = new();
+        public List<Locator> Locators { get; set; } = new();
+    }
 
-}
+    public class PortId() : Model<PortId>
+    {
+        public string Id { get; set; } = "";
 
-public record TypeId() : Base<TypeId>
-{
-    public string Name { get; set; } = "";
-    public string Variant { get; set; } = "";
-
-}
-
-public record PieceRoot() : Base<PieceRoot>
-{
-    public Plane Plane { get; set; } = new();
-}
-
-public record PieceDiagram() : Base<PieceDiagram>
-{
-    public ScreenPoint Point { get; set; } = new();
-
-}
-
-public record Piece() : Base<Piece>
-{
-    public string Id { get; set; } = "";
-    public TypeId Type { get; set; } = new();
-    public PieceRoot? Root { get; set; } = null;
-    public PieceDiagram Diagram { get; set; } = new();
-
-}
-
-public record PieceId() : Base<PieceId>
-{
-    public string Id { get; set; } = "";
-
-}
-
-public record SidePieceType() : Base<SidePieceType>
-{
-    public PortId Port { get; set; } = new();
-
-}
-
-public record SidePiece() : Base<SidePiece>
-{
-    public string Id { get; set; } = "";
-    public SidePieceType Type { get; set; } = new();
-
-    
-}
-
-public record Side() : Base<Side>
-{
-    public SidePiece Piece { get; set; } = new();
-
-}
+    }
 
 
-public record Connection() : Base<Connection>
-{
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
-    public float Offset { get; set; } = 0;
-    public float Rotation { get; set; } = 0;
+    public class Quality() : Model<Quality>
+    {
+        public string Name { get; set; } = "";
+        public string Value { get; set; } = "";
+        public string Unit { get; set; } = "";
+        public string Definition { get; set; } = "";
 
-}
+    }
 
-public record Design() : Base<Design>
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Icon { get; set; } = "";
-    public string Variant { get; set; } = "";
-    public string Unit { get; set; } = "";
-    public List<Piece> Pieces { get; set; } = new();
-    public List<Connection> Connections { get; set; } = new();
-    public List<Quality> Qualities { get; set; } = new();
+    public class Type() : Model<Type>
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Variant { get; set; } = "";
+        public string Unit { get; set; } = "";
+        public List<Representation> Representations { get; set; } = new();
+        public List<Port> Ports { get; set; } = new();
+        public List<Quality> Qualities { get; set; } = new();
+
+    }
+
+    public class TypeId() : Model<TypeId>
+    {
+        public string Name { get; set; } = "";
+        public string Variant { get; set; } = "";
+
+    }
+
+    public class PieceRoot() : Model<PieceRoot>
+    {
+        public Plane Plane { get; set; } = new();
+    }
+
+    public class PieceDiagram() : Model<PieceDiagram>
+    {
+        public ScreenPoint Point { get; set; } = new();
+
+    }
+
+    public class Piece() : Model<Piece>
+    {
+        public string Id { get; set; } = "";
+        public TypeId Type { get; set; } = new();
+        public PieceRoot? Root { get; set; } = null;
+        public PieceDiagram Diagram { get; set; } = new();
+
+    }
+
+    public class PieceId() : Model<PieceId>
+    {
+        public string Id { get; set; } = "";
+
+    }
+
+    public class SidePieceType() : Model<SidePieceType>
+    {
+        public PortId Port { get; set; } = new();
+
+    }
+
+    public class SidePiece() : Model<SidePiece>
+    {
+        public string Id { get; set; } = "";
+        public SidePieceType Type { get; set; } = new();
+
+
+    }
+
+    public class Side() : Model<Side>
+    {
+        public SidePiece Piece { get; set; } = new();
+
+    }
+
+
+    public class Connection() : Model<Connection>
+    {
+        public Side Connected { get; set; } = new();
+        public Side Connecting { get; set; } = new();
+        public float Offset { get; set; } = 0;
+        public float Rotation { get; set; } = 0;
+
+    }
+
+    public class Design() : Model<Design>
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Variant { get; set; } = "";
+        public string Unit { get; set; } = "";
+        public List<Piece> Pieces { get; set; } = new();
+        public List<Connection> Connections { get; set; } = new();
+        public List<Quality> Qualities { get; set; } = new();
 
     public Design Flatten(Type[] types = null)
     {
@@ -909,420 +986,383 @@ public record Design() : Base<Design>
     }
 }
 
-public record DesignId() : Base<DesignId>
-{
-    public string Name { get; set; } = "";
-    public string Variant { get; set; } = "";
-
-}
-
-
-public record Kit() : Base<Kit>
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Icon { get; set; } = "";
-    public string Url { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public List<Type> Types { get; set; } = new();
-    public List<Design> Designs { get; set; } = new();
-
-}
-
-public record KitProps : Base<KitProps>
-{
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Url { get; set; }
-    public string? Homepage { get; set; }
-}
-
-#endregion
-
-public static class Serializer
-{
-    public static string Serialize(this object obj)
+    public class DesignId() : Model<DesignId>
     {
-        return JsonConvert.SerializeObject(
-            obj, Formatting.Indented, new JsonSerializerSettings
+        public string Name { get; set; } = "";
+        public string Variant { get; set; } = "";
+
+    }
+
+
+    public class Kit() : Model<Kit>
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Homepage { get; set; } = "";
+        public List<Type> Types { get; set; } = new();
+        public List<Design> Designs { get; set; } = new();
+
+    }
+
+    public class KitProps : Model<KitProps>
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string? Icon { get; set; }
+        public string? Url { get; set; }
+        public string? Homepage { get; set; }
+    }
+
+    #endregion
+
+    public static class Serializer
+    {
+        public static string Serialize(this object obj)
+        {
+            return JsonConvert.SerializeObject(
+                obj, Formatting.Indented, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+        }
+    }
+
+    public static class Deserializer
+    {
+        public static T Deserialize<T>(this string json)
+        {
+            return JsonConvert.DeserializeObject<T>(
+                json, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+        }
+    }
+
+    #region Api
+
+    public class LoadLocalKitResponse
+    {
+        public Kit? Kit { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class LoadLocalKitResponseContainer
+    {
+        public LoadLocalKitResponse LoadLocalKit { get; set; }
+    }
+
+    public enum CreateLocalKitErrorCode
+    {
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_ALREADY_CONTAINS_A_KIT,
+        NO_PERMISSION_TO_CREATE_DIRECTORY,
+        NO_PERMISSION_TO_CREATE_KIT,
+        KIT_INPUT_IS_INVALID
+    }
+
+    public class CreateLocalKitError
+    {
+        public CreateLocalKitErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class CreateLocalKitResponse
+    {
+        public Kit? Kit { get; set; }
+        public CreateLocalKitError? Error { get; set; }
+    }
+
+    public class CreateLocalKitResponseContainer
+    {
+        public CreateLocalKitResponse CreateLocalKit { get; set; }
+    }
+
+    public enum UpdateLocalKitPropsErrorCode
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_UPDATE_KIT,
+        KIT_METADATA_IS_INVALID
+    }
+
+    public class UpdateLocalKitPropsError
+    {
+        public UpdateLocalKitPropsErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class UpdateLocalKitPropsResponse
+    {
+        public KitProps? Kit { get; set; }
+        public UpdateLocalKitPropsError? Error { get; set; }
+    }
+
+    public class UpdateLocalKitPropsResponseContainer
+    {
+        public UpdateLocalKitPropsResponse UpdateLocalKitProps { get; set; }
+    }
+
+    public enum DeleteLocalKitError
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_DELETE_KIT
+    }
+
+    public class DeleteLocalKitResponse
+    {
+        public DeleteLocalKitError? Error { get; set; }
+    }
+
+    public class DeleteLocalKitResponseContainer
+    {
+        public DeleteLocalKitResponse DeleteLocalKit { get; set; }
+    }
+
+    public enum AddTypeToLocalKitErrorCode
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_MODIFY_KIT,
+        TYPE_INPUT_IS_INVALID
+    }
+
+    public class AddTypeToLocalKitError
+    {
+        public AddTypeToLocalKitErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class AddTypeToLocalKitResponse
+    {
+        public Type? Type { get; set; }
+        public AddTypeToLocalKitError? Error { get; set; }
+    }
+
+    public class AddTypeToLocalKitResponseContainer
+    {
+        public AddTypeToLocalKitResponse AddTypeToLocalKit { get; set; }
+    }
+
+    public enum RemoveTypeFromLocalKitErrorCode
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_MODIFY_KIT,
+        TYPE_DOES_NOT_EXIST,
+        DESIGN_DEPENDS_ON_TYPE
+    }
+
+    public class RemoveTypeFromLocalKitError
+    {
+        public RemoveTypeFromLocalKitErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class RemoveTypeFromLocalKitResponse
+    {
+        public RemoveTypeFromLocalKitError? Error { get; set; }
+    }
+
+    public class RemoveTypeFromLocalKitResponseContainer
+    {
+        public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
+    }
+
+    public enum AddDesignToLocalKitErrorCode
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_MODIFY_KIT,
+        DESIGN_INPUT_IS_INVALID
+    }
+
+    public class AddDesignToLocalKitError
+    {
+        public AddDesignToLocalKitErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class AddDesignToLocalKitResponse
+    {
+        public Design? Design { get; set; }
+        public AddDesignToLocalKitError? Error { get; set; }
+    }
+
+    public class AddDesignToLocalKitResponseContainer
+    {
+        public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
+    }
+
+    public enum RemoveDesignFromLocalKitErrorCode
+    {
+        DIRECTORY_DOES_NOT_EXIST,
+        DIRECTORY_IS_NOT_A_DIRECTORY,
+        DIRECTORY_HAS_NO_KIT,
+        NO_PERMISSION_TO_MODIFY_KIT,
+        DESIGN_DOES_NOT_EXIST
+    }
+
+    public class RemoveDesignFromLocalKitError
+    {
+        public RemoveDesignFromLocalKitErrorCode Code { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class RemoveDesignFromLocalKitResponse
+    {
+        public RemoveDesignFromLocalKitError? Error { get; set; }
+    }
+
+    public class RemoveDesignFromLocalKitResponseContainer
+    {
+        public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
+    }
+
+
+    public class Api : ICloneable
+    {
+        public Api()
+        {
+            Endpoint = "http://127.0.0.1:5052/graphql";
+            Token = "";
+            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+        }
+
+        public Api(string endpoint, string token)
+        {
+            Endpoint = endpoint;
+            Token = token;
+            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+        }
+
+        public GraphQLHttpClient Client { get; set; }
+        public string Endpoint { get; set; }
+        public string Token { get; set; }
+
+        public object Clone()
+        {
+            return new Api(Endpoint, Token);
+        }
+
+        public override string ToString()
+        {
+            return $"Api(Endpoint: {Endpoint}, Token: {Token})";
+        }
+
+        public LoadLocalKitResponse? LoadLocalKit(string directory)
+        {
+            var query = new GraphQLRequest
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-    }
-}
+                Query = Resources.loadLocalKit,
+                OperationName = "LoadLocalKit",
+                Variables = new { directory }
+            };
+            var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.LoadLocalKit;
+        }
 
-public static class Deserializer
-{
-    public static T Deserialize<T>(this string json)
-    {
-        return JsonConvert.DeserializeObject<T>(
-            json, new JsonSerializerSettings
+        public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
+        {
+            var query = new GraphQLRequest
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-    }
-}
+                Query = Resources.createLocalKit,
+                OperationName = "CreateLocalKit",
+                Variables = new { directory, kit }
+            };
+            var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.CreateLocalKit;
+        }
 
-#region Api
-
-public class LoadLocalKitResponse
-{
-    public Kit? Kit { get; set; }
-    public string? Error { get; set; }
-}
-
-public class LoadLocalKitResponseContainer
-{
-    public LoadLocalKitResponse LoadLocalKit { get; set; }
-}
-
-public enum CreateLocalKitErrorCode
-{
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_ALREADY_CONTAINS_A_KIT,
-    NO_PERMISSION_TO_CREATE_DIRECTORY,
-    NO_PERMISSION_TO_CREATE_KIT,
-    KIT_INPUT_IS_INVALID
-}
-
-public class CreateLocalKitError
-{
-    public CreateLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class CreateLocalKitResponse
-{
-    public Kit? Kit { get; set; }
-    public CreateLocalKitError? Error { get; set; }
-}
-
-public class CreateLocalKitResponseContainer
-{
-    public CreateLocalKitResponse CreateLocalKit { get; set; }
-}
-
-public enum UpdateLocalKitMetadataErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_UPDATE_KIT,
-    KIT_METADATA_IS_INVALID
-}
-
-public class UpdateLocalKitMetadataError
-{
-    public UpdateLocalKitMetadataErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class UpdateLocalKitMetadataResponse
-{
-    public KitMetadata? Kit { get; set; }
-    public UpdateLocalKitMetadataError? Error { get; set; }
-}
-
-public class UpdateLocalKitMetadataResponseContainer
-{
-    public UpdateLocalKitMetadataResponse UpdateLocalKitMetadata { get; set; }
-}
-
-public enum DeleteLocalKitError
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_DELETE_KIT
-}
-
-public class DeleteLocalKitResponse
-{
-    public DeleteLocalKitError? Error { get; set; }
-}
-
-public class DeleteLocalKitResponseContainer
-{
-    public DeleteLocalKitResponse DeleteLocalKit { get; set; }
-}
-
-public enum AddTypeToLocalKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    TYPE_INPUT_IS_INVALID
-}
-
-public class AddTypeToLocalKitError
-{
-    public AddTypeToLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class AddTypeToLocalKitResponse
-{
-    public Type? Type { get; set; }
-    public AddTypeToLocalKitError? Error { get; set; }
-}
-
-public class AddTypeToLocalKitResponseContainer
-{
-    public AddTypeToLocalKitResponse AddTypeToLocalKit { get; set; }
-}
-
-public enum RemoveTypeFromLocalKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    TYPE_DOES_NOT_EXIST,
-    DESIGN_DEPENDS_ON_TYPE
-}
-
-public class RemoveTypeFromLocalKitError
-{
-    public RemoveTypeFromLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class RemoveTypeFromLocalKitResponse
-{
-    public RemoveTypeFromLocalKitError? Error { get; set; }
-}
-
-public class RemoveTypeFromLocalKitResponseContainer
-{
-    public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
-}
-
-public enum AddDesignToLocalKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    DESIGN_INPUT_IS_INVALID
-}
-
-public class AddDesignToLocalKitError
-{
-    public AddDesignToLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class AddDesignToLocalKitResponse
-{
-    public Design? Design { get; set; }
-    public AddDesignToLocalKitError? Error { get; set; }
-}
-
-public class AddDesignToLocalKitResponseContainer
-{
-    public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
-}
-
-public enum RemoveDesignFromLocalKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    DESIGN_DOES_NOT_EXIST
-}
-
-public class RemoveDesignFromLocalKitError
-{
-    public RemoveDesignFromLocalKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class RemoveDesignFromLocalKitResponse
-{
-    public RemoveDesignFromLocalKitError? Error { get; set; }
-}
-
-public class RemoveDesignFromLocalKitResponseContainer
-{
-    public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
-}
-
-public enum DesignToSceneFromLocalKitResponseErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_READ_KIT,
-    DESIGN_DOES_NOT_EXIST
-}
-
-public class DesignToSceneFromLocalKitResponseError
-{
-    public DesignToSceneFromLocalKitResponseErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
-public class DesignToSceneFromLocalKitResponse
-{
-    public Scene? Scene { get; set; }
-    public DesignToSceneFromLocalKitResponseError? Error { get; set; }
-}
-
-public class DesignToSceneFromLocalKitResponseContainer
-{
-    public DesignToSceneFromLocalKitResponse DesignToSceneFromLocalKit { get; set; }
-}
-
-public class Api : ICloneable
-{
-    public Api()
-    {
-        Endpoint = "http://127.0.0.1:5052/graphql";
-        Token = "";
-        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-    }
-
-    public Api(string endpoint, string token)
-    {
-        Endpoint = endpoint;
-        Token = token;
-        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-        Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
-    }
-
-    public GraphQLHttpClient Client { get; set; }
-    public string Endpoint { get; set; }
-    public string Token { get; set; }
-
-    public object Clone()
-    {
-        return new Api(Endpoint, Token);
-    }
-
-    public override string ToString()
-    {
-        return $"Api(Endpoint: {Endpoint}, Token: {Token})";
-    }
-
-    public LoadLocalKitResponse? LoadLocalKit(string directory)
-    {
-        var query = new GraphQLRequest
+        public UpdateLocalKitPropsResponse? UpdateLocalKitProps(string directory, KitProps kit)
         {
-            Query = Resources.loadLocalKit,
-            OperationName = "LoadLocalKit",
-            Variables = new { directory }
-        };
-        var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.LoadLocalKit;
+            var query = new GraphQLRequest
+            {
+                Query = Resources.updateLocalKitMetadata,
+                OperationName = "UpdateLocalKitProps",
+                Variables = new { directory, kit }
+            };
+            var response = Client.SendQueryAsync<UpdateLocalKitPropsResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.UpdateLocalKitProps;
+        }
+
+        public DeleteLocalKitResponse? DeleteLocalKit(string directory)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = Resources.deleteLocalKit,
+                OperationName = "DeleteLocalKit",
+                Variables = new { directory }
+            };
+            var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.DeleteLocalKit;
+        }
+
+        public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = Resources.addTypeToLocalKit,
+                OperationName = "AddTypeToLocalKit",
+                Variables = new { directory, type }
+            };
+            var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.AddTypeToLocalKit;
+        }
+
+        public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = Resources.removeTypeFromLocalKit,
+                OperationName = "RemoveTypeFromLocalKit",
+                Variables = new { directory, type }
+            };
+            var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.RemoveTypeFromLocalKit;
+        }
+
+        public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = Resources.addDesignToLocalKit,
+                OperationName = "AddDesignToLocalKit",
+                Variables = new { directory, design }
+            };
+            var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.AddDesignToLocalKit;
+        }
+
+        public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
+        {
+            var query = new GraphQLRequest
+            {
+                Query = Resources.removeDesignFromLocalKit,
+                OperationName = "RemoveDesignFromLocalKit",
+                Variables = new { directory, design }
+            };
+            var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
+            if (response.Errors != null) return null;
+            return response.Data.RemoveDesignFromLocalKit;
+        }
+
     }
 
-    public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.createLocalKit,
-            OperationName = "CreateLocalKit",
-            Variables = new { directory, kit }
-        };
-        var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.CreateLocalKit;
-    }
-
-    public UpdateLocalKitMetadataResponse? UpdateLocalKitMetadata(string directory, KitMetadata kit)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.updateLocalKitMetadata,
-            OperationName = "UpdateLocalKitMetadata",
-            Variables = new { directory, kit }
-        };
-        var response = Client.SendQueryAsync<UpdateLocalKitMetadataResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.UpdateLocalKitMetadata;
-    }
-
-    public DeleteLocalKitResponse? DeleteLocalKit(string directory)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.deleteLocalKit,
-            OperationName = "DeleteLocalKit",
-            Variables = new { directory }
-        };
-        var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.DeleteLocalKit;
-    }
-
-    public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.addTypeToLocalKit,
-            OperationName = "AddTypeToLocalKit",
-            Variables = new { directory, type }
-        };
-        var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.AddTypeToLocalKit;
-    }
-
-    public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.removeTypeFromLocalKit,
-            OperationName = "RemoveTypeFromLocalKit",
-            Variables = new { directory, type }
-        };
-        var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.RemoveTypeFromLocalKit;
-    }
-
-    public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.addDesignToLocalKit,
-            OperationName = "AddDesignToLocalKit",
-            Variables = new { directory, design }
-        };
-        var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.AddDesignToLocalKit;
-    }
-
-    public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.removeDesignFromLocalKit,
-            OperationName = "RemoveDesignFromLocalKit",
-            Variables = new { directory, design }
-        };
-        var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.RemoveDesignFromLocalKit;
-    }
-
-    public DesignToSceneFromLocalKitResponse? DesignToSceneFromLocalKit(string directory,
-        DesignId design)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.designToSceneFromLocalKit,
-            OperationName = "DesignToSceneFromLocalKit",
-            Variables = new { directory, design }
-        };
-        var response = Client.SendQueryAsync<DesignToSceneFromLocalKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.DesignToSceneFromLocalKit;
-    }
-}
 
 #endregion
