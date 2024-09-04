@@ -811,6 +811,17 @@ public class ModelPropAttribute : PropAttribute
 
 public abstract class Model
 {
+    public override string ToString()
+    {
+        var modelAttribute = GetType().GetCustomAttribute<ModelAttribute>();
+        var nonEmptyIdProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
+                        (string)p.GetValue(this) != "")
+            .Select(p => p.Name);
+        var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this)).Cast<string>().ToList();
+        return $"{modelAttribute.Abbreviation}({string.Join(", ", nonEmptyIdPropertiesValues)})";
+
+    }
     public override bool Equals(object obj)
     {
         if (obj == null || GetType() != obj.GetType())
@@ -1000,7 +1011,7 @@ public class Type : Model
     /// <summary>
     /// 🔀 An optional variant of the type.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.")]
+    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID)]
     public string Variant { get; set; } = "";
     /// <summary>
     /// Ⓜ️ The length unit for all distance-related information of the type.
