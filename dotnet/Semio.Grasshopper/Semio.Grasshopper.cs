@@ -1,21 +1,27 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Force.DeepCloner;
 using GH_IO.Serialization;
 using GraphQL;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Newtonsoft.Json.Linq;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Semio.Grasshopper;
 
@@ -1736,9 +1742,9 @@ public class TypeGoo : ModelGoo<Type>
 
 #region Params
 
-public abstract class SemioPersistentParam<T,TU> : GH_PersistentParam<T> where T : ModelGoo<TU> where TU: Model, new()
+public abstract class ModelParam<T,U> : GH_PersistentParam<T> where T : ModelGoo<U> where U: Model, new()
 {
-    internal SemioPersistentParam() : base(typeof(TU).Name, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(TU), typeof(ModelAttribute))).Code, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(TU), typeof(ModelAttribute))).Description, "semio", "Params")
+    internal ModelParam() : base(typeof(U).Name, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, "semio", "Params")
     {
     }
 
@@ -1753,35 +1759,24 @@ public abstract class SemioPersistentParam<T,TU> : GH_PersistentParam<T> where T
     }
 }
 
-public class RepresentationParam : SemioPersistentParam<RepresentationGoo,Representation>
+public class RepresentationParam : ModelParam<RepresentationGoo,Representation>
 {
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
     protected override Bitmap Icon => Resources.representation_24x24;
 
 }
 
-//public class LocatorParam : SemioPersistentParam<LocatorGoo>
+//public class LocatorParam : ModelParam<LocatorGoo>
 //{
-//    public LocatorParam() : base("Locator", "Lc", "", "semio", "Params")
-//    {
-//    }
+//   
 
 //    public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
 
 //    protected override Bitmap Icon => Resources.locator_24x24;
 
-//    protected override GH_GetterResult Prompt_Singular(ref LocatorGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<LocatorGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
 //}
 
-//public class PortParam : SemioPersistentParam<PortGoo>
+//public class PortParam : ModelParam<PortGoo>
 //{
 //    public PortParam() : base("Port", "Po", "", "semio", "Params")
 //    {
@@ -1802,7 +1797,7 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo,Repres
 //    }
 //}
 
-//public class QualityParam : SemioPersistentParam<QualityGoo>
+//public class QualityParam : ModelParam<QualityGoo>
 //{
 //    public QualityParam() : base("Quality", "Ql", "", "semio", "Params")
 //    {
@@ -1823,7 +1818,7 @@ public class RepresentationParam : SemioPersistentParam<RepresentationGoo,Repres
 //    }
 //}
 
-public class TypeParam : SemioPersistentParam<TypeGoo,Type>
+public class TypeParam : ModelParam<TypeGoo,Type>
 {
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 
@@ -1831,7 +1826,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 
 }
 
-//public class ScreenPointParam : SemioPersistentParam<ScreenPointGoo>
+//public class ScreenPointParam : ModelParam<ScreenPointGoo>
 //{
 //    public ScreenPointParam() : base("Screen Point", "SP", "", "semio", "Params")
 //    {
@@ -1852,7 +1847,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 //    }
 //}
 
-//public class PieceParam : SemioPersistentParam<PieceGoo>
+//public class PieceParam : ModelParam<PieceGoo>
 //{
 //    public PieceParam() : base("Piece", "Pc", "", "semio", "Params")
 //    {
@@ -1873,7 +1868,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 //    }
 //}
 
-//public class SideParam : SemioPersistentParam<SideGoo>
+//public class SideParam : ModelParam<SideGoo>
 //{
 //    public SideParam() : base("Side", "Sd", "", "semio", "Params")
 //    {
@@ -1894,7 +1889,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 //    }
 //}
 
-//public class ConnectionParam : SemioPersistentParam<ConnectionGoo>
+//public class ConnectionParam : ModelParam<ConnectionGoo>
 //{
 //    public ConnectionParam() : base("Connection", "Co", "", "semio", "Params")
 //    {
@@ -1915,7 +1910,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 //    }
 //}
 
-//public class DesignParam : SemioPersistentParam<DesignGoo>
+//public class DesignParam : ModelParam<DesignGoo>
 //{
 //    public DesignParam() : base("Design", "Dn", "", "semio", "Params")
 //    {
@@ -1936,7 +1931,7 @@ public class TypeParam : SemioPersistentParam<TypeGoo,Type>
 //    }
 //}
 
-//public class KitParam : SemioPersistentParam<KitGoo>
+//public class KitParam : ModelParam<KitGoo>
 //{
 //    public KitParam() : base("Kit", "Kt", "", "semio", "Params")
 //    {
@@ -1971,52 +1966,55 @@ public abstract class Component : GH_Component
 
 #region Modelling
 
-public abstract class ModelComponent<T> : Component where T : Model
+public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V> where U : ModelGoo<V> where V : Model, new()
 {
-    internal static ModelAttribute ModelAttribute => typeof(T).GetCustomAttribute<ModelAttribute>();
-    internal static Dictionary<string, PropertyInfo> Properties => typeof(T).GetProperties().ToDictionary(p => p.Name);
-    internal static Dictionary<string,PropAttribute> PropAttributes => typeof(T).GetProperties().ToDictionary(p => p.Name, p => p.GetCustomAttribute<PropAttribute>());
-    protected ModelComponent() : base($"Model {typeof(T).Name}", $"~{ModelAttribute.Abbreviation}", $"Construct, deconstruct or modify a {typeof(T).Name.ToLower()}",  "Modelling")
+    public static System.Type ParamType => typeof(T);
+    internal static System.Type GooType => typeof(U);
+    internal static System.Type ModelType => typeof(V);
+    internal static ModelAttribute ModelAttribute => ModelType.GetCustomAttribute<ModelAttribute>();
+    internal static Dictionary<string, PropertyInfo> Properties => ModelType.GetProperties().ToDictionary(p => p.Name);
+    internal static Dictionary<string, PropAttribute> PropAttributes => Properties.ToDictionary(p => p.Key, p => p.Value.GetCustomAttribute<PropAttribute>());
+    internal static Dictionary<string, bool> IsList => Properties.ToDictionary(p => p.Key, p => p.Value.PropertyType.IsGenericType && p.Value.PropertyType.GetGenericTypeDefinition() == typeof(List<>));
+    internal static Dictionary<string, System.Type> ItemTypes => Properties.ToDictionary(p => p.Key, p => IsList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
+    internal static Dictionary<string,System.Type> ParamTypes => Properties.ToDictionary(p => p.Key, p =>
+    {
+        if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
+            return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Param");
+        if (ItemTypes[p.Key] == typeof(string))
+            return typeof(Param_String);
+        throw new NotImplementedException();
+
+    });
+    internal static Dictionary<string, System.Type> GooTypes => Properties.ToDictionary(p => p.Key, p =>
+        {
+            if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
+                return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Goo");
+            if (ItemTypes[p.Key] == typeof(string))
+                return typeof(GH_String);
+            throw new NotImplementedException();
+        });
+    protected ModelComponent() : base($"Model {ModelType.Name}", $"~{ModelAttribute.Abbreviation}", $"Construct, deconstruct or modify a {ModelType.Name.ToLower()}",  "Modelling")
     {
     }
 
     protected void AddModelParameters(dynamic pManager, bool isOutput = false)
     {
-        var modelParamType = Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + typeof(T).Name + "Param");
-        var modelParam = (IGH_Param)Activator.CreateInstance(modelParamType);
-        var description = isOutput ? $"The constructed or modified {typeof(T).Name.ToLower()}." : $"An optional {typeof(T).Name.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, typeof(T).Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?", description, GH_ParamAccess.item);
+        var modelParam = (IGH_Param)Activator.CreateInstance(ParamType);
+        var description = isOutput ? $"The constructed or modified {ModelType.Name.ToLower()}." : $"An optional {ModelType.Name.ToLower()} to deconstruct or modify.";
+        pManager.AddParameter(modelParam, ModelType.Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?", description, GH_ParamAccess.item);
         
         foreach (var kvp in Properties)
         {
             var name = kvp.Key;
-            var property = kvp.Value;
             var propAttribute = PropAttributes[name];
-           
-            var isList = property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
-            var t = isList ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
-
-            switch (t)
-            {
-                case var _ when t == typeof(string):
-                    pManager.AddTextParameter(name, propAttribute.Code, propAttribute.Description, isList ? GH_ParamAccess.list : GH_ParamAccess.item);
-                    break;
-                case var _ when t.IsSubclassOf(typeof(Model)):
-                    var tParamType = Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + t.Name + "Param");
-                    var tParam = (IGH_Param)Activator.CreateInstance(tParamType);
-                    pManager.AddParameter(tParam, name, propAttribute.Code, propAttribute.Description, isList ? GH_ParamAccess.list : GH_ParamAccess.item);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            var param = (IGH_Param)Activator.CreateInstance(ParamTypes[name]);
+            pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description, IsList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
         }
 
         if (!isOutput)
-        {
-            pManager.AddBooleanParameter("Validate", "Vd", $"Check if the {typeof(T).Name.ToLower()} is valid.", GH_ParamAccess.item, true);
             for (var i = 0; i < pManager.ParamCount; i++)
                 ((GH_InputParamManager)pManager)[i].Optional = true;
-        }
+        
 
     }
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -2030,26 +2028,113 @@ public abstract class ModelComponent<T> : Component where T : Model
     }
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-
-        dynamic modelGoo = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetType(GetType().Namespace + "." + typeof(T).Name + "Goo"));
-        var validate = true;
+        dynamic modelGoo = Activator.CreateInstance(GooType);
 
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
 
-        DA.GetData(this.Params.Input.Count - 1, ref validate);
+        foreach (var kvp in Properties)
+        {
+            var name = kvp.Key;
+            var property = kvp.Value;
+            var isList = IsList[name];
+            var itemType = ItemTypes[name];
+            dynamic value;
 
-        var( isValid, errors) = (Tuple<bool,List<string>>)modelGoo.Value.Validate();
-        foreach (var error in errors)
-            AddRuntimeMessage(validate ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Remark, error);
-        if (validate && !isValid) return;
+            switch (itemType)
+            {
+                case var _ when itemType == typeof(string):
+                    value = isList ? new List<string>() : "";
+                    if (isList)
+                    {
+                        if (DA.GetDataList(name, value))
+                            property.SetValue(modelGoo.Value, value);
+                    }
+                    else
+                    {
+                        if (DA.GetData(name, ref value))
+                            property.SetValue(modelGoo.Value, value.Value);
+                    }
+                    break;
+                case var _ when itemType.IsSubclassOf(typeof(Model)):
+                    var gooType = GooTypes[name];
+                    var listGooType = typeof(List<>).MakeGenericType(gooType);
+                    var valueType = isList ? listGooType : gooType;
+                    value = Activator.CreateInstance(valueType);
+                    if (isList)
+                    {
+                        if (DA.GetDataList(name, value))
+                        {
+                            var listType = Properties[name].PropertyType;
+                            var castedListValue = Activator.CreateInstance(listType);
+                            var addMethod = listType.GetMethod("Add");
+
+                            foreach (var item in ((IEnumerable<object>)value).Cast<dynamic>().Select(v => v.Value))
+                                addMethod.Invoke(castedListValue, new[] { item });
+                            
+                            property.SetValue(modelGoo.Value, castedListValue);
+                        }
+                    }
+                    else
+                    {
+                        if (DA.GetData(name, ref value))
+                            property.SetValue(modelGoo.Value, value.Value);
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
+
+            }
+
+        }
+
+
+        //var( isValid, errors) = (Tuple<bool,List<string>>)modelGoo.Value.Validate();
+        //foreach (var error in errors)
+        //    AddRuntimeMessage(validate ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Remark, error);
+        //if (validate && !isValid) return;
 
 
         DA.SetData(0, modelGoo.Duplicate());
+
+        foreach (var kvp in Properties)
+        {
+            var name = kvp.Key;
+            var property = kvp.Value;
+            var isList = IsList[name];
+            var itemType = ItemTypes[name];
+            if (itemType.IsSubclassOf(typeof(Model)))
+            {
+                if (isList)
+                {
+                    var modelList = ((IEnumerable<object>)property.GetValue(modelGoo.Value))
+                        .Cast<Model>()
+                        .Select(p => Activator.CreateInstance(GooTypes[name]))
+                        .ToList();
+                    var values = property.GetValue(modelGoo.Value);
+                    for (int i = 0; i < modelList.Count; i++)
+                    {
+                        dynamic item = modelList[i];
+                        item.Value = values[i].DeepClone();
+                    }
+
+                    DA.SetDataList(name, modelList);
+                }
+                else
+                    DA.SetData(name, property.GetValue(modelGoo.Value));
+            }
+            else
+            {
+                if (isList)
+                    DA.SetDataList(name, property.GetValue(modelGoo.Value));
+                else
+                    DA.SetData(name, property.GetValue(modelGoo.Value));
+            }
+        }
     }
 
 }
-public class RepresentationComponent : ModelComponent<Representation>
+public class RepresentationComponent : ModelComponent<RepresentationParam,RepresentationGoo,Representation>
 {
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
 
@@ -2299,69 +2384,13 @@ public class RepresentationComponent : ModelComponent<Representation>
 //    }
 //}
 
-public class TypeComponent : ModelComponent<Type>
+public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
-    //    public TypeComponent()
-    //        : base("Model Type", "~Typ",
-    //            "Construct, deconstruct or modify a type.",
-    //            "semio", "Modelling")
-    //    {
-    //    }
 
-        public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+    public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
 
         protected override Bitmap Icon => Resources.type_modify_24x24;
 
-    //    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    //    {
-    //        pManager.AddParameter(new TypeParam(), "Type", "Ty?",
-    //            "Optional type to deconstruct or modify.", GH_ParamAccess.item);
-    //        pManager[0].Optional = true;
-    //        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
-    //        pManager[1].Optional = true;
-    //        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
-    //        pManager[2].Optional = true;
-    //        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-    //        pManager[3].Optional = true;
-    //        pManager.AddTextParameter("Variant", "Vn?",
-    //            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
-    //            GH_ParamAccess.item);
-    //        pManager[4].Optional = true;
-    //        pManager.AddTextParameter("Unit", "Ut",
-    //            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
-    //            GH_ParamAccess.item);
-    //        pManager[5].Optional = true;
-    //        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type.",
-    //            GH_ParamAccess.list);
-    //        pManager[6].Optional = true;
-    //        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-    //        pManager[7].Optional = true;
-    //        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-    //            "Optional qualities of the type. A quality is meta-data for decision making.",
-    //            GH_ParamAccess.list);
-    //        pManager[8].Optional = true;
-    //    }
-
-    //    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    //    {
-    //        pManager.AddParameter(new TypeParam(), "Type", "Ty",
-    //            "Constructed or modified type.", GH_ParamAccess.item);
-    //        pManager.AddTextParameter("Name", "Na", "Name of the type.", GH_ParamAccess.item);
-    //        pManager.AddTextParameter("Description", "Dc?", "Optional description of the type.", GH_ParamAccess.item);
-    //        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the type.", GH_ParamAccess.item);
-    //        pManager.AddTextParameter("Variant", "Vn?",
-    //            "Optional variant of the type. No variant means the default variant. There can be only one default variant.",
-    //            GH_ParamAccess.item);
-    //        pManager.AddTextParameter("Unit", "Ut",
-    //            "Unit of the type. By default the document unit is used. Otherwise meters will be used.",
-    //            GH_ParamAccess.item);
-    //        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+", "Representations of the type",
-    //            GH_ParamAccess.list);
-    //        pManager.AddParameter(new PortParam(), "Ports", "Po+", "Ports of the type.", GH_ParamAccess.list);
-    //        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-    //            "Optional qualities of the type. A quality is meta-data for decision making.",
-    //            GH_ParamAccess.list);
-    //    }
 
     //    protected override void SolveInstance(IGH_DataAccess DA)
     //    {
