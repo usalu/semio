@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using Force.DeepCloner;
 using GH_IO.Serialization;
-using GraphQL;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Newtonsoft.Json.Linq;
 using Rhino;
-using Rhino.DocObjects;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Semio.Grasshopper;
 
@@ -36,6 +25,7 @@ namespace Semio.Grasshopper;
 // The invalid check happen twice and code is duplicated.
 
 #region Copilot
+
 //public interface IDeepCloneable<T>
 //{
 //    T DeepClone();
@@ -323,7 +313,6 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
-
 
 //public class Quality : IDeepCloneable<Quality>, IEntity
 //{
@@ -651,7 +640,6 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-
 //public class Connection : IDeepCloneable<Connection>, IEntity
 //{
 //    public Connection()
@@ -829,7 +817,6 @@ namespace Semio.Grasshopper;
 //    }
 //}
 
-
 //public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
 //{
 //    public ObjectParent()
@@ -998,6 +985,7 @@ namespace Semio.Grasshopper;
 //        return false;
 //    }
 //}
+
 #endregion
 
 #region Utility
@@ -1038,14 +1026,14 @@ public static class Utility
         return unit;
     }
 
-    public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
+    public static Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
     {
         var thetaRad = RhinoMath.ToRadians(theta);
         var orientation = Transform.Rotation(Vector3d.YAxis, yAxis, Point3d.Origin);
         var rotation = Transform.Rotation(thetaRad, yAxis, Point3d.Origin);
         var xAxis = Vector3d.XAxis;
         xAxis.Transform(rotation * orientation);
-        return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
+        return new Plane(origin, xAxis, yAxis);
     }
 }
 
@@ -1123,6 +1111,7 @@ public static class Utility
 #endregion
 
 #region Goos
+
 public abstract class ModelGoo<T> : GH_Goo<T> where T : Model, new()
 {
     public ModelGoo()
@@ -1134,12 +1123,13 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model, new()
     {
         Value = value;
     }
+
     public override bool IsValid { get; }
 
     public override string TypeName => Value.GetType().Name;
 
-    //public override string TypeDescription { get; }
-    public override string TypeDescription => ((ModelAttribute)Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
+    public override string TypeDescription =>
+        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
 
     public override IGH_Goo Duplicate()
     {
@@ -1148,7 +1138,10 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model, new()
         return duplicate;
     }
 
-    public override string ToString() => Value.ToString();
+    public override string ToString()
+    {
+        return Value.ToString();
+    }
 
     public override bool Write(GH_IWriter writer)
     {
@@ -1162,83 +1155,46 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model, new()
         return base.Read(reader);
     }
 }
+
 public class RepresentationGoo : ModelGoo<Representation>
 {
-
 }
 
 public class TypeGoo : ModelGoo<Type>
 {
-
 }
 
-//public class LocatorGoo : GH_Goo<Locator>
-//{
-//    public LocatorGoo()
-//    {
-//        Value = new Locator();
-//    }
+public class LocatorGoo : ModelGoo<Locator>
+{
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Group);
+            target = (Q)ptr;
+            return true;
+        }
 
-//    public LocatorGoo(Locator locator)
-//    {
-//        Value = locator;
-//    }
+        return false;
+    }
 
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Locator";
-//    public override string TypeDescription { get; }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
 
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new LocatorGoo((Locator)Value.DeepClone());
-//    }
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Locator
+            {
+                Group = str
+            };
+            return true;
+        }
 
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Locator", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Locator").Deserialize<Locator>();
-//        return base.Read(reader);
-//    }
-
-//    public override bool CastTo<Q>(ref Q target)
-//    {
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-//        {
-//            object ptr = new GH_String(Value.Group);
-//            target = (Q)ptr;
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public override bool CastFrom(object source)
-//    {
-//        if (source == null) return false;
-
-//        string str = null;
-//        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-//        {
-//            Value = new Locator
-//            {
-//                Group = str
-//            };
-//            return true;
-//        }
-
-//        return false;
-//    }
-//}
+        return false;
+    }
+}
 
 //public class PortGoo : GH_Goo<Port>
 //{
@@ -1714,7 +1670,6 @@ public class TypeGoo : ModelGoo<Type>
 //    public override string TypeName => "Kit";
 //    public override string TypeDescription { get; }
 
-
 //    public override IGH_Goo Duplicate()
 //    {
 //        return new KitGoo((Kit)Value.DeepClone());
@@ -1742,10 +1697,22 @@ public class TypeGoo : ModelGoo<Type>
 
 #region Params
 
-public abstract class ModelParam<T,U> : GH_PersistentParam<T> where T : ModelGoo<U> where U: Model, new()
+public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model, new()
 {
-    internal ModelParam() : base(typeof(U).Name, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code, ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, "semio", "Params")
+    internal ModelParam() : base(typeof(U).Name,
+        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
+        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, "semio",
+        "Params")
     {
+    }
+
+    protected override Bitmap Icon
+    {
+        get
+        {
+            var iconName = $"{typeof(U).Name.ToLower()}_24x24";
+            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
+        }
     }
 
     protected override GH_GetterResult Prompt_Singular(ref T value)
@@ -1759,22 +1726,15 @@ public abstract class ModelParam<T,U> : GH_PersistentParam<T> where T : ModelGoo
     }
 }
 
-public class RepresentationParam : ModelParam<RepresentationGoo,Representation>
+public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
-    protected override Bitmap Icon => Resources.representation_24x24;
-
 }
 
-//public class LocatorParam : ModelParam<LocatorGoo>
-//{
-//   
-
-//    public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
-
-//    protected override Bitmap Icon => Resources.locator_24x24;
-
-//}
+public class LocatorParam : ModelParam<LocatorGoo, Locator>
+{
+    public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
+}
 
 //public class PortParam : ModelParam<PortGoo>
 //{
@@ -1818,11 +1778,9 @@ public class RepresentationParam : ModelParam<RepresentationGoo,Representation>
 //    }
 //}
 
-public class TypeParam : ModelParam<TypeGoo,Type>
+public class TypeParam : ModelParam<TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
-
-    protected override Bitmap Icon => Resources.type_24x24;
 
 }
 
@@ -1966,57 +1924,70 @@ public abstract class Component : GH_Component
 
 #region Modelling
 
-public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V> where U : ModelGoo<V> where V : Model, new()
+public abstract class ModelComponent<T, U, V> : Component
+    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model, new()
 {
+    protected ModelComponent() : base($"Model {ModelType.Name}", $"~{ModelAttribute.Abbreviation}",
+        $"Construct, deconstruct or modify a {ModelType.Name.ToLower()}", "Modelling")
+    {
+    }
+
     public static System.Type ParamType => typeof(T);
     internal static System.Type GooType => typeof(U);
     internal static System.Type ModelType => typeof(V);
     internal static ModelAttribute ModelAttribute => ModelType.GetCustomAttribute<ModelAttribute>();
     internal static Dictionary<string, PropertyInfo> Properties => ModelType.GetProperties().ToDictionary(p => p.Name);
-    internal static Dictionary<string, PropAttribute> PropAttributes => Properties.ToDictionary(p => p.Key, p => p.Value.GetCustomAttribute<PropAttribute>());
-    internal static Dictionary<string, bool> IsList => Properties.ToDictionary(p => p.Key, p => p.Value.PropertyType.IsGenericType && p.Value.PropertyType.GetGenericTypeDefinition() == typeof(List<>));
-    internal static Dictionary<string, System.Type> ItemTypes => Properties.ToDictionary(p => p.Key, p => IsList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
-    internal static Dictionary<string,System.Type> ParamTypes => Properties.ToDictionary(p => p.Key, p =>
+
+    internal static Dictionary<string, PropAttribute> PropAttributes =>
+        Properties.ToDictionary(p => p.Key, p => p.Value.GetCustomAttribute<PropAttribute>());
+
+    internal static Dictionary<string, bool> IsList => Properties.ToDictionary(p => p.Key,
+        p => p.Value.PropertyType.IsGenericType && p.Value.PropertyType.GetGenericTypeDefinition() == typeof(List<>));
+
+    internal static Dictionary<string, System.Type> ItemTypes => Properties.ToDictionary(p => p.Key,
+        p => IsList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
+
+    internal static Dictionary<string, System.Type> ParamTypes => Properties.ToDictionary(p => p.Key, p =>
     {
         if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
             return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Param");
         if (ItemTypes[p.Key] == typeof(string))
             return typeof(Param_String);
         throw new NotImplementedException();
-
     });
+
     internal static Dictionary<string, System.Type> GooTypes => Properties.ToDictionary(p => p.Key, p =>
-        {
-            if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
-                return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Goo");
-            if (ItemTypes[p.Key] == typeof(string))
-                return typeof(GH_String);
-            throw new NotImplementedException();
-        });
-    protected ModelComponent() : base($"Model {ModelType.Name}", $"~{ModelAttribute.Abbreviation}", $"Construct, deconstruct or modify a {ModelType.Name.ToLower()}",  "Modelling")
     {
-    }
+        if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
+            return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Goo");
+        if (ItemTypes[p.Key] == typeof(string))
+            return typeof(GH_String);
+        throw new NotImplementedException();
+    });
 
     protected void AddModelParameters(dynamic pManager, bool isOutput = false)
     {
         var modelParam = (IGH_Param)Activator.CreateInstance(ParamType);
-        var description = isOutput ? $"The constructed or modified {ModelType.Name.ToLower()}." : $"An optional {ModelType.Name.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, ModelType.Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?", description, GH_ParamAccess.item);
-        
+        var description = isOutput
+            ? $"The constructed or modified {ModelType.Name.ToLower()}."
+            : $"An optional {ModelType.Name.ToLower()} to deconstruct or modify.";
+        pManager.AddParameter(modelParam, ModelType.Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?",
+            description, GH_ParamAccess.item);
+
         foreach (var kvp in Properties)
         {
             var name = kvp.Key;
             var propAttribute = PropAttributes[name];
             var param = (IGH_Param)Activator.CreateInstance(ParamTypes[name]);
-            pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description, IsList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
+            pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description,
+                IsList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
         }
 
         if (!isOutput)
             for (var i = 0; i < pManager.ParamCount; i++)
                 ((GH_InputParamManager)pManager)[i].Optional = true;
-        
-
     }
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         AddModelParameters(pManager);
@@ -2026,6 +1997,7 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
     {
         AddModelParameters(pManager, true);
     }
+
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         dynamic modelGoo = Activator.CreateInstance(GooType);
@@ -2055,6 +2027,7 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
                         if (DA.GetData(name, ref value))
                             property.SetValue(modelGoo.Value, value.Value);
                     }
+
                     break;
                 case var _ when itemType.IsSubclassOf(typeof(Model)):
                     var gooType = GooTypes[name];
@@ -2071,7 +2044,7 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
 
                             foreach (var item in ((IEnumerable<object>)value).Cast<dynamic>().Select(v => v.Value))
                                 addMethod.Invoke(castedListValue, new[] { item });
-                            
+
                             property.SetValue(modelGoo.Value, castedListValue);
                         }
                     }
@@ -2080,21 +2053,18 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
                         if (DA.GetData(name, ref value))
                             property.SetValue(modelGoo.Value, value.Value);
                     }
+
                     break;
                 default:
                     throw new NotImplementedException();
-
             }
-
         }
 
         modelGoo.Value = ProcessModel(modelGoo.Value);
 
-        //var( isValid, errors) = (Tuple<bool,List<string>>)modelGoo.Value.Validate();
-        //foreach (var error in errors)
-        //    AddRuntimeMessage(validate ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Remark, error);
-        //if (validate && !isValid) return;
-
+        var (isValid, errors) = (Tuple<bool, List<string>>)modelGoo.Value.Validate();
+        foreach (var error in errors)
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, error);
 
         DA.SetData(0, modelGoo.Duplicate());
 
@@ -2113,7 +2083,7 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
                         .Select(p => Activator.CreateInstance(GooTypes[name]))
                         .ToList();
                     var values = property.GetValue(modelGoo.Value);
-                    for (int i = 0; i < modelList.Count; i++)
+                    for (var i = 0; i < modelList.Count; i++)
                     {
                         dynamic item = modelList[i];
                         item.Value = values[i].DeepClone();
@@ -2122,7 +2092,9 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
                     DA.SetDataList(name, modelList);
                 }
                 else
+                {
                     DA.SetData(name, property.GetValue(modelGoo.Value));
+                }
             }
             else
             {
@@ -2133,18 +2105,23 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
             }
         }
     }
-
     protected virtual V ProcessModel(V model)
     {
         return model;
     }
-
+    protected override Bitmap Icon
+    {
+        get
+        {
+            var iconName = $"{typeof(V).Name.ToLower()}_modify_24x24";
+            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
+        }
+    }
 }
-public class RepresentationComponent : ModelComponent<RepresentationParam,RepresentationGoo,Representation>
+
+public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
-
-    protected override Bitmap Icon => Resources.representation_modify_24x24;
 
     protected override Representation ProcessModel(Representation model)
     {
@@ -2152,7 +2129,6 @@ public class RepresentationComponent : ModelComponent<RepresentationParam,Repres
             model.Mime = MimeParser.ParseFromUrl(model.Url);
         return model;
     }
-
 }
 
 //public class LocatorComponent : ModelComponent<Locator>
@@ -2366,10 +2342,7 @@ public class RepresentationComponent : ModelComponent<RepresentationParam,Repres
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
-
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
-
-    protected override Bitmap Icon => Resources.type_modify_24x24;
 
     protected override Type ProcessModel(Type model)
     {
@@ -2383,6 +2356,7 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
             {
                 model.Unit = "m";
             }
+
         return model;
     }
 }

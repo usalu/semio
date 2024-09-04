@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
+using FluentValidation;
 using Force.DeepCloner;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -760,16 +762,40 @@ public abstract class TextAttribute : PropAttribute
         LengthLimit = lengthLimit;
     }
 
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    private ValidationResult ValidateString(string str)
     {
-        if (value is not string str)
-            throw new Exception("The value must be a string.");
         if (str.Length == 0 && Importance != PropImportance.OPTIONAL)
             return new ValidationResult("The text must not be empty.");
         if (str.Length > LengthLimit)
             return new ValidationResult(
-                $"The text must be at most {LengthLimit} characters long.");
+                $"The text must be at most {LengthLimit} characters long. The provided text({str.Substring(0,10)}...) has {str.Length} characters.");
         return ValidationResult.Success;
+    }
+
+    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    {
+        var isStr = value is string;
+        var isList = value is List<string>;
+        if (!isStr && !isList)
+            throw new Exception($"The value({value}) must be a string or a list of strings.");
+        if (isList)
+        {
+            var errors = new List<string>();
+            foreach (var s in (List<string>)value)
+            {
+                var result = ValidateString(s);
+                if (result != ValidationResult.Success)
+                    errors.Add(result.ErrorMessage);
+            }
+            if (errors.Count > 0)
+                return new ValidationResult(string.Join("\n", errors));
+        }
+        else
+        {
+            return ValidateString((string)value);
+        }
+        return ValidationResult.Success;
+
     }
 }
 public class NameAttribute : TextAttribute
@@ -802,6 +828,14 @@ public class DescriptionAttribute : TextAttribute
 public class ModelPropAttribute : PropAttribute
 {
     public ModelPropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
+        abbreviation, description, importance)
+    {
+    }
+}
+
+public class IntPropAttribute : PropAttribute
+{
+    public IntPropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL) : base(emoji, code,
         abbreviation, description, importance)
     {
     }
@@ -883,6 +917,15 @@ public abstract class Model
     }
 }
 
+
+public class ModelValidator : AbstractValidator<Model>
+{
+    public CustomerValidator()
+    {
+        RuleFor(customer => customer.Surname).NotNull();
+    }
+}
+
 /// <summary>
 /// 💾 A representation is an url that describes a type for a certain level of detail and tags.
 /// </summary>
@@ -903,33 +946,46 @@ public class Representation : Model
     [Name("🏷️", "Mm", "Mim", "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.", PropImportance.REQUIRED)]
     public string Mime { get; set; } = "";
     /// <summary>
-    /// 🔍 An optional Level of Detail/Development/Design of the representation.
+    /// 🔍 The optional Level of Detail/Development/Design (LoD) of the representation.
     /// </summary>
 
-    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design of the representation.")]
+    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design (LoD) of the representation.")]
     public string Lod { get; set; } = "";
     /// <summary>
-    /// 🔖 The optional associated tags of the representation.
+    /// 🔖 Optional tags to group representations.
     /// </summary>
 
-    [Name("🔖", "Tg*", "Tags", "The optional associated tags of the representation.")]
+    [Name("🔖", "Tg*", "Tags", "Optional tags to group representations.")]
     public List<string> Tags { get; set; } = new();
 }
+[Model("🗺️","Lc","Loc","A locator is metadata for grouping ports.")]
+public class Locator : Model
+{
+    /// <summary>
+    /// 👪 The group of the locator.
+    /// </summary>
+    [Name("👪", "Gr", "Grp", "The group of the locator.", PropImportance.ID)]
+    public string Group { get; set; } = "";
+    /// <summary>
+    /// 📌 An optional sub-group of the locator. No sub-group means true.
+    /// </summary>
+    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.", PropImportance.ID)]
+    public string Subgroup { get; set; } = "";
 
-//public class Locator() : Model
-//{
+}
 
-//    public string Group { get; set; } = "";
-//    public string Subgroup { get; set; } = "";
+/// <summary>
+/// 📺 A 2d-point (xy) of integers in screen plane.
+/// </summary>
+[Model("📺", "SP", "SPt", "A 2d-point (xy) of integers in screen plane.")]
+public class ScreenPoint : Model
+{
+    [IntProp("📺", "X", "XCo", "The x-coordinate of the screen point.", PropImportance.REQUIRED)]
+    public int X { get; set; } = 0;
+    [IntProp("📺", "Y", "YCo", "The y-coordinate of the screen point.", PropImportance.REQUIRED)]
+    public int Y { get; set; } = 0;
 
-//}
-
-//public class ScreenPoint() : Model
-//{
-//    public int X { get; set; } = 0;
-//    public int Y { get; set; } = 0;
-
-//}
+}
 
 //public class Point() : Model
 //{
@@ -994,7 +1050,7 @@ public class Representation : Model
 public class Type : Model
 {
     /// <summary>
-    /// 📛 The name of the type.
+    /// 📛 Name of the type.
     /// </summary>
     [Name("📛", "Na", "Nam",  "The name of the type.",PropImportance.ID)]
     public string Name { get; set; } = "";

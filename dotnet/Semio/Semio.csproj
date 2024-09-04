@@ -58,6 +58,9 @@
     <PackageReference Include="DeepCloner">
       <Version>0.10.4</Version>
     </PackageReference>
+    <PackageReference Include="FluentValidation">
+      <Version>11.9.2</Version>
+    </PackageReference>
     <PackageReference Include="GraphQL.Client">
       <Version>6.1.0</Version>
     </PackageReference>
