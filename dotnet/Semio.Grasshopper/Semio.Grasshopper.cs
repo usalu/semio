@@ -2088,6 +2088,7 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
 
         }
 
+        modelGoo.Value = ProcessModel(modelGoo.Value);
 
         //var( isValid, errors) = (Tuple<bool,List<string>>)modelGoo.Value.Validate();
         //foreach (var error in errors)
@@ -2133,6 +2134,11 @@ public abstract class ModelComponent<T,U,V> : Component where T : ModelParam<U,V
         }
     }
 
+    protected virtual V ProcessModel(V model)
+    {
+        return model;
+    }
+
 }
 public class RepresentationComponent : ModelComponent<RepresentationParam,RepresentationGoo,Representation>
 {
@@ -2140,39 +2146,13 @@ public class RepresentationComponent : ModelComponent<RepresentationParam,Repres
 
     protected override Bitmap Icon => Resources.representation_modify_24x24;
 
-   
+    protected override Representation ProcessModel(Representation model)
+    {
+        if (model.Mime == "")
+            model.Mime = MimeParser.ParseFromUrl(model.Url);
+        return model;
+    }
 
-    //protected override void SolveInstance(IGH_DataAccess DA)
-    //{
-    //    var representationGoo = new RepresentationGoo();
-    //    var url = "";
-    //    var mime = "";
-    //    var lod = "";
-    //    var tags = new List<string>();
-
-    //    if (DA.GetData(0, ref representationGoo))
-    //        representationGoo = representationGoo.Duplicate() as RepresentationGoo;
-    //    if (DA.GetData(1, ref url))
-    //        representationGoo.Value.Url = url;
-    //    if (!DA.GetData(2, ref mime))
-    //    {
-    //        if (representationGoo.Value.Mime == "")
-    //            representationGoo.Value.Mime = MimeParser.ParseFromUrl(representationGoo.Value.Url);
-    //    }
-    //    else
-    //        representationGoo.Value.Mime = mime;
-    //    if (DA.GetData(3, ref lod))
-    //        representationGoo.Value.Lod = lod;
-    //    if (DA.GetDataList(4, tags))
-    //        representationGoo.Value.Tags = tags;
-
-
-    //    DA.SetData(0, representationGoo.Duplicate());
-    //    DA.SetData(1, representationGoo.Value.Url);
-    //    DA.SetData(2, representationGoo.Value.Mime);
-    //    DA.SetData(3, representationGoo.Value.Lod);
-    //    DA.SetDataList(4, representationGoo.Value.Tags);
-    //}
 }
 
 //public class LocatorComponent : ModelComponent<Locator>
@@ -2389,95 +2369,22 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
 
-        protected override Bitmap Icon => Resources.type_modify_24x24;
+    protected override Bitmap Icon => Resources.type_modify_24x24;
 
-
-    //    protected override void SolveInstance(IGH_DataAccess DA)
-    //    {
-    //        var typeGoo = new TypeGoo();
-    //        var name = "";
-    //        var description = "";
-    //        var icon = "";
-    //        var variant = "";
-    //        var unit = "";
-    //        var representationGoos = new List<RepresentationGoo>();
-    //        var portGoos = new List<PortGoo>();
-    //        var qualityGoos = new List<QualityGoo>();
-
-    //        if (DA.GetData(0, ref typeGoo))
-    //            typeGoo = typeGoo.Duplicate() as TypeGoo;
-    //        if (DA.GetData(1, ref name))
-    //            typeGoo.Value.Name = name;
-    //        if (DA.GetData(2, ref description))
-    //            typeGoo.Value.Description = description;
-    //        if (DA.GetData(3, ref icon))
-    //            typeGoo.Value.Icon = icon;
-    //        if (DA.GetData(4, ref variant))
-    //            typeGoo.Value.Variant = variant;
-    //        if (!DA.GetData(5, ref unit))
-    //            try
-    //            {
-    //                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-    //                typeGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
-    //            }
-    //            catch (Exception e)
-    //            {
-    //                typeGoo.Value.Unit = "m";
-    //            }
-    //        else
-    //            typeGoo.Value.Unit = unit;
-
-    //        if (DA.GetDataList(6, representationGoos))
-    //            typeGoo.Value.Representations = representationGoos.Select(r => r.Value).ToList();
-    //        if (DA.GetDataList(7, portGoos))
-    //            typeGoo.Value.Ports = portGoos.Select(p => p.Value).ToList();
-    //        if (DA.GetDataList(8, qualityGoos))
-    //            typeGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
-
-    //        var isValidInput = true;
-    //        if (typeGoo.Value.Name == "")
-    //        {
-    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a name.");
-    //            isValidInput = false;
-    //        }
-
-    //        // currently impossible
-    //        if (typeGoo.Value.Unit == "")
-    //        {
-    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs a unit.");
-    //            isValidInput = false;
-    //        }
-
-    //        if (!Utility.IsValidUnit(typeGoo.Value.Unit))
-    //        {
-    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
-    //            isValidInput = false;
-    //        }
-
-    //        if (typeGoo.Value.Representations.Count == 0)
-    //        {
-    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one representation.");
-    //            isValidInput = false;
-    //        }
-
-    //        if (typeGoo.Value.Ports.Count == 0)
-    //        {
-    //            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A type needs at least one port.");
-    //            isValidInput = false;
-    //        }
-
-    //        if (!isValidInput) return;
-
-    //        DA.SetData(0, typeGoo.Duplicate());
-    //        DA.SetData(1, typeGoo.Value.Name);
-    //        DA.SetData(2, typeGoo.Value.Description);
-    //        DA.SetData(3, typeGoo.Value.Icon);
-    //        DA.SetData(4, typeGoo.Value.Variant);
-    //        DA.SetData(5, typeGoo.Value.Unit);
-    //        DA.SetDataList(6, typeGoo.Value.Representations.Select(r => new RepresentationGoo(r.DeepClone())));
-    //        DA.SetDataList(7, typeGoo.Value.Ports.Select(p => new PortGoo(p.DeepClone())));
-    //        DA.SetDataList(8, typeGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
-    //    }
+    protected override Type ProcessModel(Type model)
+    {
+        if (model.Unit == "")
+            try
+            {
+                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
+                model.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+            }
+            catch (Exception e)
+            {
+                model.Unit = "m";
+            }
+        return model;
+    }
 }
 
 //public class ScreenPointComponent : Component
