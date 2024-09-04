@@ -2,10 +2,12 @@ Emoji,Code,Abbreviation,Name,Description
 🧲,Cd,Cod,Connected,The connected piece of the side.
 🔩,Cg,Cog,Connecting,The connecting piece of the side.
 🖇️,Co,Con,Connection,A connection between two pieces in a design.
+🖇️,Co*,Cons,Connections,The optional connections in a design.
 💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
 ✏️,Dg,Dgm,Diagram,All diagram-related information of the piece.
 📁,Di?,Dir,Directory,An optional directory where to find the kit.
 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+🏙️,Dn*,Dsns,Designs,The designs of the kit.
 👪,Gr,Grp,Group,The group of the locator.
 🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
 🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
@@ -18,14 +20,15 @@ Emoji,Code,Abbreviation,Name,Description
 ⌱,Og,Org,Origin,The origin of the plane.
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+🔌,Po+,Pors,Ports,The ports of the type.
 ◳,Pn,Ple,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+◳,Pn,Ple,Plane,The plane of the piece. When pieces are connected only one piece can have a plane.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-🌱,Rt,Rot,Root,The root-related information of a piece.
 🧱,Sd,Sde,Side,A side of a piece in a connection.
 📌,SG,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
-📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the diagram of the piece.
+📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
 ✅,Su,Suc,Success,{{NAME}} was successful.
 ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 🔖,Tg*,Tags,Tags,Optional tags to group representations.

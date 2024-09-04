@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Types.Transforms;
+using Newtonsoft.Json.Linq;
 using Rhino;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
@@ -1160,11 +1162,6 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 public class RepresentationGoo : ModelGoo<Representation>
 {
 }
-
-public class TypeGoo : ModelGoo<Type>
-{
-}
-
 public class LocatorGoo : ModelGoo<Locator>
 {
     public override bool CastTo<Q>(ref Q target)
@@ -1278,111 +1275,43 @@ public class LocatorGoo : ModelGoo<Locator>
 //    }
 //}
 
-//public class QualityGoo : GH_Goo<Quality>
-//{
-//    public QualityGoo()
-//    {
-//        Value = new Quality();
-//    }
+public class QualityGoo : ModelGoo<Quality>
+{
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Name);
+            target = (Q)ptr;
+            return true;
+        }
 
-//    public QualityGoo(Quality quality)
-//    {
-//        Value = quality;
-//    }
+        return false;
+    }
 
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Quality";
-//    public override string TypeDescription { get; }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
 
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new QualityGoo((Quality)Value.DeepClone());
-//    }
+        string str;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Quality
+            {
+                Name = str
+            };
+            return true;
+        }
 
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
+        return false;
+    }
+}
 
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Quality", Value.Serialize());
-//        return base.Write(writer);
-//    }
+public class TypeGoo : ModelGoo<Type>
+{
+}
 
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Quality").Deserialize<Quality>();
-//        return base.Read(reader);
-//    }
 
-//    public override bool CastTo<Q>(ref Q target)
-//    {
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-//        {
-//            object ptr = new GH_String(Value.Name);
-//            target = (Q)ptr;
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public override bool CastFrom(object source)
-//    {
-//        if (source == null) return false;
-
-//        string str;
-//        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-//        {
-//            Value = new Quality
-//            {
-//                Name = str
-//            };
-//            return true;
-//        }
-
-//        return false;
-//    }
-//}
-
-//public class TypeGoo : GH_Goo<Type>
-//{
-//    public TypeGoo()
-//    {
-//        Value = new Type();
-//    }
-
-//    public TypeGoo(Type type)
-//    {
-//        Value = type;
-//    }
-
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Type";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new TypeGoo((Type)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Type", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Type").Deserialize<Type>();
-//        return base.Read(reader);
-//    }
 //}
 
 //public class ScreenPointGoo : GH_Goo<ScreenPoint>
@@ -1758,26 +1687,12 @@ public class LocatorParam : ModelParam<LocatorGoo, Locator>
 //    }
 //}
 
-//public class QualityParam : ModelParam<QualityGoo>
-//{
-//    public QualityParam() : base("Quality", "Ql", "", "semio", "Params")
-//    {
-//    }
+public class QualityParam : ModelParam<QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("F2F6F2F9-7F0E-4F0F-9F0C-7F6F6F6F6F6F");
 
-//    public override Guid ComponentGuid => new("F2F6F2F9-7F0E-4F0F-9F0C-7F6F6F6F6F6F");
+}
 
-//    protected override Bitmap Icon => Resources.quality_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref QualityGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<QualityGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
 
 public class TypeParam : ModelParam<TypeGoo, Type>
 {
@@ -1928,72 +1843,54 @@ public abstract class Component : GH_Component
 public abstract class ModelComponent<T, U, V> : Component
     where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
 {
-    protected ModelComponent() : base($"Model {ModelType.Name}", $"~{ModelAttribute.Abbreviation}",
-        $"Construct, deconstruct or modify a {ModelType.Name.ToLower()}", "Modelling")
+    public static string NameM;
+    public static System.Type TypeM;
+    public static System.Type GooM;
+    public static System.Type ParamM;
+    public static ModelAttribute ModelM;
+    public static ImmutableDictionary<string, PropertyInfo> PropertyM;
+    public static ImmutableDictionary<string, PropAttribute> PropM;
+    public static ImmutableDictionary<string, bool> IsPropertyList;
+    public static ImmutableDictionary<string, System.Type> PropertyItemType;
+    public static ImmutableDictionary<string, bool> IsPropertyModel;
+
+    static ModelComponent()
+    {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMeta = Semio.Meta.Model;
+        var dummyGrasshopper = Meta.Goo;
+
+        NameM = typeof(V).Name;
+        TypeM = Semio.Meta.Type[NameM];
+        GooM = Meta.Goo[NameM];
+        ParamM = Meta.Param[NameM];
+        ModelM = Semio.Meta.Model[NameM];
+        PropertyM = Semio.Meta.Property[NameM];
+        PropM = Semio.Meta.Prop[NameM];
+        IsPropertyList = Semio.Meta.IsPropertyList[NameM];
+        PropertyItemType = Semio.Meta.PropertyItemType[NameM];
+        IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
+    }
+    
+    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
+        $"Construct, deconstruct or modify a {NameM.ToLower()}", "Modelling")
     {
     }
 
-    public static System.Type ParamType => typeof(T);
-    internal static System.Type GooType => typeof(U);
-    internal static System.Type ModelType => typeof(V);
-    internal static ModelAttribute ModelAttribute => ModelType.GetCustomAttribute<ModelAttribute>();
-    internal static Dictionary<string, PropertyInfo> Properties => ModelType.GetProperties().ToDictionary(p => p.Name);
-
-    internal static Dictionary<string, PropAttribute> PropAttributes =>
-        Properties.ToDictionary(p => p.Key, p => p.Value.GetCustomAttribute<PropAttribute>());
-
-    internal static Dictionary<string, bool> IsPropertyList => Properties.ToDictionary(p => p.Key,
-        p => p.Value.PropertyType.IsGenericType && p.Value.PropertyType.GetGenericTypeDefinition() == typeof(List<>));
-
-    internal static Dictionary<string, System.Type> ItemTypes => Properties.ToDictionary(p => p.Key,
-        p => IsPropertyList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
-
-    internal static Dictionary<string,bool> IsPropertyItemTypeModel => ItemTypes.ToDictionary(p => p.Key, p =>
-    {
-        var typeToCheck = p.Value;
-        while (typeToCheck != null && typeToCheck != typeof(object))
-        {
-            var cur = typeToCheck.IsGenericType ? typeToCheck.GetGenericTypeDefinition() : typeToCheck;
-            if (typeof(Model<>) == cur)
-            {
-                return true;
-            }
-            typeToCheck = typeToCheck.BaseType;
-        }
-        return false;
-    });
-    internal static Dictionary<string, System.Type> ParamTypes => Properties.ToDictionary(p => p.Key, p =>
-    {
-        if (IsPropertyItemTypeModel[p.Key])
-            return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Param");
-        if (ItemTypes[p.Key] == typeof(string))
-            return typeof(Param_String);
-        throw new NotImplementedException();
-    });
-
-    internal static Dictionary<string, System.Type> GooTypes => Properties.ToDictionary(p => p.Key, p =>
-    {
-        if (IsPropertyItemTypeModel[p.Key])
-            return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Goo");
-        if (ItemTypes[p.Key] == typeof(string))
-            return typeof(GH_String);
-        throw new NotImplementedException();
-    });
-
     protected void AddModelParameters(dynamic pManager, bool isOutput = false)
     {
-        var modelParam = (IGH_Param)Activator.CreateInstance(ParamType);
+        var modelParam = (IGH_Param)Activator.CreateInstance(ParamM);
         var description = isOutput
-            ? $"The constructed or modified {ModelType.Name.ToLower()}."
-            : $"An optional {ModelType.Name.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, ModelType.Name, isOutput ? ModelAttribute.Code : ModelAttribute.Code + "?",
+            ? $"The constructed or modified {NameM.ToLower()}."
+            : $"An optional {NameM.ToLower()} to deconstruct or modify.";
+        pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
 
-        foreach (var kvp in Properties)
+        foreach (var kvp in PropertyM)
         {
             var name = kvp.Key;
-            var propAttribute = PropAttributes[name];
-            var param = (IGH_Param)Activator.CreateInstance(ParamTypes[name]);
+            var propAttribute = PropM[name];
+            var param = (IGH_Param)Activator.CreateInstance(Meta.Param[kvp.Key.GetType().Name]);
             pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description,
                 IsPropertyList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
         }
@@ -2015,17 +1912,19 @@ public abstract class ModelComponent<T, U, V> : Component
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        dynamic modelGoo = Activator.CreateInstance(GooType);
+        // Input
+
+        dynamic modelGoo = Activator.CreateInstance(GooM);
 
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
 
-        foreach (var kvp in Properties)
+        foreach (var kvp in PropertyM)
         {
             var name = kvp.Key;
             var property = kvp.Value;
             var isList = IsPropertyList[name];
-            var itemType = ItemTypes[name];
+            var itemType = PropertyItemType[name];
             dynamic value;
 
             switch (itemType)
@@ -2044,8 +1943,8 @@ public abstract class ModelComponent<T, U, V> : Component
                     }
 
                     break;
-                case var _ when IsPropertyItemTypeModel[name]:
-                    var gooType = GooTypes[name];
+                case var _ when IsPropertyModel[name]:
+                    var gooType = Meta.PropertyGoo[NameM][kvp.Key];
                     var listGooType = typeof(List<>).MakeGenericType(gooType);
                     var valueType = isList ? listGooType : gooType;
                     value = Activator.CreateInstance(valueType);
@@ -2053,7 +1952,7 @@ public abstract class ModelComponent<T, U, V> : Component
                     {
                         if (DA.GetDataList(name, value))
                         {
-                            var listType = Properties[name].PropertyType;
+                            var listType = PropertyM[name].PropertyType;
                             var castedListValue = Activator.CreateInstance(listType);
                             var addMethod = listType.GetMethod("Add");
 
@@ -2075,25 +1974,29 @@ public abstract class ModelComponent<T, U, V> : Component
             }
         }
 
+        // Process
+
         modelGoo.Value = ProcessModel(modelGoo.Value);
 
         var (isValid, errors) = ((bool,List<string>))modelGoo.Value.Validate();
         foreach (var error in errors)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
 
+        // Output
+
         DA.SetData(0, modelGoo.Duplicate());
 
-        foreach (var kvp in Properties)
+        foreach (var kvp in PropertyM)
         {
             var name = kvp.Key;
             var property = kvp.Value;
             var isList = IsPropertyList[name];
-            if (IsPropertyItemTypeModel[name])
+            if (IsPropertyModel[name])
             {
                 if (isList)
                 {
                     var modelList = ((IEnumerable<object>)property.GetValue(modelGoo.Value))
-                        .Select(p => Activator.CreateInstance(GooTypes[name]))
+                        .Select(p => Activator.CreateInstance(Meta.Goo[name]))
                         .ToList();
                     var values = property.GetValue(modelGoo.Value);
                     for (var i = 0; i < modelList.Count; i++)
@@ -4066,3 +3969,58 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 //#endregion
 
 //#endregion
+public static class Meta
+{
+    /// <summary>
+    /// Name of the model : Type
+    /// </summary>
+    public static readonly ImmutableDictionary<string, System.Type> Goo;
+    /// <summary>
+    /// Name of the model : Name of the property : Type
+    /// </summary>
+    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, System.Type>> PropertyGoo;
+    /// <summary>
+    /// Name of the model : Param
+    /// </summary>
+    public static readonly ImmutableDictionary<string, System.Type> Param;
+    /// <summary>
+    /// Name of the model : Name of the property : Param
+    /// </summary>
+    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, System.Type>> PropertyParam;
+    static Meta()
+    {
+        var goo = new Dictionary<string, System.Type>();
+        var propertyGoo = new Dictionary<string, Dictionary<string, System.Type>>();
+        var param = new Dictionary<string, System.Type>();
+        var propertyParam = new Dictionary<string, Dictionary<string, System.Type>>();
+        goo[nameof(String)] = typeof(GH_String);
+        goo[nameof(Boolean)] = typeof(GH_Boolean);
+        goo[nameof(Int32)] = typeof(GH_Integer);
+        goo[nameof(Single)] = typeof(GH_Number);
+        param[nameof(String)] = typeof(Param_String);
+        param[nameof(Boolean)] = typeof(Param_Boolean);
+        param[nameof(Int32)] = typeof(Param_Integer);
+        param[nameof(Single)] = typeof(Param_Number);
+        foreach (var kvp in Semio.Meta.Type)
+        {
+            var baseName = typeof(Meta).Namespace + "." + kvp.Key;
+            goo[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
+            param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
+
+            propertyGoo[kvp.Key] = new Dictionary<string, System.Type>();
+            propertyParam[kvp.Key] = new Dictionary<string, System.Type>();
+            foreach (var prop in Semio.Meta.Property[kvp.Key])
+            {
+                propertyGoo[kvp.Key][prop.Key] = goo[prop.GetType().Name];
+                propertyParam[kvp.Key][prop.Key] = param[prop.GetType().Name];
+            }
+        }
+        Goo = goo.ToImmutableDictionary();
+        PropertyGoo = propertyGoo.ToImmutableDictionary(
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+        Param = param.ToImmutableDictionary();
+        PropertyParam = propertyParam.ToImmutableDictionary(
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+    }
+
+}
