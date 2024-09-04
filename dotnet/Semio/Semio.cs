@@ -707,7 +707,7 @@ public static class MimeParser
 //🔢,Vl,Val,Value,The value of the quality.
 //🔀,Vn,Vnt,Variant,An optional variant of the {{NAME}}.
 
-public abstract class ConceptAttribute : ValidationAttribute
+public abstract class ConceptAttribute : Attribute
 {
     public ConceptAttribute(string emoji, string code, string abbreviation, string description)
     {
@@ -730,6 +730,7 @@ public class ModelAttribute : ConceptAttribute
         abbreviation, description)
     {
     }
+
 }
 
 public enum PropImportance
@@ -762,41 +763,41 @@ public abstract class TextAttribute : PropAttribute
         LengthLimit = lengthLimit;
     }
 
-    private ValidationResult ValidateString(string str)
-    {
-        if (str.Length == 0 && Importance != PropImportance.OPTIONAL)
-            return new ValidationResult("The text must not be empty.");
-        if (str.Length > LengthLimit)
-            return new ValidationResult(
-                $"The text must be at most {LengthLimit} characters long. The provided text({str.Substring(0,10)}...) has {str.Length} characters.");
-        return ValidationResult.Success;
-    }
+    //private ValidationResult ValidateString(string str)
+    //{
+    //    if (str.Length == 0 && Importance != PropImportance.OPTIONAL)
+    //        return new ValidationResult("The text must not be empty.");
+    //    if (str.Length > LengthLimit)
+    //        return new ValidationResult(
+    //            $"The text must be at most {LengthLimit} characters long. The provided text({str.Substring(0,10)}...) has {str.Length} characters.");
+    //    return ValidationResult.Success;
+    //}
 
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-    {
-        var isStr = value is string;
-        var isList = value is List<string>;
-        if (!isStr && !isList)
-            throw new Exception($"The value({value}) must be a string or a list of strings.");
-        if (isList)
-        {
-            var errors = new List<string>();
-            foreach (var s in (List<string>)value)
-            {
-                var result = ValidateString(s);
-                if (result != ValidationResult.Success)
-                    errors.Add(result.ErrorMessage);
-            }
-            if (errors.Count > 0)
-                return new ValidationResult(string.Join("\n", errors));
-        }
-        else
-        {
-            return ValidateString((string)value);
-        }
-        return ValidationResult.Success;
+    //protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    //{
+    //    var isStr = value is string;
+    //    var isList = value is List<string>;
+    //    if (!isStr && !isList)
+    //        throw new Exception($"The value({value}) must be a string or a list of strings.");
+    //    if (isList)
+    //    {
+    //        var errors = new List<string>();
+    //        foreach (var s in (List<string>)value)
+    //        {
+    //            var result = ValidateString(s);
+    //            if (result != ValidationResult.Success)
+    //                errors.Add(result.ErrorMessage);
+    //        }
+    //        if (errors.Count > 0)
+    //            return new ValidationResult(string.Join("\n", errors));
+    //    }
+    //    else
+    //    {
+    //        return ValidateString((string)value);
+    //    }
+    //    return ValidationResult.Success;
 
-    }
+    //}
 }
 public class NameAttribute : TextAttribute
 {
@@ -842,8 +843,7 @@ public class IntPropAttribute : PropAttribute
 }
 
 
-
-public abstract class Model
+public abstract class Model<T> where T : Model<T>
 {
     public override string ToString()
     {
@@ -885,7 +885,7 @@ public abstract class Model
             .Aggregate(17, (current, value) => current * 31 + value.GetHashCode());
     }
 
-    public static bool operator ==(Model left, Model right)
+    public static bool operator ==(Model<T> left, Model<T> right)
     {
         if (ReferenceEquals(left, right))
             return true;
@@ -896,42 +896,66 @@ public abstract class Model
         return left.Equals(right);
     }
 
-    public static bool operator !=(Model left, Model right)
+    public static bool operator !=(Model<T> left, Model<T> right)
     {
         return !(left == right);
     }
 
-    public Model DeepClone()
+    public Model<T> DeepClone()
     {
         if (DeepClonerExtensions.DeepClone(this) is not { } deepClone)
             throw new Exception("DeepClone failed.");
         return deepClone;
     }
 
-    public (bool, List<string>) Validate()
+    public virtual (bool, List<string>) Validate()
     {
-        var validationErrors = new List<ValidationResult>();
-        var valid = Validator.TryValidateObject(this, new ValidationContext(this), validationErrors,
-            true);
-        return (valid, validationErrors.Select(e => e.ErrorMessage).ToList());
+        var validator = new ModelValidator<T>();
+        var result = validator.Validate((T)this);
+        return (result.IsValid, result.Errors.Select(e => e.ToString()).ToList());
     }
 }
 
-
-public class ModelValidator : AbstractValidator<Model>
+public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
 {
-    public CustomerValidator()
+    public ModelValidator()
     {
-        RuleFor(customer => customer.Surname).NotNull();
+        foreach (var property in typeof(T).GetProperties())
+        {
+            if (property.PropertyType == typeof(string))
+            {
+                var textAttribute = property.GetCustomAttribute<TextAttribute>();
+
+                RuleFor(model => property.GetValue(model) as string)
+                    .NotEmpty()
+                    .When(m => textAttribute.Importance != PropImportance.OPTIONAL)
+                    .WithMessage($"The {property.Name} must not be empty.");
+
+                RuleFor(model => property.GetValue(model) as string)
+                    .MaximumLength(textAttribute.LengthLimit)
+                    .WithMessage(model =>
+                    {
+                        var value = property.GetValue(model) as string;
+                        var preview = value?.Length > 10 ? value.Substring(0, 10) + "..." : value;
+                        return $"The {property.Name} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
+                    });
+            }
+            else if (property.PropertyType == typeof(int))
+            {
+                
+            }
+            // Add more conditions for other property types as needed
+        }
     }
 }
+
 
 /// <summary>
 /// 💾 A representation is an url that describes a type for a certain level of detail and tags.
 /// </summary>
 [Model("💾", "Rp", "Rep",
     "A representation is a linked file that describes a type for a certain level of detail and tags.")]
-public class Representation : Model
+public class Representation : Model<Representation>
 {
     /// <summary>
     /// 🔗 The Unique Resource Locator (URL) to another resource outside of semio.
@@ -959,7 +983,7 @@ public class Representation : Model
     public List<string> Tags { get; set; } = new();
 }
 [Model("🗺️","Lc","Loc","A locator is metadata for grouping ports.")]
-public class Locator : Model
+public class Locator : Model<Locator>
 {
     /// <summary>
     /// 👪 The group of the locator.
@@ -978,7 +1002,7 @@ public class Locator : Model
 /// 📺 A 2d-point (xy) of integers in screen plane.
 /// </summary>
 [Model("📺", "SP", "SPt", "A 2d-point (xy) of integers in screen plane.")]
-public class ScreenPoint : Model
+public class ScreenPoint : Model<ScreenPoint>
 {
     [IntProp("📺", "X", "XCo", "The x-coordinate of the screen point.", PropImportance.REQUIRED)]
     public int X { get; set; } = 0;
@@ -1047,7 +1071,7 @@ public class ScreenPoint : Model
 /// 🧩 A type is a reusable element that can be connected with other types over ports.
 /// </summary>
 [Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
-public class Type : Model
+public class Type : Model<Type>
 {
     /// <summary>
     /// 📛 Name of the type.

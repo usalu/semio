@@ -8,6 +8,7 @@ using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel.Types.Transforms;
 using Rhino;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
@@ -1112,7 +1113,7 @@ public static class Utility
 
 #region Goos
 
-public abstract class ModelGoo<T> : GH_Goo<T> where T : Model, new()
+public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 {
     public ModelGoo()
     {
@@ -1697,7 +1698,7 @@ public class LocatorGoo : ModelGoo<Locator>
 
 #region Params
 
-public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model, new()
+public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model<U>, new()
 {
     internal ModelParam() : base(typeof(U).Name,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
@@ -1925,7 +1926,7 @@ public abstract class Component : GH_Component
 #region Modelling
 
 public abstract class ModelComponent<T, U, V> : Component
-    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model, new()
+    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
 {
     protected ModelComponent() : base($"Model {ModelType.Name}", $"~{ModelAttribute.Abbreviation}",
         $"Construct, deconstruct or modify a {ModelType.Name.ToLower()}", "Modelling")
@@ -1941,15 +1942,29 @@ public abstract class ModelComponent<T, U, V> : Component
     internal static Dictionary<string, PropAttribute> PropAttributes =>
         Properties.ToDictionary(p => p.Key, p => p.Value.GetCustomAttribute<PropAttribute>());
 
-    internal static Dictionary<string, bool> IsList => Properties.ToDictionary(p => p.Key,
+    internal static Dictionary<string, bool> IsPropertyList => Properties.ToDictionary(p => p.Key,
         p => p.Value.PropertyType.IsGenericType && p.Value.PropertyType.GetGenericTypeDefinition() == typeof(List<>));
 
     internal static Dictionary<string, System.Type> ItemTypes => Properties.ToDictionary(p => p.Key,
-        p => IsList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
+        p => IsPropertyList[p.Key] ? p.Value.PropertyType.GetGenericArguments()[0] : p.Value.PropertyType);
 
+    internal static Dictionary<string,bool> IsPropertyItemTypeModel => ItemTypes.ToDictionary(p => p.Key, p =>
+    {
+        var typeToCheck = p.Value;
+        while (typeToCheck != null && typeToCheck != typeof(object))
+        {
+            var cur = typeToCheck.IsGenericType ? typeToCheck.GetGenericTypeDefinition() : typeToCheck;
+            if (typeof(Model<>) == cur)
+            {
+                return true;
+            }
+            typeToCheck = typeToCheck.BaseType;
+        }
+        return false;
+    });
     internal static Dictionary<string, System.Type> ParamTypes => Properties.ToDictionary(p => p.Key, p =>
     {
-        if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
+        if (IsPropertyItemTypeModel[p.Key])
             return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Param");
         if (ItemTypes[p.Key] == typeof(string))
             return typeof(Param_String);
@@ -1958,7 +1973,7 @@ public abstract class ModelComponent<T, U, V> : Component
 
     internal static Dictionary<string, System.Type> GooTypes => Properties.ToDictionary(p => p.Key, p =>
     {
-        if (ItemTypes[p.Key].IsSubclassOf(typeof(Model)))
+        if (IsPropertyItemTypeModel[p.Key])
             return Assembly.GetExecutingAssembly().GetType(GooType.Namespace + "." + ItemTypes[p.Key].Name + "Goo");
         if (ItemTypes[p.Key] == typeof(string))
             return typeof(GH_String);
@@ -1980,7 +1995,7 @@ public abstract class ModelComponent<T, U, V> : Component
             var propAttribute = PropAttributes[name];
             var param = (IGH_Param)Activator.CreateInstance(ParamTypes[name]);
             pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description,
-                IsList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
+                IsPropertyList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
         }
 
         if (!isOutput)
@@ -2009,7 +2024,7 @@ public abstract class ModelComponent<T, U, V> : Component
         {
             var name = kvp.Key;
             var property = kvp.Value;
-            var isList = IsList[name];
+            var isList = IsPropertyList[name];
             var itemType = ItemTypes[name];
             dynamic value;
 
@@ -2029,7 +2044,7 @@ public abstract class ModelComponent<T, U, V> : Component
                     }
 
                     break;
-                case var _ when itemType.IsSubclassOf(typeof(Model)):
+                case var _ when IsPropertyItemTypeModel[name]:
                     var gooType = GooTypes[name];
                     var listGooType = typeof(List<>).MakeGenericType(gooType);
                     var valueType = isList ? listGooType : gooType;
@@ -2062,9 +2077,9 @@ public abstract class ModelComponent<T, U, V> : Component
 
         modelGoo.Value = ProcessModel(modelGoo.Value);
 
-        var (isValid, errors) = (Tuple<bool, List<string>>)modelGoo.Value.Validate();
+        var (isValid, errors) = ((bool,List<string>))modelGoo.Value.Validate();
         foreach (var error in errors)
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, error);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
 
         DA.SetData(0, modelGoo.Duplicate());
 
@@ -2072,14 +2087,12 @@ public abstract class ModelComponent<T, U, V> : Component
         {
             var name = kvp.Key;
             var property = kvp.Value;
-            var isList = IsList[name];
-            var itemType = ItemTypes[name];
-            if (itemType.IsSubclassOf(typeof(Model)))
+            var isList = IsPropertyList[name];
+            if (IsPropertyItemTypeModel[name])
             {
                 if (isList)
                 {
                     var modelList = ((IEnumerable<object>)property.GetValue(modelGoo.Value))
-                        .Cast<Model>()
                         .Select(p => Activator.CreateInstance(GooTypes[name]))
                         .ToList();
                     var values = property.GetValue(modelGoo.Value);
