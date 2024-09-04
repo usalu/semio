@@ -25,6 +25,7 @@ Emoji,Code,Abbreviation,Name,Description
 ◳,Pn,Ple,Plane,The plane of the piece. When pieces are connected only one piece can have a plane.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
+📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
 🧱,Sd,Sde,Side,A side of a piece in a connection.
 📌,SG,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
@@ -35,7 +36,8 @@ Emoji,Code,Abbreviation,Name,Description
 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
 Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+Ⓜ️,Ut,Unt,Unit,The unit of the value of the quality.
 ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
-🔢,Vl?,Val,Value,An optional value of the quality.
+🔢,Vl?,Val,Value,An optional value of the quality. No value is equivalent to true for the name.
 🔀,Vn?,Vnt,Variant,An optional variant of the {{NAME}}.
