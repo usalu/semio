@@ -885,10 +885,20 @@ public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
 {
     public ModelValidator()
     {
-        foreach (var property in typeof(T).GetProperties())
+        var modelTypeName = typeof(T).Name;
+        var properties = Meta.Property[modelTypeName];
+        for (int i = 0; i < properties.Length; i++)
         {
-            // check if property is list
-
+            var property = properties[i];
+            var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
+            if (isPropertyList)
+            {
+                var propAttribute = property.GetCustomAttribute<PropAttribute>();
+                RuleFor(model => property.GetValue(model))
+                    .NotEmpty()
+                    .WithMessage($"The {property.Name} ({propAttribute.Code}) must have at least one.")
+                    .When(m => (propAttribute.Importance != PropImportance.OPTIONAL));
+            }
 
             if (property.PropertyType == typeof(string))
             {
@@ -908,27 +918,22 @@ public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
             }
             else if (property.PropertyType == typeof(List<string>))
             {
+                // TODO: Fix bug where multiple items fail for the same rule
+                // On ["","","toooLonnngg","alsoToooLong"], only the first notEmtpy and the firstMaxLength are shown.
+
                 var textAttribute = property.GetCustomAttribute<TextAttribute>();
-
-                RuleFor(model => property.GetValue(model) as List<string>)
+                RuleForEach(list => property.GetValue(list) as List<string>)
                     .NotEmpty()
-                    .When(m => (textAttribute.Importance != PropImportance.OPTIONAL))
-                    .ForEach(item =>
+                    .When(m => !textAttribute.IsDefaultValid)
+                    .WithMessage(item =>
                     {
-                        item
-                        .NotEmpty()
-                        .When(m => !textAttribute.IsDefaultValid)
-                        .WithMessage(item =>
-                        {
-                            return $"An element of {property.Name}({textAttribute.Code}) must not be empty.";
-                        })
-                        .MaximumLength(textAttribute.LengthLimit)
-                        .WithMessage((model, item) =>
-                        {
-                            var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
-                            return $"An element of {property.Name}({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {item?.Length} characters.";
-                        });
-
+                        return $"An element of {property.Name} ({textAttribute.Code}) must not be empty.";
+                    })
+                    .MaximumLength(textAttribute.LengthLimit)
+                    .WithMessage((list, item) =>
+                    {
+                        var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
+                        return $"An element of {property.Name} ({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided one ({preview}) has {item?.Length} characters.";
                     })
                     .OverridePropertyName(property.Name);
 
@@ -1608,33 +1613,33 @@ public static class Meta
     /// <summary>
     /// Name of the model : Name of the property : PropertyInfo
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, PropertyInfo>> Property;
+    public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
     /// <summary>
     /// Name of the model : Name of the property : PropAttribute
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, PropAttribute>> Prop;
+    public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
     /// <summary>
     /// Name of the model : Name of the property : IsList
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, bool>> IsPropertyList;
+    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
     /// <summary>
     /// Name of the model : Name of the property : Type
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, System.Type>> PropertyItemType;
+    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
     /// <summary>
     /// Name of the model : Name of the property : IsModel
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, bool>> IsPropertyModel;
+    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyModel;
 
     static Meta()
     {
         var type = new Dictionary<string, System.Type>();
         var model = new Dictionary<string, ModelAttribute>();
-        var property = new Dictionary<string, Dictionary<string, PropertyInfo>>();
-        var prop = new Dictionary<string, Dictionary<string, PropAttribute>>();
-        var isPropertyList = new Dictionary<string, Dictionary<string, bool>>();
-        var propertyItemType = new Dictionary<string, Dictionary<string, System.Type>>();
-        var isPropertyModel = new Dictionary<string, Dictionary<string, bool>>();
+        var property = new Dictionary<string, List<PropertyInfo>>();
+        var prop = new Dictionary<string, List<PropAttribute>>();
+        var isPropertyList = new Dictionary<string, List<bool>>();
+        var propertyItemType = new Dictionary<string, List<System.Type>>();
+        var isPropertyModel = new Dictionary<string, List<bool>>();
 
         var modelTypes = Assembly.GetExecutingAssembly()
             .GetTypes()
@@ -1643,34 +1648,34 @@ public static class Meta
         {
             type[mt.Name] = mt;
             model[mt.Name] = mt.GetCustomAttribute<ModelAttribute>();
-            property[mt.Name] = new Dictionary<string, PropertyInfo>();
-            prop[mt.Name] = new Dictionary<string, PropAttribute>();
-            isPropertyList[mt.Name] = new Dictionary<string, bool>();
-            propertyItemType[mt.Name] = new Dictionary<string, System.Type>();
-            isPropertyModel[mt.Name] = new Dictionary<string, bool>();
+            property[mt.Name] = new List<PropertyInfo>();
+            prop[mt.Name] = new List<PropAttribute>();
+            isPropertyList[mt.Name] = new List<bool>();
+            propertyItemType[mt.Name] = new List<System.Type>();
+            isPropertyModel[mt.Name] = new List<bool>();
 
             foreach (var mtp in mt.GetProperties())
             {
-                property[mt.Name][mtp.Name] = mtp;
-                prop[mt.Name][mtp.Name] = mtp.GetCustomAttribute<PropAttribute>();
+                property[mt.Name].Add(mtp);
+                prop[mt.Name].Add(mtp.GetCustomAttribute<PropAttribute>());
                 var imtpl = mtp.PropertyType.IsGenericType &&
                             mtp.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
-                isPropertyList[mt.Name][mtp.Name] = imtpl;
-                propertyItemType[mt.Name][mtp.Name] = imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType;
-                isPropertyModel[mt.Name][mtp.Name] = mtp.GetCustomAttribute<ModelPropAttribute>() != null;
+                isPropertyList[mt.Name].Add(imtpl);
+                propertyItemType[mt.Name].Add(imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType);
+                isPropertyModel[mt.Name].Add(mtp.GetCustomAttribute<ModelPropAttribute>() != null);
             }
         }
         Type = type.ToImmutableDictionary();
         Model = model.ToImmutableDictionary();
         Property = property.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         Prop = prop.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         IsPropertyList = isPropertyList.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         PropertyItemType = propertyItemType.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         IsPropertyModel = isPropertyModel.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }

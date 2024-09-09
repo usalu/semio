@@ -29,965 +29,6 @@ namespace Semio.Grasshopper;
 
 #region Copilot
 
-//public interface IDeepCloneable<T>
-//{
-//    T DeepClone();
-//}
-
-//public interface IEntity
-//{
-//    string ToString();
-//    bool IsInvalid();
-//}
-
-//public class Representation : IDeepCloneable<Representation>, IEntity
-//{
-//    public Representation()
-//    {
-//        Url = "";
-//        Mime = "";
-//        Lod = "";
-//        Tags = new List<string>();
-//    }
-
-//    public string Url { get; set; }
-//    public string Mime { get; set; }
-//    public string Lod { get; set; }
-//    public List<string> Tags { get; set; }
-
-//    public Representation DeepClone()
-//    {
-//        return new Representation
-//        {
-//            Url = Url,
-//            Mime = Mime,
-//            Lod = Lod,
-//            Tags = new List<string>(Tags)
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Representation(Url:{Url})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Url == "";
-//    }
-//}
-
-//public class Locator : IDeepCloneable<Locator>, IEntity
-//{
-//    public Locator()
-//    {
-//        Group = "";
-//        Subgroup = "";
-//    }
-
-//    public string Group { get; set; }
-//    public string Subgroup { get; set; }
-
-//    public Locator DeepClone()
-//    {
-//        return new Locator
-//        {
-//            Group = Group,
-//            Subgroup = Subgroup
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Locator(Group:{Group}" + (Subgroup != "" ? $",Subgroup:{Subgroup})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Group == "";
-//    }
-//}
-
-//public class ScreenPoint : IDeepCloneable<ScreenPoint>, IEntity
-//{
-//    public ScreenPoint()
-//    {
-//        X = 0;
-//        Y = 0;
-//    }
-
-//    public int X { get; set; }
-//    public int Y { get; set; }
-
-//    public ScreenPoint DeepClone()
-//    {
-//        return new ScreenPoint
-//        {
-//            X = X,
-//            Y = Y
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Point(X:{X},Y:{Y})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return false;
-//    }
-//}
-
-//public class Point : IDeepCloneable<Point>, IEntity
-//{
-//    public Point()
-//    {
-//        X = 0;
-//        Y = 0;
-//        Z = 0;
-//    }
-
-//    public float X { get; set; }
-//    public float Y { get; set; }
-//    public float Z { get; set; }
-
-//    public Point DeepClone()
-//    {
-//        return new Point
-//        {
-//            X = X,
-//            Y = Y,
-//            Z = Z
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Point(X:{X},Y:{Y},Z:{Z})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return false;
-//    }
-
-//    public bool IsZero()
-//    {
-//        return X == 0 && Y == 0 && Z == 0;
-//    }
-//}
-
-//public class Vector : IDeepCloneable<Vector>, IEntity
-//{
-//    public Vector()
-//    {
-//        X = 0;
-//        Y = 0;
-//        Z = 0;
-//    }
-
-//    public float X { get; set; }
-//    public float Y { get; set; }
-//    public float Z { get; set; }
-
-//    public Vector DeepClone()
-//    {
-//        return new Vector
-//        {
-//            X = X,
-//            Y = Y,
-//            Z = Z
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Vector(X:{X},Y:{Y},Z:{Z})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return false;
-//    }
-
-//    public bool IsZero()
-//    {
-//        return X == 0 && Y == 0 && Z == 0;
-//    }
-//}
-
-//public class Plane : IDeepCloneable<Plane>, IEntity
-//{
-//    public Plane()
-//    {
-//        Origin = new Point();
-//        XAxis = new Vector();
-//        YAxis = new Vector();
-//    }
-
-//    public Point Origin { get; set; }
-//    public Vector XAxis { get; set; }
-//    public Vector YAxis { get; set; }
-
-//    public Plane DeepClone()
-//    {
-//        return new Plane
-//        {
-//            Origin = Origin.DeepClone(),
-//            XAxis = XAxis.DeepClone(),
-//            YAxis = YAxis.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Plane(Origin:{Origin},XAxis:{XAxis},YAxis: {YAxis})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        // TODO: Check if axes are normalized and orthogonal.
-//        return Origin.IsZero() && XAxis.IsZero() && YAxis.IsZero();
-//    }
-//}
-
-//public class Port : IDeepCloneable<Port>, IEntity
-//{
-//    public Port()
-//    {
-//        Id = "";
-//        Point = new Point();
-//        Direction = new Vector();
-//        Locators = new List<Locator>();
-//    }
-
-//    public string Id { get; set; }
-//    public Point Point { get; set; }
-//    public Vector Direction { get; set; }
-//    public List<Locator> Locators { get; set; }
-
-//    public Port DeepClone()
-//    {
-//        return new Port
-//        {
-//            Id = Id,
-//            Point = Point.DeepClone(),
-//            Direction = Direction.DeepClone(),
-//            Locators = new List<Locator>(Locators.Select(s => s.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Id == "" || Point.IsInvalid() || Direction.IsInvalid() || Locators.Any(s => s.IsInvalid());
-//    }
-//}
-
-//public class PortId : IDeepCloneable<PortId>, IEntity
-//{
-//    public PortId()
-//    {
-//        Id = "";
-//    }
-
-//    public string Id { get; set; }
-
-//    public PortId DeepClone()
-//    {
-//        return new PortId
-//        {
-//            Id = Id
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return "Port(" + (Id != "" ? $"Id:{Id})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return false;
-//    }
-//}
-
-//public class Quality : IDeepCloneable<Quality>, IEntity
-//{
-//    public Quality()
-//    {
-//        Name = "";
-//        Value = "";
-//        Unit = "";
-//        Definition = "";
-//    }
-
-//    public string Name { get; set; }
-//    public string Value { get; set; }
-//    public string Unit { get; set; }
-//    public string Definition { get; set; }
-
-//    public Quality DeepClone()
-//    {
-//        return new Quality
-//        {
-//            Name = Name,
-//            Value = Value,
-//            Unit = Unit,
-//            Definition = Definition
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Quality(Name:{Name})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "";
-//    }
-//}
-
-//public class Type : IDeepCloneable<Type>, IEntity
-//{
-//    public Type()
-//    {
-//        Name = "";
-//        Description = "";
-//        Icon = "";
-//        Variant = "";
-//        Unit = "";
-//        Representations = new List<Representation>();
-//        Ports = new List<Port>();
-//        Qualities = new List<Quality>();
-//    }
-
-//    public string Name { get; set; }
-//    public string Description { get; set; }
-//    public string Icon { get; set; }
-//    public string Variant { get; set; }
-//    public string Unit { get; set; }
-//    public List<Representation> Representations { get; set; }
-//    public List<Port> Ports { get; set; }
-//    public List<Quality> Qualities { get; set; }
-
-//    public Type DeepClone()
-//    {
-//        return new Type
-//        {
-//            Name = Name,
-//            Description = Description,
-//            Icon = Icon,
-//            Variant = Variant,
-//            Unit = Unit,
-//            Representations = new List<Representation>(Representations.Select(r => r.DeepClone())),
-//            Ports = new List<Port>(Ports.Select(p => p.DeepClone())),
-//            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "" || Unit == "" || Representations.Any(r => r.IsInvalid()) || Ports.Any(p => p.IsInvalid()) ||
-//               Qualities.Any(q => q.IsInvalid());
-//    }
-//}
-
-//public class TypeId : IDeepCloneable<TypeId>, IEntity
-//{
-//    public TypeId()
-//    {
-//        Name = "";
-//        Variant = "";
-//    }
-
-//    public string Name { get; set; }
-//    public string Variant { get; set; }
-
-//    public TypeId DeepClone()
-//    {
-//        return new TypeId
-//        {
-//            Name = Name,
-//            Variant = Variant
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Type(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "";
-//    }
-//}
-
-//public class PieceRoot : IDeepCloneable<PieceRoot>, IEntity
-//{
-//    public PieceRoot()
-//    {
-//        Plane = new Plane();
-//    }
-
-//    public Plane Plane { get; set; }
-
-//    public PieceRoot DeepClone()
-//    {
-//        return new PieceRoot
-//        {
-//            Plane = Plane.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Root({GetHashCode()})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Plane.IsInvalid();
-//    }
-//}
-
-//public class PieceDiagram : IDeepCloneable<PieceDiagram>, IEntity
-//{
-//    public PieceDiagram()
-//    {
-//        Point = new ScreenPoint();
-//    }
-
-//    public ScreenPoint Point { get; set; }
-
-//    public PieceDiagram DeepClone()
-//    {
-//        return new PieceDiagram
-//        {
-//            Point = Point.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Diagram({Point})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Point.IsInvalid();
-//    }
-//}
-
-//public class Piece : IDeepCloneable<Piece>, IEntity
-//{
-//    public Piece()
-//    {
-//        Id = "";
-//        Type = new TypeId();
-//        Root = null;
-//        Diagram = new PieceDiagram();
-//    }
-
-//    public string Id { get; set; }
-//    public TypeId Type { get; set; }
-//    public PieceRoot? Root { get; set; }
-//    public PieceDiagram Diagram { get; set; }
-
-//    public Piece DeepClone()
-//    {
-//        return new Piece
-//        {
-//            Id = Id,
-//            Type = Type.DeepClone(),
-//            Root = Root?.DeepClone(),
-//            Diagram = Diagram.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Piece(Id:{Id})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Id == "" || Type.IsInvalid() || (Root?.IsInvalid() ?? false) || Diagram.IsInvalid();
-//    }
-//}
-
-//public class PieceId : IDeepCloneable<PieceId>, IEntity
-//{
-//    public PieceId()
-//    {
-//        Id = "";
-//    }
-
-//    public string Id { get; set; }
-
-//    public PieceId DeepClone()
-//    {
-//        return new PieceId
-//        {
-//            Id = Id
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Piece(Id:{Id})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Id == "";
-//    }
-//}
-
-//public class SidePieceType : IDeepCloneable<SidePieceType>, IEntity
-//{
-//    public SidePieceType()
-//    {
-//        Port = new PortId();
-//    }
-
-//    public PortId Port { get; set; }
-
-//    public SidePieceType DeepClone()
-//    {
-//        return new SidePieceType
-//        {
-//            Port = Port.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Type({Port})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Port.IsInvalid();
-//    }
-//}
-
-//public class SidePiece : IDeepCloneable<SidePiece>, IEntity
-//{
-//    public SidePiece()
-//    {
-//        Id = "";
-//        Type = new SidePieceType();
-//    }
-
-//    public string Id { get; set; }
-//    public SidePieceType Type { get; set; }
-
-//    public SidePiece DeepClone()
-//    {
-//        return new SidePiece
-//        {
-//            Id = Id,
-//            Type = Type.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Piece(Id:{Id}" + (Type.Port.Id != "" ? $",{Type})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Id == "" || Type.IsInvalid();
-//    }
-//}
-
-//public class Side : IDeepCloneable<Side>, IEntity
-//{
-//    public Side()
-//    {
-//        Piece = new SidePiece();
-//    }
-
-//    public SidePiece Piece { get; set; }
-
-//    public Side DeepClone()
-//    {
-//        return new Side
-//        {
-//            Piece = Piece.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Side({Piece})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Piece.IsInvalid();
-//    }
-//}
-
-//public class Connection : IDeepCloneable<Connection>, IEntity
-//{
-//    public Connection()
-//    {
-//        Connected = new Side();
-//        Connecting = new Side();
-//        Offset = 0;
-//        Rotation = 0;
-//    }
-
-//    public Side Connected { get; set; }
-//    public Side Connecting { get; set; }
-//    public float Offset { get; set; }
-//    public float Rotation { get; set; }
-
-//    public Connection DeepClone()
-//    {
-//        return new Connection
-//        {
-//            Connected = Connected.DeepClone(),
-//            Connecting = Connecting.DeepClone(),
-//            Offset = Offset,
-//            Rotation = Rotation
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Connection(Connected({Connected}),Connecting({Connecting}),Offset:{Offset},Rotation:{Rotation})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Connecting.IsInvalid() || Connected.IsInvalid() || Connecting.Piece.Id == Connected.Piece.Id;
-//    }
-//}
-
-//public class Design : IDeepCloneable<Design>, IEntity
-//{
-//    public Design()
-//    {
-//        Name = "";
-//        Description = "";
-//        Icon = "";
-//        Variant = "";
-//        Unit = "";
-//        Pieces = new List<Piece>();
-//        Connections = new List<Connection>();
-//        Qualities = new List<Quality>();
-//    }
-
-//    public string Name { get; set; }
-//    public string Description { get; set; }
-//    public string Icon { get; set; }
-//    public string Variant { get; set; }
-//    public string Unit { get; set; }
-//    public List<Piece> Pieces { get; set; }
-//    public List<Connection> Connections { get; set; }
-//    public List<Quality> Qualities { get; set; }
-
-//    public Design DeepClone()
-//    {
-//        return new Design
-//        {
-//            Name = Name,
-//            Description = Description,
-//            Icon = Icon,
-//            Variant = Variant,
-//            Unit = Unit,
-//            Pieces = new List<Piece>(Pieces.Select(p => p.DeepClone())),
-//            Connections = new List<Connection>(Connections.Select(a => a.DeepClone())),
-//            Qualities = new List<Quality>(Qualities.Select(q => q.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant: {Variant})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "" || Unit == "" || Pieces.Any(p => p.IsInvalid()) || Connections.Any(a => a.IsInvalid()) ||
-//               Qualities.Any(q => q.IsInvalid());
-//    }
-//}
-
-//public class DesignId : IDeepCloneable<DesignId>, IEntity
-//{
-//    public DesignId()
-//    {
-//        Name = "";
-//        Variant = "";
-//    }
-
-//    public string Name { get; set; }
-//    public string Variant { get; set; }
-
-//    public DesignId DeepClone()
-//    {
-//        return new DesignId
-//        {
-//            Name = Name,
-//            Variant = Variant
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Design(Name:{Name}" + (Variant != "" ? $",Variant:{Variant})" : ")");
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "";
-//    }
-//}
-
-//public class ObjectPieceType : IDeepCloneable<ObjectPieceType>, IEntity
-//{
-//    public ObjectPieceType()
-//    {
-//        Representations = new List<Representation>();
-//    }
-
-//    public List<Representation> Representations { get; set; }
-
-//    public ObjectPieceType DeepClone()
-//    {
-//        return new ObjectPieceType
-//        {
-//            Representations = new List<Representation>(Representations.Select(f => f.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Type({GetHashCode()})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Representations.Any(r => r.IsInvalid());
-//    }
-//}
-
-//public class ObjectPiece : IDeepCloneable<ObjectPiece>, IEntity
-//{
-//    public ObjectPiece()
-//    {
-//        Id = "";
-//        Type = new ObjectPieceType();
-//    }
-
-//    public string Id { get; set; }
-//    public ObjectPieceType Type { get; set; }
-
-//    public ObjectPiece DeepClone()
-//    {
-//        return new ObjectPiece
-//        {
-//            Id = Id,
-//            Type = Type.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Piece(Id:{Id})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Id == "" || Type.IsInvalid();
-//    }
-//}
-
-//public class ObjectParent : IDeepCloneable<ObjectParent>, IEntity
-//{
-//    public ObjectParent()
-//    {
-//        Piece = new PieceId();
-//    }
-
-//    public PieceId Piece { get; set; }
-
-//    public ObjectParent DeepClone()
-//    {
-//        return new ObjectParent
-//        {
-//            Piece = Piece.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Parent({Piece})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Piece.IsInvalid();
-//    }
-//}
-
-//public class Object : IDeepCloneable<Object>, IEntity
-//{
-//    public Object()
-//    {
-//        Piece = new ObjectPiece();
-//        Plane = new Plane();
-//        Parent = null;
-//    }
-
-//    public ObjectPiece Piece { get; set; }
-//    public Plane Plane { get; set; }
-//    public ObjectParent? Parent { get; set; }
-
-//    public Object DeepClone()
-//    {
-//        return new Object
-//        {
-//            Piece = Piece.DeepClone(),
-//            Plane = Plane.DeepClone(),
-//            Parent = Parent?.DeepClone()
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Object({Piece})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Piece.IsInvalid() || Plane.IsInvalid() || (Parent?.IsInvalid() ?? false);
-//    }
-//}
-
-//public class Scene : IDeepCloneable<Scene>, IEntity
-//{
-//    public Scene()
-//    {
-//        Design = new DesignId();
-//        Objects = new List<Object>();
-//    }
-
-//    public DesignId Design { get; set; }
-//    public List<Object> Objects { get; set; }
-
-//    public Scene DeepClone()
-//    {
-//        return new Scene
-//        {
-//            Design = Design.DeepClone(),
-//            Objects = new List<Object>(Objects.Select(o => o.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Scene({Design})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Design.IsInvalid() || Objects.Any(o => o.IsInvalid());
-//    }
-//}
-
-//public class Kit : IDeepCloneable<Kit>, IEntity
-//{
-//    public Kit()
-//    {
-//        Name = "";
-//        Description = "";
-//        Icon = "";
-//        Url = "";
-//        Homepage = "";
-//        Types = new List<Type>();
-//        Designs = new List<Design>();
-//    }
-
-//    public string Name { get; set; }
-//    public string Description { get; set; }
-//    public string Icon { get; set; }
-//    public string Url { get; set; }
-//    public string Homepage { get; set; }
-//    public List<Type> Types { get; set; }
-//    public List<Design> Designs { get; set; }
-
-//    public Kit DeepClone()
-//    {
-//        return new Kit
-//        {
-//            Name = Name,
-//            Description = Description,
-//            Icon = Icon,
-//            Url = Url,
-//            Homepage = Homepage,
-//            Types = new List<Type>(Types.Select(t => t.DeepClone())),
-//            Designs = new List<Design>(Designs.Select(f => f.DeepClone()))
-//        };
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Kit(Name:{Name}, {GetHashCode()})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return Name == "" || Types.Any(t => t.IsInvalid()) || Designs.Any(f => f.IsInvalid());
-//    }
-//}
-
-//public class KitMetadata : IDeepCloneable<KitMetadata>, IEntity
-//{
-//    public string? Name { get; set; }
-//    public string? Description { get; set; }
-//    public string? Icon { get; set; }
-//    public string? Url { get; set; }
-//    public string? Homepage { get; set; }
-
-//    public KitMetadata DeepClone()
-//    {
-//        var kitMetadata = new KitMetadata();
-//        if (Name != null) kitMetadata.Name = Name;
-//        if (Description != null) kitMetadata.Description = Description;
-//        if (Icon != null) kitMetadata.Icon = Icon;
-//        if (Url != null) kitMetadata.Url = Url;
-//        if (Homepage != null) kitMetadata.Homepage = Homepage;
-//        return kitMetadata;
-//    }
-
-//    public override string ToString()
-//    {
-//        return $"Kit(Name:{Name})";
-//    }
-
-//    public bool IsInvalid()
-//    {
-//        return false;
-//    }
-//}
 
 #endregion
 
@@ -1311,77 +352,37 @@ public class TypeGoo : ModelGoo<Type>
 {
 }
 
+public class ScreenPointGoo : ModelGoo<ScreenPoint>
+{
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
+        {
+            object ptr = new GH_Point(new Point3d(Value.X, Value.Y, 0));
+            target = (Q)ptr;
+            return true;
+        }
 
-//}
+        return false;
+    }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
 
-//public class ScreenPointGoo : GH_Goo<ScreenPoint>
-//{
-//    public ScreenPointGoo()
-//    {
-//        Value = new ScreenPoint();
-//    }
+        var point = new Point3d();
+        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+        {
+            Value = new ScreenPoint
+            {
+                X = (int)point.X,
+                Y = (int)point.Y
+            };
+            return true;
+        }
 
-//    public ScreenPointGoo(ScreenPoint screenPoint)
-//    {
-//        Value = screenPoint;
-//    }
-
-//    public override bool IsValid { get; }
-//    public override string TypeName => "ScreenPoint";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new ScreenPointGoo((ScreenPoint)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("ScreenPoint", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("ScreenPoint").Deserialize<ScreenPoint>();
-//        return base.Read(reader);
-//    }
-
-//    public override bool CastTo<Q>(ref Q target)
-//    {
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
-//        {
-//            object ptr = new GH_Point(new Point3d(Value.X, Value.Y, 0));
-//            target = (Q)ptr;
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public override bool CastFrom(object source)
-//    {
-//        if (source == null) return false;
-
-//        var point = new Point3d();
-//        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
-//        {
-//            Value = new ScreenPoint
-//            {
-//                X = (int)point.X,
-//                Y = (int)point.Y
-//            };
-//            return true;
-//        }
-
-//        return false;
-//    }
-//}
+        return false;
+    }
+}
 
 //public class PieceGoo : GH_Goo<Piece>
 //{
@@ -1700,26 +701,11 @@ public class TypeParam : ModelParam<TypeGoo, Type>
 
 }
 
-//public class ScreenPointParam : ModelParam<ScreenPointGoo>
-//{
-//    public ScreenPointParam() : base("Screen Point", "SP", "", "semio", "Params")
-//    {
-//    }
+public class ScreenPointParam : ModelParam<ScreenPointGoo, ScreenPoint>
+{
+    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 
-//    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
-
-//    protected override Bitmap Icon => Resources.screenpoint_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref ScreenPointGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<ScreenPointGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
+}
 
 //public class PieceParam : ModelParam<PieceGoo>
 //{
@@ -1848,17 +834,19 @@ public abstract class ModelComponent<T, U, V> : Component
     public static System.Type GooM;
     public static System.Type ParamM;
     public static ModelAttribute ModelM;
-    public static ImmutableDictionary<string, PropertyInfo> PropertyM;
-    public static ImmutableDictionary<string, PropAttribute> PropM;
-    public static ImmutableDictionary<string, bool> IsPropertyList;
-    public static ImmutableDictionary<string, System.Type> PropertyItemType;
-    public static ImmutableDictionary<string, bool> IsPropertyModel;
+    public static ImmutableArray<PropertyInfo> PropertyM;
+    public static ImmutableArray<PropAttribute> PropM;
+    public static ImmutableArray<bool> IsPropertyList;
+    public static ImmutableArray<System.Type> PropertyItemType;
+    public static ImmutableArray<bool> IsPropertyModel;
+    public static ImmutableArray<System.Type> PropertyGooM;
+    public static ImmutableArray<System.Type> PropertyParamM;
 
     static ModelComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
         var dummyMeta = Semio.Meta.Model;
-        var dummyGrasshopper = Meta.Goo;
+        var dummyMetaGrasshopper = Meta.Goo;
 
         NameM = typeof(V).Name;
         TypeM = Semio.Meta.Type[NameM];
@@ -1870,6 +858,8 @@ public abstract class ModelComponent<T, U, V> : Component
         IsPropertyList = Semio.Meta.IsPropertyList[NameM];
         PropertyItemType = Semio.Meta.PropertyItemType[NameM];
         IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
+        PropertyGooM = Meta.PropertyGoo[NameM];
+        PropertyParamM = Meta.PropertyParam[NameM];
     }
     
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
@@ -1886,13 +876,13 @@ public abstract class ModelComponent<T, U, V> : Component
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
 
-        foreach (var kvp in PropertyM)
+        for (int i = 0; i < PropertyM.Length; i++)
         {
-            var name = kvp.Key;
-            var propAttribute = PropM[name];
-            var param = (IGH_Param)Activator.CreateInstance(Meta.Param[kvp.Key.GetType().Name]);
-            pManager.AddParameter(param, name, propAttribute.Code, propAttribute.Description,
-                IsPropertyList[name] ? GH_ParamAccess.list : GH_ParamAccess.item);
+            var property = PropertyM[i];
+            var propAttribute = PropM[i];
+            var param = (IGH_Param)Activator.CreateInstance(PropertyParamM[i]);
+            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
+                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
         }
 
         if (!isOutput)
@@ -1918,59 +908,27 @@ public abstract class ModelComponent<T, U, V> : Component
 
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
-
-        foreach (var kvp in PropertyM)
+        for (int i = 0; i < PropertyM.Length; i++)
         {
-            var name = kvp.Key;
-            var property = kvp.Value;
-            var isList = IsPropertyList[name];
-            var itemType = PropertyItemType[name];
-            dynamic value;
-
-            switch (itemType)
+            var property = PropertyM[i];
+            var isList = IsPropertyList[i];
+            var itemType = PropertyItemType[i];
+            dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]);
+            dynamic value = gooValue;
+            bool hasInput = isList ? DA.GetDataList(i + 1, value) : DA.GetData(i + 1, ref value);
+            if (hasInput)
             {
-                case var _ when itemType == typeof(string):
-                    value = isList ? new List<string>() : "";
-                    if (isList)
-                    {
-                        if (DA.GetDataList(name, value))
-                            property.SetValue(modelGoo.Value, value);
-                    }
-                    else
-                    {
-                        if (DA.GetData(name, ref value))
-                            property.SetValue(modelGoo.Value, value.Value);
-                    }
-
-                    break;
-                case var _ when IsPropertyModel[name]:
-                    var gooType = Meta.PropertyGoo[NameM][kvp.Key];
-                    var listGooType = typeof(List<>).MakeGenericType(gooType);
-                    var valueType = isList ? listGooType : gooType;
-                    value = Activator.CreateInstance(valueType);
-                    if (isList)
-                    {
-                        if (DA.GetDataList(name, value))
-                        {
-                            var listType = PropertyM[name].PropertyType;
-                            var castedListValue = Activator.CreateInstance(listType);
-                            var addMethod = listType.GetMethod("Add");
-
-                            foreach (var item in ((IEnumerable<object>)value).Cast<dynamic>().Select(v => v.Value))
-                                addMethod.Invoke(castedListValue, new[] { item });
-
-                            property.SetValue(modelGoo.Value, castedListValue);
-                        }
-                    }
-                    else
-                    {
-                        if (DA.GetData(name, ref value))
-                            property.SetValue(modelGoo.Value, value.Value);
-                    }
-
-                    break;
-                default:
-                    throw new NotImplementedException();
+                if (isList)
+                {
+                    var listType = typeof(List<>).MakeGenericType(itemType);
+                    dynamic list = Activator.CreateInstance(listType);
+                    foreach (var item in gooValue)
+                        list.Add(item.Value);
+                    value = list;
+                    property.SetValue(modelGoo.Value, value);
+                }
+                else
+                    property.SetValue(modelGoo.Value,  value.Value);
             }
         }
 
@@ -1986,39 +944,37 @@ public abstract class ModelComponent<T, U, V> : Component
 
         DA.SetData(0, modelGoo.Duplicate());
 
-        foreach (var kvp in PropertyM)
+        for (int i = 0; i < PropertyM.Length; i++)
         {
-            var name = kvp.Key;
-            var property = kvp.Value;
-            var isList = IsPropertyList[name];
-            if (IsPropertyModel[name])
-            {
-                if (isList)
-                {
-                    var modelList = ((IEnumerable<object>)property.GetValue(modelGoo.Value))
-                        .Select(p => Activator.CreateInstance(Meta.Goo[name]))
-                        .ToList();
-                    var values = property.GetValue(modelGoo.Value);
-                    for (var i = 0; i < modelList.Count; i++)
-                    {
-                        dynamic item = modelList[i];
-                        item.Value = values[i].DeepClone();
-                    }
+            var property = PropertyM[i];
+            var isList = IsPropertyList[i];
+            var isPropertyModel = IsPropertyModel[i];
+            var itemType = PropertyItemType[i];
+            dynamic value = property.GetValue(modelGoo.Value);
+            dynamic gooValue = value;
 
-                    DA.SetDataList(name, modelList);
+            if (isList)
+            {
+                dynamic list;
+                if (isPropertyModel)
+                {
+                    var listType = typeof(List<>).MakeGenericType(itemType);
+                    list = Activator.CreateInstance(listType);
+                    foreach (var item in value)
+                    {
+                        dynamic itemGoo = Activator.CreateInstance(PropertyGooM[i]);
+                        itemGoo.Value = item.DeepClone();
+                        list.Add(itemGoo);
+                    }
                 }
                 else
-                {
-                    DA.SetData(name, property.GetValue(modelGoo.Value));
-                }
+                    list = gooValue;
+
+                DA.SetDataList(i + 1, list);
             }
             else
-            {
-                if (isList)
-                    DA.SetDataList(name, property.GetValue(modelGoo.Value));
-                else
-                    DA.SetData(name, property.GetValue(modelGoo.Value));
-            }
+                DA.SetData(i + 1, gooValue);
+
         }
     }
     protected virtual V ProcessModel(V model)
@@ -3978,7 +2934,7 @@ public static class Meta
     /// <summary>
     /// Name of the model : Name of the property : Type
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, System.Type>> PropertyGoo;
+    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
     /// <summary>
     /// Name of the model : Param
     /// </summary>
@@ -3986,41 +2942,56 @@ public static class Meta
     /// <summary>
     /// Name of the model : Name of the property : Param
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableDictionary<string, System.Type>> PropertyParam;
+    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyParam;
     static Meta()
     {
         var goo = new Dictionary<string, System.Type>();
-        var propertyGoo = new Dictionary<string, Dictionary<string, System.Type>>();
+        var propertyGoo = new Dictionary<string, List<System.Type>>();
         var param = new Dictionary<string, System.Type>();
-        var propertyParam = new Dictionary<string, Dictionary<string, System.Type>>();
-        goo[nameof(String)] = typeof(GH_String);
-        goo[nameof(Boolean)] = typeof(GH_Boolean);
-        goo[nameof(Int32)] = typeof(GH_Integer);
-        goo[nameof(Single)] = typeof(GH_Number);
-        param[nameof(String)] = typeof(Param_String);
-        param[nameof(Boolean)] = typeof(Param_Boolean);
-        param[nameof(Int32)] = typeof(Param_Integer);
-        param[nameof(Single)] = typeof(Param_Number);
+        var propertyParam = new Dictionary<string, List<System.Type>>();
+        var basicTypes = new Dictionary<System.Type, (System.Type,System.Type)>()
+        {
+            {typeof(String), (typeof(GH_String),typeof(Param_String))},
+            {typeof(Boolean), (typeof(GH_Boolean),typeof(Param_Boolean))},
+            {typeof(Int32), (typeof(GH_Integer),typeof(Param_Integer))},
+            {typeof(Single), (typeof(GH_Number),typeof(Param_Number))},
+        };
+        foreach (var basicTypeKvp in basicTypes)
+        {
+            var name = basicTypeKvp.Key.Name;
+            goo[name] = basicTypeKvp.Value.Item1;
+            goo[name + "List"] = typeof(List<>).MakeGenericType(goo[name]);
+            param[name] = basicTypeKvp.Value.Item2;
+        }
+
         foreach (var kvp in Semio.Meta.Type)
         {
             var baseName = typeof(Meta).Namespace + "." + kvp.Key;
             goo[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
             param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
-
-            propertyGoo[kvp.Key] = new Dictionary<string, System.Type>();
-            propertyParam[kvp.Key] = new Dictionary<string, System.Type>();
-            foreach (var prop in Semio.Meta.Property[kvp.Key])
+            goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
+            propertyGoo[kvp.Key] = new List<System.Type>();
+            propertyParam[kvp.Key] = new List<System.Type>();
+        }
+        foreach (var modelKvp in Semio.Meta.Property)
+        {
+            for (int i = 0; i < modelKvp.Value.Length; i++)
             {
-                propertyGoo[kvp.Key][prop.Key] = goo[prop.GetType().Name];
-                propertyParam[kvp.Key][prop.Key] = param[prop.GetType().Name];
+                var property = modelKvp.Value[i];
+                var isPropertyList = Semio.Meta.IsPropertyList[modelKvp.Key][i];
+                var propertyTypeName = isPropertyList ?
+                    property.PropertyType.GetGenericArguments()[0].Name
+                    : property.PropertyType.Name;
+                propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
+                propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
             }
         }
         Goo = goo.ToImmutableDictionary();
         PropertyGoo = propertyGoo.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         Param = param.ToImmutableDictionary();
         PropertyParam = propertyParam.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableDictionary());
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 
 }
