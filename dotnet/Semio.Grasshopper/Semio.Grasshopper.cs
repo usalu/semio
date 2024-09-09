@@ -841,6 +841,7 @@ public abstract class ModelComponent<T, U, V> : Component
     public static ImmutableArray<bool> IsPropertyModel;
     public static ImmutableArray<System.Type> PropertyGooM;
     public static ImmutableArray<System.Type> PropertyParamM;
+    public static ImmutableArray<System.Type> PropertyItemGoo;
 
     static ModelComponent()
     {
@@ -857,6 +858,7 @@ public abstract class ModelComponent<T, U, V> : Component
         PropM = Semio.Meta.Prop[NameM];
         IsPropertyList = Semio.Meta.IsPropertyList[NameM];
         PropertyItemType = Semio.Meta.PropertyItemType[NameM];
+        PropertyItemGoo = Meta.PropertyItemGoo[NameM];
         IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
         PropertyGooM = Meta.PropertyGoo[NameM];
         PropertyParamM = Meta.PropertyParam[NameM];
@@ -903,9 +905,7 @@ public abstract class ModelComponent<T, U, V> : Component
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         // Input
-
         dynamic modelGoo = Activator.CreateInstance(GooM);
-
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
         for (int i = 0; i < PropertyM.Length; i++)
@@ -933,48 +933,37 @@ public abstract class ModelComponent<T, U, V> : Component
         }
 
         // Process
-
         modelGoo.Value = ProcessModel(modelGoo.Value);
-
         var (isValid, errors) = ((bool,List<string>))modelGoo.Value.Validate();
         foreach (var error in errors)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
 
         // Output
-
         DA.SetData(0, modelGoo.Duplicate());
-
         for (int i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
             var isList = IsPropertyList[i];
             var isPropertyModel = IsPropertyModel[i];
-            var itemType = PropertyItemType[i];
             dynamic value = property.GetValue(modelGoo.Value);
-            dynamic gooValue = value;
-
             if (isList)
             {
-                dynamic list;
+                dynamic list = Activator.CreateInstance(PropertyGooM[i]);
                 if (isPropertyModel)
                 {
-                    var listType = typeof(List<>).MakeGenericType(itemType);
-                    list = Activator.CreateInstance(listType);
                     foreach (var item in value)
                     {
-                        dynamic itemGoo = Activator.CreateInstance(PropertyGooM[i]);
+                        dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i]);
                         itemGoo.Value = item.DeepClone();
                         list.Add(itemGoo);
                     }
                 }
                 else
-                    list = gooValue;
-
+                    list = value;
                 DA.SetDataList(i + 1, list);
             }
             else
-                DA.SetData(i + 1, gooValue);
-
+                DA.SetData(i + 1, value);
         }
     }
     protected virtual V ProcessModel(V model)
@@ -2936,6 +2925,10 @@ public static class Meta
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
     /// <summary>
+    /// Name of the model : Name of the property : Type
+    /// </summary>
+    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemGoo;
+    /// <summary>
     /// Name of the model : Param
     /// </summary>
     public static readonly ImmutableDictionary<string, System.Type> Param;
@@ -2947,6 +2940,7 @@ public static class Meta
     {
         var goo = new Dictionary<string, System.Type>();
         var propertyGoo = new Dictionary<string, List<System.Type>>();
+        var propertyItemGoo = new Dictionary<string, List<System.Type>>();
         var param = new Dictionary<string, System.Type>();
         var propertyParam = new Dictionary<string, List<System.Type>>();
         var basicTypes = new Dictionary<System.Type, (System.Type,System.Type)>()
@@ -2971,6 +2965,7 @@ public static class Meta
             param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
             goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
             propertyGoo[kvp.Key] = new List<System.Type>();
+            propertyItemGoo[kvp.Key] = new List<System.Type>();
             propertyParam[kvp.Key] = new List<System.Type>();
         }
         foreach (var modelKvp in Semio.Meta.Property)
@@ -2983,11 +2978,14 @@ public static class Meta
                     property.PropertyType.GetGenericArguments()[0].Name
                     : property.PropertyType.Name;
                 propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
+                propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
                 propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
             }
         }
         Goo = goo.ToImmutableDictionary();
         PropertyGoo = propertyGoo.ToImmutableDictionary(
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
+        PropertyItemGoo = propertyItemGoo.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         Param = param.ToImmutableDictionary();
         PropertyParam = propertyParam.ToImmutableDictionary(
