@@ -235,86 +235,50 @@ public class LocatorGoo : ModelGoo<Locator>
     }
 }
 
-//public class PortGoo : GH_Goo<Port>
-//{
-//    public PortGoo()
-//    {
-//        Value = new Port();
-//    }
+public class PortGoo : ModelGoo<Port>
+{
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
+        {
+            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
+            target = (Q)ptr;
+            return true;
+        }
 
-//    public PortGoo(Port port)
-//    {
-//        Value = port;
-//    }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Serialize());
+            target = (Q)ptr;
+            return true;
+        }
 
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Port";
-//    public override string TypeDescription { get; }
+        return false;
+    }
 
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new PortGoo((Port)Value.DeepClone());
-//    }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
 
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
+        var plane = new Rhino.Geometry.Plane();
+        if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
+        {
+            Value.Point = plane.Origin.convert();
+            Value.Direction = plane.YAxis.convert();
 
-//    public override bool CastTo<Q>(ref Q target)
-//    {
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
-//        {
-//            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
-//            target = (Q)ptr;
-//            return true;
-//        }
+            return true;
+        }
 
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-//        {
-//            object ptr = new GH_String(Value.Serialize());
-//            target = (Q)ptr;
-//            return true;
-//        }
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = str.Deserialize<Port>();
+            return true;
+        }
 
-//        return false;
-//    }
-
-//    public override bool CastFrom(object source)
-//    {
-//        if (source == null) return false;
-
-//        var plane = new Rhino.Geometry.Plane();
-//        if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
-//        {
-//            Value.Point = plane.Origin.convert();
-//            Value.Direction = plane.YAxis.convert();
-
-//            return true;
-//        }
-
-//        string str = null;
-//        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-//        {
-//            Value = str.Deserialize<Port>();
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Port", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Port").Deserialize<Port>();
-//        return base.Read(reader);
-//    }
-//}
+        return false;
+    }
+}
 
 public class QualityGoo : ModelGoo<Quality>
 {
@@ -667,30 +631,15 @@ public class LocatorParam : ModelParam<LocatorGoo, Locator>
     public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
 }
 
-//public class PortParam : ModelParam<PortGoo>
-//{
-//    public PortParam() : base("Port", "Po", "", "semio", "Params")
-//    {
-//    }
+public class PortParam : ModelParam<PortGoo, Port>
+{
+    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 
-//    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
-
-//    protected override Bitmap Icon => Resources.port_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref PortGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<PortGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
+}
 
 public class QualityParam : ModelParam<QualityGoo, Quality>
 {
-    public override Guid ComponentGuid => new("F2F6F2F9-7F0E-4F0F-9F0C-7F6F6F6F6F6F");
+    public override Guid ComponentGuid => new("[431125C0-B98C-4122-9598-F72714AC9B94");
 
 }
 

@@ -11,9 +11,10 @@ Emoji,Code,Abbreviation,Name,Description
 👪,Gr,Grp,Group,The group of the locator.
 🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
 🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
-🆔,Id,Idn,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
+🆔,Id,Id,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
 🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
+🗺️,Lc*,Locs,Locators,The optional locators of the port.
 🔍,Ld,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation.
 📛,Na,Nam,Name,The name of the {{NAME}}.
 🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
@@ -21,12 +22,13 @@ Emoji,Code,Abbreviation,Name,Description
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 🔌,Po+,Pors,Ports,The ports of the type.
-◳,Pn,Ple,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-◳,Pn,Ple,Plane,The plane of the piece. When pieces are connected only one piece can have a plane.
+◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+◳,Pn,Pln,Plane,The plane of the piece.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+🌱,Rt,Rot,Root,The root-related information of the piece. When pieces are connected only one piece can be the root.
 🧱,Sd,Sde,Side,A side of a piece in a connection.
 📌,SG,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
@@ -41,3 +43,11 @@ Emoji,Code,Abbreviation,Name,Description
 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
 🔢,Vl?,Val,Value,An optional value of the quality. No value is equivalent to true for the name.
 🔀,Vn?,Vnt,Variant,An optional variant of the {{NAME}}.
+🏁,X,X,X,The x-coordinate of the screen point.
+🎚️,X,X,X,The x-coordinate of the point.
+➡️,XA,XAx,XAxis,The x-axis of the plane.
+🏁,Y,Y,Y,The y-coordinate of the screen point.
+🎚️,Y,Y,Y,The y-coordinate of the point.
+➡️,YA,YAx,YAxis,The y-axis of the plane.
+🏁,Z,Z,Z,The z-coordinate of the screen point.
+🎚️,Z,Z,Z,The z-coordinate of the point.

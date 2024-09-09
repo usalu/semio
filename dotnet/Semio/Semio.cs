@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Forms;
 using FluentValidation;
 using Force.DeepCloner;
 using Newtonsoft.Json;
@@ -23,7 +21,8 @@ namespace Semio;
 
 public static class Constants
 {
-    public const int NameLengthLimit = 255;
+    public const int NameLengthLimit = 64;
+    public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 2048;
     public const int DescriptionLengthLimit = 4096;
 }
@@ -717,6 +716,7 @@ public abstract class ConceptAttribute : Attribute
         Abbreviation = abbreviation;
         Description = description;
     }
+
     public string Emoji { get; set; }
     public string Code { get; set; }
     public string Abbreviation { get; set; }
@@ -739,61 +739,82 @@ public enum PropImportance
     ID
 }
 
-
 [AttributeUsage(AttributeTargets.Property)]
 public abstract class PropAttribute : ConceptAttribute
 {
-    public PropImportance Importance { get; set; }
-    public bool IsDefaultValid { get; set; }
-    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, bool isDefaultValid) : base(emoji, code,
+    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance,
+        bool isDefaultValid) : base(emoji, code,
         abbreviation, description)
     {
         Importance = importance;
         IsDefaultValid = isDefaultValid;
     }
+
+    public PropImportance Importance { get; set; }
+    public bool IsDefaultValid { get; set; }
 }
 
 public abstract class TextAttribute : PropAttribute
 {
-    public int LengthLimit { get; set; }
-
     public TextAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance, bool isDefaultValid, int lengthLimit) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
         LengthLimit = lengthLimit;
     }
+
+    public int LengthLimit { get; set; }
 }
+
 public class NameAttribute : TextAttribute
 {
-    public NameAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false) : base(emoji, code,
+    public NameAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid, Constants.NameLengthLimit)
     {
     }
+}
 
+public class IdAttribute : TextAttribute
+{
+    public IdAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.ID, bool isDefaultValid = false) : base(emoji, code,
+        abbreviation, description, importance, isDefaultValid, Constants.IdLengthLimit)
+    {
+    }
 }
 
 public class UrlAttribute : TextAttribute
 {
-    public UrlAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
+    public UrlAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid, Constants.UrlLengthLimit)
     {
     }
-
 }
 
 public class DescriptionAttribute : TextAttribute
 {
-    public DescriptionAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
+    public DescriptionAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid, Constants.DescriptionLengthLimit)
     {
     }
-
 }
 
 public class IntPropAttribute : PropAttribute
 {
-    public IntPropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
+    public IntPropAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
+        abbreviation, description, importance, isDefaultValid)
+    {
+    }
+}
+
+public class NumberPropAttribute : PropAttribute
+{
+    public NumberPropAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
     }
@@ -801,12 +822,12 @@ public class IntPropAttribute : PropAttribute
 
 public class ModelPropAttribute : PropAttribute
 {
-    public ModelPropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
+    public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
     }
 }
-
 
 public abstract class Model<T> where T : Model<T>
 {
@@ -817,10 +838,11 @@ public abstract class Model<T> where T : Model<T>
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
                         (string)p.GetValue(this) != "")
             .Select(p => p.Name);
-        var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this)).Cast<string>().ToList();
+        var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
+            .Cast<string>().ToList();
         return $"{modelAttribute.Abbreviation}({string.Join(", ", nonEmptyIdPropertiesValues)})";
-
     }
+
     public override bool Equals(object obj)
     {
         if (obj == null || GetType() != obj.GetType())
@@ -881,13 +903,13 @@ public abstract class Model<T> where T : Model<T>
     }
 }
 
-public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
+public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 {
     public ModelValidator()
     {
         var modelTypeName = typeof(T).Name;
         var properties = Meta.Property[modelTypeName];
-        for (int i = 0; i < properties.Length; i++)
+        for (var i = 0; i < properties.Length; i++)
         {
             var property = properties[i];
             var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
@@ -897,7 +919,7 @@ public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
                 RuleFor(model => property.GetValue(model))
                     .NotEmpty()
                     .WithMessage($"The {property.Name} ({propAttribute.Code}) must have at least one.")
-                    .When(m => (propAttribute.Importance != PropImportance.OPTIONAL));
+                    .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
             }
 
             if (property.PropertyType == typeof(string))
@@ -906,14 +928,15 @@ public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
 
                 RuleFor(model => property.GetValue(model) as string)
                     .NotEmpty()
-                    .When(m => (textAttribute.Importance != PropImportance.OPTIONAL) || !textAttribute.IsDefaultValid)
+                    .When(m => textAttribute.Importance != PropImportance.OPTIONAL || !textAttribute.IsDefaultValid)
                     .WithMessage($"The {property.Name}({textAttribute.Code}) must not be empty.")
                     .MaximumLength(textAttribute.LengthLimit)
                     .WithMessage(model =>
                     {
                         var value = property.GetValue(model) as string;
                         var preview = value?.Length > 10 ? value.Substring(0, 10) + "..." : value;
-                        return $"The {property.Name}({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
+                        return
+                            $"The {property.Name}({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
                     });
             }
             else if (property.PropertyType == typeof(List<string>))
@@ -933,227 +956,350 @@ public class ModelValidator<T>: AbstractValidator<T> where T : Model<T>
                     .WithMessage((list, item) =>
                     {
                         var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
-                        return $"An element of {property.Name} ({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided one ({preview}) has {item?.Length} characters.";
+                        return
+                            $"An element of {property.Name} ({textAttribute.Code}) must be at most {textAttribute.LengthLimit} characters long. The provided one ({preview}) has {item?.Length} characters.";
                     })
                     .OverridePropertyName(property.Name);
-
             }
             else if (property.PropertyType == typeof(int))
             {
-                
             }
-            
-            
         }
     }
 }
 
-
 /// <summary>
-/// 💾 A representation is an url that describes a type for a certain level of detail and tags.
+///     💾 A representation is an url that describes a type for a certain level of detail and tags.
 /// </summary>
 [Model("💾", "Rp", "Rep",
     "A representation is a linked file that describes a type for a certain level of detail and tags.")]
 public class Representation : Model<Representation>
 {
     /// <summary>
-    /// 🔗 The Unique Resource Locator (URL) to another resource outside of semio.
-    /// absolute file path or a link.
+    ///     🔗 The Unique Resource Locator (URL) to another resource outside of semio.
+    ///     absolute file path or a link.
     /// </summary>
     [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to another file outside of semio.", PropImportance.ID)]
     public string Url { get; set; } = "";
 
     /// <summary>
-    /// 🏷️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+    ///     🏷️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
     /// </summary>
-    [Name("🏷️", "Mm", "Mim", "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.", PropImportance.REQUIRED)]
+    [Id("🏷️", "Mm", "Mim",
+        "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.",
+        PropImportance.REQUIRED)]
     public string Mime { get; set; } = "";
+
     /// <summary>
-    /// 🔍 The optional Level of Detail/Development/Design (LoD) of the representation.
+    ///     🔍 The optional Level of Detail/Development/Design (LoD) of the representation.
     /// </summary>
 
-    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design (LoD) of the representation.", isDefaultValid: true)]
+    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design (LoD) of the representation.",
+        isDefaultValid: true)]
     public string Lod { get; set; } = "";
+
     /// <summary>
-    /// 🔖 Optional tags to group representations.
+    ///     🔖 Optional tags to group representations.
     /// </summary>
 
-    [Name("🔖", "Tg*", "Tags", "Optional tags to group representations.", isDefaultValid:false)]
+    [Name("🔖", "Tg*", "Tags", "Optional tags to group representations.", isDefaultValid: false)]
     public List<string> Tags { get; set; } = new();
-}
-[Model("🗺️","Lc","Loc","A locator is metadata for grouping ports.")]
-public class Locator : Model<Locator>
-{
-    /// <summary>
-    /// 👪 The group of the locator.
-    /// </summary>
-    [Name("👪", "Gr", "Grp", "The group of the locator.", PropImportance.ID)]
-    public string Group { get; set; } = "";
-    /// <summary>
-    /// 📌 An optional sub-group of the locator. No sub-group means true.
-    /// </summary>
-    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.", PropImportance.ID)]
-    public string Subgroup { get; set; } = "";
-
 }
 
 /// <summary>
-/// 📺 A 2d-point (xy) of integers in screen plane.
+///     🗺️ A locator is metadata for grouping ports.
+/// </summary>
+[Model("🗺️", "Lc", "Loc", "A locator is metadata for grouping ports.")]
+public class Locator : Model<Locator>
+{
+    /// <summary>
+    ///     👪 The group of the locator.
+    /// </summary>
+    [Name("👪", "Gr", "Grp", "The group of the locator.", PropImportance.ID)]
+    public string Group { get; set; } = "";
+
+    /// <summary>
+    ///     📌 An optional sub-group of the locator. No sub-group means true.
+    /// </summary>
+    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.")]
+    public string Subgroup { get; set; } = "";
+}
+
+/// <summary>
+///     📺 A 2d-point (xy) of integers in screen plane.
 /// </summary>
 [Model("📺", "SP", "SPt", "A 2d-point (xy) of integers in screen plane.")]
 public class ScreenPoint : Model<ScreenPoint>
 {
-    [IntProp("📺", "X", "XCo", "The x-coordinate of the screen point.", PropImportance.REQUIRED)]
+    [IntProp("🏁", "X", "X", "The x-coordinate of the screen point.", PropImportance.REQUIRED)]
     public int X { get; set; } = 0;
-    [IntProp("📺", "Y", "YCo", "The y-coordinate of the screen point.", PropImportance.REQUIRED)]
-    public int Y { get; set; } = 0;
 
+    [IntProp("🏁", "Y", "Y", "The y-coordinate of the screen point.", PropImportance.REQUIRED)]
+    public int Y { get; set; } = 0;
 }
 
-//public class Point() : Model
-//{
-//    public float X { get; set; } = 0;
-//    public float Y { get; set; } = 0;
-//    public float Z { get; set; } = 0;
+/// <summary>
+///     ❌ A 3-point (xyz) of floating point numbers.
+/// </summary>
+[Model("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
+public class Point : Model<Point>
+{
+    /// <summary>
+    ///     🎚️ The x-coordinate of the point.
+    /// </summary>
+    [NumberProp("🎚️", "X", "X", "The x-coordinate of the point.", PropImportance.REQUIRED)]
+    public float X { get; set; } = 0;
 
-//    public bool IsZero()
-//    {
-//        return X == 0 && Y == 0 && Z == 0;
-//    }
-//}
+    /// <summary>
+    ///     🎚️ The y-coordinate of the point.
+    /// </summary>
+    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the point.", PropImportance.REQUIRED)]
+    public float Y { get; set; } = 0;
 
-//public class Vector() : Model
-//{
-//    public float X { get; set; } = 0;
-//    public float Y { get; set; } = 0;
-//    public float Z { get; set; } = 0;
-
-//    public bool IsZero()
-//    {
-//        return X == 0 && Y == 0 && Z == 0;
-//    }
-//}
-
-//public class Plane() : Model
-//{
-//    public Point Origin { get; set; } = new();
-//    public Vector XAxis { get; set; } = new();
-//    public Vector YAxis { get; set; } = new();
-
-//}
-
-//public class Port() : Model
-//{
-//    [Id("🆔", "Id", "Idn", "Local identification of the port within the type.")]
-//    public string Id { get; set; } = "";
-//    [Required(ErrorMessage = "A port needs a point.")]
-//    public Point Point { get; set; } = new();
-//    public Vector Direction { get; set; } = new();
-//    public List<Locator> Locators { get; set; } = new();
-//}
-
-//    public class PortId() : Model
-//    {
-//        public string Id { get; set; } = "";
-
-//    }
+    /// <summary>
+    ///     🎚️ The z-coordinate of the point.
+    /// </summary>
+    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the point.", PropImportance.REQUIRED)]
+    public float Z { get; set; } = 0;
+}
 
 /// <summary>
-/// 📏 A quality is meta-data for decision making.
+///     ➡️ A 3d-vector (xyz) of floating point numbers.
+/// </summary>
+[Model("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
+public class Vector : Model<Vector>
+{
+    /// <summary>
+    ///     🎚️ The x-coordinate of the vector.
+    /// </summary>
+    [NumberProp("🎚️", "X", "X", "The x-coordinate of the vector.", PropImportance.REQUIRED)]
+    public float X { get; set; } = 0;
+
+    /// <summary>
+    ///     🎚️ The y-coordinate of the vector.
+    /// </summary>
+    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the vector.", PropImportance.REQUIRED)]
+    public float Y { get; set; } = 0;
+
+    /// <summary>
+    ///     🎚️ The z-coordinate of the vector.
+    /// </summary>
+    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the vector.", PropImportance.REQUIRED)]
+    public float Z { get; set; } = 0;
+}
+
+/// <summary>
+///     ◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+/// </summary>
+[Model("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
+public class Plane : Model<Plane>
+{
+    /// <summary>
+    ///     ⌱ The origin of the plane.
+    /// </summary>
+    [ModelProp("⌱", "Og", "Org", "The origin of the plane.")]
+    public Point Origin { get; set; } = new();
+
+    /// <summary>
+    ///     ➡️ The x-axis of the plane.
+    /// </summary>
+    [ModelProp("➡️", "XA", "XAx", "The x-axis of the plane.")]
+    public Vector XAxis { get; set; } = new();
+
+    /// <summary>
+    ///     ➡️ The y-axis of the plane.
+    /// </summary>
+    [ModelProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
+    public Vector YAxis { get; set; } = new();
+}
+
+/// <summary>
+///     🔌 A port is a connection point (with a direction) of a type.
+/// </summary>
+[Model("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
+public class Port : Model<Port>
+{
+    /// <summary>
+    ///     🆔 The local identifier of the port within the type.
+    /// </summary>
+    [Name("🆔", "Id", "Idn", "Local identifier of the port within the type.", PropImportance.ID)]
+    public string Id { get; set; } = "";
+
+    /// <summary>
+    ///     ❌ The point of the port.
+    /// </summary>
+    [ModelProp("✖️", "Pt", "Pnt", "The point of the port.")]
+    public Point Point { get; set; } = new();
+
+    /// <summary>
+    ///     ➡️ The direction of the port.
+    /// </summary>
+    [ModelProp("➡️", "Vc", "Vec", "The direction of the port.")]
+    public Vector Direction { get; set; } = new();
+
+    /// <summary>
+    ///     🗺️ The optional locators of the port.
+    /// </summary>
+    [ModelProp("🗺️", "Lc*", "Locs", "The optional locators of the port.", PropImportance.OPTIONAL)]
+    public List<Locator> Locators { get; set; } = new();
+}
+
+/// <summary>
+///     🆔 Local identifier of the port within the type.
+/// </summary>
+[Model("🆔", "Id", "Id", "Local identifier of the port within the type.")]
+public class PortId : Model<PortId>
+{
+    /// <summary>
+    ///     🆔 The local identifier of the port within the type.
+    /// </summary>
+    [Id("🆔", "Id", "Id", "Local identifier of the port within the type.")]
+    public string Id { get; set; } = "";
+}
+
+/// <summary>
+///     📏 A quality is meta-data for decision making.
 /// </summary>
 [Model("📏", "Ql", "Qal", "A quality is meta-data for decision making.")]
 public class Quality : Model<Quality>
 {
     /// <summary>
-    /// 📛 The name of the quality.
+    ///     📛 The name of the quality.
     /// </summary>
     [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
     public string Name { get; set; } = "";
+
     /// <summary>
-    /// 🔢 An optional value of the quality. No value is equivalent to true for the name.
+    ///     🔢 An optional value of the quality. No value is equivalent to true for the name.
     /// </summary>
-    [Name("🔢", "Vl?", "Val", "An optional value of the quality. No value is equivalent to true for the name.")]
+    [Url("🔢", "Vl?", "Val", "An optional value of the quality. No value is equivalent to true for the name.")]
     public string Value { get; set; } = "";
 
     /// <summary>
-    /// Ⓜ️ The unit of the value of the quality.
+    ///     Ⓜ️ The unit of the value of the quality.
     /// </summary>
     [Name("Ⓜ️", "Ut", "Unt", "The unit of the value of the quality.")]
     public string Unit { get; set; } = "";
+
     public string Definition { get; set; } = "";
 }
 
 /// <summary>
-/// 🧩 A type is a reusable element that can be connected with other types over ports.
+///     🧩 A type is a reusable element that can be connected with other types over ports.
 /// </summary>
 [Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
 public class Type : Model<Type>
 {
     /// <summary>
-    /// 📛 Name of the type.
+    ///     📛 Name of the type.
     /// </summary>
-    [Name("📛", "Na", "Nam",  "The name of the type.",PropImportance.ID)]
+    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
     public string Name { get; set; } = "";
+
     /// <summary>
-    /// 💬 An optional human description of the type.
+    ///     💬 An optional human description of the type.
     /// </summary>
     [Description("💬", "Dc?", "Dsc", "An optional human description of the type.")]
     public string Description { get; set; } = "";
+
     /// <summary>
-    /// 🖼️ An optional icon [emoji | text | image | svg] of the type.
+    ///     🖼️ An optional icon [emoji | text | image | svg] of the type.
     /// </summary>
     [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the type.")]
     public string Icon { get; set; } = "";
+
     /// <summary>
-    /// 🔀 An optional variant of the type.
+    ///     🔀 An optional variant of the type.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID,isDefaultValid:true)]
+    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
+
     /// <summary>
-    /// Ⓜ️ The length unit for all distance-related information of the type.
+    ///     Ⓜ️ The length unit for all distance-related information of the type.
     /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.", PropImportance.REQUIRED)]
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.",
+        PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+
     /// <summary>
-    /// 💾 The representations of the type.
+    ///     💾 The representations of the type.
     /// </summary>
-    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.",PropImportance.REQUIRED)]
+    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.")]
     public List<Representation> Representations { get; set; } = new();
+
     //public List<Port> Ports { get; set; } = new();
     /// <summary>
-    /// 📏 The optional qualities of the type.
+    ///     📏 The optional qualities of the type.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the type.")]
+    [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the type.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
-
 }
 
-//    public class TypeId() : Model
-//    {
-//        public string Name { get; set; } = "";
-//        public string Variant { get; set; } = "";
+/// <summary>
+///     🧩 Local identifier of the port within the type.
+/// </summary>
+[Model("🆔", "Id", "Id", "Local identifier of the type within the kit.")]
+public class TypeId : Model<TypeId>
+{
+    /// <summary>
+    ///     📛 Name of the type.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+    public string Name { get; set; } = "";
 
-//    }
+    /// <summary>
+    ///     🔀 An optional variant of the type.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+}
 
-//    public class PieceRoot() : Model
-//    {
-//        public Plane Plane { get; set; } = new();
-//    }
+/// <summary>
+///     🌱 The root-related information of the piece. When pieces are connected only one piece can be the root.
+/// </summary>
+[Model("🌱", "Rt", "Rot",
+    "The root-related information of the piece. When pieces are connected only one piece can be the root.")]
+public class PieceRoot : Model<PieceRoot>
+{
+    [ModelProp("◳", "Pn", "Pln", "The plane of the piece.")]
+    public Plane Plane { get; set; } = new();
+}
 
-//    public class PieceDiagram() : Model
-//    {
-//        public ScreenPoint Point { get; set; } = new();
+/// <summary>
+///     ✏️ All diagram-related information of the piece.
+/// </summary>
+[Model("✏️", "Dg", "Dgm", "All diagram-related information of the piece.")]
+public class PieceDiagram : Model<PieceDiagram>
+{
+    /// <summary>
+    ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+    /// </summary>
+    [ModelProp("📺", "SP", "SPt",
+        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.")]
+    public ScreenPoint Point { get; set; } = new();
+}
 
-//    }
+/// <summary>
+///     ⭕ A piece is a 3d-instance of a type in a design.
+/// </summary>
+[Model("⭕", "Pc", "Pce", "A piece is a 3d-instance of a type in a design.")]
+public class Piece : Model<Piece>
+{
+    /// <summary>
+    ///     🆔 The local identifier of the piece within the design.
+    /// </summary>
+    [Id("🆔", "Id", "Id", "The local identifier of the piece within the design.")]
+    public string Id { get; set; } = "";
 
-//    public class Piece() : Model
-//    {
-//        public string Id { get; set; } = "";
-//        public TypeId Type { get; set; } = new();
-//        public PieceRoot? Root { get; set; } = null;
-//        public PieceDiagram Diagram { get; set; } = new();
+    /// <summary>
+    ///     🧩 Local identifier of the type within the kit.
+    /// </summary>
+    [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type within the kit.")]
+    public TypeId Type { get; set; } = new();
 
-//    }
+    public PieceRoot? Root { get; set; } = null;
+    public PieceDiagram Diagram { get; set; } = new();
+}
 
 //    public class PieceId() : Model
 //    {
@@ -1247,7 +1393,6 @@ public class Type : Model<Type>
 //    }
 
 //    #endregion
-
 
 public static class Serializer
 {
@@ -1458,7 +1603,6 @@ public static class Deserializer
 //        public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
 //    }
 
-
 //    public class Api : ICloneable
 //    {
 //        public Api()
@@ -1596,38 +1740,42 @@ public static class Deserializer
 
 //    }
 
-
 //#endregion
-
 
 public static class Meta
 {
     /// <summary>
-    /// Name of the model : Type
+    ///     Name of the model : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, System.Type> Type;
+
     /// <summary>
-    /// Name of the model : ModelAttribute
+    ///     Name of the model : ModelAttribute
     /// </summary>
     public static readonly ImmutableDictionary<string, ModelAttribute> Model;
+
     /// <summary>
-    /// Name of the model : Name of the property : PropertyInfo
+    ///     Name of the model : Name of the property : PropertyInfo
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
+
     /// <summary>
-    /// Name of the model : Name of the property : PropAttribute
+    ///     Name of the model : Name of the property : PropAttribute
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
+
     /// <summary>
-    /// Name of the model : Name of the property : IsList
+    ///     Name of the model : Name of the property : IsList
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
+
     /// <summary>
-    /// Name of the model : Name of the property : Type
+    ///     Name of the model : Name of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
+
     /// <summary>
-    /// Name of the model : Name of the property : IsModel
+    ///     Name of the model : Name of the property : IsModel
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyModel;
 
@@ -1654,7 +1802,8 @@ public static class Meta
             propertyItemType[mt.Name] = new List<System.Type>();
             isPropertyModel[mt.Name] = new List<bool>();
 
-            foreach (var mtp in mt.GetProperties())
+            foreach (var mtp in mt.GetProperties()
+                         .Where(mtp => mtp.GetCustomAttribute<PropAttribute>() != null))
             {
                 property[mt.Name].Add(mtp);
                 prop[mt.Name].Add(mtp.GetCustomAttribute<PropAttribute>());
@@ -1665,6 +1814,7 @@ public static class Meta
                 isPropertyModel[mt.Name].Add(mtp.GetCustomAttribute<ModelPropAttribute>() != null);
             }
         }
+
         Type = type.ToImmutableDictionary();
         Model = model.ToImmutableDictionary();
         Property = property.ToImmutableDictionary(
