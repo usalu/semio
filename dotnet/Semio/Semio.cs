@@ -614,6 +614,62 @@ public static class Constants
 //  DESIGN_DOES_NOT_EXIST
 //}
 
+//Emoji,Code,Abbreviation,Name,Description
+//🧲,Cd,Cod,Connected,The connected piece of the side.
+//🔩,Cg,Cog,Connecting,The connecting piece of the side.
+//🖇️,Co,Con,Connection,A connection between two pieces in a design.
+//🖇️,Co*,Cons,Connections,The optional connections in a design.
+//💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
+//✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
+//📁,Di?,Dir,Directory,An optional directory where to find the kit.
+//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+//🏙️,Dn*,Dsns,Designs,The designs of the kit.
+//👪,Gr,Grp,Group,The group of the locator.
+//🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
+//🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
+//🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
+//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
+//🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
+//🗺️,Lc*,Locs,Locators,The optional locators of the port.
+//🔍,Ld,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation.
+//📛,Na,Nam,Name,The name of the {{NAME}}.
+//🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+//⌱,Og,Org,Origin,The origin of the plane.
+//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+//🔌,Po+,Pors,Ports,The ports of the type.
+//◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+//◳,Pn,Pln,Plane,The plane of the piece.
+//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+//📏,Ql,Qal,Quality,A quality is meta-data for decision making.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
+//💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+//🌱,Rt,Rot,Root,The root-related information of the piece. When pieces are connected only one piece can be the root.
+//🧱,Sd,Sde,Side,A side of a piece in a connection.
+//📌,SG,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
+//📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+//✅,Su,Suc,Success,{{NAME}} was successful.
+//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+//🔖,Tg*,Tags,Tags,Optional tags to group representations.
+//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+//🧩,Ty,Typ,Type,The type-related information of the side.
+//🧩,Ty*,Typs,Types,The types of the kit.
+//🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
+//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+//Ⓜ️,Ut,Unt,Unit,The unit of the value of the quality.
+//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+//🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
+//🔢,Vl?,Val,Value,An optional value of the quality. No value is equivalent to true for the name.
+//🔀,Vn?,Vnt,Variant,An optional variant of the {{NAME}}.
+//🏁,X,X,X,The x-coordinate of the screen point.
+//🎚️,X,X,X,The x-coordinate of the point.
+//➡️,XA,XAx,XAxis,The x-axis of the plane.
+//🏁,Y,Y,Y,The y-coordinate of the screen point.
+//🎚️,Y,Y,Y,The y-coordinate of the point.
+//➡️,YA,YAx,YAxis,The y-axis of the plane.
+//🏁,Z,Z,Z,The z-coordinate of the screen point.
+//🎚️,Z,Z,Z,The z-coordinate of the point.
+
 #endregion
 
 #region Utility
@@ -669,43 +725,6 @@ public static class MimeParser
 #endregion
 
 //#region Models
-//Emoji,Code,Abbreviation,Name,Description
-//🧲,Cd,Cod,Connected,The connected piece of the side.
-//🔩,Cg,Cog,Connecting,The connecting piece of the side.
-//🖇️,Co,Con,Connection,A connection between two pieces in a design.
-//💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
-//✏️,Dg,Dgm,Diagram,All diagram-related information of the piece.
-//📁,Di,Dir,Directory,The directory of the kit.
-//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
-//👪,Gr,Grp,Group,The group of the locator.
-//🏠,Hp,Hmp,Homepage,The url of the homepage of the kit.
-//🖼️,Ic,Ico,Icon,The icon [emoji | text | image | svg] of the {{NAME}}.
-//🆔,Id,Idn,Identification,The local identification of the {{NAME}} within the {{PARENT_NAME}}.
-//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
-//🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
-//🔍,Ld,Lod,Level of Detail,The Level of Detail/Development/Design (LoD) of the representation.
-//📛,Na,Nam,Name,The name of the {{NAME}}.
-//🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
-//⌱,Og,Org,Origin,The origin of the plane.
-//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
-//◳,Pn,Ple,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
-//📏,Ql,Qal,Quality,A quality is meta-data for decision making.
-//💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-//🌱,Rt,Rot,Root,The root-related information of a piece.
-//🧱,Sd,Sde,Side,A side of a piece in a connection.
-//📌,SG,SGr,Subgroup,The sub-group of the locator.
-//📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the diagram of the piece.
-//✅,Su,Suc,Success,{{NAME}} was successful.
-//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
-//🔖,Tg,Tag,Tag,A tag is metadata for grouping representations.
-//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
-//🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
-//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
-//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
-//🔢,Vl,Val,Value,The value of the quality.
-//🔀,Vn,Vnt,Variant,An optional variant of the {{NAME}}.
 
 public abstract class ConceptAttribute : Attribute
 {
@@ -1257,7 +1276,7 @@ public class TypeId : Model<TypeId>
 /// <summary>
 ///     🌱 The root-related information of the piece. When pieces are connected only one piece can be the root.
 /// </summary>
-[Model("🌱", "Rt", "Rot",
+[Model("🌱", "Ro", "Roo",
     "The root-related information of the piece. When pieces are connected only one piece can be the root.")]
 public class PieceRoot : Model<PieceRoot>
 {
@@ -1297,100 +1316,235 @@ public class Piece : Model<Piece>
     [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type within the kit.")]
     public TypeId Type { get; set; } = new();
 
+    /// <summary>
+    ///     🌱 The root-related information of the piece.
+    /// </summary>
+    [ModelProp("🌱", "Ro", "Roo", "The root-related information of the piece.", PropImportance.OPTIONAL)]
     public PieceRoot? Root { get; set; } = null;
+
+    /// <summary>
+    ///     ✏️ The diagram-related information of the piece.
+    /// </summary>
+    [ModelProp("✏️", "Dg", "Dgm", "The diagram-related information of the piece.")]
     public PieceDiagram Diagram { get; set; } = new();
 }
 
-//    public class PieceId() : Model
-//    {
-//        public string Id { get; set; } = "";
+/// <summary>
+///     ⭕ The local identification of the piece within the design.
+/// </summary>
+public class PieceId : Model<PieceId>
+{
+    /// <summary>
+    ///     🆔 The local identifier of the piece within the design.
+    /// </summary>
+    [Id("🆔", "Id", "Id", "The local identifier of the piece within the design.")]
+    public string Id { get; set; } = "";
+}
 
-//    }
+/// <summary>
+///     🧩 The type-related information of the piece.
+/// </summary>
+[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.")]
+public class SidePieceType : Model<SidePieceType>
+{
+    /// <summary>
+    ///     🔌 The local identification of the port within the type.
+    /// </summary>
+    [Id("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+    public PortId Port { get; set; } = new();
+}
 
-//    public class SidePieceType() : Model
-//    {
-//        public PortId Port { get; set; } = new();
+/// <summary>
+///     ⭕ The piece-related information of the side.
+/// </summary>
+public class SidePiece : Model<SidePiece>
+{
+    /// <summary>
+    ///     🆔 The local identifier of the piece within the design.
+    /// </summary>
+    [Id("🆔", "Id", "Id", "The local identifier of the piece within the design.")]
+    public string Id { get; set; } = "";
 
-//    }
+    /// <summary>
+    ///     🧩 The type-related information of the piece.
+    /// </summary>
+    [ModelProp("🧩", "Ty", "Typ", "The type-related information of the piece.")]
+    public SidePieceType Type { get; set; } = new();
+}
 
-//    public class SidePiece() : Model
-//    {
-//        public string Id { get; set; } = "";
-//        public SidePieceType Type { get; set; } = new();
+/// <summary>
+///     🧲 A side of a piece in a connection.
+/// </summary>
+[Model("🧲", "Sd", "Sde", "A side of a piece in a connection.")]
+public class Side : Model<Side>
+{
+    /// <summary>
+    ///     ⭕ The piece-related information of the side.
+    /// </summary>
+    [ModelProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
+    public SidePiece Piece { get; set; } = new();
+}
 
-//    }
+/// <summary>
+///     🔗 A connection between two pieces in a design.
+/// </summary>
+[Model("🔗", "Cn", "Con", "A connection between two pieces in a design.")]
+public class Connection : Model<Connection>
+{
+    /// <summary>
+    ///     🧲 The connected side of the piece of the connection.
+    /// </summary>
+    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
+    public Side Connected { get; set; } = new();
 
-//    public class Side() : Model
-//    {
-//        public SidePiece Piece { get; set; } = new();
+    /// <summary>
+    ///     🧲 The connected side of the piece of the connection.
+    /// </summary>
+    [ModelProp("🧲", "Cg", "Cng", "The connected side of the piece of the connection.")]
+    public Side Connecting { get; set; } = new();
 
-//    }
+    /// <summary>
+    ///     🔄 The optional rotation between the connected and the connecting piece in degrees.
+    /// </summary>
+    [NumberProp("🔄", "Rt", "Rot", "The optional rotation between the connected and the connecting piece in degrees.")]
+    public float Rotation { get; set; } = 0;
 
-//    public class Connection() : Model
-//    {
-//        public Side Connected { get; set; } = new();
-//        public Side Connecting { get; set; } = new();
-//        public float Offset { get; set; } = 0;
-//        public float Rotation { get; set; } = 0;
+    /// <summary>
+    ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+    /// </summary>
+    [NumberProp("🔄", "Tl", "Tlt",
+        "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
+    public float Tilt { get; set; } = 0;
 
-//    }
+    /// <summary>
+    ///     🔄 An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
+    ///     piece.
+    /// </summary>
+    [NumberProp("🔄", "Of", "Ofs",
+        "An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
+    public float Offset { get; set; } = 0;
+}
 
-//    public class Design() : Model
-//    {
-//        public string Name { get; set; } = "";
-//        public string Description { get; set; } = "";
-//        public string Icon { get; set; } = "";
-//        public string Variant { get; set; } = "";
-//        public string Unit { get; set; } = "";
-//        public List<Piece> Pieces { get; set; } = new();
-//        public List<Connection> Connections { get; set; } = new();
-//        public List<Quality> Qualities { get; set; } = new();
+/// <summary>
+///     🏙️ A design is a collection of pieces that are connected.
+/// </summary>
+[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+public class Design : Model<Design>
+{
+    /// <summary>
+    ///     📛 Name of the design.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+    public string Name { get; set; } = "";
 
-//    public Design Flatten(Type[] types = null)
-//    {
-//        Design flattenedDesign = this.DeepClone();
-//        if (Pieces.Count <= 1 || Connections.Count == 0)
-//            return flattenedDesign;
-//        var graph = new UndirectedGraph<string, Edge<string>>();
-//        foreach (var piece in Pieces)
-//            graph.AddVertex(piece.Id);
-//        foreach (var connection in Connections)
-//            graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
-//        var root = Pieces.First(p => p.Root != null) ?? Pieces.First();
-//        var components = new Dictionary<string, int>();
-//        graph.ConnectedComponents(components);
-//        return flattenedDesign;
+    /// <summary>
+    ///     💬 An optional human description of the design.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc", "An optional human description of the design.")]
+    public string Description { get; set; } = "";
 
-//    }
-//}
+    /// <summary>
+    ///     🖼️ An optional icon [emoji | text | image | svg] of the design.
+    /// </summary>
+    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the design.")]
+    public string Icon { get; set; } = "";
 
-//    public class DesignId() : Model
-//    {
-//        public string Name { get; set; } = "";
-//        public string Variant { get; set; } = "";
+    /// <summary>
+    ///     🔀 An optional variant of the design.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt", "An optional variant of the design.", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
 
-//    }
+    /// <summary>
+    ///     Ⓜ️ The length unit for all distance-related information of the design.
+    /// </summary>
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.",
+        PropImportance.REQUIRED)]
+    public string Unit { get; set; } = "";
 
-//    public class Kit() : Model
-//    {
-//        public string Name { get; set; } = "";
-//        public string Description { get; set; } = "";
-//        public string Icon { get; set; } = "";
-//        public string Url { get; set; } = "";
-//        public string Homepage { get; set; } = "";
-//        public List<Type> Types { get; set; } = new();
-//        public List<Design> Designs { get; set; } = new();
+    /// <summary>
+    ///     ⭕ The pieces of the design.
+    /// </summary>
+    [ModelProp("⭕", "Pc+", "Pcs", "The pieces of the design.")]
+    public List<Piece> Pieces { get; set; } = new();
 
-//    }
+    /// <summary>
+    ///     🔗 The optional connections of the design.
+    /// </summary>
+    [ModelProp("🔗", "Co+", "Cons", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    public List<Connection> Connections { get; set; } = new();
 
-//    public class KitProps : Model
-//    {
-//        public string? Name { get; set; }
-//        public string? Description { get; set; }
-//        public string? Icon { get; set; }
-//        public string? Url { get; set; }
-//        public string? Homepage { get; set; }
-//    }
+    /// <summary>
+    ///     📏 The optional qualities of the design.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the design.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+
+    //public Design Flatten(Type[] types = null)
+    //{
+    //    Design flattenedDesign = this.DeepClone();
+    //    if (Pieces.Count <= 1 || Connections.Count == 0)
+    //        return flattenedDesign;
+    //    var graph = new UndirectedGraph<string, Edge<string>>();
+    //    foreach (var piece in Pieces)
+    //        graph.AddVertex(piece.Id);
+    //    foreach (var connection in Connections)
+    //        graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+    //    var root = Pieces.First(p => p.Root != null) ?? Pieces.First();
+    //    var components = new Dictionary<string, int>();
+    //    graph.ConnectedComponents(components);
+    //    return flattenedDesign;
+    //}
+}
+
+/// <summary>
+///     🧰 A kit is a collection of types and designs.
+/// </summary>
+[Model("🧰", "Kt", "Kit", "A kit is a collection of types and designs.")]
+public class Kit : Model<Kit>
+{
+    /// <summary>
+    ///     📛 Name of the kit.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     💬 An optional human description of the kit.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc", "An optional human description of the kit.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
+    ///     🖼️ An optional icon [emoji | text | image | svg] of the design.
+    /// </summary>
+    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the design.")]
+    public string Icon { get; set; } = "";
+
+    /// <summary>
+    ///     🔗 An optional Unique Resource Locator (URL) where to fetch the kit.
+    /// </summary>
+    [Url("🔗", "Ur?", "Url", "An optional Unique Resource Locator (URL) where to fetch the kit.")]
+    public string Url { get; set; } = "";
+
+    /// <summary>
+    ///     🏠 An optional Unique Resource Locator (URL) of the homepage of the kit.
+    /// </summary>
+    [Url("🏠", "Hp?", "Hmp", "An optional Unique Resource Locator (URL) of the homepage of the kit.")]
+    public string Homepage { get; set; } = "";
+
+    /// <summary>
+    ///     🧩 The optional types of the kit.
+    /// </summary>
+    [ModelProp("🧩", "Ty*", "Typs", "The optional types of the kit.")]
+    public List<Type> Types { get; set; } = new();
+
+    /// <summary>
+    ///     🏙️ The optional designs of the kit.
+    /// </summary>
+    [ModelProp("🏙️", "Dn*", "Dsns", "The optional designs of the kit.")]
+    public List<Design> Designs { get; set; } = new();
+}
 
 //    #endregion
 

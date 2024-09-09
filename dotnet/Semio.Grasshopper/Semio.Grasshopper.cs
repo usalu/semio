@@ -9,8 +9,6 @@ using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Grasshopper.Kernel.Types.Transforms;
-using Newtonsoft.Json.Linq;
 using Rhino;
 using Rhino.Geometry;
 using Semio.Grasshopper.Properties;
@@ -28,7 +26,6 @@ namespace Semio.Grasshopper;
 // The invalid check happen twice and code is duplicated.
 
 #region Copilot
-
 
 #endregion
 
@@ -70,14 +67,14 @@ public static class Utility
         return unit;
     }
 
-    public static Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
+    public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
     {
         var thetaRad = RhinoMath.ToRadians(theta);
         var orientation = Transform.Rotation(Vector3d.YAxis, yAxis, Point3d.Origin);
         var rotation = Transform.Rotation(thetaRad, yAxis, Point3d.Origin);
         var xAxis = Vector3d.XAxis;
         xAxis.Transform(rotation * orientation);
-        return new Plane(origin, xAxis, yAxis);
+        return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
     }
 }
 
@@ -85,72 +82,72 @@ public static class Utility
 
 #region Converters
 
-//public static class RhinoConverter
-//{
-//    public static Point3d convert(this Point point)
-//    {
-//        return new Point3d(point.X, point.Y, point.Z);
-//    }
+public static class RhinoConverter
+{
+    public static Point3d convert(this Point point)
+    {
+        return new Point3d(point.X, point.Y, point.Z);
+    }
 
-//    public static Point convert(this Point3d point)
-//    {
-//        return new Point
-//        {
-//            X = (float)point.X,
-//            Y = (float)point.Y,
-//            Z = (float)point.Z
-//        };
-//    }
+    public static Point convert(this Point3d point)
+    {
+        return new Point
+        {
+            X = (float)point.X,
+            Y = (float)point.Y,
+            Z = (float)point.Z
+        };
+    }
 
-//    public static Vector3d convert(this Vector vector)
-//    {
-//        return new Vector3d(vector.X, vector.Y, vector.Z);
-//    }
+    public static Vector3d convert(this Vector vector)
+    {
+        return new Vector3d(vector.X, vector.Y, vector.Z);
+    }
 
-//    public static Vector convert(this Vector3d vector)
-//    {
-//        return new Vector
-//        {
-//            X = (float)vector.X,
-//            Y = (float)vector.Y,
-//            Z = (float)vector.Z
-//        };
-//    }
+    public static Vector convert(this Vector3d vector)
+    {
+        return new Vector
+        {
+            X = (float)vector.X,
+            Y = (float)vector.Y,
+            Z = (float)vector.Z
+        };
+    }
 
-//    public static Rhino.Geometry.Plane convert(this Plane plane)
-//    {
-//        return new Rhino.Geometry.Plane(
-//            new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
-//            new Vector3d(plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z),
-//            new Vector3d(plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z)
-//        );
-//    }
+    public static Rhino.Geometry.Plane convert(this Plane plane)
+    {
+        return new Rhino.Geometry.Plane(
+            new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
+            new Vector3d(plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z),
+            new Vector3d(plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z)
+        );
+    }
 
-//    public static Plane convert(this Rhino.Geometry.Plane plane)
-//    {
-//        return new Plane
-//        {
-//            Origin = new Point
-//            {
-//                X = (float)plane.OriginX,
-//                Y = (float)plane.OriginY,
-//                Z = (float)plane.OriginZ
-//            },
-//            XAxis = new Vector
-//            {
-//                X = (float)plane.XAxis.X,
-//                Y = (float)plane.XAxis.Y,
-//                Z = (float)plane.XAxis.Z
-//            },
-//            YAxis = new Vector
-//            {
-//                X = (float)plane.YAxis.X,
-//                Y = (float)plane.YAxis.Y,
-//                Z = (float)plane.YAxis.Z
-//            }
-//        };
-//    }
-//}
+    public static Plane convert(this Rhino.Geometry.Plane plane)
+    {
+        return new Plane
+        {
+            Origin = new Point
+            {
+                X = (float)plane.OriginX,
+                Y = (float)plane.OriginY,
+                Z = (float)plane.OriginZ
+            },
+            XAxis = new Vector
+            {
+                X = (float)plane.XAxis.X,
+                Y = (float)plane.XAxis.Y,
+                Z = (float)plane.XAxis.Z
+            },
+            YAxis = new Vector
+            {
+                X = (float)plane.YAxis.X,
+                Y = (float)plane.YAxis.Y,
+                Z = (float)plane.YAxis.Z
+            }
+        };
+    }
+}
 
 #endregion
 
@@ -203,6 +200,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 public class RepresentationGoo : ModelGoo<Representation>
 {
 }
+
 public class LocatorGoo : ModelGoo<Locator>
 {
     public override bool CastTo<Q>(ref Q target)
@@ -329,6 +327,7 @@ public class ScreenPointGoo : ModelGoo<ScreenPoint>
 
         return false;
     }
+
     public override bool CastFrom(object source)
     {
         if (source == null) return false;
@@ -348,245 +347,68 @@ public class ScreenPointGoo : ModelGoo<ScreenPoint>
     }
 }
 
-//public class PieceGoo : GH_Goo<Piece>
-//{
-//    public PieceGoo()
-//    {
-//        Value = new Piece();
-//    }
+public class PieceGoo : ModelGoo<Piece>
+{
+}
 
-//    public PieceGoo(Piece piece)
-//    {
-//        Value = piece;
-//    }
+public class SideGoo : ModelGoo<Side>
+{
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Piece.Id);
+            target = (Q)ptr;
+            return true;
+        }
 
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Piece";
-//    public override string TypeDescription { get; }
+        return false;
+    }
 
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new PieceGoo((Piece)Value.DeepClone());
-//    }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
 
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
+        string str;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Side
+            {
+                Piece = new SidePiece
+                {
+                    Id = str
+                }
+            };
+            return true;
+        }
 
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Piece", Value.Serialize());
-//        return base.Write(writer);
-//    }
+        if (source is Piece piece)
+        {
+            Value = new Side
+            {
+                Piece = new SidePiece
+                {
+                    Id = piece.Id
+                }
+            };
+            return true;
+        }
 
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Piece").Deserialize<Piece>();
-//        return base.Read(reader);
-//    }
-//}
+        return false;
+    }
+}
 
-//public class SideGoo : GH_Goo<Side>
-//{
-//    public SideGoo()
-//    {
-//        Value = new Side();
-//    }
+public class ConnectionGoo : ModelGoo<Connection>
+{
+}
 
-//    public SideGoo(Side side)
-//    {
-//        Value = side;
-//    }
+public class DesignGoo : ModelGoo<Design>
+{
+}
 
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Side";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new SideGoo((Side)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Side", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Side").Deserialize<Side>();
-//        return base.Read(reader);
-//    }
-
-//    public override bool CastTo<Q>(ref Q target)
-//    {
-//        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-//        {
-//            object ptr = new GH_String(Value.Piece.Id);
-//            target = (Q)ptr;
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public override bool CastFrom(object source)
-//    {
-//        if (source == null) return false;
-
-//        string str;
-//        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-//        {
-//            Value = new Side
-//            {
-//                Piece = new SidePiece
-//                {
-//                    Id = str
-//                }
-//            };
-//            return true;
-//        }
-
-//        if (source is Piece piece)
-//        {
-//            Value = new Side
-//            {
-//                Piece = new SidePiece
-//                {
-//                    Id = piece.Id
-//                }
-//            };
-//            return true;
-//        }
-
-//        return false;
-//    }
-//}
-
-//public class ConnectionGoo : GH_Goo<Connection>
-//{
-//    public ConnectionGoo()
-//    {
-//        Value = new Connection();
-//    }
-
-//    public ConnectionGoo(Connection connection)
-//    {
-//        Value = connection;
-//    }
-
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Connection";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new ConnectionGoo((Connection)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Connection", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Connection").Deserialize<Connection>();
-//        return base.Read(reader);
-//    }
-//}
-
-//// TODO: Implement cast with type
-//public class DesignGoo : GH_Goo<Design>
-//{
-//    public DesignGoo()
-//    {
-//        Value = new Design();
-//    }
-
-//    public DesignGoo(Design design)
-//    {
-//        Value = design;
-//    }
-
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Design";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new DesignGoo((Design)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Design", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Design").Deserialize<Design>();
-//        return base.Read(reader);
-//    }
-//}
-
-//public class KitGoo : GH_Goo<Kit>
-//{
-//    public KitGoo()
-//    {
-//        Value = new Kit();
-//    }
-
-//    public KitGoo(Kit kit)
-//    {
-//        Value = kit;
-//    }
-
-//    public override bool IsValid { get; }
-//    public override string TypeName => "Kit";
-//    public override string TypeDescription { get; }
-
-//    public override IGH_Goo Duplicate()
-//    {
-//        return new KitGoo((Kit)Value.DeepClone());
-//    }
-
-//    public override string ToString()
-//    {
-//        return Value.ToString();
-//    }
-
-//    public override bool Write(GH_IWriter writer)
-//    {
-//        writer.SetString("Kit", Value.Serialize());
-//        return base.Write(writer);
-//    }
-
-//    public override bool Read(GH_IReader reader)
-//    {
-//        Value = reader.GetString("Kit").Deserialize<Kit>();
-//        return base.Read(reader);
-//    }
-//}
+public class KitGoo : ModelGoo<Kit>
+{
+}
 
 #endregion
 
@@ -634,132 +456,47 @@ public class LocatorParam : ModelParam<LocatorGoo, Locator>
 public class PortParam : ModelParam<PortGoo, Port>
 {
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
-
 }
 
 public class QualityParam : ModelParam<QualityGoo, Quality>
 {
     public override Guid ComponentGuid => new("[431125C0-B98C-4122-9598-F72714AC9B94");
-
 }
-
 
 public class TypeParam : ModelParam<TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
-
 }
 
 public class ScreenPointParam : ModelParam<ScreenPointGoo, ScreenPoint>
 {
     public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
-
 }
 
-//public class PieceParam : ModelParam<PieceGoo>
-//{
-//    public PieceParam() : base("Piece", "Pc", "", "semio", "Params")
-//    {
-//    }
+public class PieceParam : ModelParam<PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
+}
 
-//    public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
+public class SideParam : ModelParam<SideGoo, Side>
+{
+    public override Guid ComponentGuid => new("4FDE465D-39AB-41C7-AF82-252F1F7C80B9");
+}
 
-//    protected override Bitmap Icon => Resources.piece_24x24;
+public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
+{
+    public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
+}
 
-//    protected override GH_GetterResult Prompt_Singular(ref PieceGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
+public class DesignParam : ModelParam<DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
+}
 
-//    protected override GH_GetterResult Prompt_Plural(ref List<PieceGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
-
-//public class SideParam : ModelParam<SideGoo>
-//{
-//    public SideParam() : base("Side", "Sd", "", "semio", "Params")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("4FDE465D-39AB-41C7-AF82-252F1F7C80B9");
-
-//    protected override Bitmap Icon => Resources.side_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref SideGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<SideGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
-
-//public class ConnectionParam : ModelParam<ConnectionGoo>
-//{
-//    public ConnectionParam() : base("Connection", "Co", "", "semio", "Params")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
-
-//    protected override Bitmap Icon => Resources.connection_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref ConnectionGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<ConnectionGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
-
-//public class DesignParam : ModelParam<DesignGoo>
-//{
-//    public DesignParam() : base("Design", "Dn", "", "semio", "Params")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
-
-//    protected override Bitmap Icon => Resources.design_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref DesignGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<DesignGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
-
-//public class KitParam : ModelParam<KitGoo>
-//{
-//    public KitParam() : base("Kit", "Kt", "", "semio", "Params")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
-
-//    protected override Bitmap Icon => Resources.kit_24x24;
-
-//    protected override GH_GetterResult Prompt_Singular(ref KitGoo value)
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    protected override GH_GetterResult Prompt_Plural(ref List<KitGoo> values)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
+public class KitParam : ModelParam<KitGoo, Kit>
+{
+    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
+}
 
 #endregion
 
@@ -812,10 +549,19 @@ public abstract class ModelComponent<T, U, V> : Component
         PropertyGooM = Meta.PropertyGoo[NameM];
         PropertyParamM = Meta.PropertyParam[NameM];
     }
-    
+
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
         $"Construct, deconstruct or modify a {NameM.ToLower()}", "Modelling")
     {
+    }
+
+    protected override Bitmap Icon
+    {
+        get
+        {
+            var iconName = $"{typeof(V).Name.ToLower()}_modify_24x24";
+            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
+        }
     }
 
     protected void AddModelParameters(dynamic pManager, bool isOutput = false)
@@ -827,7 +573,7 @@ public abstract class ModelComponent<T, U, V> : Component
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
 
-        for (int i = 0; i < PropertyM.Length; i++)
+        for (var i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
             var propAttribute = PropM[i];
@@ -857,13 +603,13 @@ public abstract class ModelComponent<T, U, V> : Component
         dynamic modelGoo = Activator.CreateInstance(GooM);
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
-        for (int i = 0; i < PropertyM.Length; i++)
+        for (var i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
             var isList = IsPropertyList[i];
             var itemType = PropertyItemType[i];
             dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]);
-            dynamic value = gooValue;
+            var value = gooValue;
             bool hasInput = isList ? DA.GetDataList(i + 1, value) : DA.GetData(i + 1, ref value);
             if (hasInput)
             {
@@ -877,55 +623,51 @@ public abstract class ModelComponent<T, U, V> : Component
                     property.SetValue(modelGoo.Value, value);
                 }
                 else
-                    property.SetValue(modelGoo.Value,  value.Value);
+                {
+                    property.SetValue(modelGoo.Value, value.Value);
+                }
             }
         }
 
         // Process
         modelGoo.Value = ProcessModel(modelGoo.Value);
-        var (isValid, errors) = ((bool,List<string>))modelGoo.Value.Validate();
+        var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
         foreach (var error in errors)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
 
         // Output
         DA.SetData(0, modelGoo.Duplicate());
-        for (int i = 0; i < PropertyM.Length; i++)
+        for (var i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
             var isList = IsPropertyList[i];
             var isPropertyModel = IsPropertyModel[i];
-            dynamic value = property.GetValue(modelGoo.Value);
+            var value = property.GetValue(modelGoo.Value);
             if (isList)
             {
                 dynamic list = Activator.CreateInstance(PropertyGooM[i]);
                 if (isPropertyModel)
-                {
                     foreach (var item in value)
                     {
                         dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i]);
                         itemGoo.Value = item.DeepClone();
                         list.Add(itemGoo);
                     }
-                }
                 else
                     list = value;
+
                 DA.SetDataList(i + 1, list);
             }
             else
+            {
                 DA.SetData(i + 1, value);
+            }
         }
     }
+
     protected virtual V ProcessModel(V model)
     {
         return model;
-    }
-    protected override Bitmap Icon
-    {
-        get
-        {
-            var iconName = $"{typeof(V).Name.ToLower()}_modify_24x24";
-            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
-        }
     }
 }
 
@@ -941,786 +683,87 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     }
 }
 
-//public class LocatorComponent : ModelComponent<Locator>
-//{
-//    public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
-//    protected override Bitmap Icon => Resources.locator_modify_24x24;
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new LocatorParam(), "Locator", "Sp?",
-//            "Optional locator to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Group", "Gr", "Group of the locator.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Subgroup", "SG?", "Optional subgroup of the locator.",
-//            GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//    }
+public class LocatorComponent : ModelComponent<LocatorParam, LocatorGoo, Locator>
+{
+    public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
+}
 
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new LocatorParam(), "Locator", "Lc",
-//            "Constructed or modified locator.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Group", "Gr", "Group of the locator.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Subgroup", "SG?", "Optional subgroup of the locator.",
-//            GH_ParamAccess.item);
-//    }
+public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
+{
+    public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+}
 
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var locatorGoo = new LocatorGoo();
-//        var group = "";
-//        var subgroup = "";
-
-//        if (DA.GetData(0, ref locatorGoo))
-//            locatorGoo = locatorGoo.Duplicate() as LocatorGoo;
-//        if (DA.GetData(1, ref group))
-//            locatorGoo.Value.Group = group;
-//        if (DA.GetData(2, ref subgroup))
-//            locatorGoo.Value.Subgroup = subgroup;
-
-//        var isValidInput = true;
-//        if (locatorGoo.Value.Group == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A locator needs a group.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, locatorGoo.Duplicate());
-//        DA.SetData(1, locatorGoo.Value.Group);
-//        DA.SetData(2, locatorGoo.Value.Subgroup);
-//    }
-//}
-
-//public class PortComponent : ModelComponent<Port>
-//{
-
-//    public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
-
-//    protected override Bitmap Icon => Resources.port_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new PortParam(), "Port", "Po?",
-//            "Optional port to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Id", "Id?", "Optional id of the port.", GH_ParamAccess.item);
-//        pManager.AddPointParameter("Point", "Pt", "Point of the port.", GH_ParamAccess.item);
-//        pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
-//        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*",
-//            "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
-//            GH_ParamAccess.list);
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new PortParam(), "Port", "Po",
-//            "Constructed or modified port.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Id", "Id", "Id of the port.", GH_ParamAccess.item);
-//        pManager.AddPointParameter("Point", "Pt", "Point of the port.", GH_ParamAccess.item);
-//        pManager.AddVectorParameter("Direction", "Di", "Direction of the port.", GH_ParamAccess.item);
-//        pManager.AddParameter(new LocatorParam(), "Locators", "Lc*",
-//            "Optional locators of the port. Locators help to understand the location of the port. Every port should have a set of unique locators.",
-//            GH_ParamAccess.list);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var portGoo = new PortGoo();
-//        var id = "";
-//        var pointGeo = new Point3d();
-//        var directionGeo = new Vector3d();
-//        var locatorGoos = new List<LocatorGoo>();
-
-//        if (DA.GetData(0, ref portGoo))
-//            portGoo = portGoo.Duplicate() as PortGoo;
-//        if (DA.GetData(1, ref id))
-//            portGoo.Value.Id = id;
-//        if (DA.GetData(2, ref pointGeo))
-//            portGoo.Value.Point = pointGeo.convert();
-//        if (DA.GetData(3, ref directionGeo))
-//            portGoo.Value.Direction = directionGeo.convert();
-//        if (DA.GetDataList(4, locatorGoos))
-//            portGoo.Value.Locators = locatorGoos.Select(s => s.Value).ToList();
-
-//        var isValidInput = true;
-//        if (portGoo.Value.Point.IsInvalid())
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "");
-//            isValidInput = false;
-//        }
-
-//        if (portGoo.Value.Direction.IsInvalid())
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A port needs a direction.");
-//            isValidInput = false;
-//        }
-
-//        if (portGoo.Value.Direction.IsZero())
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The direction needs to point somewhere.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, portGoo.Duplicate());
-//        DA.SetData(1, portGoo.Value.Id);
-//        DA.SetData(2, portGoo.Value.Point.convert());
-//        DA.SetData(3, portGoo.Value.Direction.convert());
-//        DA.SetDataList(4, portGoo.Value.Locators.Select(s => new LocatorGoo(s.DeepClone()
-//        )));
-//    }
-//}
-
-//public class QualityComponent : Component
-//{
-//    public QualityComponent()
-//        : base("Model Quality", "~Qlt",
-//            "Construct, deconstruct or modify a quality.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
-
-//    protected override Bitmap Icon => Resources.quality_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new QualityParam(), "Quality", "Ql?",
-//            "Optional quality to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Name", "Na", "Name of the quality.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Value", "Va?", "Optional value of the quality. No value means true.",
-//            GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Unit", "Un?", " Optional unit of the quality.", GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddTextParameter("Definition", "Df?", "Optional definition of the quality.", GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new QualityParam(), "Quality", "Ql",
-//            "Constructed or modified quality.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Name", "Na", "Name of the quality.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Value", "Va?", "Optional value of the quality. No value means true.",
-//            GH_ParamAccess.item);
-//        pManager.AddTextParameter("Unit", "Un?", "Optional unit of the quality.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Definition", "Df?", "Optional definition of the quality.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var qualityGoo = new QualityGoo();
-//        var name = "";
-//        var value = "";
-//        var unit = "";
-//        var definition = "";
-
-//        if (DA.GetData(0, ref qualityGoo))
-//            qualityGoo = qualityGoo.Duplicate() as QualityGoo;
-//        if (DA.GetData(1, ref name))
-//            qualityGoo.Value.Name = name;
-//        if (DA.GetData(2, ref value))
-//            qualityGoo.Value.Value = value;
-//        if (DA.GetData(3, ref unit))
-//            qualityGoo.Value.Unit = unit;
-//        if (DA.GetData(4, ref definition))
-//            qualityGoo.Value.Definition = definition;
-
-//        var isValidInput = true;
-//        if (qualityGoo.Value.Name == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A quality needs a name.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, qualityGoo.Duplicate());
-//        DA.SetData(1, qualityGoo.Value.Name);
-//        DA.SetData(2, qualityGoo.Value.Value);
-//        DA.SetData(3, qualityGoo.Value.Unit);
-//        DA.SetData(4, qualityGoo.Value.Definition);
-//    }
-//}
+public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+}
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
 
-    protected override Type ProcessModel(Type model)
+    protected override Type ProcessModel(Type type)
     {
-        if (model.Unit == "")
+        if (type.Unit == "")
             try
             {
                 var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                model.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+                type.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
             }
             catch (Exception e)
             {
-                model.Unit = "m";
+                type.Unit = "m";
             }
 
-        return model;
+        return type;
     }
 }
 
-//public class ScreenPointComponent : Component
-//{
-//    public ScreenPointComponent()
-//        : base("Model Screen Point", "~SP",
-//            "Construct, deconstruct or modify a screen point.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
-
-//    protected override Bitmap Icon => Resources.screenpoint_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP?",
-//            "Optional screen point to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddIntegerParameter("X", "X", "X coordinate of the screen point.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddIntegerParameter("Y", "Y", "Y coordinate of the screen point.", GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP",
-//            "Constructed or modified screen point.", GH_ParamAccess.item);
-//        pManager.AddIntegerParameter("X", "X", "X coordinate of the screen point.", GH_ParamAccess.item);
-//        pManager.AddIntegerParameter("Y", "Y", "Y coordinate of the screen point.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var screenPointGoo = new ScreenPointGoo();
-//        var x = 0;
-//        var y = 0;
-
-//        if (DA.GetData(0, ref screenPointGoo))
-//            screenPointGoo = screenPointGoo.Duplicate() as ScreenPointGoo;
-//        if (DA.GetData(1, ref x))
-//            screenPointGoo.Value.X = x;
-//        if (DA.GetData(2, ref y))
-//            screenPointGoo.Value.Y = y;
-
-//        DA.SetData(0, screenPointGoo.Duplicate());
-//        DA.SetData(1, screenPointGoo.Value.X);
-//        DA.SetData(2, screenPointGoo.Value.Y);
-//    }
-//}
-
-//public class PieceComponent : Component
-//{
-//    public PieceComponent()
-//        : base("Model Piece", "~Pce",
-//            "Construct, deconstruct or modify a piece.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
-
-//    protected override Bitmap Icon => Resources.piece_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new PieceParam(), "Piece", "Pc?",
-//            "Optional piece to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Id", "Id",
-//            "Id of the piece.",
-//            GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Type Variant", "TyVn?",
-//            "Optional variant of the type of the piece. No variant means the default variant.",
-//            GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddPlaneParameter("Root Plane", "RtPn?",
-//            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
-//            GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
-//            "Screen point of the piece in the diagram.",
-//            GH_ParamAccess.item);
-//        pManager[5].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new PieceParam(), "Piece", "Pc",
-//            "Constructed or modified piece.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Type Variant", "TyVn?",
-//            "Optional variant of the type of the piece. No variant means the default variant.",
-//            GH_ParamAccess.item);
-//        pManager.AddPlaneParameter("Root Plane", "RtPn?",
-//            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
-//            GH_ParamAccess.item);
-//        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
-//            "Screen point of the piece in the diagram.",
-//            GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var pieceGoo = new PieceGoo();
-//        var id = "";
-//        var typeName = "";
-//        var typeVariant = "";
-//        var rootPlane = new Rhino.Geometry.Plane();
-//        var screenPointGoo = new ScreenPointGoo();
-
-//        if (DA.GetData(0, ref pieceGoo))
-//            pieceGoo = pieceGoo.Duplicate() as PieceGoo;
-//        if (DA.GetData(1, ref id))
-//            pieceGoo.Value.Id = id;
-//        if (DA.GetData(2, ref typeName))
-//            pieceGoo.Value.Type.Name = typeName;
-//        if (DA.GetData(3, ref typeVariant))
-//            pieceGoo.Value.Type.Variant = typeVariant;
-//        if (DA.GetData(4, ref rootPlane))
-//            pieceGoo.Value.Root = new PieceRoot { Plane = rootPlane.convert() };
-//        if (DA.GetData(5, ref screenPointGoo))
-//            pieceGoo.Value.Diagram.Point = screenPointGoo.Value;
-
-//        var isValidInput = true;
-//        if (pieceGoo.Value.Id == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A piece needs an id.");
-//            isValidInput = false;
-//        }
-
-//        if (pieceGoo.Value.Type.Name == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A piece needs a type name.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, pieceGoo.Duplicate());
-//        DA.SetData(1, pieceGoo.Value.Id);
-//        DA.SetData(2, pieceGoo.Value.Type.Name);
-//        DA.SetData(3, pieceGoo.Value.Type.Variant);
-//        DA.SetData(4, pieceGoo.Value.Root?.Plane.convert());
-//        DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.Diagram.Point));
-//    }
-//}
-
-//public class SideComponent : Component
-//{
-//    public SideComponent()
-//        : base("Model Side", "~Sde",
-//            "Construct, deconstruct or modify a side.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("AE68EB0B-01D6-458E-870E-346E7C9823B5");
-
-//    protected override Bitmap Icon => Resources.side_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new SideParam(), "Side", "Sd?",
-//            "Optional side to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
-//            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
-//            GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new SideParam(), "Side", "Sd",
-//            "Constructed or modified side.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
-//        pManager.AddParameter(new LocatorParam(), "Piece Type Port Id", "PcTyPoId?",
-//            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
-//            GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var sideGoo = new SideGoo();
-//        var pieceId = "";
-//        var pieceTypePortId = "";
-
-//        if (DA.GetData(0, ref sideGoo))
-//            sideGoo = sideGoo.Duplicate() as SideGoo;
-//        if (DA.GetData(1, ref pieceId))
-//            sideGoo.Value.Piece.Id = pieceId;
-//        if (DA.GetData(2, ref pieceTypePortId))
-//            sideGoo.Value.Piece.Type.Port.Id = pieceTypePortId;
-
-//        var isValidInput = true;
-//        if (sideGoo.Value.Piece.Id == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A side needs a piece id.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, sideGoo.Duplicate());
-//        DA.SetData(1, sideGoo.Value.Piece.Id);
-//        DA.SetData(2, sideGoo.Value.Piece.Type.Port.Id);
-//    }
-//}
-
-//public class ConnectionComponent : Component
-//{
-//    public ConnectionComponent()
-//        : base("Model Connection", "~Con",
-//            "Construct, deconstruct or modify an connection.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
-
-//    protected override Bitmap Icon => Resources.connection_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new ConnectionParam(), "Connection", "Co?",
-//            "Optional connection to deconstruct or modify.", GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddParameter(new SideParam(), "Connected Side", "CdSd", "Connected side of the connection.",
-//            GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddParameter(new SideParam(), "Connecting Side", "CgSd", "Connecting side of the connection.",
-//            GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
-//            GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddNumberParameter("Rotation", "Rt?",
-//            "Optional rotation (degree around the port direction) of the connection.",
-//            GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new ConnectionParam(), "Connection", "Co",
-//            "Constructed or modified connection.", GH_ParamAccess.item);
-//        pManager.AddParameter(new SideParam(), "Connected Side", "CdSd", "Connected side of the connection.",
-//            GH_ParamAccess.item);
-//        pManager.AddParameter(new SideParam(), "Connecting Side", "CgSd", "Connecting side of the connection.",
-//            GH_ParamAccess.item);
-//        pManager.AddNumberParameter("Offset", "Of?", "Optional offset (in port direction) of the connection.",
-//            GH_ParamAccess.item);
-//        pManager.AddNumberParameter("Rotation", "Rt?",
-//            "Optional rotation (degree around the port direction) of the connection.",
-//            GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var connectionGoo = new ConnectionGoo();
-//        var connectedSideGoo = new SideGoo();
-//        var connectingSideGoo = new SideGoo();
-//        var offset = 0.0;
-//        var rotation = 0.0;
-
-//        if (DA.GetData(0, ref connectionGoo))
-//            connectionGoo = connectionGoo.Duplicate() as ConnectionGoo;
-//        if (DA.GetData(1, ref connectedSideGoo)) connectionGoo.Value.Connected = connectedSideGoo.Value;
-//        if (DA.GetData(2, ref connectingSideGoo)) connectionGoo.Value.Connecting = connectingSideGoo.Value;
-//        if (DA.GetData(3, ref offset)) connectionGoo.Value.Offset = (float)offset;
-//        if (DA.GetData(4, ref rotation)) connectionGoo.Value.Rotation = (float)rotation;
-
-//        var isValidInput = true;
-//        if (connectionGoo.Value.Connected.IsInvalid())
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connected side.");
-//            isValidInput = false;
-//        }
-
-//        if (connectionGoo.Value.Connecting.IsInvalid())
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An connection needs an connecting side.");
-//            isValidInput = false;
-//        }
-
-//        if (connectionGoo.Value.Connecting.Piece.Id != "" &&
-//            connectionGoo.Value.Connected.Piece.Id == connectionGoo.Value.Connecting.Piece.Id)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "An connection cannot attract itself.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, connectionGoo.Duplicate());
-//        DA.SetData(1, new SideGoo(connectionGoo.Value.Connected?.DeepClone()));
-//        DA.SetData(2, new SideGoo(connectionGoo.Value.Connecting.DeepClone()));
-//        DA.SetData(3, connectionGoo.Value.Offset);
-//        DA.SetData(4, connectionGoo.Value.Rotation);
-//    }
-//}
-
-//public class DesignComponent : Component
-//{
-//    public DesignComponent()
-//        : base("Model Design", "~Dsn",
-//            "Construct, deconstruct or modify a design.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
-
-//    protected override Bitmap Icon => Resources.design_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new DesignParam(), "Design", "Dn?",
-//            "Optional design to deconstruct or modify. A design is a collection of pieces that are connected.",
-//            GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Name", "Na", "Name of the design.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the design.", GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the design.", GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddTextParameter("Variant", "Vn?",
-//            "Optional variant of the design. No variant means the default variant. There can be only one default variant.",
-//            GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//        pManager.AddTextParameter("Unit", "Ut", "Unit of the design.", GH_ParamAccess.item);
-//        pManager[5].Optional = true;
-//        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the design.", GH_ParamAccess.list);
-//        pManager[6].Optional = true;
-//        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the design.",
-//            GH_ParamAccess.list);
-//        pManager[7].Optional = true;
-//        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-//            "Optional qualities of the design. A quality is meta-data for decision making.",
-//            GH_ParamAccess.list);
-//        pManager[8].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-//            "Constructed or modified design. A design is a collection of pieces that are connected.",
-//            GH_ParamAccess.item);
-//        pManager.AddTextParameter("Name", "Na", "Name of the design.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the design.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the design.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Variant", "Vn?",
-//            "Optional variant of the design. No variant means the default variant. There can be only one default variant.",
-//            GH_ParamAccess.item);
-//        pManager.AddTextParameter("Unit", "Ut", "Unit of the design.", GH_ParamAccess.item);
-//        pManager.AddParameter(new PieceParam(), "Pieces", "Pc+", "Pieces of the design.", GH_ParamAccess.list);
-//        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "Optional connections of the design.",
-//            GH_ParamAccess.list);
-//        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-//            "Optional qualities of the design. A quality is meta-data for decision making.",
-//            GH_ParamAccess.list);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var designGoo = new DesignGoo();
-//        var name = "";
-//        var description = "";
-//        var icon = "";
-//        var variant = "";
-//        var unit = "";
-//        var pieceGoos = new List<PieceGoo>();
-//        var connectionGoos = new List<ConnectionGoo>();
-//        var qualityGoos = new List<QualityGoo>();
-
-//        if (DA.GetData(0, ref designGoo))
-//            designGoo = designGoo.Duplicate() as DesignGoo;
-//        if (DA.GetData(1, ref name))
-//            designGoo.Value.Name = name;
-//        if (DA.GetData(2, ref description))
-//            designGoo.Value.Description = description;
-//        if (DA.GetData(3, ref icon))
-//            designGoo.Value.Icon = icon;
-//        if (DA.GetData(4, ref variant))
-//            designGoo.Value.Variant = variant;
-//        if (!DA.GetData(5, ref unit))
-//            try
-//            {
-//                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-//                designGoo.Value.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
-//            }
-//            catch (Exception e)
-//            {
-//                designGoo.Value.Unit = "m";
-//            }
-//        else
-//            designGoo.Value.Unit = unit;
-
-//        if (DA.GetDataList(6, pieceGoos))
-//            designGoo.Value.Pieces = pieceGoos.Select(p => p.Value).ToList();
-//        if (DA.GetDataList(7, connectionGoos))
-//            designGoo.Value.Connections = connectionGoos.Select(a => a.Value).ToList();
-//        if (DA.GetDataList(8, qualityGoos))
-//            designGoo.Value.Qualities = qualityGoos.Select(q => q.Value).ToList();
-
-//        var isValidInput = true;
-//        if (designGoo.Value.Name == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs a name.");
-//            isValidInput = false;
-//        }
-
-//        // currently impossible
-//        if (designGoo.Value.Unit == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs a unit.");
-//            isValidInput = false;
-//        }
-
-//        if (!Utility.IsValidUnit(designGoo.Value.Unit))
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "The unit is not valid.");
-//            isValidInput = false;
-//        }
-
-//        if (designGoo.Value.Pieces.Count == 0)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A design needs at least one piece.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, designGoo.Duplicate());
-//        DA.SetData(1, designGoo.Value.Name);
-//        DA.SetData(2, designGoo.Value.Description);
-//        DA.SetData(3, designGoo.Value.Icon);
-//        DA.SetData(4, designGoo.Value.Variant);
-//        DA.SetData(5, designGoo.Value.Unit);
-//        DA.SetDataList(6, designGoo.Value.Pieces.Select(p => new PieceGoo(p.DeepClone())));
-//        DA.SetDataList(7, designGoo.Value.Connections.Select(a => new ConnectionGoo(a.DeepClone())));
-//        DA.SetDataList(8, designGoo.Value.Qualities.Select(q => new QualityGoo(q.DeepClone())));
-//    }
-//}
-
-//public class KitComponent : Component
-//{
-//    public KitComponent()
-//        : base("Model Kit", "~Kit",
-//            "Construct, deconstruct or modify a kit.",
-//            "semio", "Modelling")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
-
-//    protected override Bitmap Icon => Resources.kit_modify_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddParameter(new KitParam(), "Kit", "Ki?",
-//            "Optional kit to deconstruct or modify.",
-//            GH_ParamAccess.item);
-//        pManager[0].Optional = true;
-//        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-//        pManager[3].Optional = true;
-//        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-//        pManager[4].Optional = true;
-//        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-//        pManager[5].Optional = true;
-//        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Types of the kit.", GH_ParamAccess.list);
-//        pManager[6].Optional = true;
-//        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Designs of the kit.", GH_ParamAccess.list);
-//        pManager[7].Optional = true;
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new KitParam(), "Kit", "Ki",
-//            "Constructed or modified kit.",
-//            GH_ParamAccess.item);
-//        pManager.AddTextParameter("Name", "Na", "Name of the kit.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Description", "Dc?", "Optional description of the kit.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Icon", "Ic?", "Optional icon of the kit.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Url", "Ur?", "Optional url of the kit.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Homepage", "Hp?", "Optional homepage of the kit.", GH_ParamAccess.item);
-//        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "Optional types of the kit.", GH_ParamAccess.list);
-//        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "Optional designs of the kit.", GH_ParamAccess.list);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var kitGoo = new KitGoo();
-//        var name = "";
-//        var description = "";
-//        var icon = "";
-//        var url = "";
-//        var homepage = "";
-//        var typeGoos = new List<TypeGoo>();
-//        var designGoos = new List<DesignGoo>();
-
-//        if (DA.GetData(0, ref kitGoo))
-//            kitGoo = kitGoo.Duplicate() as KitGoo;
-//        if (DA.GetData(1, ref name))
-//            kitGoo.Value.Name = name;
-//        if (DA.GetData(2, ref description))
-//            kitGoo.Value.Description = description;
-//        if (DA.GetData(3, ref icon))
-//            kitGoo.Value.Icon = icon;
-//        if (DA.GetData(4, ref url))
-//            kitGoo.Value.Url = url;
-//        if (DA.GetData(5, ref homepage))
-//            kitGoo.Value.Homepage = homepage;
-//        if (DA.GetDataList(6, typeGoos))
-//            kitGoo.Value.Types = typeGoos.Select(t => t.Value).ToList();
-//        if (DA.GetDataList(7, designGoos))
-//            kitGoo.Value.Designs = designGoos.Select(d => d.Value).ToList();
-
-//        var isValidInput = true;
-//        if (kitGoo.Value.Name == "")
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "A kit needs a name.");
-//            isValidInput = false;
-//        }
-
-//        if (!isValidInput) return;
-
-//        DA.SetData(0, kitGoo.Duplicate());
-//        DA.SetData(1, kitGoo.Value.Name);
-//        DA.SetData(2, kitGoo.Value.Description);
-//        DA.SetData(3, kitGoo.Value.Icon);
-//        DA.SetData(4, kitGoo.Value.Url);
-//        DA.SetData(5, kitGoo.Value.Homepage);
-//        DA.SetDataList(6, kitGoo.Value.Types.Select(t => new TypeGoo(t.DeepClone())));
-//        DA.SetDataList(7, kitGoo.Value.Designs.Select(d => new DesignGoo(d.DeepClone())));
-//    }
-//}
-
+public class ScreenPointComponent : ModelComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+{
+    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+}
+
+public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
+}
+
+public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
+{
+    public override Guid ComponentGuid => new("AE68EB0B-01D6-458E-870E-346E7C9823B5");
+}
+
+public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
+{
+    public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+}
+
+public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
+
+    protected override Design ProcessModel(Design design)
+    {
+        if (design.Unit == "")
+            try
+            {
+                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
+                design.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+            }
+            catch (Exception e)
+            {
+                design.Unit = "m";
+            }
+
+        return design;
+    }
+}
+
+public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
+{
+    public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+}
 
 //public class RandomIdsComponent : Component
 //{
@@ -1840,12 +883,10 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 //        pManager.AddBooleanParameter("Run", "R", "Load the kit.", GH_ParamAccess.item, false);
 //    }
 
-
 //    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
 //    {
 //        pManager.AddParameter(new KitParam());
 //    }
-
 
 //    protected override void SolveInstance(IGH_DataAccess DA)
 //    {
@@ -2866,25 +1907,30 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 public static class Meta
 {
     /// <summary>
-    /// Name of the model : Type
+    ///     Name of the model : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, System.Type> Goo;
+
     /// <summary>
-    /// Name of the model : Name of the property : Type
+    ///     Name of the model : Name of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
+
     /// <summary>
-    /// Name of the model : Name of the property : Type
+    ///     Name of the model : Name of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemGoo;
+
     /// <summary>
-    /// Name of the model : Param
+    ///     Name of the model : Param
     /// </summary>
     public static readonly ImmutableDictionary<string, System.Type> Param;
+
     /// <summary>
-    /// Name of the model : Name of the property : Param
+    ///     Name of the model : Name of the property : Param
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyParam;
+
     static Meta()
     {
         var goo = new Dictionary<string, System.Type>();
@@ -2892,12 +1938,12 @@ public static class Meta
         var propertyItemGoo = new Dictionary<string, List<System.Type>>();
         var param = new Dictionary<string, System.Type>();
         var propertyParam = new Dictionary<string, List<System.Type>>();
-        var basicTypes = new Dictionary<System.Type, (System.Type,System.Type)>()
+        var basicTypes = new Dictionary<System.Type, (System.Type, System.Type)>
         {
-            {typeof(String), (typeof(GH_String),typeof(Param_String))},
-            {typeof(Boolean), (typeof(GH_Boolean),typeof(Param_Boolean))},
-            {typeof(Int32), (typeof(GH_Integer),typeof(Param_Integer))},
-            {typeof(Single), (typeof(GH_Number),typeof(Param_Number))},
+            { typeof(string), (typeof(GH_String), typeof(Param_String)) },
+            { typeof(bool), (typeof(GH_Boolean), typeof(Param_Boolean)) },
+            { typeof(int), (typeof(GH_Integer), typeof(Param_Integer)) },
+            { typeof(float), (typeof(GH_Number), typeof(Param_Number)) }
         };
         foreach (var basicTypeKvp in basicTypes)
         {
@@ -2917,20 +1963,20 @@ public static class Meta
             propertyItemGoo[kvp.Key] = new List<System.Type>();
             propertyParam[kvp.Key] = new List<System.Type>();
         }
+
         foreach (var modelKvp in Semio.Meta.Property)
-        {
-            for (int i = 0; i < modelKvp.Value.Length; i++)
+            for (var i = 0; i < modelKvp.Value.Length; i++)
             {
                 var property = modelKvp.Value[i];
                 var isPropertyList = Semio.Meta.IsPropertyList[modelKvp.Key][i];
-                var propertyTypeName = isPropertyList ?
-                    property.PropertyType.GetGenericArguments()[0].Name
+                var propertyTypeName = isPropertyList
+                    ? property.PropertyType.GetGenericArguments()[0].Name
                     : property.PropertyType.Name;
                 propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
                 propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
                 propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
             }
-        }
+
         Goo = goo.ToImmutableDictionary();
         PropertyGoo = propertyGoo.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
@@ -2940,5 +1986,4 @@ public static class Meta
         PropertyParam = propertyParam.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
-
 }
