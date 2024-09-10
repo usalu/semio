@@ -614,7 +614,7 @@ export const TOLERANCE = 1e-5
 //     DesignDoesNotExist = 'DESIGN_DOES_NOT_EXIST'
 // }
 
-export enum Plane {
+export enum CoordianteSystem {
     SEMIO = 'SEMIO',
     THREE = 'THREE',
 }
@@ -1007,7 +1007,7 @@ export const threeToSemioRotation = (): Transform => {
 }
 
 
-class Hierarchy {
+export class Hierarchy {
     piece: Piece | PieceInput
     transform: Transform
     children: Hierarchy[]
@@ -1019,7 +1019,7 @@ class Hierarchy {
     }
 }
 
-export default Hierarchy;
+
 
 // Reference in Python:
 // def designToHierarchies(design: Design) -> List[Hierarchy]:

@@ -94,13 +94,10 @@ import {
 } from './semio.d'
 import {
     Hierarchy,
-    TOLERANCE,
-    radians,
     threeToSemioRotation,
     designToHierarchies,
     Point,
     Vector,
-    Plane,
     Transform,
     semioToThreeRotation,
     Plane,
