@@ -35,22 +35,69 @@ You want to ✏️ the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But
 
 Let me start by what semio is **not**:
 
-- Rhino, SketchUp, Blender, … A _3d-modeling_ tool 🐚
+- Rhino, SketchUp, 3ds Max, Blender, ...
+
+  A _3d-modeling_ tool 🐚
+
   > In semio you **link** 3d-models.
-- Revit, ArchiCAD, Vectorworks, BricksCAD, BlenderBIM, … A BIM-authoring tool 🧱
-  > In semio you **link** instances of your own types.
-- Grasshopper, Dynamo, Sverchok, … A _node-based programming_ tool 🦗
-  > In semio you **link** the input with the output.
-- Illustrator, AffinityDesigner, InkScape, … A _vector graphics_ tool ➡️
-  > In semio you **link** drawings.
-- EnergyPlus, TRYNSIS, Modellica, … A simulation tool ☀️
-  > In semio you **link** models and results.
-- Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Nextcloud, … A CDE tool ☁️
-  > In semio you **link** urls.
-- IFC, Speckle, BHoM, … A data tool 📄
-  > In semio you **link** design knowledge.
-- Hypar, Viktor, Fusion, CadQuery, … A parametric tool 🎛️
-  > In semio you **link** static pieces.
+
+- Revit, ArchiCAD, Vectorworks, BricksCAD, BlenderBIM, …
+
+  A BIM-authoring tool 🧱
+
+  > In semio you **link** instances of your own types 🗿
+
+- Grasshopper, Dynamo, GenerativeComponents, Sverchok,
+
+  A _node-based programming_ tool 🦗
+
+  > In semio you **link** the input with the output ⛓️‍💥
+
+- IFC, Speckle, BHoM, …
+
+  A data tool 📄
+
+  > In semio you **link** design knowledge 📚
+
+- Hypar, Viktor, Fusion, …
+
+  A parametric tool 🎛️
+
+  > In semio you **link** static designs 🩻
+
+- Wasp, Assembler, Monocerous, …
+
+  A combinatorical tool 🎰
+
+  > In semio you **link** precise pieces 🪡
+
+- ComputerGeneratedArchitecture, …
+
+  A shape-grammar tool ➡️
+
+  > In semio you **link** precise pieces 🪡
+
+- OpenSCAD, CadQuery, Fornjot,
+
+  A scripting tool
+
+- Illustrator, AffinityDesigner, InkScape, …
+
+  A _vector graphics_ tool 📐
+
+  > In semio you **link** drawings 🖼️
+
+- EnergyPlus, TRYNSIS, Modellica, …
+
+  A simulation tool ☀️
+
+  > In semio you **link** models and results 🔢
+
+- Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Nextcloud, …
+
+  A CDE tool ☁️
+
+  > In semio you **link** urls 🔗
 
 So, what **is** semio?
 
@@ -63,11 +110,20 @@ So, what **is** semio?
 
 ## When should I design with semio?
 
-If you design storeys, walls, windows, slabs, roofs by moving them around, changing individual dimensions of those, then you should stick to your BIM tool ❌
+If you design storeys, walls, windows, slabs, roofs
+by moving them around, changing individual dimensions of those,
+then you should stick to your BIM tool ❌
 
-If you design atmospheres based on hand drawn sketches, eager to find the right shape based on surfaces with one-of-each-kind morphology, then you should stick to your 3d tool ❌
+If you design unique atmospheres
+by hand drawn sketches, eager to find the right shape based on surfaces with one-of-each-kind morphology, then you should stick to your 3d tool ❌
 
-If you design typologies which you iteratively detail and you want to test systems where you are tinkering about rules, exceptions and metrics then you should use semio ✅
+If you design high-resolution blobs
+by sophisticated rules, statistical noise, intersection-based entropy,
+then you should stick to your solver tool ❌
+
+If you design custom typologies
+by iteretively detailing types and variants based on metrics,
+then you should use semio ✅
 
 # Getting started
 

@@ -750,6 +750,15 @@ public class ModelAttribute : ConceptAttribute
     {
     }
 }
+[AttributeUsage(AttributeTargets.Class)]
+public class ModelIdAttribute : ConceptAttribute
+{
+    public ModelIdAttribute(string emoji, string code, string abbreviation, string description) : base(emoji, code,
+        abbreviation, description)
+    {
+    }
+}
+
 
 public enum PropImportance
 {
@@ -775,6 +784,7 @@ public abstract class PropAttribute : ConceptAttribute
 
 public abstract class TextAttribute : PropAttribute
 {
+    public int LengthLimit { get; set; }
     public TextAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance, bool isDefaultValid, int lengthLimit) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
@@ -782,7 +792,6 @@ public abstract class TextAttribute : PropAttribute
         LengthLimit = lengthLimit;
     }
 
-    public int LengthLimit { get; set; }
 }
 
 public class NameAttribute : TextAttribute
@@ -841,7 +850,26 @@ public class NumberPropAttribute : PropAttribute
 
 public class ModelPropAttribute : PropAttribute
 {
+    public bool IsEmbedded { get; set; }
     public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool isEmbedded = false) : base(emoji, code,
+        abbreviation, description, importance, isDefaultValid)
+    {
+        IsEmbedded = isEmbedded;
+    }
+}
+public class PartialModelPropAttribute : PropAttribute
+{
+    public PartialModelPropAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
+        abbreviation, description, importance, isDefaultValid)
+    {
+    }
+}
+
+public class ModelIdPropAttribute : PartialModelPropAttribute
+{
+    public ModelIdPropAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
@@ -1141,7 +1169,7 @@ public class Port : Model<Port>
     /// <summary>
     ///     🆔 The local identifier of the port within the type.
     /// </summary>
-    [Name("🆔", "Id", "Idn", "Local identifier of the port within the type.", PropImportance.ID)]
+    [Id("🆔", "Id", "Idn", "Local identifier of the port within the type.", PropImportance.ID)]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -1164,9 +1192,9 @@ public class Port : Model<Port>
 }
 
 /// <summary>
-///     🆔 Local identifier of the port within the type.
+///     🔌 Local identifier of the port within the type.
 /// </summary>
-[Model("🆔", "Id", "Id", "Local identifier of the port within the type.")]
+[Model("🔌", "Po", "Por", "Local identifier of the port within the type.")]
 public class PortId : Model<PortId>
 {
     /// <summary>
@@ -1199,7 +1227,10 @@ public class Quality : Model<Quality>
     /// </summary>
     [Name("Ⓜ️", "Ut", "Unt", "The unit of the value of the quality.")]
     public string Unit { get; set; } = "";
-
+    /// <summary>
+    ///     📖 An optional definition [text | url] of the quality.
+    /// </summary>
+    [Description("📖", "Df?", "Def", "An optional definition [text | url] of the quality.")]
     public string Definition { get; set; } = "";
 }
 
@@ -1255,9 +1286,9 @@ public class Type : Model<Type>
 }
 
 /// <summary>
-///     🧩 Local identifier of the port within the type.
+///     🔌 Local identifier of the type within the kit.
 /// </summary>
-[Model("🆔", "Id", "Id", "Local identifier of the type within the kit.")]
+[ModelId("🧩", "Ty", "Typ", "Local identifier of the type within the kit.")]
 public class TypeId : Model<TypeId>
 {
     /// <summary>
@@ -1332,6 +1363,7 @@ public class Piece : Model<Piece>
 /// <summary>
 ///     ⭕ The local identification of the piece within the design.
 /// </summary>
+[ModelId("⭕", "Pc", "Pce", "The local identification of the piece within the design.")]
 public class PieceId : Model<PieceId>
 {
     /// <summary>
@@ -1350,13 +1382,14 @@ public class SidePieceType : Model<SidePieceType>
     /// <summary>
     ///     🔌 The local identification of the port within the type.
     /// </summary>
-    [Id("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+    [ModelIdProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
 }
 
 /// <summary>
 ///     ⭕ The piece-related information of the side.
 /// </summary>
+[PartialModel("⭕", "Pc", "Pce", "The piece-related information of the side.")]
 public class SidePiece : Model<SidePiece>
 {
     /// <summary>

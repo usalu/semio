@@ -515,24 +515,23 @@ public abstract class Component : GH_Component
 public abstract class ModelComponent<T, U, V> : Component
     where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
 {
-    public static string NameM;
-    public static System.Type TypeM;
-    public static System.Type GooM;
-    public static System.Type ParamM;
-    public static ModelAttribute ModelM;
-    public static ImmutableArray<PropertyInfo> PropertyM;
-    public static ImmutableArray<PropAttribute> PropM;
-    public static ImmutableArray<bool> IsPropertyList;
-    public static ImmutableArray<System.Type> PropertyItemType;
-    public static ImmutableArray<bool> IsPropertyModel;
-    public static ImmutableArray<System.Type> PropertyGooM;
-    public static ImmutableArray<System.Type> PropertyParamM;
-    public static ImmutableArray<System.Type> PropertyItemGoo;
+    public static readonly string NameM;
+    public static readonly System.Type TypeM;
+    public static readonly System.Type GooM;
+    public static readonly System.Type ParamM;
+    public static readonly ModelAttribute ModelM;
+    public static readonly ImmutableArray<PropertyInfo> PropertyM;
+    public static readonly ImmutableArray<PropAttribute> PropM;
+    public static readonly ImmutableArray<bool> IsPropertyList;
+    public static readonly ImmutableArray<System.Type> PropertyItemType;
+    public static readonly ImmutableArray<bool> IsPropertyModel;
+    public static readonly ImmutableArray<System.Type> PropertyGooM;
+    public static readonly ImmutableArray<System.Type> PropertyParamM;
+    public static readonly ImmutableArray<System.Type> PropertyItemGoo;
 
     static ModelComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
-        var dummyMeta = Semio.Meta.Model;
         var dummyMetaGrasshopper = Meta.Goo;
 
         NameM = typeof(V).Name;
@@ -1933,6 +1932,9 @@ public static class Meta
 
     static Meta()
     {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMeta = Semio.Meta.Model;
+
         var goo = new Dictionary<string, System.Type>();
         var propertyGoo = new Dictionary<string, List<System.Type>>();
         var propertyItemGoo = new Dictionary<string, List<System.Type>>();

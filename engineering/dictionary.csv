@@ -4,6 +4,7 @@ Emoji,Code,Abbreviation,Name,Description
 🖇️,Co,Con,Connection,A connection between two pieces in a design.
 🖇️,Co*,Cons,Connections,The optional connections of a design.
 💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
+📖,Df,Def,Definition,An optional definition [text | url] of the quality.
 ✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
 📁,Di?,Dir,Directory,An optional directory where to find the kit.
 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
@@ -25,12 +26,11 @@ Emoji,Code,Abbreviation,Name,Description
 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 🔌,Po+,Pors,Ports,The ports of the type.
 ◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-◳,Pn,Pln,Plane,The plane of the piece.
+◳,Pn,Pln,Plane,The plane of the piece. When pieces are connected only one piece can have a plane.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-🌱,Ro,Roo,Root,The root-related information of the piece. When pieces are connected only one piece can be the root.
 🔄,Rt,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
 🧲,Sd,Sde,Side,A side of a piece in a connection.
 📌,SG,SGr,Subgroup,An optional sub-group of the locator. No sub-group means true.
