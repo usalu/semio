@@ -1,9 +1,6 @@
 type Query {
   loadLocalKit(directory: String!): LoadLocalKitResponse
-  designToSceneFromLocalKit(
-    directory: String!
-    designIdInput: DesignIdInput!
-  ): DesignToSceneFromLocalKitResponse
+  designToSceneFromLocalKit(directory: String!, designIdInput: DesignIdInput!): DesignToSceneFromLocalKitResponse
 }
 
 type LoadLocalKitResponse {
@@ -11,9 +8,7 @@ type LoadLocalKitResponse {
   error: LoadLocalKitError
 }
 
-"""
-🗃️ A kit is a collection of types and designs.
-"""
+"""🗃️ A kit is a collection of types and designs."""
 type Kit {
   name: String!
   description: String!
@@ -76,18 +71,14 @@ type Port {
   plane: Plane!
 }
 
-"""
-🗺️ A locator is meta-data for grouping ports.
-"""
+"""🗺️ A locator is meta-data for grouping ports."""
 type Locator {
   group: String!
   subgroup: String!
   port: Port
 }
 
-"""
-🖇️ A connection between two pieces of a design.
-"""
+"""🖇️ A connection between two pieces of a design."""
 type Connection {
   offset: Float!
   rotation: Float!
@@ -96,9 +87,7 @@ type Connection {
   connecting: Side!
 }
 
-"""
-🏙️ A design is a collection of pieces that are connected.
-"""
+"""🏙️ A design is a collection of pieces that are connected."""
 type Design {
   name: String!
   description: String!
@@ -113,9 +102,7 @@ type Design {
   qualities: [Quality!]!
 }
 
-"""
-⭕ A piece is a 3d-instance of a type in a design.
-"""
+"""⭕ A piece is a 3d-instance of a type in a design."""
 type Piece {
   type: Type
   design: Design
@@ -126,58 +113,44 @@ type Piece {
   diagram: PieceDiagram!
 }
 
-"""
-🌱 The root indesign of a piece.
-"""
+"""🌱 A root piece in a design."""
 type PieceRoot {
   plane: Plane!
 }
 
-"""
-◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
-"""
+"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 type Plane {
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
 }
 
-"""
-✖️ A 3d-point (xyz) of floating point numbers.
-"""
+"""✖️ A 3d-point (xyz) of floating point numbers."""
 type Point {
   x: Float!
   y: Float!
   z: Float!
 }
 
-"""
-➡️ A 3d-vector (xyz) of floating point numbers.
-"""
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
 type Vector {
   x: Float!
   y: Float!
   z: Float!
 }
 
-"""
-✏️ The diagram indesign of a piece.
-"""
+"""✏️ The diagram indesign of a piece."""
 type PieceDiagram {
   point: ScreenPoint!
 }
 
-"""
-📺 A 2d-point (xy) of integers in screen plane.
-"""
+"""📺 A 2d-point (xy) of integers in screen plane."""
 type ScreenPoint {
   x: Int!
   y: Int!
 }
 
-"""
-📏 A quality is meta-data for decision making.
-"""
+"""📏 A quality is meta-data for decision making."""
 type Quality {
   name: String!
   value: String!
@@ -187,9 +160,7 @@ type Quality {
   design: Design
 }
 
-"""
-🧱 A side of a piece in a connection.
-"""
+"""🧱 A side of a piece in a connection."""
 type Side {
   piece: SidePiece!
 }
@@ -202,9 +173,7 @@ type SidePiece {
   type: SidePieceType!
 }
 
-"""
-🧩 The type indesign of a piece of a side.
-"""
+"""🧩 The type indesign of a piece of a side."""
 type SidePieceType {
   port: Port
 }
@@ -221,9 +190,7 @@ type DesignToSceneFromLocalKitResponse {
   error: DesignToSceneFromLocalKitResponseError
 }
 
-"""
-🌆 A scene is a collection of objects.
-"""
+"""🌆 A scene is a collection of objects."""
 type Scene {
   objects: [Object]!
   design: Design
@@ -251,40 +218,20 @@ enum DesignToSceneFromLocalKitResponseErrorCode {
   DESIGN_DOES_NOT_EXIST
 }
 
-"""
-🏙️ A design is identified by a name and optional variant.
-"""
+"""🏙️ A design is identified by a name and optional variant."""
 input DesignIdInput {
   name: String!
   variant: String = ""
 }
 
 type Mutation {
-  createLocalKit(
-    directory: String!
-    kitInput: KitInput!
-  ): CreateLocalKitMutation
-  updateLocalKitMetadata(
-    directory: String!
-    kitMetadataInput: KitMetadataInput!
-  ): UpdateLocalKitMetadataMutation
+  createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
+  updateLocalKitMetadata(directory: String!, kitMetadataInput: KitMetadataInput!): UpdateLocalKitMetadataMutation
   deleteLocalKit(directory: String!): DeleteLocalKitMutation
-  addTypeToLocalKit(
-    directory: String!
-    typeInput: TypeInput!
-  ): AddTypeToLocalKitMutation
-  removeTypeFromLocalKit(
-    directory: String!
-    typeId: TypeIdInput!
-  ): RemoveTypeFromLocalKitMutation
-  addDesignToLocalKit(
-    directory: String!
-    designInput: DesignInput!
-  ): AddDesignToLocalKitMutation
-  removeDesignFromLocalKit(
-    directory: String!
-    designId: DesignIdInput!
-  ): RemoveDesignFromLocalKitMutation
+  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
+  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
+  addDesignToLocalKit(designInput: DesignInput!, directory: String!): AddDesignToLocalKitMutation
+  removeDesignFromLocalKit(designId: DesignIdInput!, directory: String!): RemoveDesignFromLocalKitMutation
 }
 
 type CreateLocalKitMutation {
@@ -305,9 +252,7 @@ enum CreateLocalKitErrorCode {
   KIT_INPUT_IS_INVALID
 }
 
-"""
-🗃️ A kit is a collection of types and designs.
-"""
+"""🗃️ A kit is a collection of types and designs."""
 input KitInput {
   name: String!
   description: String
@@ -352,35 +297,27 @@ input PortInput {
   locators: [LocatorInput!]
 }
 
-"""
-✖️ A 3d-point (xyz) of floating point numbers.
-"""
+"""✖️ A 3d-point (xyz) of floating point numbers."""
 input PointInput {
   x: Float = 0
   y: Float = 0
   z: Float = 0
 }
 
-"""
-➡️ A 3d-vector (xyz) of floating point numbers.
-"""
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
 input VectorInput {
   x: Float = 0
   y: Float = 0
   z: Float = 0
 }
 
-"""
-🗺️ A locator is meta-data for grouping ports.
-"""
+"""🗺️ A locator is meta-data for grouping ports."""
 input LocatorInput {
   group: String!
   subgroup: String
 }
 
-"""
-📏 A quality is meta-data for decision making.
-"""
+"""📏 A quality is meta-data for decision making."""
 input QualityInput {
   name: String!
   value: String
@@ -388,9 +325,7 @@ input QualityInput {
   definition: String
 }
 
-"""
-🏙️ A design is a collection of pieces that are connected.
-"""
+"""🏙️ A design is a collection of pieces that are connected."""
 input DesignInput {
   name: String!
   description: String
@@ -402,9 +337,7 @@ input DesignInput {
   qualities: [QualityInput!]
 }
 
-"""
-⭕ A piece is a 3d-instance of a type in a design.
-"""
+"""⭕ A piece is a 3d-instance of a type in a design."""
 input PieceInput {
   id: String!
   type: TypeIdInput!
@@ -412,48 +345,36 @@ input PieceInput {
   diagram: PieceDiagramInput!
 }
 
-"""
-🧩 A type is identified by a name and variant (empty=default).
-"""
+"""🧩 A type is identified by a name and variant (empty=default)."""
 input TypeIdInput {
   name: String!
   variant: String = ""
 }
 
-"""
-🌱 The root indesign of a piece.
-"""
+"""🌱 The root of a piece is a plane."""
 input PieceRootInput {
   plane: PlaneInput!
 }
 
-"""
-◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
-"""
+"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 input PlaneInput {
   origin: PointInput!
   xAxis: VectorInput!
   yAxis: VectorInput!
 }
 
-"""
-✏️ The diagram indesign of a piece.
-"""
+"""✏️ The diagram indesign of a piece."""
 input PieceDiagramInput {
   point: ScreenPointInput!
 }
 
-"""
-📺 A 2d-point (xy) of integers in screen plane.
-"""
+"""📺 A 2d-point (xy) of integers in screen plane."""
 input ScreenPointInput {
   x: Int = 0
   y: Int = 0
 }
 
-"""
-🖇️ A connection between two pieces of a design.
-"""
+"""🖇️ A connection between two pieces of a design."""
 input ConnectionInput {
   connecting: SideInput!
   connected: SideInput!
@@ -461,9 +382,7 @@ input ConnectionInput {
   rotation: Float = 0
 }
 
-"""
-🧱 A side of a piece in a connection.
-"""
+"""🧱 A side of a piece in a connection."""
 input SideInput {
   piece: SidePieceInput!
 }
@@ -476,16 +395,12 @@ input SidePieceInput {
   type: SidePieceTypeInput = null
 }
 
-"""
-🧩 The type indesign of a piece of a side.
-"""
+"""🧩 The type indesign of a piece of a side."""
 input SidePieceTypeInput {
   port: PortIdInput = null
 }
 
-"""
-🔌 A port is identified by an id (emtpy=default)).
-"""
+"""🔌 A port is identified by an id (emtpy=default))."""
 input PortIdInput {
   id: String = ""
 }
@@ -508,9 +423,7 @@ enum UpdateLocalKitMetadataErrorCode {
   KIT_METADATA_IS_INVALID
 }
 
-"""
-🗃️ Meta-data of a kit.
-"""
+"""🗃️ Meta-data of a kit."""
 input KitMetadataInput {
   name: String
   description: String

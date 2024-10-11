@@ -1,18 +1,19 @@
 ---
 name: semio
-version: 2.3.0
+version: 2.4.0
 authors:
-  - Ueli Saluz
+- Ueli Saluz
 description: >
   ✏️Typological, non-linear and ai-boosted designing.
 url: https://github.com/usalu/semio
-icon: icon.png
 keywords:
-  - procedural_modelling
-  - generative_design
-  - computer-aided-architectural-design
-  - graph-based_design
-  - port-based_design
-  - design_prototypes
-  - shape_grammar
-  - building_information_modelling
+- procedural_modelling
+- generative_design
+- computer-aided-architectural-design
+- graph-based_design
+- port-based_design
+- design_prototypes
+- shape_grammar
+- building_information_modelling
+- guid:fe587cbf-5f7d-4091-aa6d-d9d30cf80b64
+icon: icon.png

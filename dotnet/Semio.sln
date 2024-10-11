@@ -1,31 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33403.182
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "Semio.Grasshopper\Semio.Grasshopper.csproj", "{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio", "Semio\Semio.csproj", "{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio", "Semio\Semio.csproj", "{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio.Grasshopper", "Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4525A56C-D8BD-47AC-B4F1-1BE5C31CED3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AB4380F-E47D-465F-8E49-E6F4D5E1166D}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {19AD715B-FD6A-4121-A0D4-8C911545F8B0}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

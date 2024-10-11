@@ -119,39 +119,39 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="addDesignToLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\addDesignToLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\addDesignToLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="addTypeToLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\addTypeToLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\addTypeToLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="adjectives" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\adjectives.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\adjectives.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="animals" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\animals.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\animals.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="createLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\createLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\createLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="deleteLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\deleteLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\deleteLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="designToSceneFromLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\designToSceneFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\designToSceneFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="loadLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\loadLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\loadLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="removeDesignFromLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\removeDesignFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\removeDesignFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="removeTypeFromLocalKit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\removeTypeFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\removeTypeFromLocalKit.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="schema" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\schema.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\schema.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="updateLocalKitMetadata" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\updateLocalKitMetadata.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>Resources\updateLocalKitMetadata.graphql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
 </root>

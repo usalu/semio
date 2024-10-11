@@ -6,7 +6,7 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Semio.Properties;
+using Semio;
 
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
@@ -1865,7 +1865,8 @@ public class Api : ICloneable
         Endpoint = endpoint;
         Token = token;
         Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-        Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+        if(Token!="")
+            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
     }
 
     public GraphQLHttpClient Client { get; set; }

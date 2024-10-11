@@ -4,6 +4,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +15,6 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino;
 using Rhino.Geometry;
-using Semio.Grasshopper.Properties;
 
 namespace Semio.Grasshopper;
 
@@ -3129,30 +3131,44 @@ public abstract class EngineComponent : SemioComponent
     protected override void BeforeSolveInstance()
     {
         base.BeforeSolveInstance();
-        var processes = Process.GetProcessesByName("semio-engine");
-        if (processes.Length == 0)
+        try
         {
-            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                "semio-engine.exe");
-            var engine = Process.Start(path);
-            // lightweight way to kill child process when parent process is killed
-            // https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed#4657392
-            AppDomain.CurrentDomain.DomainUnload += (s, e) =>
+            var processes = Process.GetProcessesByName("semio-engine");
+            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] tcpListeners = ipGlobalProperties.GetActiveTcpListeners();
+            bool isSemioPortInUse = tcpListeners.Any(endpoint => endpoint.Port == 5052);
+            if (processes.Length == 0 || !isSemioPortInUse)
             {
-                engine.Kill();
-                engine.WaitForExit();
-            };
-            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
-            {
-                engine.Kill();
-                engine.WaitForExit();
-            };
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                engine.Kill();
-                engine.WaitForExit();
-            };
+                var executableName = "semio-engine" +
+                                     (Environment.OSVersion.Platform == PlatformID.Win32NT ? ".exe" : string.Empty);
+                var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                    executableName);
+                var engine = Process.Start(path);
+
+                // lightweight way to kill child process when parent process is killed
+                // https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed#4657392
+                AppDomain.CurrentDomain.DomainUnload += (s, e) =>
+                {
+                    engine.Kill();
+                    engine.WaitForExit();
+                };
+                AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+                {
+                    engine.Kill();
+                    engine.WaitForExit();
+                };
+                AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                {
+                    engine.Kill();
+                    engine.WaitForExit();
+                };
+            }
         }
+        catch (Exception e)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "semio-engine could not be started automatically.\n" + e.Message);
+        }
+
     }
 }
 

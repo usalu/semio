@@ -2834,8 +2834,8 @@ def designToHierarchies(design: Design) -> List[Hierarchy]:
             component.nodes[child]["hierarchy"] = hierarchy
             component.nodes[parent]["hierarchy"].children.append(hierarchy)
         hierarchies.append(rootHierarchy)
-        with open("../../local/engine_hierarchy.json", "w") as file:
-            file.write(rootHierarchy.model_dump_json())
+        # with open("../../local/engine_hierarchy.json", "w") as file:
+        #     file.write(rootHierarchy.model_dump_json())
 
     return hierarchies
 
