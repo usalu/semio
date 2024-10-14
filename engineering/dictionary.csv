@@ -13,13 +13,13 @@ Emoji,Code,Abbreviation,Name,Description
 🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
 🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
 🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
-↔️,Of,Ofs,Offset,An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece. 
 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
 🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
 🗺️,Lc*,Locs,Locators,The optional locators of the port.
 🔍,Ld,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation.
 📛,Na,Nam,Name,The name of the {{NAME}}.
 🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+↕️,Of,Ofs,Offset,An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece. 
 ⌱,Og,Org,Origin,The origin of the plane.
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
 ⭕,Pc+,Pces,Pieces,

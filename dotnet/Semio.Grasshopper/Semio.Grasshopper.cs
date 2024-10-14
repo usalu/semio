@@ -10,8 +10,8 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino;
+using Rhino.DocObjects;
 using Rhino.Geometry;
-using Semio.Grasshopper.Properties;
 
 namespace Semio.Grasshopper;
 
@@ -153,7 +153,7 @@ public static class RhinoConverter
 
 #region Goos
 
-public abstract class ModelGoo<T> : GH_Goo<T> where T : Base<T>, new()
+public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 {
     public ModelGoo()
     {
@@ -414,7 +414,7 @@ public class KitGoo : ModelGoo<Kit>
 
 #region Params
 
-public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Base<U>, new()
+public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model<U>, new()
 {
     internal ModelParam() : base(typeof(U).Name,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
@@ -513,7 +513,7 @@ public abstract class Component : GH_Component
 #region Modelling
 
 public abstract class ModelComponent<T, U, V> : Component
-    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Base<V>, new()
+    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
 {
     public static readonly string NameM;
     public static readonly System.Type TypeM;
@@ -602,6 +602,22 @@ public abstract class ModelComponent<T, U, V> : Component
         dynamic modelGoo = Activator.CreateInstance(GooM);
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
+        GetProps(DA,modelGoo);
+
+        // Process
+        modelGoo.Value = ProcessModel(modelGoo.Value);
+        var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
+        foreach (var error in errors)
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+
+        // Output
+        DA.SetData(0, modelGoo.Duplicate());
+        SetProps(DA, modelGoo);
+
+    }
+
+    protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
+    {
         for (var i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
@@ -627,15 +643,10 @@ public abstract class ModelComponent<T, U, V> : Component
                 }
             }
         }
+    }
 
-        // Process
-        modelGoo.Value = ProcessModel(modelGoo.Value);
-        var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
-        foreach (var error in errors)
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
-
-        // Output
-        DA.SetData(0, modelGoo.Duplicate());
+    protected virtual void SetProps(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
+    {
         for (var i = 0; i < PropertyM.Length; i++)
         {
             var property = PropertyM[i];
@@ -732,7 +743,46 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
     public override Guid ComponentGuid => new("AE68EB0B-01D6-458E-870E-346E7C9823B5");
+    
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new SideParam(), "Side", "Sd?",
+            "Optional side to deconstruct or modify.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
+            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            GH_ParamAccess.item);
+        pManager[2].Optional = true;
+    }
 
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new SideParam(), "Side", "Sd",
+            "Constructed or modified side.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocatorParam(), "Piece Type Port Id", "PcTyPoId?",
+            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            GH_ParamAccess.item);
+    }
+
+    protected override void GetProps(IGH_DataAccess DA, dynamic sideGoo)
+    {
+        var pieceId = "";
+        var pieceTypePortId = "";
+
+        if (DA.GetData(1, ref pieceId))
+            sideGoo.Value.Piece.Id = pieceId;
+        if (DA.GetData(2, ref pieceTypePortId))
+            sideGoo.Value.Piece.Type.Port.Id = pieceTypePortId;
+    }
+
+    protected override void SetProps(IGH_DataAccess DA, dynamic sideGoo)
+    {
+        DA.SetData(1, sideGoo.Value.Piece.Id);
+        DA.SetData(2, sideGoo.Value.Piece.Type.Port.Id);
+    }
 }
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
@@ -1960,12 +2010,27 @@ public static class Meta
         foreach (var kvp in Semio.Meta.Type)
         {
             var baseName = typeof(Meta).Namespace + "." + kvp.Key;
-            goo[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
-            param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
-            goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
-            propertyGoo[kvp.Key] = new List<System.Type>();
-            propertyItemGoo[kvp.Key] = new List<System.Type>();
-            propertyParam[kvp.Key] = new List<System.Type>();
+            try
+            {
+                goo[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
+                goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
+                propertyGoo[kvp.Key] = new List<System.Type>();
+                propertyItemGoo[kvp.Key] = new List<System.Type>();
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
+
+            try
+            {
+                param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
+                propertyParam[kvp.Key] = new List<System.Type>();
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
         }
 
         foreach (var modelKvp in Semio.Meta.Property)

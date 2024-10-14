@@ -745,20 +745,16 @@ public abstract class ConceptAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class)]
 public class ModelAttribute : ConceptAttribute
 {
-    public ModelAttribute(string emoji, string code, string abbreviation, string description) : base(emoji, code,
+    /// <summary>
+    /// IsInvisible is used to hide the model from the user interface.
+    /// </summary>
+    public bool IsInvisible { get; set; }
+    public ModelAttribute(string emoji, string code, string abbreviation, string description, bool isInvisible = false) : base(emoji, code,
         abbreviation, description)
     {
+        IsInvisible = isInvisible;
     }
 }
-[AttributeUsage(AttributeTargets.Class)]
-public class ModelIdAttribute : ConceptAttribute
-{
-    public ModelIdAttribute(string emoji, string code, string abbreviation, string description) : base(emoji, code,
-        abbreviation, description)
-    {
-    }
-}
-
 
 public enum PropImportance
 {
@@ -850,29 +846,11 @@ public class NumberPropAttribute : PropAttribute
 
 public class ModelPropAttribute : PropAttribute
 {
-    public bool IsEmbedded { get; set; }
     public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool isEmbedded = false) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
-    {
-        IsEmbedded = isEmbedded;
-    }
-}
-public class PartialModelPropAttribute : PropAttribute
-{
-    public PartialModelPropAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
-    }
-}
-
-public class ModelIdPropAttribute : PartialModelPropAttribute
-{
-    public ModelIdPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
-    {
+        
     }
 }
 
@@ -1194,7 +1172,7 @@ public class Port : Model<Port>
 /// <summary>
 ///     🔌 Local identifier of the port within the type.
 /// </summary>
-[Model("🔌", "Po", "Por", "Local identifier of the port within the type.")]
+[Model("🔌", "Po", "Por", "Local identifier of the port within the type.", isInvisible:true)]
 public class PortId : Model<PortId>
 {
     /// <summary>
@@ -1202,6 +1180,14 @@ public class PortId : Model<PortId>
     /// </summary>
     [Id("🆔", "Id", "Id", "Local identifier of the port within the type.")]
     public string Id { get; set; } = "";
+
+    public static implicit operator PortId(Port port)
+    {
+        return new PortId
+        {
+            Id = port.Id
+        };
+    }
 }
 
 /// <summary>
@@ -1288,7 +1274,7 @@ public class Type : Model<Type>
 /// <summary>
 ///     🔌 Local identifier of the type within the kit.
 /// </summary>
-[ModelId("🧩", "Ty", "Typ", "Local identifier of the type within the kit.")]
+[Model("🧩", "Ty", "Typ", "Local identifier of the type within the kit.", isInvisible: true)]
 public class TypeId : Model<TypeId>
 {
     /// <summary>
@@ -1302,31 +1288,15 @@ public class TypeId : Model<TypeId>
     /// </summary>
     [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
-}
 
-/// <summary>
-///     🌱 The root-related information of the piece. When pieces are connected only one piece can be the root.
-/// </summary>
-[Model("🌱", "Ro", "Roo",
-    "The root-related information of the piece. When pieces are connected only one piece can be the root.")]
-public class PieceRoot : Model<PieceRoot>
-{
-    [ModelProp("◳", "Pn", "Pln", "The plane of the piece.")]
-    public Plane Plane { get; set; } = new();
-}
-
-/// <summary>
-///     ✏️ All diagram-related information of the piece.
-/// </summary>
-[Model("✏️", "Dg", "Dgm", "All diagram-related information of the piece.")]
-public class PieceDiagram : Model<PieceDiagram>
-{
-    /// <summary>
-    ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
-    /// </summary>
-    [ModelProp("📺", "SP", "SPt",
-        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.")]
-    public ScreenPoint Point { get; set; } = new();
+    public static implicit operator TypeId(Type type)
+    {
+        return new TypeId
+        {
+            Name = type.Name,
+            Variant = type.Variant
+        };
+    }
 }
 
 /// <summary>
@@ -1348,48 +1318,44 @@ public class Piece : Model<Piece>
     public TypeId Type { get; set; } = new();
 
     /// <summary>
-    ///     🌱 The root-related information of the piece.
+    ///     ◳ The plane of the piece. When pieces are connected only one piece can have a plane.
     /// </summary>
-    [ModelProp("🌱", "Ro", "Roo", "The root-related information of the piece.", PropImportance.OPTIONAL)]
-    public PieceRoot? Root { get; set; } = null;
+    [ModelProp("◳", "Pn", "Pln", "The plane of the piece. When pieces are connected only one piece can have a plane.")]
+    public Plane Plane { get; set; } = new();
 
     /// <summary>
-    ///     ✏️ The diagram-related information of the piece.
+    ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
     /// </summary>
-    [ModelProp("✏️", "Dg", "Dgm", "The diagram-related information of the piece.")]
-    public PieceDiagram Diagram { get; set; } = new();
-}
-
-/// <summary>
-///     ⭕ The local identification of the piece within the design.
-/// </summary>
-[ModelId("⭕", "Pc", "Pce", "The local identification of the piece within the design.")]
-public class PieceId : Model<PieceId>
-{
-    /// <summary>
-    ///     🆔 The local identifier of the piece within the design.
-    /// </summary>
-    [Id("🆔", "Id", "Id", "The local identifier of the piece within the design.")]
-    public string Id { get; set; } = "";
+    [ModelProp("📺", "SP", "SPt",
+        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.")]
+    public ScreenPoint Point { get; set; } = new();
 }
 
 /// <summary>
 ///     🧩 The type-related information of the piece.
 /// </summary>
-[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.")]
+[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.", isInvisible: true)]
 public class SidePieceType : Model<SidePieceType>
 {
     /// <summary>
     ///     🔌 The local identification of the port within the type.
     /// </summary>
-    [ModelIdProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+    [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
+
+    public static implicit operator SidePieceType(Port port)
+    {
+        return new SidePieceType
+        {
+            Port = port
+        };
+    }
 }
 
 /// <summary>
 ///     ⭕ The piece-related information of the side.
 /// </summary>
-[PartialModel("⭕", "Pc", "Pce", "The piece-related information of the side.")]
+[Model("⭕", "Pc", "Pce", "The piece-related information of the side.", isInvisible:true)]
 public class SidePiece : Model<SidePiece>
 {
     /// <summary>
@@ -1399,10 +1365,18 @@ public class SidePiece : Model<SidePiece>
     public string Id { get; set; } = "";
 
     /// <summary>
-    ///     🧩 The type-related information of the piece.
+    ///     🆔 The type-related information of the piece.
     /// </summary>
-    [ModelProp("🧩", "Ty", "Typ", "The type-related information of the piece.")]
+    [ModelProp("🆔", "Ty", "Typ", "The type-related information of the piece.")]
     public SidePieceType Type { get; set; } = new();
+
+    public static implicit operator SidePiece(Piece piece)
+    {
+        return new SidePiece
+        {
+            Id = piece.Id
+        };
+    }
 }
 
 /// <summary>
@@ -1445,7 +1419,7 @@ public class Connection : Model<Connection>
     /// <summary>
     ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
     /// </summary>
-    [NumberProp("🔄", "Tl", "Tlt",
+    [NumberProp("↘️", "Tl", "Tlt",
         "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
     public float Tilt { get; set; } = 0;
 
@@ -1453,7 +1427,7 @@ public class Connection : Model<Connection>
     ///     🔄 An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
     ///     piece.
     /// </summary>
-    [NumberProp("🔄", "Of", "Ofs",
+    [NumberProp("↕️", "Of", "Ofs",
         "An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
     public float Offset { get; set; } = 0;
 }
