@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino;
-using Rhino.DocObjects;
 using Rhino.Geometry;
 
 namespace Semio.Grasshopper;
@@ -199,10 +195,25 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 
 public class RepresentationGoo : ModelGoo<Representation>
 {
+    public RepresentationGoo()
+    {
+    }
+
+    public RepresentationGoo(Representation value) : base(value)
+    {
+    }
 }
 
 public class LocatorGoo : ModelGoo<Locator>
 {
+    public LocatorGoo()
+    {
+    }
+
+    public LocatorGoo(Locator value) : base(value)
+    {
+    }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -235,6 +246,14 @@ public class LocatorGoo : ModelGoo<Locator>
 
 public class PortGoo : ModelGoo<Port>
 {
+    public PortGoo()
+    {
+    }
+
+    public PortGoo(Port value) : base(value)
+    {
+    }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
@@ -280,6 +299,14 @@ public class PortGoo : ModelGoo<Port>
 
 public class QualityGoo : ModelGoo<Quality>
 {
+    public QualityGoo()
+    {
+    }
+
+    public QualityGoo(Quality value) : base(value)
+    {
+    }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -312,10 +339,25 @@ public class QualityGoo : ModelGoo<Quality>
 
 public class TypeGoo : ModelGoo<Type>
 {
+    public TypeGoo()
+    {
+    }
+
+    public TypeGoo(Type value) : base(value)
+    {
+    }
 }
 
 public class ScreenPointGoo : ModelGoo<ScreenPoint>
 {
+    public ScreenPointGoo()
+    {
+    }
+
+    public ScreenPointGoo(ScreenPoint value) : base(value)
+    {
+    }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
@@ -349,10 +391,25 @@ public class ScreenPointGoo : ModelGoo<ScreenPoint>
 
 public class PieceGoo : ModelGoo<Piece>
 {
+    public PieceGoo()
+    {
+    }
+
+    public PieceGoo(Piece value) : base(value)
+    {
+    }
 }
 
 public class SideGoo : ModelGoo<Side>
 {
+    public SideGoo()
+    {
+    }
+
+    public SideGoo(Side value) : base(value)
+    {
+    }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -400,14 +457,35 @@ public class SideGoo : ModelGoo<Side>
 
 public class ConnectionGoo : ModelGoo<Connection>
 {
+    public ConnectionGoo()
+    {
+    }
+
+    public ConnectionGoo(Connection value) : base(value)
+    {
+    }
 }
 
 public class DesignGoo : ModelGoo<Design>
 {
+    public DesignGoo()
+    {
+    }
+
+    public DesignGoo(Design value) : base(value)
+    {
+    }
 }
 
 public class KitGoo : ModelGoo<Kit>
 {
+    public KitGoo()
+    {
+    }
+
+    public KitGoo(Kit value) : base(value)
+    {
+    }
 }
 
 #endregion
@@ -460,7 +538,7 @@ public class PortParam : ModelParam<PortGoo, Port>
 
 public class QualityParam : ModelParam<QualityGoo, Quality>
 {
-    public override Guid ComponentGuid => new("[431125C0-B98C-4122-9598-F72714AC9B94");
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
 
 public class TypeParam : ModelParam<TypeGoo, Type>
@@ -523,6 +601,7 @@ public abstract class ModelComponent<T, U, V> : Component
     public static readonly ImmutableArray<PropertyInfo> PropertyM;
     public static readonly ImmutableArray<PropAttribute> PropM;
     public static readonly ImmutableArray<bool> IsPropertyList;
+    public static readonly ImmutableArray<bool> IsPropertyMapped;
     public static readonly ImmutableArray<System.Type> PropertyItemType;
     public static readonly ImmutableArray<bool> IsPropertyModel;
     public static readonly ImmutableArray<System.Type> PropertyGooM;
@@ -542,6 +621,7 @@ public abstract class ModelComponent<T, U, V> : Component
         PropertyM = Semio.Meta.Property[NameM];
         PropM = Semio.Meta.Prop[NameM];
         IsPropertyList = Semio.Meta.IsPropertyList[NameM];
+        IsPropertyMapped = Meta.IsPropertyMapped[NameM];
         PropertyItemType = Semio.Meta.PropertyItemType[NameM];
         PropertyItemGoo = Meta.PropertyItemGoo[NameM];
         IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
@@ -549,7 +629,7 @@ public abstract class ModelComponent<T, U, V> : Component
         PropertyParamM = Meta.PropertyParam[NameM];
     }
 
-    protected ModelComponent() : base($"Base {NameM}", $"~{ModelM.Abbreviation}",
+    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
         $"Construct, deconstruct or modify a {NameM.ToLower()}", "Modelling")
     {
     }
@@ -563,6 +643,18 @@ public abstract class ModelComponent<T, U, V> : Component
         }
     }
 
+    protected virtual void AddModelProps(dynamic pManager)
+    {
+        for (var i = 0; i < PropertyM.Length; i++)
+        {
+            var property = PropertyM[i];
+            var propAttribute = PropM[i];
+            var param = (IGH_Param)Activator.CreateInstance(PropertyParamM[i]);
+            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
+                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
+        }
+    }
+
     protected void AddModelParameters(dynamic pManager, bool isOutput = false)
     {
         var modelParam = (IGH_Param)Activator.CreateInstance(ParamM);
@@ -572,14 +664,7 @@ public abstract class ModelComponent<T, U, V> : Component
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
 
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var propAttribute = PropM[i];
-            var param = (IGH_Param)Activator.CreateInstance(PropertyParamM[i]);
-            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
-                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
-        }
+        AddModelProps(pManager);
 
         if (!isOutput)
             for (var i = 0; i < pManager.ParamCount; i++)
@@ -602,7 +687,7 @@ public abstract class ModelComponent<T, U, V> : Component
         dynamic modelGoo = Activator.CreateInstance(GooM);
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
-        GetProps(DA,modelGoo);
+        GetProps(DA, modelGoo);
 
         // Process
         modelGoo.Value = ProcessModel(modelGoo.Value);
@@ -613,7 +698,6 @@ public abstract class ModelComponent<T, U, V> : Component
         // Output
         DA.SetData(0, modelGoo.Duplicate());
         SetProps(DA, modelGoo);
-
     }
 
     protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
@@ -652,26 +736,33 @@ public abstract class ModelComponent<T, U, V> : Component
             var property = PropertyM[i];
             var isList = IsPropertyList[i];
             var isPropertyModel = IsPropertyModel[i];
+            var isPropertyMapped = IsPropertyMapped[i];
             var value = property.GetValue(modelGoo.Value);
+            // set value
             if (isList)
             {
                 dynamic list = Activator.CreateInstance(PropertyGooM[i]);
                 if (isPropertyModel)
                     foreach (var item in value)
                     {
-                        dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i]);
-                        itemGoo.Value = item.DeepClone();
+                        dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i],item.DeepClone());
                         list.Add(itemGoo);
                     }
-                else
-                    list = value;
-
-                DA.SetDataList(i + 1, list);
             }
             else
-            {
-                DA.SetData(i + 1, value);
-            }
+                if (isPropertyModel)
+                {
+                    if (isPropertyMapped)
+                    {
+                        var convertMethod =
+                            typeof(RhinoConverter).GetMethod("convert", new System.Type[] { value.GetType() });
+                        value = convertMethod.Invoke(null, new[] { value });
+                    }
+                    else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
+                }
+
+            if (isList) DA.SetDataList(i + 1, value);
+            else DA.SetData(i + 1, value);
         }
     }
 
@@ -738,31 +829,61 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
 
+    protected override void AddModelProps(dynamic pManager)
+    {
+        pManager.AddTextParameter("Id", "Id",
+            "Id of the piece.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Name", "TyNa", "Name of the type of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Variant", "TyVn?",
+            "Optional variant of the type of the piece. No variant means the default variant.",
+            GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Root Plane", "RtPn?",
+            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
+            GH_ParamAccess.item);
+        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
+            "Screen point of the piece in the diagram.",
+            GH_ParamAccess.item);
+    }
+
+    protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
+    {
+        var id = "";
+        var typeName = "";
+        var typeVariant = "";
+        var rootPlane = new Rhino.Geometry.Plane();
+        var screenPointGoo = new ScreenPointGoo();
+
+        if (DA.GetData(1, ref id))
+            pieceGoo.Value.Id = id;
+        if (DA.GetData(2, ref typeName))
+            pieceGoo.Value.Type.Name = typeName;
+        if (DA.GetData(3, ref typeVariant))
+            pieceGoo.Value.Type.Variant = typeVariant;
+        if (DA.GetData(4, ref rootPlane))
+            pieceGoo.Value.Plane = rootPlane.convert();
+        if (DA.GetData(5, ref screenPointGoo))
+            pieceGoo.Value.ScreenPoint = screenPointGoo.Value;
+    }
+
+    protected override void SetProps(IGH_DataAccess DA, dynamic pieceGoo)
+    {
+        DA.SetData(1, pieceGoo.Value.Id);
+        DA.SetData(2, pieceGoo.Value.Type.Name);
+        DA.SetData(3, pieceGoo.Value.Type.Variant);
+        DA.SetData(4, (pieceGoo.Value.Plane as Plane)?.convert());
+        DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.ScreenPoint as ScreenPoint));
+    }
 }
 
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
     public override Guid ComponentGuid => new("AE68EB0B-01D6-458E-870E-346E7C9823B5");
-    
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new SideParam(), "Side", "Sd?",
-            "Optional side to deconstruct or modify.", GH_ParamAccess.item);
-        pManager[0].Optional = true;
-        pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
-            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-    }
 
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    protected override void AddModelProps(dynamic pManager)
     {
-        pManager.AddParameter(new SideParam(), "Side", "Sd",
-            "Constructed or modified side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Piece Id", "PcId", "Id of the piece of the side.", GH_ParamAccess.item);
-        pManager.AddParameter(new LocatorParam(), "Piece Type Port Id", "PcTyPoId?",
+        pManager.AddTextParameter("Piece Type Port Id", "PcTyPoId?",
             "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
     }
@@ -1963,12 +2084,12 @@ public static class Meta
     public static readonly ImmutableDictionary<string, System.Type> Goo;
 
     /// <summary>
-    ///     Name of the model : Name of the property : Type
+    ///     Name of the model : Index of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
 
     /// <summary>
-    ///     Name of the model : Name of the property : Type
+    ///     Name of the model : Index of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemGoo;
 
@@ -1978,9 +2099,14 @@ public static class Meta
     public static readonly ImmutableDictionary<string, System.Type> Param;
 
     /// <summary>
-    ///     Name of the model : Name of the property : Param
+    ///     Name of the model : Index of the property : Param
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyParam;
+
+    /// <summary>
+    ///     Name of the model : Index of the property : IsMapped
+    /// </summary>
+    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyMapped;
 
     static Meta()
     {
@@ -1992,45 +2118,46 @@ public static class Meta
         var propertyItemGoo = new Dictionary<string, List<System.Type>>();
         var param = new Dictionary<string, System.Type>();
         var propertyParam = new Dictionary<string, List<System.Type>>();
-        var basicTypes = new Dictionary<System.Type, (System.Type, System.Type)>
+        var manualMappedTypes = new Dictionary<System.Type, (System.Type, System.Type)>
         {
             { typeof(string), (typeof(GH_String), typeof(Param_String)) },
             { typeof(bool), (typeof(GH_Boolean), typeof(Param_Boolean)) },
             { typeof(int), (typeof(GH_Integer), typeof(Param_Integer)) },
-            { typeof(float), (typeof(GH_Number), typeof(Param_Number)) }
+            { typeof(float), (typeof(GH_Number), typeof(Param_Number)) },
+            { typeof(Point), (typeof(GH_Point), typeof(Param_Point)) },
+            { typeof(Vector), (typeof(GH_Vector), typeof(Param_Vector)) },
+            { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) }
         };
-        foreach (var basicTypeKvp in basicTypes)
+        var isPropertyMapped = new Dictionary<string, List<bool>>();
+        foreach (var manualMappedTypeKvp in manualMappedTypes)
         {
-            var name = basicTypeKvp.Key.Name;
-            goo[name] = basicTypeKvp.Value.Item1;
+            var name = manualMappedTypeKvp.Key.Name;
+            goo[name] = manualMappedTypeKvp.Value.Item1;
             goo[name + "List"] = typeof(List<>).MakeGenericType(goo[name]);
-            param[name] = basicTypeKvp.Value.Item2;
+            param[name] = manualMappedTypeKvp.Value.Item2;
         }
 
         foreach (var kvp in Semio.Meta.Type)
         {
             var baseName = typeof(Meta).Namespace + "." + kvp.Key;
-            try
+            if (!goo.ContainsKey(kvp.Key))
             {
-                goo[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
-                goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
-                propertyGoo[kvp.Key] = new List<System.Type>();
-                propertyItemGoo[kvp.Key] = new List<System.Type>();
-            }
-            catch (Exception e)
-            {
-                // ignored
+                var equivalentGooType = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
+                if (equivalentGooType != null)
+                {
+                    goo[kvp.Key] = equivalentGooType;
+                    goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
+                }
+
+                var equivalentParamType = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
+                if (equivalentParamType != null)
+                    param[kvp.Key] = equivalentParamType;
             }
 
-            try
-            {
-                param[kvp.Key] = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
-                propertyParam[kvp.Key] = new List<System.Type>();
-            }
-            catch (Exception e)
-            {
-                // ignored
-            }
+            propertyGoo[kvp.Key] = new List<System.Type>();
+            propertyItemGoo[kvp.Key] = new List<System.Type>();
+            propertyParam[kvp.Key] = new List<System.Type>();
+            isPropertyMapped[kvp.Key] = new List<bool>();
         }
 
         foreach (var modelKvp in Semio.Meta.Property)
@@ -2041,9 +2168,34 @@ public static class Meta
                 var propertyTypeName = isPropertyList
                     ? property.PropertyType.GetGenericArguments()[0].Name
                     : property.PropertyType.Name;
-                propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
-                propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
-                propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
+                bool isPropertyMappedValue;
+                try
+                {
+                    isPropertyMappedValue = manualMappedTypes.ContainsKey(Semio.Meta.Type[propertyTypeName]);
+                }
+                catch
+                {
+                    isPropertyMappedValue = false;
+                }
+                isPropertyMapped[modelKvp.Key].Add(isPropertyMappedValue);
+                try
+                {
+                    propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
+                    propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
+                }
+                catch (Exception e)
+                {
+                    // ignored
+                }
+
+                try
+                {
+                    propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
+                }
+                catch (Exception e)
+                {
+                    // ignored
+                }
             }
 
         Goo = goo.ToImmutableDictionary();
@@ -2053,6 +2205,8 @@ public static class Meta
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         Param = param.ToImmutableDictionary();
         PropertyParam = propertyParam.ToImmutableDictionary(
+            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
+        IsPropertyMapped = isPropertyMapped.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using FluentValidation;
-using Force.DeepCloner;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -745,15 +740,12 @@ public abstract class ConceptAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class)]
 public class ModelAttribute : ConceptAttribute
 {
-    /// <summary>
-    /// IsInvisible is used to hide the model from the user interface.
-    /// </summary>
-    public bool IsInvisible { get; set; }
-    public ModelAttribute(string emoji, string code, string abbreviation, string description, bool isInvisible = false) : base(emoji, code,
-        abbreviation, description)
+    public ModelAttribute(string emoji, string code, string abbreviation, string description)
+        : base(emoji, code,
+            abbreviation, description)
     {
-        IsInvisible = isInvisible;
     }
+
 }
 
 public enum PropImportance
@@ -780,7 +772,6 @@ public abstract class PropAttribute : ConceptAttribute
 
 public abstract class TextAttribute : PropAttribute
 {
-    public int LengthLimit { get; set; }
     public TextAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance, bool isDefaultValid, int lengthLimit) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
@@ -788,6 +779,7 @@ public abstract class TextAttribute : PropAttribute
         LengthLimit = lengthLimit;
     }
 
+    public int LengthLimit { get; set; }
 }
 
 public class NameAttribute : TextAttribute
@@ -850,7 +842,6 @@ public class ModelPropAttribute : PropAttribute
         PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
         abbreviation, description, importance, isDefaultValid)
     {
-        
     }
 }
 
@@ -915,9 +906,7 @@ public abstract class Model<T> where T : Model<T>
 
     public Model<T> DeepClone()
     {
-        if (DeepClonerExtensions.DeepClone(this) is not { } deepClone)
-            throw new Exception("DeepClone failed.");
-        return deepClone;
+        return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(this));
     }
 
     public virtual (bool, List<string>) Validate()
@@ -1046,7 +1035,7 @@ public class Locator : Model<Locator>
     /// <summary>
     ///     📌 An optional sub-group of the locator. No sub-group means true.
     /// </summary>
-    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.")]
+    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
     public string Subgroup { get; set; } = "";
 }
 
@@ -1147,7 +1136,7 @@ public class Port : Model<Port>
     /// <summary>
     ///     🆔 The local identifier of the port within the type.
     /// </summary>
-    [Id("🆔", "Id", "Idn", "Local identifier of the port within the type.", PropImportance.ID)]
+    [Id("🆔", "Id", "Idn", "Local identifier of the port within the type.")]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -1172,7 +1161,7 @@ public class Port : Model<Port>
 /// <summary>
 ///     🔌 Local identifier of the port within the type.
 /// </summary>
-[Model("🔌", "Po", "Por", "Local identifier of the port within the type.", isInvisible:true)]
+[Model("🔌", "Po", "Por", "Local identifier of the port within the type.")]
 public class PortId : Model<PortId>
 {
     /// <summary>
@@ -1213,6 +1202,7 @@ public class Quality : Model<Quality>
     /// </summary>
     [Name("Ⓜ️", "Ut", "Unt", "The unit of the value of the quality.")]
     public string Unit { get; set; } = "";
+
     /// <summary>
     ///     📖 An optional definition [text | url] of the quality.
     /// </summary>
@@ -1274,7 +1264,7 @@ public class Type : Model<Type>
 /// <summary>
 ///     🔌 Local identifier of the type within the kit.
 /// </summary>
-[Model("🧩", "Ty", "Typ", "Local identifier of the type within the kit.", isInvisible: true)]
+[Model("🧩", "Ty", "Typ", "Local identifier of the type within the kit.")]
 public class TypeId : Model<TypeId>
 {
     /// <summary>
@@ -1328,13 +1318,13 @@ public class Piece : Model<Piece>
     /// </summary>
     [ModelProp("📺", "SP", "SPt",
         "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.")]
-    public ScreenPoint Point { get; set; } = new();
+    public ScreenPoint ScreenPoint { get; set; } = new();
 }
 
 /// <summary>
 ///     🧩 The type-related information of the piece.
 /// </summary>
-[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.", isInvisible: true)]
+[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.")]
 public class SidePieceType : Model<SidePieceType>
 {
     /// <summary>
@@ -1355,7 +1345,7 @@ public class SidePieceType : Model<SidePieceType>
 /// <summary>
 ///     ⭕ The piece-related information of the side.
 /// </summary>
-[Model("⭕", "Pc", "Pce", "The piece-related information of the side.", isInvisible:true)]
+[Model("⭕", "Pc", "Pce", "The piece-related information of the side.")]
 public class SidePiece : Model<SidePiece>
 {
     /// <summary>
@@ -1380,9 +1370,9 @@ public class SidePiece : Model<SidePiece>
 }
 
 /// <summary>
-///     🧲 A side of a piece in a connection.
+///     🧱 A side of a piece in a connection.
 /// </summary>
-[Model("🧲", "Sd", "Sde", "A side of a piece in a connection.")]
+[Model("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
 public class Side : Model<Side>
 {
     /// <summary>
@@ -1419,7 +1409,7 @@ public class Connection : Model<Connection>
     /// <summary>
     ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
     /// </summary>
-    [NumberProp("↘️", "Tl", "Tlt",
+    [NumberProp("↗️", "Tl", "Tlt",
         "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
     public float Tilt { get; set; } = 0;
 
@@ -1916,27 +1906,27 @@ public static class Meta
     public static readonly ImmutableDictionary<string, ModelAttribute> Model;
 
     /// <summary>
-    ///     Name of the model : Name of the property : PropertyInfo
+    ///     Name of the model : Index of the property : PropertyInfo
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
 
     /// <summary>
-    ///     Name of the model : Name of the property : PropAttribute
+    ///     Name of the model : Index of the property : PropAttribute
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
 
     /// <summary>
-    ///     Name of the model : Name of the property : IsList
+    ///     Name of the model : Index of the property : IsList
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
 
     /// <summary>
-    ///     Name of the model : Name of the property : Type
+    ///     Name of the model : Index of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
 
     /// <summary>
-    ///     Name of the model : Name of the property : IsModel
+    ///     Name of the model : Index of the property : IsModel
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyModel;
 
