@@ -3,6 +3,9 @@ using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using FluentValidation;
+using GraphQL;
+using GraphQL.Client.Http;
+using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -27,664 +30,29 @@ public static class Constants
 
 #region Copilot
 
-//type Query
-//{
-//loadLocalKit(directory: String!): LoadLocalKitResponse
-//  designToSceneFromLocalKit(directory: String!, designIdInput: DesignIdInput!): DesignToSceneFromLocalKitResponse
-//}
+//GraphQL
 
-//type LoadLocalKitResponse
-//{
-//kit: Kit
-//  error: LoadLocalKitError
-//}
-
-//"""🗃️ A kit is a collection of types and designs."""
-//type Kit
-//{
-//name: String!
-//  description: String!
-//  icon: String!
-//  createdAt: DateTime!
-//  lastUpdateAt: DateTime!
-//  url: String!
-//  homepage: String!
-//  types: [Type!]!
-//  designs: [Design!]!
-//}
-
-//"""
-//The `DateTime` scalar type represents a DateTime
-//value as specified by
-//[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
-//"""
-//scalar DateTime
-
-//"""
-//🧩 A type is a reusable element that can be connected with other types over ports.
-//"""
-//type Type {
-//  name: String!
-//  description: String!
-//  icon: String!
-//  variant: String!
-//  unit: String!
-//  createdAt: DateTime!
-//  lastUpdateAt: DateTime!
-//  kit: Kit
-//  representations: [Representation!]!
-//  ports: [Port!]!
-//  qualities: [Quality!]!
-//  pieces: [Piece!]!
-//}
-
-//"""
-//💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
-//"""
-//type Representation
-//{
-//url: String!
-//  mime: String!
-//  lod: String!
-//  type: Type
-//  tags: [String!]!
-//}
-
-//"""
-//🔌 A port is a conceptual connection point (with a direction) of a type.
-//"""
-//type Port
-//{
-//type: Type
-//  locators: [Locator!]!
-//  connecteds: [Connection!]!
-//  connectings: [Connection!]!
-//  id: String!
-//  point: Point!
-//  direction: Vector!
-//  plane: Plane!
-//}
-
-//"""🗺️ A locator is meta-data for grouping ports."""
-//type Locator
-//{
-//group: String!
-//  subgroup: String!
-//  port: Port
-//}
-
-//"""🖇️ A connection between two pieces of a design."""
-//type Connection
-//{
-//offset: Float!
-//  rotation: Float!
-//  design: Design
-//  connected: Side!
-//  connecting: Side!
-//}
-
-//"""🏙️ A design is a collection of pieces that are connected."""
-//type Design
-//{
-//name: String!
-//  description: String!
-//  icon: String!
-//  variant: String!
-//  unit: String!
-//  createdAt: DateTime!
-//  lastUpdateAt: DateTime!
-//  kit: Kit
-//  pieces: [Piece!]!
-//  connections: [Connection!]!
-//  qualities: [Quality!]!
-//}
-
-//"""⭕ A piece is a 3d-instance of a type in a design."""
-//type Piece
-//{
-//type: Type
-//  design: Design
-//  connectings: [Connection!]!
-//  connecteds: [Connection!]!
-//  id: String!
-//  root: PieceRoot
-//  diagram: PieceDiagram!
-//}
-
-//"""🌱 The root indesign of a piece."""
-//type PieceRoot
-//{
-//plane: Plane!
-//}
-
-//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-//type Plane
-//{
-//origin: Point!
-//  xAxis: Vector!
-//  yAxis: Vector!
-//}
-
-//"""✖️ A 3d-point (xyz) of floating point numbers."""
-//type Point
-//{
-//x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//"""➡️ A 3d-vector (xyz) of floating point numbers."""
-//type Vector
-//{
-//x: Float!
-//  y: Float!
-//  z: Float!
-//}
-
-//"""✏️ The diagram indesign of a piece."""
-//type PieceDiagram
-//{
-//point: ScreenPoint!
-//}
-
-//"""📺 A 2d-point (xy) of integers in screen plane."""
-//type ScreenPoint
-//{
-//x: Int!
-//  y: Int!
-//}
-
-//"""📏 A quality is meta-data for decision making."""
-//type Quality
-//{
-//name: String!
-//  value: String!
-//  unit: String!
-//  definition: String!
-//  type: Type
-//  design: Design
-//}
-
-//"""🧱 A side of a piece in a connection."""
-//type Side
-//{
-//piece: SidePiece!
-//}
-
-//"""
-//⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
-//"""
-//type SidePiece
-//{
-//id: String!
-//  type: SidePieceType!
-//}
-
-//"""🧩 The type indesign of a piece of a side."""
-//type SidePieceType
-//{
-//port: Port
-//}
-
-//enum LoadLocalKitError
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_READ_KIT
-//}
-
-//type DesignToSceneFromLocalKitResponse
-//{
-//    scene: Scene
-//  error: DesignToSceneFromLocalKitResponseError
-//}
-
-//"""🌆 A scene is a collection of objects."""
-//type Scene
-//{
-//    objects: [Object]!
-//  design: Design
-//}
-
-//"""
-//🗿 An object is a piece with a plane and a parent object (unless the piece is a root).
-//"""
-//type Object
-//{
-//    plane: Plane!
-//  piece: Piece
-//  parent: Object
-//}
-
-//type DesignToSceneFromLocalKitResponseError
-//{
-//    code: DesignToSceneFromLocalKitResponseErrorCode!
-//  message: String
-//}
-
-//enum DesignToSceneFromLocalKitResponseErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_READ_KIT
-//  DESIGN_DOES_NOT_EXIST
-//}
-
-//"""🏙️ A design is identified by a name and optional variant."""
-//input DesignIdInput
-//{
-//    name: String!
-//  variant: String = ""
-//}
-
-//type Mutation
-//{
-//    createLocalKit(directory: String!, kitInput: KitInput!): CreateLocalKitMutation
-//  updateLocalKitProps(directory: String!, kitMetadataInput: KitPropsInput!): UpdateLocalKitPropsMutation
-//  deleteLocalKit(directory: String!): DeleteLocalKitMutation
-//  addTypeToLocalKit(directory: String!, typeInput: TypeInput!): AddTypeToLocalKitMutation
-//  removeTypeFromLocalKit(directory: String!, typeId: TypeIdInput!): RemoveTypeFromLocalKitMutation
-//  addDesignToLocalKit(directory: String!, designInput: DesignInput!): AddDesignToLocalKitMutation
-//  removeDesignFromLocalKit(directory: String!, designId: DesignIdInput!): RemoveDesignFromLocalKitMutation
-//}
-
-//type CreateLocalKitMutation
-//{
-//    kit: Kit
-//  error: CreateLocalKitError
-//}
-
-//type CreateLocalKitError
-//{
-//    code: CreateLocalKitErrorCode!
-//  message: String
-//}
-
-//enum CreateLocalKitErrorCode
-//{
-//    DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_ALREADY_CONTAINS_A_KIT
-//  NO_PERMISSION_TO_CREATE_DIRECTORY
-//  NO_PERMISSION_TO_CREATE_KIT
-//  KIT_INPUT_IS_INVALID
-//}
-
-//"""🗃️ A kit is a collection of types and designs."""
-//input KitInput
-//{
-//    name: String!
-//  description: String
-//  icon: String
-//  url: String
-//  homepage: String
-//  types: [TypeInput!]
-//    designs: [DesignInput!]
-//}
-
-//"""
-//🧩 A type is a reusable element that can be connected with other types over ports.
-//"""
-//input TypeInput
-//{
-//    name: String!
-//  description: String
-//  icon: String
-//  variant: String = ""
-//  unit: String!
-//  representations: [RepresentationInput!]!
-//  ports: [PortInput!]!
-//  qualities: [QualityInput!]
-//}
-
-//"""
-//💾 A representation is a link to a file that describes a type for a certain level of detail and tags.
-//"""
-//input RepresentationInput
-//{
-//    url: String!
-//  mime: String
-//  lod: String
-//  tags: [String!]
-//}
-
-//"""
-//🔌 A port is a conceptual connection point (with a direction) of a type.
-//"""
-//input PortInput
-//{
-//    id: String = ""
-//  point: PointInput!
-//  direction: VectorInput!
-//  locators: [LocatorInput!]
-//}
-
-//"""✖️ A 3d-point (xyz) of floating point numbers."""
-//input PointInput
-//{
-//    x: Float = 0
-//  y: Float = 0
-//  z: Float = 0
-//}
-
-//"""➡️ A 3d-vector (xyz) of floating point numbers."""
-//input VectorInput
-//{
-//    x: Float = 0
-//  y: Float = 0
-//  z: Float = 0
-//}
-
-//"""🗺️ A locator is meta-data for grouping ports."""
-//input LocatorInput
-//{
-//    group: String!
-//  subgroup: String
-//}
-
-//"""📏 A quality is meta-data for decision making."""
-//input QualityInput
-//{
-//    name: String!
-//  value: String
-//  unit: String
-//  definition: String
-//}
-
-//"""🏙️ A design is a collection of pieces that are connected."""
-//input DesignInput
-//{
-//    name: String!
-//  description: String
-//  icon: String
-//  variant: String = ""
-//  unit: String!
-//  pieces: [PieceInput!]!
-//  connections: [ConnectionInput!]!
-//  qualities: [QualityInput!]
-//}
-
-//"""⭕ A piece is a 3d-instance of a type in a design."""
-//input PieceInput
-//{
-//    id: String!
-//  type: TypeIdInput!
-//  root: PieceRootInput = null
-//  diagram: PieceDiagramInput!
-//}
-
-//"""🧩 A type is identified by a name and variant (empty=default)."""
-//input TypeIdInput
-//{
-//    name: String!
-//  variant: String = ""
-//}
-
-//"""🌱 The root indesign of a piece."""
-//input PieceRootInput
-//{
-//    plane: PlaneInput!
-//}
-
-//"""◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-//input PlaneInput
-//{
-//    origin: PointInput!
-//  xAxis: VectorInput!
-//  yAxis: VectorInput!
-//}
-
-//"""✏️ The diagram indesign of a piece."""
-//input PieceDiagramInput
-//{
-//    point: ScreenPointInput!
-//}
-
-//"""📺 A 2d-point (xy) of integers in screen plane."""
-//input ScreenPointInput
-//{
-//    x: Int = 0
-//  y: Int = 0
-//}
-
-//"""🖇️ A connection between two pieces of a design."""
-//input ConnectionInput
-//{
-//    connecting: SideInput!
-//  connected: SideInput!
-//  offset: Float = 0
-//  rotation: Float = 0
-//}
-
-//"""🧱 A side of a piece in a connection."""
-//input SideInput
-//{
-//    piece: SidePieceInput!
-//}
-
-//"""
-//⭕ The piece indesign of a side. A piece is identified by an id (emtpy=default)).
-//"""
-//input SidePieceInput
-//{
-//    id: String!
-//  type: SidePieceTypeInput = null
-//}
-
-//"""🧩 The type indesign of a piece of a side."""
-//input SidePieceTypeInput
-//{
-//    port: PortIdInput = null
-//}
-
-//"""🔌 A port is identified by an id (emtpy=default))."""
-//input PortIdInput
-//{
-//    id: String = ""
-//}
-
-//type UpdateLocalKitPropsMutation
-//{
-//    kit: Kit
-//  error: UpdateLocalKitPropsError
-//}
-
-//type UpdateLocalKitPropsError
-//{
-//    code: UpdateLocalKitPropsErrorCode!
-//  message: String
-//}
-
-//enum UpdateLocalKitPropsErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_UPDATE_KIT
-//  KIT_METADATA_IS_INVALID
-//}
-
-//"""🗃️ Meta-data of a kit."""
-//input KitPropsInput
-//{
-//    name: String
-//  description: String
-//  icon: String
-//  url: String
-//  homepage: String
-//}
-
-//type DeleteLocalKitMutation
-//{
-//    error: DeleteLocalKitError
-//}
-
-//enum DeleteLocalKitError
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_DELETE_KIT
-//}
-
-//type AddTypeToLocalKitMutation
-//{
-//    type: Type
-//  error: AddTypeToLocalKitError
-//}
-
-//type AddTypeToLocalKitError
-//{
-//    code: AddTypeToLocalKitErrorCode!
-//  message: String
-//}
-
-//enum AddTypeToLocalKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_MODIFY_KIT
-//  TYPE_INPUT_IS_INVALID
-//}
-
-//type RemoveTypeFromLocalKitMutation
-//{
-//    error: RemoveTypeFromLocalKitError
-//}
-
-//type RemoveTypeFromLocalKitError
-//{
-//    code: RemoveTypeFromLocalKitErrorCode!
-//  message: String
-//}
-
-//enum RemoveTypeFromLocalKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_MODIFY_KIT
-//  TYPE_DOES_NOT_EXIST
-//  DESIGN_DEPENDS_ON_TYPE
-//}
-
-//type AddDesignToLocalKitMutation
-//{
-//    design: Design
-//  error: AddDesignToLocalKitError
-//}
-
-//type AddDesignToLocalKitError
-//{
-//    code: AddDesignToLocalKitErrorCode!
-//  message: String
-//}
-
-//enum AddDesignToLocalKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_MODIFY_KIT
-//  DESIGN_INPUT_IS_INVALID
-//}
-
-//type RemoveDesignFromLocalKitMutation
-//{
-//    error: RemoveDesignFromLocalKitError
-//}
-
-//type RemoveDesignFromLocalKitError
-//{
-//    code: RemoveDesignFromLocalKitErrorCode!
-//  message: String
-//}
-
-//enum RemoveDesignFromLocalKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST
-//  DIRECTORY_IS_NOT_A_DIRECTORY
-//  DIRECTORY_HAS_NO_KIT
-//  NO_PERMISSION_TO_MODIFY_KIT
-//  DESIGN_DOES_NOT_EXIST
-//}
-
-//Emoji,Code,Abbreviation,Name,Description
-//🧲,Cd,Cod,Connected,The connected piece of the side.
-//🔩,Cg,Cog,Connecting,The connecting piece of the side.
-//🖇️,Co,Con,Connection,A connection between two pieces in a design.
-//🖇️,Co*,Cons,Connections,The optional connections in a design.
-//💬,Dc?,Dsc,Description,The optional human description of the {{NAME}}.
-//✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
-//📁,Di?,Dir,Directory,The optional directory where to find the kit.
-//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
-//🏙️,Dn*,Dsns,Designs,The designs of the kit.
-//👪,Gr,Grp,Group,The group of the locator.
-//🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
-//🖼️,Ic?,Ico,Icon,The optional icon [emoji | text | image | svg] of the {{NAME}}.
-//🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
-//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
-//🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
-//🗺️,Lc*,Locs,Locators,The optional locators of the port.
-//🔍,Ld,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation.
-//📛,Na,Nam,Name,The name of the {{NAME}}.
-//🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
-//⌱,Og,Org,Origin,The origin of the plane.
-//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
-//🔌,Po+,Pors,Ports,The ports of the type.
-//◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-//◳,Pn,Pln,Plane,The optional plane of the piece.
-//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
-//📏,Ql,Qal,Quality,A quality is meta-data for decision making.
-//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
-//💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-//🌱,Rt,Rot,Root,The root-related information of the piece. When pieces are connected only one piece can be the root.
-//🧱,Sd,Sde,Side,A side of a piece in a connection.
-//📌,SG,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
-//📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
-//✅,Su,Suc,Success,{{NAME}} was successful.
-//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
-//🔖,Tg*,Tags,Tags,Optional tags to group representations.
-//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
-//🧩,Ty,Typ,Type,The type-related information of the side.
-//🧩,Ty*,Typs,Types,The types of the kit.
-//🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
-//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
-//Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
-//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
-//🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
-//🔢,Vl?,Val,Value,The optional value of the quality. No value is equivalent to true for the name.
-//🔀,Vn?,Vnt,Variant,The optional value of the {{NAME}}.
-//🏁,X,X,X,The x-coordinate of the screen point.
-//🎚️,X,X,X,The x-coordinate of the point.
-//➡️,XA,XAx,XAxis,The x-axis of the plane.
-//🏁,Y,Y,Y,The y-coordinate of the screen point.
-//🎚️,Y,Y,Y,The y-coordinate of the point.
-//➡️,YA,YAx,YAxis,The y-axis of the plane.
-//🏁,Z,Z,Z,The z-coordinate of the screen point.
-//🎚️,Z,Z,Z,The z-coordinate of the point.
+//Dictionary
 
 #endregion
 
 #region Utility
 
-//public static class Generator
-//{
-//    public static string GenerateRandomId(int seed)
-//    {
-//        var adjectives = Resources.adjectives.Deserialize<List<string>>();
-//        var animals = Resources.animals.Deserialize<List<string>>();
-//        var random = new Random(seed);
-//        var adjective = adjectives[random.Next(adjectives.Count)];
-//        var animal = animals[random.Next(animals.Count)];
-//        var number = random.Next(0, 999);
-//        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
-//        animal = char.ToUpper(animal[0]) + animal.Substring(1);
-//        return $"{adjective}{animal}{number}";
-//    }
-//}
+public static class Generator
+{
+    public static string GenerateRandomId(int seed)
+    {
+        var adjectives = Resources.adjectives.Deserialize<List<string>>();
+        var animals = Resources.animals.Deserialize<List<string>>();
+        var random = new Random(seed);
+        var adjective = adjectives[random.Next(adjectives.Count)];
+        var animal = animals[random.Next(animals.Count)];
+        var number = random.Next(0, 999);
+        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
+        animal = char.ToUpper(animal[0]) + animal.Substring(1);
+        return $"{adjective}{animal}{number}";
+    }
+}
 
 public static class MimeParser
 {
@@ -1145,7 +513,7 @@ public class Port : Model<Port>
     /// <summary>
     ///     🆔 The local identifier of the port within the type.
     /// </summary>
-    [Id("🆔", "Id", "Idn", "Local identifier of the port within the type.")]
+    [Id("🆔", "Id", "Idn", " identifier of the port within the type.")]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -1168,15 +536,15 @@ public class Port : Model<Port>
 }
 
 /// <summary>
-///     🔌 Local identifier of the port within the type.
+///     🔌  identifier of the port within the type.
 /// </summary>
-[Model("🔌", "Po", "Por", "Local identifier of the port within the type.")]
+[Model("🔌", "Po", "Por", " identifier of the port within the type.")]
 public class PortId : Model<PortId>
 {
     /// <summary>
     ///     🆔 The local identifier of the port within the type.
     /// </summary>
-    [Id("🆔", "Id", "Id", "Local identifier of the port within the type.")]
+    [Id("🆔", "Id", "Id", " identifier of the port within the type.")]
     public string Id { get; set; } = "";
 
     public static implicit operator PortId(Port port)
@@ -1276,9 +644,9 @@ public class Type : Model<Type>
 }
 
 /// <summary>
-///     🔌 Local identifier of the type within the kit.
+///     🔌  identifier of the type within the kit.
 /// </summary>
-[Model("🧩", "Ty", "Typ", "Local identifier of the type within the kit.")]
+[Model("🧩", "Ty", "Typ", " identifier of the type within the kit.")]
 public class TypeId : Model<TypeId>
 {
     /// <summary>
@@ -1316,7 +684,7 @@ public class Piece : Model<Piece>
     public string Id { get; set; } = "";
 
     /// <summary>
-    ///     🧩 Local identifier of the type within the kit.
+    ///     🧩  identifier of the type within the kit.
     /// </summary>
     [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type within the kit.")]
     public TypeId Type { get; set; } = new();
@@ -1583,329 +951,327 @@ public static class Deserializer
     }
 }
 
-//    #region Api
+#region Api
 
-//    public class LoadLocalKitResponse
-//    {
-//        public Kit? Kit { get; set; }
-//        public string? Error { get; set; }
-//    }
+public class LoadKitResponse
+{
+    public Kit? Kit { get; set; }
+    public string? Error { get; set; }
+}
 
-//    public class LoadLocalKitResponseContainer
-//    {
-//        public LoadLocalKitResponse LoadLocalKit { get; set; }
-//    }
+public class LoadKitResponseContainer
+{
+    public LoadKitResponse LoadKit { get; set; }
+}
 
-//    public enum CreateLocalKitErrorCode
-//    {
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_ALREADY_CONTAINS_A_KIT,
-//        NO_PERMISSION_TO_CREATE_DIRECTORY,
-//        NO_PERMISSION_TO_CREATE_KIT,
-//        KIT_INPUT_IS_INVALID
-//    }
+public enum CreateKitErrorCode
+{
+    KIT_URL_IS_INVALID,
+    NO_PERMISSION_TO_CREATE_KIT,
+    KIT_INPUT_IS_INVALID
+}
 
-//    public class CreateLocalKitError
-//    {
-//        public CreateLocalKitErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class CreateKitError
+{
+    public CreateKitErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class CreateLocalKitResponse
-//    {
-//        public Kit? Kit { get; set; }
-//        public CreateLocalKitError? Error { get; set; }
-//    }
+public class CreateKitResponse
+{
+    public Kit? Kit { get; set; }
+    public CreateKitError? Error { get; set; }
+}
 
-//    public class CreateLocalKitResponseContainer
-//    {
-//        public CreateLocalKitResponse CreateLocalKit { get; set; }
-//    }
+public class CreateKitResponseContainer
+{
+    public CreateKitResponse CreateKit { get; set; }
+}
 
-//    public enum UpdateLocalKitPropsErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_UPDATE_KIT,
-//        KIT_METADATA_IS_INVALID
-//    }
+public enum UpdateKitPropsErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_UPDATE_KIT,
+    KIT_METADATA_IS_INVALID
+}
 
-//    public class UpdateLocalKitPropsError
-//    {
-//        public UpdateLocalKitPropsErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class UpdateKitPropsError
+{
+    public UpdateKitPropsErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class UpdateLocalKitPropsResponse
-//    {
-//        public KitProps? Kit { get; set; }
-//        public UpdateLocalKitPropsError? Error { get; set; }
-//    }
+public class UpdateKitPropsResponse
+{
+    public KitProps? Kit { get; set; }
+    public UpdateKitPropsError? Error { get; set; }
+}
 
-//    public class UpdateLocalKitPropsResponseContainer
-//    {
-//        public UpdateLocalKitPropsResponse UpdateLocalKitProps { get; set; }
-//    }
+public class UpdateKitPropsResponseContainer
+{
+    public UpdateKitPropsResponse UpdateKitProps { get; set; }
+}
 
-//    public enum DeleteLocalKitError
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_DELETE_KIT
-//    }
+public enum DeleteKitError
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_DELETE_KIT
+}
 
-//    public class DeleteLocalKitResponse
-//    {
-//        public DeleteLocalKitError? Error { get; set; }
-//    }
+public class DeleteKitResponse
+{
+    public DeleteKitError? Error { get; set; }
+}
 
-//    public class DeleteLocalKitResponseContainer
-//    {
-//        public DeleteLocalKitResponse DeleteLocalKit { get; set; }
-//    }
+public class DeleteKitResponseContainer
+{
+    public DeleteKitResponse DeleteKit { get; set; }
+}
 
-//    public enum AddTypeToLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_MODIFY_KIT,
-//        TYPE_INPUT_IS_INVALID
-//    }
+public enum AddTypeToKitErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_MODIFY_KIT,
+    TYPE_INPUT_IS_INVALID
+}
 
-//    public class AddTypeToLocalKitError
-//    {
-//        public AddTypeToLocalKitErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class AddTypeToKitError
+{
+    public AddTypeToKitErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class AddTypeToLocalKitResponse
-//    {
-//        public Type? Type { get; set; }
-//        public AddTypeToLocalKitError? Error { get; set; }
-//    }
+public class AddTypeToKitResponse
+{
+    public Type? Type { get; set; }
+    public AddTypeToKitError? Error { get; set; }
+}
 
-//    public class AddTypeToLocalKitResponseContainer
-//    {
-//        public AddTypeToLocalKitResponse AddTypeToLocalKit { get; set; }
-//    }
+public class AddTypeToKitResponseContainer
+{
+    public AddTypeToKitResponse AddTypeToKit { get; set; }
+}
 
-//    public enum RemoveTypeFromLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_MODIFY_KIT,
-//        TYPE_DOES_NOT_EXIST,
-//        DESIGN_DEPENDS_ON_TYPE
-//    }
+public enum RemoveTypeFromKitErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_MODIFY_KIT,
+    TYPE_DOES_NOT_EXIST,
+    DESIGN_DEPENDS_ON_TYPE
+}
 
-//    public class RemoveTypeFromLocalKitError
-//    {
-//        public RemoveTypeFromLocalKitErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class RemoveTypeFromKitError
+{
+    public RemoveTypeFromKitErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class RemoveTypeFromLocalKitResponse
-//    {
-//        public RemoveTypeFromLocalKitError? Error { get; set; }
-//    }
+public class RemoveTypeFromKitResponse
+{
+    public RemoveTypeFromKitError? Error { get; set; }
+}
 
-//    public class RemoveTypeFromLocalKitResponseContainer
-//    {
-//        public RemoveTypeFromLocalKitResponse RemoveTypeFromLocalKit { get; set; }
-//    }
+public class RemoveTypeFromKitResponseContainer
+{
+    public RemoveTypeFromKitResponse RemoveTypeFromKit { get; set; }
+}
 
-//    public enum AddDesignToLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_MODIFY_KIT,
-//        DESIGN_INPUT_IS_INVALID
-//    }
+public enum AddDesignToKitErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_MODIFY_KIT,
+    DESIGN_INPUT_IS_INVALID
+}
 
-//    public class AddDesignToLocalKitError
-//    {
-//        public AddDesignToLocalKitErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class AddDesignToKitError
+{
+    public AddDesignToKitErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class AddDesignToLocalKitResponse
-//    {
-//        public Design? Design { get; set; }
-//        public AddDesignToLocalKitError? Error { get; set; }
-//    }
+public class AddDesignToKitResponse
+{
+    public Design? Design { get; set; }
+    public AddDesignToKitError? Error { get; set; }
+}
 
-//    public class AddDesignToLocalKitResponseContainer
-//    {
-//        public AddDesignToLocalKitResponse AddDesignToLocalKit { get; set; }
-//    }
+public class AddDesignToKitResponseContainer
+{
+    public AddDesignToKitResponse AddDesignToKit { get; set; }
+}
 
-//    public enum RemoveDesignFromLocalKitErrorCode
-//    {
-//        DIRECTORY_DOES_NOT_EXIST,
-//        DIRECTORY_IS_NOT_A_DIRECTORY,
-//        DIRECTORY_HAS_NO_KIT,
-//        NO_PERMISSION_TO_MODIFY_KIT,
-//        DESIGN_DOES_NOT_EXIST
-//    }
+public enum RemoveDesignFromKitErrorCode
+{
+    DIRECTORY_DOES_NOT_EXIST,
+    DIRECTORY_IS_NOT_A_DIRECTORY,
+    DIRECTORY_HAS_NO_KIT,
+    NO_PERMISSION_TO_MODIFY_KIT,
+    DESIGN_DOES_NOT_EXIST
+}
 
-//    public class RemoveDesignFromLocalKitError
-//    {
-//        public RemoveDesignFromLocalKitErrorCode Code { get; set; }
-//        public string Message { get; set; }
-//    }
+public class RemoveDesignFromKitError
+{
+    public RemoveDesignFromKitErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 
-//    public class RemoveDesignFromLocalKitResponse
-//    {
-//        public RemoveDesignFromLocalKitError? Error { get; set; }
-//    }
+public class RemoveDesignFromKitResponse
+{
+    public RemoveDesignFromKitError? Error { get; set; }
+}
 
-//    public class RemoveDesignFromLocalKitResponseContainer
-//    {
-//        public RemoveDesignFromLocalKitResponse RemoveDesignFromLocalKit { get; set; }
-//    }
+public class RemoveDesignFromKitResponseContainer
+{
+    public RemoveDesignFromKitResponse RemoveDesignFromKit { get; set; }
+}
 
-//    public class Api : ICloneable
-//    {
-//        public Api()
-//        {
-//            Endpoint = "http://127.0.0.1:5052/graphql";
-//            Token = "";
-//            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-//        }
+public class Api : ICloneable
+{
+    public Api()
+    {
+        Endpoint = "http://127.0.0.1:5052/graphql";
+        Token = "";
+        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+    }
 
-//        public Api(string endpoint, string token)
-//        {
-//            Endpoint = endpoint;
-//            Token = token;
-//            Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-//            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
-//        }
+    public Api(string endpoint, string token)
+    {
+        Endpoint = endpoint;
+        Token = token;
+        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
+        Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+    }
 
-//        public GraphQLHttpClient Client { get; set; }
-//        public string Endpoint { get; set; }
-//        public string Token { get; set; }
+    public GraphQLHttpClient Client { get; set; }
+    public string Endpoint { get; set; }
+    public string Token { get; set; }
 
-//        public object Clone()
-//        {
-//            return new Api(Endpoint, Token);
-//        }
+    public object Clone()
+    {
+        return new Api(Endpoint, Token);
+    }
 
-//        public override string ToString()
-//        {
-//            return $"Api(Endpoint: {Endpoint}, Token: {Token})";
-//        }
+    public override string ToString()
+    {
+        return $"Api(Endpoint: {Endpoint}, Token: {Token})";
+    }
 
-//        public LoadLocalKitResponse? LoadLocalKit(string directory)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.loadLocalKit,
-//                OperationName = "LoadLocalKit",
-//                Variables = new { directory }
-//            };
-//            var response = Client.SendQueryAsync<LoadLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.LoadLocalKit;
-//        }
+    public LoadKitResponse? LoadKit(string directory)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.loadKit,
+            OperationName = "LoadKit",
+            Variables = new { directory }
+        };
+        var response = Client.SendQueryAsync<LoadKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.LoadKit;
+    }
 
-//        public CreateLocalKitResponse? CreateLocalKit(string directory, Kit kit)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.createLocalKit,
-//                OperationName = "CreateLocalKit",
-//                Variables = new { directory, kit }
-//            };
-//            var response = Client.SendQueryAsync<CreateLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.CreateLocalKit;
-//        }
+    public CreateKitResponse? CreateKit(string directory, Kit kit)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.createKit,
+            OperationName = "CreateKit",
+            Variables = new { directory, kit }
+        };
+        var response = Client.SendQueryAsync<CreateKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.CreateKit;
+    }
 
-//        public UpdateLocalKitPropsResponse? UpdateLocalKitProps(string directory, KitProps kit)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.updateLocalKitMetadata,
-//                OperationName = "UpdateLocalKitProps",
-//                Variables = new { directory, kit }
-//            };
-//            var response = Client.SendQueryAsync<UpdateLocalKitPropsResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.UpdateLocalKitProps;
-//        }
+    public UpdateKitPropsResponse? UpdateKitProps(string directory, KitProps kit)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.updateKitMetadata,
+            OperationName = "UpdateKitProps",
+            Variables = new { directory, kit }
+        };
+        var response = Client.SendQueryAsync<UpdateKitPropsResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.UpdateKitProps;
+    }
 
-//        public DeleteLocalKitResponse? DeleteLocalKit(string directory)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.deleteLocalKit,
-//                OperationName = "DeleteLocalKit",
-//                Variables = new { directory }
-//            };
-//            var response = Client.SendQueryAsync<DeleteLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.DeleteLocalKit;
-//        }
+    public DeleteKitResponse? DeleteKit(string directory)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.deleteKit,
+            OperationName = "DeleteKit",
+            Variables = new { directory }
+        };
+        var response = Client.SendQueryAsync<DeleteKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.DeleteKit;
+    }
 
-//        public AddTypeToLocalKitResponse? AddTypeToLocalKit(string directory, Type type)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.addTypeToLocalKit,
-//                OperationName = "AddTypeToLocalKit",
-//                Variables = new { directory, type }
-//            };
-//            var response = Client.SendQueryAsync<AddTypeToLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.AddTypeToLocalKit;
-//        }
+    public AddTypeToKitResponse? AddTypeToKit(string directory, Type type)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.addTypeToKit,
+            OperationName = "AddTypeToKit",
+            Variables = new { directory, type }
+        };
+        var response = Client.SendQueryAsync<AddTypeToKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.AddTypeToKit;
+    }
 
-//        public RemoveTypeFromLocalKitResponse? RemoveTypeFromLocalKit(string directory, TypeId type)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.removeTypeFromLocalKit,
-//                OperationName = "RemoveTypeFromLocalKit",
-//                Variables = new { directory, type }
-//            };
-//            var response = Client.SendQueryAsync<RemoveTypeFromLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.RemoveTypeFromLocalKit;
-//        }
+    public RemoveTypeFromKitResponse? RemoveTypeFromKit(string directory, TypeId type)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.removeTypeFromKit,
+            OperationName = "RemoveTypeFromKit",
+            Variables = new { directory, type }
+        };
+        var response = Client.SendQueryAsync<RemoveTypeFromKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.RemoveTypeFromKit;
+    }
 
-//        public AddDesignToLocalKitResponse? AddDesignToLocalKit(string directory, Design design)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.addDesignToLocalKit,
-//                OperationName = "AddDesignToLocalKit",
-//                Variables = new { directory, design }
-//            };
-//            var response = Client.SendQueryAsync<AddDesignToLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.AddDesignToLocalKit;
-//        }
+    public AddDesignToKitResponse? AddDesignToKit(string directory, Design design)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.addDesignToKit,
+            OperationName = "AddDesignToKit",
+            Variables = new { directory, design }
+        };
+        var response = Client.SendQueryAsync<AddDesignToKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.AddDesignToKit;
+    }
 
-//        public RemoveDesignFromLocalKitResponse? RemoveDesignFromLocalKit(string directory, DesignId design)
-//        {
-//            var query = new GraphQLRequest
-//            {
-//                Query = Resources.removeDesignFromLocalKit,
-//                OperationName = "RemoveDesignFromLocalKit",
-//                Variables = new { directory, design }
-//            };
-//            var response = Client.SendQueryAsync<RemoveDesignFromLocalKitResponseContainer>(query).Result;
-//            if (response.Errors != null) return null;
-//            return response.Data.RemoveDesignFromLocalKit;
-//        }
+    public RemoveDesignFromKitResponse? RemoveDesignFromKit(string directory, DesignId design)
+    {
+        var query = new GraphQLRequest
+        {
+            Query = Resources.removeDesignFromKit,
+            OperationName = "RemoveDesignFromKit",
+            Variables = new { directory, design }
+        };
+        var response = Client.SendQueryAsync<RemoveDesignFromKitResponseContainer>(query).Result;
+        if (response.Errors != null) return null;
+        return response.Data.RemoveDesignFromKit;
+    }
 
-//    }
+}
 
-//#endregion
+#endregion
 
 public static class Meta
 {

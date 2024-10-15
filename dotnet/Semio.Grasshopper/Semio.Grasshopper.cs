@@ -1125,384 +1125,335 @@ public class LoadKitComponent : EngineComponent
     }
 }
 
-public class CreateKitComponent : EngineComponent
-{
-    protected new static string SuccessDescription = "True if the kit was successfully created. False otherwise.";
+//public class CreateKitComponent : EngineComponent
+//{
+//    protected new static string SuccessDescription = "True if the kit was successfully created. False otherwise.";
 
-    public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.")
-    {
-    }
+//    public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.")
+//    {
+//    }
 
-    public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
+//    public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
 
-    protected override Bitmap Icon => Resources.kit_create_24x24;
+//    protected override Bitmap Icon => Resources.kit_create_24x24;
 
-    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new KitParam());
-    }
+//    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new KitParam());
+//    }
 
-    protected override void Run(string path, IGH_DataAccess DA)
-    {
-        var kitGoo = new KitGoo();
+//    protected override void Run(string path, IGH_DataAccess DA)
+//    {
+//        var kitGoo = new KitGoo();
 
-        var response = new Api().CreateLocalKit(path, kitGoo.Value);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
+//        var response = new Api().CreateLocalKit(path, kitGoo.Value);
+//        if (response == null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            DA.SetData(0, false);
-            return;
-        }
+//        if (response.Error != null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-        DA.SetData(0, true);
-    }
-}
+//        DA.SetData(0, true);
+//    }
+//}
 
-public class DeleteKitComponent : EngineComponent
-{
-    public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.")
-    {
-    }
+//public class DeleteKitComponent : EngineComponent
+//{
+//    public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.")
+//    {
+//    }
 
-    public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
+//    public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
 
-    protected override Bitmap Icon => Resources.kit_delete_24x24;
+//    protected override Bitmap Icon => Resources.kit_delete_24x24;
 
-    protected override void Run(string url, IGH_DataAccess DA)
-    {
-        var path = "";
-        var run = false;
+//    protected override dynamic Run(string url)=>new Api().DeleteLocalKit(path);
+    
+//}
 
-        if (!DA.GetData(0, ref path))
-            path = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(1, ref run);
+//#region Adding
 
-        if (!run)
-        {
-            DA.SetData(0, false);
-            return;
-        }
+//public abstract class AddComponent<T> : EngineComponent where T : Model<T>
+//{
+//    protected new static string SuccessDescription = $"True if the {typeof(T).Name} was added to the kit.";
 
-        var response = new Api().DeleteLocalKit(path);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
+//    public AddComponent()
+//        : base($"Add {typeof(T).Name}", $"+{Semio.Meta.Model[typeof(T).Name].Abbreviation}",
+//            $"Add a {typeof(T).Name} to a kit.")
+//    {
+//    }
 
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.ToString());
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override Bitmap Icon
+//    {
+//        get
+//        {
+//            var iconName = $"{typeof(T).Name.ToLower()}_add_24x24";
+//            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
+//        }
+//    }
 
-        DA.SetData(0, true);
-    }
-}
+//    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
+//    {
+//        var param = (IGH_Param)Activator.CreateInstance(Meta.Param[typeof(T).Name]);
+//        pManager.AddParameter(param, $"{typeof(T).Name}", $"{Semio.Meta.Model[typeof(T).Name].Code}",
+//            $"{typeof(T).Name} to add to the kit.", GH_ParamAccess.item);
+//    }
 
-#region Adding
+//    protected override void Run(string url, IGH_DataAccess DA)
+//    {
+//        var goo = Activator.CreateInstance(Meta.Goo[typeof(T).Name]);
 
-public abstract class AddComponent<T> : EngineComponent where T : Model<T>
-{
-    protected new static string SuccessDescription = $"True if the {typeof(T).Name} was added to the kit.";
+//        if (DA.GetData(0, ref goo))
+//            goo = goo.Duplicate();
+//    }
+//}
 
-    public AddComponent()
-        : base($"Add {typeof(T).Name}", $"+{Semio.Meta.Model[typeof(T).Name].Abbreviation}",
-            $"Add a {typeof(T).Name} to a kit.")
-    {
-    }
+//public class AddTypeComponent : AddComponent<Type>
+//{
+//    public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
 
-    protected override Bitmap Icon
-    {
-        get
-        {
-            var iconName = $"{typeof(T).Name.ToLower()}_add_24x24";
-            return (Bitmap)Resources.ResourceManager.GetObject(iconName);
-        }
-    }
+//    protected override dynamic Add(string url,Model<Type> type) => new Api().AddTypeToLocalKit(url, type);
+   
+//}
 
-    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
-    {
-        var param = (IGH_Param)Activator.CreateInstance(Meta.Param[typeof(T).Name]);
-        pManager.AddParameter(param, $"{typeof(T).Name}", $"{Semio.Meta.Model[typeof(T).Name].Code}",
-            $"{typeof(T).Name} to add to the kit.", GH_ParamAccess.item);
-    }
+//public class AddDesignComponent : EngineComponent
+//{
+//    public AddDesignComponent()
+//        : base("Add Design", "+Dsn",
+//            "Add a design to a kit.",
+//            "semio", "Loading/Saving")
+//    {
+//    }
 
-    protected override void Run(string url, IGH_DataAccess DA)
-    {
-        var goo = Activator.CreateInstance(Meta.Goo[typeof(T).Name]);
+//    public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
 
-        if (DA.GetData(0, ref goo))
-            goo = goo.Duplicate();
-    }
-}
+//    protected override Bitmap Icon => Resources.design_add_24x24;
 
-public class AddTypeComponent : AddComponent<Type>
-{
-    public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+//            "Design to add to the kit.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Directory", "Di?",
+//            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+//            GH_ParamAccess.item);
+//        pManager[1].Optional = true;
+//        pManager.AddBooleanParameter("Run", "R", "Add the design to the kit.", GH_ParamAccess.item, false);
+//    }
 
-    protected override void Run(string url, IGH_DataAccess DA)
-    {
-        var response = new Api().AddTypeToLocalKit(path, typeGoo.Value);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Success", "Sc", "True if the design was added to the kit.",
+//            GH_ParamAccess.item);
+//    }
 
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var designGoo = new DesignGoo();
+//        var path = "";
+//        var run = false;
 
-        DA.SetData(0, true);
-    }
-}
+//        if (DA.GetData(0, ref designGoo))
+//            designGoo = designGoo.Duplicate() as DesignGoo;
+//        if (!DA.GetData(1, ref path))
+//            path = OnPingDocument().IsFilePathDefined
+//                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//                : Directory.GetCurrentDirectory();
+//        DA.GetData(2, ref run);
 
-public class AddDesignComponent : EngineComponent
-{
-    public AddDesignComponent()
-        : base("Add Design", "+Dsn",
-            "Add a design to a kit.",
-            "semio", "Loading/Saving")
-    {
-    }
+//        if (!run)
+//        {
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
+//        var response = new Api().AddDesignToLocalKit(path, designGoo.Value);
+//        if (response == null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override Bitmap Icon => Resources.design_add_24x24;
+//        if (response.Error != null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to add to the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Directory", "Di?",
-            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-            GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Add the design to the kit.", GH_ParamAccess.item, false);
-    }
+//        DA.SetData(0, true);
+//    }
+//}
 
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the design was added to the kit.",
-            GH_ParamAccess.item);
-    }
+//#endregion
 
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        var path = "";
-        var run = false;
+//#region Removing
 
-        if (DA.GetData(0, ref designGoo))
-            designGoo = designGoo.Duplicate() as DesignGoo;
-        if (!DA.GetData(1, ref path))
-            path = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(2, ref run);
+//public class RemoveTypeComponent : EngineComponent
+//{
+//    public RemoveTypeComponent()
+//        : base("Remove Type", "-Typ",
+//            "Remove a type from a kit.",
+//            "semio", "Loading/Saving")
+//    {
+//    }
 
-        if (!run)
-        {
-            DA.SetData(0, false);
-            return;
-        }
+//    public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
 
-        var response = new Api().AddDesignToLocalKit(path, designGoo.Value);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override Bitmap Icon => Resources.type_remove_24x24;
 
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Type Name", "TyNa",
+//            "Name of the type to remove from the kit.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Type Variant", "TyVn?",
+//            "Optional variant of the type to remove from the kit. No variant will remove the default variant.",
+//            GH_ParamAccess.item);
+//        pManager[1].Optional = true;
+//        pManager.AddTextParameter("Directory", "Di?",
+//            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+//            GH_ParamAccess.item);
+//        pManager[2].Optional = true;
+//        pManager.AddBooleanParameter("Run", "R", "Remove the type from the kit.", GH_ParamAccess.item, false);
+//    }
 
-        DA.SetData(0, true);
-    }
-}
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Success", "Sc", "True if the type was removed from the kit.",
+//            GH_ParamAccess.item);
+//    }
 
-#endregion
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var typeName = "";
+//        var typeVariant = "";
+//        var path = "";
+//        var run = false;
 
-#region Removing
+//        DA.GetData(0, ref typeName);
+//        DA.GetData(1, ref typeVariant);
+//        if (!DA.GetData(2, ref path))
+//            path = OnPingDocument().IsFilePathDefined
+//                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//                : Directory.GetCurrentDirectory();
+//        DA.GetData(3, ref run);
 
-public class RemoveTypeComponent : EngineComponent
-{
-    public RemoveTypeComponent()
-        : base("Remove Type", "-Typ",
-            "Remove a type from a kit.",
-            "semio", "Loading/Saving")
-    {
-    }
+//        if (!run)
+//        {
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
+//        var type = new TypeId
+//        {
+//            Name = typeName,
+//            Variant = typeVariant
+//        };
+//        var response = new Api().RemoveTypeFromLocalKit(path, type);
+//        if (response == null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override Bitmap Icon => Resources.type_remove_24x24;
+//        if (response.Error != null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Type Name", "TyNa",
-            "Name of the type to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "TyVn?",
-            "Optional variant of the type to remove from the kit. No variant will remove the default variant.",
-            GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Directory", "Di?",
-            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Remove the type from the kit.", GH_ParamAccess.item, false);
-    }
+//        DA.SetData(0, true);
+//    }
+//}
 
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the type was removed from the kit.",
-            GH_ParamAccess.item);
-    }
+//public class RemoveDesignComponent : EngineComponent
+//{
+//    public RemoveDesignComponent()
+//        : base("Remove Design", "-Dsn",
+//            "Remove a design from a kit.",
+//            "semio", "Loading/Saving")
+//    {
+//    }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var typeName = "";
-        var typeVariant = "";
-        var path = "";
-        var run = false;
+//    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
 
-        DA.GetData(0, ref typeName);
-        DA.GetData(1, ref typeVariant);
-        if (!DA.GetData(2, ref path))
-            path = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(3, ref run);
+//    protected override Bitmap Icon => Resources.design_remove_24x24;
 
-        if (!run)
-        {
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Design Name", "DnNa",
+//            "Name of the design to remove from the kit.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Design Variant", "DnVn?",
+//            "Optional variant of the design to remove from the kit. No variant will remove the default variant.",
+//            GH_ParamAccess.item);
+//        pManager[1].Optional = true;
+//        pManager.AddTextParameter("Directory", "Di?",
+//            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+//            GH_ParamAccess.item);
+//        pManager[2].Optional = true;
+//        pManager.AddBooleanParameter("Run", "R", "Remove the design from the kit.", GH_ParamAccess.item, false);
+//    }
 
-        var type = new TypeId
-        {
-            Name = typeName,
-            Variant = typeVariant
-        };
-        var response = new Api().RemoveTypeFromLocalKit(path, type);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Success", "Sc", "True if the design was removed from the kit.",
+//            GH_ParamAccess.item);
+//    }
 
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            DA.SetData(0, false);
-            return;
-        }
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var designName = "";
+//        var designVariant = "";
+//        var path = "";
+//        var run = false;
 
-        DA.SetData(0, true);
-    }
-}
+//        DA.GetData(0, ref designName);
+//        DA.GetData(1, ref designVariant);
+//        if (!DA.GetData(2, ref path))
+//            path = OnPingDocument().IsFilePathDefined
+//                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//                : Directory.GetCurrentDirectory();
+//        DA.GetData(3, ref run);
 
-public class RemoveDesignComponent : EngineComponent
-{
-    public RemoveDesignComponent()
-        : base("Remove Design", "-Dsn",
-            "Remove a design from a kit.",
-            "semio", "Loading/Saving")
-    {
-    }
+//        if (!run)
+//        {
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
+//        var design = new DesignId
+//        {
+//            Name = designName,
+//            Variant = designVariant
+//        };
+//        var response = new Api().RemoveDesignFromLocalKit(path, design);
+//        if (response == null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override Bitmap Icon => Resources.design_remove_24x24;
+//        if (response.Error != null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+//            DA.SetData(0, false);
+//            return;
+//        }
 
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Design Name", "DnNa",
-            "Name of the design to remove from the kit.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design Variant", "DnVn?",
-            "Optional variant of the design to remove from the kit. No variant will remove the default variant.",
-            GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Directory", "Di?",
-            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Remove the design from the kit.", GH_ParamAccess.item, false);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the design was removed from the kit.",
-            GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designName = "";
-        var designVariant = "";
-        var path = "";
-        var run = false;
-
-        DA.GetData(0, ref designName);
-        DA.GetData(1, ref designVariant);
-        if (!DA.GetData(2, ref path))
-            path = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(3, ref run);
-
-        if (!run)
-        {
-            DA.SetData(0, false);
-            return;
-        }
-
-        var design = new DesignId
-        {
-            Name = designName,
-            Variant = designVariant
-        };
-        var response = new Api().RemoveDesignFromLocalKit(path, design);
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            DA.SetData(0, false);
-            return;
-        }
-
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            DA.SetData(0, false);
-            return;
-        }
-
-        DA.SetData(0, true);
-    }
-}
+//        DA.SetData(0, true);
+//    }
+//}
 
 #endregion
 
@@ -1510,553 +1461,553 @@ public class RemoveDesignComponent : EngineComponent
 
 #region Scripting
 
-public class EncodeTextComponent : Component
-{
-    public EncodeTextComponent()
-        : base("Encode Text", ">Txt",
-            "Encode a text.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
-
-    protected override Bitmap Icon => Resources.encode_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var text = "";
-
-        DA.GetData(0, ref text);
-
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
-
-        DA.SetData(0, base64Text);
-    }
-}
-
-public class DecodeTextComponent : Component
-{
-    public DecodeTextComponent()
-        : base("Decode Text", "<Txt",
-            "Decode a text.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
-
-    protected override Bitmap Icon => Resources.decode_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text to decode.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Decoded text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var base64Text = "";
-
-        DA.GetData(0, ref base64Text);
-
-        var textBytes = Convert.FromBase64String(base64Text);
-        var text = Encoding.UTF8.GetString(textBytes);
-
-        DA.SetData(0, text);
-    }
-}
-
-#region Serialize
-
-public class SerializeQualityComponent : Component
-{
-    public SerializeQualityComponent()
-        : base("Serialize Quality", ">Qlt",
-            "Serialize a quality.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
-
-    protected override Bitmap Icon => Resources.quality_serialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new QualityParam(), "Quality", "Ql",
-            "Quality to serialize.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "Serialize the quality.", GH_ParamAccess.item, false);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var qualityGoo = new QualityGoo();
-
-        DA.GetData(0, ref qualityGoo);
-
-        var text = qualityGoo.Value.Serialize();
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
-
-        DA.SetData(0, base64Text);
-    }
-}
-
-public class SerializeTypeComponent : Component
-{
-    public SerializeTypeComponent()
-        : base("Serialize Type", ">Typ",
-            "Serialize a type.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
-
-    protected override Bitmap Icon => Resources.type_serialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new TypeParam(), "Type", "Ty",
-            "Type to serialize.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized type.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var typeGoo = new TypeGoo();
-
-        DA.GetData(0, ref typeGoo);
-        var text = typeGoo.Value.Serialize();
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
-
-        DA.SetData(0, base64Text);
-    }
-}
-
-public class SerializeDesignComponent : Component
-{
-    public SerializeDesignComponent()
-        : base("Serialize Design", ">For",
-            "Serialize a design.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
-
-    protected override Bitmap Icon => Resources.design_serialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to serialize.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-
-        DA.GetData(0, ref designGoo);
-        var text = designGoo.Value.Serialize();
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
-
-        DA.SetData(0, base64Text);
-    }
-}
-
-public class SerializeSceneComponent : Component
-{
-    public SerializeSceneComponent()
-        : base("Serialize Scene", ">Scn",
-            "Serialize a scene.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("2470CB4D-FC4A-4DCE-92BF-EDA281B36609");
-
-    protected override Bitmap Icon => Resources.scene_serialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-            "Scene to serialize.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var sceneGoo = new SceneGoo();
-
-        DA.GetData(0, ref sceneGoo);
-        var text = sceneGoo.Value.Serialize();
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
-
-        DA.SetData(0, base64Text);
-    }
-}
-
-#endregion
-
-#region Deserialize
-
-public class DeserializeQualityComponent : Component
-{
-    public DeserializeQualityComponent()
-        : base("Deserialize Quality", "<Qlt",
-            "Deserialize a quality.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
-
-    protected override Bitmap Icon => Resources.quality_deserialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new QualityParam(), "Quality", "Ql",
-            "Deserialized quality.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var base64Text = "";
-
-        DA.GetData(0, ref base64Text);
-
-        var textBytes = Convert.FromBase64String(base64Text);
-        var text = Encoding.UTF8.GetString(textBytes);
-
-        var quality = text.Deserialize<Quality>();
-
-        DA.SetData(0, new QualityGoo(quality));
-    }
-}
-
-public class DeserializeTypeComponent : Component
-{
-    public DeserializeTypeComponent()
-        : base("Deserialize Type", "<Typ",
-            "Deserialize a type.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
-
-    protected override Bitmap Icon => Resources.type_deserialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized type.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new TypeParam(), "Type", "Ty",
-            "Deserialized type.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var base64Text = "";
-
-        DA.GetData(0, ref base64Text);
-        var textBytes = Convert.FromBase64String(base64Text);
-        var text = Encoding.UTF8.GetString(textBytes);
-
-        var type = text.Deserialize<Type>();
-
-        DA.SetData(0, new TypeGoo(type));
-    }
-}
-
-public class DeserializeDesignComponent : Component
-{
-    public DeserializeDesignComponent()
-        : base("Deserialize Design", "<For",
-            "Deserialize a design.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
-
-    protected override Bitmap Icon => Resources.design_deserialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Deserialized design.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var base64Text = "";
-
-        DA.GetData(0, ref base64Text);
-        var textBytes = Convert.FromBase64String(base64Text);
-        var text = Encoding.UTF8.GetString(textBytes);
-
-        var design = text.Deserialize<Design>();
-
-        DA.SetData(0, new DesignGoo(design));
-    }
-}
-
-public class DeserializeSceneComponent : Component
-{
-    public DeserializeSceneComponent()
-        : base("Deserialize Scene", "<Scn",
-            "Deserialize a scene.",
-            "semio", "Scripting")
-    {
-    }
-
-    public override Guid ComponentGuid => new("9A9AF239-6019-43E6-A3E1-59838BD5400B");
-
-    protected override Bitmap Icon => Resources.scene_deserialize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-            "Deserialized scene.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var base64Text = "";
-
-        DA.GetData(0, ref base64Text);
-        var textBytes = Convert.FromBase64String(base64Text);
-        var text = Encoding.UTF8.GetString(textBytes);
-
-        var scene = text.Deserialize<Scene>();
-
-        DA.SetData(0, new SceneGoo(scene));
-    }
-}
-
-#endregion
-
-#endregion
-
-#region Viewing
-
-public class GetSceneComponent : Component
-{
-    public GetSceneComponent()
-        : base("GetScene", "!Scn",
-            "Get a scene from a design.",
-            "semio", "Viewing")
-    {
-    }
-
-    public override Guid ComponentGuid => new("55F3BF32-3B4D-4355-BFAD-F3CA3847FC94");
-
-    protected override Bitmap Icon => Resources.scene_get_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Design Name", "DnNa",
-            "Name of design to convert to a scene.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design Variant", "DnVn?",
-            "Optional variant of the design to convert to a scene. No variant will convert the default variant.",
-            GH_ParamAccess.item);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Directory", "Di?",
-            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "Convert the design to a scene.", GH_ParamAccess.item, false);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new SceneParam(), "Scene", "Sc", "Scene.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designName = "";
-        var designVariant = "";
-        var path = "";
-        var run = false;
-
-        DA.GetData(0, ref designName);
-        DA.GetData(1, ref designVariant);
-        if (!DA.GetData(2, ref path))
-            path = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(3, ref run);
-
-        if (!run) return;
-
-        var response = new Api().DesignToSceneFromLocalKit(path, new DesignId
-        {
-            Name = designName,
-            Variant = designVariant
-        });
-        if (response == null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-            return;
-        }
-
-        if (response.Error != null)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-            return;
-        }
-
-        DA.SetData(0, new SceneGoo(response.Scene));
-    }
-}
-
-public class FilterSceneComponent : Component
-{
-    public FilterSceneComponent()
-        : base("FilterScene", "|Scn",
-            "Filter a scene.",
-            "semio", "Viewing")
-    {
-    }
-
-    public override Guid ComponentGuid => new("232796C0-5ADF-47FF-9FC4-058CB7003C5A");
-
-    protected override Bitmap Icon => Resources.scene_filter_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-            "Scene to filter.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Level of Details", "LD*",
-            "Optional level of details of the representations in the scene.",
-            GH_ParamAccess.list);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
-            GH_ParamAccess.list);
-        pManager[2].Optional = true;
-        pManager.AddTextParameter("Mimes", "Mm*", "Optional mimes of the representations in the scene.",
-            GH_ParamAccess.list);
-        pManager[3].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+",
-            "Representation of the objects of the scene.", GH_ParamAccess.list);
-        pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
-        pManager.AddTextParameter("Pieces Ids", "PcId+",
-            "Ids of the pieces from the design that correspond to the objects of the scene.", GH_ParamAccess.list);
-        pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
-            "Ids of the parent pieces from the design that correspond to the objects of the scene.",
-            GH_ParamAccess.list);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var sceneGoo = new SceneGoo();
-        var lods = new List<string>();
-        var tags = new List<string>();
-        var mimes = new List<string>();
-
-        DA.GetData(0, ref sceneGoo);
-        DA.GetDataList(1, lods);
-        DA.GetDataList(2, tags);
-        DA.GetDataList(3, mimes);
-
-        // filter the representations of the scene
-        // if lods are used, only the representations with the specified lods are returned
-        // if tags are used, each representations must have at least one of the specified tags
-        // if mimes are used, only the representations with the specified mimes are returned
-        var representations = sceneGoo.Value.Objects
-            .Select(o => o.Piece.Type.Representations
-                .First(r =>
-                {
-                    if (lods.Count > 0)
-                        if (!lods.Contains(r.Lod))
-                            return false;
-                    if (tags.Count > 0)
-                    {
-                        if (r.Tags == null)
-                            return false;
-                        if (!r.Tags.Any(t => tags.Contains(t)))
-                            return false;
-                    }
-
-                    if (mimes.Count > 0)
-                        if (!mimes.Contains(r.Mime))
-                            return false;
-                    return true;
-                })).ToList();
-        var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
-        var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
-        var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
-
-        DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
-        DA.SetDataList(1, planes.Select(p => p.convert()));
-        DA.SetDataList(2, piecesIds);
-        DA.SetDataList(3, parentsPiecesIds);
-    }
-}
-
-#endregion
+//public class EncodeTextComponent : Component
+//{
+//    public EncodeTextComponent()
+//        : base("Encode Text", ">Txt",
+//            "Encode a text.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
+
+//    protected override Bitmap Icon => Resources.encode_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var text = "";
+
+//        DA.GetData(0, ref text);
+
+//        var textBytes = Encoding.UTF8.GetBytes(text);
+//        var base64Text = Convert.ToBase64String(textBytes);
+
+//        DA.SetData(0, base64Text);
+//    }
+//}
+
+//public class DecodeTextComponent : Component
+//{
+//    public DecodeTextComponent()
+//        : base("Decode Text", "<Txt",
+//            "Decode a text.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
+
+//    protected override Bitmap Icon => Resources.decode_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Encoded Text", "EnTx", "Encoded text to decode.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Decoded text.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var base64Text = "";
+
+//        DA.GetData(0, ref base64Text);
+
+//        var textBytes = Convert.FromBase64String(base64Text);
+//        var text = Encoding.UTF8.GetString(textBytes);
+
+//        DA.SetData(0, text);
+//    }
+//}
+
+//#region Serialize
+
+//public class SerializeQualityComponent : Component
+//{
+//    public SerializeQualityComponent()
+//        : base("Serialize Quality", ">Qlt",
+//            "Serialize a quality.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+
+//    protected override Bitmap Icon => Resources.quality_serialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new QualityParam(), "Quality", "Ql",
+//            "Quality to serialize.", GH_ParamAccess.item);
+//        pManager.AddBooleanParameter("Run", "R", "Serialize the quality.", GH_ParamAccess.item, false);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var qualityGoo = new QualityGoo();
+
+//        DA.GetData(0, ref qualityGoo);
+
+//        var text = qualityGoo.Value.Serialize();
+//        var textBytes = Encoding.UTF8.GetBytes(text);
+//        var base64Text = Convert.ToBase64String(textBytes);
+
+//        DA.SetData(0, base64Text);
+//    }
+//}
+
+//public class SerializeTypeComponent : Component
+//{
+//    public SerializeTypeComponent()
+//        : base("Serialize Type", ">Typ",
+//            "Serialize a type.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+
+//    protected override Bitmap Icon => Resources.type_serialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new TypeParam(), "Type", "Ty",
+//            "Type to serialize.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized type.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var typeGoo = new TypeGoo();
+
+//        DA.GetData(0, ref typeGoo);
+//        var text = typeGoo.Value.Serialize();
+//        var textBytes = Encoding.UTF8.GetBytes(text);
+//        var base64Text = Convert.ToBase64String(textBytes);
+
+//        DA.SetData(0, base64Text);
+//    }
+//}
+
+//public class SerializeDesignComponent : Component
+//{
+//    public SerializeDesignComponent()
+//        : base("Serialize Design", ">For",
+//            "Serialize a design.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
+
+//    protected override Bitmap Icon => Resources.design_serialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+//            "Design to serialize.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var designGoo = new DesignGoo();
+
+//        DA.GetData(0, ref designGoo);
+//        var text = designGoo.Value.Serialize();
+//        var textBytes = Encoding.UTF8.GetBytes(text);
+//        var base64Text = Convert.ToBase64String(textBytes);
+
+//        DA.SetData(0, base64Text);
+//    }
+//}
+
+//public class SerializeSceneComponent : Component
+//{
+//    public SerializeSceneComponent()
+//        : base("Serialize Scene", ">Scn",
+//            "Serialize a scene.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("2470CB4D-FC4A-4DCE-92BF-EDA281B36609");
+
+//    protected override Bitmap Icon => Resources.scene_serialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+//            "Scene to serialize.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var sceneGoo = new SceneGoo();
+
+//        DA.GetData(0, ref sceneGoo);
+//        var text = sceneGoo.Value.Serialize();
+//        var textBytes = Encoding.UTF8.GetBytes(text);
+//        var base64Text = Convert.ToBase64String(textBytes);
+
+//        DA.SetData(0, base64Text);
+//    }
+//}
+
+//#endregion
+
+//#region Deserialize
+
+//public class DeserializeQualityComponent : Component
+//{
+//    public DeserializeQualityComponent()
+//        : base("Deserialize Quality", "<Qlt",
+//            "Deserialize a quality.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
+
+//    protected override Bitmap Icon => Resources.quality_deserialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized quality.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new QualityParam(), "Quality", "Ql",
+//            "Deserialized quality.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var base64Text = "";
+
+//        DA.GetData(0, ref base64Text);
+
+//        var textBytes = Convert.FromBase64String(base64Text);
+//        var text = Encoding.UTF8.GetString(textBytes);
+
+//        var quality = text.Deserialize<Quality>();
+
+//        DA.SetData(0, new QualityGoo(quality));
+//    }
+//}
+
+//public class DeserializeTypeComponent : Component
+//{
+//    public DeserializeTypeComponent()
+//        : base("Deserialize Type", "<Typ",
+//            "Deserialize a type.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
+
+//    protected override Bitmap Icon => Resources.type_deserialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized type.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new TypeParam(), "Type", "Ty",
+//            "Deserialized type.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var base64Text = "";
+
+//        DA.GetData(0, ref base64Text);
+//        var textBytes = Convert.FromBase64String(base64Text);
+//        var text = Encoding.UTF8.GetString(textBytes);
+
+//        var type = text.Deserialize<Type>();
+
+//        DA.SetData(0, new TypeGoo(type));
+//    }
+//}
+
+//public class DeserializeDesignComponent : Component
+//{
+//    public DeserializeDesignComponent()
+//        : base("Deserialize Design", "<For",
+//            "Deserialize a design.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
+
+//    protected override Bitmap Icon => Resources.design_deserialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized design.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+//            "Deserialized design.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var base64Text = "";
+
+//        DA.GetData(0, ref base64Text);
+//        var textBytes = Convert.FromBase64String(base64Text);
+//        var text = Encoding.UTF8.GetString(textBytes);
+
+//        var design = text.Deserialize<Design>();
+
+//        DA.SetData(0, new DesignGoo(design));
+//    }
+//}
+
+//public class DeserializeSceneComponent : Component
+//{
+//    public DeserializeSceneComponent()
+//        : base("Deserialize Scene", "<Scn",
+//            "Deserialize a scene.",
+//            "semio", "Scripting")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("9A9AF239-6019-43E6-A3E1-59838BD5400B");
+
+//    protected override Bitmap Icon => Resources.scene_deserialize_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Tx", "Text of serialized scene.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+//            "Deserialized scene.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var base64Text = "";
+
+//        DA.GetData(0, ref base64Text);
+//        var textBytes = Convert.FromBase64String(base64Text);
+//        var text = Encoding.UTF8.GetString(textBytes);
+
+//        var scene = text.Deserialize<Scene>();
+
+//        DA.SetData(0, new SceneGoo(scene));
+//    }
+//}
+
+//#endregion
+
+//#endregion
+
+//#region Viewing
+
+//public class GetSceneComponent : Component
+//{
+//    public GetSceneComponent()
+//        : base("GetScene", "!Scn",
+//            "Get a scene from a design.",
+//            "semio", "Viewing")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("55F3BF32-3B4D-4355-BFAD-F3CA3847FC94");
+
+//    protected override Bitmap Icon => Resources.scene_get_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Design Name", "DnNa",
+//            "Name of design to convert to a scene.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Design Variant", "DnVn?",
+//            "Optional variant of the design to convert to a scene. No variant will convert the default variant.",
+//            GH_ParamAccess.item);
+//        pManager[1].Optional = true;
+//        pManager.AddTextParameter("Directory", "Di?",
+//            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
+//            GH_ParamAccess.item);
+//        pManager[2].Optional = true;
+//        pManager.AddBooleanParameter("Run", "R", "Convert the design to a scene.", GH_ParamAccess.item, false);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new SceneParam(), "Scene", "Sc", "Scene.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var designName = "";
+//        var designVariant = "";
+//        var path = "";
+//        var run = false;
+
+//        DA.GetData(0, ref designName);
+//        DA.GetData(1, ref designVariant);
+//        if (!DA.GetData(2, ref path))
+//            path = OnPingDocument().IsFilePathDefined
+//                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//                : Directory.GetCurrentDirectory();
+//        DA.GetData(3, ref run);
+
+//        if (!run) return;
+
+//        var response = new Api().DesignToSceneFromLocalKit(path, new DesignId
+//        {
+//            Name = designName,
+//            Variant = designVariant
+//        });
+//        if (response == null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
+//            return;
+//        }
+
+//        if (response.Error != null)
+//        {
+//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
+//            return;
+//        }
+
+//        DA.SetData(0, new SceneGoo(response.Scene));
+//    }
+//}
+
+//public class FilterSceneComponent : Component
+//{
+//    public FilterSceneComponent()
+//        : base("FilterScene", "|Scn",
+//            "Filter a scene.",
+//            "semio", "Viewing")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("232796C0-5ADF-47FF-9FC4-058CB7003C5A");
+
+//    protected override Bitmap Icon => Resources.scene_filter_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
+//            "Scene to filter.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Level of Details", "LD*",
+//            "Optional level of details of the representations in the scene.",
+//            GH_ParamAccess.list);
+//        pManager[1].Optional = true;
+//        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
+//            GH_ParamAccess.list);
+//        pManager[2].Optional = true;
+//        pManager.AddTextParameter("Mimes", "Mm*", "Optional mimes of the representations in the scene.",
+//            GH_ParamAccess.list);
+//        pManager[3].Optional = true;
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+",
+//            "Representation of the objects of the scene.", GH_ParamAccess.list);
+//        pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
+//        pManager.AddTextParameter("Pieces Ids", "PcId+",
+//            "Ids of the pieces from the design that correspond to the objects of the scene.", GH_ParamAccess.list);
+//        pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
+//            "Ids of the parent pieces from the design that correspond to the objects of the scene.",
+//            GH_ParamAccess.list);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var sceneGoo = new SceneGoo();
+//        var lods = new List<string>();
+//        var tags = new List<string>();
+//        var mimes = new List<string>();
+
+//        DA.GetData(0, ref sceneGoo);
+//        DA.GetDataList(1, lods);
+//        DA.GetDataList(2, tags);
+//        DA.GetDataList(3, mimes);
+
+//        // filter the representations of the scene
+//        // if lods are used, only the representations with the specified lods are returned
+//        // if tags are used, each representations must have at least one of the specified tags
+//        // if mimes are used, only the representations with the specified mimes are returned
+//        var representations = sceneGoo.Value.Objects
+//            .Select(o => o.Piece.Type.Representations
+//                .First(r =>
+//                {
+//                    if (lods.Count > 0)
+//                        if (!lods.Contains(r.Lod))
+//                            return false;
+//                    if (tags.Count > 0)
+//                    {
+//                        if (r.Tags == null)
+//                            return false;
+//                        if (!r.Tags.Any(t => tags.Contains(t)))
+//                            return false;
+//                    }
+
+//                    if (mimes.Count > 0)
+//                        if (!mimes.Contains(r.Mime))
+//                            return false;
+//                    return true;
+//                })).ToList();
+//        var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
+//        var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
+//        var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
+
+//        DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
+//        DA.SetDataList(1, planes.Select(p => p.convert()));
+//        DA.SetDataList(2, piecesIds);
+//        DA.SetDataList(3, parentsPiecesIds);
+//    }
+//}
+
+//#endregion
 
 #endregion
 
