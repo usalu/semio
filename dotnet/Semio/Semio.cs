@@ -614,14 +614,14 @@ public static class Constants
 //🔩,Cg,Cog,Connecting,The connecting piece of the side.
 //🖇️,Co,Con,Connection,A connection between two pieces in a design.
 //🖇️,Co*,Cons,Connections,The optional connections in a design.
-//💬,Dc?,Dsc,Description,An optional human description of the {{NAME}}.
+//💬,Dc?,Dsc,Description,The optional human description of the {{NAME}}.
 //✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
-//📁,Di?,Dir,Directory,An optional directory where to find the kit.
+//📁,Di?,Dir,Directory,The optional directory where to find the kit.
 //🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 //🏙️,Dn*,Dsns,Designs,The designs of the kit.
 //👪,Gr,Grp,Group,The group of the locator.
-//🏠,Hp?,Hmp,Homepage,An url of the homepage of the kit.
-//🖼️,Ic?,Ico,Icon,An optional icon [emoji | text | image | svg] of the {{NAME}}.
+//🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
+//🖼️,Ic?,Ico,Icon,The optional icon [emoji | text | image | svg] of the {{NAME}}.
 //🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
 //🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
 //🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
@@ -651,11 +651,11 @@ public static class Constants
 //🧩,Ty*,Typs,Types,The types of the kit.
 //🔗,Ur,Url,Unique Resource Locator,Unique Resource Locator of the representation. Either a relative file path or link.
 //Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
-//Ⓜ️,Ut,Unt,Unit,The unit of the value of the quality.
+//Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
 //➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
 //🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
-//🔢,Vl?,Val,Value,An optional value of the quality. No value is equivalent to true for the name.
-//🔀,Vn?,Vnt,Variant,An optional variant of the {{NAME}}.
+//🔢,Vl?,Val,Value,The optional value of the quality. No value is equivalent to true for the name.
+//🔀,Vn?,Vnt,Variant,The optional value of the {{NAME}}.
 //🏁,X,X,X,The x-coordinate of the screen point.
 //🎚️,X,X,X,The x-coordinate of the point.
 //➡️,XA,XAx,XAxis,The x-axis of the plane.
@@ -1033,7 +1033,7 @@ public class Locator : Model<Locator>
     public string Group { get; set; } = "";
 
     /// <summary>
-    ///     📌 An optional sub-group of the locator. No sub-group means true.
+    ///     📌 The optional sub-group of the locator. No sub-group means true.
     /// </summary>
     [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
     public string Subgroup { get; set; } = "";
@@ -1192,21 +1192,21 @@ public class Quality : Model<Quality>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔢 An optional value of the quality. No value is equivalent to true for the name.
+    ///     🔢 The optional value of the quality. No value is equivalent to true for the name.
     /// </summary>
-    [Url("🔢", "Vl?", "Val", "An optional value of the quality. No value is equivalent to true for the name.")]
+    [Url("🔢", "Vl?", "Val", "The optional value of the quality. No value is equivalent to true for the name.")]
     public string Value { get; set; } = "";
 
     /// <summary>
-    ///     Ⓜ️ The unit of the value of the quality.
+    ///     Ⓜ️ The optional unit of the value of the quality.
     /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The unit of the value of the quality.")]
+    [Name("Ⓜ️", "Ut", "Unt", "The optional unit of the value of the quality.", isDefaultValid: true)]
     public string Unit { get; set; } = "";
 
     /// <summary>
-    ///     📖 An optional definition [text | url] of the quality.
+    ///     📖 The optional definition [text | url] of the quality.
     /// </summary>
-    [Description("📖", "Df?", "Def", "An optional definition [text | url] of the quality.")]
+    [Description("📖", "Df?", "Def", "The optional definition [text | url] of the quality.")]
     public string Definition { get; set; } = "";
 }
 
@@ -1223,21 +1223,21 @@ public class Type : Model<Type>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 An optional human description of the type.
+    ///     💬 The optional human description of the type.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "An optional human description of the type.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human description of the type.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ An optional icon [emoji | text | image | svg] of the type.
+    ///     🖼️ The optional icon [emoji | text | image | svg] of the type.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the type.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the type.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔀 An optional variant of the type.
+    ///     🔀 The optional value of the type.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional value of the type.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     /// <summary>
@@ -1274,9 +1274,9 @@ public class TypeId : Model<TypeId>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔀 An optional variant of the type.
+    ///     🔀 The optional value of the type.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "An optional variant of the type.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional value of the type.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     public static implicit operator TypeId(Type type)
@@ -1414,11 +1414,11 @@ public class Connection : Model<Connection>
     public float Tilt { get; set; } = 0;
 
     /// <summary>
-    ///     🔄 An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
+    ///     🔄 The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
     ///     piece.
     /// </summary>
     [NumberProp("↕️", "Of", "Ofs",
-        "An optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
+        "The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
     public float Offset { get; set; } = 0;
 }
 
@@ -1429,27 +1429,27 @@ public class Connection : Model<Connection>
 public class Design : Model<Design>
 {
     /// <summary>
-    ///     📛 Name of the design.
+    ///     📛 The name of the design.
     /// </summary>
     [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 An optional human description of the design.
+    ///     💬 The optional human description of the design.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "An optional human description of the design.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human description of the design.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ An optional icon [emoji | text | image | svg] of the design.
+    ///     🖼️ The optional icon [emoji | text | image | svg] of the design.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the design.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the design.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔀 An optional variant of the design.
+    ///     🔀 The optional value of the design.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "An optional variant of the design.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     /// <summary>
@@ -1507,27 +1507,27 @@ public class Kit : Model<Kit>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 An optional human description of the kit.
+    ///     💬 The optional human description of the kit.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "An optional human description of the kit.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human description of the kit.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ An optional icon [emoji | text | image | svg] of the design.
+    ///     🖼️ The optional icon [emoji | text | image | svg] of the design.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "An optional icon [emoji | text | image | svg] of the design.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the design.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔗 An optional Unique Resource Locator (URL) where to fetch the kit.
+    ///     🔗 The optional Unique Resource Locator (URL) where to fetch the kit.
     /// </summary>
-    [Url("🔗", "Ur?", "Url", "An optional Unique Resource Locator (URL) where to fetch the kit.")]
+    [Url("🔗", "Ur?", "Url", "The optional Unique Resource Locator (URL) where to fetch the kit.")]
     public string Url { get; set; } = "";
 
     /// <summary>
-    ///     🏠 An optional Unique Resource Locator (URL) of the homepage of the kit.
+    ///     🏠 The optional Unique Resource Locator (URL) of the homepage of the kit.
     /// </summary>
-    [Url("🏠", "Hp?", "Hmp", "An optional Unique Resource Locator (URL) of the homepage of the kit.")]
+    [Url("🏠", "Hp?", "Hmp", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
 
     /// <summary>

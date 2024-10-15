@@ -660,7 +660,7 @@ public abstract class ModelComponent<T, U, V> : Component
         var modelParam = (IGH_Param)Activator.CreateInstance(ParamM);
         var description = isOutput
             ? $"The constructed or modified {NameM.ToLower()}."
-            : $"An optional {NameM.ToLower()} to deconstruct or modify.";
+            : $"The optional {NameM.ToLower()} to deconstruct or modify.";
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
 
@@ -745,21 +745,21 @@ public abstract class ModelComponent<T, U, V> : Component
                 if (isPropertyModel)
                     foreach (var item in value)
                     {
-                        dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i],item.DeepClone());
+                        dynamic itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
                         list.Add(itemGoo);
                     }
             }
             else
                 if (isPropertyModel)
+            {
+                if (isPropertyMapped)
                 {
-                    if (isPropertyMapped)
-                    {
-                        var convertMethod =
-                            typeof(RhinoConverter).GetMethod("convert", new System.Type[] { value.GetType() });
-                        value = convertMethod.Invoke(null, new[] { value });
-                    }
-                    else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
+                    var convertMethod =
+                        typeof(RhinoConverter).GetMethod("convert", new System.Type[] { value.GetType() });
+                    value = convertMethod.Invoke(null, new[] { value });
                 }
+                else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
+            }
 
             if (isList) DA.SetDataList(i + 1, value);
             else DA.SetData(i + 1, value);
