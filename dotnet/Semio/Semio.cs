@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
+using System.Linq.Expressions;
 using System.Reflection;
 using FluentValidation;
 using Newtonsoft.Json;
@@ -634,7 +635,7 @@ public static class Constants
 //🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 //🔌,Po+,Pors,Ports,The ports of the type.
 //◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-//◳,Pn,Pln,Plane,The plane of the piece.
+//◳,Pn,Pln,Plane,The optional plane of the piece.
 //✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 //📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 //📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
@@ -927,6 +928,7 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
         {
             var property = properties[i];
             var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
+            var isPropertyModel = Meta.IsPropertyModel[modelTypeName][i];
             if (isPropertyList)
             {
                 var propAttribute = property.GetCustomAttribute<PropAttribute>();
@@ -935,14 +937,13 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
                     .WithMessage($"The {property.Name} ({propAttribute.Code}) must have at least one.")
                     .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
             }
-
             if (property.PropertyType == typeof(string))
             {
                 var textAttribute = property.GetCustomAttribute<TextAttribute>();
 
                 RuleFor(model => property.GetValue(model) as string)
                     .NotEmpty()
-                    .When(m => textAttribute.Importance != PropImportance.OPTIONAL || !textAttribute.IsDefaultValid)
+                    .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
                     .WithMessage($"The {property.Name}({textAttribute.Code}) must not be empty.")
                     .MaximumLength(textAttribute.LengthLimit)
                     .WithMessage(model =>
@@ -975,8 +976,16 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
                     })
                     .OverridePropertyName(property.Name);
             }
-            else if (property.PropertyType == typeof(int))
+            else if (isPropertyModel && !isPropertyList)
             {
+                // TODO: Implement validation for model properties
+                //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
+                //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
+
+            }
+            else if (isPropertyModel && isPropertyList)
+            {
+                
             }
         }
     }
@@ -1248,12 +1257,17 @@ public class Type : Model<Type>
     public string Unit { get; set; } = "";
 
     /// <summary>
+    ///     🔌 The ports of the type.
+    /// </summary>
+    [ModelProp("🔌", "Po+", "Pors", "The ports of the type.", PropImportance.OPTIONAL)]
+    public List<Port> Ports { get; set; } = new();
+
+    /// <summary>
     ///     💾 The representations of the type.
     /// </summary>
-    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.")]
+    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.", PropImportance.OPTIONAL)]
     public List<Representation> Representations { get; set; } = new();
 
-    //public List<Port> Ports { get; set; } = new();
     /// <summary>
     ///     📏 The optional qualities of the type.
     /// </summary>
@@ -1308,9 +1322,9 @@ public class Piece : Model<Piece>
     public TypeId Type { get; set; } = new();
 
     /// <summary>
-    ///     ◳ The plane of the piece. When pieces are connected only one piece can have a plane.
+    ///     ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     /// </summary>
-    [ModelProp("◳", "Pn", "Pln", "The plane of the piece. When pieces are connected only one piece can have a plane.")]
+    [ModelProp("◳", "Pn", "Pln", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
     public Plane Plane { get; set; } = new();
 
     /// <summary>
@@ -1462,7 +1476,7 @@ public class Design : Model<Design>
     /// <summary>
     ///     ⭕ The pieces of the design.
     /// </summary>
-    [ModelProp("⭕", "Pc+", "Pcs", "The pieces of the design.")]
+    [ModelProp("⭕", "Pc+", "Pcs", "The pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
 
     /// <summary>
@@ -1533,13 +1547,13 @@ public class Kit : Model<Kit>
     /// <summary>
     ///     🧩 The optional types of the kit.
     /// </summary>
-    [ModelProp("🧩", "Ty*", "Typs", "The optional types of the kit.")]
+    [ModelProp("🧩", "Ty*", "Typs", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
 
     /// <summary>
     ///     🏙️ The optional designs of the kit.
     /// </summary>
-    [ModelProp("🏙️", "Dn*", "Dsns", "The optional designs of the kit.")]
+    [ModelProp("🏙️", "Dn*", "Dsns", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
 }
 
