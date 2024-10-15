@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# semio engine.
+# semio.py
 # Copyright (C) 2024 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -70,13 +70,13 @@ import sqlalchemy.ext.hybrid
 import sqlmodel
 
 
-RELEASE = "r24.09-1"
-NAME_LENGTH_MAX = 64
+RELEASE = "r24.11-1"
+NAME_LENGTH_LIMIT = 64
 NAME_REGEX = r"^[a-zA-Z0-9_-]+$"
-ID_LENGTH_MAX = 128
+ID_LENGTH_LIMIT = 128
 ID_REGEX = NAME_REGEX
 URL_LENGTH_MAX = 1024
-DESCRIPTION_LENGTH_MAX = 4096
+DESCRIPTION_LENGTH_LIMIT = 4096
 KIT_FOLDERNAME = ".semio"
 KIT_FILENAME = "kit.sqlite3"
 
@@ -413,7 +413,7 @@ class UrledRow(Row):
 
 
 class NamedRow(Row):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX)
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
     def localId(self, encode: bool = False) -> str:
         return encodeString(self.name) if encode else self.name
@@ -433,7 +433,7 @@ class ArtifactRow(NamedRow):
 class VariableArtifactRow(ArtifactRow):
     """🎚️ A variable artifact is an artifact that has variants (at least one default)."""
 
-    variant: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
+    variant: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, default="")
 
     def localId(self, encode: bool = False) -> str:
         return f"{super().localId(encode)},{(encodeString(self.variant) if encode else self.variant)}"
@@ -524,7 +524,7 @@ class RepresentationSkeleton(RepresentationBase):
 
 class LocatorBase(sqlmodel.SQLModel):
     # Optional. '' means true.
-    subgroup: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_MAX)
+    subgroup: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class Locator(LocatorBase, Row, table=True):
@@ -535,7 +535,7 @@ class Locator(LocatorBase, Row, table=True):
     group: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "groupName",
-            sqlalchemy.String(NAME_LENGTH_MAX),
+            sqlalchemy.String(NAME_LENGTH_LIMIT),
             primary_key=True,
         ),
     )
@@ -1034,7 +1034,7 @@ class Port(PortBase, IdentifiedRow, table=True):
         alias="id",
         sa_column=sqlmodel.Column(
             "localId",
-            sqlalchemy.String(NAME_LENGTH_MAX),
+            sqlalchemy.String(NAME_LENGTH_LIMIT),
         ),
     )
     pointX: float = sqlmodel.Field(exclude=True)
@@ -1117,11 +1117,11 @@ class PortIdSkeleton(sqlmodel.SQLModel):
 class QualityBase(NamedRow):
 
     # Optional. '' means true.
-    value: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
+    value: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, default="")
     # Optional. Set to '' for None.
     definition: str = sqlmodel.Field(max_length=TEXT_LENGTH_MAX, default="")
     # Optional. Set to '' for None.
-    unit: str = sqlmodel.Field(max_length=NAME_LENGTH_MAX, default="")
+    unit: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, default="")
 
 
 class Quality(QualityBase, Row, table=True):
@@ -1267,7 +1267,7 @@ class Piece(PieceBase, Row, table=True):
         alias="id",
         sa_column=sqlmodel.Column(
             "localId",
-            sqlalchemy.String(NAME_LENGTH_MAX),
+            sqlalchemy.String(NAME_LENGTH_LIMIT),
         ),
     )
     coordinateSystemPk: typing.Optional[int] = sqlmodel.Field(

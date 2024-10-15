@@ -1,4 +1,20 @@
-﻿using System.Collections.Immutable;
+﻿//Semio.Grasshopper.cs
+//Copyright (C) 2024 Ueli Saluz
+
+//This program is free software: you can redistribute it and/or modify
+//it under the terms of the GNU Affero General Public License as
+//published by the Free Software Foundation, either version 3 of the
+//License, or (at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Affero General Public License for more details.
+
+//You should have received a copy of the GNU Affero General Public License
+//along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
@@ -81,12 +97,17 @@ public static class Utility
 
 public static class RhinoConverter
 {
-    public static Point3d convert(this Point point)
+    public static object Convert(this object value) => value;
+    public static string Convert(this string value) => value;
+    public static int Convert(this int value) => value;
+    public static float Convert(this double value) => (float)value;
+    
+    public static Point3d Convert(this Point point)
     {
         return new Point3d(point.X, point.Y, point.Z);
     }
 
-    public static Point convert(this Point3d point)
+    public static Point Convert(this Point3d point)
     {
         return new Point
         {
@@ -96,12 +117,12 @@ public static class RhinoConverter
         };
     }
 
-    public static Vector3d convert(this Vector vector)
+    public static Vector3d Convert(this Vector vector)
     {
         return new Vector3d(vector.X, vector.Y, vector.Z);
     }
 
-    public static Vector convert(this Vector3d vector)
+    public static Vector Convert(this Vector3d vector)
     {
         return new Vector
         {
@@ -111,7 +132,7 @@ public static class RhinoConverter
         };
     }
 
-    public static Rhino.Geometry.Plane convert(this Plane plane)
+    public static Rhino.Geometry.Plane Convert(this Plane plane)
     {
         return new Rhino.Geometry.Plane(
             new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
@@ -120,7 +141,7 @@ public static class RhinoConverter
         );
     }
 
-    public static Plane convert(this Rhino.Geometry.Plane plane)
+    public static Plane Convert(this Rhino.Geometry.Plane plane)
     {
         return new Plane
         {
@@ -259,7 +280,7 @@ public class PortGoo : ModelGoo<Port>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
         {
-            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.convert(), 0, Value.Point.convert()));
+            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
             target = (Q)ptr;
             return true;
         }
@@ -281,8 +302,8 @@ public class PortGoo : ModelGoo<Port>
         var plane = new Rhino.Geometry.Plane();
         if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
         {
-            Value.Point = plane.Origin.convert();
-            Value.Direction = plane.YAxis.convert();
+            Value.Point = plane.Origin.Convert();
+            Value.Direction = plane.YAxis.Convert();
 
             return true;
         }
@@ -698,7 +719,7 @@ public abstract class ModelComponent<T, U, V> : Component
 
         // Output
         DA.SetData(0, modelGoo.Duplicate());
-        SetProps(DA, modelGoo);
+        SetData(DA, modelGoo);
     }
 
     protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
@@ -718,19 +739,19 @@ public abstract class ModelComponent<T, U, V> : Component
                     var listType = typeof(List<>).MakeGenericType(itemType);
                     dynamic list = Activator.CreateInstance(listType);
                     foreach (var item in gooValue)
-                        list.Add(item.Value);
+                        list.Add(item.Value.DeepClone());
                     value = list;
                     property.SetValue(modelGoo.Value, value);
                 }
                 else
                 {
-                    property.SetValue(modelGoo.Value, value.Value);
+                    property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
                 }
             }
         }
     }
 
-    protected virtual void SetProps(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
+    protected virtual void SetData(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
     {
         for (var i = 0; i < PropertyM.Length; i++)
         {
@@ -739,23 +760,26 @@ public abstract class ModelComponent<T, U, V> : Component
             var isPropertyModel = IsPropertyModel[i];
             var isPropertyMapped = IsPropertyMapped[i];
             var value = property.GetValue(modelGoo.Value);
-            // set value
+   
             if (isList)
             {
-                dynamic list = Activator.CreateInstance(PropertyGooM[i]);
                 if (isPropertyModel)
+                {
+                    dynamic list = Activator.CreateInstance(PropertyGooM[i]);
                     foreach (var item in value)
                     {
                         var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
                         list.Add(itemGoo);
                     }
+                    value = list;
+                }
             }
             else if (isPropertyModel)
             {
                 if (isPropertyMapped)
                 {
                     var convertMethod =
-                        typeof(RhinoConverter).GetMethod("convert", new System.Type[] { value.GetType() });
+                        typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
                     value = convertMethod.Invoke(null, new[] { value });
                 }
                 else
@@ -764,8 +788,10 @@ public abstract class ModelComponent<T, U, V> : Component
                 }
             }
 
-            if (isList) DA.SetDataList(i + 1, value);
-            else DA.SetData(i + 1, value);
+            if (isList)
+                DA.SetDataList(i + 1, value);
+            else
+                DA.SetData(i + 1, value);
         }
     }
 
@@ -841,11 +867,11 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddTextParameter("Type Variant", "TyVn?",
             "Optional variant of the type of the piece. No variant means the default variant.",
             GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Root Plane", "RtPn?",
-            "Root plane of the piece. This only applies to root pieces. \nA piece is a root piece when it is never connected.",
+        pManager.AddPlaneParameter("Plane", "Pn?",
+            "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new ScreenPointParam(), "Diagram Screen Point", "DgSP",
-            "Screen point of the piece in the diagram.",
+        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP?",
+            "The optional 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.",
             GH_ParamAccess.item);
     }
 
@@ -864,17 +890,17 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         if (DA.GetData(3, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
         if (DA.GetData(4, ref rootPlane))
-            pieceGoo.Value.Plane = rootPlane.convert();
+            pieceGoo.Value.Plane = rootPlane.Convert();
         if (DA.GetData(5, ref screenPointGoo))
             pieceGoo.Value.ScreenPoint = screenPointGoo.Value;
     }
 
-    protected override void SetProps(IGH_DataAccess DA, dynamic pieceGoo)
+    protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
     {
         DA.SetData(1, pieceGoo.Value.Id);
         DA.SetData(2, pieceGoo.Value.Type.Name);
         DA.SetData(3, pieceGoo.Value.Type.Variant);
-        DA.SetData(4, (pieceGoo.Value.Plane as Plane)?.convert());
+        DA.SetData(4, (pieceGoo.Value.Plane as Plane)?.Convert());
         DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.ScreenPoint as ScreenPoint));
     }
 }
@@ -902,7 +928,7 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
             sideGoo.Value.Piece.Type.Port.Id = pieceTypePortId;
     }
 
-    protected override void SetProps(IGH_DataAccess DA, dynamic sideGoo)
+    protected override void SetData(IGH_DataAccess DA, dynamic sideGoo)
     {
         DA.SetData(1, sideGoo.Value.Piece.Id);
         DA.SetData(2, sideGoo.Value.Piece.Type.Port.Id);
@@ -912,6 +938,43 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+    protected override void AddModelProps(dynamic pManager)
+    {
+        pManager.AddParameter(new SideParam(),"Connected Side", "CdSd", "The connected side of the piece of the connection.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(),"Connecting Side", "CgSd", "The connecting side of the piece of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The optional rotation between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Offset", "Of?", "The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.", GH_ParamAccess.item);
+    }
+
+    protected override void GetProps(IGH_DataAccess DA, dynamic sideGoo)
+    {
+        var connectedSideGoo = new SideGoo();
+        var connectingSideGoo = new SideGoo();
+        var rotation = 0.0;
+        var tilt = 0.0;
+        var offset = 0.0;
+
+        if (DA.GetData(1, ref connectedSideGoo))
+            sideGoo.Value.Connected = connectedSideGoo.Value;
+        if (DA.GetData(2, ref connectingSideGoo))
+            sideGoo.Value.Connecting = connectingSideGoo.Value;
+        if (DA.GetData(3, ref rotation))
+            sideGoo.Value.Rotation = (float)rotation;
+        if (DA.GetData(4, ref tilt))
+            sideGoo.Value.Tilt = (float)tilt;
+        if (DA.GetData(5, ref offset))
+            sideGoo.Value.Offset = (float)offset;
+    }
+
+    protected override void SetData(IGH_DataAccess DA, dynamic sideGoo)
+    {
+        DA.SetData(1, new SideGoo(sideGoo.Value.Connected.DeepClone() as Side));
+        DA.SetData(2, new SideGoo(sideGoo.Value.Connecting.DeepClone() as Side));
+        DA.SetData(3, sideGoo.Value.Rotation);
+        DA.SetData(4, sideGoo.Value.Tilt);
+        DA.SetData(5, sideGoo.Value.Offset);
+    }
 }
 
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
@@ -1015,10 +1078,11 @@ public abstract class EngineComponent : Component
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         RegisterCustomInputParams(pManager);
+        int amountCustomParams = pManager.ParamCount;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
             GH_ParamAccess.item);
-        pManager[1].Optional = true;
+        pManager[amountCustomParams].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Add the type to the kit.", GH_ParamAccess.item, false);
     }
 
@@ -1116,7 +1180,8 @@ public class LoadKitComponent : EngineComponent
 
     protected override dynamic Run(string url)
     {
-        return new Api().LoadLocalKit(url);
+        //return new Api().LoadLocalKit(url);
+        return null;
     }
 
     protected override void SetOutput(IGH_DataAccess DA, dynamic response)
@@ -2001,7 +2066,7 @@ public class LoadKitComponent : EngineComponent
 //        var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
 
 //        DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
-//        DA.SetDataList(1, planes.Select(p => p.convert()));
+//        DA.SetDataList(1, planes.Select(p => p.Convert()));
 //        DA.SetDataList(2, piecesIds);
 //        DA.SetDataList(3, parentsPiecesIds);
 //    }

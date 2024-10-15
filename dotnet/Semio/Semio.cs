@@ -1,6 +1,21 @@
-﻿using System.Collections;
+﻿//Semio.cs
+//Copyright (C) 2024 Ueli Saluz
+
+//This program is free software: you can redistribute it and/or modify
+//it under the terms of the GNU Affero General Public License as
+//published by the Free Software Foundation, either version 3 of the
+//License, or (at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Affero General Public License for more details.
+
+//You should have received a copy of the GNU Affero General Public License
+//along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using System.Collections;
 using System.Collections.Immutable;
-using System.Linq.Expressions;
 using System.Reflection;
 using FluentValidation;
 using GraphQL;
@@ -38,21 +53,21 @@ public static class Constants
 
 #region Utility
 
-public static class Generator
-{
-    public static string GenerateRandomId(int seed)
-    {
-        var adjectives = Resources.adjectives.Deserialize<List<string>>();
-        var animals = Resources.animals.Deserialize<List<string>>();
-        var random = new Random(seed);
-        var adjective = adjectives[random.Next(adjectives.Count)];
-        var animal = animals[random.Next(animals.Count)];
-        var number = random.Next(0, 999);
-        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
-        animal = char.ToUpper(animal[0]) + animal.Substring(1);
-        return $"{adjective}{animal}{number}";
-    }
-}
+//public static class Generator
+//{
+//    public static string GenerateRandomId(int seed)
+//    {
+//        var adjectives = Resources.adjectives.Deserialize<List<string>>();
+//        var animals = Resources.animals.Deserialize<List<string>>();
+//        var random = new Random(seed);
+//        var adjective = adjectives[random.Next(adjectives.Count)];
+//        var animal = animals[random.Next(animals.Count)];
+//        var number = random.Next(0, 999);
+//        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
+//        animal = char.ToUpper(animal[0]) + animal.Substring(1);
+//        return $"{adjective}{animal}{number}";
+//    }
+//}
 
 public static class MimeParser
 {
@@ -353,7 +368,7 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             }
             else if (isPropertyModel && isPropertyList)
             {
-                
+
             }
         }
     }
@@ -390,10 +405,10 @@ public class Representation : Model<Representation>
     public string Lod { get; set; } = "";
 
     /// <summary>
-    ///     🔖 Optional tags to group representations.
+    ///     🔖 The optional tags to group representations.
     /// </summary>
 
-    [Name("🔖", "Tg*", "Tags", "Optional tags to group representations.", isDefaultValid: false)]
+    [Name("🔖", "Tg*", "Tags", "The optional tags to group representations.", isDefaultValid: false)]
     public List<string> Tags { get; set; } = new();
 }
 
@@ -412,7 +427,7 @@ public class Locator : Model<Locator>
     /// <summary>
     ///     📌 The optional sub-group of the locator. No sub-group means true.
     /// </summary>
-    [Name("📌", "SG", "SGr", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
+    [Name("📌", "SG?", "SGr", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
     public string Subgroup { get; set; } = "";
 }
 
@@ -692,14 +707,14 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     /// </summary>
-    [ModelProp("◳", "Pn", "Pln", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
+    [ModelProp("◳", "Pn?", "Pln", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
     public Plane Plane { get; set; } = new();
 
     /// <summary>
-    ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+    ///     📺 The optional 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
     /// </summary>
-    [ModelProp("📺", "SP", "SPt",
-        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.")]
+    [ModelProp("📺", "SP?", "SPt",
+        "The optional 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.", PropImportance.OPTIONAL)]
     public ScreenPoint ScreenPoint { get; set; } = new();
 }
 
@@ -762,6 +777,11 @@ public class Side : Model<Side>
     /// </summary>
     [ModelProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
     public SidePiece Piece { get; set; } = new();
+
+    public override string ToString()
+    {
+        return $"Sde({Piece.Id}" + (Piece.Type.Port.Id != "" ? ":"+ Piece.Type.Port.Id : "") + ")";
+    }
 }
 
 /// <summary>
@@ -785,13 +805,13 @@ public class Connection : Model<Connection>
     /// <summary>
     ///     🔄 The optional rotation between the connected and the connecting piece in degrees.
     /// </summary>
-    [NumberProp("🔄", "Rt", "Rot", "The optional rotation between the connected and the connecting piece in degrees.")]
+    [NumberProp("🔄", "Rt?", "Rot", "The optional rotation between the connected and the connecting piece in degrees.")]
     public float Rotation { get; set; } = 0;
 
     /// <summary>
     ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
     /// </summary>
-    [NumberProp("↗️", "Tl", "Tlt",
+    [NumberProp("↗️", "Tl?", "Tlt",
         "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
     public float Tilt { get; set; } = 0;
 
@@ -799,9 +819,16 @@ public class Connection : Model<Connection>
     ///     🔄 The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
     ///     piece.
     /// </summary>
-    [NumberProp("↕️", "Of", "Ofs",
+    [NumberProp("↕️", "Of?", "Ofs",
         "The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
     public float Offset { get; set; } = 0;
+
+    public override string ToString()
+    {
+        var ctd = Connected.Piece.Id + ((Connected.Piece.Type.Port.Id != "") ? ":" + Connected.Piece.Type.Port.Id : "");
+        var cng =  ((Connecting.Piece.Type.Port.Id != "") ? Connecting.Piece.Type.Port.Id + ":" : "") + Connecting.Piece.Id;
+        return $"Con({ctd}--{cng})";
+    }
 }
 
 /// <summary>
@@ -877,9 +904,9 @@ public class Design : Model<Design>
 }
 
 /// <summary>
-///     🧰 A kit is a collection of types and designs.
+///     🗃️ A kit is a collection of types and designs.
 /// </summary>
-[Model("🧰", "Kt", "Kit", "A kit is a collection of types and designs.")]
+[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
 public class Kit : Model<Kit>
 {
     /// <summary>
@@ -953,6 +980,18 @@ public static class Deserializer
 
 #region Api
 
+public enum ErrorCode
+{
+    ADDRESS_INVALID,
+    PERMISSION_ERROR,
+    INPUT_INVALID
+}
+
+public class Error
+{
+    public ErrorCode Code { get; set; }
+    public string Message { get; set; }
+}
 public class LoadKitResponse
 {
     public Kit? Kit { get; set; }
@@ -964,23 +1003,10 @@ public class LoadKitResponseContainer
     public LoadKitResponse LoadKit { get; set; }
 }
 
-public enum CreateKitErrorCode
-{
-    KIT_URL_IS_INVALID,
-    NO_PERMISSION_TO_CREATE_KIT,
-    KIT_INPUT_IS_INVALID
-}
-
-public class CreateKitError
-{
-    public CreateKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-
 public class CreateKitResponse
 {
     public Kit? Kit { get; set; }
-    public CreateKitError? Error { get; set; }
+    public Error? Error { get; set; }
 }
 
 public class CreateKitResponseContainer
@@ -988,151 +1014,142 @@ public class CreateKitResponseContainer
     public CreateKitResponse CreateKit { get; set; }
 }
 
-public enum UpdateKitPropsErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_UPDATE_KIT,
-    KIT_METADATA_IS_INVALID
-}
+//public class UpdateKitPropsError
+//{
+//    public UpdateKitPropsErrorCode Code { get; set; }
+//    public string Message { get; set; }
+//}
 
-public class UpdateKitPropsError
-{
-    public UpdateKitPropsErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
+//public class UpdateKitPropsResponse
+//{
+//    public KitProps? Kit { get; set; }
+//    public UpdateKitPropsError? Error { get; set; }
+//}
 
-public class UpdateKitPropsResponse
-{
-    public KitProps? Kit { get; set; }
-    public UpdateKitPropsError? Error { get; set; }
-}
+//public class UpdateKitPropsResponseContainer
+//{
+//    public UpdateKitPropsResponse UpdateKitProps { get; set; }
+//}
 
-public class UpdateKitPropsResponseContainer
-{
-    public UpdateKitPropsResponse UpdateKitProps { get; set; }
-}
+//public enum DeleteKitError
+//{
+//    DIRECTORY_DOES_NOT_EXIST,
+//    DIRECTORY_HAS_NO_KIT,
+//    NO_PERMISSION_TO_DELETE_KIT
+//}
 
-public enum DeleteKitError
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_DELETE_KIT
-}
+//public class DeleteKitResponse
+//{
+//    public DeleteKitError? Error { get; set; }
+//}
 
-public class DeleteKitResponse
-{
-    public DeleteKitError? Error { get; set; }
-}
+//public class DeleteKitResponseContainer
+//{
+//    public DeleteKitResponse DeleteKit { get; set; }
+//}
 
-public class DeleteKitResponseContainer
-{
-    public DeleteKitResponse DeleteKit { get; set; }
-}
+//public enum AddTypeToKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST,
+//    DIRECTORY_IS_NOT_A_DIRECTORY,
+//    DIRECTORY_HAS_NO_KIT,
+//    NO_PERMISSION_TO_MODIFY_KIT,
+//    TYPE_INPUT_IS_INVALID
+//}
 
-public enum AddTypeToKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    TYPE_INPUT_IS_INVALID
-}
+//public class AddTypeToKitError
+//{
+//    public AddTypeToKitErrorCode Code { get; set; }
+//    public string Message { get; set; }
+//}
 
-public class AddTypeToKitError
-{
-    public AddTypeToKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
+//public class AddTypeToKitResponse
+//{
+//    public Type? Type { get; set; }
+//    public AddTypeToKitError? Error { get; set; }
+//}
 
-public class AddTypeToKitResponse
-{
-    public Type? Type { get; set; }
-    public AddTypeToKitError? Error { get; set; }
-}
+//public class AddTypeToKitResponseContainer
+//{
+//    public AddTypeToKitResponse AddTypeToKit { get; set; }
+//}
 
-public class AddTypeToKitResponseContainer
-{
-    public AddTypeToKitResponse AddTypeToKit { get; set; }
-}
+//public enum RemoveTypeFromKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST,
+//    DIRECTORY_IS_NOT_A_DIRECTORY,
+//    DIRECTORY_HAS_NO_KIT,
+//    NO_PERMISSION_TO_MODIFY_KIT,
+//    TYPE_DOES_NOT_EXIST,
+//    DESIGN_DEPENDS_ON_TYPE
+//}
 
-public enum RemoveTypeFromKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    TYPE_DOES_NOT_EXIST,
-    DESIGN_DEPENDS_ON_TYPE
-}
+//public class RemoveTypeFromKitError
+//{
+//    public RemoveTypeFromKitErrorCode Code { get; set; }
+//    public string Message { get; set; }
+//}
 
-public class RemoveTypeFromKitError
-{
-    public RemoveTypeFromKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
+//public class RemoveTypeFromKitResponse
+//{
+//    public RemoveTypeFromKitError? Error { get; set; }
+//}
 
-public class RemoveTypeFromKitResponse
-{
-    public RemoveTypeFromKitError? Error { get; set; }
-}
+//public class RemoveTypeFromKitResponseContainer
+//{
+//    public RemoveTypeFromKitResponse RemoveTypeFromKit { get; set; }
+//}
 
-public class RemoveTypeFromKitResponseContainer
-{
-    public RemoveTypeFromKitResponse RemoveTypeFromKit { get; set; }
-}
+//public enum AddDesignToKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST,
+//    DIRECTORY_IS_NOT_A_DIRECTORY,
+//    DIRECTORY_HAS_NO_KIT,
+//    NO_PERMISSION_TO_MODIFY_KIT,
+//    DESIGN_INPUT_IS_INVALID
+//}
 
-public enum AddDesignToKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    DESIGN_INPUT_IS_INVALID
-}
+//public class AddDesignToKitError
+//{
+//    public AddDesignToKitErrorCode Code { get; set; }
+//    public string Message { get; set; }
+//}
 
-public class AddDesignToKitError
-{
-    public AddDesignToKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
+//public class AddDesignToKitResponse
+//{
+//    public Design? Design { get; set; }
+//    public AddDesignToKitError? Error { get; set; }
+//}
 
-public class AddDesignToKitResponse
-{
-    public Design? Design { get; set; }
-    public AddDesignToKitError? Error { get; set; }
-}
+//public class AddDesignToKitResponseContainer
+//{
+//    public AddDesignToKitResponse AddDesignToKit { get; set; }
+//}
 
-public class AddDesignToKitResponseContainer
-{
-    public AddDesignToKitResponse AddDesignToKit { get; set; }
-}
+//public enum RemoveDesignFromKitErrorCode
+//{
+//    DIRECTORY_DOES_NOT_EXIST,
+//    DIRECTORY_IS_NOT_A_DIRECTORY,
+//    DIRECTORY_HAS_NO_KIT,
+//    NO_PERMISSION_TO_MODIFY_KIT,
+//    DESIGN_DOES_NOT_EXIST
+//}
 
-public enum RemoveDesignFromKitErrorCode
-{
-    DIRECTORY_DOES_NOT_EXIST,
-    DIRECTORY_IS_NOT_A_DIRECTORY,
-    DIRECTORY_HAS_NO_KIT,
-    NO_PERMISSION_TO_MODIFY_KIT,
-    DESIGN_DOES_NOT_EXIST
-}
+//public class RemoveDesignFromKitError
+//{
+//    public RemoveDesignFromKitErrorCode Code { get; set; }
+//    public string Message { get; set; }
+//}
 
-public class RemoveDesignFromKitError
-{
-    public RemoveDesignFromKitErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
+//public class RemoveDesignFromKitResponse
+//{
+//    public RemoveDesignFromKitError? Error { get; set; }
+//}
 
-public class RemoveDesignFromKitResponse
-{
-    public RemoveDesignFromKitError? Error { get; set; }
-}
-
-public class RemoveDesignFromKitResponseContainer
-{
-    public RemoveDesignFromKitResponse RemoveDesignFromKit { get; set; }
-}
+//public class RemoveDesignFromKitResponseContainer
+//{
+//    public RemoveDesignFromKitResponse RemoveDesignFromKit { get; set; }
+//}
 
 public class Api : ICloneable
 {
@@ -1148,7 +1165,8 @@ public class Api : ICloneable
         Endpoint = endpoint;
         Token = token;
         Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-        Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+        if (!string.IsNullOrEmpty(Token))
+            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
     }
 
     public GraphQLHttpClient Client { get; set; }
@@ -1165,109 +1183,109 @@ public class Api : ICloneable
         return $"Api(Endpoint: {Endpoint}, Token: {Token})";
     }
 
-    public LoadKitResponse? LoadKit(string directory)
+    public LoadKitResponse? LoadKit(string url)
     {
         var query = new GraphQLRequest
         {
             Query = Resources.loadKit,
             OperationName = "LoadKit",
-            Variables = new { directory }
+            Variables = new { url }
         };
         var response = Client.SendQueryAsync<LoadKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
         return response.Data.LoadKit;
     }
 
-    public CreateKitResponse? CreateKit(string directory, Kit kit)
+    public CreateKitResponse? CreateKit(string url, Kit kit)
     {
         var query = new GraphQLRequest
         {
             Query = Resources.createKit,
             OperationName = "CreateKit",
-            Variables = new { directory, kit }
+            Variables = new { url, kit }
         };
         var response = Client.SendQueryAsync<CreateKitResponseContainer>(query).Result;
         if (response.Errors != null) return null;
         return response.Data.CreateKit;
     }
 
-    public UpdateKitPropsResponse? UpdateKitProps(string directory, KitProps kit)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.updateKitMetadata,
-            OperationName = "UpdateKitProps",
-            Variables = new { directory, kit }
-        };
-        var response = Client.SendQueryAsync<UpdateKitPropsResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.UpdateKitProps;
-    }
+    //public UpdateKitPropsResponse? UpdateKitProps(string directory, KitProps kit)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.updateKitMetadata,
+    //        OperationName = "UpdateKitProps",
+    //        Variables = new { directory, kit }
+    //    };
+    //    var response = Client.SendQueryAsync<UpdateKitPropsResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.UpdateKitProps;
+    //}
 
-    public DeleteKitResponse? DeleteKit(string directory)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.deleteKit,
-            OperationName = "DeleteKit",
-            Variables = new { directory }
-        };
-        var response = Client.SendQueryAsync<DeleteKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.DeleteKit;
-    }
+    //public DeleteKitResponse? DeleteKit(string directory)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.deleteKit,
+    //        OperationName = "DeleteKit",
+    //        Variables = new { directory }
+    //    };
+    //    var response = Client.SendQueryAsync<DeleteKitResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.DeleteKit;
+    //}
 
-    public AddTypeToKitResponse? AddTypeToKit(string directory, Type type)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.addTypeToKit,
-            OperationName = "AddTypeToKit",
-            Variables = new { directory, type }
-        };
-        var response = Client.SendQueryAsync<AddTypeToKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.AddTypeToKit;
-    }
+    //public AddTypeToKitResponse? AddTypeToKit(string directory, Type type)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.addTypeToKit,
+    //        OperationName = "AddTypeToKit",
+    //        Variables = new { directory, type }
+    //    };
+    //    var response = Client.SendQueryAsync<AddTypeToKitResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.AddTypeToKit;
+    //}
 
-    public RemoveTypeFromKitResponse? RemoveTypeFromKit(string directory, TypeId type)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.removeTypeFromKit,
-            OperationName = "RemoveTypeFromKit",
-            Variables = new { directory, type }
-        };
-        var response = Client.SendQueryAsync<RemoveTypeFromKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.RemoveTypeFromKit;
-    }
+    //public RemoveTypeFromKitResponse? RemoveTypeFromKit(string directory, TypeId type)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.removeTypeFromKit,
+    //        OperationName = "RemoveTypeFromKit",
+    //        Variables = new { directory, type }
+    //    };
+    //    var response = Client.SendQueryAsync<RemoveTypeFromKitResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.RemoveTypeFromKit;
+    //}
 
-    public AddDesignToKitResponse? AddDesignToKit(string directory, Design design)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.addDesignToKit,
-            OperationName = "AddDesignToKit",
-            Variables = new { directory, design }
-        };
-        var response = Client.SendQueryAsync<AddDesignToKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.AddDesignToKit;
-    }
+    //public AddDesignToKitResponse? AddDesignToKit(string directory, Design design)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.addDesignToKit,
+    //        OperationName = "AddDesignToKit",
+    //        Variables = new { directory, design }
+    //    };
+    //    var response = Client.SendQueryAsync<AddDesignToKitResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.AddDesignToKit;
+    //}
 
-    public RemoveDesignFromKitResponse? RemoveDesignFromKit(string directory, DesignId design)
-    {
-        var query = new GraphQLRequest
-        {
-            Query = Resources.removeDesignFromKit,
-            OperationName = "RemoveDesignFromKit",
-            Variables = new { directory, design }
-        };
-        var response = Client.SendQueryAsync<RemoveDesignFromKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.RemoveDesignFromKit;
-    }
+    //public RemoveDesignFromKitResponse? RemoveDesignFromKit(string directory, DesignId design)
+    //{
+    //    var query = new GraphQLRequest
+    //    {
+    //        Query = Resources.removeDesignFromKit,
+    //        OperationName = "RemoveDesignFromKit",
+    //        Variables = new { directory, design }
+    //    };
+    //    var response = Client.SendQueryAsync<RemoveDesignFromKitResponseContainer>(query).Result;
+    //    if (response.Errors != null) return null;
+    //    return response.Data.RemoveDesignFromKit;
+    //}
 
 }
 
