@@ -60,11 +60,30 @@ GRAPHQLTYPES = {
     list[str]: graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
     semio.Point: graphene.NonNull(lambda: PointNode),
     semio.Vector: graphene.NonNull(lambda: VectorNode),
-    semio.CoordinateSystem: graphene.NonNull(lambda: CoordinateSystemNode),
-    semio.PieceDiagram: graphene.NonNull(lambda: PieceDiagramNode),
-    semio.SidePieceType: graphene.NonNull(lambda: SidePieceTypeNode),
-    semio.SidePiece: graphene.NonNull(lambda: SidePieceNode),
-    semio.Side: graphene.NonNull(lambda: SideNode),
+    semio.Representation: graphene.NonNull(lambda: RepresentationNode),
+    list[semio.Representation]: graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    semio.Port: graphene.NonNull(lambda: PortNode),
+    list[semio.Port]: graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    semio.Quality: graphene.NonNull(lambda: QualityNode),
+    list[semio.Quality]: graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: QualityNode))
+    ),
+    semio.Type: graphene.NonNull(lambda: TypeNode),
+    list[semio.Type]: graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: TypeNode))
+    ),
+    # semio.Plane: graphene.NonNull(lambda: PlaneNode),
+    # semio.PieceDiagram: graphene.NonNull(lambda: PieceDiagramNode),
+    # semio.SidePieceType: graphene.NonNull(lambda: SidePieceTypeNode),
+    # semio.SidePiece: graphene.NonNull(lambda: SidePieceNode),
+    # semio.Side: graphene.NonNull(lambda: SideNode),
+    # semio.Connection: graphene.NonNull(lambda: ConnectionNode),
+    # semio.Design: graphene.NonNull(lambda: DesignNode),
+    semio.Kit: graphene.NonNull(lambda: KitNode),
 }
 
 
@@ -79,12 +98,7 @@ class NodeNode(graphene.relay.Node):
 
     @staticmethod
     def get_node_from_global_id(info, global_id, only_type=None):
-
         node = semio.getRowByGuid(global_id)
-        if only_type:
-            # We assure that the node type that we want to retrieve
-            # is the same that was indicated in the field type
-            assert type_ == only_type._meta.name, "Received not compatible node."
 
 
 class RowNode(graphene_sqlalchemy.SQLAlchemyObjectType):
@@ -102,7 +116,6 @@ class RowNode(graphene_sqlalchemy.SQLAlchemyObjectType):
             options["exclude_fields"] = tuple(
                 k for k, v in model.__fields__.items() if v.exclude
             )
-
         if "name" not in options:
             options["name"] = model.__name__
         if "interfaces" not in options:
@@ -153,14 +166,14 @@ class LocatorInput(graphene_pydantic.PydanticInputObjectType):
         model = semio.LocatorSkeleton
 
 
-class ScreenPointNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.ScreenPoint
+# class ScreenPointNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.ScreenPoint
 
 
-class ScreenPointInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.ScreenPoint
+# class ScreenPointInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.ScreenPoint
 
 
 class PointNode(graphene_pydantic.PydanticObjectType):
@@ -183,14 +196,14 @@ class VectorInput(graphene_pydantic.PydanticInputObjectType):
         model = semio.Vector
 
 
-class CoordinateSystemNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.CoordinateSystem
+# class PlaneNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.Plane
 
 
-class CoordinateSystemInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.CoordinateSystem
+# class PlaneInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.Plane
 
 
 class PortNode(RowNode):
@@ -228,99 +241,99 @@ class TypeInput(graphene_pydantic.PydanticInputObjectType):
         model = semio.TypeSkeleton
 
 
-class PieceDiagramNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.PieceDiagram
+# class PieceDiagramNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.PieceDiagram
 
 
-class PieceDiagramInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.PieceDiagram
+# class PieceDiagramInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.PieceDiagram
 
 
-class PieceNode(RowNode):
-    class Meta:
-        model = semio.Piece
+# class PieceNode(RowNode):
+#     class Meta:
+#         model = semio.Piece
 
-    coordinateSystem = graphene.NonNull(CoordinateSystemNode)
-    diagram = graphene.NonNull(PieceDiagramNode)
+#     coordinateSystem = graphene.NonNull(PlaneNode)
+#     diagram = graphene.NonNull(PieceDiagramNode)
 
-    def resolve_coordinateSystem(self, info):
-        return self.coordinateSystem
+#     def resolve_coordinateSystem(self, info):
+#         return self.coordinateSystem
 
-    def resolve_diagram(self, info):
-        return self.diagram
-
-
-class PieceInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.PieceSkeleton
+#     def resolve_diagram(self, info):
+#         return self.diagram
 
 
-class SidePieceTypeNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.SidePieceType
-        # port is none Pydanctic model and needs to be resolved manually
-        exclude_fields = ("port",)
-
-    port = graphene.Field(PortNode)
-
-    def resolve_port(type: semio.SidePieceType, info):
-        return type.port
+# class PieceInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.PieceSkeleton
 
 
-class SidePieceTypeInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.SidePieceTypeSkeleton
+# class SidePieceTypeNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.SidePieceType
+#         # port is none Pydanctic model and needs to be resolved manually
+#         exclude_fields = ("port",)
+
+#     port = graphene.Field(PortNode)
+
+#     def resolve_port(type: semio.SidePieceType, info):
+#         return type.port
 
 
-class SidePieceNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.SidePiece
+# class SidePieceTypeInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.SidePieceTypeSkeleton
 
 
-class SidePieceInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.SidePieceSkeleton
+# class SidePieceNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.SidePiece
 
 
-class SideNode(graphene_pydantic.PydanticObjectType):
-    class Meta:
-        model = semio.Side
+# class SidePieceInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.SidePieceSkeleton
 
 
-class SideInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.SideSkeleton
+# class SideNode(graphene_pydantic.PydanticObjectType):
+#     class Meta:
+#         model = semio.Side
 
 
-class ConnectionNode(RowNode):
-    class Meta:
-        model = semio.Connection
-
-    connected = graphene.NonNull(SideNode)
-    connecting = graphene.NonNull(SideNode)
-
-    def resolve_connected(self, info):
-        return self.connected
-
-    def resolve_connecting(self, info):
-        return self.connecting
+# class SideInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.SideSkeleton
 
 
-class ConnectionInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.ConnectionSkeleton
+# class ConnectionNode(RowNode):
+#     class Meta:
+#         model = semio.Connection
+
+#     connected = graphene.NonNull(SideNode)
+#     connecting = graphene.NonNull(SideNode)
+
+#     def resolve_connected(self, info):
+#         return self.connected
+
+#     def resolve_connecting(self, info):
+#         return self.connecting
 
 
-class DesignNode(RowNode):
-    class Meta:
-        model = semio.Design
+# class ConnectionInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.ConnectionSkeleton
 
 
-class DesignInput(graphene_pydantic.PydanticInputObjectType):
-    class Meta:
-        model = semio.DesignSkeleton
+# class DesignNode(RowNode):
+#     class Meta:
+#         model = semio.Design
+
+
+# class DesignInput(graphene_pydantic.PydanticInputObjectType):
+#     class Meta:
+#         model = semio.DesignSkeleton
 
 
 class KitNode(RowNode):
@@ -361,13 +374,13 @@ def start_engine(debug: bool = False):
 
     rest = fastapi.FastAPI()
 
-    @rest.get("/kits}")
+    @rest.get("/kits")
     async def read_kits() -> semio.KitSkeleton:
         return semio.Kit.all()
 
     @rest.get("/kits/{kitId}")
     async def read_kit(kitId) -> semio.KitSkeleton:
-        return semio.Kit.getByLocalId(kitId)
+        return semio.Kit.specific(kitId)
 
     @rest.get("/kits/{kitId}/types")
     async def read_type(kitId, typeId) -> semio.TypeSkeleton:
@@ -375,17 +388,19 @@ def start_engine(debug: bool = False):
 
     @rest.get("/kits/{kitId}/types/{typeId}")
     async def read_type(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.Type.getByLocalId(kitId, typeId)
+        return semio.Type.specific(kitId, typeId)
 
     @rest.get("/kits/{kitId}/types/{typeId}/representations")
     async def read_representations(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.Type.all(kitId)
+        return semio.Representation.all(
+            kitId,
+        )
 
     @rest.get("/kits/{kitId}/types/{typeId}/representations/{representationId}")
     async def read_representation(
         kitId, typeId, representationId
     ) -> semio.RepresentationSkeleton:
-        return semio.Representation.getByLocalId(kitId, typeId, representationId)
+        return semio.Representation.specific(kitId, typeId, representationId)
 
     schema = graphene.Schema(
         query=Query,
