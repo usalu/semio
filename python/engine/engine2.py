@@ -98,7 +98,8 @@ class NodeNode(graphene.relay.Node):
 
     @staticmethod
     def get_node_from_global_id(info, global_id, only_type=None):
-        node = semio.getRowByGuid(global_id)
+        entity = semio.entityByGuid(global_id)
+        return entity
 
 
 class RowNode(graphene_sqlalchemy.SQLAlchemyObjectType):
@@ -141,7 +142,7 @@ class RowNode(graphene_sqlalchemy.SQLAlchemyObjectType):
             setattr(cls, name, GRAPHQLTYPES[prop_return_type])
             setattr(cls, f"resolve_{name}", make_resolver(name))
 
-        setattr(cls, "resolver_id", make_resolver("guid"))
+        setattr(cls, "resolve_id", make_resolver("guid"))
 
         super().__init_subclass_with_meta__(model=model, **options)
 
@@ -341,14 +342,14 @@ class KitNode(RowNode):
         model = semio.Kit
 
 
-# Can't use SQLAlchemyConnectionField because only supports one database.
-# https://github.com/graphql-python/graphene-sqlalchemy/issues/180
-class KitConnection(graphene.relay.Connection):
-    url = graphene.String()
+# # Can't use SQLAlchemyConnectionField because only supports one database.
+# # https://github.com/graphql-python/graphene-sqlalchemy/issues/180
+# class KitConnection(graphene.relay.Connection):
+#     url = graphene.String()
 
-    class Meta:
-        node = KitNode
-        name = "KitConnection"
+#     class Meta:
+#         node = KitNode
+#         # name = "KitConnection"
 
 
 class KitInput(graphene_pydantic.PydanticInputObjectType):
@@ -357,13 +358,13 @@ class KitInput(graphene_pydantic.PydanticInputObjectType):
 
 
 class Query(graphene.ObjectType):
-    node = NodeNode.Field()
-    # kit = graphene.Field(KitNode, url=graphene.String(required=True))
+    # node = NodeNode.Field()
+    kit = graphene.Field(KitNode, url=graphene.String(required=True))
     # kit = graphene_sqlalchemy.SQLAlchemyConnectionField(KitNode.connection)
     # kits = graphene.relay.ConnectionField(KitConnection)
 
     def resolve_kit(self, info, url):
-        return semio.getKit(url)
+        return semio.Kit.specific(url)
 
 
 class Mutation(graphene.ObjectType):
@@ -374,33 +375,31 @@ def start_engine(debug: bool = False):
 
     rest = fastapi.FastAPI()
 
-    @rest.get("/kits")
-    async def read_kits() -> semio.KitSkeleton:
-        return semio.Kit.all()
+    @rest.get("/")
+    async def kits(kitUrl) -> semio.KitSkeleton:
+        return semio.Kits.all()
 
-    @rest.get("/kits/{kitId}")
-    async def read_kit(kitId) -> semio.KitSkeleton:
-        return semio.Kit.specific(kitId)
+    @rest.get("/{kitUrl}")
+    async def kit(kitUrl) -> semio.KitSkeleton:
+        return semio.Kit.specific(kitUrl)
 
-    @rest.get("/kits/{kitId}/types")
-    async def read_type(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.Type.all(kitId)
+    @rest.get("/{kitUrl}/types")
+    async def type(kitUrl) -> semio.TypeSkeleton:
+        return semio.Type.all(kitUrl)
 
-    @rest.get("/kits/{kitId}/types/{typeId}")
-    async def read_type(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.Type.specific(kitId, typeId)
+    @rest.get("/{kitUrl}/types/{typeId}")
+    async def type(kitUrl, typeId) -> semio.TypeSkeleton:
+        return semio.Type.specific(kitUrl, typeId)
 
-    @rest.get("/kits/{kitId}/types/{typeId}/representations")
-    async def read_representations(kitId, typeId) -> semio.TypeSkeleton:
-        return semio.Representation.all(
-            kitId,
-        )
+    @rest.get("/{kitUrl}/types/{typeId}/representations")
+    async def representations(kitUrl, typeId) -> semio.TypeSkeleton:
+        return semio.Representation.all(kitUrl, typeId)
 
-    @rest.get("/kits/{kitId}/types/{typeId}/representations/{representationId}")
-    async def read_representation(
-        kitId, typeId, representationId
+    @rest.get("/{kitUrl}/types/{typeId}/representations/{representationId}")
+    async def representation(
+        kitUrl, typeId, representationId
     ) -> semio.RepresentationSkeleton:
-        return semio.Representation.specific(kitId, typeId, representationId)
+        return semio.Representation.specific(kitUrl, typeId, representationId)
 
     schema = graphene.Schema(
         query=Query,

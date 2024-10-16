@@ -1,17 +1,5 @@
 type Query {
-  node(
-    """The ID of the object"""
-    id: ID!
-  ): Node
-}
-
-interface Node {
-  """The ID of the object"""
-  id: ID!
-}
-
-type Mutation {
-  createKit(kit: KitInput!): Kit
+  kit(url: String!): Kit
 }
 
 type Kit implements Node {
@@ -24,6 +12,11 @@ type Kit implements Node {
   homepage: String!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
 
+  """The ID of the object"""
+  id: ID!
+}
+
+interface Node {
   """The ID of the object"""
   id: ID!
 }
@@ -206,6 +199,10 @@ type Quality implements Node {
 
   """The ID of the object"""
   id: ID!
+}
+
+type Mutation {
+  createKit(kit: KitInput!): Kit
 }
 
 input KitInput {

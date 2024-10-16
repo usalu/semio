@@ -64,6 +64,7 @@ from networkx import (
 )
 import pint
 import pydantic
+import lark
 import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.ext.hybrid
@@ -72,10 +73,8 @@ import sqlmodel
 
 RELEASE = "r24.11-1"
 NAME_LENGTH_LIMIT = 64
-NAME_REGEX = r"^[a-zA-Z0-9_-]+$"
 ID_LENGTH_LIMIT = 128
-ID_REGEX = NAME_REGEX
-URL_LENGTH_MAX = 1024
+URL_LENGTH_LIMIT = 1024
 DESCRIPTION_LENGTH_LIMIT = 4096
 KIT_FOLDERNAME = ".semio"
 KIT_FILENAME = "kit.sqlite3"
@@ -180,14 +179,6 @@ class InvalidGuid(SemioException):
     pass
 
 
-class StoreKind(enum.Enum):
-    """🏪 The kind of the store."""
-
-    DATABASE = "database"
-    REST = "rest"
-    GRAPHQL = "graphql"
-
-
 def encodeString(value: str) -> str:
     encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
     encoded_str = encoded_bytes.decode("utf-8")
@@ -200,75 +191,112 @@ def decodeString(value: str) -> str:
     return decoded_str
 
 
+guidGrammar = r"""
+    entity: ENCODED_STRING ("/" (type | representation | port | locator))?
+    type: "types" "/" ENCODED_STRING "," ENCODED_STRING?
+    representation: type "/representations/" ENCODED_STRING
+    port: type "/ports/" ENCODED_STRING
+    locator: type "/locators/" ENCODED_STRING
+    ENCODED_STRING: /[a-zA-ZZ0-9_=-]+/
+"""
+guidParser = lark.Lark(guidGrammar, start="entity")
+
+
+class QueryBuilder(lark.Transformer):
+    # E.g:
+    # a2l0LnNxbGl0ZTM=
+    # a2l0LnNxbGl0ZTM=/types/Q2Fwc3VsZQ==,
+    # a2l0LnNxbGl0ZTM=/types/Q2Fwc3VsZQ==,/representations/aHR0cHM6Ly9hcHAuc3BlY2tsZS5zeXN0ZW1zL3Byb2plY3RzL2U3ZGUxYTJmOGYvbW9kZWxzL2IzYzIwZGI5NzA=
+    # kit.sqlite3/types/Capsule,/representations/https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
+    # url: kit.sqlite3
+    # kind: type
+    # typeName: Capsule
+    # typeVariant: ""
+    # representationUrl: https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
+
+    def entity(self, children):
+        kitUrl = decodeString(children[0].value)
+        if len(children) == 1:
+            return {"kind": "kit", "kitUrl": kitUrl}
+        entity = children[1]
+        entity["kitUrl"] = kitUrl
+        return entity
+
+    def type(self, children):
+        return {
+            "kind": "type",
+            "typeName": decodeString(children[0].value),
+            "typeVariant": decodeString(
+                children[1].value if len(children) == 2 else ""
+            ),
+        }
+
+    def representation(self, children):
+        type = children[0]
+        return {
+            "kind": "representation",
+            "typeName": type["name"],
+            "typeVariant": type["variant"],
+            "representationUrl": decodeString(children[1].value),
+        }
+
+
+class StoreKind(enum.Enum):
+    """🏪 The kind of the store."""
+
+    DATABASE = "database"
+    REST = "rest"
+    GRAPHQL = "graphql"
+
+
 class Store(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def getRowByUrl(cls, url: str, body={}) -> "Row":
-        """🔍 Get a row from a url."""
+    def entityByGuid(cls: "Store", guid: str) -> typing.Any:
+        """🔍 Get an entity from a guid."""
         pass
 
 
 class DatabaseStore(Store, abc.ABC):
+
     @classmethod
     @abc.abstractmethod
-    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
-        """🔧 Get the engine from the url."""
+    def sessionByUrl(cls: "DatabaseStore", url: str) -> sqlalchemy.orm.Session:
+        """🔧 Get a session from the url."""
         pass
 
     @classmethod
-    def getRowByUrl(cls, url: str, body={}) -> "Row":
-        engine = cls.getEngineByUrl(url)
-        sqlmodel.SQLModel.metadata.create_all(engine)
-        session = sqlalchemy.orm.sessionmaker(bind=engine)()
-        parsedUrl = urllib.parse.urlparse(url)
-        encodedQuery = parsedUrl.path.split(f"/{Kit.PLURAL}/")[1]
-        queryParts = encodedQuery.split("/")
-        kitName = decodeString(queryParts[0])
-        kit = session.query(Kit).filter(Kit.name == kitName).one_or_none()
-        if len(queryParts) == 1:
-            return kit
-        kind = queryParts[-2]
+    @abc.abstractmethod
+    def kitNameByUrl(cls: "DatabaseStore", url: str) -> str:
+        """📛 Get the name of the kit from the url."""
+        pass
+
+    @classmethod
+    def entityByGuid(cls: "DatabaseStore", guid: str) -> typing.Any:
+        queryTree = guidParser.parse(guid)
+        query = QueryBuilder().transform(queryTree)
+        session = cls.sessionByUrl(query["kitUrl"])
+        kitName = cls.kitNameByUrl(query["kitUrl"])
+        kind = query["kind"]
         match kind:
-            case Design.PLURAL | Piece.PLURAL | Connection.PLURAL:
-                designName, designVariant = decodeString(queryParts[-1])
-                designVariant = "" if designVariant == "None" else designVariant
-                design = (
-                    session.query(Design)
-                    .filter(
-                        Design.kit == kit,
-                        Design.name == designName,
-                        Design.variant == designVariant,
-                    )
-                    .one_or_none()
+            case "kit":
+                return Kit.specific(session, kitName)
+            case "type":
+                return Type.specific(
+                    session, kitName, query["typeName"], query["typeVariant"]
                 )
-                pass
-            case Type.PLURAL | Representation.PLURAL | Port.PLURAL | Locator.PLURAL:
-                typeName, typeVariant = queryParts[2].split(",")
-                typeName = decodeString(typeName)
-                typeVariant = decodeString(typeVariant) if typeVariant else ""
-                type = (
-                    session.query(Type)
-                    .filter(Type.kit == kit, Type.name == typeName)
-                    .one_or_none()
+            case "representation":
+                return Representation.specific(
+                    session,
+                    kitName,
+                    query["typeName"],
+                    query["typeVariant"],
+                    query["representationUrl"],
                 )
-                if kind == Type.PLURAL:
-                    return type
-                if kind == Representation.PLURAL:
-                    representationUrl = queryParts[4]
-                    representationUrl = decodeString(representationUrl)
-                    # representation = (
-                    #     session.query(Representation)
-                    #     .filter(
-                    #         Representation.type == type,
-                    #         Representation.url == representationUrl,
-                    #     )
-                    #     .one_or_none()
-                    # )
-                    representation = Representation.getByLocalId(
-                        session, (representationUrl,), decode=True, parent=type
-                    )
-                    return representation
+
+            case _:
+                raise InvalidBackend(f"Unknown kind: {kind}")
 
 
 class SSLMode(enum.Enum):
@@ -283,9 +311,10 @@ class SSLMode(enum.Enum):
 
 
 class SqliteStore(DatabaseStore):
+
     @classmethod
-    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
-        parsedUrl = urllib.parse.urlparse(url.split(f"/{Kit.PLURAL}/")[0])
+    def sessionByUrl(cls, url: str):
+        parsedUrl = urllib.parse.urlparse(url)
         if not parsedUrl.path.endswith(".sqlite3"):
             if not parsedUrl.path.endswith(".semio"):
                 path = pathlib.Path(parsedUrl.path) / KIT_FOLDERNAME / KIT_FILENAME
@@ -299,13 +328,21 @@ class SqliteStore(DatabaseStore):
             if parsedUrl.scheme == "sqlite"
             else f"sqlite:///{path}" if not path.startswith("/") else f"sqlite://{path}"
         )
-        return sqlalchemy.create_engine(connectionString, echo=True)
+        engine = sqlalchemy.create_engine(connectionString, echo=True)
+        sqlmodel.SQLModel.metadata.create_all(engine)
+        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        return session
+
+    @classmethod
+    def kitNameByUrl(cls: "SqliteStore", url: str) -> str:
+        session = cls.sessionByUrl(url)
+        return session.query(Kit).one_or_none().name
 
 
 class PostgresStore(DatabaseStore):
+
     @classmethod
-    def getEngineByUrl(cls, url: str) -> sqlalchemy.engine.base.Engine:
-        """🔧 Get the engine from the url. Assumes the url has the format:"""
+    def sessionByUrl(cls, url: str):
         parsedUrl = urllib.parse.urlparse(url)
         connection_string = sqlalchemy.URL.create(
             "postgresql+psycopg",
@@ -314,47 +351,46 @@ class PostgresStore(DatabaseStore):
             host=parsedUrl.hostname,
             database=parsedUrl.path[1:],  # Remove the leading '/'
         )
-        return sqlalchemy.create_engine(
+        engine = sqlalchemy.create_engine(
             connection_string,
             connect_args={"sslmode": parsedUrl.query.get("sslmode", SSLMode.REQUIRE)},
         )
+        sqlmodel.SQLModel.metadata.create_all(engine)
+        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        return session
 
 
 class RestStore(Store):
     @classmethod
-    def getRowByUrl(cls, url: str, body={}) -> "Row":
+    def entityByGuid(cls, url: str, body={}) -> "Row":
         raise NotImplementedError()
 
 
 class GraphqlStore(Store):
     @classmethod
-    def getRowByUrl(cls, url: str, body={}) -> "Row":
+    def entityByGuid(cls, url: str, body={}) -> "Row":
         raise NotImplementedError()
 
 
-def byUrl(url: str) -> "Row":
-    """🔍 Get a row from a url."""
+def entityByGuid(url: str) -> typing.Any:
+    """🔍 Get an entity from a url."""
     try:
-        return SqliteStore.getRowByUrl(url)
+        return SqliteStore.entityByGuid(url)
     except Exception as e:
         pass
     try:
-        return RestStore.getRowByUrl(url)
+        return RestStore.entityByGuid(url)
     except Exception as e:
         pass
     try:
-        return GraphqlStore.getRowByUrl(url)
+        return GraphqlStore.entityByGuid(url)
     except Exception as e:
         pass
     try:
-        return PostgresStore.getRowByUrl(url)
+        return PostgresStore.entityByGuid(url)
     except Exception as e:
         pass
     raise InvalidURL(url)
-
-
-class exposedProperty(property):
-    pass
 
 
 class Semio(sqlmodel.SQLModel):
@@ -372,10 +408,9 @@ class Row(sqlmodel.SQLModel):
     PLURAL: typing.ClassVar[str]
     """🔢 The plural of the entity."""
 
-    # @abc.abstractmethod
     def parent(self) -> typing.Optional["Row"]:
         """👪 The parent of the entity."""
-        pass
+        return None
 
     # @abc.abstractmethod
     def localId(self, encode: bool = False) -> tuple:
@@ -389,8 +424,13 @@ class Row(sqlmodel.SQLModel):
     def guid(self) -> str:
         """🆔 A guid that let's relay identify the entity."""
         localId = f"{self.__class__.PLURAL.lower()}/{self.localId(encode=True)}"
-        parentId = f"{self.parent().guid()}/" if self.parent() is not None else ""
+        parent = self.parent()
+        parentId = f"{parent.guid()}/" if parent is not None else ""
         return parentId + localId
+
+    @property
+    def id(self) -> str:
+        return self.guid()
 
 
 class Skeleton(sqlmodel.SQLModel):
@@ -406,7 +446,7 @@ class IdentifiedRow(Row):
 
 
 class UrledRow(Row):
-    url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX)
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
     def localId(self, encode: bool = False) -> str:
         return encodeString(self.url) if encode else self.url
@@ -425,7 +465,7 @@ class ArtifactRow(NamedRow):
     # Optional. Set to '' for None.
     description: str = sqlmodel.Field(max_length=DESCRIPTION_LENGTH_LIMIT, default="")
     # Optional. Set to '' for None.
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_MAX)
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
     createdAt: datetime = sqlmodel.Field(default_factory=datetime.now)
     lastUpdateAt: datetime = sqlmodel.Field(default_factory=datetime.now)
 
@@ -513,6 +553,44 @@ class Representation(RepresentationBase, table=True):
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
+
+    @classmethod
+    def specific(
+        cls: "Representation",
+        session: sqlalchemy.orm.Session,
+        kitName: str,
+        typeName: str,
+        typeVariant: str,
+        representationUrl: str,
+    ):
+        return (
+            session.query(Representation, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+                Representation.url == representationUrl,
+            )
+            .one_or_none()
+        )
+
+    @classmethod
+    def all(
+        cls: "Representation",
+        session: sqlalchemy.orm.Session,
+        kitName: str,
+        typeName: str,
+        typeVariant: str,
+    ):
+        return (
+            session.query(Representation, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+            )
+            .all()
+        )
 
 
 class RepresentationSkeleton(RepresentationBase):
@@ -1093,9 +1171,6 @@ class Port(PortBase, table=True):
             raise NoTypeAssigned()
         return self.type
 
-    def localId(self, encode: bool = False) -> tuple:
-        return (encodeString(self.id_) if encode else self.id_,)
-
 
 class PortSkeleton(PortBase):
     class Config:
@@ -1226,6 +1301,20 @@ class Type(TypeBase, Row, table=True):
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
+
+    @classmethod
+    def all(cls, session: sqlalchemy.orm.Session) -> list["Type"]:
+        return session.query(cls).all()
+
+    @classmethod
+    def specific(
+        cls, session: sqlalchemy.orm.Session, name: str, variant: str = ""
+    ) -> "Type":
+        return (
+            session.query(cls)
+            .filter(cls.name == name, cls.variant == variant)
+            .one.or_none()
+        )
 
 
 class TypeSkeleton(TypeBase):
@@ -1593,8 +1682,8 @@ class TypeSkeleton(TypeBase):
 
 
 class KitBase(ArtifactRow):
-    url: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
-    homepage: str = sqlmodel.Field(max_length=URL_LENGTH_MAX, default="")
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT, default="")
+    homepage: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT, default="")
 
 
 class Kit(KitBase, Row, table=True):
@@ -1616,16 +1705,10 @@ class Kit(KitBase, Row, table=True):
     #     back_populates="kit", cascade_delete=True
     # )
 
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint("name"),
-        sqlalchemy.UniqueConstraint("url"),
-    )
-
-    def parent(self) -> None:
-        return None
+    __table_args__ = (sqlalchemy.UniqueConstraint("name"),)
 
     def guid(self) -> str:
-        return self.url + "/" + super().guid()
+        return encodeString(self.url)
 
 
 class KitSkeleton(KitBase):
@@ -1636,28 +1719,40 @@ class KitSkeleton(KitBase):
     types: list[TypeSkeleton] = sqlmodel.Field(default_factory=list)
 
 
+ENTITIES = [Kit, Type, Port, Quality, Representation]
+
+
 def createDbAndTables():
-    path = pathlib.Path("engine2.sqlite3")
+    path = pathlib.Path("kit.sqlite3")
     try:
         os.remove(path)
     except:
         pass
-    r1 = Representation(url="https://www.google.com")
+    r1 = Representation(
+        url="https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970"
+    )
     # print(r1.guid())
-    r2 = Representation(url="https://www.yahoo.com")
+    r2 = Representation(
+        url="https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+        lod="1to500",
+    )
     r2.tags = ["tag1", "tag2"]
-    r2.tags = ["tag3", "tag4"]
-    r3 = Representation(id="y2", url="https://www.yahoo.com1")
-    t1 = Type(name="capsule")
+    r2.tags = ["tag3", "tag4", "tag5"]
+    r3 = Representation(
+        id="3",
+        url="https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+        lod="1to200",
+    )
+    t1 = Type(name="Capsule")
     t1.representations = [r1, r2, r3]
-    k1 = Kit(name="kit1", url=str(path), types=[t1])
+    k1 = Kit(name="Metabolism", url=str(path), types=[t1])
     print(r1.guid())
     engine = sqlalchemy.create_engine("sqlite:///" + str(path))
     sqlmodel.SQLModel.metadata.create_all(engine)
     with sqlalchemy.orm.Session(engine) as session:
         session.add(k1)
         [r1n, r2n, r3n] = t1.representations
-        r2n.tags = ["tag5", "tag6"]
+        r2n.tags = ["volume"]
         session.commit()
         pass
     pass
