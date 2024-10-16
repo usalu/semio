@@ -235,8 +235,8 @@ class QueryBuilder(lark.Transformer):
         type = children[0]
         return {
             "kind": "representation",
-            "typeName": type["name"],
-            "typeVariant": type["variant"],
+            "typeName": type["typeName"],
+            "typeVariant": type["typeVariant"],
             "representationUrl": decodeString(children[1].value),
         }
 
@@ -276,20 +276,16 @@ class DatabaseStore(Store, abc.ABC):
     def entityByGuid(cls: "DatabaseStore", guid: str) -> typing.Any:
         queryTree = guidParser.parse(guid)
         query = QueryBuilder().transform(queryTree)
-        session = cls.sessionByUrl(query["kitUrl"])
-        kitName = cls.kitNameByUrl(query["kitUrl"])
+        kitUrl = query["kitUrl"]
         kind = query["kind"]
         match kind:
             case "kit":
-                return Kit.specific(session, kitName)
+                return Kit.specific(kitUrl)
             case "type":
-                return Type.specific(
-                    session, kitName, query["typeName"], query["typeVariant"]
-                )
+                return Type.specific(kitUrl, query["typeName"], query["typeVariant"])
             case "representation":
                 return Representation.specific(
-                    session,
-                    kitName,
+                    kitUrl,
                     query["typeName"],
                     query["typeVariant"],
                     query["representationUrl"],
@@ -359,17 +355,40 @@ class PostgresStore(DatabaseStore):
         session = sqlalchemy.orm.sessionmaker(bind=engine)()
         return session
 
-
-class RestStore(Store):
     @classmethod
-    def entityByGuid(cls, url: str, body={}) -> "Row":
+    def kitNameByUrl(cls: "PostgresStore", url: str) -> str:
         raise NotImplementedError()
 
 
-class GraphqlStore(Store):
-    @classmethod
-    def entityByGuid(cls, url: str, body={}) -> "Row":
-        raise NotImplementedError()
+# class ApiStore(Store, abc.ABC):
+
+#     @classmethod
+#     @abc.abstractmethod
+#     def kit(cls: "ApiStore", url: str) -> "Kit":
+#         """📦 Get a kit from the url."""
+#         pass
+
+#     @classmethod
+#     def entityByGuid(cls, url: str, body={}) -> "Row":
+#         # TODO: Implement
+#         # fetch kit
+#         # cache kit locally under encoded url
+#         # run SQLiteStore.entityByGuid
+#         raise NotImplementedError()
+
+
+# class RestStore(ApiStore):
+
+#     @classmethod
+#     def kit(cls, url: str) -> "Kit":
+#         raise NotImplementedError()
+
+
+# class GraphqlStore(Store):
+
+#     @classmethod
+#     def kit(cls, url: str) -> "Kit":
+#         raise NotImplementedError()
 
 
 def entityByGuid(url: str) -> typing.Any:
@@ -379,17 +398,59 @@ def entityByGuid(url: str) -> typing.Any:
     except Exception as e:
         pass
     try:
-        return RestStore.entityByGuid(url)
-    except Exception as e:
-        pass
-    try:
-        return GraphqlStore.entityByGuid(url)
-    except Exception as e:
-        pass
-    try:
         return PostgresStore.entityByGuid(url)
     except Exception as e:
         pass
+    # try:
+    #     return RestStore.entityByGuid(url)
+    # except Exception as e:
+    #     pass
+    # try:
+    #     return GraphqlStore.entityByGuid(url)
+    # except Exception as e:
+    #     pass
+    raise InvalidURL(url)
+
+
+def sessionByUrl(url: str) -> sqlalchemy.orm.Session:
+    """🔧 Get a session from the url."""
+    try:
+        return SqliteStore.sessionByUrl(url)
+    except Exception as e:
+        pass
+    try:
+        return PostgresStore.sessionByUrl(url)
+    except Exception as e:
+        pass
+    # try:
+    #     return RestStore.sessionByUrl(url)
+    # except Exception as e:
+    #     pass
+    # try:
+    #     return GraphqlStore.sessionByUrl(url)
+    # except Exception as e:
+    #     pass
+    raise InvalidURL(url)
+
+
+def kitNameByUrl(url: str) -> str:
+    """📛 Get the name of the kit from the url."""
+    try:
+        return SqliteStore.kitNameByUrl(url)
+    except Exception as e:
+        pass
+    try:
+        return PostgresStore.kitNameByUrl(url)
+    except Exception as e:
+        pass
+    # try:
+    #     return RestStore.kitNameByUrl(url)
+    # except Exception as e:
+    #     pass
+    # try:
+    #     return GraphqlStore.kitNameByUrl(url)
+    # except Exception as e:
+    #     pass
     raise InvalidURL(url)
 
 
@@ -428,9 +489,9 @@ class Row(sqlmodel.SQLModel):
         parentId = f"{parent.guid()}/" if parent is not None else ""
         return parentId + localId
 
-    @property
-    def id(self) -> str:
-        return self.guid()
+    # @property
+    # def id(self) -> str:
+    #     return self.guid()
 
 
 class Skeleton(sqlmodel.SQLModel):
@@ -557,12 +618,13 @@ class Representation(RepresentationBase, table=True):
     @classmethod
     def specific(
         cls: "Representation",
-        session: sqlalchemy.orm.Session,
-        kitName: str,
+        kitUrl: str,
         typeName: str,
         typeVariant: str,
         representationUrl: str,
     ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
         return (
             session.query(Representation, Type, Kit)
             .filter(
@@ -577,11 +639,12 @@ class Representation(RepresentationBase, table=True):
     @classmethod
     def all(
         cls: "Representation",
-        session: sqlalchemy.orm.Session,
-        kitName: str,
+        kitUrl: str,
         typeName: str,
         typeVariant: str,
     ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
         return (
             session.query(Representation, Type, Kit)
             .filter(
@@ -1171,6 +1234,46 @@ class Port(PortBase, table=True):
             raise NoTypeAssigned()
         return self.type
 
+    @classmethod
+    def all(
+        cls: "Port",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
+        return (
+            session.query(Port, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+            )
+            .all()
+        )
+
+    @classmethod
+    def specific(
+        cls: "Port",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+        portId: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
+        return (
+            session.query(Port, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+                Port.id_ == portId,
+            )
+            .one_or_none()
+        )
+
 
 class PortSkeleton(PortBase):
     class Config:
@@ -1247,6 +1350,46 @@ class Quality(QualityBase, table=True):
             raise NoTypeAssigned()
         return self.type
 
+    @classmethod
+    def all(
+        cls: "Quality",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
+        return (
+            session.query(Quality, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+            )
+            .all()
+        )
+
+    @classmethod
+    def specific(
+        cls: "Quality",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+        qualityName: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
+        return (
+            session.query(Quality, Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+                Quality.name == qualityName,
+            )
+            .one_or_none()
+        )
+
 
 class QualitySkeleton(QualityBase):
     class Config:
@@ -1303,17 +1446,41 @@ class Type(TypeBase, Row, table=True):
         return self.kit
 
     @classmethod
-    def all(cls, session: sqlalchemy.orm.Session) -> list["Type"]:
-        return session.query(cls).all()
+    def all(
+        cls: "Type",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
+        return (
+            session.query(Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+            )
+            .all()
+        )
 
     @classmethod
     def specific(
-        cls, session: sqlalchemy.orm.Session, name: str, variant: str = ""
-    ) -> "Type":
+        cls: "Type",
+        kitUrl: str,
+        typeName: str,
+        typeVariant: str,
+    ):
+        session = sessionByUrl(kitUrl)
+        kitName = kitNameByUrl(kitUrl)
         return (
-            session.query(cls)
-            .filter(cls.name == name, cls.variant == variant)
-            .one.or_none()
+            session.query(Type, Kit)
+            .filter(
+                Kit.name == kitName,
+                Type.name == typeName,
+                Type.variant == typeVariant,
+            )
+            .one_or_none()
         )
 
 
@@ -1709,6 +1876,21 @@ class Kit(KitBase, Row, table=True):
 
     def guid(self) -> str:
         return encodeString(self.url)
+
+    @classmethod
+    def specific(
+        cls: "Kit",
+        url: str,
+    ):
+        session = sessionByUrl(url)
+        name = kitNameByUrl(url)
+        return session.query(Kit).filter(Kit.name == name).one_or_none()
+
+    @classmethod
+    def all(
+        cls: "Kit",
+    ):
+        raise NotImplementedError()
 
 
 class KitSkeleton(KitBase):

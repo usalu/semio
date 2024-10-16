@@ -1,5 +1,14 @@
 type Query {
+  node(
+    """The ID of the object"""
+    id: ID!
+  ): Node
   kit(url: String!): Kit
+}
+
+interface Node {
+  """The ID of the object"""
+  id: ID!
 }
 
 type Kit implements Node {
@@ -12,11 +21,6 @@ type Kit implements Node {
   homepage: String!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
 
-  """The ID of the object"""
-  id: ID!
-}
-
-interface Node {
   """The ID of the object"""
   id: ID!
 }

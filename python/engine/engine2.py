@@ -142,7 +142,10 @@ class RowNode(graphene_sqlalchemy.SQLAlchemyObjectType):
             setattr(cls, name, GRAPHQLTYPES[prop_return_type])
             setattr(cls, f"resolve_{name}", make_resolver(name))
 
-        setattr(cls, "resolve_id", make_resolver("guid"))
+        def resolver_guid(self, info):
+            return self.guid()
+
+        setattr(cls, "resolve_id", resolver_guid)
 
         super().__init_subclass_with_meta__(model=model, **options)
 
@@ -358,7 +361,7 @@ class KitInput(graphene_pydantic.PydanticInputObjectType):
 
 
 class Query(graphene.ObjectType):
-    # node = NodeNode.Field()
+    node = NodeNode.Field()
     kit = graphene.Field(KitNode, url=graphene.String(required=True))
     # kit = graphene_sqlalchemy.SQLAlchemyConnectionField(KitNode.connection)
     # kits = graphene.relay.ConnectionField(KitConnection)
@@ -376,7 +379,7 @@ def start_engine(debug: bool = False):
     rest = fastapi.FastAPI()
 
     @rest.get("/")
-    async def kits(kitUrl) -> semio.KitSkeleton:
+    async def kits() -> semio.KitSkeleton:
         return semio.Kits.all()
 
     @rest.get("/{kitUrl}")
