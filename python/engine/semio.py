@@ -634,6 +634,7 @@ class Representation(RepresentationBase, table=True):
                 Representation.url == representationUrl,
             )
             .one_or_none()
+            .Representation
         )
 
     @classmethod
@@ -653,6 +654,7 @@ class Representation(RepresentationBase, table=True):
                 Type.variant == typeVariant,
             )
             .all()
+            .Representation
         )
 
 

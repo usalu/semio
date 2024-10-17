@@ -395,7 +395,9 @@ def start_engine(debug: bool = False):
         return semio.Type.specific(kitUrl, typeId)
 
     @rest.get("/{kitUrl}/types/{typeId}/representations")
-    async def representations(kitUrl, typeId) -> semio.TypeSkeleton:
+    async def representations(
+        kitUrl, typeId, request: fastapi.Request
+    ) -> semio.TypeSkeleton:
         return semio.Representation.all(kitUrl, typeId)
 
     @rest.get("/{kitUrl}/types/{typeId}/representations/{representationId}")
@@ -417,6 +419,8 @@ def start_engine(debug: bool = False):
             os.remove(sqliteSchemaPath)
         metadata_engine = sqlalchemy.create_engine("sqlite:///debug/semio.db")
         sqlmodel.SQLModel.metadata.create_all(metadata_engine)
+        if not os.path.exists("debug"):
+            os.makedirs("debug")
         extract_schema("debug/semio.db", "../../sqlite/schema.sql")
 
     engine = starlette.applications.Starlette()
