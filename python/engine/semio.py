@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # semio.py
 # Copyright (C) 2024 Ueli Saluz
 
@@ -174,7 +172,14 @@ class InvalidBackend(SemioException):
 
 class InvalidGuid(SemioException):
     """🆔 The guid is not valid. A guid looks like this:
-    URL/kits/SLUGGED_KIT_LOCAL_ID}/types/SLUGGED_TYPE_LOCAL_ID/..."""
+    ENCODED_KIT_URL/types/ENCODED_TYPE_NAME,ENCODED_TYPE_VARIANT/..."""
+
+    pass
+
+
+class InvalidQuery(InvalidGuid):
+    """🔍 The query is not valid. A query looks like this:
+    ENCODED_KIT_URL/types/ENCODED_TYPE_NAME,ENCODED_TYPE_VARIANT/..."""
 
     pass
 
@@ -186,26 +191,28 @@ def encodeString(value: str) -> str:
 
 
 def decodeString(value: str) -> str:
+    value += "=" * (-len(value) % 4)
     decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
     decoded_str = decoded_bytes.decode("utf-8")
     return decoded_str
 
 
-guidGrammar = r"""
-    entity: ENCODED_STRING ("/" (type | representation | port | locator))?
-    type: "types" "/" ENCODED_STRING "," ENCODED_STRING?
-    representation: type "/representations/" ENCODED_STRING
-    port: type "/ports/" ENCODED_STRING
-    locator: type "/locators/" ENCODED_STRING
-    ENCODED_STRING: /[a-zA-ZZ0-9_=-]+/
+queryGrammar = r"""
+    query: (ENCODED_STRING)? ("/" (type | representation | port))?
+    type: "types" ("/" ENCODED_STRING "," ENCODED_STRING?)?
+    representation: type "/representations" ("/" ENCODED_STRING)?
+    port: type "/ports" ("/" ENCODED_STRING)?
+    ENCODED_STRING: /[a-zA-ZZ0-9_-]+={0,2}/
 """
-guidParser = lark.Lark(guidGrammar, start="entity")
+queryParser = lark.Lark(queryGrammar, start="query")
 
 
 class QueryBuilder(lark.Transformer):
     # E.g:
     # a2l0LnNxbGl0ZTM=
+    # a2l0LnNxbGl0ZTM=/types
     # a2l0LnNxbGl0ZTM=/types/Q2Fwc3VsZQ==,
+    # a2l0LnNxbGl0ZTM=/types/Q2Fwc3VsZQ==,/representations
     # a2l0LnNxbGl0ZTM=/types/Q2Fwc3VsZQ==,/representations/aHR0cHM6Ly9hcHAuc3BlY2tsZS5zeXN0ZW1zL3Byb2plY3RzL2U3ZGUxYTJmOGYvbW9kZWxzL2IzYzIwZGI5NzA=
     # kit.sqlite3/types/Capsule,/representations/https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
     # url: kit.sqlite3
@@ -214,31 +221,53 @@ class QueryBuilder(lark.Transformer):
     # typeVariant: ""
     # representationUrl: https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
 
-    def entity(self, children):
+    def query(self, children):
+        if len(children) == 0:
+            return {"kind": "kits"}
         kitUrl = decodeString(children[0].value)
         if len(children) == 1:
             return {"kind": "kit", "kitUrl": kitUrl}
-        entity = children[1]
-        entity["kitUrl"] = kitUrl
-        return entity
+        query = children[1]
+        query["kitUrl"] = kitUrl
+        return query
 
     def type(self, children):
+        if len(children) == 0:
+            return {"kind": "types"}
         return {
             "kind": "type",
             "typeName": decodeString(children[0].value),
-            "typeVariant": decodeString(
-                children[1].value if len(children) == 2 else ""
+            "typeVariant": (
+                decodeString(children[1].value) if len(children) == 2 else ""
             ),
         }
 
     def representation(self, children):
         type = children[0]
-        return {
-            "kind": "representation",
+        query = {
             "typeName": type["typeName"],
             "typeVariant": type["typeVariant"],
-            "representationUrl": decodeString(children[1].value),
         }
+        if len(children) == 1:
+            query["kind"] = "representations"
+        else:
+            query["kind"] = "representation"
+            query["representationUrl"] = decodeString(children[1].value)
+
+        return query
+
+    def port(self, children):
+        type = children[0]
+        query = {
+            "typeName": type["typeName"],
+            "typeVariant": type["typeVariant"],
+        }
+        if len(children) == 1:
+            query["kind"] = "ports"
+        else:
+            query["kind"] = "port"
+            query["portUrl"] = decodeString(children[1].value)
+        return query
 
 
 class StoreKind(enum.Enum):
@@ -253,8 +282,8 @@ class Store(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def entityByGuid(cls: "Store", guid: str) -> typing.Any:
-        """🔍 Get an entity from a guid."""
+    def query(cls: "Store", query: str) -> typing.Any:
+        """🔍 Query the store. Outputs are either entities or collections of entities."""
         pass
 
 
@@ -273,22 +302,32 @@ class DatabaseStore(Store, abc.ABC):
         pass
 
     @classmethod
-    def entityByGuid(cls: "DatabaseStore", guid: str) -> typing.Any:
-        queryTree = guidParser.parse(guid)
+    def query(cls: "DatabaseStore", query: str) -> typing.Any:
+        queryTree = queryParser.parse(query)
         query = QueryBuilder().transform(queryTree)
         kitUrl = query["kitUrl"]
         kind = query["kind"]
         match kind:
             case "kit":
                 return Kit.specific(kitUrl)
+            case "kits":
+                return Kit.all()
             case "type":
                 return Type.specific(kitUrl, query["typeName"], query["typeVariant"])
+            case "types":
+                return Type.all(kitUrl)
             case "representation":
                 return Representation.specific(
                     kitUrl,
                     query["typeName"],
                     query["typeVariant"],
                     query["representationUrl"],
+                )
+            case "representations":
+                return Representation.all(
+                    kitUrl,
+                    query["typeName"],
+                    query["typeVariant"],
                 )
 
             case _:
@@ -369,11 +408,11 @@ class PostgresStore(DatabaseStore):
 #         pass
 
 #     @classmethod
-#     def entityByGuid(cls, url: str, body={}) -> "Row":
+#     def query(cls, url: str, body={}) -> "Row":
 #         # TODO: Implement
 #         # fetch kit
 #         # cache kit locally under encoded url
-#         # run SQLiteStore.entityByGuid
+#         # run SQLiteStore.query
 #         raise NotImplementedError()
 
 
@@ -391,25 +430,24 @@ class PostgresStore(DatabaseStore):
 #         raise NotImplementedError()
 
 
-def entityByGuid(url: str) -> typing.Any:
-    """🔍 Get an entity from a url."""
+def query(query: str) -> typing.Any:
     try:
-        return SqliteStore.entityByGuid(url)
+        return SqliteStore.query(query)
     except Exception as e:
         pass
     try:
-        return PostgresStore.entityByGuid(url)
+        return PostgresStore.query(query)
     except Exception as e:
         pass
     # try:
-    #     return RestStore.entityByGuid(url)
+    #     return RestStore.query(query)
     # except Exception as e:
     #     pass
     # try:
-    #     return GraphqlStore.entityByGuid(url)
+    #     return GraphqlStore.query(query)
     # except Exception as e:
     #     pass
-    raise InvalidURL(url)
+    raise InvalidQuery(query)
 
 
 def sessionByUrl(url: str) -> sqlalchemy.orm.Session:
@@ -643,19 +681,19 @@ class Representation(RepresentationBase, table=True):
         kitUrl: str,
         typeName: str,
         typeVariant: str,
-    ):
+    ) -> list["Representation"]:
         session = sessionByUrl(kitUrl)
         kitName = kitNameByUrl(kitUrl)
-        return (
-            session.query(Representation, Type, Kit)
+        return [
+            r.Representation
+            for r in session.query(Representation, Type, Kit)
             .filter(
                 Kit.name == kitName,
                 Type.name == typeName,
                 Type.variant == typeVariant,
             )
             .all()
-            .Representation
-        )
+        ]
 
 
 class RepresentationSkeleton(RepresentationBase):
@@ -1242,18 +1280,19 @@ class Port(PortBase, table=True):
         kitUrl: str,
         typeName: str,
         typeVariant: str,
-    ):
+    ) -> list["Port"]:
         session = sessionByUrl(kitUrl)
         kitName = kitNameByUrl(kitUrl)
-        return (
-            session.query(Port, Type, Kit)
+        return [
+            p.Port
+            for p in session.query(Port, Type, Kit)
             .filter(
                 Kit.name == kitName,
                 Type.name == typeName,
                 Type.variant == typeVariant,
             )
             .all()
-        )
+        ]
 
     @classmethod
     def specific(
@@ -1358,18 +1397,19 @@ class Quality(QualityBase, table=True):
         kitUrl: str,
         typeName: str,
         typeVariant: str,
-    ):
+    ) -> list["Quality"]:
         session = sessionByUrl(kitUrl)
         kitName = kitNameByUrl(kitUrl)
-        return (
-            session.query(Quality, Type, Kit)
+        return [
+            q.Quality
+            for q in session.query(Quality, Type, Kit)
             .filter(
                 Kit.name == kitName,
                 Type.name == typeName,
                 Type.variant == typeVariant,
             )
             .all()
-        )
+        ]
 
     @classmethod
     def specific(
@@ -1453,18 +1493,19 @@ class Type(TypeBase, Row, table=True):
         kitUrl: str,
         typeName: str,
         typeVariant: str,
-    ):
+    ) -> list["Type"]:
         session = sessionByUrl(kitUrl)
         kitName = kitNameByUrl(kitUrl)
-        return (
-            session.query(Type, Kit)
+        return [
+            t.Type
+            for t in session.query(Type, Kit)
             .filter(
                 Kit.name == kitName,
                 Type.name == typeName,
                 Type.variant == typeVariant,
             )
             .all()
-        )
+        ]
 
     @classmethod
     def specific(
@@ -1891,7 +1932,7 @@ class Kit(KitBase, Row, table=True):
     @classmethod
     def all(
         cls: "Kit",
-    ):
+    ) -> list["Kit"]:
         raise NotImplementedError()
 
 
@@ -1904,42 +1945,3 @@ class KitSkeleton(KitBase):
 
 
 ENTITIES = [Kit, Type, Port, Quality, Representation]
-
-
-def createDbAndTables():
-    path = pathlib.Path("kit.sqlite3")
-    try:
-        os.remove(path)
-    except:
-        pass
-    r1 = Representation(
-        url="https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970"
-    )
-    # print(r1.guid())
-    r2 = Representation(
-        url="https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
-        lod="1to500",
-    )
-    r2.tags = ["tag1", "tag2"]
-    r2.tags = ["tag3", "tag4", "tag5"]
-    r3 = Representation(
-        id="3",
-        url="https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
-        lod="1to200",
-    )
-    t1 = Type(name="Capsule")
-    t1.representations = [r1, r2, r3]
-    k1 = Kit(name="Metabolism", url=str(path), types=[t1])
-    print(r1.guid())
-    engine = sqlalchemy.create_engine("sqlite:///" + str(path))
-    sqlmodel.SQLModel.metadata.create_all(engine)
-    with sqlalchemy.orm.Session(engine) as session:
-        session.add(k1)
-        [r1n, r2n, r3n] = t1.representations
-        r2n.tags = ["volume"]
-        session.commit()
-        pass
-    pass
-
-
-createDbAndTables()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# semio engine.
+# semio-engine.py
 # Copyright (C) 2024 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ import argparse
 import os
 import logging  # for uvicorn in pyinstaller
 import multiprocessing
+import pathlib
 import sqlite3
 import sqlmodel
 import sqlalchemy
@@ -378,33 +379,51 @@ def start_engine(debug: bool = False):
 
     rest = fastapi.FastAPI()
 
-    @rest.get("/")
-    async def kits() -> semio.KitSkeleton:
-        return semio.Kits.all()
+    @rest.get("/kits")
+    async def kits(request: fastapi.Request) -> list[semio.KitSkeleton]:
+        return semio.query("")
 
-    @rest.get("/{kitUrl}")
-    async def kit(kitUrl) -> semio.KitSkeleton:
-        return semio.Kit.specific(kitUrl)
+    @rest.get("/kits/{encodedKitUrl}")
+    async def kit(encodedKitUrl, request: fastapi.Request) -> semio.KitSkeleton:
+        return semio.query(request.url.path.removeprefix("/kits/"))
 
-    @rest.get("/{kitUrl}/types")
-    async def type(kitUrl) -> semio.TypeSkeleton:
-        return semio.Type.all(kitUrl)
+    @rest.get("/kits/{encodedKitUrl}/types")
+    async def types(
+        encodedKitUrl: str, request: fastapi.Request
+    ) -> list[semio.TypeSkeleton]:
+        return semio.query(request.url.path.removeprefix("/kits/"))
 
-    @rest.get("/{kitUrl}/types/{typeId}")
-    async def type(kitUrl, typeId) -> semio.TypeSkeleton:
-        return semio.Type.specific(kitUrl, typeId)
-
-    @rest.get("/{kitUrl}/types/{typeId}/representations")
-    async def representations(
-        kitUrl, typeId, request: fastapi.Request
+    @rest.get("/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}")
+    async def type(
+        encodedKitUrl: str,
+        encodedTypeName: str,
+        encodedTypeVariant: str,
+        request: fastapi.Request,
     ) -> semio.TypeSkeleton:
-        return semio.Representation.all(kitUrl, typeId)
+        return semio.query(request.url.path.removeprefix("/kits/"))
 
-    @rest.get("/{kitUrl}/types/{typeId}/representations/{representationId}")
+    @rest.get(
+        "/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}/representations"
+    )
+    async def representations(
+        encodedKitUrl: str,
+        encodedTypeName: str,
+        encodedTypeVariant: str,
+        request: fastapi.Request,
+    ) -> list[semio.RepresentationSkeleton]:
+        return semio.query(request.url.path.removeprefix("/kits/"))
+
+    @rest.get(
+        "/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}/representations/{encodedRepresentationUrl}"
+    )
     async def representation(
-        kitUrl, typeId, representationId
+        encodedKitUrl: str,
+        encodedTypeName: str,
+        encodedTypeVariant: str,
+        encodedRepresentationUrl: str,
+        request: fastapi.Request,
     ) -> semio.RepresentationSkeleton:
-        return semio.Representation.specific(kitUrl, typeId, representationId)
+        return semio.query(request.url.path.removeprefix("/kits/"))
 
     schema = graphene.Schema(
         query=Query,
@@ -412,6 +431,44 @@ def start_engine(debug: bool = False):
     )
 
     if debug:
+
+        def createDbAndTables():
+            path = pathlib.Path("kit.sqlite3")
+            try:
+                os.remove(path)
+            except:
+                pass
+            r1 = semio.Representation(
+                url="https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970"
+            )
+            # print(r1.guid())
+            r2 = semio.Representation(
+                url="https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+                lod="1to500",
+            )
+            r2.tags = ["tag1", "tag2"]
+            r2.tags = ["tag3", "tag4", "tag5"]
+            r3 = semio.Representation(
+                id="3",
+                url="https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+                lod="1to200",
+            )
+            t1 = semio.Type(name="Capsule")
+            t1.representations = [r1, r2, r3]
+            k1 = semio.Kit(name="Metabolism", url=str(path), types=[t1])
+            print(r1.guid())
+            engine = sqlalchemy.create_engine("sqlite:///" + str(path))
+            sqlmodel.SQLModel.metadata.create_all(engine)
+            with sqlalchemy.orm.Session(engine) as session:
+                session.add(k1)
+                [r1n, r2n, r3n] = t1.representations
+                r2n.tags = ["volume"]
+                session.commit()
+                pass
+            pass
+
+        createDbAndTables()
+
         with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
             f.write(str(schema))
         sqliteSchemaPath = "../../sqlite/schema.sql"
@@ -430,7 +487,7 @@ def start_engine(debug: bool = False):
             schema, on_get=starlette_graphene3.make_graphiql_handler()
         ),
     )
-    engine.mount("/api", rest)
+    engine.mount("/", rest)
 
     uvicorn.run(
         engine,

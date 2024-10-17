@@ -123,14 +123,14 @@ then you should use semio ✅
 
 # 🚀 Getting started
 
-> Despite of the code semio being compatible for Windows, Mac and Linux, the user interfaces are currently compiled for Windows only.
+> The code of semio is compatible with Windows, Mac and Linux, but currently compiled for Windows only.
 
 semio has two user-interfaces:
 
 - Grasshopper 🦗
 - sketchpad ✏️
 
-> The heart of semio is the `engine.exe` which exposes a GraphQL API. If you are developer, then you should visit `http://localhost:5052/graphql/`.
+> The heart of semio is the `semio-engine` executable which exposes an API. If you are developer, then you should visit `http://localhost:5052/docs` (REST) or `http://localhost:5052/graphql` (GraphQL).
 
 ## ⬇️ Installation
 
