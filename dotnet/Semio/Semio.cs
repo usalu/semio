@@ -12,6 +12,20 @@ using Semio;
 // TODO: Add logging mechanism to all API calls if they fail.
 // TODO: Add a more detailed message system when a model is invalid.
 
+#region Constants
+
+public static class Constants
+{
+    public const int NameLengthLimit = 64;
+    public const int IdLengthLimit = 128;
+    public const int UrlLengthLimit = 2048;
+    public const int DescriptionLengthLimit = 4096;
+    public const string Release = "r24.10-3";
+    public const int EnginePort = 24103;
+}
+
+#endregion
+
 #region Copilot
 //type Query
 //{
@@ -1855,7 +1869,7 @@ public class Api : ICloneable
 {
     public Api()
     {
-        Endpoint = "http://127.0.0.1:5052/graphql";
+        Endpoint = $"http://127.0.0.1:{Constants.EnginePort}/graphql";
         Token = "";
         Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
     }

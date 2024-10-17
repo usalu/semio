@@ -3136,7 +3136,7 @@ public abstract class EngineComponent : SemioComponent
             var processes = Process.GetProcessesByName("semio-engine");
             IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
             IPEndPoint[] tcpListeners = ipGlobalProperties.GetActiveTcpListeners();
-            bool isSemioPortInUse = tcpListeners.Any(endpoint => endpoint.Port == 5052);
+            bool isSemioPortInUse = tcpListeners.Any(endpoint => endpoint.Port == Constants.EnginePort);
             if (processes.Length == 0 || !isSemioPortInUse)
             {
                 var executableName = "semio-engine" +
@@ -3166,7 +3166,7 @@ public abstract class EngineComponent : SemioComponent
         }
         catch (Exception e)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "semio-engine could not be started automatically.\n" + e.Message);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "semio-engine could not be started automatically.\n" + e.Message);
         }
 
     }

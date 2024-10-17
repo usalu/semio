@@ -108,13 +108,14 @@ from starlette_graphene3 import GraphQLApp, make_graphiql_handler
 
 logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
-RELEASE= "r24.09-1"
+RELEASE = "r24.10-3"
+ENGINE = "v3.0.0"
 NAME_LENGTH_MAX = 100
 URL_LENGTH_MAX = 1000
 KIT_FOLDERNAME = ".semio"
 KIT_FILENAME = "kit.sqlite3"
 HOST = "127.0.0.1"
-PORT = 5052
+PORT = 24103
 TOLERANCE = 1e-5
 SIGNIFICANT_DIGITS = 5
 
@@ -241,12 +242,16 @@ class Artifact(Entity):
 class Base(DeclarativeBase):
     pass
 
+
 class Semio(Base):
     """ℹ️ Metadata about the semio database."""
+
     __tablename__ = "semio"
 
     release: Mapped[str] = mapped_column(String(NAME_LENGTH_MAX), primary_key=True)
-    createdAt: Mapped[datetime] = mapped_column(DateTime(), default=datetime.now(), nullable=False)
+    createdAt: Mapped[datetime] = mapped_column(
+        DateTime(), default=datetime.now(), nullable=False
+    )
 
 
 class Tag(Base):
@@ -303,6 +308,7 @@ class Tag(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+
 def parseMimeFromUrl(url: str) -> str:
     """🔍 Parse the mime type from the URL.
 
@@ -316,6 +322,7 @@ def parseMimeFromUrl(url: str) -> str:
         return MIMES[Path(url).suffix]
     except KeyError:
         return "application/octet-stream"
+
 
 class Representation(Base):
     """💾 A representation is a link to a file that describes a type for a certain level of detail and tags."""
@@ -448,10 +455,12 @@ class Locator(Base):
     # def relatedTo(self) -> List[Entity]:
     #     return [self.parent]
 
+
 def prettyNumber(number: float) -> str:
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
+
 
 class ScreenPoint(BaseModel):
     """📺 A 2d-point (xy) of integers in screen plane."""
@@ -488,10 +497,14 @@ class Point(BaseModel):
         super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
-    
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
+
     def __repr__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
 
     def __len__(self):
         return 3
@@ -515,10 +528,10 @@ class Point(BaseModel):
             and abs(self.y - other.y) < tol
             and abs(self.z - other.z) < tol
         )
-    
+
     def transform(self, transform: "Transform") -> "Point":
         return Transform.transformPoint(transform, self)
-    
+
     def toVector(self) -> "Vector":
         return Vector(self.x, self.y, self.z)
 
@@ -534,10 +547,14 @@ class Vector(BaseModel):
         super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
-    
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
+
     def __repr__(self) -> str:
-        return f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        return (
+            f"[{prettyNumber(self.x)}, {prettyNumber(self.y)}, {prettyNumber(self.z)}]"
+        )
 
     def __len__(self):
         return 3
@@ -554,17 +571,17 @@ class Vector(BaseModel):
 
     def __iter__(self):
         return iter((self.x, self.y, self.z))
-    
+
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
     @property
     def length(self) -> float:
         return (self.x**2 + self.y**2 + self.z**2) ** 0.5
-    
+
     def revert(self) -> "Vector":
         return Vector(-self.x, -self.y, -self.z)
-    
+
     def amplify(self, factor: float) -> "Vector":
         return Vector(self.x * factor, self.y * factor, self.z * factor)
 
@@ -587,10 +604,10 @@ class Vector(BaseModel):
 
     def transform(self, transform: "Transform") -> "Vector":
         return Transform.transformVector(transform, self)
-    
+
     def toPoint(self) -> "Point":
         return Point(self.x, self.y, self.z)
-    
+
     def toTransform(self) -> "Transform":
         return Transform.fromTranslation(self)
 
@@ -702,7 +719,7 @@ class Transform(ndarray):
     def __str__(self) -> str:
         rounded_self = self.round()
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
-    
+
     def __repr__(self) -> str:
         rounded_self = self.round()
         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
@@ -715,19 +732,15 @@ class Transform(ndarray):
         if axisAngle[3] == 0:
             return None
         return Rotation(
-            axis=Vector(
-                float(axisAngle[0]), 
-                float(axisAngle[1]), 
-                float(axisAngle[2])
-            ), 
-            angle=float(degrees(axisAngle[3]))
+            axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
+            angle=float(degrees(axisAngle[3])),
         )
-    
+
     @property
     def translation(self) -> Vector:
         """➡️ The translation part of the transform."""
         return Vector(*self[:3, 3])
-    
+
     # for pydantic
     def dict(self) -> Dict[str, Union[Rotation, Vector]]:
         return {
@@ -793,7 +806,10 @@ class Transform(ndarray):
     @staticmethod
     def fromRotation(rotation: Rotation) -> "Transform":
         return Transform(
-            transform_from(matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))), Vector())
+            transform_from(
+                matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
+                Vector(),
+            )
         )
 
     @staticmethod
@@ -943,9 +959,7 @@ class Quality(Base):
     designId: Mapped[Optional[int]] = mapped_column(
         ForeignKey("design.id"), nullable=True
     )
-    design: Mapped["Design"] = relationship(
-        "Design", back_populates="qualities"
-    )
+    design: Mapped["Design"] = relationship("Design", back_populates="qualities")
 
     __table_args__ = (
         CheckConstraint(
@@ -1089,6 +1103,7 @@ def receive_after_update(mapper, connection, target):
 def receive_after_update(mapper, connection, target):
     target.type.lastUpdateAt = datetime.now()
 
+
 class TypeId(BaseModel):
     """🧩 A type is identified by a name and variant (empty=default)."""
 
@@ -1217,7 +1232,7 @@ class Piece(Base):
             "root": self.root if self.root else None,
             "diagram": self.diagram,
         }
-    
+
     # @property
     # def parent(self) -> Entity:
     #     return self.design
@@ -1298,9 +1313,7 @@ class Connection(Base):
         CheckConstraint("rotation >= 0 AND rotation < 360", name="normalisedRotation"),
     )
     designId: Mapped[int] = mapped_column(ForeignKey("design.id"))
-    design: Mapped["Design"] = relationship(
-        "Design", back_populates="connections"
-    )
+    design: Mapped["Design"] = relationship("Design", back_populates="connections")
 
     __table_args__ = (
         CheckConstraint(
@@ -1339,7 +1352,7 @@ class Connection(Base):
                 ),
             )
         )
-    
+
     @property
     def connecting(self) -> Side:
         return Side(
@@ -1350,7 +1363,6 @@ class Connection(Base):
                 ),
             )
         )
-
 
     # @property
     # def parent(self) -> Entity:
@@ -1431,7 +1443,9 @@ class Design(Base):
         return f"Design(id={str(self.id)}, kitId={str(self.kitId)})"
 
     def client__str__(self) -> str:
-        return f"Design(name={self.name}, qualities={client__str__List(self.qualities)})"
+        return (
+            f"Design(name={self.name}, qualities={client__str__List(self.qualities)})"
+        )
 
     # @property
     # def parent(self) -> Entity:
@@ -1481,11 +1495,11 @@ class Hierarchy(BaseModel):
     transform: Transform
     children: Optional[List["Hierarchy"]]
 
-    @field_serializer('piece')
+    @field_serializer("piece")
     def serialize_piece(self, piece: Piece, _info):
         return piece.dict()
-    
-    @field_serializer('transform')
+
+    @field_serializer("transform")
     def serialize_transform(self, transform: Transform, _info):
         return transform.dict()
 
@@ -1609,8 +1623,7 @@ def getLocalSession(directory: str) -> Session:
     sqlitePath = directory_path.joinpath(KIT_FOLDERNAME).joinpath(KIT_FILENAME)
     exists = sqlitePath.exists()
     engine = create_engine(
-        "sqlite:///"
-        + str(sqlitePath),
+        "sqlite:///" + str(sqlitePath),
         # echo=True,
     )
     if not exists:
@@ -2052,12 +2065,14 @@ class TypeIdInput(PydanticInputObjectType):
     class Meta:
         model = TypeId
 
+
 class PieceRootInput(PydanticInputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
     """🌱 The root of a piece is a plane."""
 
     class Meta:
         model = PieceRoot
+
 
 class PieceDiagramInput(PydanticInputObjectType):
     # Duplicate docstring because not automatically generated by PydanticInputObjectType
@@ -2172,6 +2187,7 @@ ConnectionLike = Connection | ConnectionNode | ConnectionInput
 DesignLike = Design | DesignNode | DesignInput
 KitLike = Kit | KitNode | KitInput
 
+
 class NotFound(SpecificationError):
     def __init__(self, id, pythonType) -> None:
         self.id = id
@@ -2239,7 +2255,7 @@ class PieceNotFound(NotFound):
 
 class ConnectionNotFound(NotFound):
     def __init__(self, design, connected, connecting) -> None:
-        super().__init__((connected,connecting), Connection)
+        super().__init__((connected, connecting), Connection)
         self.design = design
         self.connected = connected
         self.connecting = connecting
@@ -2249,13 +2265,14 @@ class ConnectionNotFound(NotFound):
 
 
 class DesignNotFound(NotFound):
-    def __init__(self, name, variant = "") -> None:
+    def __init__(self, name, variant="") -> None:
         super().__init__(name, Design)
         self.name = name
         self.variant = variant
 
     def __str__(self):
         return f"Design({(self.name + ":" + self.variant) if self.variant!="" else self.name}) not found."
+
 
 class KitNotFound(NotFound):
     def __init__(self, name) -> None:
@@ -2284,7 +2301,9 @@ class AlreadyExists(SpecificationError):
 
 
 class RepresentationAlreadyExists(AlreadyExists):
-    def __init__(self, newRepresentation : RepresentationLike, oldRepresentation) -> None:
+    def __init__(
+        self, newRepresentation: RepresentationLike, oldRepresentation
+    ) -> None:
         super().__init__(newRepresentation, oldRepresentation)
 
     def __str__(self):
@@ -2335,9 +2354,7 @@ class DesignAlreadyExists(DocumentAlreadyExists):
         self.design = design
 
     def __str__(self):
-        return (
-            f"Design ({self.design.name}) already exists: {str(self.design)}"
-        )
+        return f"Design ({self.design.name}) already exists: {str(self.design)}"
 
 
 def getMainKit(session: Session) -> Kit:
@@ -2372,9 +2389,7 @@ def getTypeByNameAndVariant(session: Session, name: str, variant: str) -> Type:
     return type
 
 
-def getDesignByNameAndVariant(
-    session: Session, name: str, variant: str = ""
-) -> Design:
+def getDesignByNameAndVariant(session: Session, name: str, variant: str = "") -> Design:
     try:
         design = (
             session.query(Design).filter_by(name=name, variant=variant).one_or_none()
@@ -2432,7 +2447,7 @@ def addRepresentationInputToSession(
         mime = parseMimeFromUrl(representationInput.url)
     try:
         representation = getRepresentationByUrl(session, type, representationInput.url)
-        raise RepresentationAlreadyExists(representationInput,representation)
+        raise RepresentationAlreadyExists(representationInput, representation)
     except RepresentationNotFound:
         pass
     representation = Representation(
@@ -2657,7 +2672,9 @@ def addConnectionInputToSession(
         offset = 0.0
     try:
         rotation = (
-            connectionInput.rotation % 360 if connectionInput.rotation is not None else 0.0
+            connectionInput.rotation % 360
+            if connectionInput.rotation is not None
+            else 0.0
         )
         if rotation < 0.0:
             rotation = rotation + 360.0
@@ -2677,9 +2694,7 @@ def addConnectionInputToSession(
     return connection
 
 
-def addDesignInputToSession(
-    session: Session, kit: Kit, designInput: DesignInput
-):
+def addDesignInputToSession(session: Session, kit: Kit, designInput: DesignInput):
     try:
         description = (
             designInput.description if designInput.description is not None else ""
@@ -2695,9 +2710,7 @@ def addDesignInputToSession(
     except AttributeError:
         variant = ""
     try:
-        existingDesign = getDesignByNameAndVariant(
-            session, designInput.name, variant
-        )
+        existingDesign = getDesignByNameAndVariant(session, designInput.name, variant)
         raise DesignAlreadyExists(existingDesign)
     except DesignNotFound:
         pass
@@ -2812,9 +2825,19 @@ def designToHierarchies(design: Design) -> List[Hierarchy]:
         for parent, child in bfs_tree(component, source=root).edges():
             connection = component[parent][child]["connection"]
             connectedIsParent = connection.connected.piece.id == parent
-            parentPort = connection.connected.piece.type.port if connectedIsParent else connection.connecting.piece.type.port
-            childPort = connection.connecting.piece.type.port if connectedIsParent else connection.connected.piece.type.port
-            orient = Transform.fromDirections(childPort.direction.revert(), parentPort.direction)
+            parentPort = (
+                connection.connected.piece.type.port
+                if connectedIsParent
+                else connection.connecting.piece.type.port
+            )
+            childPort = (
+                connection.connecting.piece.type.port
+                if connectedIsParent
+                else connection.connected.piece.type.port
+            )
+            orient = Transform.fromDirections(
+                childPort.direction.revert(), parentPort.direction
+            )
             rotation = orient
             if connection.rotation != 0.0:
                 rotate = Transform.fromAngle(parentPort.direction, connection.rotation)
@@ -2857,13 +2880,9 @@ def addObjectsToScene(
         addObjectsToScene(scene, object, child, transformedPlane)
 
 
-def sceneFromDesignInSession(
-    session: Session, designIdInput: DesignIdInput
-) -> "Scene":
+def sceneFromDesignInSession(session: Session, designIdInput: DesignIdInput) -> "Scene":
     try:
-        variant = (
-            designIdInput.variant if designIdInput.variant is not None else ""
-        )
+        variant = designIdInput.variant if designIdInput.variant is not None else ""
     except AttributeError:
         variant = ""
     design = getDesignByNameAndVariant(session, designIdInput.name, variant)

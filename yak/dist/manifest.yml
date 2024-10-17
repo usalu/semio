@@ -1,19 +1,26 @@
 ---
 name: semio
-version: 2.4.0
+version: 3.0.1
 authors:
 - Ueli Saluz
 description: >
-  ✏️Typological, non-linear and ai-boosted designing.
+  ✏️Design kit-of-parts architecture.
 url: https://github.com/usalu/semio
 keywords:
-- procedural_modelling
-- generative_design
-- computer-aided-architectural-design
-- graph-based_design
-- port-based_design
-- design_prototypes
+- kit-of-parts
+- port-based_thinking
 - shape_grammar
+- graph-based_design
+- graph_transformations
+- graph_rewriting
+- design_prototypes
+- design_systems
+- computer-based_design_synthesis
+- generative_design
+- procedural_modelling
+- parametric_design
+- computer_aided_architectural_design
 - building_information_modelling
 - guid:fe587cbf-5f7d-4091-aa6d-d9d30cf80b64
+platform: win
 icon: icon.png
