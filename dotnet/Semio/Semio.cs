@@ -39,6 +39,8 @@ public static class Constants
     public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 2048;
     public const int DescriptionLengthLimit = 4096;
+    public const string Release = "r24.11-1";
+    public const int EnginePort = 24111;
 }
 
 #endregion
@@ -1155,7 +1157,7 @@ public class Api : ICloneable
 {
     public Api()
     {
-        Endpoint = "http://127.0.0.1:5052/graphql";
+        Endpoint = $"http://127.0.0.1:{Constants.EnginePort}/graphql";
         Token = "";
         Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
     }

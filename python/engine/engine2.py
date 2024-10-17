@@ -52,7 +52,7 @@ logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
 
 VERSION = "3.0.0"
 HOST = "127.0.0.1"
-PORT = 5052
+PORT = 24111
 GRAPHQLTYPES = {
     str: graphene.NonNull(graphene.String),
     int: graphene.NonNull(graphene.Int),
