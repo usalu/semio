@@ -1,8 +1,8 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal.svg">
-        <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/kit-horizontal-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/kit-horizontal.svg">
+        <img alt="semio kit" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/kit-horizontal.svg">
     </picture>
     <br/>
     <a><img src="https://img.shields.io/badge/designs-2-red?style=flat-square&color=ff344f" alt="Designs"></a>
@@ -17,7 +17,7 @@
     <a><img src="https://img.shields.io/badge/lods-2-green?style=flat-square&color=00a69d" alt="LoDs"></a>
     <a><img src="https://img.shields.io/badge/tags-1-red?style=flat-square&color=ff344f" alt="Tags"></a>
     <br/>
-    <i>🫀Metametabolistic metabolism</i>
+    <i>🫀Metabolism</i>
 </p>
 <br/>
 
@@ -261,5 +261,5 @@ From here, all user-interfaces can access the data over the GraphQL-API ⚡
 # 📊 Stats
 
 <p align="center">
-    <a href="https://github.com/usalu/semio/blob/main/examples/metabolism/README.md"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio%2Fblob%2Fmain%2Fexamples%2Fmetabolism%2FREADME.md&count_bg=%23FF344F&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visits&edge_flat=false"/></a>
+    <a href="https://github.com/usalu/semio/blob/main/examples/metabolism/README.md"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio%2Fblob%2Fmain%2Fexamples%2Fmetabolism%2FREADME.md&count_bg=%23FF344F&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visits&edge_flat=true"/></a>
 </p>
