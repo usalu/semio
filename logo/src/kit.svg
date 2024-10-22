@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="841.7pt" height="595.2pt" viewBox="0 0 841.68 595.2" xmlns="http://www.w3.org/2000/svg">
+  <defs />
+  <g id="logogram">
+    <g id="logogram::t">
+      <path d="M657.06805,225.55531 L657.06445,334.0964 L685.41095,306.26575 L685.4144,225.55534 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M742.111,194.37567 L602.3802,194.3728 L630.7267,222.71927 L742.111,222.72212 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <g id="logogram::i">
+      <path d="M572.0322,336.10797 L572.0351,196.37663 L543.6886,224.32289 L543.6858,336.10797 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <g id="logogram::k">
+      <path d="M430.29996,336.108 L430.29712,196.37666 L458.6436,224.3229 L458.64642,336.10797 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M461.4753,267.20532 L461.4753,307.29324 L489.38138,335.1993 L509.42538,315.15536 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M461.4753,264.37067 L461.4753,224.28273 L489.38138,196.37663 L509.42538,216.42061 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+  </g>
+  <g id="logo">
+    <g id="logo::e">
+      <path d="M203.52829,293.63303 L260.2212,236.94011 L311.24484,236.94011 L311.24484,293.63303 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M203.52829,407.01886 L260.2212,350.32593 L311.24484,350.32593 L311.24484,407.01886 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <g id="logo::i">
+      <path d="M90.14247,185.91647 L90.136734,403.01578 L146.82965,346.32288 L146.83539,185.91647 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <g id="logo::l">
+      <path d="M373.60703,407.01886 L373.6965,127.4736 L317.00357,184.16652 L316.91412,407.01886 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M90.14247,123.55428 L369.60397,123.54854 L312.91104,180.24147 L90.14247,180.2472 z" stroke="#000000" stroke-width="0.24" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+  </g>
+</svg>
