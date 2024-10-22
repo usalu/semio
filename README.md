@@ -163,3 +163,9 @@ You can download the latest [examples](https://github.com/usalu/semio/releases/d
 
 New platforms wait to be reached, bugs wait to be found, examples wait to be created, documentation waits to be written, ...
 Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues), take a look under the [project site](https://github.com/users/usalu/projects/2) or just write me an [e-mail](semio-community@posteo.org) 👋
+
+# 📊 Stats
+
+<p align="center">
+    <a href="https://github.com/usalu/semio/blob/main/README.md"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio&count_bg=%23FF344F&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visits&edge_flat=false"/></a>
+</p>
