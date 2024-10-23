@@ -6,8 +6,8 @@
    overflow="visible"
    version="1.1"
    id="svg106"
-   sodipodi:docname="logo-horizontal.svg"
-   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="semio-horizontal.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
    inkscape:export-filename="logo.png"
    inkscape:export-xdpi="180.52"
    inkscape:export-ydpi="180.52"
@@ -28,16 +28,18 @@
    inkscape:document-units="pt"
    showgrid="false"
    inkscape:zoom="1.4432414"
-   inkscape:cx="279.57901"
-   inkscape:cy="107.74358"
+   inkscape:cx="381.43307"
+   inkscape:cy="80.374634"
    inkscape:window-width="1920"
    inkscape:window-height="1010"
    inkscape:window-x="-6"
-   inkscape:window-y="1073"
+   inkscape:window-y="1077"
    inkscape:window-maximized="1"
    inkscape:current-layer="layer22"
    showborder="false"
    borderlayer="false" />
+
+
 
 
 
@@ -49,16 +51,7 @@
    id="layer22"
    inkscape:label="background"
    style="display:inline;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
-   transform="translate(100.2898,-114.5)">
-  <rect
-     style="stroke:none;stroke-width:0.75;stroke-dasharray:none;stroke-opacity:1;fill:#ffffff;fill-opacity:1"
-     id="rect252"
-     width="410"
-     height="140"
-     x="-100.2898"
-     y="114.5"
-     transform="translate(-2.5e-6)" />
-</g>
+   transform="translate(100.2898,-114.5)" />
 <g
    inkscape:groupmode="layer"
    id="layer2"
@@ -82,14 +75,14 @@
            stroke-width="0.117525"
            fill-opacity="0"
            id="path60"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
         <path
            d="m 278.65795,159.64969 h -38.25927 l 9.98962,9.98963 h 28.26965 z"
            stroke="#000000"
            stroke-width="0.117525"
            fill-opacity="0"
            id="path64"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
       </g>
       <g
          inkscape:groupmode="layer"
@@ -101,14 +94,14 @@
            stroke-width="0.117525"
            fill-opacity="0"
            id="path62"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
         <path
            d="m 250.68211,209.6076 h 38.26417 l -9.99452,-9.98962 h -28.26965 z"
            stroke="#000000"
            stroke-width="0.117525"
            fill-opacity="0"
            id="path66"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
       </g>
     </g>
   </g>
@@ -122,7 +115,7 @@
        stroke-width="0.117525"
        fill-opacity="0"
        id="path68"
-       style="fill:#000000;fill-opacity:1" />
+       style="fill:#000000;fill-opacity:1;stroke:none" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -138,14 +131,14 @@
          stroke-width="0.117525"
          fill-opacity="0"
          id="path70"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
       <path
          d="m 179.7362,170.63828 v 38.96932 l 9.99452,-9.98962 v -28.9797 z"
          stroke="#000000"
          stroke-width="0.117525"
          fill-opacity="0"
          id="path72"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
     <g
        inkscape:groupmode="layer"
@@ -157,14 +150,14 @@
          stroke-width="0.117525"
          fill-opacity="0"
          id="path74"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
       <path
          d="m 209.71486,159.64969 h -49.25275 l 9.98962,9.98963 h 39.26313 z"
          stroke="#000000"
          stroke-width="0.117525"
          fill-opacity="0"
          id="path76"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
   </g>
   <g
@@ -181,14 +174,14 @@
          stroke-width="0.117525"
          fill-opacity="0"
          id="path82"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
       <path
          d="m 99.804536,159.64969 v 49.25276 l 9.989624,-9.98962 v -39.26314 z"
          stroke="#000000"
          stroke-width="0.117525"
          fill-opacity="0"
          id="path84"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
     <g
        inkscape:groupmode="layer"
@@ -200,14 +193,14 @@
          stroke-width="0.117525"
          fill-opacity="0"
          id="path78"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
       <path
          d="m 110.79312,179.63384 h 38.96932 l -9.98962,9.98962 -28.9797,0.005 z"
          stroke="#000000"
          stroke-width="0.117525"
          fill-opacity="0"
          id="path80"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
   </g>
   <g
@@ -228,14 +221,14 @@
            stroke-width="0.117525"
            fill-opacity="0"
            id="path86"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
         <path
            d="M 89.814914,159.64969 H 40.557261 l 9.994519,9.99452 h 39.263134 z"
            stroke="#000000"
            stroke-width="0.117525"
            fill-opacity="0"
            id="path88"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
       </g>
       <g
          inkscape:groupmode="layer"
@@ -247,14 +240,14 @@
            stroke-width="0.117525"
            fill-opacity="0"
            id="path90"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
         <path
            d="m 39.852111,179.63384 h 49.252756 l -9.989622,9.98962 -39.263134,0.005 z"
            stroke="#000000"
            stroke-width="0.117525"
            fill-opacity="0"
            id="path92"
-           style="fill:#000000;fill-opacity:1" />
+           style="fill:#000000;fill-opacity:1;stroke:none" />
       </g>
     </g>
     <g
@@ -267,7 +260,7 @@
          stroke-width="0.117525"
          fill-opacity="0"
          id="path94"
-         style="fill:#000000;fill-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
   </g>
 </g>
@@ -288,7 +281,7 @@
        stroke-width="0.24"
        fill-opacity="0"
        id="path100"
-       style="fill:#fa9500;fill-opacity:1;stroke:#000000;stroke-width:0.489687;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#fa9500;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -301,14 +294,14 @@
        stroke-width="0.24"
        fill-opacity="0"
        id="path102"
-       style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:0.489687;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
     <path
        d="M -80.044957,134.74484 H 18.465455 L -1.5186955,154.72898 H -80.044957 Z"
        stroke="#000000"
        stroke-width="0.24"
        fill-opacity="0"
        id="path104"
-       style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:0.489687;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#ff344f;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -321,14 +314,14 @@
        stroke-width="0.24"
        fill-opacity="0"
        id="path96"
-       style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:0.489687;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
     <path
        d="m -40.076674,194.69726 19.984138,-19.98414 h 17.9862205 v 19.98414 z"
        stroke="#000000"
        stroke-width="0.24"
        fill-opacity="0"
        id="path98"
-       style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:0.489687;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#00a69d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </g>
 </svg>
