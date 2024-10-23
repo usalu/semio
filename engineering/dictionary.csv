@@ -1,36 +1,62 @@
-Abr,Short,Icon,Normal,Short Description
-Cd,Cod,🧲,Connected,
-Cg,Cog,🔩,Connecting,
-Co,Con,🖇️,Connection,A connection between two pieces of a design.
-Dc,Dsc,💬,Description,
-Dg,Dgm,✏️,Diagram,
-Di,Dir,📁,Directory,
-Dn,Dsn,🏙️,Design,A design is a collection of pieces that are connected
-Hp,Hop,🏠,Homepage,
-Ic,Ico,🖼️,Icon,
-Id,Idn,🆔,Identification,
-Kt,Kit,🗃️,Kit,A kit is a collection of types and designs.
-Lc,Loc,🗺️,Locator,A locator is meta-data for grouping ports.
-Ld,Lod,🔍,Level of Detail,
-Na,Nam,📛,Name,
-Ob,Obj,🗿,Object,An object is a piece with a plane and a parent object (unless the piece is a root).
-On,Ori,⌱,Origin,
-Pc,Pce,⭕,Piece,A piece is a 3d-instance of a type in a design.
-Po,Por,🔌,Port,A port is a connection point (with a direction) of a type.
-Pn,Ple,◳,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-Pt,Pot,✖️,Point,A 3d-point (xyz) of floating point numbers.
-Qa,Qal,📏,Quality,A quality is meta-data for decision making.
-Rp,Rep,💾,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
-Rt,Rot,🌱,Root,The root indesign of a piece.
-Sc,Scn,🌆,Scene,A scene is a collection of objects.
-Sd,Sde,🧱,Side,A side of a piece in a connection.
-SP,SPt,📺,Screen Point,A 2d-point (xy) of integers in screen plane.
-Su,Suc,✅,Success,
-Tf,Trf,▦,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
-Tg,Tag,🏷️,Tag,A tag is meta-data for grouping representations.
-Ty,Typ,🧩,Type,A type is a reusable element that can be connected with other types over ports.
-Ur,Url,🔗,Unique Resource Locator,
-Ut,Unt,Ⓜ️,Unit,
-Vc,Vec,➡️,Vector,A 3d-vector (xyz) of floating point numbers.
-Vl,Val,🔢,Value,
-Vn,Vnt,🔀,Variant,
+Emoji,Code,Abbreviation,Name,Description
+🧲,Cd,Cnd,Connected,The connected side of the piece of the connection.
+🧲,Cg,Cng,Connecting,The connecting side of the piece of the connection.
+🖇️,Co,Con,Connection,A connection between two pieces in a design.
+🖇️,Co*,Cons,Connections,The optional connections of a design.
+💬,Dc?,Dsc,Description,The optional human description of the {{NAME}}.
+📖,Df,Def,Definition,The optional definition [text | url] of the quality.
+✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
+📁,Di?,Dir,Directory,The optional directory where to find the kit.
+➡️,Dr,Drn,Direction,The direction of the port.
+🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
+👪,Gr,Grp,Group,The group of the locator.
+🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
+🖼️,Ic?,Ico,Icon,The optional icon [emoji | text | image | svg] of the {{NAME}}.
+🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
+🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
+🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
+🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
+🗺️,Lc*,Locs,Locators,The optional locators of the port.
+🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+📛,Na,Nam,Name,The name of the {{NAME}}.
+🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+↕️,Of?,Ofs,Offset,The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece. 
+⌱,Og,Org,Origin,The origin of the plane.
+⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+⭕,Pc+,Pces,Pieces,
+🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+🔌,Po+,Pors,Ports,The ports of the type.
+◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
+✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+📏,Ql,Qal,Quality,A quality is meta-data for decision making.
+📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
+💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
+🧱,Sd,Sde,Side,A side of a piece in a connection.
+📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
+📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+✅,Su,Suc,Success,{{NAME}} was successful.
+🔖,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
+↗️,Tl?,Tlt,Tilt,The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+🧩,Ty,Typ,Type,The type-related information of the side.
+🧩,Ty*,Typs,Types,The optional types of the kit.
+🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to another resource outside of semio.
+🔗,Ur?,Url,Unique Resource Locator,The optional Unique Resource Locator (URL) where to fetch the kit.
+Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
+➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
+🔢,Vl?,Val,Value,The optional value of the quality. No value is equivalent to true for the name.
+🔀,Vn?,Vnt,Variant,The optional value of the {{NAME}}.
+🏁,X,X,X,The x-coordinate of the screen point.
+🎚️,X,X,X,The x-coordinate of the point.
+➡️,XA,XAx,XAxis,The x-axis of the plane.
+🏁,Y,Y,Y,The y-coordinate of the screen point.
+🎚️,Y,Y,Y,The y-coordinate of the point.
+➡️,YA,YAx,YAxis,The y-axis of the plane.
+🏁,Z,Z,Z,The z-coordinate of the screen point.
+🎚️,Z,Z,Z,The z-coordinate of the point.

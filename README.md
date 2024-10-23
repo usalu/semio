@@ -1,37 +1,29 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal.svg">
-        <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/logo/logo-horizontal.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
+        <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
     </picture>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/doizenodo.svg" alt="Cite"></a>
-    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/latestrelease.svg" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/licenseagplv3.svg" alt="AGPLv3 License"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/doi-zenodo.svg" alt="Cite"></a>
+    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/latest-release.svg" alt="Latest Release"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/uigrasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://dynamobim.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/uiplanneddynamo.svg" alt="Dynamo"></a>
-    <a href="https://nortikin.github.io/sverchok/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/uiplannedsverchok.svg" alt="Sverchok"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/poweredbypython.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/poweredbycsharp.svg" alt="C#"></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/badges/poweredbytypescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
-    <i>✏️Design kit-of-parts architecture.</i>
+    <i>✏️ Design kit-of-parts architecture.</i>
 </p>
 <br/>
 
 You want to ✏️ the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
 
 # 🤖 What is semio?
-
-<p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/conceptual/analogies-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.10-3/conceptual/analogies.svg">
-        <img alt="Analogies" src="https://raw.githubusercontent.com/usalu/semio/r24.10-3/conceptual/analogies.svg">
-    </picture>
-</p>
 
 Let me start by what semio is **not**:
 
@@ -145,7 +137,7 @@ The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 1. Install the latest version ⬇️
 1. Restart Rhino 🔄
 
-![Rhino Package](https://raw.githubusercontent.com/usalu/semio/r24.10-3/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
+![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main-tag/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
 
 That's it!
 
@@ -157,9 +149,15 @@ That's it!
 
 ## 🏘️ Examples
 
-You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.10-3/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/r24.10-3/examples/metabolism/README.md) 👀
+You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.10-3/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/main-tag/examples/metabolism/README.md) 👀
 
-# ❤️Contribution
+# ❤️ Contribution
 
 New platforms wait to be reached, bugs wait to be found, examples wait to be created, documentation waits to be written, ...
 Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues), take a look under the [project site](https://github.com/users/usalu/projects/2) or just write me an [e-mail](semio-community@posteo.org) 👋
+
+# 📊 Stats
+
+<p align="center">
+    <a href="https://github.com/usalu/semio"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio&count_bg=%23FF344F&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visits&edge_flat=true"/></a>
+</p>

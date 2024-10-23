@@ -4,7 +4,7 @@ kit : !Kit{
     icon : ?String
     url : ?String
     homepage : ?String
-    types : +[
+    types : +Type[
         name : !String
         description : ?String
         icon : ?String
@@ -16,7 +16,7 @@ kit : !Kit{
             lod : ?String
             tags : *[String]
         ]
-        ports : +[
+        ports : +Port[
             id : !String
             point : !{
                 x : !Float
@@ -28,81 +28,78 @@ kit : !Kit{
                 y : !Float
                 z : !Float
             }
-            locators : *[
+            locators : *Locator[
                 group : !String
                 subgroup : !String
             ]
         ]
-        qualities : *[
+        qualities : *Quality[
             name : !String
             value : !String
             unit : ?String
             definition : ?String
         ]
     ]
-    designs : +[
+    designs : +Design[
         name : !String
         description : ?String
         icon : ?String
         variant : ?String
         unit : !String
-        pieces : ![
+        pieces : !Piece[
             id : !String
-            type : !{
+            type : !TypeId{
                 name : !String
                 variant : ?String
             }
-            root : ?{
-                plane : !{
-                    origin : !{
-                        x : !Float
-                        y : !Float
-                        z : !Float
-                    }
-                    x_axis : !{
-                        x : !Float
-                        y : !Float
-                        z : !Float
-                    }
-                    y_axis : !{
-                        x : !Float
-                        y : !Float
-                        z : !Float
-                    }
+            plane : ?Plane{
+                origin : !Point{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                x_axis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                y_axis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
                 }
             }
-            diagram : ?{
-                point :  !{
-                    x : !Integer
-                    y : !Integer
-                }
+            screen_point :  ?ScreenPoint{
+                x : !Integer
+                y : !Integer
             }
         ]
-        connections : +[
-            connected : !{
-                piece : !{
+        connections : +Connection[
+            connected : !Side{
+                piece : !SidePiece{
                     id : !String
-                    type : !{
-                        port : !{
+                    type : !SidePieceType{
+                        port : !PortId{
                             id : !String
                         }
                     }
                 }
             }
-            connecting : !{
-                piece : !{
+            connecting : !Side{
+                piece : !SidePiece{
                     id : !String
-                    type : !{
-                        port : !{
+                    type : !SidePieceType{
+                        port : !PortId{
                             id : !String
                         }
                     }
                 }
             }
-            rotation : ?Float
-            offset : ?Float
+            rotation : !Float
+            tilt : !Float
+            offset : !Float
         ]
-        qualities : *[
+        qualities : *Quality[
             name : !String
             value : !String
             unit : ?String

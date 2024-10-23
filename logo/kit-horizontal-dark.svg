@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   width="269.96997pt"
+   height="139.99916pt"
+   viewBox="0 0 269.96356 139.99916"
+   id="svg11"
+   sodipodi:docname="kit-horizontal-dark.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview11"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     inkscape:zoom="2.6283725"
+     inkscape:cx="111.85629"
+     inkscape:cy="110.7149"
+     inkscape:window-width="1920"
+     inkscape:window-height="1010"
+     inkscape:window-x="640"
+     inkscape:window-y="-6"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11" />
+  <defs
+     id="defs1" />
+  <g
+     id="logogram"
+     transform="matrix(0.3527703,0,0,0.3527703,-11.798853,-23.584582)"
+     style="fill:#ffffff;fill-opacity:1;stroke:none">
+    <g
+       id="logogram::k"
+       style="fill:#ffffff;fill-opacity:1;stroke:none">
+      <path
+         d="m 461.4753,267.20532 v 40.08792 l 27.90608,27.90606 20.044,-20.04394 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path1"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <path
+         d="m 461.4753,264.37067 v -40.08794 l 27.90608,-27.9061 20.044,20.04398 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path2"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <path
+         d="m 430.29996,336.108 -0.003,-139.73134 28.34648,27.94624 0.003,111.78507 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path3"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    </g>
+    <g
+       id="logogram::i"
+       style="fill:#ffffff;fill-opacity:1;stroke:none">
+      <path
+         d="m 572.0322,336.10797 0.003,-139.73134 -28.3465,27.94626 -0.003,111.78508 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path4"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    </g>
+    <g
+       id="logogram::t"
+       style="fill:#ffffff;fill-opacity:1;stroke:none">
+      <path
+         d="m 657.06805,225.55531 -0.004,108.54109 28.3465,-27.83065 0.003,-80.71041 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path5"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <path
+         d="m 742.111,194.37567 -139.7308,-0.003 28.3465,28.34647 111.3843,0.003 z"
+         stroke="#000000"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path6"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    </g>
+  </g>
+  <g
+     id="logo"
+     transform="matrix(0.3527703,0,0,0.3527703,-11.798853,-23.584582)">
+    <g
+       id="logo::l">
+      <path
+         d="m 373.60703,407.01886 0.0895,-279.54526 -56.69293,56.69292 -0.0894,222.85234 z"
+         stroke="#ff344f"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path7"
+         style="fill:#ff344f;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none" />
+      <path
+         d="m 90.14247,123.55428 279.4615,-0.006 -56.69293,56.69293 -222.76857,0.006 z"
+         stroke="#ff344f"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path8"
+         style="fill:#ff344f;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none" />
+    </g>
+    <g
+       id="logo::e"
+       style="stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none">
+      <path
+         d="m 203.52829,407.01886 56.69291,-56.69293 h 51.02364 v 56.69293 z"
+         stroke="#00a69d"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path9"
+         style="fill:#00a69d;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none" />
+      <path
+         d="m 203.52829,293.63303 56.69291,-56.69292 h 51.02364 v 56.69292 z"
+         stroke="#00a69d"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path10"
+         style="fill:#00a69d;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none" />
+    </g>
+    <g
+       id="logo::i"
+       style="stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none">
+      <path
+         d="m 90.14247,185.91647 -0.0057,217.09931 56.69292,-56.6929 0.006,-160.40641 z"
+         stroke="#fa9500"
+         stroke-width="0.24"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         fill="none"
+         id="path11"
+         style="fill:#fa9500;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-linejoin:miter;stroke-width:2.83470581;stroke-dasharray:none" />
+    </g>
+  </g>
+</svg>
