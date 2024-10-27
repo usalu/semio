@@ -1,0 +1,545 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "FastAPI",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/kits/{encodedKitUrl}": {
+            "get": {
+                "summary": "Kit",
+                "operationId": "kit_kits__encodedKitUrl__get",
+                "parameters": [
+                    {
+                        "name": "encodedKitUrl",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedkiturl"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KitOutput"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "summary": "Create Kit",
+                "operationId": "create_kit_kits__encodedKitUrl__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUrl",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedkiturl"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/KitInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Kit",
+                "operationId": "delete_kit_kits__encodedKitUrl__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUrl",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedkiturl"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}": {
+            "put": {
+                "summary": "Put Type",
+                "operationId": "put_type_kits__encodedKitUrl__types__encodedTypeName___encodedTypeVariant__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUrl",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedkiturl"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedtypename"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeVariant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedtypevariant"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TypeInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Type",
+                "operationId": "delete_type_kits__encodedKitUrl__types__encodedTypeName___encodedTypeVariant__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUrl",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedkiturl"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedtypename"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeVariant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "title": "Encodedtypevariant"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "KitInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "remote": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "default": ""
+                    },
+                    "homepage": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "default": ""
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeInput"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "KitInput"
+            },
+            "KitOutput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "lastUpdateAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastupdateat"
+                    },
+                    "remote": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "default": ""
+                    },
+                    "homepage": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "default": ""
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeOutput"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "KitOutput"
+            },
+            "RepresentationInput": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Url"
+                    },
+                    "lod": {
+                        "type": "string",
+                        "title": "Lod",
+                        "default": ""
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url"
+                ],
+                "title": "RepresentationInput"
+            },
+            "RepresentationOutput": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Url"
+                    },
+                    "lod": {
+                        "type": "string",
+                        "title": "Lod",
+                        "default": ""
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url"
+                ],
+                "title": "RepresentationOutput"
+            },
+            "TypeInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "default": ""
+                    },
+                    "representations": {
+                        "items": {
+                            "$ref": "#/components/schemas/RepresentationInput"
+                        },
+                        "type": "array",
+                        "title": "Representations"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeInput"
+            },
+            "TypeOutput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "lastUpdateAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastupdateat"
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "default": ""
+                    },
+                    "representations": {
+                        "items": {
+                            "$ref": "#/components/schemas/RepresentationOutput"
+                        },
+                        "type": "array",
+                        "title": "Representations"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeOutput"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

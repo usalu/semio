@@ -21,7 +21,7 @@ Emoji,Code,Abbreviation,Name,Description
 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
 📛,Na,Nam,Name,The name of the {{NAME}}.
 🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
-↕️,Of?,Ofs,Offset,The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece. 
+↕️,Of?,Ofs,Offset,The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
 ⌱,Og,Org,Origin,The origin of the plane.
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
 ⭕,Pc+,Pces,Pieces,
@@ -32,7 +32,8 @@ Emoji,Code,Abbreviation,Name,Description
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
-💾,Rp,Rep,Representation,A representation is a link to a file that describes a type for a certain level of detail and tags.
+☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
 🧱,Sd,Sde,Side,A side of a piece in a connection.
 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
@@ -45,13 +46,12 @@ Emoji,Code,Abbreviation,Name,Description
 🧩,Ty,Typ,Type,The type-related information of the side.
 🧩,Ty*,Typs,Types,The optional types of the kit.
 🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to another resource outside of semio.
-🔗,Ur?,Url,Unique Resource Locator,The optional Unique Resource Locator (URL) where to fetch the kit.
 Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
 Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
 ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
 🔢,Vl?,Val,Value,The optional value of the quality. No value is equivalent to true for the name.
-🔀,Vn?,Vnt,Variant,The optional value of the {{NAME}}.
+🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
 🏁,X,X,X,The x-coordinate of the screen point.
 🎚️,X,X,X,The x-coordinate of the point.
 ➡️,XA,XAx,XAxis,The x-axis of the plane.

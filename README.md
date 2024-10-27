@@ -29,61 +29,67 @@ Let me start by what semio is **not**:
 
 - Rhino, SketchUp, 3ds Max, Blender, ...
 
-  A _3d-modeling_ tool 🐚
+  A _3d_ tool 🐚
 
   > In semio you **link** 3d-models 🎋
 
+- AutoCAD, DraftSight, LibreCAD, ...
+
+  A _CAD_ tool 📐
+
+  > In semio you **link** dynamic blocks 📦
+
 - Revit, ArchiCAD, Vectorworks, BricksCAD, BlenderBIM, …
 
-  A BIM-authoring tool 🧱
+  A _BIM_ tool 🧱
 
   > In semio you **link** instances of your own types 🗿
 
 - Grasshopper, Dynamo, GenerativeComponents, Sverchok, …
 
-  A _node-based programming_ tool 🦗
+  A _node_ tool 🦗
 
   > In semio you **link** the input with the output ⛓️‍💥
 
 - IFC, Speckle, BHoM, …
 
-  A data tool 📄
+  A _data_ tool 📄
 
   > In semio you **link** design knowledge 📚
 
 - Hypar, Viktor, Fusion, …
 
-  A parametric tool 🎛️
+  A _parametric_ tool 🎛️
 
   > In semio you **link** static designs 🩻
 
 - Wasp, Assembler, Monocerous, ComputerGeneratedArchitecture …
 
-  A combinatorical tool 🎰
+  A _solver_ tool 🎰
 
   > In semio you **link** precise pieces 🪡
 
 - OpenSCAD, CadQuery, Fornjot, …
 
-  A scripting tool 📜
+  A _scripting_ tool 📜
 
   > In semio you **link** ports visually 🖱️
 
 - Illustrator, AffinityDesigner, InkScape, …
 
-  A _vector graphics_ tool 📐
+  A _vector_ tool ↗️
 
   > In semio you **link** drawings 🖼️
 
 - EnergyPlus, TRYNSIS, Modellica, …
 
-  A simulation tool ☀️
+  A _simulation_ tool ☀️
 
   > In semio you **link** models and results 🔢
 
 - Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Git, Nextcloud, …
 
-  A CDE tool ☁️
+  A _CDE_ tool ☁️
 
   > In semio you **link** urls 🔗
 
@@ -98,19 +104,23 @@ So, what **is** semio?
 
 ## 🤔 When should I design with semio?
 
-If you design storeys, walls, windows, slabs, roofs
-by moving them around, changing individual dimensions of those,
-then you should stick to your BIM tool ❌
-
 If you design unique atmospheres
 by hand drawn sketches, eager to find the right shape based on surfaces with one-of-each-kind morphology, then you should stick to your 3d tool ❌
+
+If you design floor plans, sections and elevations
+by moving lines and hatches around, analyzing contours
+then you should stick to your CAD tool ❌
+
+If you design storeys, walls, windows, slabs and roofs
+by moving them around, changing individual dimensions of those,
+then you should stick to your BIM tool ❌
 
 If you design high-resolution blobs
 by sophisticated rules, statistical noise, intersection-based entropy,
 then you should stick to your solver tool ❌
 
-If you design custom typologies
-by iteratively detailing types and variants based on metrics,
+If you design modular systems
+by iteratively developing typology based on metrics,
 then you should use semio ✅
 
 # 🚀 Getting started

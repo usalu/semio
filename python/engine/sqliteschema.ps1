@@ -1,0 +1,1 @@
+sqlite3 debug/semio.db .schema > ../../sqlite/schema.sql

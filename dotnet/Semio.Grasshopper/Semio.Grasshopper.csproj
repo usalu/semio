@@ -33,4 +33,10 @@
     </EmbeddedResource>
   </ItemGroup>
 
+	<ItemGroup>
+		<Content Include="UserObjects\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

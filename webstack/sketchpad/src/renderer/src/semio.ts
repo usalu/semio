@@ -8,7 +8,7 @@ import {
     DesignInput,
     Piece as TPiece,
     PieceInput,
-    Port,
+    Port
 } from './semio.d'
 
 export const TOLERANCE = 1e-5
@@ -42,11 +42,9 @@ export const TOLERANCE = 1e-5
 //     designToSceneFromLocalKit?: Maybe<DesignToSceneFromLocalKitResponse>
 // }
 
-
 // export type QueryLoadLocalKitArgs = {
 //     directory: Scalars['String']['input']
 // }
-
 
 // export type QueryDesignToSceneFromLocalKitArgs = {
 //     directory: Scalars['String']['input']
@@ -90,7 +88,7 @@ export const TOLERANCE = 1e-5
 //     pieces: Array<Piece>
 // }
 
-// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
+// /** 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags. */
 // export type Representation = {
 //     __typename?: 'Representation'
 //     url: Scalars['String']['output']
@@ -290,41 +288,34 @@ export const TOLERANCE = 1e-5
 //     removeDesignFromLocalKit?: Maybe<RemoveDesignFromLocalKitMutation>
 // }
 
-
 // export type MutationCreateLocalKitArgs = {
 //     directory: Scalars['String']['input']
 //     kitInput: KitInput
 // }
-
 
 // export type MutationUpdateLocalKitMetadataArgs = {
 //     directory: Scalars['String']['input']
 //     kitMetadataInput: KitMetadataInput
 // }
 
-
 // export type MutationDeleteLocalKitArgs = {
 //     directory: Scalars['String']['input']
 // }
-
 
 // export type MutationAddTypeToLocalKitArgs = {
 //     directory: Scalars['String']['input']
 //     typeInput: TypeInput
 // }
 
-
 // export type MutationRemoveTypeFromLocalKitArgs = {
 //     directory: Scalars['String']['input']
 //     typeId: TypeIdInput
 // }
 
-
 // export type MutationAddDesignToLocalKitArgs = {
 //     directory: Scalars['String']['input']
 //     designInput: DesignInput
 // }
-
 
 // export type MutationRemoveDesignFromLocalKitArgs = {
 //     directory: Scalars['String']['input']
@@ -374,7 +365,7 @@ export const TOLERANCE = 1e-5
 //     qualities?: InputMaybe<Array<QualityInput>>
 // }
 
-// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
+// /** 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags. */
 // export type RepresentationInput = {
 //     url: Scalars['String']['input']
 //     lod?: InputMaybe<Scalars['String']['input']>
@@ -616,7 +607,7 @@ export const TOLERANCE = 1e-5
 
 export enum Plane {
     SEMIO = 'SEMIO',
-    THREE = 'THREE',
+    THREE = 'THREE'
 }
 
 export const radians = (degrees: number): number => {
@@ -628,7 +619,6 @@ export const degrees = (radians: number): number => {
 }
 
 export class Point extends Vector3 {
-
     constructor(x: number = 0, y: number = 0, z: number = 0) {
         super(x, y, z)
     }
@@ -641,9 +631,15 @@ export class Point extends Vector3 {
         yield this.z
     }
 
-    get 0(): number { return this.x }
-    get 1(): number { return this.y }
-    get 2(): number { return this.z }
+    get 0(): number {
+        return this.x
+    }
+    get 1(): number {
+        return this.y
+    }
+    get 2(): number {
+        return this.z
+    }
 
     isCloseTo(other: Point | Vector | number, tol: number = TOLERANCE): boolean {
         if (typeof other === 'number') {
@@ -663,9 +659,13 @@ export class Point extends Vector3 {
         }
     }
 
-    toVector(): Vector { return new Vector(this.x, this.y, this.z) }
+    toVector(): Vector {
+        return new Vector(this.x, this.y, this.z)
+    }
 
-    static fromVector(vector: Vector): Point { return new Point(vector.x, vector.y, vector.z) }
+    static fromVector(vector: Vector): Point {
+        return new Point(vector.x, vector.y, vector.z)
+    }
 
     static parse(object: Point | TPoint | string | null | undefined): Point {
         if (object === undefined || object === null) {
@@ -683,7 +683,6 @@ export class Point extends Vector3 {
 }
 
 export class Vector extends Vector3 {
-
     constructor(x: number = 0, y: number = 0, z: number = 0) {
         super(x, y, z)
     }
@@ -696,9 +695,15 @@ export class Vector extends Vector3 {
         yield this.z
     }
 
-    get 0(): number { return this.x }
-    get 1(): number { return this.y }
-    get 2(): number { return this.z }
+    get 0(): number {
+        return this.x
+    }
+    get 1(): number {
+        return this.y
+    }
+    get 2(): number {
+        return this.z
+    }
 
     sqrt(): Vector {
         return new Vector(Math.sqrt(this.x), Math.sqrt(this.y), Math.sqrt(this.z))
@@ -734,7 +739,9 @@ export class Vector extends Vector3 {
         return new Point(this.x, this.y, this.z)
     }
 
-    toTransform(): Transform { return Transform.fromTranslation(this) }
+    toTransform(): Transform {
+        return Transform.fromTranslation(this)
+    }
 
     static X(): Vector {
         return new Vector(1, 0, 0)
@@ -773,13 +780,13 @@ export class Plane {
         this.xAxis = xAxis ?? Vector.X()
         this.yAxis = yAxis ?? Vector.Y()
         if (this.xAxis.length() - 1 > TOLERANCE) {
-            throw new Error("The x-axis must be normalized.")
+            throw new Error('The x-axis must be normalized.')
         }
         if (this.yAxis.length() - 1 > TOLERANCE) {
-            throw new Error("The y-axis must be normalized.")
+            throw new Error('The y-axis must be normalized.')
         }
         if (Math.abs(this.xAxis.dot(this.yAxis)) > TOLERANCE) {
-            throw new Error("The x-axis and y-axis must be orthogonal.")
+            throw new Error('The x-axis and y-axis must be orthogonal.')
         }
     }
 
@@ -817,7 +824,7 @@ export class Plane {
 
     static fromYAxis(yAxis: Vector, theta: number = 0, origin?: Point): Plane {
         if (yAxis.length() - 1 > TOLERANCE) {
-            throw new Error("The yAxis must be normalized.")
+            throw new Error('The yAxis must be normalized.')
         }
         const orientation = Transform.fromDirections(Vector.Y(), yAxis)
         const rotation = Transform.fromAngle(yAxis, theta)
@@ -836,7 +843,11 @@ export class Plane {
             const { origin, xAxis, yAxis } = JSON.parse(object)
             return new Plane(Point.parse(origin), Vector.parse(xAxis), Vector.parse(yAxis))
         }
-        return new Plane(Point.parse(object.origin), Vector.parse(object.xAxis), Vector.parse(object.yAxis))
+        return new Plane(
+            Point.parse(object.origin),
+            Vector.parse(object.xAxis),
+            Vector.parse(object.yAxis)
+        )
     }
 }
 
@@ -854,10 +865,12 @@ export class Rotation {
     }
 
     toJSON(): object | null {
-        return this.angle === 0 ? null : {
-            axis: this.axis,
-            angle: this.angle
-        }
+        return this.angle === 0
+            ? null
+            : {
+                  axis: this.axis,
+                  angle: this.angle
+              }
     }
 }
 
@@ -869,7 +882,8 @@ export class Transform extends Matrix4 {
         //https://github.com/dfki-ric/pytransform3d/blob/c45e817c4a7960108afe9f5259542c8376c0e89a/pytransform3d/rotations/_conversions.py#L1719
         const rotationMatrix = new Matrix4()
         rotationMatrix.extractRotation(this)
-        const trace = rotationMatrix.elements[0] + rotationMatrix.elements[5] + rotationMatrix.elements[10]
+        const trace =
+            rotationMatrix.elements[0] + rotationMatrix.elements[5] + rotationMatrix.elements[10]
         const cosAngle = (trace - 1) / 2
         const angle = Math.acos(Math.min(Math.max(-1, cosAngle), 1))
         if (angle === 0) return new Rotation()
@@ -880,7 +894,11 @@ export class Transform extends Matrix4 {
         )
         let axis: Vector
         if (Math.abs(angle - Math.PI) < 1e-4) {
-            const clampedDiagonal = new Vector(rotationMatrix[0], rotationMatrix[5], rotationMatrix[10]).clampScalar(-1, 1)
+            const clampedDiagonal = new Vector(
+                rotationMatrix[0],
+                rotationMatrix[5],
+                rotationMatrix[10]
+            ).clampScalar(-1, 1)
             const eeTDiag = clampedDiagonal.clone().addScalar(1).multiplyScalar(0.5)
             const signs = axisUnnormalized.clone().sign()
             const unitizedSigns = new Vector(signs.x || 1, signs.y || 1, signs.z || 1)
@@ -899,7 +917,7 @@ export class Transform extends Matrix4 {
     }
 
     clone(): Transform {
-        return new Transform().copy(this);
+        return new Transform().copy(this)
     }
 
     after(before: Transform): Transform {
@@ -930,7 +948,7 @@ export class Transform extends Matrix4 {
         } else if (geometry instanceof Plane) {
             return this.transformPlane(geometry)
         } else {
-            throw new Error("Not implemented")
+            throw new Error('Not implemented')
         }
     }
 
@@ -943,7 +961,8 @@ export class Transform extends Matrix4 {
     }
 
     static fromPlane(plane: Plane): Transform {
-        return new Transform().makeBasis(plane.xAxis, plane.yAxis, plane.zAxis)
+        return new Transform()
+            .makeBasis(plane.xAxis, plane.yAxis, plane.zAxis)
             .setPosition(plane.origin)
     }
 
@@ -956,7 +975,10 @@ export class Transform extends Matrix4 {
             return new Transform()
         }
         const axisAngle = new Vector3().crossVectors(startDirection, endDirection)
-        return new Transform().makeRotationAxis(axisAngle.normalize(), startDirection.angleTo(endDirection))
+        return new Transform().makeRotationAxis(
+            axisAngle.normalize(),
+            startDirection.angleTo(endDirection)
+        )
     }
 
     toPlane(): Plane {
@@ -982,44 +1004,41 @@ export class Transform extends Matrix4 {
         }
         if (typeof object === 'string') {
             const { rotation, translation } = JSON.parse(object)
-            return new Transform().makeRotationAxis(Vector.parse(rotation.axis), radians(rotation.angle)).setPosition(Vector.parse(translation))
+            return new Transform()
+                .makeRotationAxis(Vector.parse(rotation.axis), radians(rotation.angle))
+                .setPosition(Vector.parse(translation))
         }
-        return new Transform().makeRotationAxis(Vector.parse(object.rotation.axis), radians(object.rotation.angle)).setPosition(Vector.parse(object.translation))
+        return new Transform()
+            .makeRotationAxis(Vector.parse(object.rotation.axis), radians(object.rotation.angle))
+            .setPosition(Vector.parse(object.translation))
     }
-
 }
 
-
 export const semioToThreeRotation = (): Transform => {
-    return new Transform().set(
-        1, 0, 0, 0,
-        0, 0, 1, 0,
-        0, -1, 0, 0,
-        0, 0, 0, 1)
+    return new Transform().set(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
 }
 
 export const threeToSemioRotation = (): Transform => {
-    return new Transform().set(
-        1, 0, 0, 0,
-        0, 0, -1, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 1)
+    return new Transform().set(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
 }
-
 
 class Hierarchy {
     piece: Piece | PieceInput
     transform: Transform
     children: Hierarchy[]
 
-    constructor(piece: Piece | PieceInput, transform?: Transform | null | undefined, children?: Hierarchy[] | null | undefined) {
+    constructor(
+        piece: Piece | PieceInput,
+        transform?: Transform | null | undefined,
+        children?: Hierarchy[] | null | undefined
+    ) {
         this.piece = piece
         this.transform = transform ?? new Transform()
         this.children = children ?? []
     }
 }
 
-export default Hierarchy;
+export default Hierarchy
 
 // Reference in Python:
 // def designToHierarchies(design: Design) -> List[Hierarchy]:
@@ -1107,61 +1126,62 @@ export const designToHierarchies = (
         hierarchies.push(rootHierarchy)
         const pieceIdToHierarchy: { [key: string]: Hierarchy } = {}
         pieceIdToHierarchy[rootHierarchy.piece.id] = rootHierarchy
-        cy.elements().bfs(
-            {
-                root,
-                visit: (v, e, u, i, depth) => {
-                    if (depth === 0) return
-                    const parentId = u.id()
-                    const childId = v.id()
-                    const connection = design.connections.find(
-                        (connection) =>
-                            connection.connected.piece.id === e.source().id() &&
-                            connection.connecting.piece.id === e.target().id()
-                    )
-                    const connectedIsParent = connection.connected.piece.id === parentId
-                    const parentPiece = design.pieces.find((p) => p.id === parentId)
-                    const childPiece = design.pieces.find((p) => p.id === childId)
-                    const parentPortId = connectedIsParent
-                        ? connection.connected.piece?.type.port?.id
-                        : connection.connecting.piece?.type.port?.id
-                    const childPortId = connectedIsParent
-                        ? connection.connecting.piece?.type.port?.id
-                        : connection.connected.piece?.type.port?.id
-                    const parentPort = ports
-                        .get(parentPiece.type.name)
-                        ?.get(parentPiece.type.variant ?? '')
-                        ?.get(parentPortId ?? '')
-                    const childPort = ports
-                        .get(childPiece.type.name)
-                        ?.get(childPiece.type.variant ?? '')
-                        ?.get(childPortId ?? '')
-                    const parentDirection = Vector.parse(parentPort.direction)
-                    const childDirection = Vector.parse(childPort.direction)
-                    const parentPoint = Point.parse(parentPort.point)
-                    const childPoint = Point.parse(childPort.point)
-                    const orient = Transform.fromDirections(childDirection.negate(), parentDirection)
-                    let rotation = orient
-                    if (connection.rotation !== 0) {
-                        const rotate = Transform.fromAngle(parentDirection, connection.rotation)
-                        rotation = rotate.after(orient)
-                    }
-                    const centerChild = childPoint.toVector().negate().toTransform()
-                    const moveToParent = parentPoint.toVector().toTransform()
-                    let transform = new Transform()
-                    transform = rotation.after(centerChild)
-                    if (connection.offset !== 0) {
-                        const offset = parentDirection.clone().multiplyScalar(connection.offset).toTransform()
-                        transform = offset.after(transform)
-                    }
-                    transform = moveToParent.after(transform)
-                    const hierarchy = new Hierarchy(childPiece, transform)
-                    // console.log(hierarchy, transform.toPlane(), rotation, centerChild, moveToParent)
-                    pieceIdToHierarchy[childPiece.id] = hierarchy
-                    pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
+        cy.elements().bfs({
+            root,
+            visit: (v, e, u, i, depth) => {
+                if (depth === 0) return
+                const parentId = u.id()
+                const childId = v.id()
+                const connection = design.connections.find(
+                    (connection) =>
+                        connection.connected.piece.id === e.source().id() &&
+                        connection.connecting.piece.id === e.target().id()
+                )
+                const connectedIsParent = connection.connected.piece.id === parentId
+                const parentPiece = design.pieces.find((p) => p.id === parentId)
+                const childPiece = design.pieces.find((p) => p.id === childId)
+                const parentPortId = connectedIsParent
+                    ? connection.connected.piece?.type.port?.id
+                    : connection.connecting.piece?.type.port?.id
+                const childPortId = connectedIsParent
+                    ? connection.connecting.piece?.type.port?.id
+                    : connection.connected.piece?.type.port?.id
+                const parentPort = ports
+                    .get(parentPiece.type.name)
+                    ?.get(parentPiece.type.variant ?? '')
+                    ?.get(parentPortId ?? '')
+                const childPort = ports
+                    .get(childPiece.type.name)
+                    ?.get(childPiece.type.variant ?? '')
+                    ?.get(childPortId ?? '')
+                const parentDirection = Vector.parse(parentPort.direction)
+                const childDirection = Vector.parse(childPort.direction)
+                const parentPoint = Point.parse(parentPort.point)
+                const childPoint = Point.parse(childPort.point)
+                const orient = Transform.fromDirections(childDirection.negate(), parentDirection)
+                let rotation = orient
+                if (connection.rotation !== 0) {
+                    const rotate = Transform.fromAngle(parentDirection, connection.rotation)
+                    rotation = rotate.after(orient)
                 }
+                const centerChild = childPoint.toVector().negate().toTransform()
+                const moveToParent = parentPoint.toVector().toTransform()
+                let transform = new Transform()
+                transform = rotation.after(centerChild)
+                if (connection.offset !== 0) {
+                    const offset = parentDirection
+                        .clone()
+                        .multiplyScalar(connection.offset)
+                        .toTransform()
+                    transform = offset.after(transform)
+                }
+                transform = moveToParent.after(transform)
+                const hierarchy = new Hierarchy(childPiece, transform)
+                // console.log(hierarchy, transform.toPlane(), rotation, centerChild, moveToParent)
+                pieceIdToHierarchy[childPiece.id] = hierarchy
+                pieceIdToHierarchy[parentPiece.id].children.push(hierarchy)
             }
-        )
+        })
         console.log(JSON.stringify(rootHierarchy))
     })
     return hierarchies

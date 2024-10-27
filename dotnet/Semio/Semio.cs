@@ -16,18 +16,20 @@
 
 using System.Collections;
 using System.Collections.Immutable;
+using System.Net;
 using System.Reflection;
+using System.Text;
+using System.Xml.Linq;
 using FluentValidation;
-using GraphQL;
-using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Refit;
 
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
-// TODO: Implement reflexive validation for model properties
-
+// TODO: Implement reflexive validation for model properties.
+// TODO: Add index to prop and add to list based on index not on source code order.
+// TODO: See if Utility.Encode(url) can be added by attribute on parameters.
 
 namespace Semio;
 
@@ -41,6 +43,7 @@ public static class Constants
     public const int DescriptionLengthLimit = 4096;
     public const string Release = "r24.11-1";
     public const int EnginePort = 24111;
+    public const string EngineAddress = "http://127.0.0.1:24111";
     public const float Tolerance = 1e-5f;
 }
 
@@ -55,22 +58,6 @@ public static class Constants
 #endregion
 
 #region Utility
-
-//public static class Generator
-//{
-//    public static string GenerateRandomId(int seed)
-//    {
-//        var adjectives = Resources.adjectives.Deserialize<List<string>>();
-//        var animals = Resources.animals.Deserialize<List<string>>();
-//        var random = new Random(seed);
-//        var adjective = adjectives[random.Next(adjectives.Count)];
-//        var animal = animals[random.Next(animals.Count)];
-//        var number = random.Next(0, 999);
-//        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
-//        animal = char.ToUpper(animal[0]) + animal.Substring(1);
-//        return $"{adjective}{animal}{number}";
-//    }
-//}
 
 public static class Utility
 {
@@ -102,6 +89,61 @@ public static class Utility
             return "application/octet-stream";
         }
     }
+
+    public static string Encode(string text)
+    {
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(text))
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
+    public static string Decode(string text)
+    {
+        text = text.Replace('-', '+').Replace('_', '/');
+        switch (text.Length % 4)
+        {
+            case 2:
+                text += "==";
+                break;
+            case 3:
+                text += "=";
+                break;
+        }
+
+        return Encoding.UTF8.GetString(Convert.FromBase64String(text));
+    }
+
+    public static string Serialize(this object obj)
+    {
+        return JsonConvert.SerializeObject(
+            obj, Formatting.Indented, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+    }
+
+    public static T Deserialize<T>(this string json)
+    {
+        return JsonConvert.DeserializeObject<T>(
+            json, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+    }
+
+
+    public static string GenerateRandomId(int seed)
+    {
+        var adjectives = Resources.adjectives.Deserialize<List<string>>();
+        var animals = Resources.animals.Deserialize<List<string>>();
+        var random = new Random(seed);
+        var adjective = adjectives[random.Next(adjectives.Count)];
+        var animal = animals[random.Next(animals.Count)];
+        var number = random.Next(0, 999);
+        adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
+        animal = char.ToUpper(animal[0]) + animal.Substring(1);
+        return $"{adjective}{animal}{number}";
+    }
 }
 
 #endregion
@@ -132,7 +174,6 @@ public class ModelAttribute : ConceptAttribute
             abbreviation, description)
     {
     }
-
 }
 
 public enum PropImportance
@@ -302,7 +343,7 @@ public abstract class Model<T> where T : Model<T>
 
     public Model<T> DeepClone()
     {
-        return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(this));
+        return Utility.Deserialize<T>(Utility.Serialize(this));
     }
 
     public virtual (bool, List<string>) Validate()
@@ -338,13 +379,11 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
                 var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
                 var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
                 if (isAngle)
-                {
                     RuleFor(model => property.GetValue(model) as float?)
                         .GreaterThanOrEqualTo(0)
                         .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
                         .LessThan(360)
                         .WithMessage($"The {property.Name.ToLower()} must be less than 360 degrees.");
-                }
             }
             else if (property.PropertyType == typeof(string))
             {
@@ -389,14 +428,13 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             }
             else if (isPropertyModel && !isPropertyList)
             {
-                // TODO: Implement reflexive validation for model properties
+                // TODO: Implement reflexive validation for model properties.
                 //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
                 //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
-
             }
             else if (isPropertyModel && isPropertyList)
             {
-                // TODO: Implement reflexive validation for model properties
+                // TODO: Implement reflexive validation for model properties.
             }
         }
     }
@@ -428,7 +466,8 @@ public class Representation : Model<Representation>
     ///     🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.
     /// </summary>
 
-    [Name("🔍", "Ld?", "Lod", "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
+    [Name("🔍", "Ld?", "Lod",
+        "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
         isDefaultValid: true)]
     public string Lod { get; set; } = "";
 
@@ -513,7 +552,7 @@ public class Vector : Model<Vector>
     ///     🎚️ The y-coordinate of the vector.
     /// </summary>
     [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the vector.", PropImportance.REQUIRED)]
-    public float Y { get; set; } = 0;
+    public float Y { get; set; }
 
     /// <summary>
     ///     🎚️ The z-coordinate of the vector.
@@ -525,6 +564,7 @@ public class Vector : Model<Vector>
     {
         return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
     }
+
     public static bool IsOrthogonal(Vector a, Vector b)
     {
         return Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
@@ -532,19 +572,20 @@ public class Vector : Model<Vector>
 
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance && Math.Abs(Z) < Constants.Tolerance)
         {
             isValid = false;
             errors.Add("The vector must not be the zero vector.");
         }
+
         if (Math.Abs(Math.Sqrt(X * X + Y * Y + Z * Z) - 1) > Constants.Tolerance)
         {
             isValid = false;
             errors.Add("The vector must be a unit vector.");
         }
-        return (isValid, errors);
 
+        return (isValid, errors);
     }
 }
 
@@ -570,12 +611,12 @@ public class Plane : Model<Plane>
     ///     ➡️ The y-axis of the plane.
     /// </summary>
     [ModelProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
-    public Vector YAxis { get; set; } = new (){Y=1};
+    public Vector YAxis { get; set; } = new() { Y = 1 };
 
-    // TODO: Implement reflexive validation for model properties
+    // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         var pointValidator = new ModelValidator<Point>();
         var originValidation = pointValidator.Validate(Origin);
         isValid = isValid && originValidation.IsValid;
@@ -592,6 +633,7 @@ public class Plane : Model<Plane>
             isValid = false;
             errors.Add("The x-axis and y-axis must be orthogonal.");
         }
+
         return (isValid, errors);
     }
 }
@@ -605,7 +647,8 @@ public class Port : Model<Port>
     /// <summary>
     ///     🆔 The optional local identifier of the port within the type. No id means the default port.
     /// </summary>
-    [Id("🆔", "Id?", "Idn", "The optional local identifier of the port within the type. No id means the default port.", isDefaultValid: true)]
+    [Id("🆔", "Id?", "Idn", "The optional local identifier of the port within the type. No id means the default port.",
+        isDefaultValid: true)]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -625,10 +668,11 @@ public class Port : Model<Port>
     /// </summary>
     [ModelProp("🗺️", "Lc*", "Locs", "The optional locators of the port.", PropImportance.OPTIONAL)]
     public List<Locator> Locators { get; set; } = new();
-    // TODO: Implement reflexive validation for model properties
+
+    // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         if (Point != null)
         {
             var pointValidator = new ModelValidator<Point>();
@@ -641,6 +685,7 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The point must not be null.");
         }
+
         if (Direction != null)
         {
             var vectorValidator = new ModelValidator<Vector>();
@@ -653,6 +698,7 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The direction must not be null.");
         }
+
         return (isValid, errors);
     }
 }
@@ -709,11 +755,7 @@ public class Quality : Model<Quality>
     public string Definition { get; set; } = "";
 }
 
-/// <summary>
-///     🧩 A type is a reusable element that can be connected with other types over ports.
-/// </summary>
-[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
-public class Type : Model<Type>
+public class TypeProps : Model<Type>
 {
     /// <summary>
     ///     📛 Name of the type.
@@ -745,7 +787,14 @@ public class Type : Model<Type>
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.",
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+}
 
+/// <summary>
+///     🧩 A type is a reusable element that can be connected with other types over ports.
+/// </summary>
+[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+public class Type : TypeProps
+{
     /// <summary>
     ///     🔌 The ports of the type.
     /// </summary>
@@ -764,10 +813,10 @@ public class Type : Model<Type>
     [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the type.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
-    // TODO: Implement reflexive validation for model properties
+    // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         var portValidator = new ModelValidator<Port>();
         foreach (var port in Ports)
         {
@@ -775,6 +824,7 @@ public class Type : Model<Type>
             isValid = isValid && portValidation.IsValid;
             errors.AddRange(portValidation.Errors.Select(e => "A port is invalid: " + e));
         }
+
         var representationValidator = new ModelValidator<Representation>();
         foreach (var representation in Representations)
         {
@@ -782,6 +832,7 @@ public class Type : Model<Type>
             isValid = isValid && representationValidation.IsValid;
             errors.AddRange(representationValidation.Errors.Select(e => "A representation is invalid: " + e));
         }
+
         var qualityValidator = new ModelValidator<Quality>();
         foreach (var quality in Qualities)
         {
@@ -789,6 +840,7 @@ public class Type : Model<Type>
             isValid = isValid && qualityValidation.IsValid;
             errors.AddRange(qualityValidation.Errors.Select(e => "A quality is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -830,7 +882,9 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     🆔 The optional local identifier of the piece within the design. No id means the default piece.
     /// </summary>
-    [Id("🆔", "Id?", "Id", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
+    [Id("🆔", "Id?", "Id",
+        "The optional local identifier of the piece within the design. No id means the default piece.",
+        isDefaultValid: true)]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -842,25 +896,27 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     /// </summary>
-    [ModelProp("◳", "Pn?", "Pln", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
+    [ModelProp("◳", "Pn?", "Pln",
+        "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
+        PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; } = null;
 
     /// <summary>
     ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
     /// </summary>
     [ModelProp("📺", "SP", "SPt",
-        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.", PropImportance.OPTIONAL)]
+        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.",
+        PropImportance.OPTIONAL)]
     public ScreenPoint ScreenPoint { get; set; } = new();
 
-    // TODO: Implement reflexive validation for model properties
+    // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         var typeValidator = new ModelValidator<TypeId>();
         var typeValidation = typeValidator.Validate(Type);
         errors.AddRange(typeValidation.Errors.Select(e => "The type is invalid: " + e));
         return (isValid && typeValidation.IsValid, errors);
-
     }
 }
 
@@ -894,7 +950,8 @@ public class SidePiece : Model<SidePiece>
     /// <summary>
     ///     🆔 The optional local identifier of the piece within the design. No id means the default piece.
     /// </summary>
-    [Id("🆔", "Id?", "Id", "The optional local identifier of the piece within the design. No id means the default piece.")]
+    [Id("🆔", "Id?", "Id",
+        "The optional local identifier of the piece within the design. No id means the default piece.")]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -933,9 +990,12 @@ public class Side : Model<Side>
 /// <summary>
 ///     🔗 A connection between two pieces in a design.
 /// </summary>
-[Model("🔗", "Cn", "Con", "A connection between two pieces in a design.")]
+[Model("🔗", "Co", "Con", "A connection between two pieces in a design.")]
 public class Connection : Model<Connection>
 {
+    private float _rotation;
+    private float _tilt;
+
     /// <summary>
     ///     🧲 The connected side of the piece of the connection.
     /// </summary>
@@ -957,7 +1017,6 @@ public class Connection : Model<Connection>
         get => _rotation;
         set => _rotation = (value % 360 + 360) % 360;
     }
-    private float _rotation;
 
     /// <summary>
     ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
@@ -969,41 +1028,39 @@ public class Connection : Model<Connection>
         get => _tilt;
         set => _tilt = (value % 360 + 360) % 360;
     }
-    private float _tilt;
 
     /// <summary>
-    ///     🔄 The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting
+    ///     🔄 The optional offset distance (in port direction after rotation and tilt) between the connected and the
+    ///     connecting
     ///     piece.
     /// </summary>
     [NumberProp("↕️", "Of?", "Ofs",
-        "The optional offset distance (in port direction after rotation and tilt) between the connected and the connecting piece.")]
+        "The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
     public float Offset { get; set; } = 0;
 
     public override string ToString()
     {
-        var ctd = Connected.Piece.Id + ((Connected.Piece.Type.Port.Id != "") ? ":" + Connected.Piece.Type.Port.Id : "");
-        var cng = ((Connecting.Piece.Type.Port.Id != "") ? Connecting.Piece.Type.Port.Id + ":" : "") + Connecting.Piece.Id;
+        var ctd = Connected.Piece.Id + (Connected.Piece.Type.Port.Id != "" ? ":" + Connected.Piece.Type.Port.Id : "");
+        var cng = (Connecting.Piece.Type.Port.Id != "" ? Connecting.Piece.Type.Port.Id + ":" : "") +
+                  Connecting.Piece.Id;
         return $"Con({ctd}--{cng})";
     }
 
-    // TODO: Implement reflexive validation for model properties
+    // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
-        (var isValid, var errors) = base.Validate();
+        var (isValid, errors) = base.Validate();
         if (Connected.Piece.Id == Connecting.Piece.Id)
         {
             isValid = false;
             errors.Add("The connected and connecting pieces must be different.");
         }
+
         return (isValid, errors);
     }
 }
 
-/// <summary>
-///     🏙️ A design is a collection of pieces that are connected.
-/// </summary>
-[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
-public class Design : Model<Design>
+public class DesignProps : Model<Design>
 {
     /// <summary>
     ///     📛 The name of the design.
@@ -1035,7 +1092,14 @@ public class Design : Model<Design>
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.",
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+}
 
+/// <summary>
+///     🏙️ A design is a collection of pieces that are connected.
+/// </summary>
+[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+public class Design : DesignProps
+{
     /// <summary>
     ///     ⭕ The pieces of the design.
     /// </summary>
@@ -1069,13 +1133,77 @@ public class Design : Model<Design>
     //    graph.ConnectedComponents(components);
     //    return flattenedDesign;
     //}
+
+    // TODO: Implement reflexive validation for model properties.
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        var pieceValidator = new ModelValidator<Piece>();
+        foreach (var piece in Pieces)
+        {
+            var pieceValidation = pieceValidator.Validate(piece);
+            isValid = isValid && pieceValidation.IsValid;
+            errors.AddRange(pieceValidation.Errors.Select(e => "A piece is invalid: " + e));
+        }
+
+        var connectionValidator = new ModelValidator<Connection>();
+        foreach (var connection in Connections)
+        {
+            var connectionValidation = connectionValidator.Validate(connection);
+            isValid = isValid && connectionValidation.IsValid;
+            errors.AddRange(connectionValidation.Errors.Select(e => "A connection is invalid: " + e));
+        }
+
+        var qualityValidator = new ModelValidator<Quality>();
+        foreach (var quality in Qualities)
+        {
+            var qualityValidation = qualityValidator.Validate(quality);
+            isValid = isValid && qualityValidation.IsValid;
+            errors.AddRange(qualityValidation.Errors.Select(e => "A quality is invalid: " + e));
+        }
+
+        return (isValid, errors);
+    }
 }
 
 /// <summary>
-///     🗃️ A kit is a collection of types and designs.
+///     🏙️ The local identifier of the design within the kit.
 /// </summary>
-[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
-public class Kit : Model<Kit>
+[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+public class DesignId : Model<DesignId>
+{
+    /// <summary>
+    ///     📛 Name of the design.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     🔀 The optional value of the design.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+
+    public static implicit operator DesignId(DesignProps design)
+    {
+        return new DesignId
+        {
+            Name = design.Name,
+            Variant = design.Variant
+        };
+    }
+
+    public static implicit operator DesignId(Design design)
+    {
+        return new DesignId
+        {
+            Name = design.Name,
+            Variant = design.Variant
+        };
+    }
+}
+
+public class KitProps : Model<Kit>
 {
     /// <summary>
     ///     📛 Name of the kit.
@@ -1096,17 +1224,24 @@ public class Kit : Model<Kit>
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔗 The optional Unique Resource Locator (URL) where to fetch the kit.
+    ///     ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
     /// </summary>
-    [Url("🔗", "Ur?", "Url", "The optional Unique Resource Locator (URL) where to fetch the kit.")]
-    public string Url { get; set; } = "";
+    [Url("☁️", "Rm?", "Rmt", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
+    public string Remote { get; set; } = "";
 
     /// <summary>
     ///     🏠 The optional Unique Resource Locator (URL) of the homepage of the kit.
     /// </summary>
     [Url("🏠", "Hp?", "Hmp", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
+}
 
+/// <summary>
+///     🗃️ A kit is a collection of types and designs.
+/// </summary>
+[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
+public class Kit : KitProps
+{
     /// <summary>
     ///     🧩 The optional types of the kit.
     /// </summary>
@@ -1118,342 +1253,226 @@ public class Kit : Model<Kit>
     /// </summary>
     [ModelProp("🏙️", "Dn*", "Dsns", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+
+    // TODO: Implement reflexive validation for model properties.
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        var typeValidator = new ModelValidator<Type>();
+        foreach (var type in Types)
+        {
+            var typeValidation = typeValidator.Validate(type);
+            isValid = isValid && typeValidation.IsValid;
+            errors.AddRange(typeValidation.Errors.Select(e => "A type is invalid: " + e));
+        }
+
+        var designValidator = new ModelValidator<Design>();
+        foreach (var design in Designs)
+        {
+            var designValidation = designValidator.Validate(design);
+            isValid = isValid && designValidation.IsValid;
+            errors.AddRange(designValidation.Errors.Select(e => "A design is invalid: " + e));
+        }
+
+        return (isValid, errors);
+    }
 }
 
 #endregion
 
-public static class Serializer
-{
-    public static string Serialize(this object obj)
-    {
-        return JsonConvert.SerializeObject(
-            obj, Formatting.Indented, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-    }
-}
-
-public static class Deserializer
-{
-    public static T Deserialize<T>(this string json)
-    {
-        return JsonConvert.DeserializeObject<T>(
-            json, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-    }
-}
-
 #region Api
 
-public enum ErrorCode
+public class ApiException : Exception
 {
-    ADDRESS_INVALID,
-    PERMISSION_ERROR,
-    INPUT_INVALID
-}
-
-public class Error
-{
-    public ErrorCode Code { get; set; }
-    public string Message { get; set; }
-}
-public class LoadKitResponse
-{
-    public Kit? Kit { get; set; }
-    public string? Error { get; set; }
-}
-
-public class LoadKitResponseContainer
-{
-    public LoadKitResponse LoadKit { get; set; }
-}
-
-public class CreateKitResponse
-{
-    public Kit? Kit { get; set; }
-    public Error? Error { get; set; }
-}
-
-public class CreateKitResponseContainer
-{
-    public CreateKitResponse CreateKit { get; set; }
-}
-
-//public class UpdateKitPropsError
-//{
-//    public UpdateKitPropsErrorCode Code { get; set; }
-//    public string Message { get; set; }
-//}
-
-//public class UpdateKitPropsResponse
-//{
-//    public KitProps? Kit { get; set; }
-//    public UpdateKitPropsError? Error { get; set; }
-//}
-
-//public class UpdateKitPropsResponseContainer
-//{
-//    public UpdateKitPropsResponse UpdateKitProps { get; set; }
-//}
-
-//public enum DeleteKitError
-//{
-//    DIRECTORY_DOES_NOT_EXIST,
-//    DIRECTORY_HAS_NO_KIT,
-//    NO_PERMISSION_TO_DELETE_KIT
-//}
-
-//public class DeleteKitResponse
-//{
-//    public DeleteKitError? Error { get; set; }
-//}
-
-//public class DeleteKitResponseContainer
-//{
-//    public DeleteKitResponse DeleteKit { get; set; }
-//}
-
-//public enum AddTypeToKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST,
-//    DIRECTORY_IS_NOT_A_DIRECTORY,
-//    DIRECTORY_HAS_NO_KIT,
-//    NO_PERMISSION_TO_MODIFY_KIT,
-//    TYPE_INPUT_IS_INVALID
-//}
-
-//public class AddTypeToKitError
-//{
-//    public AddTypeToKitErrorCode Code { get; set; }
-//    public string Message { get; set; }
-//}
-
-//public class AddTypeToKitResponse
-//{
-//    public Type? Type { get; set; }
-//    public AddTypeToKitError? Error { get; set; }
-//}
-
-//public class AddTypeToKitResponseContainer
-//{
-//    public AddTypeToKitResponse AddTypeToKit { get; set; }
-//}
-
-//public enum RemoveTypeFromKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST,
-//    DIRECTORY_IS_NOT_A_DIRECTORY,
-//    DIRECTORY_HAS_NO_KIT,
-//    NO_PERMISSION_TO_MODIFY_KIT,
-//    TYPE_DOES_NOT_EXIST,
-//    DESIGN_DEPENDS_ON_TYPE
-//}
-
-//public class RemoveTypeFromKitError
-//{
-//    public RemoveTypeFromKitErrorCode Code { get; set; }
-//    public string Message { get; set; }
-//}
-
-//public class RemoveTypeFromKitResponse
-//{
-//    public RemoveTypeFromKitError? Error { get; set; }
-//}
-
-//public class RemoveTypeFromKitResponseContainer
-//{
-//    public RemoveTypeFromKitResponse RemoveTypeFromKit { get; set; }
-//}
-
-//public enum AddDesignToKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST,
-//    DIRECTORY_IS_NOT_A_DIRECTORY,
-//    DIRECTORY_HAS_NO_KIT,
-//    NO_PERMISSION_TO_MODIFY_KIT,
-//    DESIGN_INPUT_IS_INVALID
-//}
-
-//public class AddDesignToKitError
-//{
-//    public AddDesignToKitErrorCode Code { get; set; }
-//    public string Message { get; set; }
-//}
-
-//public class AddDesignToKitResponse
-//{
-//    public Design? Design { get; set; }
-//    public AddDesignToKitError? Error { get; set; }
-//}
-
-//public class AddDesignToKitResponseContainer
-//{
-//    public AddDesignToKitResponse AddDesignToKit { get; set; }
-//}
-
-//public enum RemoveDesignFromKitErrorCode
-//{
-//    DIRECTORY_DOES_NOT_EXIST,
-//    DIRECTORY_IS_NOT_A_DIRECTORY,
-//    DIRECTORY_HAS_NO_KIT,
-//    NO_PERMISSION_TO_MODIFY_KIT,
-//    DESIGN_DOES_NOT_EXIST
-//}
-
-//public class RemoveDesignFromKitError
-//{
-//    public RemoveDesignFromKitErrorCode Code { get; set; }
-//    public string Message { get; set; }
-//}
-
-//public class RemoveDesignFromKitResponse
-//{
-//    public RemoveDesignFromKitError? Error { get; set; }
-//}
-
-//public class RemoveDesignFromKitResponseContainer
-//{
-//    public RemoveDesignFromKitResponse RemoveDesignFromKit { get; set; }
-//}
-
-public class Api : ICloneable
-{
-    public Api()
+    public ApiException(string message) : base(message)
     {
-        Endpoint = $"http://127.0.0.1:{Constants.EnginePort}/graphql";
-        Token = "";
-        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
     }
+}
 
-    public Api(string endpoint, string token)
+public class NotFoundException : ApiException
+{
+    public NotFoundException(string message) : base(message)
     {
-        Endpoint = endpoint;
-        Token = token;
-        Client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer());
-        if (!string.IsNullOrEmpty(Token))
-            Client.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
     }
+}
 
-    public GraphQLHttpClient Client { get; set; }
-    public string Endpoint { get; set; }
-    public string Token { get; set; }
-
-    public object Clone()
+public class TypeNotFoundException : NotFoundException
+{
+    public TypeNotFoundException(string message) : base(message)
     {
-        return new Api(Endpoint, Token);
     }
+}
 
-    public override string ToString()
+public class DesignNotFoundException : NotFoundException
+{
+    public DesignNotFoundException(string message) : base(message)
     {
-        return $"Api(Endpoint: {Endpoint}, Token: {Token})";
     }
+}
 
-    public LoadKitResponse? LoadKit(string url)
+public class KitNotFoundException : NotFoundException
+{
+    public KitNotFoundException(string message) : base(message)
     {
-        var query = new GraphQLRequest
+    }
+}
+
+public class ServerException : Exception
+{
+    public ServerException(string message) : base(message)
+    {
+    }
+}
+
+public class BadInputException : ApiException
+{
+    public BadInputException(string message) : base(message)
+    {
+    }
+}
+
+public class BadTypeInputException : BadInputException
+{
+    public BadTypeInputException(string message) : base(message)
+    {
+    }
+}
+
+public class BadDesignInputException : BadInputException
+{
+    public BadDesignInputException(string message) : base(message)
+    {
+    }
+}
+
+public class BadKitInputException : BadInputException
+{
+    public BadKitInputException(string message) : base(message)
+    {
+    }
+}
+
+public interface IApi
+{
+    [Get("/kits/{encodedKitUrl}")]
+    Task<ApiResponse<Kit>> GetKit(string encodedKitUrl);
+
+    [Put("/kits/{encodedKitUrl}")]
+    Task<ApiResponse<bool>> CreateKit(string encodedKitUrl, [Body] Kit input);
+
+    [Delete("/kits/{encodedKitUrl}")]
+    Task<ApiResponse<bool>> DeleteKit(string encodedKitUrl);
+
+
+    [Put("/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}")]
+    Task<ApiResponse<bool>> PutType(string encodedKitUrl, string encodedTypeName, string encodedTypeVariant,
+        [Body] Type input);
+
+    [Delete("/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}")]
+    Task<ApiResponse<bool>> RemoveType(string encodedKitUrl, string encodedTypeName, string encodedTypeVariant);
+
+    [Put("/kits/{encodedKitUrl}/designs/{encodedDesignName},{encodedDesignVariant}")]
+    Task<ApiResponse<bool>> PutDesign(string encodedKitUrl, string encodedDesignName, string encodedDesignVariant,
+        [Body] Design input);
+
+    [Delete("/kits/{encodedKitUrl}/designs/{encodedDesignName},{encodedDesignVariant}")]
+    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUrl, string encodedDesignName, string encodedDesignVariant);
+}
+
+public static class Api
+{
+    private static IApi GetApi()
+    {
+        return RestService.For<IApi>(Constants.EngineAddress, new RefitSettings
         {
-            Query = Resources.loadKit,
-            OperationName = "LoadKit",
-            Variables = new { url }
-        };
-        var response = Client.SendQueryAsync<LoadKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.LoadKit;
+            ContentSerializer = new NewtonsoftJsonContentSerializer(
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                }
+            )
+        });
     }
 
-    public CreateKitResponse? CreateKit(string url, Kit kit)
+    private static string UnsuccessfullResponseToString<T>(ApiResponse<T> response)
     {
-        var query = new GraphQLRequest
+        return JsonConvert.SerializeObject(new
         {
-            Query = Resources.createKit,
-            OperationName = "CreateKit",
-            Variables = new { url, kit }
-        };
-        var response = Client.SendQueryAsync<CreateKitResponseContainer>(query).Result;
-        if (response.Errors != null) return null;
-        return response.Data.CreateKit;
+            Message = response.Error.Content ?? "null",
+            StatusCode = response.StatusCode.ToString(),
+            Request = response.RequestMessage.ToString(),
+            Headers = response.Headers.ToString(),
+        });
     }
 
-    //public UpdateKitPropsResponse? UpdateKitProps(string directory, KitProps kit)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.updateKitMetadata,
-    //        OperationName = "UpdateKitProps",
-    //        Variables = new { directory, kit }
-    //    };
-    //    var response = Client.SendQueryAsync<UpdateKitPropsResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.UpdateKitProps;
-    //}
+    public static Kit GetKit(string url)
+    {
+        var response = GetApi().GetKit(Utility.Encode(url)).Result;
+        if (response.IsSuccessStatusCode)
+            return response.Content;
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new KitNotFoundException(response.Error.Content);
+        throw new ServerException(UnsuccessfullResponseToString(response));
+    }
 
-    //public DeleteKitResponse? DeleteKit(string directory)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.deleteKit,
-    //        OperationName = "DeleteKit",
-    //        Variables = new { directory }
-    //    };
-    //    var response = Client.SendQueryAsync<DeleteKitResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.DeleteKit;
-    //}
+    public static void CreateKit(string url, Kit input)
+    {
+        var response = GetApi().CreateKit(Utility.Encode(url), input).Result;
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            throw new BadKitInputException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
 
-    //public AddTypeToKitResponse? AddTypeToKit(string directory, Type type)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.addTypeToKit,
-    //        OperationName = "AddTypeToKit",
-    //        Variables = new { directory, type }
-    //    };
-    //    var response = Client.SendQueryAsync<AddTypeToKitResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.AddTypeToKit;
-    //}
+    public static void DeleteKit(string url)
+    {
+        var response = GetApi().DeleteKit(Utility.Encode(url)).Result;
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new KitNotFoundException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
 
-    //public RemoveTypeFromKitResponse? RemoveTypeFromKit(string directory, TypeId type)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.removeTypeFromKit,
-    //        OperationName = "RemoveTypeFromKit",
-    //        Variables = new { directory, type }
-    //    };
-    //    var response = Client.SendQueryAsync<RemoveTypeFromKitResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.RemoveTypeFromKit;
-    //}
 
-    //public AddDesignToKitResponse? AddDesignToKit(string directory, Design design)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.addDesignToKit,
-    //        OperationName = "AddDesignToKit",
-    //        Variables = new { directory, design }
-    //    };
-    //    var response = Client.SendQueryAsync<AddDesignToKitResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.AddDesignToKit;
-    //}
+    public static void PutType(string kitUrl, Type input)
+    {
+        var response = GetApi()
+            .PutType(Utility.Encode(kitUrl), Utility.Encode(input.Name), Utility.Encode(input.Variant), input).Result;
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            throw new BadTypeInputException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
 
-    //public RemoveDesignFromKitResponse? RemoveDesignFromKit(string directory, DesignId design)
-    //{
-    //    var query = new GraphQLRequest
-    //    {
-    //        Query = Resources.removeDesignFromKit,
-    //        OperationName = "RemoveDesignFromKit",
-    //        Variables = new { directory, design }
-    //    };
-    //    var response = Client.SendQueryAsync<RemoveDesignFromKitResponseContainer>(query).Result;
-    //    if (response.Errors != null) return null;
-    //    return response.Data.RemoveDesignFromKit;
-    //}
+    public static void RemoveType(string kitUrl, TypeId id)
+    {
+        var response = GetApi()
+            .RemoveType(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new TypeNotFoundException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
+
+    public static void PutDesign(string kitUrl, Design input)
+    {
+        var response = GetApi().PutDesign(Utility.Encode(kitUrl), Utility.Encode(input.Name),
+            Utility.Encode(input.Variant), input).Result;
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            throw new BadDesignInputException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
+
+    public static void RemoveDesign(string kitUrl, DesignId id)
+    {
+        var response = GetApi()
+            .RemoveDesign(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new DesignNotFoundException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
 
 }
 
@@ -1519,17 +1538,45 @@ public static class Meta
             propertyItemType[mt.Name] = new List<System.Type>();
             isPropertyModel[mt.Name] = new List<bool>();
 
+            // TODO: Add index to prop and add to list based on index not on source code order.
+            // GetProperties() returns parent last
+            var propertyParents = new List<PropertyInfo>();
+            var propParents = new List<PropAttribute>();
+            var isPropertyListParents = new List<bool>();
+            var propertyItemTypeParents = new List<System.Type>();
+            var isPropertyModelParents = new List<bool>();
             foreach (var mtp in mt.GetProperties()
                          .Where(mtp => mtp.GetCustomAttribute<PropAttribute>() != null))
             {
-                property[mt.Name].Add(mtp);
-                prop[mt.Name].Add(mtp.GetCustomAttribute<PropAttribute>());
+                var mtpProp = mtp.GetCustomAttribute<PropAttribute>();
                 var imtpl = mtp.PropertyType.IsGenericType &&
                             mtp.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
-                isPropertyList[mt.Name].Add(imtpl);
-                propertyItemType[mt.Name].Add(imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType);
-                isPropertyModel[mt.Name].Add(mtp.GetCustomAttribute<ModelPropAttribute>() != null);
+                var mtpPropertyItemType = imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType;
+                var mtpIsPropertyModel = mtp.GetCustomAttribute<ModelPropAttribute>() != null;
+
+                if (mtp.DeclaringType.FullName != mt.FullName)
+                {
+                    propertyParents.Add(mtp);
+                    propParents.Add(mtpProp);
+                    isPropertyListParents.Add(imtpl);
+                    propertyItemTypeParents.Add(mtpPropertyItemType);
+                    isPropertyModelParents.Add(mtpIsPropertyModel);
+                }
+                else
+                {
+                    property[mt.Name].Add(mtp);
+                    prop[mt.Name].Add(mtpProp);
+                    isPropertyList[mt.Name].Add(imtpl);
+                    propertyItemType[mt.Name].Add(mtpPropertyItemType);
+                    isPropertyModel[mt.Name].Add(mtpIsPropertyModel);
+                }
             }
+
+            property[mt.Name].InsertRange(0, propertyParents);
+            prop[mt.Name].InsertRange(0, propParents);
+            isPropertyList[mt.Name].InsertRange(0, isPropertyListParents);
+            propertyItemType[mt.Name].InsertRange(0, propertyItemTypeParents);
+            isPropertyModel[mt.Name].InsertRange(0, isPropertyModelParents);
         }
 
         Type = type.ToImmutableDictionary();

@@ -1,19 +1,19 @@
 [tool.poetry]
 name = "semio-engine"
-version = "3.0.0"
+version = "4.0.0"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 maintainers = ["Ueli Saluz <semio-community@posteo.org>"]
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/usalu/semio"
-homepage = "https://usalu.github.io/semio"
+# homepage = "https://usalu.github.io/semio"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
 sqlalchemy = "^2.0.36"
-uvicorn = "^0.32.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
 starlette = "^0.41.0"
-graphene = "^3.3"
+graphene = "^3.4.1"
 graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
 starlette-graphene3 = "^0.6.0"
 pydantic = "^2.9.2"
@@ -42,7 +42,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-engine = "engine:main" #doesn't work. Use instead: poetry run python engine.py
+semio = "semio:main" #doesn't work. Use instead: poetry run python semio.py
 
 [tool.coverage.run]
 branch = true

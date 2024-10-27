@@ -1,8 +1,0 @@
-mutation RemoveTypeFromLocalKit($directory: String!, $type: TypeIdInput!) {
-  removeTypeFromLocalKit(directory: $directory, typeId: $type) {
-    error {
-      code
-      message
-    }
-  }
-}

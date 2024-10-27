@@ -47,7 +47,17 @@ import {
     InputNumberProps
 } from 'antd'
 import enUS from 'antd/lib/calendar/locale/en_US'
-import { Mesh, Line, Matrix4, MeshBasicMaterial, LineBasicMaterial, Color, Vector3, Object3DEventMap, Group } from 'three'
+import {
+    Mesh,
+    Line,
+    Matrix4,
+    MeshBasicMaterial,
+    LineBasicMaterial,
+    Color,
+    Vector3,
+    Object3DEventMap,
+    Group
+} from 'three'
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber'
 import {
     OrbitControls,
@@ -74,7 +84,14 @@ import FolderSharpIcon from '@mui/icons-material/FolderSharp'
 import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp'
 import OpenWithIcon from '@mui/icons-material/OpenWith'
 import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from '@dnd-kit/core'
+import {
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    useDraggable,
+    useDroppable
+} from '@dnd-kit/core'
 import { nanoid } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -103,7 +120,7 @@ import {
     Plane,
     Transform,
     semioToThreeRotation,
-    Plane,
+    Plane
 } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
@@ -158,11 +175,9 @@ import { ThemeConfig } from 'antd/lib'
 //     designToSceneFromLocalKit?: Maybe<DesignToSceneFromLocalKitResponse>;
 // };
 
-
 // export type QueryLoadLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 // };
-
 
 // export type QueryDesignToSceneFromLocalKitArgs = {
 //     directory: Scalars['String']['input'];
@@ -206,7 +221,7 @@ import { ThemeConfig } from 'antd/lib'
 //     pieces: Array<Piece>;
 // };
 
-// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
+// /** 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags. */
 // export type Representation = {
 //     __typename?: 'Representation';
 //     url: Scalars['String']['output'];
@@ -406,41 +421,34 @@ import { ThemeConfig } from 'antd/lib'
 //     removeDesignFromLocalKit?: Maybe<RemoveDesignFromLocalKitMutation>;
 // };
 
-
 // export type MutationCreateLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 //     kitInput: KitInput;
 // };
-
 
 // export type MutationUpdateLocalKitMetadataArgs = {
 //     directory: Scalars['String']['input'];
 //     kitMetadataInput: KitMetadataInput;
 // };
 
-
 // export type MutationDeleteLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 // };
-
 
 // export type MutationAddTypeToLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 //     typeInput: TypeInput;
 // };
 
-
 // export type MutationRemoveTypeFromLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 //     typeId: TypeIdInput;
 // };
 
-
 // export type MutationAddDesignToLocalKitArgs = {
 //     directory: Scalars['String']['input'];
 //     designInput: DesignInput;
 // };
-
 
 // export type MutationRemoveDesignFromLocalKitArgs = {
 //     directory: Scalars['String']['input'];
@@ -490,7 +498,7 @@ import { ThemeConfig } from 'antd/lib'
 //     qualities?: InputMaybe<Array<QualityInput>>;
 // };
 
-// /** 💾 A representation is a link to a file that describes a type for a certain level of detail and tags. */
+// /** 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags. */
 // export type RepresentationInput = {
 //     url: Scalars['String']['input'];
 //     lod?: InputMaybe<Scalars['String']['input']>;
@@ -791,7 +799,7 @@ const sketchpadTheme = {
         wireframe: false,
         borderRadius: 0,
         lineType: 'none',
-        lineWidth: 0,
+        lineWidth: 0
         // TODO: Fast motion without modal freeze
         // motionUnit: 0.001, // Makes modal freeze somehow and overwriting it on Modal doesn't work.
     },
@@ -814,10 +822,9 @@ const sketchpadTheme = {
             groupBorderColor: colors.light,
             linkHoverBg: colors.light,
             primaryColor: colors.light,
-            textHoverBg: colors.light,
+            textHoverBg: colors.light
         },
-        FloatButton: {
-        },
+        FloatButton: {},
         Layout: {
             bodyBg: colors.dark, //
             footerBg: colors.grey, //
@@ -877,13 +884,19 @@ const sketchpadTheme = {
             buttonSolidCheckedActiveBg: colors.light,
             buttonSolidCheckedColor: colors.light,
             buttonSolidCheckedHoverBg: colors.light,
-            dotColorDisabled: colors.light,
+            dotColorDisabled: colors.light
         },
-        Tooltip: {},
+        Tooltip: {}
     }
 } as ThemeConfig
 
-const Label = ({ children, className }: { children: ReactNode; className?: string }): JSX.Element => {
+const Label = ({
+    children,
+    className
+}: {
+    children: ReactNode
+    className?: string
+}): JSX.Element => {
     return <span className={`text-lightGrey ${className}`}>{children}</span>
 }
 
@@ -989,7 +1002,7 @@ const ResultItem = forwardRef(
                 ref={ref}
                 className={`flex justify-between px-4 rounded-md  ${active ? 'bg-primary text-dark' : 'bg-dark bg-opacity-50 text-light'}`}
             >
-                <div className='description'>
+                <div className="description">
                     {action.icon && action.icon}
                     <div>
                         <div>
@@ -1006,7 +1019,7 @@ const ResultItem = forwardRef(
                     </div>
                 </div>
                 {action.shortcut?.length ? (
-                    <div className='shortcut'>
+                    <div className="shortcut">
                         {action.shortcut.map((sc) => (
                             <kbd key={sc}>{tinyKeyStringToHuman(sc)}</kbd>
                         ))}
@@ -1043,10 +1056,10 @@ function RenderResults({ className }: RenderResultsProps): JSX.Element {
 function CommandBar(): JSX.Element {
     return (
         <KBarPortal>
-            <KBarPositioner className='backdrop-blur-sm'>
-                <KBarAnimator className='w-2/3'>
-                    <KBarSearch className='w-full bg-light border-none p-4 rounded-2xl placeholder:text-dark focus:bg-primary focus:outline-none focus:placeholder:text-light selection:bg-secondary' />
-                    <RenderResults className=' bg-light bg-opacity-50 rounded-md px-2 py-1 box-content' />
+            <KBarPositioner className="backdrop-blur-sm">
+                <KBarAnimator className="w-2/3">
+                    <KBarSearch className="w-full bg-light border-none p-4 rounded-2xl placeholder:text-dark focus:bg-primary focus:outline-none focus:placeholder:text-light selection:bg-secondary" />
+                    <RenderResults className=" bg-light bg-opacity-50 rounded-md px-2 py-1 box-content" />
                 </KBarAnimator>
             </KBarPositioner>
         </KBarPortal>
@@ -1117,22 +1130,22 @@ const ArtifactAvatar = ({
     const [data, kind] = getIconData(icon)
     const draggableProps = draggableId
         ? (() => {
-            const { attributes, listeners, setNodeRef } = useDraggable({
-                id: draggableId
-            })
+              const { attributes, listeners, setNodeRef } = useDraggable({
+                  id: draggableId
+              })
 
-            return {
-                ref: setNodeRef,
-                ...listeners,
-                ...attributes
-            }
-        })()
+              return {
+                  ref: setNodeRef,
+                  ...listeners,
+                  ...attributes
+              }
+          })()
         : {}
 
     switch (kind) {
         case IconKind.Svg:
             return (
-                <Tooltip placement='right' title={description}>
+                <Tooltip placement="right" title={description}>
                     <Avatar
                         className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
                         size={38}
@@ -1140,15 +1153,15 @@ const ArtifactAvatar = ({
                     >
                         <SVG
                             src={turnBlackAndWhiteSvgSemiotic(data, isSelected)}
-                            width='32'
-                            height='32'
+                            width="32"
+                            height="32"
                         />
                     </Avatar>
                 </Tooltip>
             )
         case IconKind.Image:
             return (
-                <Tooltip placement='right' title={description}>
+                <Tooltip placement="right" title={description}>
                     <Avatar
                         className={`cursor-pointer ${isSelected ? 'bg-primary opacity-50' : 'bg-light opacity-100'}`}
                         src={data}
@@ -1159,7 +1172,7 @@ const ArtifactAvatar = ({
             )
         case IconKind.Text:
             return (
-                <Tooltip placement='right' title={description}>
+                <Tooltip placement="right" title={description}>
                     <Avatar
                         className={`font-sans cursor-pointer ${isSelected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
                         size={38}
@@ -1171,7 +1184,6 @@ const ArtifactAvatar = ({
             )
     }
 }
-
 
 const getGroupNameFromClickEventGroupObject = (o: any): string => {
     if (o.name !== '') return o.name
@@ -1187,14 +1199,11 @@ const getGroupNameFromClickEventGroupObject = (o: any): string => {
 
 const Gizmo = (): JSX.Element => {
     return (
-        <GizmoHelper
-            alignment='bottom-right'
-            margin={[80, 80]}
-        >
+        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
             <GizmoViewport
                 labels={['X', 'Z', '-Y']}
                 axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-            // font='Anta'
+                // font='Anta'
             />
         </GizmoHelper>
     )
@@ -1216,7 +1225,6 @@ const PointThree = ({ point, color, size }: PointThreeProps): JSX.Element => {
     )
 }
 
-
 interface SemioCanvasProps {
     children: React.ReactNode
     onPointerMissed?: (event: MouseEvent) => void
@@ -1234,16 +1242,13 @@ const SemioCanvas = ({ children, onPointerMissed }: SemioCanvasProps): JSX.Eleme
             <Grid infiniteGrid={true} sectionColor={colors.lightGrey} />
             <Stage center={{ disable: true }} environment={null}>
                 <Suspense fallback={null}>
-                    <group
-                        matrix={semioToThreeRotation().toArray()}
-                        matrixAutoUpdate={false}
-                    >
+                    <group matrix={semioToThreeRotation().toArray()} matrixAutoUpdate={false}>
                         {/* <PointThree point={new Point(0, 0, 0)} color={colors.light} size={0.1} /> */}
                         {children}
                     </group>
                 </Suspense>
             </Stage>
-        </Canvas >
+        </Canvas>
     )
 }
 
@@ -1362,11 +1367,12 @@ const PortThree = ({ port, selected, onClick }: PortThreeProps): JSX.Element => 
     const direction = Vector.parse(port.direction)
 
     return (
-        <group name='port' onClick={onClick}>
+        <group name="port" onClick={onClick}>
             <PointThree
                 point={point}
                 color={selected ? colors.primary : colors.grey}
-                size={selected ? 0.2 : 0.1} />
+                size={selected ? 0.2 : 0.1}
+            />
             <DreiLine
                 points={[point.toArray(), new Vector3().addVectors(point, direction).toArray()]}
                 color={colors.light}
@@ -1383,7 +1389,12 @@ interface RepresentationThreeProps {
     transform?: Transform // in semio coordinates
 }
 
-const RepresentationThree = ({ representation, id, color, transform }: RepresentationThreeProps): JSX.Element => {
+const RepresentationThree = ({
+    representation,
+    id,
+    color,
+    transform
+}: RepresentationThreeProps): JSX.Element => {
     const { blobUrls } = useContext(EditorContext)
     const representationThreeScene = useMemo(() => {
         const clone = useLoader(GLTFLoader, blobUrls[representation.url]).scene.clone()
@@ -1424,10 +1435,13 @@ const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JS
     const ports = type.ports
 
     return (
-        <div className='w-[350px] h-[350px]'>
+        <div className="w-[350px] h-[350px]">
             <SemioCanvas>
                 {/* TODO: Proper filtering */}
-                <RepresentationThree id={type.id} representation={type.representations.find((r) => r.url.endsWith('.glb'))} />
+                <RepresentationThree
+                    id={type.id}
+                    representation={type.representations.find((r) => r.url.endsWith('.glb'))}
+                />
                 {ports.map((port) => (
                     <PortThree
                         key={port.id}
@@ -1440,7 +1454,7 @@ const PortSelector = ({ type, selectedPortId, onSelect }: PortSelectorProps): JS
                     />
                 ))}
             </SemioCanvas>
-        </div >
+        </div>
     )
 }
 
@@ -1450,9 +1464,17 @@ interface ConnectionPreview {
     connection: Connection | ConnectionInput
 }
 
-const ConnectionPreview = ({ connectedType, connectingType, connection }: ConnectionPreview): JSX.Element => {
-    const parentPort = connectedType.ports.find((port) => port.id === connection.connected.piece.type?.port?.id)
-    const childPort = connectingType.ports.find((port) => port.id === connection.connecting.piece.type?.port?.id)
+const ConnectionPreview = ({
+    connectedType,
+    connectingType,
+    connection
+}: ConnectionPreview): JSX.Element => {
+    const parentPort = connectedType.ports.find(
+        (port) => port.id === connection.connected.piece.type?.port?.id
+    )
+    const childPort = connectingType.ports.find(
+        (port) => port.id === connection.connecting.piece.type?.port?.id
+    )
     const parentDirection = Vector.parse(parentPort.direction)
     const childDirection = Vector.parse(childPort.direction)
     const parentPoint = Point.parse(parentPort.point)
@@ -1473,17 +1495,21 @@ const ConnectionPreview = ({ connectedType, connectingType, connection }: Connec
     }
     transform = moveToParent.after(transform)
     return (
-        <div className='w-[700px] h-[700px]'>
+        <div className="w-[700px] h-[700px]">
             <SemioCanvas>
                 <RepresentationThree
-                    id='connected'
+                    id="connected"
                     // TODO: Proper filtering
-                    representation={connectedType.representations.find((r) => r.url.endsWith('.glb'))}
+                    representation={connectedType.representations.find((r) =>
+                        r.url.endsWith('.glb')
+                    )}
                 />
                 <RepresentationThree
-                    id='connecting'
+                    id="connecting"
                     // TODO: Proper filtering
-                    representation={connectingType.representations.find((r) => r.url.endsWith('.glb'))}
+                    representation={connectingType.representations.find((r) =>
+                        r.url.endsWith('.glb')
+                    )}
                     transform={transform}
                 />
             </SemioCanvas>
@@ -1501,15 +1527,21 @@ interface ConnectionBuilderProps {
     onConnectionChange: (connection: ConnectionInput) => void
 }
 
-const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }: ConnectionBuilderProps): JSX.Element => {
-    const [connectingPortId, setConnectingPortId] = useState(findDefaultOrFirstPort(connectingType).id)
+const ConnectionBuilder = ({
+    connectingType,
+    connectedType,
+    onConnectionChange
+}: ConnectionBuilderProps): JSX.Element => {
+    const [connectingPortId, setConnectingPortId] = useState(
+        findDefaultOrFirstPort(connectingType).id
+    )
     const [connectedPortId, setConnectedPortId] = useState(findDefaultOrFirstPort(connectedType).id)
     const [offset, setOffset] = useState(0)
     const [rotation, setRotation] = useState(0)
 
     const onRotationChange: InputNumberProps['onChange'] = (newValue) => {
-        setRotation(newValue as number);
-    };
+        setRotation(newValue as number)
+    }
 
     const connection = {
         connecting: {
@@ -1541,15 +1573,20 @@ const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }
     return (
         <Flex>
             <Flex vertical>
-                <PortSelector type={connectingType} onSelect={setConnectingPortId} selectedPortId={connectingPortId} />
-                <Divider className='m-0' />
-                <PortSelector type={connectedType} onSelect={setConnectedPortId} selectedPortId={connectedPortId} />
+                <PortSelector
+                    type={connectingType}
+                    onSelect={setConnectingPortId}
+                    selectedPortId={connectingPortId}
+                />
+                <Divider className="m-0" />
+                <PortSelector
+                    type={connectedType}
+                    onSelect={setConnectedPortId}
+                    selectedPortId={connectedPortId}
+                />
                 <Flex>
                     <Label>Offset</Label>
-                    <InputNumber
-                        value={offset}
-                        onChange={(value) => setOffset(value)}
-                    />
+                    <InputNumber value={offset} onChange={(value) => setOffset(value)} />
                 </Flex>
                 <Row>
                     <Col span={12}>
@@ -1571,14 +1608,17 @@ const ConnectionBuilder = ({ connectingType, connectedType, onConnectionChange }
                     </Col>
                 </Row>
             </Flex>
-            <Divider className='h-auto' type='vertical' />
+            <Divider className="h-auto" type="vertical" />
             <Flex vertical>
-                <ConnectionPreview connectingType={connectingType} connectedType={connectedType} connection={connection} />
+                <ConnectionPreview
+                    connectingType={connectingType}
+                    connectedType={connectedType}
+                    connection={connection}
+                />
             </Flex>
         </Flex>
     )
 }
-
 
 const GraphConfig = {
     NodeTypes: {
@@ -1587,14 +1627,14 @@ const GraphConfig = {
             shapeId: '#piece',
             shape: (
                 <symbol
-                    className='piece'
-                    viewBox='0 0 50 50'
-                    height='40'
-                    width='40'
-                    id='piece'
-                    key='0'
+                    className="piece"
+                    viewBox="0 0 50 50"
+                    height="40"
+                    width="40"
+                    id="piece"
+                    key="0"
                 >
-                    <circle cx='25' cy='25' r='24'></circle>
+                    <circle cx="25" cy="25" r="24"></circle>
                 </symbol>
             )
         }
@@ -1604,7 +1644,7 @@ const GraphConfig = {
         connection: {
             shapeId: '#connection',
             shape: (
-                <symbol viewBox='0 0 50 50' id='connection' key='0'>
+                <symbol viewBox="0 0 50 50" id="connection" key="0">
                     {/* <circle cx='25' cy='25' r='8' fill='currentColor'> </circle> */}
                 </symbol>
             )
@@ -1641,8 +1681,14 @@ const transformPieceToNode = (piece: Piece | PieceInput): IPieceNode => {
     }
 }
 const transformConnectionToEdge = (connection: Connection | ConnectionInput): IConnectionEdge => {
-    const sourceLabel = (connection.connected.piece.type?.port?.id ?? '') === '' ? '""' : connection.connected.piece.type?.port?.id
-    const targetLabel = (connection.connecting.piece.type?.port?.id ?? '') === '' ? '""' : connection.connecting.piece.type?.port?.id
+    const sourceLabel =
+        (connection.connected.piece.type?.port?.id ?? '') === ''
+            ? '""'
+            : connection.connected.piece.type?.port?.id
+    const targetLabel =
+        (connection.connecting.piece.type?.port?.id ?? '') === ''
+            ? '""'
+            : connection.connecting.piece.type?.port?.id
     return {
         source: connection.connected.piece.id,
         target: connection.connecting.piece.id,
@@ -1665,7 +1711,10 @@ const transformDesignToGraph = (design: Design | DesignInput): IDraft => {
     }
 }
 
-const transformSelectionToGraph = (design: Design | DesignInput, selection: ISelectionDesign): SelectionT => {
+const transformSelectionToGraph = (
+    design: Design | DesignInput,
+    selection: ISelectionDesign
+): SelectionT => {
     const nodes = new Map<string, INode>()
     const edges = new Map<string, IEdge>()
     selection.piecesIds.forEach((pieceId) => {
@@ -1696,21 +1745,21 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     const { designViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
     const types = useSelector((state: RootState) => selectTypes(state, kitDirectory))
-    const designView = useSelector((state: RootState) =>
-        selectDesignView(state, designViewId)
-    )
+    const designView = useSelector((state: RootState) => selectDesignView(state, designViewId))
     if (!designView) return null
     const designRef = useRef(designView.design)
     useEffect(() => {
-        designRef.current = designView.design;
+        designRef.current = designView.design
     }, [designView.design])
-
 
     const graph = useMemo(() => transformDesignToGraph(designView.design), [designView.design])
     const nodes = graph.nodes
     const edges = graph.edges
 
-    const selected = useMemo(() => transformSelectionToGraph(designView.design, designView.selection), [designView.design, designView.selection])
+    const selected = useMemo(
+        () => transformSelectionToGraph(designView.design, designView.selection),
+        [designView.design, designView.selection]
+    )
 
     const graphViewRef = useRef(null)
 
@@ -1718,7 +1767,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         id: 'diagramEditor'
     })
 
-    const [isConnectionBuilderOpen, setIsConnectionBuilderOpen] = useState(false);
+    const [isConnectionBuilderOpen, setIsConnectionBuilderOpen] = useState(false)
     const [connectingType, setConnectingType] = useState<Type | TypeInput | null>(null)
     const [connectingPieceId, setConnectingPieceId] = useState<string | null>(null)
     const [connectedType, setConnectedType] = useState<Type | TypeInput | null>(null)
@@ -1867,14 +1916,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         pieces: designRef.current.pieces.map((p) =>
                             p.id === node.id
                                 ? {
-                                    ...p,
-                                    diagram: {
-                                        point: {
-                                            x: Math.round(updatedNodePosition?.x ?? node.x),
-                                            y: Math.round(updatedNodePosition?.y ?? node.y)
-                                        }
-                                    }
-                                }
+                                      ...p,
+                                      diagram: {
+                                          point: {
+                                              x: Math.round(updatedNodePosition?.x ?? node.x),
+                                              y: Math.round(updatedNodePosition?.y ?? node.y)
+                                          }
+                                      }
+                                  }
                                 : p
                         )
                     } as DesignInput
@@ -1884,8 +1933,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     }
 
     const onCreateEdge = (sourceNode: INode, targetNode: INode): void => {
-        const connectingPieceType = types.get(sourceNode.piece.type.name).get(sourceNode.piece.type.variant ?? '')
-        const connectedPieceType = types.get(targetNode.piece.type.name).get(targetNode.piece.type.variant ?? '')
+        const connectingPieceType = types
+            .get(sourceNode.piece.type.name)
+            .get(sourceNode.piece.type.variant ?? '')
+        const connectedPieceType = types
+            .get(targetNode.piece.type.name)
+            .get(targetNode.piece.type.variant ?? '')
         setConnectingType(connectingPieceType)
         setConnectingPieceId(sourceNode.id)
         setConnectedType(connectedPieceType)
@@ -1894,7 +1947,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     }
 
     const onDeleteSelected = (selected: SelectionT) => {
-        dispatch(updateDesignSelection(designView.id, designView.selection.piecesIds.filter((id) => !selected.nodes?.has(id))))
+        dispatch(
+            updateDesignSelection(
+                designView.id,
+                designView.selection.piecesIds.filter((id) => !selected.nodes?.has(id))
+            )
+        )
         dispatch(
             updateDesign({
                 id: designView.id,
@@ -1907,8 +1965,9 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         (connection) =>
                             !selected.edges?.has(
                                 `${connection.connecting.piece.id}_${connection.connected.piece.id}`
-                            ) && !selected.nodes?.has(connection.connecting.piece.id)
-                            && !selected.nodes?.has(connection.connected.piece.id)
+                            ) &&
+                            !selected.nodes?.has(connection.connecting.piece.id) &&
+                            !selected.nodes?.has(connection.connected.piece.id)
                     )
                 } as DesignInput
             })
@@ -1920,7 +1979,9 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             const nodesToCopy = graph.nodes.filter((node) => selected.nodes?.has(node.id))
             const toppestNode = nodesToCopy.reduce((prev, curr) => (prev.y < curr.y ? prev : curr))
             const leftestNode = nodesToCopy.reduce((prev, curr) => (prev.x < curr.x ? prev : curr))
-            const edgesToCopy = graph.edges.filter((edge) => selected.edges?.has(`${edge.source}_${edge.target}`))
+            const edgesToCopy = graph.edges.filter((edge) =>
+                selected.edges?.has(`${edge.source}_${edge.target}`)
+            )
             const designSnippetToCopy = {
                 pieces: nodesToCopy.map((node) => ({
                     ...node.piece,
@@ -1935,10 +1996,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             }
             navigator.clipboard
                 .writeText(JSON.stringify(designSnippetToCopy))
-                .then(() => {
-                })
-                .catch((err) => {
-                })
+                .then(() => {})
+                .catch((err) => {})
         }
     }
 
@@ -1988,10 +2047,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     id: designView.id,
                     design: {
                         ...designRef.current,
-                        pieces: [
-                            ...designRef.current.pieces,
-                            ...placedDesignSnippet.pieces
-                        ],
+                        pieces: [...designRef.current.pieces, ...placedDesignSnippet.pieces],
                         connections: [
                             ...designRef.current.connections,
                             ...placedDesignSnippet.connections
@@ -2015,7 +2071,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         return false
     }
 
-    const onContextMenu = (x: number, y: number, event: any): void => { }
+    const onContextMenu = (x: number, y: number, event: any): void => {}
 
     const renderNodeText = (
         data: IPieceNode,
@@ -2024,7 +2080,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     ): SVGProps<SVGGElement> => {
         const type = types.get(data.piece.type.name)?.get(data.piece.type.variant ?? '')
         return (
-            <foreignObject x='-19' y='-19' width='38' height='38'>
+            <foreignObject x="-19" y="-19" width="38" height="38">
                 <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                     <ArtifactAvatar
                         icon={type.icon}
@@ -2063,20 +2119,26 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         designSnippet: Design | DesignInput,
         x?: number | undefined,
         y?: number | undefined,
-        existingDesign?: Design | DesignInput | null | undefined) => {
+        existingDesign?: Design | DesignInput | null | undefined
+    ) => {
         if (graphViewRef.current) {
             const viewTransfrom = graphViewRef.current.state.viewTransform
             const svgX = -1 * ((viewTransfrom.x - x) / viewTransfrom.k)
             const svgY = -1 * ((viewTransfrom.y - y) / viewTransfrom.k)
 
             const areAllIdsUnique = designSnippet.pieces.every((piece) => {
-                return !(existingDesign?.pieces.some((existingPiece) => existingPiece.id === piece.id) ?? true)
+                return !(
+                    existingDesign?.pieces.some((existingPiece) => existingPiece.id === piece.id) ??
+                    true
+                )
             })
             const idMap = new Map<string, string>()
             const newDesignPieces = designSnippet.pieces.map((piece) => {
                 const x = Math.round(svgX + piece.diagram.point.x)
                 const y = Math.round(svgY + piece.diagram.point.y)
-                const id = areAllIdsUnique ? piece.id : piece.id + SEPARATOR + Generator.generateRandomId(x - y)
+                const id = areAllIdsUnique
+                    ? piece.id
+                    : piece.id + SEPARATOR + Generator.generateRandomId(x - y)
                 idMap.set(piece.id, id)
                 return {
                     ...piece,
@@ -2126,8 +2188,10 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
     return (
         <>
             <div
-                id='design-editor'
-                className={'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')}
+                id="design-editor"
+                className={
+                    'font-sans h-full ' + props.className + (isOver ? 'bg-dark' : 'bg-darkGrey')
+                }
                 ref={setNodeRef}
             >
                 <GraphView
@@ -2152,7 +2216,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     showGraphControls={false}
                     canSwapEdge={canSwapEdge}
                     onSwapEdge={onSwapEdge}
-                    onArrowClicked={(selectedEdge: IEdge): void => { }}
+                    onArrowClicked={(selectedEdge: IEdge): void => {}}
                     onSelect={onSelect}
                     onCreateNode={onCreateNode}
                     onUpdateNode={onUpdateNode}
@@ -2166,11 +2230,12 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             </div>
             <Modal
                 width={1200}
-                title='New connection'
+                title="New connection"
                 open={isConnectionBuilderOpen}
                 onOk={handleConnectionBuilderFinished}
                 onCancel={handleConnectionBuilderCanceled}
-                mask={false}>
+                mask={false}
+            >
                 {connectingType && connectedType ? (
                     <ConnectionBuilder
                         connectingType={connectingType}
@@ -2203,9 +2268,7 @@ interface PieceThreeProps {
 const PieceThree = ({ piece, selected }: PieceThreeProps) => {
     const { designViewId, kitDirectory } = useContext(EditorContext)
     const dispatch = useDispatch()
-    const designView = useSelector((state: RootState) =>
-        selectDesignView(state, designViewId)
-    )
+    const designView = useSelector((state: RootState) => selectDesignView(state, designViewId))
     const type = useSelector((state: RootState) =>
         selectType(state, kitDirectory, piece.type.name, piece.type.variant ?? '')
     )
@@ -2214,7 +2277,7 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
         <ThreeSelect
             multiple
             box
-            border='1px solid #fff'
+            border="1px solid #fff"
             // onChange={(selected): void => {
             //         console.log('selection starting', selected)
             //     }}
@@ -2228,16 +2291,16 @@ const PieceThree = ({ piece, selected }: PieceThreeProps) => {
                 const pieceId = getGroupNameFromClickEventGroupObject(e.eventObject)
                 if (designView.selection.piecesIds.includes(pieceId)) {
                     dispatch(
-                        updateDesignSelection(designViewId,
-                            designView.selection.piecesIds.filter(
-                                (id) => id !== pieceId
-                            ),
+                        updateDesignSelection(
+                            designViewId,
+                            designView.selection.piecesIds.filter((id) => id !== pieceId),
                             designView.selection.connectionsPiecesIds
                         )
                     )
                 } else {
                     dispatch(
-                        updateDesignSelection(designViewId,
+                        updateDesignSelection(
+                            designViewId,
                             [...designView.selection.piecesIds, pieceId],
                             designView.selection.connectionsPiecesIds
                         )
@@ -2266,14 +2329,12 @@ interface HierarchyThreeProps {
 
 const HierarchyThree = ({ hierarchy }: HierarchyThreeProps) => {
     const { designViewId } = useContext(EditorContext)
-    const designView = useSelector((state: RootState) =>
-        selectDesignView(state, designViewId)
-    )
+    const designView = useSelector((state: RootState) => selectDesignView(state, designViewId))
     const piece = designView.design.pieces.find((p) => p.id === hierarchy.piece.id)
     const selected = designView.selection.piecesIds.includes(piece.id)
     if (!piece) return null
 
-    const groupRef = useRef();
+    const groupRef = useRef()
     useEffect(() => {
         if (groupRef.current) {
             groupRef.current.applyMatrix4(hierarchy.transform)
@@ -2305,13 +2366,13 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
     if (!ports) return null
     const selectedHierarchyRootPiecesIds = designView.selection.piecesIds
     const hierarchies = useMemo(() => {
-        return designToHierarchies(designView.design, ports);
-    }, [designView.design, ports]);
+        return designToHierarchies(designView.design, ports)
+    }, [designView.design, ports])
     const transformControlRef = useRef(null)
 
     return (
-        <group name={designToIdString(designView.design)} >
-            {hierarchies.map((hierarchy, i) => (
+        <group name={designToIdString(designView.design)}>
+            {hierarchies.map((hierarchy, i) =>
                 selectedHierarchyRootPiecesIds.includes(hierarchy.piece.id) ? (
                     <TransformControls
                         // matrix={semioToThreeRotation().toArray()}
@@ -2320,65 +2381,70 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
                         ref={transformControlRef}
                         mode={transformationMode}
                         onMouseUp={(event) => {
-                            const transformControlMatrix = new Matrix4();
+                            const transformControlMatrix = new Matrix4()
                             switch (transformationMode) {
                                 case 'translate':
-                                    transformControlMatrix.setPosition(transformControlRef.current.offset);
-                                    break;
-                                case 'rotate':
-                                    transformControlMatrix.makeRotationFromQuaternion(transformControlRef.current.tempQuaternion);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            dispatch(updateDesign({
-                                id: designViewId,
-                                design: {
-                                    ...designView.design,
-                                    pieces: designView.design.pieces.map((piece) =>
-                                        selectedHierarchyRootPiecesIds.includes(piece.id)
-                                            ? {
-                                                ...piece,
-                                                root: {
-                                                    plane: Plane.parse(piece.root?.plane).transform(transformControlMatrix)
-                                                }
-                                            }
-                                            : piece
+                                    transformControlMatrix.setPosition(
+                                        transformControlRef.current.offset
                                     )
-                                }
-                            }))
-                        }
-                        }
+                                    break
+                                case 'rotate':
+                                    transformControlMatrix.makeRotationFromQuaternion(
+                                        transformControlRef.current.tempQuaternion
+                                    )
+                                    break
+                                default:
+                                    break
+                            }
+                            dispatch(
+                                updateDesign({
+                                    id: designViewId,
+                                    design: {
+                                        ...designView.design,
+                                        pieces: designView.design.pieces.map((piece) =>
+                                            selectedHierarchyRootPiecesIds.includes(piece.id)
+                                                ? {
+                                                      ...piece,
+                                                      root: {
+                                                          plane: Plane.parse(
+                                                              piece.root?.plane
+                                                          ).transform(transformControlMatrix)
+                                                      }
+                                                  }
+                                                : piece
+                                        )
+                                    }
+                                })
+                            )
+                        }}
                     >
                         <HierarchyThree hierarchy={hierarchy} />
                     </TransformControls>
                 ) : (
                     <HierarchyThree key={i} hierarchy={hierarchy} />
                 )
-
-            ))}
-        </group >
+            )}
+        </group>
     )
 }
 
 DesignThree.displayName = 'DesignThree'
 
-interface ShapeEditorProps {
-}
+interface ShapeEditorProps {}
 
-const ShapeEditor = ({ }: ShapeEditorProps) => {
+const ShapeEditor = ({}: ShapeEditorProps) => {
     const { designViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
     const [transformationMode, setTransdesignMode] = useState('translate')
 
     return (
-        <div className='h-full relative'>
-            <FloatButton.Group className='absolute right-4 top-4' >
+        <div className="h-full relative">
+            <FloatButton.Group className="absolute right-4 top-4">
                 {/* TODO: Fix hacky repositioning of icons */}
                 <FloatButton
                     icon={
-                        <div className='-ml-[2.5px]'>
+                        <div className="-ml-[2.5px]">
                             <OpenWithIcon />
                         </div>
                     }
@@ -2387,7 +2453,7 @@ const ShapeEditor = ({ }: ShapeEditorProps) => {
                 />
                 <FloatButton
                     icon={
-                        <div className='-ml-[2.5px]'>
+                        <div className="-ml-[2.5px]">
                             <ThreeSixtyIcon />
                         </div>
                     }
@@ -2687,7 +2753,7 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
     if (!designView) return <div>Design not found</div>
     const designRef = useRef(designView.design)
     useEffect(() => {
-        designRef.current = designView.design;
+        designRef.current = designView.design
     }, [designView.design])
 
     const kit = useSelector((state: RootState) => selectKit(state, kitDirectory))
@@ -2738,7 +2804,9 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
             case 'design': {
                 const designNameSeparatorIndex = artifactId.indexOf(SEPARATOR)
                 const designName = artifactId.substring(0, designNameSeparatorIndex)
-                const designVariant = artifactId.substring(designNameSeparatorIndex + SEPARATOR.length)
+                const designVariant = artifactId.substring(
+                    designNameSeparatorIndex + SEPARATOR.length
+                )
                 const design = designs.get(designName)?.get(designVariant ?? '')
                 setActiveDraggedArtifact(design)
                 setActiveDraggedArtifactKind('design')
@@ -2767,9 +2835,16 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                     break
                 }
                 case 'design': {
-                    const designToDrop = designs.get(activeDraggedArtifact.name)?.get(activeDraggedArtifact?.variant ?? '')
+                    const designToDrop = designs
+                        .get(activeDraggedArtifact.name)
+                        ?.get(activeDraggedArtifact?.variant ?? '')
                     if (designToDrop) {
-                        diagramEditorRef.current.onDropDesignSnippet(designToDrop, relativeX, relativeY, designView.design)
+                        diagramEditorRef.current.onDropDesignSnippet(
+                            designToDrop,
+                            relativeX,
+                            relativeY,
+                            designView.design
+                        )
                     }
                 }
             }
@@ -2803,17 +2878,18 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
             section: 'Files',
             perform: () => {
                 // TODO: Inject method and remove direct ipcRenderer call
-                window.electron.ipcRenderer.invoke('add-local-design', kitDirectory, designRef.current).then((result) => {
-                    const { design, error } = result
-                    if (error) {
-                        message.error(error.code)
-                    } else {
-                        message.success('Design saved')
-                    }
-                })
-
+                window.electron.ipcRenderer
+                    .invoke('add-local-design', kitDirectory, designRef.current)
+                    .then((result) => {
+                        const { design, error } = result
+                        if (error) {
+                            message.error(error.code)
+                        } else {
+                            message.success('Design saved')
+                        }
+                    })
             }
-        },
+        }
         // {
         //     id: 'zoom-to-fit',
         //     name: 'Zoom to Fit',
@@ -2831,25 +2907,25 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
     return (
         <KBarProvider actions={actions}>
             <CommandBar />
-            <Row className='items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey'>
-                <Col className='flex items-center'>
+            <Row className="items-center justify-between flex h-[47px] w-full bg-darkGrey border-b-thin border-lightGrey">
+                <Col className="flex items-center">
                     {/* TODO: Add icons for main menu and tools */}
                 </Col>
-                <Col className='flex items-center'>
+                <Col className="flex items-center">
                     <Breadcrumb>
                         <Breadcrumb.Item>{kit.name}</Breadcrumb.Item>
                         <Breadcrumb.Item>Designs</Breadcrumb.Item>
                         <Breadcrumb.Item>{designToHumanString(designView?.design)}</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
-                <Col className='flex items-center'>{/* TODO: Add icons for sharing, etc */}</Col>
+                <Col className="flex items-center">{/* TODO: Add icons for sharing, etc */}</Col>
             </Row>
             <Layout style={{ flex: 1 }}>
                 <Layout>
                     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-                        <Sider width='240px' className='border-r-thin border-lightGrey'>
+                        <Sider width="240px" className="border-r-thin border-lightGrey">
                             <Collapse
-                                className='p-3 border-b-thin border-lightGrey font-thin uppercase'
+                                className="p-3 border-b-thin border-lightGrey font-thin uppercase"
                                 defaultActiveKey={['types', 'designs']}
                                 items={[
                                     {
@@ -2857,7 +2933,7 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                         label: 'Types',
                                         children: (
                                             <Collapse
-                                                className='p-2 font-normal text-lightGrey normal-case'
+                                                className="p-2 font-normal text-lightGrey normal-case"
                                                 defaultActiveKey={Array.from(types.keys())}
                                                 items={Array.from(types.entries())
                                                     .sort()
@@ -2866,8 +2942,8 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                                         label: typeName,
                                                         children: (
                                                             <Space
-                                                                className='h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1'
-                                                                direction='vertical'
+                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                direction="vertical"
                                                                 size={10}
                                                                 style={{
                                                                     gridTemplateColumns:
@@ -2925,91 +3001,81 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                         label: 'Designs',
                                         children: (
                                             <Collapse
-                                                className='p-2 font-normal text-lightGrey normal-case'
+                                                className="p-2 font-normal text-lightGrey normal-case"
                                                 defaultActiveKey={Array.from(designs.keys())}
                                                 items={Array.from(designs.entries())
                                                     .sort()
-                                                    .map(
-                                                        (
-                                                            [designName, designVariants],
-                                                            index
-                                                        ) => ({
-                                                            key: designName,
-                                                            label: designName,
-                                                            children: (
-                                                                <Space
-                                                                    className='h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1'
-                                                                    direction='vertical'
-                                                                    size={10}
-                                                                    style={{
-                                                                        gridTemplateColumns:
-                                                                            'repeat(auto-fill, minmax(40px, 1fr))',
-                                                                        gridAutoRows: '40px'
-                                                                    }}
-                                                                >
-                                                                    {Array.from(
-                                                                        designVariants.entries()
-                                                                    )
-                                                                        .sort()
-                                                                        .map(
-                                                                            (
-                                                                                [
-                                                                                    designVariant,
-                                                                                    design
-                                                                                ],
-                                                                                index
-                                                                            ) => (
-                                                                                <ArtifactAvatar
-                                                                                    key={
-                                                                                        'design' +
-                                                                                        SEPARATOR +
-                                                                                        designName +
-                                                                                        SEPARATOR +
-                                                                                        designVariant
-                                                                                    }
-                                                                                    draggableId={
-                                                                                        'design' +
-                                                                                        SEPARATOR +
-                                                                                        designName +
-                                                                                        SEPARATOR +
-                                                                                        designVariant
-                                                                                    }
-                                                                                    icon={
-                                                                                        design.icon
-                                                                                    }
-                                                                                    description={
-                                                                                        designVariant ? (
-                                                                                            <>
-                                                                                                {`Variant: ${designVariant}`}
-                                                                                                <br />
-                                                                                                {
-                                                                                                    design.description
-                                                                                                }
-                                                                                            </>
-                                                                                        ) : (
-                                                                                            design.description
-                                                                                        )
-                                                                                    }
-                                                                                ></ArtifactAvatar>
-                                                                            )
-                                                                        )}
-                                                                </Space>
-                                                            )
-                                                        })
-                                                    )}
+                                                    .map(([designName, designVariants], index) => ({
+                                                        key: designName,
+                                                        label: designName,
+                                                        children: (
+                                                            <Space
+                                                                className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                                                                direction="vertical"
+                                                                size={10}
+                                                                style={{
+                                                                    gridTemplateColumns:
+                                                                        'repeat(auto-fill, minmax(40px, 1fr))',
+                                                                    gridAutoRows: '40px'
+                                                                }}
+                                                            >
+                                                                {Array.from(
+                                                                    designVariants.entries()
+                                                                )
+                                                                    .sort()
+                                                                    .map(
+                                                                        (
+                                                                            [designVariant, design],
+                                                                            index
+                                                                        ) => (
+                                                                            <ArtifactAvatar
+                                                                                key={
+                                                                                    'design' +
+                                                                                    SEPARATOR +
+                                                                                    designName +
+                                                                                    SEPARATOR +
+                                                                                    designVariant
+                                                                                }
+                                                                                draggableId={
+                                                                                    'design' +
+                                                                                    SEPARATOR +
+                                                                                    designName +
+                                                                                    SEPARATOR +
+                                                                                    designVariant
+                                                                                }
+                                                                                icon={design.icon}
+                                                                                description={
+                                                                                    designVariant ? (
+                                                                                        <>
+                                                                                            {`Variant: ${designVariant}`}
+                                                                                            <br />
+                                                                                            {
+                                                                                                design.description
+                                                                                            }
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        design.description
+                                                                                    )
+                                                                                }
+                                                                            ></ArtifactAvatar>
+                                                                        )
+                                                                    )}
+                                                            </Space>
+                                                        )
+                                                    }))}
                                             />
                                         )
                                     }
                                 ]}
                             />
                         </Sider>
-                        <EditorContext.Provider value={{ kitDirectory, designViewId: viewId, blobUrls }}>
+                        <EditorContext.Provider
+                            value={{ kitDirectory, designViewId: viewId, blobUrls }}
+                        >
                             <Content>
-                                <DiagramEditor
-                                    ref={diagramEditorRef}
-                                />
+                                <DiagramEditor ref={diagramEditorRef} />
                             </Content>
-                            <Divider className='h-full top-0' type='vertical' />
+                            <Divider className="h-full top-0" type="vertical" />
                             <Content>
                                 <ShapeEditor />
                             </Content>
@@ -3027,9 +3093,9 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                         </EditorContext.Provider>
                     </DndContext>
                 </Layout>
-                <Sider className='border-l-thin border-lightGrey' width='240'>
+                <Sider className="border-l-thin border-lightGrey" width="240">
                     <Collapse
-                        className='p-3 border-b-thin border-lightGrey font-thin uppercase'
+                        className="p-3 border-b-thin border-lightGrey font-thin uppercase"
                         defaultActiveKey={['scene']}
                         items={[
                             {
@@ -3038,14 +3104,14 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                 children: (
                                     <Flex
                                         vertical={true}
-                                        className='p-2 font-normal text-lightGrey normal-case'
+                                        className="p-2 font-normal text-lightGrey normal-case"
                                     >
-                                        <Label className='p-0'>Level of Details</Label>
+                                        <Label className="p-0">Level of Details</Label>
                                         <Select
-                                            className='p-1'
-                                            mode='multiple'
+                                            className="p-1"
+                                            mode="multiple"
                                             allowClear
-                                            placeholder='Select'
+                                            placeholder="Select"
                                             options={[
                                                 {
                                                     label: '1to500',
@@ -3057,12 +3123,12 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                                 }
                                             ]}
                                         />
-                                        <Label className='p-0'>Tags</Label>
+                                        <Label className="p-0">Tags</Label>
                                         <Select
-                                            className='p-1'
-                                            mode='multiple'
+                                            className="p-1"
+                                            mode="multiple"
                                             allowClear
-                                            placeholder='Select'
+                                            placeholder="Select"
                                             options={[
                                                 {
                                                     label: 'volume',
@@ -3083,9 +3149,9 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                                 children: (
                                     <Flex
                                         vertical={true}
-                                        className='p-2 text-lightGrey normal-case'
+                                        className="p-2 text-lightGrey normal-case"
                                     >
-                                        <div className='p-0'>
+                                        <div className="p-0">
                                             This will change based on the Selection.
                                         </div>
                                     </Flex>
@@ -3101,7 +3167,7 @@ const DesignWindow = ({ viewId, kitDirectory }: DesignWindowProps): JSX.Element 
                         </div>
                     </div>
                 </Footer> */}
-        </KBarProvider >
+        </KBarProvider>
     )
 }
 
@@ -3141,16 +3207,16 @@ const ArtifactWizard = ({
 
     return (
         <Form
-            className='p-3'
+            className="p-3"
             form={form}
-            name='Artifact Wizard'
+            name="Artifact Wizard"
             initialValues={{ remember: true }}
             onFinish={onFinish}
-            autoComplete='off'
+            autoComplete="off"
         >
             <Form.Item<IArtifactView>
-                label='Kind'
-                name='kind'
+                label="Kind"
+                name="kind"
                 rules={[{ required: true, message: 'What artifact do you want to create?' }]}
                 initialValue={ViewKind.Design}
             >
@@ -3160,36 +3226,36 @@ const ArtifactWizard = ({
                 </Radio.Group>
             </Form.Item>
             <Form.Item<IArtifactView>
-                label='Kit Directory'
-                name='kitDirectory'
+                label="Kit Directory"
+                name="kitDirectory"
                 rules={[{ required: true, message: 'In what directory is the kit?' }]}
             >
                 <Button onClick={onOpenDirectoryFromButton} icon={<FolderSharpIcon />}>
                     {kitDirectory
                         ? kitDirectory
                         : onOpenDirectoryStatus === 'loading'
-                            ? 'Loading...'
-                            : 'Open Directory'}
+                          ? 'Loading...'
+                          : 'Open Directory'}
                 </Button>
             </Form.Item>
             <Form.Item<IArtifactView>
-                label='Name'
-                name='name'
+                label="Name"
+                name="name"
                 initialValue={'Untitled'}
                 rules={[{ required: true, message: 'Every artifacts needs a name.' }]}
             >
                 <Input />
             </Form.Item>
-            <Form.Item<IArtifactView> label='Description' name='description'>
+            <Form.Item<IArtifactView> label="Description" name="description">
                 <Input />
             </Form.Item>
-            <Form.Item<IArtifactView> label='Icon' name='icon'>
+            <Form.Item<IArtifactView> label="Icon" name="icon">
                 <Button onClick={onOpenFileFromButton} icon={<FileUploadSharpIcon />}>
                     {onOpenFileStatus === 'loading' ? 'Loading...' : 'Upload Icon'}
                 </Button>
             </Form.Item>
             <Form.Item>
-                <Button htmlType='submit' className='bg-lightGrey text-dark'>
+                <Button htmlType="submit" className="bg-lightGrey text-dark">
                     Create
                 </Button>
             </Form.Item>
@@ -3307,8 +3373,7 @@ const App = ({
     const [activeTab, setActiveTab] = useState('home')
 
     return (
-        <div className='h-screen w-screen'>
-
+        <div className="h-screen w-screen">
             <ConfigProvider locale={enUS} theme={sketchpadTheme}>
                 <Layout style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
                     <Header style={{ height: 'auto' }}>
@@ -3322,8 +3387,8 @@ const App = ({
                             }}
                         >
                             <Tabs
-                                className='p-0 flex items-center'
-                                type='editable-card'
+                                className="p-0 flex items-center"
+                                type="editable-card"
                                 style={{
                                     WebkitAppRegion: 'no-drag'
                                 }}
@@ -3339,7 +3404,7 @@ const App = ({
                                         if (activeTab === targetKey) setActiveTab('home')
                                     }
                                 }}
-                                defaultActiveKey='home'
+                                defaultActiveKey="home"
                                 items={[
                                     {
                                         key: 'home',
@@ -3354,13 +3419,13 @@ const App = ({
                                                 label:
                                                     view.kind === ViewKind.Type
                                                         ? view.type.name +
-                                                        (view.type.variant
-                                                            ? ` (${view.type.variant})`
-                                                            : '')
+                                                          (view.type.variant
+                                                              ? ` (${view.type.variant})`
+                                                              : '')
                                                         : view.design.name +
-                                                        (view.design.variant
-                                                            ? ` (${view.design.variant})`
-                                                            : '')
+                                                          (view.design.variant
+                                                              ? ` (${view.design.variant})`
+                                                              : '')
                                             }
                                         return {
                                             key: tab,
@@ -3420,7 +3485,7 @@ const App = ({
                         </div>
                     </Header>
                     {activeTab === 'home' ? (
-                        <div className='h-full flex items-center justify-center text-lightGrey text-2xl'>
+                        <div className="h-full flex items-center justify-center text-lightGrey text-2xl">
                             Click + to add a new artifact.
                         </div>
                     ) : (

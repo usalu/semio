@@ -1,5 +1,0 @@
-mutation DeleteLocalKit($directory: String!) {
-  deleteLocalKit(directory: $directory) {
-    error
-  }
-}
