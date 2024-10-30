@@ -17,6 +17,7 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
@@ -29,7 +30,7 @@ using Refit;
 // TODO: Add logging mechanism to all API calls if they fail.
 // TODO: Implement reflexive validation for model properties.
 // TODO: Add index to prop and add to list based on index not on source code order.
-// TODO: See if Utility.Encode(url) can be added by attribute on parameters.
+// TODO: See if Utility.Encode(uri) can be added by attribute on parameters.
 
 namespace Semio;
 
@@ -113,10 +114,10 @@ public static class Utility
         return Encoding.UTF8.GetString(Convert.FromBase64String(text));
     }
 
-    public static string Serialize(this object obj)
+    public static string Serialize(this object obj, bool indented = false)
     {
         return JsonConvert.SerializeObject(
-            obj, Formatting.Indented, new JsonSerializerSettings
+            obj, indented ? Formatting.Indented : Formatting.None, new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
@@ -448,16 +449,16 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 public class Representation : Model<Representation>
 {
     /// <summary>
-    ///     🔗 The Unique Resource Locator (URL) to another resource outside of semio.
+    ///     🔗 The Unique Resource Locator (URL) to the resource of the representation.
     ///     absolute file path or a link.
     /// </summary>
     [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to another file outside of semio.", PropImportance.ID)]
     public string Url { get; set; } = "";
 
     /// <summary>
-    ///     🏷️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+    ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
     /// </summary>
-    [Id("🏷️", "Mm", "Mim",
+    [Id("✉️", "Mm", "Mim",
         "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.",
         PropImportance.REQUIRED)]
     public string Mime { get; set; } = "";
@@ -472,10 +473,10 @@ public class Representation : Model<Representation>
     public string Lod { get; set; } = "";
 
     /// <summary>
-    ///     🔖 The optional tags to group representations. No tags means default.
+    ///     🏷️ The optional tags to group representations. No tags means default.
     /// </summary>
 
-    [Name("🔖", "Tg*", "Tags", "The optional tags to group representations. No tags means default.")]
+    [Name("🏷️", "Tg*", "Tags", "The optional tags to group representations. No tags means default.")]
     public List<string> Tags { get; set; } = new();
 }
 
@@ -649,18 +650,19 @@ public class Port : Model<Port>
     /// </summary>
     [Id("🆔", "Id?", "Idn", "The optional local identifier of the port within the type. No id means the default port.",
         isDefaultValid: true)]
+    [JsonProperty("id_")]
     public string Id { get; set; } = "";
 
     /// <summary>
-    ///     ❌ The point of the port.
+    ///     ❌ The connection point of the port that is attracted to another connection point.
     /// </summary>
-    [ModelProp("✖️", "Pt", "Pnt", "The point of the port.")]
+    [ModelProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
 
     /// <summary>
-    ///     ➡️ The direction of the port.
+    ///     ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
     /// </summary>
-    [ModelProp("➡️", "Dr", "Drn", "The direction of the port.")]
+    [ModelProp("➡️", "Dr", "Drn", "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.")]
     public Vector? Direction { get; set; } = null;
 
     /// <summary>
@@ -698,6 +700,16 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The direction must not be null.");
         }
+        if (Locators.Count != 0)
+        {
+            var locatorValidator = new ModelValidator<Locator>();
+            foreach (var locator in Locators)
+            {
+                var locatorValidation = locatorValidator.Validate(locator);
+                isValid = isValid && locatorValidation.IsValid;
+                errors.AddRange(locatorValidation.Errors.Select(e => "A locator is invalid: " + e));
+            }
+        }
 
         return (isValid, errors);
     }
@@ -713,6 +725,7 @@ public class PortId : Model<PortId>
     ///     🆔 The optional local identifier of the port within the type. No id means the default port.
     /// </summary>
     [Id("🆔", "Id?", "Id", "The local identifier of the port within the type.", isDefaultValid: true)]
+    [JsonProperty("id_")]
     public string Id { get; set; } = "";
 
     public static implicit operator PortId(Port port)
@@ -737,9 +750,9 @@ public class Quality : Model<Quality>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔢 The optional value of the quality. No value is equivalent to true for the name.
+    ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
     /// </summary>
-    [Description("🔢", "Vl?", "Val", "The optional value of the quality. No value is equivalent to true for the name.")]
+    [Description("🔢", "Vl?", "Val", "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
     public string Value { get; set; } = "";
 
     /// <summary>
@@ -749,9 +762,9 @@ public class Quality : Model<Quality>
     public string Unit { get; set; } = "";
 
     /// <summary>
-    ///     📖 The optional definition [text | url] of the quality.
+    ///     📖 The optional definition [ text | url ] of the quality.
     /// </summary>
-    [Description("📖", "Df?", "Def", "The optional definition [text | url] of the quality.")]
+    [Description("📖", "Df?", "Def", "The optional definition [ text | url ] of the quality.")]
     public string Definition { get; set; } = "";
 }
 
@@ -770,9 +783,9 @@ public class TypeProps : Model<Type>
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [emoji | text | image | svg] of the type.
+    ///     🖼️ The optional icon [ emoji | name | url ] of the type.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the type.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the type.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
@@ -1075,9 +1088,9 @@ public class DesignProps : Model<Design>
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [emoji | text | image | svg] of the design.
+    ///     🖼️ The optional icon [ emoji | name | url ] of the design.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the design.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the design.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
@@ -1218,9 +1231,9 @@ public class KitProps : Model<Kit>
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [emoji | text | image | svg] of the design.
+    ///     🖼️ The optional icon [ emoji | name | url ] of the design.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [emoji | text | image | svg] of the design.")]
+    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the design.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
@@ -1289,94 +1302,46 @@ public class ApiException : Exception
     }
 }
 
-public class NotFoundException : ApiException
-{
-    public NotFoundException(string message) : base(message)
-    {
-    }
-}
-
-public class TypeNotFoundException : NotFoundException
-{
-    public TypeNotFoundException(string message) : base(message)
-    {
-    }
-}
-
-public class DesignNotFoundException : NotFoundException
-{
-    public DesignNotFoundException(string message) : base(message)
-    {
-    }
-}
-
-public class KitNotFoundException : NotFoundException
-{
-    public KitNotFoundException(string message) : base(message)
-    {
-    }
-}
-
-public class ServerException : Exception
+public class ServerException : ApiException
 {
     public ServerException(string message) : base(message)
     {
     }
 }
 
-public class BadInputException : ApiException
+public class ClientException : ApiException
 {
-    public BadInputException(string message) : base(message)
+    public ClientException(string message) : base(message)
     {
     }
 }
 
-public class BadTypeInputException : BadInputException
-{
-    public BadTypeInputException(string message) : base(message)
-    {
-    }
-}
-
-public class BadDesignInputException : BadInputException
-{
-    public BadDesignInputException(string message) : base(message)
-    {
-    }
-}
-
-public class BadKitInputException : BadInputException
-{
-    public BadKitInputException(string message) : base(message)
-    {
-    }
-}
 
 public interface IApi
 {
-    [Get("/kits/{encodedKitUrl}")]
-    Task<ApiResponse<Kit>> GetKit(string encodedKitUrl);
+    [Get("/kits/{encodedKitUri}")]
+    Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
 
-    [Put("/kits/{encodedKitUrl}")]
-    Task<ApiResponse<bool>> CreateKit(string encodedKitUrl, [Body] Kit input);
+    [Put("/kits/{encodedKitUri}")]
+    Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body] Kit input);
 
-    [Delete("/kits/{encodedKitUrl}")]
-    Task<ApiResponse<bool>> DeleteKit(string encodedKitUrl);
+    [Delete("/kits/{encodedKitUri}")]
+    Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-    [Put("/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}")]
-    Task<ApiResponse<bool>> PutType(string encodedKitUrl, string encodedTypeName, string encodedTypeVariant,
+    [Put("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")]
+    Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, string encodedTypeVariant,
         [Body] Type input);
 
-    [Delete("/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}")]
-    Task<ApiResponse<bool>> RemoveType(string encodedKitUrl, string encodedTypeName, string encodedTypeVariant);
+    [Delete("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")]
+    Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName, string encodedTypeVariant);
 
-    [Put("/kits/{encodedKitUrl}/designs/{encodedDesignName},{encodedDesignVariant}")]
-    Task<ApiResponse<bool>> PutDesign(string encodedKitUrl, string encodedDesignName, string encodedDesignVariant,
+    [Put("/kits/{encodedKitUri}/designs/{encodedDesignName},{encodedDesignVariant}")]
+    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName, string encodedDesignVariant,
         [Body] Design input);
 
-    [Delete("/kits/{encodedKitUrl}/designs/{encodedDesignName},{encodedDesignVariant}")]
-    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUrl, string encodedDesignName, string encodedDesignVariant);
+    [Delete("/kits/{encodedKitUri}/designs/{encodedDesignName},{encodedDesignVariant}")]
+    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName, string encodedDesignVariant);
 }
 
 public static class Api
@@ -1405,73 +1370,61 @@ public static class Api
         });
     }
 
-    public static Kit GetKit(string url)
+    private static void HandleErrors<T>(ApiResponse<T> response)
     {
-        var response = GetApi().GetKit(Utility.Encode(url)).Result;
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            throw new ClientException(response.Error.Content);
+        if (!response.IsSuccessStatusCode)
+            throw new ServerException(UnsuccessfullResponseToString(response));
+    }
+
+    public static Kit GetKit(string uri)
+    {
+        var response = GetApi().GetKit(Utility.Encode(uri)).Result;
         if (response.IsSuccessStatusCode)
             return response.Content;
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new KitNotFoundException(response.Error.Content);
-        throw new ServerException(UnsuccessfullResponseToString(response));
+        HandleErrors(response);
+        return null; // This line will never be reached, but is required to satisfy the compiler.
     }
 
-    public static void CreateKit(string url, Kit input)
+    public static void CreateKit(string uri, Kit input)
     {
-        var response = GetApi().CreateKit(Utility.Encode(url), input).Result;
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            throw new BadKitInputException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        var response = GetApi().CreateKit(Utility.Encode(uri), input).Result;
+        HandleErrors(response);
     }
 
-    public static void DeleteKit(string url)
+    public static void DeleteKit(string uri)
     {
-        var response = GetApi().DeleteKit(Utility.Encode(url)).Result;
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new KitNotFoundException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        var response = GetApi().DeleteKit(Utility.Encode(uri)).Result;
+        HandleErrors(response);
     }
-
 
     public static void PutType(string kitUrl, Type input)
     {
         var response = GetApi()
             .PutType(Utility.Encode(kitUrl), Utility.Encode(input.Name), Utility.Encode(input.Variant), input).Result;
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            throw new BadTypeInputException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        HandleErrors(response);
     }
 
     public static void RemoveType(string kitUrl, TypeId id)
     {
         var response = GetApi()
             .RemoveType(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new TypeNotFoundException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        HandleErrors(response);
     }
 
     public static void PutDesign(string kitUrl, Design input)
     {
         var response = GetApi().PutDesign(Utility.Encode(kitUrl), Utility.Encode(input.Name),
             Utility.Encode(input.Variant), input).Result;
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            throw new BadDesignInputException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        HandleErrors(response);
     }
 
     public static void RemoveDesign(string kitUrl, DesignId id)
     {
         var response = GetApi()
             .RemoveDesign(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new DesignNotFoundException(response.Error.Content);
-        if (!response.IsSuccessStatusCode)
-            throw new ServerException(UnsuccessfullResponseToString(response));
+        HandleErrors(response);
     }
 
 }

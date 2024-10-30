@@ -42,7 +42,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-semio = "semio:main" #doesn't work. Use instead: poetry run python semio.py
+engine = "engine:main" #doesn't work. Use instead: poetry run python semio.py
 
 [tool.coverage.run]
 branch = true

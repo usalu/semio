@@ -1059,8 +1059,9 @@ public abstract class EngineComponent : Component
     {
         RegisterCustomInputParams(pManager);
         int amountCustomParams = pManager.ParamCount;
-        pManager.AddTextParameter("Url", "Ur?",
-            "Optional url of the kit. If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
+        pManager.AddTextParameter("Uri", "Ur?",
+            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
+            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
             GH_ParamAccess.item);
         pManager[amountCustomParams].Optional = true;
         pManager.AddBooleanParameter("Run", "R", RunDescription, GH_ParamAccess.item, false);
@@ -1088,26 +1089,25 @@ public abstract class EngineComponent : Component
         var url = "";
         var run = false;
 
-        if (!DA.GetData("Url", ref url))
+        if (!DA.GetData(Params.Input.Count-2, ref url))
             url = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
 
-        DA.GetData("Run", ref run);
+        DA.GetData(Params.Input.Count - 1, ref run);
         if (!run) return;
 
         var input = GetInput(DA);
         try
         {
-            
             var response = Run(url, input);
             SetOutput(DA, response);
-            DA.SetData("Success", true);
+            DA.SetData(Params.Output.Count - 1, true);
         }
-        catch (ApiException e)
+        catch (ClientException e)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.Message);
-            DA.SetData("Success", false);
+            DA.SetData(Params.Output.Count - 1, false);
         }
         catch (ServerException e)
         {
@@ -1119,7 +1119,7 @@ public abstract class EngineComponent : Component
                 "Semio.Release: " + Constants.Release + "\n" +
                 "Semio.Grasshopper: " + new Semio_GrasshopperInfo().Version + "\n" +
                 (serializedInput != "" ? "Input: " + (serializedInput.Length < 1000 ? serializedInput : serializedInput.Substring(0, 1000) + "\n...\n") : ""));
-            DA.SetData("Success", false);
+            DA.SetData(Params.Output.Count - 1, false);
         }
     }
 
@@ -1497,7 +1497,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     {
         U goo = new U();
         DA.GetData(0, ref goo);
-        var text = goo.Value.Serialize();
+        var text = goo.Value.Serialize(true);
         DA.SetData(0, text);
     }
     protected override Bitmap Icon=> (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");

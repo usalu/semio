@@ -1,7 +1,7 @@
 import pytest
 import graphene
 import deepdiff
-import semio
+import engine
 
 
 @pytest.mark.parametrize(
@@ -46,10 +46,10 @@ import semio
     ],
 )
 def test_planeFromYAxis(yAxis, phi, expectedXAxis):
-    yAxisVector = semio.Vector(*yAxis)
-    plane = semio.Plane.fromYAxis(yAxisVector, phi)
-    expectedPlane = semio.Plane(
-        semio.Point(), semio.Vector(*expectedXAxis), yAxisVector
+    yAxisVector = engine.Vector(*yAxis)
+    plane = engine.Plane.fromYAxis(yAxisVector, phi)
+    expectedPlane = engine.Plane(
+        engine.Point(), engine.Vector(*expectedXAxis), yAxisVector
     )
     assert plane.isClose(expectedPlane)
 

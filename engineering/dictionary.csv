@@ -1,37 +1,54 @@
-Emoji,Code,Abbreviation,Name,Description
+Symbol,Code,Abbreviation,Name,Description
+👥,Bs,Bas,Base,The shared base props for {{NAME}} models.
 🧲,Cd,Cnd,Connected,The connected side of the piece of the connection.
 🧲,Cg,Cng,Connecting,The connecting side of the piece of the connection.
 🖇️,Co,Con,Connection,A connection between two pieces in a design.
 🖇️,Co*,Cons,Connections,The optional connections of a design.
+⌚,CA,CAt,Created At,The time when the {{NAME}} was created.
 💬,Dc?,Dsc,Description,The optional human description of the {{NAME}}.
-📖,Df,Def,Definition,The optional definition [text | url] of the quality.
-✏️,Dg,Dgm,Diagram,The diagram-related information of the piece.
+📖,Df,Def,Definition,The optional definition [ text | url ] of the quality.
+✏️,Dg,Dgm,Diagram,The diagram of the design.
 📁,Di?,Dir,Directory,The optional directory where to find the kit.
-➡️,Dr,Drn,Direction,The direction of the port.
+➡️,Dr,Drn,Direction,The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
+🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
+🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
+▢,En,Ent,Entity,An entity is a collection of properties and children.
+🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
+🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
 👪,Gr,Grp,Group,The group of the locator.
 🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
-🖼️,Ic?,Ico,Icon,The optional icon [emoji | text | image | svg] of the {{NAME}}.
+🖼️,Ic?,Ico,Icon,The optional icon [ emoji | name | url ] of the {{NAME}}.
 🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
 🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
+🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
+↘️,In,Inp,Input,The input for a {{NAME}}.
 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
 🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
 🗺️,Lc*,Locs,Locators,The optional locators of the port.
 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
 📛,Na,Nam,Name,The name of the {{NAME}}.
-🏷️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
 ↕️,Of?,Ofs,Offset,The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
 ⌱,Og,Org,Origin,The origin of the plane.
+↗️,Ou,Out,Output,The output for a {{NAME}}.
+👪,Pa,Par,Parent,The parent of {{NAME}}.
+⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
+🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-⭕,Pc+,Pces,Pieces,
+⭕,Pc+,Pces,Pieces,The pieces of the design.
+🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 🔌,Po+,Pors,Ports,The ports of the type.
+🎫,Pp,Prp,Props,The props are all values of an entity without its children.
 ◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
 ◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
+🍾,Rl,Rel,Release,The release of the engine that created this database.
 ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
@@ -39,18 +56,20 @@ Emoji,Code,Abbreviation,Name,Description
 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
 ✅,Su,Suc,Success,{{NAME}} was successful.
-🔖,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
+🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
 ↗️,Tl?,Tlt,Tilt,The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
 ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 🧩,Ty,Typ,Type,The type-related information of the side.
 🧩,Ty*,Typs,Types,The optional types of the kit.
-🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to another resource outside of semio.
+🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to the resource of the representation.
 Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
 Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
+🔄,Up,Upd,Update,Update the props of the {{NAME}}. Optionally empty the {{NAME}} before.
 ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
-🔢,Vl?,Val,Value,The optional value of the quality. No value is equivalent to true for the name.
+🏷️,Vl,Val,Value,The value of the tag.
+🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
 🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
 🏁,X,X,X,The x-coordinate of the screen point.
 🎚️,X,X,X,The x-coordinate of the point.
@@ -60,3 +79,4 @@ Emoji,Code,Abbreviation,Name,Description
 ➡️,YA,YAx,YAxis,The y-axis of the plane.
 🏁,Z,Z,Z,The z-coordinate of the screen point.
 🎚️,Z,Z,Z,The z-coordinate of the point.
+➡️,ZA,ZAx,ZAxis,The z-axis of the plane.

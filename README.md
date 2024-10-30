@@ -17,7 +17,7 @@
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-csharp.svg" alt="C#"></a>
     <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
-    <i>✏️ Design kit-of-parts architecture.</i>
+    <i>✏️ Design-Information-Modeling for Kit-of-Parts Architecture.</i>
 </p>
 <br/>
 

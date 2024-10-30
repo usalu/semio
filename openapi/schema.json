@@ -5,19 +5,19 @@
         "version": "0.1.0"
     },
     "paths": {
-        "/kits/{encodedKitUrl}": {
+        "/kits/{encodedKitUri}": {
             "get": {
                 "summary": "Kit",
-                "operationId": "kit_kits__encodedKitUrl__get",
+                "operationId": "kit_kits__encodedKitUri__get",
                 "parameters": [
                     {
-                        "name": "encodedKitUrl",
+                        "name": "encodedKitUri",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedkiturl"
+                            "title": "Encodedkituri"
                         }
                     }
                 ],
@@ -46,16 +46,16 @@
             },
             "put": {
                 "summary": "Create Kit",
-                "operationId": "create_kit_kits__encodedKitUrl__put",
+                "operationId": "create_kit_kits__encodedKitUri__put",
                 "parameters": [
                     {
-                        "name": "encodedKitUrl",
+                        "name": "encodedKitUri",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedkiturl"
+                            "title": "Encodedkituri"
                         }
                     }
                 ],
@@ -92,16 +92,16 @@
             },
             "delete": {
                 "summary": "Delete Kit",
-                "operationId": "delete_kit_kits__encodedKitUrl__delete",
+                "operationId": "delete_kit_kits__encodedKitUri__delete",
                 "parameters": [
                     {
-                        "name": "encodedKitUrl",
+                        "name": "encodedKitUri",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedkiturl"
+                            "title": "Encodedkituri"
                         }
                     }
                 ],
@@ -127,19 +127,19 @@
                 }
             }
         },
-        "/kits/{encodedKitUrl}/types/{encodedTypeName},{encodedTypeVariant}": {
+        "/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}": {
             "put": {
                 "summary": "Put Type",
-                "operationId": "put_type_kits__encodedKitUrl__types__encodedTypeName___encodedTypeVariant__put",
+                "operationId": "put_type_kits__encodedKitUri__types__encodedTypeName___encodedTypeVariant__put",
                 "parameters": [
                     {
-                        "name": "encodedKitUrl",
+                        "name": "encodedKitUri",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedkiturl"
+                            "title": "Encodedkituri"
                         }
                     },
                     {
@@ -196,16 +196,16 @@
             },
             "delete": {
                 "summary": "Delete Type",
-                "operationId": "delete_type_kits__encodedKitUrl__types__encodedTypeName___encodedTypeVariant__delete",
+                "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeName___encodedTypeVariant__delete",
                 "parameters": [
                     {
-                        "name": "encodedKitUrl",
+                        "name": "encodedKitUri",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedkiturl"
+                            "title": "Encodedkituri"
                         }
                     },
                     {
@@ -269,180 +269,480 @@
             },
             "KitInput": {
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "default": ""
-                    },
-                    "icon": {
+                    "homepage": {
                         "type": "string",
                         "maxLength": 1024,
-                        "title": "Icon",
+                        "title": "Homepage",
+                        "description": "\ud83c\udf10 The homepage of the kit.",
                         "default": ""
                     },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Remote",
+                        "description": "\ud83c\udf10 The remote of the kit.",
                         "default": ""
                     },
-                    "homepage": {
+                    "icon": {
                         "type": "string",
                         "maxLength": 1024,
-                        "title": "Homepage",
+                        "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the kit.",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the kit."
                     },
                     "types": {
                         "items": {
                             "$ref": "#/components/schemas/TypeInput"
                         },
                         "type": "array",
-                        "title": "Types"
+                        "title": "Types",
+                        "description": "\ud83e\udde9 The types of the kit."
                     }
                 },
                 "type": "object",
                 "required": [
                     "name"
                 ],
-                "title": "KitInput"
+                "title": "KitInput",
+                "description": "\u2198\ufe0f The input for a kit."
             },
             "KitOutput": {
                 "properties": {
-                    "name": {
+                    "lastUpdateAt": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Name"
+                        "format": "date-time",
+                        "title": "Lastupdateat",
+                        "description": "\ud83d\udd52 The last update date of the kit."
                     },
-                    "description": {
+                    "createdAt": {
                         "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
+                        "format": "date-time",
+                        "title": "Createdat",
+                        "description": "\ud83d\udd52 The creation date of the kit."
+                    },
+                    "homepage": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "default": ""
+                    },
+                    "remote": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "description": "\ud83c\udf10 The remote of the kit.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
                     },
-                    "createdAt": {
+                    "description": {
                         "type": "string",
-                        "format": "date-time",
-                        "title": "Createdat"
-                    },
-                    "lastUpdateAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "title": "Lastupdateat"
-                    },
-                    "remote": {
-                        "type": "string",
-                        "maxLength": 1024,
-                        "title": "Remote",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the kit.",
                         "default": ""
                     },
-                    "homepage": {
+                    "name": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Homepage",
-                        "default": ""
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the kit."
+                    },
+                    "uri": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Uri",
+                        "description": "\ud83c\udd94 The uri of the kit."
                     },
                     "types": {
                         "items": {
                             "$ref": "#/components/schemas/TypeOutput"
                         },
                         "type": "array",
-                        "title": "Types"
+                        "title": "Types",
+                        "description": "\ud83e\udde9 The types of the kit."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "uri"
+                ],
+                "title": "KitOutput",
+                "description": "\u2197\ufe0f The output of a kit."
+            },
+            "LocatorInput": {
+                "properties": {
+                    "subgroup": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Subgroup",
+                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
+                        "default": ""
+                    },
+                    "group": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Group",
+                        "description": "\ud83d\udc6a The group of the locator."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "group"
+                ],
+                "title": "LocatorInput",
+                "description": "\u2198\ufe0f The input for a locator."
+            },
+            "LocatorOutput": {
+                "properties": {
+                    "subgroup": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Subgroup",
+                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
+                        "default": ""
+                    },
+                    "group": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Group",
+                        "description": "\ud83d\udc6a The group of the locator."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "group"
+                ],
+                "title": "LocatorOutput",
+                "description": "\u2197\ufe0f The output of a locator."
+            },
+            "Point": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "Point",
+                "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
+            },
+            "PointInput": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "PointInput",
+                "description": "\u2198\ufe0f The input for a point."
+            },
+            "PortInput": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    },
+                    "point": {
+                        "$ref": "#/components/schemas/PointInput",
+                        "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/VectorInput",
+                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                    },
+                    "locators": {
+                        "items": {
+                            "$ref": "#/components/schemas/LocatorInput"
+                        },
+                        "type": "array",
+                        "title": "Locators",
+                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "point",
+                    "direction"
+                ],
+                "title": "PortInput",
+                "description": "\u2198\ufe0f The input for a port."
+            },
+            "PortOutput": {
+                "properties": {
+                    "direction": {
+                        "$ref": "#/components/schemas/Vector",
+                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                    },
+                    "point": {
+                        "$ref": "#/components/schemas/Point",
+                        "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+                    },
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    },
+                    "locators": {
+                        "items": {
+                            "$ref": "#/components/schemas/LocatorOutput"
+                        },
+                        "type": "array",
+                        "title": "Locators",
+                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "direction",
+                    "point"
+                ],
+                "title": "PortOutput",
+                "description": "\u2197\ufe0f The output of a port."
+            },
+            "QualityInput": {
+                "properties": {
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the quality.",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Definition",
+                        "description": "\ud83d\udccf The definition of the quality.",
+                        "default": ""
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "description": "\ud83d\udccf The value of the quality.",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udccf The name of the quality."
                     }
                 },
                 "type": "object",
                 "required": [
                     "name"
                 ],
-                "title": "KitOutput"
+                "title": "QualityInput",
+                "description": "\u2198\ufe0f The input for a quality."
+            },
+            "QualityOutput": {
+                "properties": {
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the quality.",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Definition",
+                        "description": "\ud83d\udccf The definition of the quality.",
+                        "default": ""
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "description": "\ud83d\udccf The value of the quality.",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udccf The name of the quality."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "QualityOutput",
+                "description": "\u2197\ufe0f The output of a quality."
             },
             "RepresentationInput": {
                 "properties": {
                     "url": {
                         "type": "string",
                         "maxLength": 1024,
-                        "title": "Url"
-                    },
-                    "lod": {
-                        "type": "string",
-                        "title": "Lod",
-                        "default": ""
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     },
                     "tags": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Tags"
+                        "title": "Tags",
+                        "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
+                    },
+                    "lod": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Lod",
+                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
+                    },
+                    "mime": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Mime",
+                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "url"
+                    "url",
+                    "lod",
+                    "mime"
                 ],
-                "title": "RepresentationInput"
+                "title": "RepresentationInput",
+                "description": "\u2198\ufe0f The input for a representation."
             },
             "RepresentationOutput": {
                 "properties": {
                     "url": {
                         "type": "string",
                         "maxLength": 1024,
-                        "title": "Url"
-                    },
-                    "lod": {
-                        "type": "string",
-                        "title": "Lod",
-                        "default": ""
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     },
                     "tags": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Tags"
+                        "title": "Tags",
+                        "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
+                    },
+                    "lod": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Lod",
+                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
+                    },
+                    "mime": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Mime",
+                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "url"
+                    "url",
+                    "lod",
+                    "mime"
                 ],
-                "title": "RepresentationOutput"
+                "title": "RepresentationOutput",
+                "description": "\u2197\ufe0f The output of a representation."
             },
             "TypeInput": {
                 "properties": {
-                    "name": {
+                    "unit": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "default": ""
-                    },
-                    "icon": {
-                        "type": "string",
-                        "maxLength": 1024,
-                        "title": "Icon",
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the type.",
                         "default": ""
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the type.",
                         "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the type.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the type.",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
                     },
                     "representations": {
                         "items": {
@@ -450,48 +750,64 @@
                         },
                         "type": "array",
                         "title": "Representations"
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortInput"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
                 "required": [
                     "name"
                 ],
-                "title": "TypeInput"
+                "title": "TypeInput",
+                "description": "\u2198\ufe0f The input for a type."
             },
             "TypeOutput": {
                 "properties": {
-                    "name": {
+                    "unit": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Name"
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the type.",
+                        "default": ""
                     },
-                    "description": {
+                    "variant": {
                         "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the type.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the type.",
                         "default": ""
                     },
-                    "createdAt": {
+                    "description": {
                         "type": "string",
-                        "format": "date-time",
-                        "title": "Createdat"
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the type.",
+                        "default": ""
                     },
-                    "lastUpdateAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "title": "Lastupdateat"
-                    },
-                    "variant": {
+                    "name": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Variant",
-                        "default": ""
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
                     },
                     "representations": {
                         "items": {
@@ -499,13 +815,28 @@
                         },
                         "type": "array",
                         "title": "Representations"
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortOutput"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityOutput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
                 "required": [
                     "name"
                 ],
-                "title": "TypeOutput"
+                "title": "TypeOutput",
+                "description": "\u2197\ufe0f The output of a type."
             },
             "ValidationError": {
                 "properties": {
@@ -539,6 +870,60 @@
                     "type"
                 ],
                 "title": "ValidationError"
+            },
+            "Vector": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "Vector",
+                "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
+            },
+            "VectorInput": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "VectorInput",
+                "description": "\u2198\ufe0f The input for a vector."
             }
         }
     }

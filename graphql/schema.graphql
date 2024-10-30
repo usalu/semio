@@ -1,1 +1,323 @@
-[('CREATE TABLE plane (\n\tid INTEGER NOT NULL, \n\t"planeOriginX" FLOAT NOT NULL, \n\t"planeOriginY" FLOAT NOT NULL, \n\t"planeOriginZ" FLOAT NOT NULL, \n\t"xAxisX" FLOAT NOT NULL, \n\t"xAxisY" FLOAT NOT NULL, \n\t"xAxisZ" FLOAT NOT NULL, \n\t"yAxisX" FLOAT NOT NULL, \n\t"yAxisY" FLOAT NOT NULL, \n\t"yAxisZ" FLOAT NOT NULL, \n\tPRIMARY KEY (id)\n)',), ('CREATE TABLE kit (\n\tname VARCHAR(64) NOT NULL, \n\tdescription VARCHAR(4096) NOT NULL, \n\ticon VARCHAR(1024) NOT NULL, \n\tremote VARCHAR(1024) NOT NULL, \n\thomepage VARCHAR(1024) NOT NULL, \n\tid INTEGER NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (name)\n)',), ('CREATE TABLE type (\n\tname VARCHAR(64) NOT NULL, \n\tdescription VARCHAR(4096) NOT NULL, \n\ticon VARCHAR(1024) NOT NULL, \n\tvariant VARCHAR(64) NOT NULL, \n\tid INTEGER NOT NULL, \n\t"kitId" INTEGER, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY("kitId") REFERENCES kit (id)\n)',), ('CREATE TABLE representation (\n\turl VARCHAR(1024) NOT NULL, \n\tlod VARCHAR NOT NULL, \n\tid INTEGER NOT NULL, \n\t"typeId" INTEGER, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY("typeId") REFERENCES type (id)\n)',), ('CREATE TABLE port (\n\tid INTEGER NOT NULL, \n\t"localId" VARCHAR(64), \n\t"pointX" FLOAT NOT NULL, \n\t"pointY" FLOAT NOT NULL, \n\t"pointZ" FLOAT NOT NULL, \n\t"directionX" FLOAT NOT NULL, \n\t"directionY" FLOAT NOT NULL, \n\t"directionZ" FLOAT NOT NULL, \n\t"typeId" INTEGER, \n\tPRIMARY KEY (id), \n\tUNIQUE ("localId", "typeId"), \n\tFOREIGN KEY("typeId") REFERENCES type (id)\n)',), ('CREATE TABLE quality (\n\tname VARCHAR(64) NOT NULL, \n\tvalue VARCHAR(64) NOT NULL, \n\tdefinition VARCHAR(4096) NOT NULL, \n\tunit VARCHAR(64) NOT NULL, \n\tid INTEGER NOT NULL, \n\t"typeId" INTEGER, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY("typeId") REFERENCES type (id)\n)',), ('CREATE TABLE tag (\n\tvalue VARCHAR NOT NULL, \n\t"representationId" INTEGER NOT NULL, \n\tPRIMARY KEY (value, "representationId"), \n\tFOREIGN KEY("representationId") REFERENCES representation (id)\n)',), ('CREATE TABLE locator (\n\tsubgroup VARCHAR(64) NOT NULL, \n\t"groupName" VARCHAR(64) NOT NULL, \n\t"portId" INTEGER NOT NULL, \n\tPRIMARY KEY ("groupName", "portId"), \n\tFOREIGN KEY("portId") REFERENCES port (id)\n)',)]
+type Query {
+  node(
+    """The ID of the object"""
+    id: ID!
+  ): Node
+  kit(uri: String!): Kit
+}
+
+interface Node {
+  """The ID of the object"""
+  id: ID!
+}
+
+type Kit implements Node {
+  lastUpdateAt: DateTime!
+  createdAt: DateTime!
+  homepage: String!
+  remote: String!
+  icon: String!
+  description: String!
+  name: String!
+  uri: String!
+  types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
+
+  """The ID of the object"""
+  id: ID!
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+type TypeNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [TypeNodeEdge]!
+}
+
+"""
+The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+"""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""A Relay edge containing a `TypeNode` and its cursor."""
+type TypeNodeEdge {
+  """The item at the end of the edge"""
+  node: Type
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+type Type implements Node {
+  unit: String!
+  variant: String!
+  icon: String!
+  description: String!
+  name: String!
+  representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
+  ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  kit: Kit
+
+  """The ID of the object"""
+  id: ID!
+}
+
+type RepresentationNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [RepresentationNodeEdge]!
+}
+
+"""A Relay edge containing a `RepresentationNode` and its cursor."""
+type RepresentationNodeEdge {
+  """The item at the end of the edge"""
+  node: Representation
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+type Representation implements Node {
+  url: String!
+  lod: String!
+  mime: String!
+  type: Type
+
+  """The ID of the object"""
+  id: ID!
+  tags: [String!]!
+}
+
+type PortNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [PortNodeEdge]!
+}
+
+"""A Relay edge containing a `PortNode` and its cursor."""
+type PortNodeEdge {
+  """The item at the end of the edge"""
+  node: Port
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+type Port implements Node {
+  id_: String
+  type: Type
+  locators: [Locator!]
+
+  """The ID of the object"""
+  id: ID!
+  point: Point!
+  direction: Vector!
+}
+
+type Locator {
+  subgroup: String!
+  group: String!
+  port: Port
+}
+
+"""✖️ A 3d-point (xyz) of floating point numbers."""
+type Point {
+  """🎚️ The x-coordinate of the point."""
+  x: Float!
+
+  """🎚️ The y-coordinate of the point."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the point."""
+  z: Float!
+}
+
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
+type Vector {
+  """🎚️ The x-coordinate of the vector."""
+  x: Float!
+
+  """🎚️ The y-coordinate of the vector."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the vector."""
+  z: Float!
+}
+
+type QualityNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [QualityNodeEdge]!
+}
+
+"""A Relay edge containing a `QualityNode` and its cursor."""
+type QualityNodeEdge {
+  """The item at the end of the edge"""
+  node: Quality
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+type Quality implements Node {
+  unit: String!
+  definition: String!
+  value: String!
+  name: String!
+  type: Type
+
+  """The ID of the object"""
+  id: ID!
+}
+
+type Mutation {
+  createKit(kit: KitInputNode!): Kit
+}
+
+input KitInputNode {
+  """🌐 The homepage of the kit."""
+  homepage: String = ""
+
+  """🌐 The remote of the kit."""
+  remote: String = ""
+
+  """🖼️ The icon of the kit."""
+  icon: String = ""
+
+  """💬 The description of the kit."""
+  description: String = ""
+
+  """📛 The name of the kit."""
+  name: String!
+
+  """🧩 The types of the kit."""
+  types: [TypeInputNode] = null
+}
+
+input TypeInputNode {
+  """📏 The unit of the type."""
+  unit: String = ""
+
+  """🔀 The variant of the type."""
+  variant: String = ""
+
+  """🖼️ The icon of the type."""
+  icon: String = ""
+
+  """💬 The description of the type."""
+  description: String = ""
+
+  """📛 The name of the type."""
+  name: String!
+  representations: [RepresentationInputNode] = null
+  ports: [PortInputNode] = null
+  qualities: [QualityInputNode] = null
+}
+
+input RepresentationInputNode {
+  """
+  🔗 The Unique Resource Locator (URL) to the resource of the representation.
+  """
+  url: String!
+
+  """🏷️ The optional tags to group representations. No tags means default."""
+  tags: [String] = null
+
+  """
+  🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+  """
+  lod: String!
+
+  """
+  ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+  """
+  mime: String!
+}
+
+input PortInputNode {
+  """🆔 The id of the port."""
+  id_: String = ""
+
+  """
+  ✖️ The connection point of the port that is attracted to another connection point.
+  """
+  point: PointInputNode!
+
+  """
+  ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+  """
+  direction: VectorInputNode!
+
+  """🗺️ The locators of the port."""
+  locators: [LocatorInputNode] = null
+}
+
+input PointInputNode {
+  """🎚️ The x-coordinate of the point."""
+  x: Float!
+
+  """🎚️ The y-coordinate of the point."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the point."""
+  z: Float!
+}
+
+input VectorInputNode {
+  """🎚️ The x-coordinate of the vector."""
+  x: Float!
+
+  """🎚️ The y-coordinate of the vector."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the vector."""
+  z: Float!
+}
+
+input LocatorInputNode {
+  """📌 The optional sub-group of the locator. No sub-group means true."""
+  subgroup: String = ""
+
+  """👪 The group of the locator."""
+  group: String!
+}
+
+input QualityInputNode {
+  """📏 The unit of the quality."""
+  unit: String = ""
+
+  """📏 The definition of the quality."""
+  definition: String = ""
+
+  """📏 The value of the quality."""
+  value: String = ""
+
+  """📏 The name of the quality."""
+  name: String!
+}
