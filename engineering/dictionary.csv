@@ -9,6 +9,7 @@ Symbol,Code,Abbreviation,Name,Description
 📖,Df,Def,Definition,The optional definition [ text | url ] of the quality.
 ✏️,Dg,Dgm,Diagram,The diagram of the design.
 📁,Di?,Dir,Directory,The optional directory where to find the kit.
+🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
 ➡️,Dr,Drn,Direction,The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
@@ -37,7 +38,7 @@ Symbol,Code,Abbreviation,Name,Description
 ⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
 🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
 ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-⭕,Pc+,Pces,Pieces,The pieces of the design.
+⭕,Pc?,Pces,Pieces,The optional pieces of the design.
 🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 🔌,Po+,Pors,Ports,The ports of the type.

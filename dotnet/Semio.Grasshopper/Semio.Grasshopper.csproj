@@ -6,7 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;UnitTest</Configurations>
   </PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'UnitTest'">
+		<TargetExt>.dll</TargetExt>
+	</PropertyGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Semio\Semio.csproj" />

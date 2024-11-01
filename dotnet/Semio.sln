@@ -7,32 +7,41 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio", "Semio\Semio.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio.UnitTests", "Semio.UnitTests\Semio.UnitTests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.UnitTests", "Semio.UnitTests\Semio.UnitTests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio.Grasshopper.UnitTests", "Semio.Grasshopper.UnitTests\Semio.Grasshopper.UnitTests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.UnitTests", "Semio.Grasshopper.UnitTests\Semio.Grasshopper.UnitTests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		UnitTest|Any CPU = UnitTest|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.UnitTest|Any CPU.ActiveCfg = UnitTest|Any CPU
+		{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}.UnitTest|Any CPU.Build.0 = UnitTest|Any CPU
 		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.UnitTest|Any CPU.ActiveCfg = UnitTest|Any CPU
+		{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}.UnitTest|Any CPU.Build.0 = UnitTest|Any CPU
 		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.UnitTest|Any CPU.ActiveCfg = UnitTest|Any CPU
+		{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}.UnitTest|Any CPU.Build.0 = UnitTest|Any CPU
 		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.UnitTest|Any CPU.ActiveCfg = UnitTest|Any CPU
+		{9735D68F-06FF-4A3D-B48E-C867B5F2F214}.UnitTest|Any CPU.Build.0 = UnitTest|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

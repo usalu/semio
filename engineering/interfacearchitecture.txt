@@ -2,7 +2,7 @@ kit : !Kit{
     name : !String
     description : ?String
     icon : ?String
-    url : ?String
+    remote : ?String
     homepage : ?String
     types : +Type[
         name : !String
@@ -10,11 +10,11 @@ kit : !Kit{
         icon : ?String
         variant : ?String
         unit : !String
-        representations : +[
+        representations : +Representations[
             url : !String
             mime : !String
             lod : ?String
-            tags : *[String]
+            tags : *String[]
         ]
         ports : +Port[
             id : !String

@@ -16,7 +16,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
                             "title": "Encodedkituri"
                         }
                     }
@@ -54,7 +54,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
                             "title": "Encodedkituri"
                         }
                     }
@@ -100,7 +100,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
                             "title": "Encodedkituri"
                         }
                     }
@@ -127,10 +127,10 @@
                 }
             }
         },
-        "/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}": {
+        "/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
             "put": {
                 "summary": "Put Type",
-                "operationId": "put_type_kits__encodedKitUri__types__encodedTypeName___encodedTypeVariant__put",
+                "operationId": "put_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__put",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -138,28 +138,18 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
                             "title": "Encodedkituri"
                         }
                     },
                     {
-                        "name": "encodedTypeName",
+                        "name": "encodedTypeNameAndVariant",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedtypename"
-                        }
-                    },
-                    {
-                        "name": "encodedTypeVariant",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedtypevariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodedtypenameandvariant"
                         }
                     }
                 ],
@@ -196,7 +186,7 @@
             },
             "delete": {
                 "summary": "Delete Type",
-                "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeName___encodedTypeVariant__delete",
+                "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__delete",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -204,28 +194,122 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
                             "title": "Encodedkituri"
                         }
                     },
                     {
-                        "name": "encodedTypeName",
+                        "name": "encodedTypeNameAndVariant",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedtypename"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodedtypenameandvariant"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}": {
+            "put": {
+                "summary": "Put Design",
+                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
                         }
                     },
                     {
-                        "name": "encodedTypeVariant",
+                        "name": "encodedDesignNameAndVariant",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-ZZ0-9_-]+={0,2}",
-                            "title": "Encodedtypevariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariant"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DesignInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Design",
+                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    },
+                    {
+                        "name": "encodedDesignNameAndVariant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariant"
                         }
                     }
                 ],
@@ -254,6 +338,230 @@
     },
     "components": {
         "schemas": {
+            "ConnectionInput": {
+                "properties": {
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The rotation of the connection.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The tilt of the connection.",
+                        "default": 0
+                    },
+                    "offset": {
+                        "type": "number",
+                        "title": "Offset",
+                        "description": "\u2195\ufe0f The offset of the connection.",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideInput",
+                        "description": "\ud83e\uddf2 The connected side of the connection."
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideInput",
+                        "description": "\ud83e\uddf2 The connecting side of the connection."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionInput",
+                "description": "\u2198\ufe0f The input for a connection."
+            },
+            "ConnectionOutput": {
+                "properties": {
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The rotation of the connection.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The tilt of the connection.",
+                        "default": 0
+                    },
+                    "offset": {
+                        "type": "number",
+                        "title": "Offset",
+                        "description": "\u2195\ufe0f The offset of the connection.",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideOutput",
+                        "description": "\ud83e\uddf2 The connected side of the connection."
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideOutput",
+                        "description": "\ud83e\uddf2 The connecting side of the connection."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionOutput",
+                "description": "\u2197\ufe0f The output of a connection."
+            },
+            "DesignInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the design."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the design.",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the design.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the design.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the design.",
+                        "default": ""
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceInput"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionInput"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignInput",
+                "description": "\u2198\ufe0f The input for a design."
+            },
+            "DesignOutput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the design."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the design.",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "description": "\ud83d\uddbc\ufe0f The icon of the design.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the design.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the design.",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat",
+                        "description": "\ud83d\udd52 The creation date of the design."
+                    },
+                    "lastUpdateAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastupdateat",
+                        "description": "\ud83d\udd52 The last update date of the design."
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceOutput"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionOutput"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityOutput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignOutput",
+                "description": "\u2197\ufe0f The output of a design."
+            },
             "HTTPValidationError": {
                 "properties": {
                     "detail": {
@@ -269,18 +577,17 @@
             },
             "KitInput": {
                 "properties": {
-                    "homepage": {
+                    "name": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
-                        "default": ""
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the kit."
                     },
-                    "remote": {
+                    "description": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the kit.",
                         "default": ""
                     },
                     "icon": {
@@ -290,18 +597,19 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
                     },
-                    "description": {
+                    "remote": {
                         "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "description": "\ud83d\udcac The description of the kit.",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "description": "\ud83c\udf10 The remote of the kit.",
                         "default": ""
                     },
-                    "name": {
+                    "homepage": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udcdb The name of the kit."
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "default": ""
                     },
                     "types": {
                         "items": {
@@ -310,6 +618,14 @@
                         "type": "array",
                         "title": "Types",
                         "description": "\ud83e\udde9 The types of the kit."
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignInput"
+                        },
+                        "type": "array",
+                        "title": "Designs",
+                        "description": "\ud83c\udfd9\ufe0f The designs of the kit."
                     }
                 },
                 "type": "object",
@@ -321,30 +637,23 @@
             },
             "KitOutput": {
                 "properties": {
-                    "lastUpdateAt": {
+                    "uri": {
                         "type": "string",
-                        "format": "date-time",
-                        "title": "Lastupdateat",
-                        "description": "\ud83d\udd52 The last update date of the kit."
+                        "maxLength": 4096,
+                        "title": "Uri",
+                        "description": "\ud83c\udd94 The uri of the kit."
                     },
-                    "createdAt": {
+                    "name": {
                         "type": "string",
-                        "format": "date-time",
-                        "title": "Createdat",
-                        "description": "\ud83d\udd52 The creation date of the kit."
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the kit."
                     },
-                    "homepage": {
+                    "description": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
-                        "default": ""
-                    },
-                    "remote": {
-                        "type": "string",
-                        "maxLength": 1024,
-                        "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the kit.",
                         "default": ""
                     },
                     "icon": {
@@ -354,24 +663,31 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
                     },
-                    "description": {
+                    "remote": {
                         "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "description": "\ud83d\udcac The description of the kit.",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "description": "\ud83c\udf10 The remote of the kit.",
                         "default": ""
                     },
-                    "name": {
+                    "homepage": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udcdb The name of the kit."
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "default": ""
                     },
-                    "uri": {
+                    "createdAt": {
                         "type": "string",
-                        "maxLength": 4096,
-                        "title": "Uri",
-                        "description": "\ud83c\udd94 The uri of the kit."
+                        "format": "date-time",
+                        "title": "Createdat",
+                        "description": "\ud83d\udd52 The creation date of the kit."
+                    },
+                    "lastUpdateAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastupdateat",
+                        "description": "\ud83d\udd52 The last update date of the kit."
                     },
                     "types": {
                         "items": {
@@ -380,30 +696,38 @@
                         "type": "array",
                         "title": "Types",
                         "description": "\ud83e\udde9 The types of the kit."
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignOutput"
+                        },
+                        "type": "array",
+                        "title": "Designs",
+                        "description": "\ud83c\udfd9\ufe0f The designs of the kit."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "name",
-                    "uri"
+                    "uri",
+                    "name"
                 ],
                 "title": "KitOutput",
                 "description": "\u2197\ufe0f The output of a kit."
             },
             "LocatorInput": {
                 "properties": {
+                    "group": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Group",
+                        "description": "\ud83d\udc6a The group of the locator."
+                    },
                     "subgroup": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Subgroup",
                         "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
                         "default": ""
-                    },
-                    "group": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Group",
-                        "description": "\ud83d\udc6a The group of the locator."
                     }
                 },
                 "type": "object",
@@ -415,18 +739,18 @@
             },
             "LocatorOutput": {
                 "properties": {
+                    "group": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Group",
+                        "description": "\ud83d\udc6a The group of the locator."
+                    },
                     "subgroup": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Subgroup",
                         "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
                         "default": ""
-                    },
-                    "group": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Group",
-                        "description": "\ud83d\udc6a The group of the locator."
                     }
                 },
                 "type": "object",
@@ -435,6 +759,143 @@
                 ],
                 "title": "LocatorOutput",
                 "description": "\u2197\ufe0f The output of a locator."
+            },
+            "PieceId": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "title": "PieceId",
+                "description": "\ud83e\udeaa The props to identify the piece within the parent design."
+            },
+            "PieceInput": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeId",
+                        "description": "\ud83e\udde9 The type of the piece."
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\u25f3 The plane of the piece."
+                    },
+                    "screenPoint": {
+                        "$ref": "#/components/schemas/ScreenPointInput",
+                        "description": "\ud83d\udcfa The screen point of the piece."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type",
+                    "plane",
+                    "screenPoint"
+                ],
+                "title": "PieceInput",
+                "description": "\u2198\ufe0f The input for a piece."
+            },
+            "PieceOutput": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeId",
+                        "description": "\ud83e\udde9 The type of the piece."
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneOutput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\u25f3 The plane of the piece."
+                    },
+                    "screenPoint": {
+                        "$ref": "#/components/schemas/ScreenPointOutput",
+                        "description": "\ud83d\udcfa The screen point of the piece."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type",
+                    "screenPoint"
+                ],
+                "title": "PieceOutput",
+                "description": "\u2197\ufe0f The output of a piece."
+            },
+            "PlaneInput": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/PointInput",
+                        "description": "\u2331 The origin of the plane."
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/VectorInput",
+                        "description": "\u27a1\ufe0f The x-axis of the plane."
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/VectorInput",
+                        "description": "\u27a1\ufe0f The y-axis of the plane."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "PlaneInput",
+                "description": "\u2198\ufe0f The input for a plane."
+            },
+            "PlaneOutput": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/Point",
+                        "description": "\u2331 The origin of the plane."
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/Vector",
+                        "description": "\u27a1\ufe0f The x-axis of the plane."
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/Vector",
+                        "description": "\u27a1\ufe0f The y-axis of the plane."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "PlaneOutput",
+                "description": "\u2197\ufe0f The output of a plane."
             },
             "Point": {
                 "properties": {
@@ -489,6 +950,20 @@
                 ],
                 "title": "PointInput",
                 "description": "\u2198\ufe0f The input for a point."
+            },
+            "PortId": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Id ",
+                        "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "title": "PortId",
+                "description": "\ud83e\udeaa The props to identify the port within the parent type."
             },
             "PortInput": {
                 "properties": {
@@ -560,11 +1035,17 @@
             },
             "QualityInput": {
                 "properties": {
-                    "unit": {
+                    "name": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the quality.",
+                        "title": "Name",
+                        "description": "\ud83d\udccf The name of the quality."
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "description": "\ud83d\udccf The value of the quality.",
                         "default": ""
                     },
                     "definition": {
@@ -574,18 +1055,12 @@
                         "description": "\ud83d\udccf The definition of the quality.",
                         "default": ""
                     },
-                    "value": {
+                    "unit": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Value",
-                        "description": "\ud83d\udccf The value of the quality.",
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the quality.",
                         "default": ""
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udccf The name of the quality."
                     }
                 },
                 "type": "object",
@@ -597,11 +1072,17 @@
             },
             "QualityOutput": {
                 "properties": {
-                    "unit": {
+                    "name": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the quality.",
+                        "title": "Name",
+                        "description": "\ud83d\udccf The name of the quality."
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "description": "\ud83d\udccf The value of the quality.",
                         "default": ""
                     },
                     "definition": {
@@ -611,18 +1092,12 @@
                         "description": "\ud83d\udccf The definition of the quality.",
                         "default": ""
                     },
-                    "value": {
+                    "unit": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Value",
-                        "description": "\ud83d\udccf The value of the quality.",
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the quality.",
                         "default": ""
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udccf The name of the quality."
                     }
                 },
                 "type": "object",
@@ -634,11 +1109,17 @@
             },
             "RepresentationInput": {
                 "properties": {
-                    "url": {
+                    "mime": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                        "maxLength": 64,
+                        "title": "Mime",
+                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
+                    },
+                    "lod": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Lod",
+                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
                     },
                     "tags": {
                         "items": {
@@ -648,35 +1129,35 @@
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
                     },
-                    "lod": {
+                    "url": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Lod",
-                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
-                    },
-                    "mime": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Mime",
-                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
+                        "maxLength": 1024,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "url",
+                    "mime",
                     "lod",
-                    "mime"
+                    "url"
                 ],
                 "title": "RepresentationInput",
                 "description": "\u2198\ufe0f The input for a representation."
             },
             "RepresentationOutput": {
                 "properties": {
-                    "url": {
+                    "mime": {
                         "type": "string",
-                        "maxLength": 1024,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                        "maxLength": 64,
+                        "title": "Mime",
+                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
+                    },
+                    "lod": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Lod",
+                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
                     },
                     "tags": {
                         "items": {
@@ -686,42 +1167,132 @@
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
                     },
-                    "lod": {
+                    "url": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Lod",
-                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
-                    },
-                    "mime": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Mime",
-                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
+                        "maxLength": 1024,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "url",
+                    "mime",
                     "lod",
-                    "mime"
+                    "url"
                 ],
                 "title": "RepresentationOutput",
                 "description": "\u2197\ufe0f The output of a representation."
             },
-            "TypeInput": {
+            "ScreenPointInput": {
                 "properties": {
-                    "unit": {
+                    "x": {
+                        "type": "integer",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the screen point."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the screen point."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "ScreenPointInput",
+                "description": "\u2198\ufe0f The input for a screen point."
+            },
+            "ScreenPointOutput": {
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the screen point."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the screen point."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "ScreenPointOutput",
+                "description": "\u2197\ufe0f The output of a screen point."
+            },
+            "SideInput": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "port": {
+                        "$ref": "#/components/schemas/PortId"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece",
+                    "port"
+                ],
+                "title": "SideInput"
+            },
+            "SideOutput": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "port": {
+                        "$ref": "#/components/schemas/PortId"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece",
+                    "port"
+                ],
+                "title": "SideOutput"
+            },
+            "TypeId": {
+                "properties": {
+                    "name": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
-                        "default": ""
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
                         "description": "\ud83d\udd00 The variant of the type.",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeId",
+                "description": "\ud83e\udeaa The props to identify the type."
+            },
+            "TypeInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the type.",
                         "default": ""
                     },
                     "icon": {
@@ -731,18 +1302,19 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the type.",
                         "default": ""
                     },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "description": "\ud83d\udcac The description of the type.",
-                        "default": ""
-                    },
-                    "name": {
+                    "variant": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udcdb The name of the type."
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the type.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the type.",
+                        "default": ""
                     },
                     "representations": {
                         "items": {
@@ -775,18 +1347,17 @@
             },
             "TypeOutput": {
                 "properties": {
-                    "unit": {
+                    "name": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
-                        "default": ""
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
                     },
-                    "variant": {
+                    "description": {
                         "type": "string",
-                        "maxLength": 64,
-                        "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The description of the type.",
                         "default": ""
                     },
                     "icon": {
@@ -796,18 +1367,31 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the type.",
                         "default": ""
                     },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Description",
-                        "description": "\ud83d\udcac The description of the type.",
-                        "default": ""
-                    },
-                    "name": {
+                    "variant": {
                         "type": "string",
                         "maxLength": 64,
-                        "title": "Name",
-                        "description": "\ud83d\udcdb The name of the type."
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The variant of the type.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the type.",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat",
+                        "description": "\ud83d\udd52 The creation date of the type."
+                    },
+                    "lastUpdateAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastupdateat",
+                        "description": "\ud83d\udd52 The last update date of the type."
                     },
                     "representations": {
                         "items": {

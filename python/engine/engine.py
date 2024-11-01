@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# semio.py
+# engine.py
 # Copyright (C) 2024 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 
 
 """
-semio.py
+engine.py
 """
 
 
@@ -31,7 +31,7 @@ semio.py
 # TODO: Automatic updating based on props.
 # TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
 # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-
+# TODO: Proper mechanism of nullable fields.
 
 # Copilot
 
@@ -78,7 +78,7 @@ semio.py
 # ⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
 # 🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
 # ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-# ⭕,Pc+,Pces,Pieces,The pieces of the design.
+# ⭕,Pc+,Pces,Pieces,The optional pieces of the design.
 # 🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
 # 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 # 🔌,Po+,Pors,Ports,The ports of the type.
@@ -149,6 +149,7 @@ import lark
 import pint
 import pydantic
 import sqlalchemy
+import sqlalchemy.exc
 import sqlmodel
 import starlette
 import starlette_graphene3
@@ -179,7 +180,8 @@ URI_LENGTH_LIMIT = 4 * URL_LENGTH_LIMIT
 MAX_TAGS = 16
 MAX_HIERARCHY = 16
 DESCRIPTION_LENGTH_LIMIT = 4096
-ENCODING_REGEX = r"[a-zA-ZZ0-9_-]+={0,2}"
+ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
+ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
 KIT_LOCAL_FILENAME = "kit.sqlite3"
 KIT_LOCAL_SUFFIX = str(
@@ -204,6 +206,9 @@ MIMES = {
     ".txt": "text/plain",
 }
 ENCODED_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX)]
+ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[
+    str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*")
+]
 MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  # 50MB
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
@@ -214,18 +219,13 @@ ureg = pint.UnitRegistry()
 
 
 def encode(value: str) -> str:
-    """ᗒ Encode a string to a base64 url-safe (uses - and _ instead of + and /)."""
-    encoded_bytes = base64.urlsafe_b64encode(value.encode("utf-8"))
-    encoded_str = encoded_bytes.decode("utf-8")
-    return encoded_str
+    """ᗒ Encode a string to be url safe."""
+    return urllib.parse.quote(value, safe="")
 
 
 def decode(value: str) -> str:
-    """ᗕ Decode a base64 url-safe (uses - and _ instead of + and /) string."""
-    value += "=" * (-len(value) % 4)
-    decoded_bytes = base64.urlsafe_b64decode(value.encode("utf-8"))
-    decoded_str = decoded_bytes.decode("utf-8")
-    return decoded_str
+    """ᗕ Decode a url safe string."""
+    return urllib.parse.unquote(value)
 
 
 def encodeList(list: list[str]) -> str:
@@ -237,7 +237,7 @@ def decodeList(encodedList: str) -> list[str]:
 
 
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
-    """🆔 Encode a `RecursiveAnyList` to a base64 url-safe (uses - and _ instead of + and /) string."""
+    """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
@@ -304,15 +304,25 @@ class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors."""
 
 
-class TypeNotFound(NotFound):
+class PortNotFound(NotFound):
 
-    def __init__(self, name: str, variant: str = "") -> None:
-        self.name = name
-        self.variant = variant
+    def __init__(self, parent: "Type", id: "PortId") -> None:
+        self.parent = parent
+        self.id = id
 
     def __str__(self):
-        variant = f", {self.variant}" if self.variant else ""
-        return f"🔍 Couldn't find the type ({self.name}{variant})."
+        variant = f", {self.parent.variant}" if self.parent.variant else ""
+        return f"🔍 Couldn't find the port ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
+
+
+class TypeNotFound(NotFound):
+
+    def __init__(self, id: "TypeId") -> None:
+        self.id = id
+
+    def __str__(self):
+        variant = f", {self.id.variant}" if self.id.variant else ""
+        return f"🔍 Couldn't find the type ({self.id.name}{variant})."
 
 
 # class DesignNotFound(NotFound):
@@ -332,7 +342,7 @@ class KitNotFound(NotFound):
         self.uri = uri
 
     def __str__(self):
-        return f"🔍 Couldn't find a local or remote kit under uri:\n {self.uri}."
+        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
 
 
 class NoKitToDelete(KitNotFound):
@@ -390,6 +400,18 @@ class NoTypeAssigned(NoParentAssigned):
         return "👪 The entity has no parent type assigned."
 
 
+class NoDesignAssigned(NoParentAssigned):
+
+    def __str__(self):
+        return "👪 The entity has no parent design assigned."
+
+
+class NoTypeOrDesignAssigned(NoTypeAssigned, NoDesignAssigned):
+
+    def __str__(self):
+        return "👪 The entity has no parent type or design assigned."
+
+
 class NoKitAssigned(NoParentAssigned):
 
     def __str__(self):
@@ -434,8 +456,10 @@ class Model(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
 
     @classmethod
-    def parse(cls, input: str | dict | typing.Any) -> "Model":
+    def parse(cls, input: str | dict | typing.Any | None) -> "Model":
         """⚒️ Parse the entity from an input."""
+        if input is None:
+            return cls()
         if isinstance(input, str):
             return cls.model_validate_json(input)
         return cls.model_validate(input)
@@ -577,45 +601,45 @@ class RepresentationTagsField(MaskedField, abc.ABC):
 
 
 class RepresentationId(
-    RepresentationMimeField, RepresentationLodField, RepresentationTagsField, Id
+    RepresentationTagsField, RepresentationLodField, RepresentationMimeField, Id
 ):
     """🪪 The props to identify the representation within the parent type."""
 
 
 class RepresentationProps(
-    RepresentationMimeField,
-    RepresentationLodField,
-    RepresentationTagsField,
     RepresentationUrlField,
+    RepresentationTagsField,
+    RepresentationLodField,
+    RepresentationMimeField,
     Props,
 ):
     """🎫 The props of a representation."""
 
 
 class RepresentationInput(
-    RepresentationMimeField,
-    RepresentationLodField,
-    RepresentationTagsField,
     RepresentationUrlField,
+    RepresentationTagsField,
+    RepresentationLodField,
+    RepresentationMimeField,
     Input,
 ):
     """↘️ The input for a representation."""
 
 
 class RepresentationOutput(
-    RepresentationMimeField,
-    RepresentationLodField,
-    RepresentationTagsField,
     RepresentationUrlField,
+    RepresentationTagsField,
+    RepresentationLodField,
+    RepresentationMimeField,
     Output,
 ):
     """↗️ The output of a representation."""
 
 
 class Representation(
-    RepresentationMimeField,
-    RepresentationLodField,
     RepresentationUrlField,
+    RepresentationLodField,
+    RepresentationMimeField,
     TableEntity,
     table=True,
 ):
@@ -674,8 +698,12 @@ class Representation(
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(
-        cls: "Representation", input: str | dict | typing.Any
+        cls: "Representation",
+        input: str | dict | RepresentationInput | typing.Any | None,
     ) -> "Representation":
+        """⚒️ Parse the representation from an input."""
+        if input is None:
+            return cls()
         obj = (
             json.loads(input)
             if isinstance(input, str)
@@ -722,15 +750,15 @@ class LocatorId(LocatorGroupField, Id):
     """🪪 The props to identify the locator within the parent port."""
 
 
-class LocatorProps(LocatorGroupField, LocatorSubgroupField, Props):
+class LocatorProps(LocatorSubgroupField, LocatorGroupField, Props):
     """🎫 The props of a locator."""
 
 
-class LocatorInput(LocatorGroupField, LocatorSubgroupField, Input):
+class LocatorInput(LocatorSubgroupField, LocatorGroupField, Input):
     """↘️ The input for a locator."""
 
 
-class LocatorOutput(LocatorGroupField, LocatorSubgroupField, Output):
+class LocatorOutput(LocatorSubgroupField, LocatorGroupField, Output):
     """↗️ The output of a locator."""
 
 
@@ -981,11 +1009,18 @@ class PlaneYAxisField(MaskedField, abc.ABC):
     """➡️ The y-axis of the plane."""
 
 
-class PlaneInput(PlaneOriginField, PlaneXAxisField, PlaneYAxisField, Input):
+class PlaneInput(Input):
     """↘️ The input for a plane."""
 
+    origin: PointInput = sqlmodel.Field(description="⌱ The origin of the plane.")
+    """⌱ The origin of the plane."""
+    xAxis: VectorInput = sqlmodel.Field(description="➡️ The x-axis of the plane.")
+    """➡️ The x-axis of the plane."""
+    yAxis: VectorInput = sqlmodel.Field(description="➡️ The y-axis of the plane.")
+    """➡️ The y-axis of the plane."""
 
-class PlaneOutput(PlaneOriginField, PlaneXAxisField, PlaneYAxisField, Output):
+
+class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     """↗️ The output of a plane."""
 
 
@@ -1021,7 +1056,7 @@ class Plane(Table, table=True):
     """🎚️ The y-coordinate of the y-axis vector of the plane."""
     yAxisZ: float = sqlmodel.Field(exclude=True)
     """🎚️ The z-coordinate of the y-axis vector of the plane."""
-    # piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
+    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
     """👪 The parent piece of the plane."""
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -1102,10 +1137,6 @@ class Plane(Table, table=True):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    @property
-    def zAxis(self) -> Vector:
-        return self.xAxis.cross(self.yAxis)
-
     def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
         return (
             self.origin.isCloseTo(other.origin, tol)
@@ -1137,6 +1168,27 @@ class Plane(Table, table=True):
         rotation = Transform.fromAngle(yAxis, theta)
         xAxis = Vector.X().transform(rotation.after(orientation))
         return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(
+        cls: "Plane", input: str | dict | PlaneInput | typing.Any | None
+    ) -> "Plane":
+        if input is None:
+            return cls()
+        obj = (
+            json.loads(input)
+            if isinstance(input, str)
+            else input if isinstance(input, dict) else input.__dict__
+        )
+        origin = PointInput.model_validate(obj["origin"])
+        xAxis = VectorInput.model_validate(obj["xAxis"])
+        yAxis = VectorInput.model_validate(obj["yAxis"])
+        entity = Plane()
+        entity.origin = origin
+        entity.xAxis = xAxis
+        entity.yAxis = yAxis
+        return entity
 
 
 ### Rotations ### TODO
@@ -1372,7 +1424,7 @@ class PortId(PortIdField, Id):
 
 
 class PortProps(
-    PortIdField, PortPointField, PortDirectionField, PortLocatorsField, Props
+    PortLocatorsField, PortDirectionField, PortPointField, PortIdField, Props
 ):
     """🎫 The props of a port."""
 
@@ -1460,14 +1512,14 @@ class Port(TableEntity, table=True):
         back_populates="port", cascade_delete=True
     )
     """🗺️ The locators of the port."""
-    # connecteds: list["Connection"] = sqlmodel.Relationship(
-    #     back_populates="connectedPieceTypePort",
-    #     sa_relationship_kwargs={"foreign_keys": "Connection.connectedPieceTypePortPk"},
-    # )
-    # connectings: list["Connection"] = sqlmodel.Relationship(
-    #     back_populates="connectingPieceTypePort",
-    #     sa_relationship_kwargs={"foreign_keys": "Connection.connectingPieceTypePortPk"},
-    # )
+    connecteds: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectedPort",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"},
+    )
+    connectings: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectingPort",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"},
+    )
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint("localId", "typeId", name="Unique localId"),
@@ -1503,22 +1555,19 @@ class Port(TableEntity, table=True):
             raise NoTypeAssigned()
         return self.type
 
-    # TODO: Automatic derive from Id model.
-    def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the port within its parent type."""
-        return self.id_
-
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Port", input: str | dict | typing.Any) -> "Port":
+    def parse(cls: "Port", input: str | dict | PortInput | typing.Any | None) -> "Port":
         """🧪 Parse the input to a port."""
+        if input is None:
+            return cls()
         obj = (
             json.loads(input)
             if isinstance(input, str)
             else input if isinstance(input, dict) else input.__dict__
         )
-        point = Point(**obj["point"])
-        direction = Vector(**obj["direction"])
+        point = Point.parse(obj["point"])
+        direction = Vector.parse(obj["direction"])
         entity = cls(id_=obj["id_"])
         entity.point = point
         entity.direction = direction
@@ -1528,6 +1577,11 @@ class Port(TableEntity, table=True):
         except KeyError:
             pass
         return entity
+
+    # TODO: Automatic derive from Id model.
+    def idMembers(self) -> RecursiveAnyList:
+        """🪪 The members that form the id of the port within its parent type."""
+        return self.id_
 
 
 ### Qualities ### TODO
@@ -1581,36 +1635,36 @@ class QualityId(QualityNameField, Id):
 
 
 class QualityProps(
-    QualityNameField,
-    QualityValueField,
-    QualityDefinitionField,
     QualityUnitField,
+    QualityDefinitionField,
+    QualityValueField,
+    QualityNameField,
     Props,
 ):
     """🎫 The props of a quality."""
 
 
 class QualityInput(
-    QualityNameField, QualityValueField, QualityDefinitionField, QualityUnitField, Input
+    QualityUnitField, QualityDefinitionField, QualityValueField, QualityNameField, Input
 ):
     """↘️ The input for a quality."""
 
 
 class QualityOutput(
-    QualityNameField,
-    QualityValueField,
-    QualityDefinitionField,
     QualityUnitField,
+    QualityDefinitionField,
+    QualityValueField,
+    QualityNameField,
     Output,
 ):
     """↗️ The output of a quality."""
 
 
 class Quality(
-    QualityNameField,
-    QualityValueField,
-    QualityDefinitionField,
     QualityUnitField,
+    QualityDefinitionField,
+    QualityValueField,
+    QualityNameField,
     TableEntity,
     table=True,
 ):
@@ -1641,12 +1695,35 @@ class Quality(
     """🔑 The foreign primary key of the parent type of the quality in the database."""
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
     """👪 The parent type of the quality."""
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "designId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent design of the quality in the database."""
+    design: typing.Optional["Design"] = sqlmodel.Relationship(
+        back_populates="qualities"
+    )
+    __tableargs__ = (
+        sqlalchemy.CheckConstraint(
+            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
+            name="typeOrDesignSet",
+        ),
+        sqlalchemy.UniqueConstraint("name", "typeId", "designId"),
+    )
 
     def parent(self) -> "Type":
-        """👪 The parent type of the quality or otherwise `NoTypeAssigned` is raised."""
-        if self.type is None:
-            raise NoTypeAssigned()
-        return self.type
+        """👪 The parent type or design of the quality or otherwise `NoTypeOrDesignAssigned` is raised."""
+        if self.type is not None:
+            return self.type
+        if self.design is not None:
+            return self.design
+        raise NoTypeOrDesignAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the quality within its parent type."""
@@ -1730,27 +1807,27 @@ class TypeLastUpdateAtField(RealField, abc.ABC):
     """🕒 The last update date of the type."""
 
 
-class TypeId(TypeNameField, TypeVariantField, Id):
+class TypeId(TypeVariantField, TypeNameField, Id):
     """🪪 The props to identify the type."""
 
 
 class TypeProps(
-    TypeNameField,
-    TypeDescriptionField,
-    TypeIconField,
-    TypeVariantField,
     TypeUnitField,
+    TypeVariantField,
+    TypeIconField,
+    TypeDescriptionField,
+    TypeNameField,
     Props,
 ):
     """🎫 The props of a type."""
 
 
 class TypeInput(
-    TypeNameField,
-    TypeDescriptionField,
-    TypeIconField,
-    TypeVariantField,
     TypeUnitField,
+    TypeVariantField,
+    TypeIconField,
+    TypeDescriptionField,
+    TypeNameField,
     Input,
 ):
     """↘️ The input for a type."""
@@ -1761,11 +1838,13 @@ class TypeInput(
 
 
 class TypeOutput(
-    TypeNameField,
-    TypeDescriptionField,
-    TypeIconField,
-    TypeVariantField,
+    TypeLastUpdateAtField,
+    TypeCreatedAtField,
     TypeUnitField,
+    TypeVariantField,
+    TypeIconField,
+    TypeDescriptionField,
+    TypeNameField,
     Output,
 ):
     """↗️ The output of a type."""
@@ -1776,11 +1855,13 @@ class TypeOutput(
 
 
 class Type(
-    TypeNameField,
-    TypeDescriptionField,
-    TypeIconField,
-    TypeVariantField,
+    TypeLastUpdateAtField,
+    TypeCreatedAtField,
     TypeUnitField,
+    TypeVariantField,
+    TypeIconField,
+    TypeDescriptionField,
+    TypeNameField,
     TableEntity,
     table=True,
 ):
@@ -1824,6 +1905,7 @@ class Type(
     """🔑 The foreign primary key of the parent kit of the type in the database."""
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="types")
     """👪 The parent kit of the type."""
+    pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
@@ -1839,8 +1921,10 @@ class Type(
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Type", input: str | dict | typing.Any) -> "Type":
+    def parse(cls: "Type", input: str | dict | TypeInput | typing.Any | None) -> "Type":
         """🧪 Parse the input to a type."""
+        if input is None:
+            return cls()
         obj = (
             json.loads(input)
             if isinstance(input, str)
@@ -1886,388 +1970,806 @@ class Type(
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
+        """🪪 The members that form the id of the type within the parent kit."""
         return [self.name, self.variant]
 
 
 ### Pieces ###
 
 
-# class PieceIdField(MaskedField, abc.ABC):
-#     """🆔 The id of the piece."""
+class PieceIdField(MaskedField, abc.ABC):
+    """🆔 The id of the piece."""
 
-#     id_: str = sqlmodel.Field(
-#         default="",
-#         # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-#         max_length=NAME_LENGTH_LIMIT,
-#         description="🆔 The id of the piece.",
-#     )
-#     """🆔 The id of the piece."""
-
-
-# class PieceTypeField(MaskedField, abc.ABC):
-#     """🧩 The type of the piece."""
-
-#     type: TypeId = sqlmodel.Field(
-#         description="🧩 The type of the piece.",
-#     )
-#     """🧩 The type of the piece."""
+    id_: str = sqlmodel.Field(
+        default="",
+        # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        max_length=NAME_LENGTH_LIMIT,
+        description="🆔 The id of the piece.",
+    )
+    """🆔 The id of the piece."""
 
 
-# class PiecePlaneField(MaskedField, abc.ABC):
-#     """◳ The plane of the piece."""
+class PieceTypeField(MaskedField, abc.ABC):
+    """🧩 The type of the piece."""
 
-#     plane: Plane = sqlmodel.Field(
-#         description="◳ The plane of the piece.",
-#     )
-#     """◳ The plane of the piece."""
-
-
-# class PieceScreenPointField(MaskedField, abc.ABC):
-#     """📺 The screen point of the piece."""
-
-#     screenPoint: ScreenPoint = sqlmodel.Field(
-#         description="📺 The screen point of the piece.",
-#     )
-#     """📺 The screen point of the piece."""
+    type: TypeId = sqlmodel.Field(
+        description="🧩 The type of the piece.",
+    )
+    """🧩 The type of the piece."""
 
 
-# class PieceId(PieceIdField, Id):
-#     """🪪 The props to identify the piece within the parent design."""
+class PiecePlaneField(MaskedField, abc.ABC):
+    """◳ The plane of the piece."""
+
+    plane: Plane = sqlmodel.Field(
+        description="◳ The plane of the piece.",
+    )
+    """◳ The plane of the piece."""
 
 
-# class PieceProps(
-#     PieceIdField, PieceTypeField, PiecePlaneField, PieceScreenPointField, Props
-# ):
-#     """🎫 The props of a piece."""
+class PieceScreenPointField(MaskedField, abc.ABC):
+    """📺 The screen point of the piece."""
+
+    screenPoint: ScreenPoint = sqlmodel.Field(
+        description="📺 The screen point of the piece.",
+    )
+    """📺 The screen point of the piece."""
 
 
-# class PieceInput(PieceIdField, PieceTypeField, Input):
-#     """↘️ The input for a piece."""
-
-#     plane: PlaneInput = sqlmodel.Field(
-#         description="◳ The plane of the piece.",
-#     )
-#     """◳ The plane of the piece."""
-#     screenPoint: ScreenPointInput = sqlmodel.Field(
-#         description="📺 The screen point of the piece.",
-#     )
-#     """📺 The screen point of the piece."""
+class PieceId(PieceIdField, Id):
+    """🪪 The props to identify the piece within the parent design."""
 
 
-# class PieceOutput(PieceIdField, PieceTypeField, Output):
-#     """↗️ The output of a piece."""
-
-#     plane: PlaneOutput = sqlmodel.Field(
-#         description="◳ The plane of the piece.",
-#     )
-#     """◳ The plane of the piece."""
-#     screenPoint: ScreenPointOutput = sqlmodel.Field(
-#         description="📺 The screen point of the piece.",
-#     )
-#     """📺 The screen point of the piece."""
+class PieceProps(
+    PieceScreenPointField, PiecePlaneField, PieceTypeField, PieceIdField, Props
+):
+    """🎫 The props of a piece."""
 
 
-# class Piece(TableEntity, table=True):
-#     """⭕ A piece is a 3d-instance of a type in a design."""
+class PieceInput(PieceTypeField, PieceIdField, Input):
+    """↘️ The input for a piece."""
 
-#     PLURAL = "pieces"
-#     __tablename__ = "piece"
-#     pk: typing.Optional[int] = sqlmodel.Field(
-#         sa_column=sqlmodel.Column(
-#             "id",
-#             sqlalchemy.Integer(),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     """🔑 The primary key of the piece in the database."""
-#     id_: str = sqlmodel.Field(
-#         sa_column=sqlmodel.Column(
-#             "localId",
-#             sqlalchemy.String(NAME_LENGTH_LIMIT),
-#         ),
-#         default="",
-#         exclude=True,
-#     )
-#     """🆔 The id of the piece within the design."""
-#     planePk: typing.Optional[int] = sqlmodel.Field(
-#         sa_column=sqlmodel.Column(
-#             "planeId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("plane.id"),
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     """🔑 The foreign primary key of the plane of the piece in the database."""
-#     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
-#     """◳ The plane of the piece."""
-#     screenPointX: int = sqlmodel.Field(exclude=True)
-#     """📏 The x-coordinate of the screen point of the piece."""
-#     screenPointY: int = sqlmodel.Field(exclude=True)
-#     """📏 The y-coordinate of the screen point of the piece."""
-#     designPk: typing.Optional[int] = sqlmodel.Field(
-#         sa_column=sqlmodel.Column(
-#             "designId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("design.id"),
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     """🔑 The foreign primary key of the parent design of the piece in the database."""
-#     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
-#     """👪 The parent design of the piece."""
-#     connecteds: list["Connection"] = sqlmodel.Relationship(
-#         back_populates="connectedPiece",
-#         sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
-#     )
-#     """🖇️ The connections where the piece is the connected to another piece."""
-#     connectings: list["Connection"] = sqlmodel.Relationship(
-#         back_populates="connectingPiece",
-#         sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
-#     )
-#     """🖇️ The connections where the piece is the connecting from another piece."""
-
-#     __table_args__ = (sqlalchemy.UniqueConstraint("localId", "designId"),)
-
-#     @property
-#     def screenPoint(self) -> ScreenPoint:
-#         return ScreenPoint(self.screenPointPointX, self.screenPointPointY)
-
-#     @screenPoint.setter
-#     def screenPoint(self, screenPoint: ScreenPoint):
-#         self.screenPointPointX = screenPoint.x
-#         self.screenPointPointY = screenPoint.y
-
-#     def parent(self) -> "Design":
-#         if self.design is None:
-#             raise NoParentAssigned()
-#         return self.design
+    plane: typing.Optional[PlaneInput] = sqlmodel.Field(
+        description="◳ The plane of the piece.",
+    )
+    """◳ The plane of the piece."""
+    screenPoint: ScreenPointInput = sqlmodel.Field(
+        description="📺 The screen point of the piece.",
+    )
+    """📺 The screen point of the piece."""
 
 
-# class SidePieceType(sqlmodel.SQLModel):
-#     port: Port = sqlmodel.Field()
+class PieceOutput(PieceTypeField, PieceIdField, Output):
+    """↗️ The output of a piece."""
+
+    plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
+        default=None,
+        description="◳ The plane of the piece.",
+    )
+    """◳ The plane of the piece."""
+    screenPoint: ScreenPointOutput = sqlmodel.Field(
+        description="📺 The screen point of the piece.",
+    )
+    """📺 The screen point of the piece."""
 
 
-# class SidePieceTypeOutput(sqlmodel.SQLModel):
-#     port: PortIdOutput = sqlmodel.Field()
+class Piece(TableEntity, table=True):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    PLURAL = "pieces"
+    __tablename__ = "piece"
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The primary key of the piece in the database."""
+    id_: str = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "localId",
+            sqlalchemy.String(NAME_LENGTH_LIMIT),
+        ),
+        default="",
+        exclude=True,
+    )
+    typePk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "typeId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("type.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign key of the type of the piece in the database."""
+    type: Type = sqlmodel.Relationship(back_populates="pieces")
+    """🆔 The id of the piece within the design."""
+    planePk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "planeId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("plane.id"),
+            nullable=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the plane of the piece in the database."""
+    plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
+    """◳ The plane of the piece."""
+    screenPointX: int = sqlmodel.Field(exclude=True)
+    """📏 The x-coordinate of the screen point of the piece."""
+    screenPointY: int = sqlmodel.Field(exclude=True)
+    """📏 The y-coordinate of the screen point of the piece."""
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "designId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent design of the piece in the database."""
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
+    """👪 The parent design of the piece."""
+    connecteds: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectedPiece",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
+    )
+    """🖇️ The connections where the piece is the connected to another piece."""
+    connectings: list["Connection"] = sqlmodel.Relationship(
+        back_populates="connectingPiece",
+        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
+    )
+    """🖇️ The connections where the piece is the connecting from another piece."""
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("localId", "designId"),)
+
+    @property
+    def screenPoint(self) -> ScreenPoint:
+        """↗️ Get the masked screen point of the piece."""
+        return ScreenPoint(self.screenPointX, self.screenPointY)
+
+    @screenPoint.setter
+    def screenPoint(self, screenPoint: ScreenPoint):
+        """↘️ Set the masked screen point of the piece."""
+        self.screenPointX = screenPoint.x
+        self.screenPointY = screenPoint.y
+
+    def parent(self) -> "Design":
+        """👪 The parent design of the piece or otherwise `NoParentAssigned` is raised."""
+        if self.design is None:
+            raise NoParentAssigned()
+        return self.design
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(
+        cls: "Piece",
+        input: str | dict | PieceInput | typing.Any | None,
+        types: dict[str, dict[str, Type]],
+    ) -> "Piece":
+        if input is None:
+            return cls()
+        obj = (
+            json.loads(input)
+            if isinstance(input, str)
+            else input if isinstance(input, dict) else input.__dict__
+        )
+        entity = cls(id_=obj["id_"])
+        type = TypeId.parse(obj["type"])
+        try:
+            entity.type = types[type.name][type.variant]
+        except KeyError:
+            raise TypeNotFound(type)
+        screenPoint = ScreenPoint.parse(obj["screenPoint"])
+        entity.screenPoint = screenPoint
+        try:
+            plane = Plane.parse(obj["plane"])
+            # TODO: Proper mechanism of nullable fields.
+            if plane.originX is not None:
+                entity.plane = plane
+        except KeyError:
+            pass
+        return entity
+
+    # TODO: Automatic emptying.
+    def empty(self) -> "Piece":
+        props = PieceProps()
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+    # TODO: Automatic updating based on props.
+    def update(self, other: "Piece", empty: bool = False) -> "Piece":
+        if empty:
+            self.empty()
+        props = PieceProps.model_validate(other)
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+    # TODO: Automatic derive from Id model.
+    def idMembers(self) -> RecursiveAnyList:
+        """🪪 The members that form the id of the piece within the parent design."""
+        return self.id_
 
 
-# class SidePiece(sqlmodel.SQLModel):
-#     id_: str = sqlmodel.Field(alias="id")
-#     type: SidePieceType = sqlmodel.Field()
+### Sides ###
 
 
-# class SidePieceOutput(sqlmodel.SQLModel):
-#     id_: str = sqlmodel.Field(alias="id")
-#     type: SidePieceTypeOutput = sqlmodel.Field()
+class Side(Model):
+    piece: PieceId = sqlmodel.Field()
+    port: PortId = sqlmodel.Field()
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(cls: "Side", input: str | dict | typing.Any | None) -> "Side":
+        """🧪 Parse the input to a side."""
+        if input is None:
+            return cls()
+        obj = (
+            json.loads(input)
+            if isinstance(input, str)
+            else input if isinstance(input, dict) else input.__dict__
+        )
+        piece = PieceId.parse(obj["piece"])
+        port = PortId.parse(obj["port"])
+        return cls(piece=piece, port=port)
 
 
-# class Side(sqlmodel.SQLModel):
-#     piece: SidePiece = sqlmodel.Field()
+class SideInput(Side):
+    pass
 
 
-# class SideOutput(sqlmodel.SQLModel):
-#     piece: SidePieceOutput = sqlmodel.Field()
+class SideOutput(Side):
+    pass
 
 
-# class ConnectionBase(sqlmodel.SQLModel):
-#     rotation: float = sqlmodel.Field(ge=0, lt=360)
-#     offset: float = sqlmodel.Field()
+### Connections ###
 
 
-# class Connection(ConnectionBase, TableEntity, table=True):
-#     """🖇️ A connection between two pieces of a design."""
+class ConnectionConnectedField(MaskedField, abc.ABC):
+    """🧲 The connected side of the connection."""
 
-#     PLURAL = "connections"
-#     __tablename__ = "connection"
-
-#     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
-#         alias="connectedPieceId",
-#         sa_column=sqlmodel.Column(
-#             "connectedPieceId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("piece.id"),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     connectedPiece: Piece = sqlmodel.Relationship(
-#         sa_relationship=sqlalchemy.orm.relationship(
-#             "Piece",
-#             back_populates="connecteds",
-#             foreign_keys="[Connection.connectedPiecePk]",
-#         )
-#     )
-#     connectedPieceTypePortPk: typing.Optional[int] = sqlmodel.Field(
-#         alias="connectedPieceTypePortId",
-#         sa_column=sqlmodel.Column(
-#             "connectedPieceTypePortId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("port.id"),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     connectedPieceTypePort: Port = sqlmodel.Relationship(
-#         sa_relationship=sqlalchemy.orm.relationship(
-#             "Port",
-#             back_populates="connecteds",
-#             foreign_keys="[Connection.connectedPieceTypePortPk]",
-#         )
-#     )
-#     connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
-#         alias="connectingPieceId",
-#         sa_column=sqlmodel.Column(
-#             "connectingPieceId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("piece.id"),
-#             primary_key=True,
-#         ),
-#         exclude=True,
-#         default=None,
-#     )
-#     connectingPiece: Piece = sqlmodel.Relationship(
-#         sa_relationship=sqlalchemy.orm.relationship(
-#             "Piece",
-#             back_populates="connectings",
-#             foreign_keys="[Connection.connectingPiecePk]",
-#         )
-#     )
-#     connectingPieceTypePortPk: typing.Optional[int] = sqlmodel.Field(
-#         alias="connectingPieceTypePortId",
-#         sa_column=sqlmodel.Column(
-#             "connectingPieceTypePortId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("port.id"),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     connectingPieceTypePort: Port = sqlmodel.Relationship(
-#         sa_relationship=sqlalchemy.orm.relationship(
-#             "Port",
-#             back_populates="connectings",
-#             foreign_keys="[Connection.connectingPieceTypePortPk]",
-#         )
-#     )
-#     designPk: typing.Optional[int] = sqlmodel.Field(
-#         alias="designId",
-#         sa_column=sqlmodel.Column(
-#             "designId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("design.id"),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     design: "Design" = sqlmodel.Relationship(back_populates="connections")
-#     __table_args__ = (
-#         sqlalchemy.CheckConstraint(
-#             "connectingPieceId != connectedPieceId",
-#             name="noReflexiveConnection",
-#         ),
-#     )
-
-#     @property
-#     def connected(self) -> Side:
-#         return Side(
-#             piece=SidePiece(
-#                 id_=self.connectedPiece.id,
-#                 type=SidePieceType(
-#                     port=PortIdOutput(id=self.connectedPieceTypePort.id_)
-#                 ),
-#             )
-#         )
-
-#     @property
-#     def connecting(self) -> Side:
-#         return Side(
-#             piece=SidePiece(
-#                 id_=self.connectingPiece.id,
-#                 type=SidePieceType(
-#                     port=PortIdOutput(id=self.connectingPieceTypePort.id_)
-#                 ),
-#             )
-#         )
+    connected: Side = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
 
 
-# class ConnectionOutput(ConnectionBase):
-#     class Config:
-#         title = "Connection"
+class ConnectionConnectingField(MaskedField, abc.ABC):
+    """🧲 The connecting side of the connection."""
 
-#     connected: Side = sqlmodel.Field()
-#     connecting: Side = sqlmodel.Field()
-
-
-# class DesignBase(VariableArtifact):
-#     pass
+    connecting: Side = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
 
 
-# class Design(DesignBase, TableEntity, table=True):
-#     """🏙️ A design is a collection of pieces that are connected."""
+class ConnectionRotationField(RealField, abc.ABC):
+    """🔄 The rotation of the connection."""
 
-#     PLURAL = "designs"
-#     __tablename__ = "design"
-#     pk: typing.Optional[int] = sqlmodel.Field(
-#         sa_column=sqlmodel.Column(
-#             "id",
-#             sqlalchemy.Integer(),
-#             primary_key=True,
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     pieces: list[Piece] = sqlmodel.Relationship(
-#         back_populates="design", cascade_delete=True
-#     )
-#     connections: list[Connection] = sqlmodel.Relationship(
-#         back_populates="design", cascade_delete=True
-#     )
-#     qualities: list[Quality] = sqlmodel.Relationship(
-#         back_populates="design", cascade_delete=True
-#     )
-#     kitPk: typing.Optional[int] = sqlmodel.Field(
-#         alias="kitId",
-#         sa_column=sqlmodel.Column(
-#             "kitId",
-#             sqlalchemy.Integer(),
-#             sqlalchemy.ForeignKey("kit.id"),
-#         ),
-#         default=None,
-#         exclude=True,
-#     )
-#     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
-
-#     # __table_args__ = (sqlalchemy.UniqueConstraint('name', 'variant', 'kitPk'),)
-
-#     def parent(self) -> "Kit":
-#         if self.kit is None:
-#             raise NoKitAssigned()
-#         return self.kit
-
-#     def getByLocalId(
-#         self, session: sqlalchemy.orm.Session, localId: tuple, decode: bool = False
-#     ) -> "Design":
-#         return (
-#             session.query(Design)
-#             .filter(Design.name == decode(localId[0]) if decode else localId[0])
-#             .first()
-#         )
+    rotation: float = sqlmodel.Field(
+        ge=0, lt=360, default=0, description="🔄 The rotation of the connection."
+    )
+    """🔄 The rotation of the connection."""
 
 
-# class DesignOutput(DesignBase):
-#     class Config:
-#         title = "Design"
+class ConnectionTiltField(RealField, abc.ABC):
+    """↗️ The tilt of the connection."""
 
-#     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
-#     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
+    tilt: float = sqlmodel.Field(
+        ge=0, lt=360, default=0, description="↗️ The tilt of the connection."
+    )
+    """↗️ The tilt of the connection."""
+
+
+class ConnectionOffsetField(RealField, abc.ABC):
+    """↕️ The offset of the connection."""
+
+    offset: float = sqlmodel.Field(
+        default=0, description="↕️ The offset of the connection."
+    )
+    """↕️ The offset of the connection."""
+
+
+class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
+    """🪪 The props to identify the connection."""
+
+
+class ConnectionProps(
+    ConnectionOffsetField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Props,
+):
+    """🎫 The props of a connection."""
+
+
+class ConnectionInput(
+    ConnectionOffsetField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Input,
+):
+    """↘️ The input for a connection."""
+
+    connected: SideInput = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SideInput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class ConnectionOutput(
+    ConnectionOffsetField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Output,
+):
+    """↗️ The output of a connection."""
+
+    connected: SideOutput = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SideOutput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class Connection(
+    ConnectionOffsetField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    TableEntity,
+    table=True,
+):
+    """🖇️ A connection between two pieces of a design."""
+
+    PLURAL = "connections"
+    __tablename__ = "connection"
+
+    connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedPieceId",
+        sa_column=sqlmodel.Column(
+            "connectedPieceId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("piece.id"),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    connectedPiece: Piece = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Piece",
+            back_populates="connecteds",
+            foreign_keys="[Connection.connectedPiecePk]",
+        )
+    )
+    connectedPortPk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedPortId",
+        sa_column=sqlmodel.Column(
+            "connectedPortId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("port.id"),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    connectedPort: Port = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Port",
+            back_populates="connecteds",
+            foreign_keys="[Connection.connectedPortPk]",
+        )
+    )
+    connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingPieceId",
+        sa_column=sqlmodel.Column(
+            "connectingPieceId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("piece.id"),
+            primary_key=True,
+        ),
+        exclude=True,
+        default=None,
+    )
+    connectingPiece: Piece = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Piece",
+            back_populates="connectings",
+            foreign_keys="[Connection.connectingPiecePk]",
+        )
+    )
+    connectingPortPk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingPortId",
+        sa_column=sqlmodel.Column(
+            "connectingPortId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("port.id"),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    connectingPort: Port = sqlmodel.Relationship(
+        sa_relationship=sqlalchemy.orm.relationship(
+            "Port",
+            back_populates="connectings",
+            foreign_keys="[Connection.connectingPortPk]",
+        )
+    )
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        alias="designId",
+        sa_column=sqlmodel.Column(
+            "designId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    design: "Design" = sqlmodel.Relationship(back_populates="connections")
+    __table_args__ = (
+        sqlalchemy.CheckConstraint(
+            "connectingPieceId != connectedPieceId",
+            name="noReflexiveConnection",
+        ),
+    )
+
+    @property
+    def connected(self) -> Side:
+        return Side(
+            piece=self.connectedPiece,
+            port=self.connectedPort,
+        )
+
+    @property
+    def connecting(self) -> Side:
+        return Side(
+            piece=self.connectingPiece,
+            port=self.connectingPort,
+        )
+
+    def parent(self) -> "Design":
+        """👪 The parent design of the connection or otherwise `NoDesignAssigned` is raised."""
+        if self.design is None:
+            raise NoDesignAssigned()
+        return self.design
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(
+        cls: "Connection",
+        input: str | dict | ConnectionInput | typing.Any | None,
+        pieces: list[Piece],
+    ) -> "Connection":
+        if input is None:
+            return cls()
+        obj = (
+            json.loads(input)
+            if isinstance(input, str)
+            else input if isinstance(input, dict) else input.__dict__
+        )
+        piecesDict = {p.id_: p for p in pieces}
+        connected = Side.parse(obj["connected"])
+        connecting = Side.parse(obj["connecting"])
+        connectedPiece = piecesDict[connected.piece.id_]
+        connectedType = connectedPiece.type
+        connectedPort = [p for p in connectedType.ports if p.id_ == connected.port.id_]
+        if len(connectedPort) == 0:
+            raise PortNotFound(connectedType, connected.port)
+        else:
+            connectedPort = connectedPort[0]
+        connectingPiece = piecesDict[connecting.piece.id_]
+        connectingType = connectingPiece.type
+        connectingPort = [
+            p for p in connectingType.ports if p.id_ == connecting.port.id_
+        ]
+        if len(connectingPort) == 0:
+            raise PortNotFound(connectingType, connecting.port)
+        else:
+            connectingPort = connectingPort[0]
+        entity = cls(
+            connectedPiece=connectedPiece,
+            connectedPort=connectedPort,
+            connectingPiece=connectingPiece,
+            connectingPort=connectingPort,
+        )
+        try:
+            entity.rotation = obj["rotation"]
+        except KeyError:
+            pass
+        try:
+            entity.tilt = obj["tilt"]
+        except KeyError:
+            pass
+        try:
+            entity.offset = obj["offset"]
+        except KeyError:
+            pass
+        return entity
+
+    # TODO: Automatic emptying.
+    def empty(self) -> "Connection":
+        for key, value in ConnectionProps.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+    # TODO: Automatic updating based on props.
+    def update(self, other: "Connection", empty: bool = False) -> "Connection":
+        if empty:
+            self.empty()
+        props = ConnectionProps.model_validate(other)
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+    # TODO: Automatic derive from Id model.
+    def idMembers(self) -> RecursiveAnyList:
+        """🪪 The members that form the id of the connection within the parent design."""
+        return [
+            self.connected.piece.id_,
+            self.connected.port.id_,
+            self.connecting.piece.id_,
+            self.connecting.port.id_,
+        ]
+
+
+### Designs ###
+
+
+class DesignNameField(RealField, abc.ABC):
+    """📛 The name of the design."""
+
+    name: str = sqlmodel.Field(
+        max_length=NAME_LENGTH_LIMIT,
+        description="📛 The name of the design.",
+    )
+    """📛 The name of the design."""
+
+
+class DesignDescriptionField(RealField, abc.ABC):
+    """💬 The description of the design."""
+
+    description: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="💬 The description of the design.",
+    )
+    """💬 The description of the design."""
+
+
+class DesignIconField(RealField, abc.ABC):
+    """🖼️ The icon of the design."""
+
+    icon: str = sqlmodel.Field(
+        default="",
+        max_length=URL_LENGTH_LIMIT,
+        description="🖼️ The icon of the design.",
+    )
+    """🖼️ The icon of the design."""
+
+
+class DesignVariantField(RealField, abc.ABC):
+    """🔀 The variant of the design."""
+
+    variant: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="🔀 The variant of the design.",
+    )
+    """🔀 The variant of the design."""
+
+
+class DesignUnitField(RealField, abc.ABC):
+    """📏 The unit of the design."""
+
+    unit: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="📏 The unit of the design.",
+    )
+    """📏 The unit of the design."""
+
+
+class DesignCreatedAtField(RealField, abc.ABC):
+    """🕒 The creation date of the design."""
+
+    createdAt: datetime.datetime = sqlmodel.Field(
+        default_factory=datetime.datetime.now,
+        description="🕒 The creation date of the design.",
+    )
+    """🕒 The creation date of the design."""
+
+
+class DesignLastUpdateAtField(RealField, abc.ABC):
+    """🕒 The last update date of the design."""
+
+    lastUpdateAt: datetime.datetime = sqlmodel.Field(
+        default_factory=datetime.datetime.now,
+        description="🕒 The last update date of the design.",
+    )
+    """🕒 The last update date of the design."""
+
+
+class DesignId(DesignNameField, DesignVariantField, Id):
+    """🪪 The props to identify the design."""
+
+
+class DesignProps(
+    DesignUnitField,
+    DesignVariantField,
+    DesignIconField,
+    DesignDescriptionField,
+    DesignNameField,
+    Props,
+):
+    """🎫 The props of a design."""
+
+
+class DesignInput(
+    DesignUnitField,
+    DesignVariantField,
+    DesignIconField,
+    DesignDescriptionField,
+    DesignNameField,
+    Input,
+):
+    """↘️ The input for a design."""
+
+    pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+
+
+class DesignOutput(
+    DesignLastUpdateAtField,
+    DesignCreatedAtField,
+    DesignUnitField,
+    DesignVariantField,
+    DesignIconField,
+    DesignDescriptionField,
+    DesignNameField,
+    Output,
+):
+    """↗️ The output of a design."""
+
+    pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Design(
+    DesignLastUpdateAtField,
+    DesignCreatedAtField,
+    DesignUnitField,
+    DesignVariantField,
+    DesignIconField,
+    DesignDescriptionField,
+    DesignNameField,
+    TableEntity,
+    table=True,
+):
+    """🏙️ A design is a collection of pieces that are connected."""
+
+    PLURAL = "designs"
+    __tablename__ = "design"
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    pieces: list[Piece] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    connections: list[Connection] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    kitPk: typing.Optional[int] = sqlmodel.Field(
+        alias="kitId",
+        sa_column=sqlmodel.Column(
+            "kitId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("kit.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kitId"),)
+
+    def parent(self) -> "Kit":
+        """👪 The parent kit of the design or otherwise `NoKitAssigned` is raised."""
+        if self.kit is None:
+            raise NoKitAssigned()
+        return self.kit
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(
+        cls: "Design",
+        input: str | dict | DesignInput | typing.Any | None,
+        types: list[Type],
+    ) -> "Design":
+        """🧪 Parse the input to a design."""
+        if input is None:
+            return cls()
+        obj = (
+            json.loads(input)
+            if isinstance(input, str)
+            else input if isinstance(input, dict) else input.__dict__
+        )
+        props = DesignProps.model_validate(obj)
+        entity = cls(**props.model_dump())
+        typesDict = {}
+        for type in types:
+            if type.name not in typesDict:
+                typesDict[type.name] = {}
+            if type.variant not in typesDict[type.name]:
+                typesDict[type.name][type.variant] = {}
+            typesDict[type.name][type.variant] = type
+        try:
+            pieces = [Piece.parse(p, typesDict) for p in obj["pieces"]]
+            entity.pieces = pieces
+        except KeyError:
+            pass
+        try:
+            connections = [Connection.parse(c, pieces) for c in obj["connections"]]
+            entity.connections = connections
+        except KeyError:
+            pass
+        try:
+            qualities = [Quality.parse(q) for q in obj["qualities"]]
+            entity.qualities = qualities
+        except KeyError:
+            pass
+        return entity
+
+    # TODO: Automatic emptying.
+    def empty(self) -> "Kit":
+        """🪣 Empty the design."""
+        props = DesignProps()
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        self.designs = []
+        return self
+
+    # TODO: Automatic updating based on props.
+    def update(self, other: "Design", empty: bool = False) -> "Design":
+        """🔄 Update the props of the design. Optionally empty the design before."""
+        if empty:
+            self.empty()
+        props = DesignProps.model_validate(other)
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+    # TODO: Automatic derive from Id model.
+    def idMembers(self) -> RecursiveAnyList:
+        return [self.name, self.variant]
 
 
 ### Kits ###
@@ -2362,23 +2864,23 @@ class KitId(KitUriField, Id):
 
 
 class KitProps(
-    KitUriField,
-    KitNameField,
-    KitDescriptionField,
-    KitIconField,
-    KitRemoteField,
     KitHomepage,
+    KitRemoteField,
+    KitIconField,
+    KitDescriptionField,
+    KitNameField,
+    KitUriField,
     Props,
 ):
     """🎫 The props of a kit."""
 
 
 class KitInput(
-    KitNameField,
-    KitDescriptionField,
-    KitIconField,
-    KitRemoteField,
     KitHomepage,
+    KitRemoteField,
+    KitIconField,
+    KitDescriptionField,
+    KitNameField,
     Input,
 ):
     """↘️ The input for a kit."""
@@ -2387,17 +2889,21 @@ class KitInput(
         default_factory=list, description="🧩 The types of the kit."
     )
     """🧩 The types of the kit."""
+    designs: list[DesignInput] = sqlmodel.Field(
+        default_factory=list, description="🏙️ The designs of the kit."
+    )
+    """🏙️ The designs of the kit."""
 
 
 class KitOutput(
-    KitUriField,
-    KitNameField,
-    KitDescriptionField,
-    KitIconField,
-    KitRemoteField,
-    KitHomepage,
-    KitCreatedAtField,
     KitLastUpdateAtField,
+    KitCreatedAtField,
+    KitHomepage,
+    KitRemoteField,
+    KitIconField,
+    KitDescriptionField,
+    KitNameField,
+    KitUriField,
     Output,
 ):
     """↗️ The output of a kit."""
@@ -2406,17 +2912,21 @@ class KitOutput(
         default_factory=list, description="🧩 The types of the kit."
     )
     """🧩 The types of the kit."""
+    designs: list[DesignOutput] = sqlmodel.Field(
+        default_factory=list, description="🏙️ The designs of the kit."
+    )
+    """🏙️ The designs of the kit."""
 
 
 class Kit(
-    KitUriField,
-    KitNameField,
-    KitDescriptionField,
-    KitIconField,
-    KitRemoteField,
-    KitHomepage,
-    KitCreatedAtField,
     KitLastUpdateAtField,
+    KitCreatedAtField,
+    KitHomepage,
+    KitRemoteField,
+    KitIconField,
+    KitDescriptionField,
+    KitNameField,
+    KitUriField,
     TableEntity,
     table=True,
 ):
@@ -2437,16 +2947,19 @@ class Kit(
 
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     """🧩 The types of the kit."""
-    # designs: list[Design] = sqlmodel.Relationship(
-    #     back_populates="kit", cascade_delete=True
-    # )
+    designs: list[Design] = sqlmodel.Relationship(
+        back_populates="kit", cascade_delete=True
+    )
+    """🏙️ The designs of the kit."""
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri"),)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Kit", input: str | dict | KitInput | typing.Any) -> "Kit":
+    def parse(cls: "Kit", input: str | dict | KitInput | typing.Any | None) -> "Kit":
         """🧪 Parse the input to a kit."""
+        if input is None:
+            return cls()
         obj = (
             json.loads(input)
             if isinstance(input, str)
@@ -2457,6 +2970,11 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
+        except KeyError:
+            pass
+        try:
+            designs = [Design.parse(d, types) for d in obj["designs"]]
+            entity.designs = designs
         except KeyError:
             pass
         return entity
@@ -2493,13 +3011,16 @@ class Kit(
 # Store #
 
 
-codeGrammar = r"""
-    code: (ENCODED_STRING)? ("/" (type | representation | port))?
+codeGrammar = (
+    """
+    code: (ENCODED_STRING)? ("/" (design | type))?
     type: "types" ("/" ENCODED_STRING "," ENCODED_STRING?)?
-    representation: type "/representations" ("/" ENCODED_STRING)?
-    port: type "/ports" ("/" ENCODED_STRING)?
-    ENCODED_STRING: /[a-zA-ZZ0-9_-]+={0,2}/
-"""
+    design: "designs" ("/" ENCODED_STRING "," ENCODED_STRING?)?
+    ENCODED_STRING: /"""
+    + ENCODING_REGEX
+    + "/"
+)
+
 codeParser = lark.Lark(codeGrammar, start="code")
 
 
@@ -2526,6 +3047,15 @@ class OperationBuilder(lark.Transformer):
         code = children[1]
         code["kitUri"] = kitUri
         return code
+
+    def design(self, children):
+        if len(children) == 0:
+            return {"kind": "designs"}
+        return {
+            "kind": "design",
+            "designName": decode(children[0].value),
+            "designVariant": (decode(children[1].value) if len(children) == 2 else ""),
+        }
 
     def type(self, children):
         if len(children) == 0:
@@ -2641,6 +3171,14 @@ class DatabaseStore(Store, abc.ABC):
     def session(self: "DatabaseStore") -> sqlalchemy.orm.Session:
         return sqlalchemy.orm.sessionmaker(bind=self.engine)()
 
+    def initialized(self: "DatabaseStore") -> bool:
+        try:
+            inspector = sqlalchemy.inspect(self.engine)
+            if "semio" in inspector.get_table_names():
+                return True
+        except sqlalchemy.exc.OperationalError:
+            return False
+
     @classmethod
     @abc.abstractmethod
     def fromUri(cls: "DatabaseStore", uri: str) -> "DatabaseStore":
@@ -2650,22 +3188,19 @@ class DatabaseStore(Store, abc.ABC):
     def get(self: "DatabaseStore", operation: dict) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
-        kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+        try:
+            kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+        except sqlalchemy.exc.OperationalError:
+            raise KitNotFound(kitUri)
         if kit is None:
             raise KitNotFound(kitUri)
         match kind:
             case "kit":
                 return kit
+            case "design":
+                raise FeatureNotYetSupported()
             case "type":
-                return (
-                    self.session.Query(Type, Kit)
-                    .filter(
-                        Kit.uri == kitUri,
-                        Type.name == operation["typeName"],
-                        Type.variant == operation["typeVariant"],
-                    )
-                    .one_or_none()
-                )
+                raise FeatureNotYetSupported()
             case _:
                 raise FeatureNotYetSupported()
 
@@ -2674,24 +3209,83 @@ class DatabaseStore(Store, abc.ABC):
     ) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
+
+        if kind == "kit":
+            self.initialize()
+            dump = input.model_dump()
+            dump["uri"] = kitUri
+            kit = Kit.parse(dump)
+            existingKit = (
+                self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+            )
+            if existingKit is not None:
+                raise KitAlreadyExists(kitUri)
+            try:
+                self.session.add(kit)
+                self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                raise e
+            return kit
+
+        if not self.initialized():
+            raise KitNotFound(kitUri)
+        kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
         match kind:
-            case "kit":
-                self.initialize()
-                dump = input.model_dump()
-                dump["uri"] = kitUri
-                kit = Kit.parse(dump)
-                existingKit = (
-                    self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+            case "design":
+                types = [
+                    u.Type
+                    for u in self.session.query(Type, Kit)
+                    .filter(Kit.uri == kitUri)
+                    .all()
+                ]
+                design = Design.parse(input, types)
+                design.kit = kit
+                existingDesign = (
+                    self.session.query(Design, Kit)
+                    .filter(
+                        Kit.uri == kitUri,
+                        Design.name == design.name,
+                        Design.variant == design.variant,
+                    )
+                    .one_or_none()
                 )
-                if existingKit is not None:
-                    raise KitAlreadyExists(kitUri)
+                if existingDesign is not None:
+                    try:
+                        self.session.delete(existingDesign)
+                        self.session.commit()
+                    except Exception as e:
+                        self.session.rollback()
+                        raise e
                 try:
-                    self.session.add(kit)
+                    self.session.add(design)
+                    self.session.commit()
+                    return design
+                except Exception as e:
+                    self.session.rollback()
+                    raise e
+            case "type":
+                type = Type.parse(input)
+                type.kit = kit
+                existingType = (
+                    self.session.query(Type, Kit)
+                    .filter(
+                        Kit.uri == kitUri,
+                        Type.name == type.name,
+                        Type.variant == type.variant,
+                    )
+                    .one_or_none()
+                )
+                if existingType is not None:
+                    # TODO: Check if type is used in pieces and update them.
+                    raise FeatureNotYetSupported()
+                try:
+                    self.session.add(type)
                     self.session.commit()
                 except Exception as e:
                     self.session.rollback()
                     raise e
-                return kit
+                return type
             case _:
                 raise FeatureNotYetSupported()
 
@@ -2701,13 +3295,38 @@ class DatabaseStore(Store, abc.ABC):
     def delete(self: "DatabaseStore", operation: dict) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
-        kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+        try:
+            kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
+        except sqlalchemy.exc.OperationalError:
+            raise KitNotFound(kitUri)
         if kit is None:
-            raise NoKitToDelete(kitUri)
+            raise KitNotFound(kitUri)
         match kind:
             case "kit":
                 try:
                     self.session.delete(kit)
+                    self.session.commit()
+                except Exception as e:
+                    self.session.rollback()
+                    raise e
+            case "design":
+                try:
+                    self.session.query(Design, Kit).filter(
+                        Kit.uri == kitUri,
+                        Design.name == operation["designName"],
+                        Design.variant == operation["designVariant"],
+                    ).delete()
+                    self.session.commit()
+                except Exception as e:
+                    self.session.rollback()
+                    raise e
+            case "type":
+                try:
+                    self.session.query(Type, Kit).filter(
+                        Kit.uri == kitUri,
+                        Type.name == operation["typeName"],
+                        Type.variant == operation["typeVariant"],
+                    ).delete()
                     self.session.commit()
                 except Exception as e:
                     self.session.rollback()
@@ -2749,10 +3368,6 @@ class SqliteStore(DatabaseStore):
         engine = sqlalchemy.create_engine(connectionString, echo=True)
         return SqliteStore(uri, engine, path)
 
-    def kitNameByUri(self: "SqliteStore", uri: str) -> str | None:
-        kit = self.session.query(Kit).one_or_none()
-        return kit.name if kit is not None else None
-
     def initialize(self: "DatabaseStore") -> None:
         os.makedirs(
             str(pathlib.Path(self.uri) / pathlib.Path(KIT_LOCAL_FOLDERNAME)),
@@ -2780,10 +3395,6 @@ class PostgresStore(DatabaseStore):
         #     connect_args={"sslmode": parsedUri.query.get("sslmode", SSLMode.REQUIRE)},
         # )
         # return PostgresStore(uri, engine)
-        raise FeatureNotYetSupported()
-
-    @classmethod
-    def kitNameByUri(self: "PostgresStore", uri: str) -> str | None:
         raise FeatureNotYetSupported()
 
     def initialize(self: "DatabaseStore") -> None:
@@ -2848,27 +3459,29 @@ GRAPHQLTYPES = {
     float: graphene.NonNull(graphene.Float),
     bool: graphene.NonNull(graphene.Boolean),
     list[str]: graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
+    ScreenPoint: graphene.NonNull(lambda: ScreenPointNode),
     Point: graphene.NonNull(lambda: PointNode),
     Vector: graphene.NonNull(lambda: VectorNode),
+    Plane: graphene.NonNull(lambda: PlaneNode),
     Representation: graphene.NonNull(lambda: RepresentationNode),
     list[Representation]: graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: RepresentationNode))
     ),
     Port: graphene.NonNull(lambda: PortNode),
+    PortId: graphene.NonNull(lambda: PortNode),
     list[Port]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
     Quality: graphene.NonNull(lambda: QualityNode),
     list[Quality]: graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
     ),
     Type: graphene.NonNull(lambda: TypeNode),
+    TypeId: graphene.NonNull(lambda: TypeNode),
     list[Type]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    # Plane: graphene.NonNull(lambda: PlaneNode),
-    # PieceDiagram: graphene.NonNull(lambda: PieceDiagramNode),
-    # SidePieceType: graphene.NonNull(lambda: SidePieceTypeNode),
-    # SidePiece: graphene.NonNull(lambda: SidePieceNode),
-    # Side: graphene.NonNull(lambda: SideNode),
-    # Connection: graphene.NonNull(lambda: ConnectionNode),
-    # Design: graphene.NonNull(lambda: DesignNode),
+    Piece: graphene.NonNull(lambda: PieceNode),
+    PieceId: graphene.NonNull(lambda: PieceNode),
+    Side: graphene.NonNull(lambda: SideNode),
+    Connection: graphene.NonNull(lambda: ConnectionNode),
+    Design: graphene.NonNull(lambda: DesignNode),
     Kit: graphene.NonNull(lambda: KitNode),
 }
 
@@ -2991,14 +3604,14 @@ class LocatorInputNode(InputNode):
         model = LocatorInput
 
 
-# class ScreenPointNode(Node):
-#     class Meta:
-#         model = ScreenPoint
+class ScreenPointNode(Node):
+    class Meta:
+        model = ScreenPoint
 
 
-# class ScreenPointInputNode(InputNode):
-#     class Meta:
-#         model = ScreenPointInput
+class ScreenPointInputNode(InputNode):
+    class Meta:
+        model = ScreenPointInput
 
 
 class PointNode(Node):
@@ -3021,14 +3634,14 @@ class VectorInputNode(InputNode):
         model = VectorInput
 
 
-# class PlaneNode(TableNode):
-#     class Meta:
-#         model = Plane
+class PlaneNode(TableNode):
+    class Meta:
+        model = Plane
 
 
-# class PlaneInputNode(InputNode):
-#     class Meta:
-#         model = PlaneInput
+class PlaneInputNode(InputNode):
+    class Meta:
+        model = PlaneInput
 
 
 class PortNode(TableEntityNode):
@@ -3071,89 +3684,86 @@ class TypeInputNode(InputNode):
         model = TypeInput
 
 
-# class PieceNode(TableEntityNode):
-#     class Meta:
-#         model = Piece
-
-#     coordinateSystem = graphene.NonNull(PlaneNode)
-#     diagram = graphene.NonNull(PieceDiagramNode)
-
-#     def resolve_coordinateSystem(self, info):
-#         return self.coordinateSystem
-
-#     def resolve_diagram(self, info):
-#         return self.diagram
+class TypeIdInputNode(InputNode):
+    class Meta:
+        model = TypeId
 
 
-# class PieceInputNode(InputNode):
-#     class Meta:
-#         model = PieceInput
+class PieceNode(TableEntityNode):
+    class Meta:
+        model = Piece
 
 
-# class SidePieceTypeNode(Node):
-#     class Meta:
-#         model = SidePieceType
-#         # port is none Pydanctic model and needs to be resolved manually
-#         exclude_fields = ("port",)
+class PieceInputNode(InputNode):
+    class Meta:
+        model = PieceInput
+        exclude_fields = "type"
 
-#     port = graphene.Field(PortNode)
-
-#     def resolve_port(type: SidePieceType, info):
-#         return type.port
+    type = graphene.NonNull(TypeIdInputNode)
 
 
-# class SidePieceTypeInputNode(InputNode):
-#     class Meta:
-#         model = SidePieceTypeInput
+class PieceIdInputNode(InputNode):
+    class Meta:
+        model = PieceId
 
 
-# class SidePieceNode(Node):
-#     class Meta:
-#         model = SidePiece
+class SideNode(Node):
+    class Meta:
+        model = Side
+        exclude_fields = ("piece", "port")
+
+    piece = graphene.NonNull(PieceNode)
+    port = graphene.NonNull(PortNode)
+
+    def resolve_piece(self, info):
+        return self.piece
+
+    def resolve_port(self, info):
+        return self.port
 
 
-# class SidePieceInputNode(InputNode):
-#     class Meta:
-#         model = SidePieceInput
+class SideInputNode(InputNode):
+    class Meta:
+        model = SideInput
+        exclude_fields = ("piece", "port")
+
+    piece = graphene.NonNull(PieceIdInputNode)
+    port = graphene.NonNull(PortIdInputNode)
 
 
-# class SideNode(Node):
-#     class Meta:
-#         model = Side
+class ConnectionNode(TableEntityNode):
+    class Meta:
+        model = Connection
+        exclude_fields = (
+            "connectedPiece",
+            "connectedPort",
+            "connectingPiece",
+            "connectingPort",
+        )
+
+    # connected = graphene.NonNull(SideNode)
+    # connecting = graphene.NonNull(SideNode)
+
+    # def resolve_connected(connection: Connection, info):
+    #     return connection.connected
+
+    # def resolve_connecting(connection: Connection, info):
+    #     return connection.connecting
 
 
-# class SideInputNode(InputNode):
-#     class Meta:
-#         model = SideInput
+class ConnectionInputNode(InputNode):
+    class Meta:
+        model = ConnectionInput
 
 
-# class ConnectionNode(TableEntityNode):
-#     class Meta:
-#         model = Connection
-
-#     connected = graphene.NonNull(SideNode)
-#     connecting = graphene.NonNull(SideNode)
-
-#     def resolve_connected(self, info):
-#         return self.connected
-
-#     def resolve_connecting(self, info):
-#         return self.connecting
+class DesignInputNode(InputNode):
+    class Meta:
+        model = DesignInput
 
 
-# class ConnectionInputNode(InputNode):
-#     class Meta:
-#         model = ConnectionInput
-
-
-# class DesignInputNode(InputNode):
-#     class Meta:
-#         model = DesignInput
-
-
-# class DesignNode(TableEntityNode):
-#     class Meta:
-#         model = Design
+class DesignNode(TableEntityNode):
+    class Meta:
+        model = Design
 
 
 class KitInputNode(InputNode):
@@ -3215,8 +3825,8 @@ async def kit(
 @rest.put("/kits/{encodedKitUri}")
 async def create_kit(
     request: fastapi.Request,
-    encodedKitUri: ENCODED_PATH,
     input: KitInput,
+    encodedKitUri: ENCODED_PATH,
 ) -> None:
     try:
         put(request.url.path.removeprefix("/kits/"), input)
@@ -3247,13 +3857,12 @@ async def delete_kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.put("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")
+@rest.put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def put_type(
     request: fastapi.Request,
-    encodedKitUri: ENCODED_PATH,
-    encodedTypeName: ENCODED_PATH,
-    encodedTypeVariant: ENCODED_PATH,
     input: TypeInput,
+    encodedKitUri: ENCODED_PATH,
+    encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
         put(request.url.path.removeprefix("/kits/"), input)
@@ -3267,12 +3876,48 @@ async def put_type(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.delete("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")
+@rest.delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def delete_type(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
-    encodedTypeName: ENCODED_PATH,
-    encodedTypeVariant: ENCODED_PATH,
+    encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
+) -> None:
+    try:
+        delete(request.url.path.removeprefix("/kits/"))
+        return None
+    except ClientError as e:
+        statusCode = 400
+        error = e
+    except Exception as e:
+        statusCode = 500
+        error = e
+    return fastapi.Response(content=str(error), status_code=statusCode)
+
+
+@rest.put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")
+async def put_design(
+    request: fastapi.Request,
+    input: DesignInput,
+    encodedKitUri: ENCODED_PATH,
+    encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
+) -> None:
+    try:
+        put(request.url.path.removeprefix("/kits/"), input)
+        return None
+    except ClientError as e:
+        statusCode = 400
+        error = e
+    except Exception as e:
+        statusCode = 500
+        error = e
+    return fastapi.Response(content=str(error), status_code=statusCode)
+
+
+@rest.delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")
+async def delete_design(
+    request: fastapi.Request,
+    encodedKitUri: ENCODED_PATH,
+    encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
         delete(request.url.path.removeprefix("/kits/"))

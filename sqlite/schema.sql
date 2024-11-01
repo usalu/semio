@@ -28,34 +28,50 @@ CREATE TABLE plane (
             )
 );
 CREATE TABLE kit (
-	"lastUpdateAt" DATETIME NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	homepage VARCHAR(1024) NOT NULL, 
-	remote VARCHAR(1024) NOT NULL, 
-	icon VARCHAR(1024) NOT NULL, 
-	description VARCHAR(4096) NOT NULL, 
-	name VARCHAR(64) NOT NULL, 
 	uri VARCHAR(4096) NOT NULL, 
+	name VARCHAR(64) NOT NULL, 
+	description VARCHAR(4096) NOT NULL, 
+	icon VARCHAR(1024) NOT NULL, 
+	remote VARCHAR(1024) NOT NULL, 
+	homepage VARCHAR(1024) NOT NULL, 
+	"createdAt" DATETIME NOT NULL, 
+	"lastUpdateAt" DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	UNIQUE (uri)
 );
 CREATE TABLE type (
-	unit VARCHAR(64) NOT NULL, 
-	variant VARCHAR(64) NOT NULL, 
-	icon VARCHAR(1024) NOT NULL, 
-	description VARCHAR(4096) NOT NULL, 
 	name VARCHAR(64) NOT NULL, 
+	description VARCHAR(4096) NOT NULL, 
+	icon VARCHAR(1024) NOT NULL, 
+	variant VARCHAR(64) NOT NULL, 
+	unit VARCHAR(64) NOT NULL, 
+	"createdAt" DATETIME NOT NULL, 
+	"lastUpdateAt" DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	"kitId" INTEGER, 
 	PRIMARY KEY (id), 
 	CONSTRAINT "Unique name and variant" UNIQUE (name, variant, "kitId"), 
 	FOREIGN KEY("kitId") REFERENCES kit (id)
 );
+CREATE TABLE design (
+	name VARCHAR(64) NOT NULL, 
+	description VARCHAR(4096) NOT NULL, 
+	icon VARCHAR(1024) NOT NULL, 
+	variant VARCHAR(64) NOT NULL, 
+	unit VARCHAR(64) NOT NULL, 
+	"createdAt" DATETIME NOT NULL, 
+	"lastUpdateAt" DATETIME NOT NULL, 
+	id INTEGER NOT NULL, 
+	"kitId" INTEGER, 
+	PRIMARY KEY (id), 
+	UNIQUE (name, variant, "kitId"), 
+	FOREIGN KEY("kitId") REFERENCES kit (id)
+);
 CREATE TABLE representation (
-	url VARCHAR(1024) NOT NULL, 
-	lod VARCHAR(64) NOT NULL, 
 	mime VARCHAR(64) NOT NULL, 
+	lod VARCHAR(64) NOT NULL, 
+	url VARCHAR(1024) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"encodedTags" VARCHAR(1039) NOT NULL, 
 	"typeId" INTEGER, 
@@ -77,14 +93,30 @@ CREATE TABLE port (
 	FOREIGN KEY("typeId") REFERENCES type (id)
 );
 CREATE TABLE quality (
-	unit VARCHAR(64) NOT NULL, 
-	definition VARCHAR(4096) NOT NULL, 
-	value VARCHAR(64) NOT NULL, 
 	name VARCHAR(64) NOT NULL, 
+	value VARCHAR(64) NOT NULL, 
+	definition VARCHAR(4096) NOT NULL, 
+	unit VARCHAR(64) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"typeId" INTEGER, 
+	"designId" INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY("typeId") REFERENCES type (id)
+	FOREIGN KEY("typeId") REFERENCES type (id), 
+	FOREIGN KEY("designId") REFERENCES design (id)
+);
+CREATE TABLE piece (
+	id INTEGER NOT NULL, 
+	"localId" VARCHAR(64), 
+	"typeId" INTEGER, 
+	"planeId" INTEGER, 
+	"screenPointX" INTEGER NOT NULL, 
+	"screenPointY" INTEGER NOT NULL, 
+	"designId" INTEGER, 
+	PRIMARY KEY (id), 
+	UNIQUE ("localId", "designId"), 
+	FOREIGN KEY("typeId") REFERENCES type (id), 
+	FOREIGN KEY("planeId") REFERENCES plane (id), 
+	FOREIGN KEY("designId") REFERENCES design (id)
 );
 CREATE TABLE locator (
 	subgroup VARCHAR(64) NOT NULL, 
@@ -92,4 +124,21 @@ CREATE TABLE locator (
 	"portId" INTEGER NOT NULL, 
 	PRIMARY KEY ("groupName", "portId"), 
 	FOREIGN KEY("portId") REFERENCES port (id)
+);
+CREATE TABLE connection (
+	rotation FLOAT NOT NULL, 
+	tilt FLOAT NOT NULL, 
+	"offset" FLOAT NOT NULL, 
+	"connectedPieceId" INTEGER NOT NULL, 
+	"connectedPortId" INTEGER NOT NULL, 
+	"connectingPieceId" INTEGER NOT NULL, 
+	"connectingPortId" INTEGER NOT NULL, 
+	"designId" INTEGER NOT NULL, 
+	PRIMARY KEY ("connectedPieceId", "connectedPortId", "connectingPieceId", "connectingPortId", "designId"), 
+	CONSTRAINT "noReflexiveConnection" CHECK (connectingPieceId != connectedPieceId), 
+	FOREIGN KEY("connectedPieceId") REFERENCES piece (id), 
+	FOREIGN KEY("connectedPortId") REFERENCES port (id), 
+	FOREIGN KEY("connectingPieceId") REFERENCES piece (id), 
+	FOREIGN KEY("connectingPortId") REFERENCES port (id), 
+	FOREIGN KEY("designId") REFERENCES design (id)
 );

@@ -1,4 +1,5 @@
-﻿//Semio.Grasshopper.cs
+﻿#region License
+//Semio.Grasshopper.cs
 //Copyright (C) 2024 Ueli Saluz
 
 //This program is free software: you can redistribute it and/or modify
@@ -13,7 +14,9 @@
 
 //You should have received a copy of the GNU Affero General Public License
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#endregion
 
+#region Usings
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -32,9 +35,11 @@ using Newtonsoft.Json.Serialization;
 using Refit;
 using Rhino;
 using Rhino.Geometry;
+#endregion
 
 namespace Semio.Grasshopper;
 
+#region TODOs
 // TODO: Add toplevel scanning for kits wherever a directory is given
 // Maybe extension function for components. The repeated code looks something like this:
 // if (!DA.GetData(_, ref path))
@@ -44,6 +49,16 @@ namespace Semio.Grasshopper;
 // TODO: IsInvalid is used to check null state which is not clean.
 // Think of a better way to handle this.
 // The invalid check happen twice and code is duplicated.
+#endregion
+
+#region Constants
+
+public static class Constants
+{
+    public const string Category = "semio";
+}
+
+#endregion
 
 #region Copilot
 
@@ -53,14 +68,6 @@ namespace Semio.Grasshopper;
 
 public static class Utility
 {
-    public static string ServerErrorMessage =>
-        "The server seems to have a problem with this.\nTry to restart the server and try it again and if it happens again please report this on GitHub:\n https://github.com/usalu/semio";
-
-    public static bool IsPathFullyQualified(string path)
-    {
-        return Path.GetFullPath(path) == path;
-    }
-
     public static bool IsValidUnit(string unit)
     {
         return new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
@@ -95,6 +102,76 @@ public static class Utility
         var xAxis = Vector3d.XAxis;
         xAxis.Transform(rotation * orientation);
         return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
+    }
+
+    public static Plane ComputeChildPlane(Plane parentPlane,Point parentPoint, Vector parentDirection, Point childPoint, Vector childDirection, float rotation, float tilt, float offset)
+    {
+        var parentPointR = new Vector3d(parentPoint.Convert());
+        var parentDirectionR = parentDirection.Convert();
+        var revertedChildPointR = new Vector3d(childPoint.Convert());
+        revertedChildPointR.Reverse();
+        var offsetDirectionR = new Vector3d(parentDirectionR);
+        var reverseChildDirectionR = childDirection.Convert();
+        reverseChildDirectionR.Reverse();
+        var rotationRad = RhinoMath.ToRadians(rotation);
+        var tiltRad = RhinoMath.ToRadians(tilt);
+
+        // orient
+
+        // If directions are same, then there are infinite solutions.
+        var areDirectionsSame = parentDirectionR.IsParallelTo(childDirection.Convert(), Semio.Constants.Tolerance) == 1;
+
+        // Rhino tends to pick the "wrong" direction when the vectors are parallel.
+        // E.g when z=0 it picks to flip the object around the y-axis instead of a rotation around the z-axis.
+        Transform directionT;
+        if (areDirectionsSame)
+        {
+            // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
+            if (Math.Abs(parentDirectionR.Z)<Semio.Constants.Tolerance)
+                directionT = Transform.Rotation(RhinoMath.ToRadians(180),Vector3d.ZAxis, new Point3d());
+            else
+                directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.CrossProduct(Vector3d.ZAxis, parentDirectionR), new Point3d());
+        }
+        else
+            directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR,new Point3d());
+
+        var tiltAxisRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
+        var tiltAxis = Vector3d.XAxis;
+        tiltAxis.Transform(tiltAxisRotation);
+
+        var offsetDirection = offsetDirectionR * offset;
+
+        var orientationT = directionT;
+
+        var rotateT = Transform.Rotation(-rotationRad, parentDirectionR, new Point3d());
+        orientationT = rotateT * directionT;
+        tiltAxis.Transform(rotateT);
+        offsetDirection.Transform(rotateT);
+   
+        var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
+        orientationT = tiltT * orientationT;
+        offsetDirection.Transform(tiltT);
+
+        // move
+        
+        var centerChild = Transform.Translation(revertedChildPointR);
+        var moveToParent = Transform.Translation(parentPointR);
+        var transform = orientationT * centerChild;
+        
+        var offsetTransform = Transform.Translation(offsetDirection);
+        transform = offsetTransform * transform;
+        
+        transform = moveToParent * transform;
+        var childPlaneR = Rhino.Geometry.Plane.WorldXY;
+        childPlaneR.Transform(transform);
+
+        // to parent
+
+        var parentPlaneR = parentPlane.Convert();
+        var parentPlaneT = Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, parentPlaneR);
+        childPlaneR.Transform(parentPlaneT);
+
+        return childPlaneR.Convert();
     }
 }
 
@@ -200,7 +277,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
     public override IGH_Goo Duplicate()
     {
         var duplicate = (ModelGoo<T>)Activator.CreateInstance(GetType());
-        duplicate.Value = (T)Value.DeepClone();
+        duplicate.Value = Value.DeepClone();
         return duplicate;
     }
 
@@ -460,7 +537,7 @@ public class SideGoo : ModelGoo<Side>
         {
             Value = new Side
             {
-                Piece = new SidePiece
+                Piece = new PieceId
                 {
                     Id = str
                 }
@@ -472,7 +549,7 @@ public class SideGoo : ModelGoo<Side>
         {
             Value = new Side
             {
-                Piece = new SidePiece
+                Piece = new PieceId
                 {
                     Id = piece.Id
                 }
@@ -525,7 +602,7 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
 {
     internal ModelParam() : base(typeof(U).Name,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
-        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, "semio",
+        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, Constants.Category,
         "Params")
     {
     }
@@ -600,7 +677,7 @@ public class KitParam : ModelParam<KitGoo, Kit>
 public abstract class Component : GH_Component
 {
     public Component(string name, string nickname, string description, string subcategory) : base(
-        name, nickname, description, "semio", subcategory)
+        name, nickname, description, Constants.Category, subcategory)
     {
     }
 }
@@ -803,6 +880,7 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     {
         if (model.Mime == "")
             model.Mime = Semio.Utility.ParseMimeFromUrl(model.Url);
+        model.Url = model.Url.Replace('\\', '/');
         return model;
     }
 }
@@ -920,21 +998,21 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
     {
         var connectedPieceId = "";
-        var connectedPieceTypePortId = "";
+        var connectedPortId = "";
         var connectingPieceId = "";
-        var connectingPieceTypePortId = "";
+        var connectingPortId = "";
         var rotation = 0.0;
         var tilt = 0.0;
         var offset = 0.0;
 
         if (DA.GetData(1, ref connectedPieceId))
             connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
-        if (DA.GetData(2, ref connectedPieceTypePortId))
-            connectionGoo.Value.Connected.Piece.Type.Port.Id = connectedPieceTypePortId;
+        if (DA.GetData(2, ref connectedPortId))
+            connectionGoo.Value.Connected.Port.Id = connectedPortId;
         if (DA.GetData(3, ref connectingPieceId))
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
-        if (DA.GetData(4, ref connectingPieceTypePortId))
-            connectionGoo.Value.Connecting.Piece.Type.Port.Id = connectingPieceTypePortId;
+        if (DA.GetData(4, ref connectingPortId))
+            connectionGoo.Value.Connecting.Port.Id = connectingPortId;
         if (DA.GetData(5, ref rotation))
             connectionGoo.Value.Rotation = (float)rotation;
         if (DA.GetData(6, ref tilt))
@@ -946,9 +1024,9 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
     {
         DA.SetData(1, connectionGoo.Value.Connected.Piece.Id);
-        DA.SetData(2, connectionGoo.Value.Connected.Piece.Type.Port.Id);
+        DA.SetData(2, connectionGoo.Value.Connected.Port.Id);
         DA.SetData(3, connectionGoo.Value.Connecting.Piece.Id);
-        DA.SetData(4, connectionGoo.Value.Connecting.Piece.Type.Port.Id);
+        DA.SetData(4, connectionGoo.Value.Connecting.Port.Id);
         DA.SetData(5, connectionGoo.Value.Rotation);
         DA.SetData(6, connectionGoo.Value.Tilt);
         DA.SetData(7, connectionGoo.Value.Offset);
@@ -1116,7 +1194,7 @@ public abstract class EngineComponent : Component
                 "The engine didn't like it ¯\\_(ツ)_/¯\n" +
                 "If you want, you can report this under: https://github.com/usalu/semio/issues\n" +
                 "ServerError: " + e.Message + "\n" +
-                "Semio.Release: " + Constants.Release + "\n" +
+                "Semio.Release: " + Semio.Constants.Release + "\n" +
                 "Semio.Grasshopper: " + new Semio_GrasshopperInfo().Version + "\n" +
                 (serializedInput != "" ? "Input: " + (serializedInput.Length < 1000 ? serializedInput : serializedInput.Substring(0, 1000) + "\n...\n") : ""));
             DA.SetData(Params.Output.Count - 1, false);
@@ -1259,7 +1337,7 @@ public abstract class PutComponent<T,U,V> : EngineComponent where T : ModelParam
     protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
 
     protected PutComponent()
-        : base($"Put {NameM}", $"+{ModelM.Abbreviation}", $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()}(same name and variant) exists it will be overwritten")
+        : base($"Put {NameM}", $"+{ModelM.Abbreviation}", $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
     {
     }
 
@@ -1654,85 +1732,54 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 
 #endregion
 
-//#region Viewing
+#region Viewing
 
-//public class GetSceneComponent : Component
-//{
-//    public GetSceneComponent()
-//        : base("GetScene", "!Scn",
-//            "Get a scene from a design.",
-//            "semio", "Viewing")
-//    {
-//    }
+public class FlattenDesignComponent : Component
+{
+    public FlattenDesignComponent()
+        : base("Flatten Design", "FltDsn", "Flatten a design.", "Utility")
+    {
+    }
 
-//    public override Guid ComponentGuid => new("55F3BF32-3B4D-4355-BFAD-F3CA3847FC94");
+    public override Guid ComponentGuid => new("434144EA-2AFB-4D39-9F75-BB77A9223595");
 
-//    protected override Bitmap Icon => Resources.scene_get_24x24;
+    protected override Bitmap Icon => Resources.design_flatten_24x24;
 
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddTextParameter("Design Name", "DnNa",
-//            "Name of design to convert to a scene.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Design Variant", "DnVn?",
-//            "Optional variant of the design to convert to a scene. No variant will convert the default variant.",
-//            GH_ParamAccess.item);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Directory", "Di?",
-//            "Optional directory path to the the kit. If none is provided, it will try to find if the Grasshopper script is executed inside a kit.",
-//            GH_ParamAccess.item);
-//        pManager[2].Optional = true;
-//        pManager.AddBooleanParameter("Run", "R", "Convert the design to a scene.", GH_ParamAccess.item, false);
-//    }
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to flatten.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
+            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
+    }
 
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddParameter(new SceneParam(), "Scene", "Sc", "Scene.", GH_ParamAccess.item);
-//    }
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D",
+            "Flat Design with no connections.", GH_ParamAccess.item);
+    }
 
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var designName = "";
-//        var designVariant = "";
-//        var path = "";
-//        var run = false;
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        var typesGoos = new List<TypeGoo>();
+        DA.GetData(0, ref designGoo);
+        DA.GetDataList(1, typesGoos);
+        var design = designGoo.Value;
+        var types = typesGoos.Select(t => t.Value).ToArray();
+        var flatDesign = design.Flatten(types,Utility.ComputeChildPlane);
+        DA.SetData(0, new DesignGoo(flatDesign));
+    }
+}
 
-//        DA.GetData(0, ref designName);
-//        DA.GetData(1, ref designVariant);
-//        if (!DA.GetData(2, ref path))
-//            path = OnPingDocument().IsFilePathDefined
-//                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-//                : Directory.GetCurrentDirectory();
-//        DA.GetData(3, ref run);
 
-//        if (!run) return;
-
-//        var response = new Api().DesignToSceneFromLocalKit(path, new DesignId
-//        {
-//            Name = designName,
-//            Variant = designVariant
-//        });
-//        if (response == null)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, Utility.ServerErrorMessage);
-//            return;
-//        }
-
-//        if (response.Error != null)
-//        {
-//            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, response.Error.Code + ": " + response.Error.Message);
-//            return;
-//        }
-
-//        DA.SetData(0, new SceneGoo(response.Scene));
-//    }
-//}
 
 //public class FilterSceneComponent : Component
 //{
 //    public FilterSceneComponent()
 //        : base("FilterScene", "|Scn",
 //            "Filter a scene.",
-//            "semio", "Viewing")
+//            Constants.Category, "Viewing")
 //    {
 //    }
 
@@ -1815,9 +1862,9 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 //    }
 //}
 
-//#endregion
+#endregion
 
-//#endregion
+#region Meta
 
 public static class Meta
 {
@@ -1954,3 +2001,4 @@ public static class Meta
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }
+#endregion

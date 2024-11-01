@@ -17,13 +17,13 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
-using System.Text;
-using System.Xml.Linq;
 using FluentValidation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using QuikGraph;
+using QuikGraph.Algorithms;
+using QuikGraph.Algorithms.Search;
 using Refit;
 
 // TODO: Replace GetHashcode() with a proper hash function.
@@ -93,25 +93,12 @@ public static class Utility
 
     public static string Encode(string text)
     {
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(text))
-            .Replace('+', '-')
-            .Replace('/', '_');
+        return Uri.EscapeDataString(text);
     }
 
     public static string Decode(string text)
     {
-        text = text.Replace('-', '+').Replace('_', '/');
-        switch (text.Length % 4)
-        {
-            case 2:
-                text += "==";
-                break;
-            case 3:
-                text += "=";
-                break;
-        }
-
-        return Encoding.UTF8.GetString(Convert.FromBase64String(text));
+        return Uri.UnescapeDataString(text);
     }
 
     public static string Serialize(this object obj, bool indented = false)
@@ -188,22 +175,24 @@ public enum PropImportance
 public abstract class PropAttribute : ConceptAttribute
 {
     public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance,
-        bool isDefaultValid) : base(emoji, code,
+        bool isDefaultValid, bool skipValidation) : base(emoji, code,
         abbreviation, description)
     {
         Importance = importance;
         IsDefaultValid = isDefaultValid;
+        SkipValidation = skipValidation;
     }
 
     public PropImportance Importance { get; set; }
     public bool IsDefaultValid { get; set; }
+    public bool SkipValidation { get; set; }
 }
 
 public abstract class TextAttribute : PropAttribute
 {
     public TextAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance, bool isDefaultValid, int lengthLimit) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
+        PropImportance importance, bool isDefaultValid, bool skipValidation, int lengthLimit) : base(emoji, code,
+        abbreviation, description, importance, isDefaultValid, skipValidation)
     {
         LengthLimit = lengthLimit;
     }
@@ -214,8 +203,9 @@ public abstract class TextAttribute : PropAttribute
 public class NameAttribute : TextAttribute
 {
     public NameAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, Constants.NameLengthLimit)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation, Constants.NameLengthLimit)
     {
     }
 }
@@ -223,8 +213,9 @@ public class NameAttribute : TextAttribute
 public class IdAttribute : TextAttribute
 {
     public IdAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.ID, bool isDefaultValid = false) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, Constants.IdLengthLimit)
+        PropImportance importance = PropImportance.ID, bool isDefaultValid = false, bool skipValidation = false) : base(
+        emoji, code,
+        abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
     {
     }
 }
@@ -232,8 +223,9 @@ public class IdAttribute : TextAttribute
 public class UrlAttribute : TextAttribute
 {
     public UrlAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, Constants.UrlLengthLimit)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation, Constants.UrlLengthLimit)
     {
     }
 }
@@ -241,8 +233,19 @@ public class UrlAttribute : TextAttribute
 public class DescriptionAttribute : TextAttribute
 {
     public DescriptionAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, Constants.DescriptionLengthLimit)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation, Constants.DescriptionLengthLimit)
+    {
+    }
+}
+
+public class BoolAttribute : PropAttribute
+{
+    public BoolAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation)
     {
     }
 }
@@ -250,8 +253,9 @@ public class DescriptionAttribute : TextAttribute
 public class IntPropAttribute : PropAttribute
 {
     public IntPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation)
     {
     }
 }
@@ -259,8 +263,9 @@ public class IntPropAttribute : PropAttribute
 public class NumberPropAttribute : PropAttribute
 {
     public NumberPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation)
     {
     }
 }
@@ -268,8 +273,9 @@ public class NumberPropAttribute : PropAttribute
 public class AnglePropAttribute : NumberPropAttribute
 {
     public AnglePropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation)
     {
     }
 }
@@ -277,8 +283,9 @@ public class AnglePropAttribute : NumberPropAttribute
 public class ModelPropAttribute : PropAttribute
 {
     public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid)
+        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation)
     {
     }
 }
@@ -294,7 +301,14 @@ public abstract class Model<T> where T : Model<T>
             .Select(p => p.Name);
         var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
             .Cast<string>().ToList();
-        return $"{modelAttribute.Abbreviation}({string.Join(", ", nonEmptyIdPropertiesValues)})";
+        if (nonEmptyIdPropertiesValues.Count!=0)
+            return $"{modelAttribute.Abbreviation}({string.Join(", ", nonEmptyIdPropertiesValues)})";
+        var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
+            .Select(p => p.Name);
+        var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
+            .Select(v=>v.ToString()).ToList();
+        return $"{modelAttribute.Abbreviation}({string.Join(", ", requiredPropertiesValues)})";
     }
 
     public override bool Equals(object obj)
@@ -342,9 +356,9 @@ public abstract class Model<T> where T : Model<T>
         return !(left == right);
     }
 
-    public Model<T> DeepClone()
+    public T DeepClone()
     {
-        return Utility.Deserialize<T>(Utility.Serialize(this));
+        return this.Serialize().Deserialize<T>();
     }
 
     public virtual (bool, List<string>) Validate()
@@ -366,101 +380,104 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             var property = properties[i];
             var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
             var isPropertyModel = Meta.IsPropertyModel[modelTypeName][i];
-            if (isPropertyList)
-            {
-                var propAttribute = property.GetCustomAttribute<PropAttribute>();
-                RuleFor(model => property.GetValue(model))
-                    .NotEmpty()
-                    .WithMessage($"The {property.Name.ToLower()} must have at least one.")
-                    .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
-            }
+            ValidateProperty(property, isPropertyList, isPropertyModel);
+        }
+    }
 
-            if (property.PropertyType == typeof(float))
-            {
-                var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
-                var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
-                if (isAngle)
-                    RuleFor(model => property.GetValue(model) as float?)
-                        .GreaterThanOrEqualTo(0)
-                        .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
-                        .LessThan(360)
-                        .WithMessage($"The {property.Name.ToLower()} must be less than 360 degrees.");
-            }
-            else if (property.PropertyType == typeof(string))
-            {
-                var textAttribute = property.GetCustomAttribute<TextAttribute>();
+    private void ValidateProperty(PropertyInfo property, bool isPropertyList, bool isPropertyModel)
+    {
+        var propAttribute = property.GetCustomAttribute<PropAttribute>();
+        if (propAttribute.SkipValidation)
+            return;
+        if (isPropertyList)
+            RuleFor(model => property.GetValue(model))
+                .NotEmpty()
+                .WithMessage($"The {property.Name.ToLower()} must have at least one.")
+                .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
 
-                RuleFor(model => property.GetValue(model) as string)
-                    .NotEmpty()
-                    .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
-                    .WithMessage($"The {property.Name.ToLower()} must not be empty.")
-                    .MaximumLength(textAttribute.LengthLimit)
-                    .WithMessage(model =>
-                    {
-                        var value = property.GetValue(model) as string;
-                        var preview = value?.Length > 10 ? value.Substring(0, 10) + "..." : value;
-                        return
-                            $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
-                    });
-            }
-            else if (property.PropertyType == typeof(List<string>))
-            {
-                // TODO: Fix bug where multiple items fail for the same rule
-                // On ["","","toooLonnngg","alsoToooLong"], only the first notEmtpy and the firstMaxLength are shown.
+        if (property.PropertyType == typeof(float))
+        {
+            var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
+            var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
+            if (isAngle)
+                RuleFor(model => property.GetValue(model) as float?)
+                    .GreaterThanOrEqualTo(0)
+                    .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
+                    .LessThan(360)
+                    .WithMessage($"The {property.Name.ToLower()} must be less than 360 degrees.");
+        }
+        else if (property.PropertyType == typeof(string))
+        {
+            var textAttribute = property.GetCustomAttribute<TextAttribute>();
 
-                var textAttribute = property.GetCustomAttribute<TextAttribute>();
-                RuleForEach(list => property.GetValue(list) as List<string>)
-                    .NotEmpty()
-                    .When(m => !textAttribute.IsDefaultValid)
-                    .WithMessage(item =>
-                    {
-                        var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                        return $"A {singularPropertyName} must not be empty.";
-                    })
-                    .MaximumLength(textAttribute.LengthLimit)
-                    .WithMessage((list, item) =>
-                    {
-                        var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
-                        var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                        return
-                            $"A {singularPropertyName} must be at most {textAttribute.LengthLimit} characters long. The provided {singularPropertyName} ({preview}) has {item?.Length} characters.";
-                    })
-                    .OverridePropertyName(property.Name);
-            }
-            else if (isPropertyModel && !isPropertyList)
-            {
-                // TODO: Implement reflexive validation for model properties.
-                //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
-                //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
-            }
-            else if (isPropertyModel && isPropertyList)
-            {
-                // TODO: Implement reflexive validation for model properties.
-            }
+            RuleFor(model => property.GetValue(model) as string)
+                .NotEmpty()
+                .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
+                .WithMessage($"The {property.Name.ToLower()} must not be empty.")
+                .MaximumLength(textAttribute.LengthLimit)
+                .WithMessage(model =>
+                {
+                    var value = property.GetValue(model) as string;
+                    var preview = value?.Length > 10 ? value.Substring(0, 10) + "..." : value;
+                    return
+                        $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
+                });
+        }
+        else if (property.PropertyType == typeof(List<string>))
+        {
+            // TODO: Fix bug where multiple items fail for the same rule
+            // On ["","","toooLonnngg","alsoToooLong"], only the first notEmtpy and the firstMaxLength are shown.
+
+            var textAttribute = property.GetCustomAttribute<TextAttribute>();
+            RuleForEach(list => property.GetValue(list) as List<string>)
+                .NotEmpty()
+                .When(m => !textAttribute.IsDefaultValid)
+                .WithMessage(item =>
+                {
+                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
+                    return $"A {singularPropertyName} must not be empty.";
+                })
+                .MaximumLength(textAttribute.LengthLimit)
+                .WithMessage((list, item) =>
+                {
+                    var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
+                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
+                    return
+                        $"A {singularPropertyName} must be at most {textAttribute.LengthLimit} characters long. The provided {singularPropertyName} ({preview}) has {item?.Length} characters.";
+                })
+                .OverridePropertyName(property.Name);
+        }
+        else if (isPropertyModel && !isPropertyList)
+        {
+            // TODO: Implement reflexive validation for model properties.
+            //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
+            //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
+        }
+        else if (isPropertyModel && isPropertyList)
+        {
+            // TODO: Implement reflexive validation for model properties.
         }
     }
 }
 
 /// <summary>
-///     💾 A representation is an url that describes a type for a certain level of detail and tags.
+///     💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
 /// </summary>
 [Model("💾", "Rp", "Rep",
-    "A representation is a linked file that describes a type for a certain level of detail and tags.")]
+    "A representation is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Representation : Model<Representation>
 {
     /// <summary>
     ///     🔗 The Unique Resource Locator (URL) to the resource of the representation.
-    ///     absolute file path or a link.
     /// </summary>
-    [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to another file outside of semio.", PropImportance.ID)]
+    [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to the resource of the representation.")]
     public string Url { get; set; } = "";
 
     /// <summary>
-    ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.
+    ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
     /// </summary>
     [Id("✉️", "Mm", "Mim",
-        "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.",
-        PropImportance.REQUIRED)]
+        "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.")]
     public string Mime { get; set; } = "";
 
     /// <summary>
@@ -469,15 +486,47 @@ public class Representation : Model<Representation>
 
     [Name("🔍", "Ld?", "Lod",
         "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
-        isDefaultValid: true)]
+        PropImportance.ID,
+        true)]
     public string Lod { get; set; } = "";
 
     /// <summary>
     ///     🏷️ The optional tags to group representations. No tags means default.
     /// </summary>
 
-    [Name("🏷️", "Tg*", "Tags", "The optional tags to group representations. No tags means default.")]
+    [Name("🏷️", "Tg*", "Tags", "The optional tags to group representations. No tags means default.", PropImportance.ID,
+        skipValidation: true)]
     public List<string> Tags { get; set; } = new();
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        foreach (var tag in Tags)
+        {
+            if (tag.Length == 0)
+            {
+                isValid = false;
+                errors.Add("The tag must not be empty.");
+            }
+
+            if (tag.Length > Constants.NameLengthLimit)
+            {
+                isValid = false;
+                var preview = tag.Length > 10 ? tag.Substring(0, 10) + "..." : tag;
+                errors.Add(
+                    $"A tag must be at most {Constants.NameLengthLimit} characters long. The provided tag ({preview}) has {tag.Length} characters.");
+            }
+        }
+
+        return (isValid, errors);
+    }
+
+    public override string ToString()
+    {
+        var lod = Lod == "" ? "" : ", " + Lod;
+        var tags = Tags.Count == 0 ? "" : ", " + string.Join(" ", Tags);
+        return $"Rep({Mime}{lod}{tags})";
+    }
 }
 
 /// <summary>
@@ -618,17 +667,15 @@ public class Plane : Model<Plane>
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var pointValidator = new ModelValidator<Point>();
-        var originValidation = pointValidator.Validate(Origin);
-        isValid = isValid && originValidation.IsValid;
-        errors.AddRange(originValidation.Errors.Select(e => "The origin is invalid: " + e));
-        var vectorValidator = new ModelValidator<Vector>();
-        var xAxisValidation = vectorValidator.Validate(XAxis);
-        isValid = isValid && xAxisValidation.IsValid;
-        errors.AddRange(xAxisValidation.Errors.Select(e => "The x-axis is invalid: " + e));
-        var yAxisValidation = vectorValidator.Validate(YAxis);
-        isValid = isValid && yAxisValidation.IsValid;
-        errors.AddRange(yAxisValidation.Errors.Select(e => "The y-axis is invalid: " + e));
+        var (isValidOrigin,errorsOrigin) = Origin.Validate();
+        isValid = isValid && isValidOrigin;
+        errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
+        var (isValidXAxis, errorsXAxis) = XAxis.Validate();
+        isValid = isValid && isValidXAxis;
+        errors.AddRange(errorsXAxis.Select(e => "The x-axis is invalid: " + e));
+        var (isValidYAxis, errorsYAxis) = YAxis.Validate();
+        isValid = isValid && isValidYAxis;
+        errors.AddRange(errorsYAxis.Select(e => "The y-axis is invalid: " + e));
         if (!Vector.IsOrthogonal(XAxis, YAxis))
         {
             isValid = false;
@@ -662,7 +709,8 @@ public class Port : Model<Port>
     /// <summary>
     ///     ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
     /// </summary>
-    [ModelProp("➡️", "Dr", "Drn", "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.")]
+    [ModelProp("➡️", "Dr", "Drn",
+        "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.")]
     public Vector? Direction { get; set; } = null;
 
     /// <summary>
@@ -677,10 +725,9 @@ public class Port : Model<Port>
         var (isValid, errors) = base.Validate();
         if (Point != null)
         {
-            var pointValidator = new ModelValidator<Point>();
-            var pointValidation = pointValidator.Validate(Point);
-            errors.AddRange(pointValidation.Errors.Select(e => "The point is invalid: " + e));
-            isValid = isValid && pointValidation.IsValid;
+            var (isValidPoint, errorsPoint) = Point.Validate();
+            isValid = isValid && isValidPoint;
+            errors.AddRange(errorsPoint.Select(e => "The point is invalid: " + e));
         }
         else
         {
@@ -690,24 +737,23 @@ public class Port : Model<Port>
 
         if (Direction != null)
         {
-            var vectorValidator = new ModelValidator<Vector>();
-            var vectorValidation = vectorValidator.Validate(Direction);
-            errors.AddRange(vectorValidation.Errors.Select(e => "The direction is invalid: " + e));
-            isValid = isValid && vectorValidation.IsValid;
+            var (isValidDirection, errorsDirection) = Direction.Validate();
+            isValid = isValid && isValidDirection;
+            errors.AddRange(errorsDirection.Select(e => "The direction is invalid: " + e));
         }
         else
         {
             isValid = false;
             errors.Add("The direction must not be null.");
         }
+
         if (Locators.Count != 0)
         {
-            var locatorValidator = new ModelValidator<Locator>();
             foreach (var locator in Locators)
             {
-                var locatorValidation = locatorValidator.Validate(locator);
-                isValid = isValid && locatorValidation.IsValid;
-                errors.AddRange(locatorValidation.Errors.Select(e => "A locator is invalid: " + e));
+                var (isValidLocator, errorsLocator) = locator.Validate();
+                isValid = isValid && isValidLocator;
+                errors.AddRange(errorsLocator.Select(e => "A locator is invalid: " + e));
             }
         }
 
@@ -752,7 +798,8 @@ public class Quality : Model<Quality>
     /// <summary>
     ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
     /// </summary>
-    [Description("🔢", "Vl?", "Val", "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
+    [Description("🔢", "Vl?", "Val",
+        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
     public string Value { get; set; } = "";
 
     /// <summary>
@@ -809,16 +856,16 @@ public class TypeProps : Model<Type>
 public class Type : TypeProps
 {
     /// <summary>
-    ///     🔌 The ports of the type.
-    /// </summary>
-    [ModelProp("🔌", "Po+", "Pors", "The ports of the type.")]
-    public List<Port> Ports { get; set; } = new();
-
-    /// <summary>
     ///     💾 The representations of the type.
     /// </summary>
     [ModelProp("💾", "Rp+", "Reps", "The representations of the type.")]
     public List<Representation> Representations { get; set; } = new();
+
+    /// <summary>
+    ///     🔌 The ports of the type.
+    /// </summary>
+    [ModelProp("🔌", "Po+", "Pors", "The ports of the type.")]
+    public List<Port> Ports { get; set; } = new();
 
     /// <summary>
     ///     📏 The optional qualities of the type.
@@ -830,28 +877,25 @@ public class Type : TypeProps
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var portValidator = new ModelValidator<Port>();
         foreach (var port in Ports)
         {
-            var portValidation = portValidator.Validate(port);
-            isValid = isValid && portValidation.IsValid;
-            errors.AddRange(portValidation.Errors.Select(e => "A port is invalid: " + e));
+            var(isValidPort, errorsPort) = port.Validate();
+            isValid = isValid && isValidPort;
+            errors.AddRange(errorsPort.Select(e => "A port is invalid: " + e));
         }
 
-        var representationValidator = new ModelValidator<Representation>();
         foreach (var representation in Representations)
         {
-            var representationValidation = representationValidator.Validate(representation);
-            isValid = isValid && representationValidation.IsValid;
-            errors.AddRange(representationValidation.Errors.Select(e => "A representation is invalid: " + e));
+            var(isValidRepresentation, errorsRepresentation) = representation.Validate();
+            isValid = isValid && isValidRepresentation;
+            errors.AddRange(errorsRepresentation.Select(e => "A representation is invalid: " + e));
         }
 
-        var qualityValidator = new ModelValidator<Quality>();
         foreach (var quality in Qualities)
         {
-            var qualityValidation = qualityValidator.Validate(quality);
-            isValid = isValid && qualityValidation.IsValid;
-            errors.AddRange(qualityValidation.Errors.Select(e => "A quality is invalid: " + e));
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -898,6 +942,7 @@ public class Piece : Model<Piece>
     [Id("🆔", "Id?", "Id",
         "The optional local identifier of the piece within the design. No id means the default piece.",
         isDefaultValid: true)]
+    [JsonProperty("id_")]
     public string Id { get; set; } = "";
 
     /// <summary>
@@ -912,7 +957,7 @@ public class Piece : Model<Piece>
     [ModelProp("◳", "Pn?", "Pln",
         "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
         PropImportance.OPTIONAL)]
-    public Plane? Plane { get; set; } = null;
+    public Plane? Plane { get; set; }
 
     /// <summary>
     ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
@@ -926,60 +971,31 @@ public class Piece : Model<Piece>
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var typeValidator = new ModelValidator<TypeId>();
-        var typeValidation = typeValidator.Validate(Type);
-        errors.AddRange(typeValidation.Errors.Select(e => "The type is invalid: " + e));
-        return (isValid && typeValidation.IsValid, errors);
-    }
-}
-
-/// <summary>
-///     🧩 The type-related information of the piece.
-/// </summary>
-[Model("🧩", "Ty", "Typ", "The type-related information of the piece in the side.")]
-public class SidePieceType : Model<SidePieceType>
-{
-    /// <summary>
-    ///     🔌 The local identification of the port within the type.
-    /// </summary>
-    [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
-    public PortId Port { get; set; } = new();
-
-    public static implicit operator SidePieceType(Port port)
-    {
-        return new SidePieceType
+        var (isValidType, errorsType) = Type.Validate();
+        isValid = isValid && isValidType;
+        errors.AddRange(errorsType.Select(e => "The type is invalid: " + e));
+        if (Plane != null)
         {
-            Port = port
-        };
+            var (isValidPlane, errorsPlane) = Plane.Validate();
+            isValid = isValid && isValidPlane;
+            errors.AddRange(errorsPlane.Select(e => "The plane is invalid: " + e));
+        }
+        return (isValid, errors);
     }
 }
 
-/// <summary>
-///     ⭕ The piece-related information of the side.
-/// </summary>
-[Model("⭕", "Pc", "Pce", "The piece-related information of the side.")]
-public class SidePiece : Model<SidePiece>
+[Model("⭕", "Pc", "Pce",
+    "The optional local identifier of the piece within the design. No id means the default piece.")]
+public class PieceId : Model<PieceId>
 {
     /// <summary>
     ///     🆔 The optional local identifier of the piece within the design. No id means the default piece.
     /// </summary>
     [Id("🆔", "Id?", "Id",
-        "The optional local identifier of the piece within the design. No id means the default piece.")]
+        "The optional local identifier of the piece within the design. No id means the default piece.",
+        isDefaultValid: true)]
+    [JsonProperty("id_")]
     public string Id { get; set; } = "";
-
-    /// <summary>
-    ///     🆔 The type-related information of the piece.
-    /// </summary>
-    [ModelProp("🆔", "Ty", "Typ", "The type-related information of the piece.")]
-    public SidePieceType Type { get; set; } = new();
-
-    public static implicit operator SidePiece(Piece piece)
-    {
-        return new SidePiece
-        {
-            Id = piece.Id
-        };
-    }
 }
 
 /// <summary>
@@ -992,11 +1008,17 @@ public class Side : Model<Side>
     ///     ⭕ The piece-related information of the side.
     /// </summary>
     [ModelProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
-    public SidePiece Piece { get; set; } = new();
+    public PieceId Piece { get; set; } = new();
+
+    /// <summary>
+    ///     🔌 The local identification of the port within the type.
+    /// </summary>
+    [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+    public PortId Port { get; set; } = new();
 
     public override string ToString()
     {
-        return $"Sde({Piece.Id}" + (Piece.Type.Port.Id != "" ? ":" + Piece.Type.Port.Id : "") + ")";
+        return $"Sde({Piece.Id}" + (Port.Id != "" ? ":" + Port.Id : "") + ")";
     }
 }
 
@@ -1053,8 +1075,8 @@ public class Connection : Model<Connection>
 
     public override string ToString()
     {
-        var ctd = Connected.Piece.Id + (Connected.Piece.Type.Port.Id != "" ? ":" + Connected.Piece.Type.Port.Id : "");
-        var cng = (Connecting.Piece.Type.Port.Id != "" ? Connecting.Piece.Type.Port.Id + ":" : "") +
+        var ctd = Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "");
+        var cng = (Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") +
                   Connecting.Piece.Id;
         return $"Con({ctd}--{cng})";
     }
@@ -1114,9 +1136,9 @@ public class DesignProps : Model<Design>
 public class Design : DesignProps
 {
     /// <summary>
-    ///     ⭕ The pieces of the design.
+    ///     ⭕ The optional pieces of the design.
     /// </summary>
-    [ModelProp("⭕", "Pc+", "Pcs", "The pieces of the design.")]
+    [ModelProp("⭕", "Pc?", "Pcs", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
 
     /// <summary>
@@ -1131,51 +1153,137 @@ public class Design : DesignProps
     [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the design.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
-    //public Design Flatten(Type[] types = null)
-    //{
-    //    Design flattenedDesign = this.DeepClone();
-    //    if (Pieces.Count <= 1 || Connections.Count == 0)
-    //        return flattenedDesign;
-    //    var graph = new UndirectedGraph<string, Edge<string>>();
-    //    foreach (var piece in Pieces)
-    //        graph.AddVertex(piece.Id);
-    //    foreach (var connection in Connections)
-    //        graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
-    //    var root = Pieces.First(p => p.Root != null) ?? Pieces.First();
-    //    var components = new Dictionary<string, int>();
-    //    graph.ConnectedComponents(components);
-    //    return flattenedDesign;
-    //}
+    public Design Flatten(Type[] types,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, Plane> computeChildPlane)
+    {
+        var clone = DeepClone();
+        if (clone.Pieces.Count > 1 && clone.Connections.Count > 0)
+        {
+            var pieces = clone.Pieces.ToDictionary(p => p.Id);
+            var ports = new Dictionary<string, Dictionary<string, Dictionary<string, Port>>>();
+            foreach (var type in types)
+            {
+                if (!ports.ContainsKey(type.Name))
+                    ports[type.Name] = new Dictionary<string, Dictionary<string, Port>>();
+                if (!ports[type.Name].ContainsKey(type.Variant))
+                    ports[type.Name][type.Variant] = new Dictionary<string, Port>();
+                foreach (var port in type.Ports)
+                    ports[type.Name][type.Variant][port.Id] = port;
+            }
+
+            var graph = new UndirectedGraph<string, Edge<string>>();
+            foreach (var piece in clone.Pieces)
+                graph.AddVertex(piece.Id);
+            foreach (var connection in clone.Connections)
+                graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+            var components = new Dictionary<string, int>();
+            graph.ConnectedComponents(components);
+            var componentPieces = new Dictionary<int, Dictionary<string, Piece>>();
+            foreach (var kvp in components)
+            {
+                if (!componentPieces.ContainsKey(kvp.Value))
+                    componentPieces[kvp.Value] = new Dictionary<string, Piece>();
+                componentPieces[kvp.Value][kvp.Key] = pieces[kvp.Key];
+            }
+
+            foreach (var component in componentPieces)
+            {
+                var subGraph = new UndirectedGraph<string, Edge<string>>();
+                foreach (var piece in component.Value)
+                    subGraph.AddVertex(piece.Key);
+                foreach (var connection in clone.Connections)
+                    if (component.Value.ContainsKey(connection.Connected.Piece.Id) &&
+                        component.Value.ContainsKey(connection.Connecting.Piece.Id))
+                        subGraph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+                var root = subGraph.Vertices.FirstOrDefault(p => pieces[p].Plane != null);
+                if (root == null)
+                {
+                    root = subGraph.Vertices.First();
+                    pieces[root].Plane = new Plane();
+                }
+                var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(subGraph);
+                bfs.SetRootVertex(root);
+                bfs.TreeEdge += (g, edge) =>
+                {
+                    var parent = pieces[edge.Source];
+                    var child = pieces[edge.Target];
+                    var connection = clone.Connections.First(c =>
+                        (c.Connected.Piece.Id == parent.Id && c.Connecting.Piece.Id == child.Id) ||
+                        (c.Connected.Piece.Id == child.Id && c.Connecting.Piece.Id == parent.Id));
+                    var isParentConnected = connection.Connected.Piece.Id == parent.Id;
+                    var parentPlane = parent.Plane;
+                    var parentPort =
+                        ports[parent.Type.Name][parent.Type.Variant][
+                            isParentConnected ? connection.Connected.Port.Id : connection.Connecting.Port.Id];
+                    var childPort =
+                        ports[child.Type.Name][child.Type.Variant][
+                            isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
+                    var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction, childPort.Point,
+                        childPort.Direction, connection.Rotation, connection.Tilt, connection.Offset);
+                    child.Plane = childPlane;
+                };
+                bfs.Compute();
+            }
+        }
+
+        clone.Connections = new List<Connection>();
+
+        return clone;
+    }
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var pieceValidator = new ModelValidator<Piece>();
         foreach (var piece in Pieces)
         {
-            var pieceValidation = pieceValidator.Validate(piece);
-            isValid = isValid && pieceValidation.IsValid;
-            errors.AddRange(pieceValidation.Errors.Select(e => "A piece is invalid: " + e));
+            var (isValidPiece, errorsPiece) = piece.Validate();
+            isValid = isValid && isValidPiece;
+            errors.AddRange(errorsPiece.Select(e => "A piece is invalid: " + e));
         }
 
         var connectionValidator = new ModelValidator<Connection>();
         foreach (var connection in Connections)
         {
-            var connectionValidation = connectionValidator.Validate(connection);
-            isValid = isValid && connectionValidation.IsValid;
-            errors.AddRange(connectionValidation.Errors.Select(e => "A connection is invalid: " + e));
+            var (isValidConnection, errorsConnection) = connection.Validate();
+            isValid = isValid && isValidConnection;
+            errors.AddRange(errorsConnection.Select(e => "A connection is invalid: " + e));
         }
 
         var qualityValidator = new ModelValidator<Quality>();
         foreach (var quality in Qualities)
         {
-            var qualityValidation = qualityValidator.Validate(quality);
-            isValid = isValid && qualityValidation.IsValid;
-            errors.AddRange(qualityValidation.Errors.Select(e => "A quality is invalid: " + e));
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
         }
 
-        return (isValid, errors);
+        var pieceIds = Pieces.Select(p => p.Id);
+
+        var duplicatePieceIds = pieceIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
+        if (duplicatePieceIds.Length != 0)
+        {
+            isValid = false;
+            foreach (var duplicatePieceId in duplicatePieceIds)
+                errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
+        }
+
+        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList().Select(c=>c.Connected.Piece.Id).ToArray();
+        if (nonExistingConnectedPieces.Length!=0)
+        {
+            isValid = false;
+            foreach (var nonExistingConnectedPiece in nonExistingConnectedPieces)
+                errors.Add($"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
+        }
+        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList().Select(c => c.Connecting.Piece.Id).ToArray();
+        if (nonExistingConnectingPieces.Length != 0)
+        {
+            isValid = false;
+            foreach (var nonExistingConnectingPiece in nonExistingConnectingPieces)
+                errors.Add($"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
+        }
+        
+    return (isValid, errors);
     }
 }
 
@@ -1271,22 +1379,18 @@ public class Kit : KitProps
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var typeValidator = new ModelValidator<Type>();
         foreach (var type in Types)
         {
-            var typeValidation = typeValidator.Validate(type);
-            isValid = isValid && typeValidation.IsValid;
-            errors.AddRange(typeValidation.Errors.Select(e => "A type is invalid: " + e));
+            var (isValidType, errorsType) = type.Validate();
+            isValid = isValid && isValidType;
+            errors.AddRange(errorsType.Select(e => "A type is invalid: " + e));
         }
-
-        var designValidator = new ModelValidator<Design>();
         foreach (var design in Designs)
         {
-            var designValidation = designValidator.Validate(design);
-            isValid = isValid && designValidation.IsValid;
-            errors.AddRange(designValidation.Errors.Select(e => "A design is invalid: " + e));
+            var (isValidDesign, errorsDesign) = design.Validate();
+            isValid = isValid && isValidDesign;
+            errors.AddRange(errorsDesign.Select(e => "A design is invalid: " + e));
         }
-
         return (isValid, errors);
     }
 }
@@ -1316,7 +1420,6 @@ public class ClientException : ApiException
     }
 }
 
-
 public interface IApi
 {
     [Get("/kits/{encodedKitUri}")]
@@ -1329,19 +1432,18 @@ public interface IApi
     Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-    [Put("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")]
-    Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, string encodedTypeVariant,
-        [Body] Type input);
+    [Put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeNameAndVariant, [Body] Type input);
 
-    [Delete("/kits/{encodedKitUri}/types/{encodedTypeName},{encodedTypeVariant}")]
-    Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName, string encodedTypeVariant);
+    [Delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeNameAndVariant);
 
-    [Put("/kits/{encodedKitUri}/designs/{encodedDesignName},{encodedDesignVariant}")]
-    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName, string encodedDesignVariant,
+    [Put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignNameAndVariant,
         [Body] Design input);
 
-    [Delete("/kits/{encodedKitUri}/designs/{encodedDesignName},{encodedDesignVariant}")]
-    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName, string encodedDesignVariant);
+    [Delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignNameAndVariant);
 }
 
 public static class Api
@@ -1363,10 +1465,10 @@ public static class Api
     {
         return JsonConvert.SerializeObject(new
         {
-            Message = response.Error.Content ?? "null",
             StatusCode = response.StatusCode.ToString(),
+            Message = response.Error.Content ?? "null",
             Request = response.RequestMessage.ToString(),
-            Headers = response.Headers.ToString(),
+            Headers = response.Headers.ToString()
         });
     }
 
@@ -1376,6 +1478,11 @@ public static class Api
             throw new ClientException(response.Error.Content);
         if (!response.IsSuccessStatusCode)
             throw new ServerException(UnsuccessfullResponseToString(response));
+    }
+
+    public static string EncodeNameAndVariant(string name, string variant = "")
+    {
+        return Utility.Encode(name) + "," + Utility.Encode(variant);
     }
 
     public static Kit GetKit(string uri)
@@ -1402,31 +1509,30 @@ public static class Api
     public static void PutType(string kitUrl, Type input)
     {
         var response = GetApi()
-            .PutType(Utility.Encode(kitUrl), Utility.Encode(input.Name), Utility.Encode(input.Variant), input).Result;
+            .PutType(Utility.Encode(kitUrl), EncodeNameAndVariant(input.Name, input.Variant), input).Result;
         HandleErrors(response);
     }
 
     public static void RemoveType(string kitUrl, TypeId id)
     {
         var response = GetApi()
-            .RemoveType(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
+            .RemoveType(Utility.Encode(kitUrl), EncodeNameAndVariant(id.Name, id.Variant)).Result;
         HandleErrors(response);
     }
 
     public static void PutDesign(string kitUrl, Design input)
     {
-        var response = GetApi().PutDesign(Utility.Encode(kitUrl), Utility.Encode(input.Name),
-            Utility.Encode(input.Variant), input).Result;
+        var response = GetApi()
+            .PutDesign(Utility.Encode(kitUrl), EncodeNameAndVariant(input.Name, input.Variant), input).Result;
         HandleErrors(response);
     }
 
     public static void RemoveDesign(string kitUrl, DesignId id)
     {
         var response = GetApi()
-            .RemoveDesign(Utility.Encode(kitUrl), Utility.Encode(id.Name), Utility.Encode(id.Variant)).Result;
+            .RemoveDesign(Utility.Encode(kitUrl), EncodeNameAndVariant(id.Name, id.Variant)).Result;
         HandleErrors(response);
     }
-
 }
 
 #endregion
