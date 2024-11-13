@@ -1,1 +1,1 @@
-"C:\Program Files\Rhino 7\System\Yak.exe" login
+"C:\Program Files\Rhino 8\System\Yak.exe" login

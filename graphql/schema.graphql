@@ -170,7 +170,8 @@ type ConnectionNodeEdge {
 type Connection implements Node {
   rotation: Float!
   tilt: Float!
-  offset: Float!
+  gap: Float!
+  shift: Float!
   connectedPiecePk: ID!
   connectedPortPk: ID!
   connectingPiecePk: ID!
@@ -516,8 +517,15 @@ input ConnectionInputNode {
   """↗️ The tilt of the connection."""
   tilt: Float = 0
 
-  """↕️ The offset of the connection."""
-  offset: Float = 0
+  """
+  ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
+  """
+  gap: Float = 0
+
+  """
+  ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
+  """
+  shift: Float = 0
 
   """🧲 The connected side of the connection."""
   connected: SideInputNode!

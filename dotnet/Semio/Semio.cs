@@ -301,14 +301,14 @@ public abstract class Model<T> where T : Model<T>
             .Select(p => p.Name);
         var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
             .Cast<string>().ToList();
-        if (nonEmptyIdPropertiesValues.Count!=0)
-            return $"{modelAttribute.Abbreviation}({string.Join(", ", nonEmptyIdPropertiesValues)})";
+        if (nonEmptyIdPropertiesValues.Count != 0)
+            return $"{modelAttribute.Abbreviation}({string.Join(",", nonEmptyIdPropertiesValues)})";
         var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
             .Select(p => p.Name);
         var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
-            .Select(v=>v.ToString()).ToList();
-        return $"{modelAttribute.Abbreviation}({string.Join(", ", requiredPropertiesValues)})";
+            .Select(v => v.ToString()).ToList();
+        return $"{modelAttribute.Abbreviation}({string.Join(",", requiredPropertiesValues)})";
     }
 
     public override bool Equals(object obj)
@@ -667,7 +667,7 @@ public class Plane : Model<Plane>
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        var (isValidOrigin,errorsOrigin) = Origin.Validate();
+        var (isValidOrigin, errorsOrigin) = Origin.Validate();
         isValid = isValid && isValidOrigin;
         errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
         var (isValidXAxis, errorsXAxis) = XAxis.Validate();
@@ -805,7 +805,7 @@ public class Quality : Model<Quality>
     /// <summary>
     ///     Ⓜ️ The optional unit of the value of the quality.
     /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The optional unit of the value of the quality.", isDefaultValid: true)]
+    [Name("Ⓜ️", "Ut?", "Unt", "The optional unit of the value of the quality.", isDefaultValid: true)]
     public string Unit { get; set; } = "";
 
     /// <summary>
@@ -856,15 +856,15 @@ public class TypeProps : Model<Type>
 public class Type : TypeProps
 {
     /// <summary>
-    ///     💾 The representations of the type.
+    ///     💾 The optional representations of the type.
     /// </summary>
-    [ModelProp("💾", "Rp+", "Reps", "The representations of the type.")]
+    [ModelProp("💾", "Rp*", "Reps", "The optional representations of the type.", PropImportance.OPTIONAL)]
     public List<Representation> Representations { get; set; } = new();
 
     /// <summary>
-    ///     🔌 The ports of the type.
+    ///     🔌 The optional ports of the type.
     /// </summary>
-    [ModelProp("🔌", "Po+", "Pors", "The ports of the type.")]
+    [ModelProp("🔌", "Po*", "Pors", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
 
     /// <summary>
@@ -879,14 +879,14 @@ public class Type : TypeProps
         var (isValid, errors) = base.Validate();
         foreach (var port in Ports)
         {
-            var(isValidPort, errorsPort) = port.Validate();
+            var (isValidPort, errorsPort) = port.Validate();
             isValid = isValid && isValidPort;
             errors.AddRange(errorsPort.Select(e => "A port is invalid: " + e));
         }
 
         foreach (var representation in Representations)
         {
-            var(isValidRepresentation, errorsRepresentation) = representation.Validate();
+            var (isValidRepresentation, errorsRepresentation) = representation.Validate();
             isValid = isValid && isValidRepresentation;
             errors.AddRange(errorsRepresentation.Select(e => "A representation is invalid: " + e));
         }
@@ -1065,13 +1065,17 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     🔄 The optional offset distance (in port direction after rotation and tilt) between the connected and the
-    ///     connecting
-    ///     piece.
+    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
     /// </summary>
-    [NumberProp("↕️", "Of?", "Ofs",
-        "The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
-    public float Offset { get; set; } = 0;
+    [NumberProp("↕️", "Gp?", "Gap",
+        "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
+    public float Gap { get; set; } = 0;
+    /// <summary>
+    ///    ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+    /// </summary>
+
+    [NumberProp("↔️", "Sf?", "Sft", "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
+    public float Shift { get; set; } = 0;
 
     public override string ToString()
     {
@@ -1138,13 +1142,13 @@ public class Design : DesignProps
     /// <summary>
     ///     ⭕ The optional pieces of the design.
     /// </summary>
-    [ModelProp("⭕", "Pc?", "Pcs", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("⭕", "Pc*", "Pcs", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
 
     /// <summary>
     ///     🔗 The optional connections of the design.
     /// </summary>
-    [ModelProp("🔗", "Co?", "Cons", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("🔗", "Co*", "Cons", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
 
     /// <summary>
@@ -1154,7 +1158,7 @@ public class Design : DesignProps
     public List<Quality> Qualities { get; set; } = new();
 
     public Design Flatten(Type[] types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, Plane> computeChildPlane)
+        Func<Plane, Point, Vector, Point, Vector, float, float, float,float, Plane> computeChildPlane)
     {
         var clone = DeepClone();
         if (clone.Pieces.Count > 1 && clone.Connections.Count > 0)
@@ -1219,7 +1223,7 @@ public class Design : DesignProps
                         ports[child.Type.Name][child.Type.Variant][
                             isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                     var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction, childPort.Point,
-                        childPort.Direction, connection.Rotation, connection.Tilt, connection.Offset);
+                        childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
                     child.Plane = childPlane;
                 };
                 bfs.Compute();
@@ -1268,8 +1272,8 @@ public class Design : DesignProps
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
 
-        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList().Select(c=>c.Connected.Piece.Id).ToArray();
-        if (nonExistingConnectedPieces.Length!=0)
+        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList().Select(c => c.Connected.Piece.Id).ToArray();
+        if (nonExistingConnectedPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectedPiece in nonExistingConnectedPieces)
@@ -1282,8 +1286,8 @@ public class Design : DesignProps
             foreach (var nonExistingConnectingPiece in nonExistingConnectingPieces)
                 errors.Add($"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
         }
-        
-    return (isValid, errors);
+
+        return (isValid, errors);
     }
 }
 

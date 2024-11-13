@@ -1,1 +1,1 @@
-"C:\Program Files\Rhino 7\System\Yak.exe" push semio-3.0.0-rh6_35-win.yak
+"C:\Program Files\Rhino 8\System\Yak.exe" push semio-4.0.0-rh6_35-win.yak

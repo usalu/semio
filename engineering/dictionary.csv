@@ -17,6 +17,7 @@ Symbol,Code,Abbreviation,Name,Description
 🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
 ▢,En,Ent,Entity,An entity is a collection of properties and children.
 🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
+↕️,Gp?,Gap,Gap,The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
 🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
 👪,Gr,Grp,Group,The group of the locator.
 🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
@@ -31,7 +32,6 @@ Symbol,Code,Abbreviation,Name,Description
 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
 📛,Na,Nam,Name,The name of the {{NAME}}.
 ✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
-↕️,Of?,Ofs,Offset,The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
 ⌱,Og,Org,Origin,The origin of the plane.
 ↗️,Ou,Out,Output,The output for a {{NAME}}.
 👪,Pa,Par,Parent,The parent of {{NAME}}.
@@ -54,6 +54,7 @@ Symbol,Code,Abbreviation,Name,Description
 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
 🧱,Sd,Sde,Side,A side of a piece in a connection.
+↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
 ✅,Su,Suc,Success,{{NAME}} was successful.

@@ -254,7 +254,7 @@ import { ThemeConfig } from 'antd/lib'
 // /** 🖇️ A connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection';
-//     offset: Scalars['Float']['output'];
+//     gap: Scalars['Float']['output'];
 //     rotation: Scalars['Float']['output'];
 //     design?: Maybe<Design>;
 //     connected: Side;
@@ -594,7 +594,7 @@ import { ThemeConfig } from 'antd/lib'
 // export type ConnectionInput = {
 //     connecting: SideInput;
 //     connected: SideInput;
-//     offset?: InputMaybe<Scalars['Float']['input']>;
+//     gap?: InputMaybe<Scalars['Float']['input']>;
 //     rotation?: InputMaybe<Scalars['Float']['input']>;
 // };
 
@@ -1489,9 +1489,9 @@ const ConnectionPreview = ({
     const moveToParent = parentPoint.toVector().toTransform()
     let transform = new Transform()
     transform = rotation.after(centerChild)
-    if (connection.offset !== 0) {
-        const offset = parentDirection.clone().multiplyScalar(connection.offset).toTransform()
-        transform = offset.after(transform)
+    if (connection.gap !== 0) {
+        const gap = parentDirection.clone().multiplyScalar(connection.gap).toTransform()
+        transform = gap.after(transform)
     }
     transform = moveToParent.after(transform)
     return (
@@ -1536,7 +1536,7 @@ const ConnectionBuilder = ({
         findDefaultOrFirstPort(connectingType).id
     )
     const [connectedPortId, setConnectedPortId] = useState(findDefaultOrFirstPort(connectedType).id)
-    const [offset, setOffset] = useState(0)
+    const [gap, setGap] = useState(0)
     const [rotation, setRotation] = useState(0)
 
     const onRotationChange: InputNumberProps['onChange'] = (newValue) => {
@@ -1562,7 +1562,7 @@ const ConnectionBuilder = ({
                 }
             }
         },
-        offset,
+        gap,
         rotation
     } as ConnectionInput
 
@@ -1585,8 +1585,8 @@ const ConnectionBuilder = ({
                     selectedPortId={connectedPortId}
                 />
                 <Flex>
-                    <Label>Offset</Label>
-                    <InputNumber value={offset} onChange={(value) => setOffset(value)} />
+                    <Label>Gap</Label>
+                    <InputNumber value={gap} onChange={(value) => setGap(value)} />
                 </Flex>
                 <Row>
                     <Col span={12}>
@@ -2385,7 +2385,7 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
                             switch (transformationMode) {
                                 case 'translate':
                                     transformControlMatrix.setPosition(
-                                        transformControlRef.current.offset
+                                        transformControlRef.current.gap
                                     )
                                     break
                                 case 'rotate':

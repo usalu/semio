@@ -356,10 +356,16 @@
                         "description": "\u2197\ufe0f The tilt of the connection.",
                         "default": 0
                     },
-                    "offset": {
+                    "gap": {
                         "type": "number",
-                        "title": "Offset",
-                        "description": "\u2195\ufe0f The offset of the connection.",
+                        "title": "Gap",
+                        "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "connected": {
@@ -397,10 +403,16 @@
                         "description": "\u2197\ufe0f The tilt of the connection.",
                         "default": 0
                     },
-                    "offset": {
+                    "gap": {
                         "type": "number",
-                        "title": "Offset",
-                        "description": "\u2195\ufe0f The offset of the connection.",
+                        "title": "Gap",
+                        "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "connected": {

@@ -62,7 +62,7 @@ class Root {
 }
 
 class Connection {
-    offset : Float
+    gap : Float
     rotation : Float
 }
 

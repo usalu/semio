@@ -26,6 +26,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 using GH_IO.Serialization;
+using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
@@ -49,6 +50,31 @@ namespace Semio.Grasshopper;
 // TODO: IsInvalid is used to check null state which is not clean.
 // Think of a better way to handle this.
 // The invalid check happen twice and code is duplicated.
+// TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
+#endregion
+
+#region General
+public class Semio_GrasshopperInfo : GH_AssemblyInfo
+{
+    public override string Name => "semio";
+    public override Bitmap Icon => Resources.semio_24x24;
+    public override Bitmap AssemblyIcon => Resources.semio_24x24;
+    public override string Description => "semio within 🦗.";
+    public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
+    public override string Version => "4.0.0";
+    public override string AuthorName => "Ueli Saluz";
+    public override string AuthorContact => "semio-community@posteo.org";
+}
+
+public class SemioCategoryIcon : GH_AssemblyPriority
+{
+    public override GH_LoadingInstruction PriorityLoad()
+    {
+        Instances.ComponentServer.AddCategoryIcon("semio", Resources.semio_24x24);
+        Instances.ComponentServer.AddCategorySymbolName("semio", 'S');
+        return GH_LoadingInstruction.Proceed;
+    }
+}
 #endregion
 
 #region Constants
@@ -104,13 +130,13 @@ public static class Utility
         return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
     }
 
-    public static Plane ComputeChildPlane(Plane parentPlane,Point parentPoint, Vector parentDirection, Point childPoint, Vector childDirection, float rotation, float tilt, float offset)
+    public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection, Point childPoint, Vector childDirection, float rotation, float tilt, float gap, float shift)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
         var revertedChildPointR = new Vector3d(childPoint.Convert());
         revertedChildPointR.Reverse();
-        var offsetDirectionR = new Vector3d(parentDirectionR);
+        var gapDirectionR = new Vector3d(parentDirectionR);
         var reverseChildDirectionR = childDirection.Convert();
         reverseChildDirectionR.Reverse();
         var rotationRad = RhinoMath.ToRadians(rotation);
@@ -127,40 +153,45 @@ public static class Utility
         if (areDirectionsSame)
         {
             // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
-            if (Math.Abs(parentDirectionR.Z)<Semio.Constants.Tolerance)
-                directionT = Transform.Rotation(RhinoMath.ToRadians(180),Vector3d.ZAxis, new Point3d());
+            if (Math.Abs(parentDirectionR.Z) < Semio.Constants.Tolerance)
+                directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.ZAxis, new Point3d());
             else
                 directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.CrossProduct(Vector3d.ZAxis, parentDirectionR), new Point3d());
         }
         else
-            directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR,new Point3d());
+            directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
 
         var tiltAxisRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
         var tiltAxis = Vector3d.XAxis;
         tiltAxis.Transform(tiltAxisRotation);
 
-        var offsetDirection = offsetDirectionR * offset;
+        var gapDirection = gapDirectionR;
 
         var orientationT = directionT;
 
         var rotateT = Transform.Rotation(-rotationRad, parentDirectionR, new Point3d());
         orientationT = rotateT * directionT;
         tiltAxis.Transform(rotateT);
-        offsetDirection.Transform(rotateT);
-   
+        gapDirection.Transform(rotateT);
+
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
-        offsetDirection.Transform(tiltT);
+        gapDirection.Transform(tiltT);
 
         // move
-        
+
         var centerChild = Transform.Translation(revertedChildPointR);
         var moveToParent = Transform.Translation(parentPointR);
         var transform = orientationT * centerChild;
-        
-        var offsetTransform = Transform.Translation(offsetDirection);
-        transform = offsetTransform * transform;
-        
+
+
+        var gapTransform = Transform.Translation(gapDirection*gap);
+        var shiftDirection = new Vector3d(tiltAxis) * shift;
+        var shiftTransform = Transform.Translation(shiftDirection);
+        var translation =  gapTransform * shiftTransform;
+
+        transform = translation * transform;
+
         transform = moveToParent * transform;
         var childPlaneR = Rhino.Geometry.Plane.WorldXY;
         childPlaneR.Transform(transform);
@@ -504,61 +535,35 @@ public class PieceGoo : ModelGoo<Piece>
     public PieceGoo(Piece value) : base(value)
     {
     }
-}
 
-public class SideGoo : ModelGoo<Side>
-{
-    public SideGoo()
-    {
-    }
+    // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
+    //public override bool CastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        object ptr = new GH_String(Value.Id);
+    //        target = (Q)ptr;
+    //        return true;
+    //    }
 
-    public SideGoo(Side value) : base(value)
-    {
-    }
+    //    return false;
+    //}
 
-    public override bool CastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            object ptr = new GH_String(Value.Piece.Id);
-            target = (Q)ptr;
-            return true;
-        }
+    //public override bool CastFrom(object source)
+    //{
+    //    if (source == null) return false;
 
-        return false;
-    }
-
-    public override bool CastFrom(object source)
-    {
-        if (source == null) return false;
-
-        string str;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-        {
-            Value = new Side
-            {
-                Piece = new PieceId
-                {
-                    Id = str
-                }
-            };
-            return true;
-        }
-
-        if (source is Piece piece)
-        {
-            Value = new Side
-            {
-                Piece = new PieceId
-                {
-                    Id = piece.Id
-                }
-            };
-            return true;
-        }
-
-        return false;
-    }
+    //    string str;
+    //    if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+    //    {
+    //        Value = new Piece
+    //        {
+    //            Id = str
+    //        };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class ConnectionGoo : ModelGoo<Connection>
@@ -607,7 +612,7 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
     {
     }
 
-    protected override Bitmap Icon=> (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
 
     protected override GH_GetterResult Prompt_Singular(ref T value)
     {
@@ -728,7 +733,7 @@ public abstract class ModelComponent<T, U, V> : Component
     {
     }
 
-    protected override Bitmap Icon=>(Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
 
     protected virtual void AddModelProps(dynamic pManager)
     {
@@ -750,6 +755,7 @@ public abstract class ModelComponent<T, U, V> : Component
             : $"The optional {NameM.ToLower()} to deconstruct or modify.";
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
+        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?", isOutput ? "True if the model is valid." : "Whether the model should be validated.", GH_ParamAccess.item);
 
         AddModelProps(pManager);
 
@@ -770,19 +776,23 @@ public abstract class ModelComponent<T, U, V> : Component
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        // Input
         dynamic modelGoo = Activator.CreateInstance(GooM);
+        bool validate = false;
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
+        DA.GetData(1, ref validate);
         GetProps(DA, modelGoo);
 
-        // Process
         modelGoo.Value = ProcessModel(modelGoo.Value);
-        var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
-        foreach (var error in errors)
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
 
-        // Output
+        if (validate)
+        {
+            var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
         DA.SetData(0, modelGoo.Duplicate());
         SetData(DA, modelGoo);
     }
@@ -796,7 +806,7 @@ public abstract class ModelComponent<T, U, V> : Component
             var itemType = PropertyItemType[i];
             dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]);
             var value = gooValue;
-            bool hasInput = isList ? DA.GetDataList(i + 1, value) : DA.GetData(i + 1, ref value);
+            bool hasInput = isList ? DA.GetDataList(i + 2, value) : DA.GetData(i + 2, ref value);
             if (hasInput)
             {
                 if (isList)
@@ -858,9 +868,9 @@ public abstract class ModelComponent<T, U, V> : Component
             }
 
             if (isList)
-                DA.SetDataList(i + 1, value);
+                DA.SetDataList(i + 2, value);
             else
-                DA.SetData(i + 1, value);
+                DA.SetData(i + 2, value);
         }
     }
 
@@ -942,7 +952,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddPlaneParameter("Plane", "Pn?",
             "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP?",
+        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP",
             "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.",
             GH_ParamAccess.item);
     }
@@ -955,25 +965,25 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         var rootPlane = new Rhino.Geometry.Plane();
         var screenPointGoo = new ScreenPointGoo();
 
-        if (DA.GetData(1, ref id))
+        if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
-        if (DA.GetData(2, ref typeName))
+        if (DA.GetData(3, ref typeName))
             pieceGoo.Value.Type.Name = typeName;
-        if (DA.GetData(3, ref typeVariant))
+        if (DA.GetData(4, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(4, ref rootPlane))
+        if (DA.GetData(5, ref rootPlane))
             pieceGoo.Value.Plane = rootPlane.Convert();
-        if (DA.GetData(5, ref screenPointGoo))
+        if (DA.GetData(6, ref screenPointGoo))
             pieceGoo.Value.ScreenPoint = screenPointGoo.Value;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
     {
-        DA.SetData(1, pieceGoo.Value.Id);
-        DA.SetData(2, pieceGoo.Value.Type.Name);
-        DA.SetData(3, pieceGoo.Value.Type.Variant);
-        DA.SetData(4, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(5, new ScreenPointGoo(pieceGoo.Value.ScreenPoint as ScreenPoint));
+        DA.SetData(2, pieceGoo.Value.Id);
+        DA.SetData(3, pieceGoo.Value.Type.Name);
+        DA.SetData(4, pieceGoo.Value.Type.Variant);
+        DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
+        DA.SetData(6, new ScreenPointGoo(pieceGoo.Value.ScreenPoint as ScreenPoint));
     }
 }
 
@@ -992,7 +1002,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Rotation", "Rt?", "The optional rotation between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Tilt", "Tl?", "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Offset", "Of?", "The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1003,33 +1014,37 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectingPortId = "";
         var rotation = 0.0;
         var tilt = 0.0;
-        var offset = 0.0;
+        var gap = 0.0;
+        var shift = 0.0;
 
-        if (DA.GetData(1, ref connectedPieceId))
+        if (DA.GetData(2, ref connectedPieceId))
             connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
-        if (DA.GetData(2, ref connectedPortId))
+        if (DA.GetData(3, ref connectedPortId))
             connectionGoo.Value.Connected.Port.Id = connectedPortId;
-        if (DA.GetData(3, ref connectingPieceId))
+        if (DA.GetData(4, ref connectingPieceId))
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
-        if (DA.GetData(4, ref connectingPortId))
+        if (DA.GetData(5, ref connectingPortId))
             connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(5, ref rotation))
+        if (DA.GetData(6, ref rotation))
             connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(6, ref tilt))
+        if (DA.GetData(7, ref tilt))
             connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(7, ref offset))
-            connectionGoo.Value.Offset = (float)offset;
+        if (DA.GetData(8, ref gap))
+            connectionGoo.Value.Gap = (float)gap;
+        if (DA.GetData(9, ref shift))
+            connectionGoo.Value.Shift = (float)shift;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
     {
-        DA.SetData(1, connectionGoo.Value.Connected.Piece.Id);
-        DA.SetData(2, connectionGoo.Value.Connected.Port.Id);
-        DA.SetData(3, connectionGoo.Value.Connecting.Piece.Id);
-        DA.SetData(4, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(5, connectionGoo.Value.Rotation);
-        DA.SetData(6, connectionGoo.Value.Tilt);
-        DA.SetData(7, connectionGoo.Value.Offset);
+        DA.SetData(2, connectionGoo.Value.Connected.Piece.Id);
+        DA.SetData(3, connectionGoo.Value.Connected.Port.Id);
+        DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
+        DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
+        DA.SetData(6, connectionGoo.Value.Rotation);
+        DA.SetData(7, connectionGoo.Value.Tilt);
+        DA.SetData(8, connectionGoo.Value.Gap);
+        DA.SetData(9, connectionGoo.Value.Shift);
     }
 }
 
@@ -1116,7 +1131,7 @@ public class RandomIdsComponent : Component
 
 #endregion
 
-#region Loading/Saving
+#region Persistence
 
 public abstract class EngineComponent : Component
 {
@@ -1125,7 +1140,7 @@ public abstract class EngineComponent : Component
     protected virtual string SuccessDescription => "True if the operation was successful.";
 
     protected EngineComponent(string name, string nickname, string description)
-        : base(name, nickname, description, "Loading/Saving")
+        : base(name, nickname, description, "Persistence")
     {
     }
 
@@ -1167,7 +1182,7 @@ public abstract class EngineComponent : Component
         var url = "";
         var run = false;
 
-        if (!DA.GetData(Params.Input.Count-2, ref url))
+        if (!DA.GetData(Params.Input.Count - 2, ref url))
             url = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
@@ -1190,7 +1205,7 @@ public abstract class EngineComponent : Component
         catch (ServerException e)
         {
             string serializedInput = input != null ? Semio.Utility.Serialize(input) : "";
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, 
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
                 "The engine didn't like it ¯\\_(ツ)_/¯\n" +
                 "If you want, you can report this under: https://github.com/usalu/semio/issues\n" +
                 "ServerError: " + e.Message + "\n" +
@@ -1320,7 +1335,7 @@ public class DeleteKitComponent : EngineComponent
 
 #region Putting
 
-public abstract class PutComponent<T,U,V> : EngineComponent where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
 
 {
     public static readonly string NameM;
@@ -1400,7 +1415,7 @@ public abstract class RemoveComponent<T, U, V> : EngineComponent where T : Model
     }
     protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
     protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
-    
+
 
     public RemoveComponent()
         : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}",
@@ -1408,7 +1423,7 @@ public abstract class RemoveComponent<T, U, V> : EngineComponent where T : Model
     {
     }
 
-    protected override Bitmap Icon=> (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
 
     protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
     {
@@ -1578,7 +1593,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
         var text = goo.Value.Serialize(true);
         DA.SetData(0, text);
     }
-    protected override Bitmap Icon=> (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
@@ -1605,6 +1620,11 @@ public class SerializeQualityComponent : SerializeComponent<QualityParam, Qualit
 public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+}
+
+public class SerializeScreenPointComponent : SerializeComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+{
+    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
 
 public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
@@ -1672,7 +1692,7 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
         goo.Value = value;
         DA.SetData(0, goo);
     }
-    protected override Bitmap Icon=> (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
 }
@@ -1701,6 +1721,12 @@ public class DeserializeQualityComponent : DeserializeComponent<QualityParam, Qu
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
+
+}
+
+public class DeserializeScreenPointComponent : DeserializeComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+{
+    public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
 
 }
 
@@ -1737,7 +1763,7 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 public class FlattenDesignComponent : Component
 {
     public FlattenDesignComponent()
-        : base("Flatten Design", "FltDsn", "Flatten a design.", "Utility")
+        : base("Flatten Design", "FltDsn", "Flatten a design.", "Util")
     {
     }
 
@@ -1767,7 +1793,7 @@ public class FlattenDesignComponent : Component
         DA.GetDataList(1, typesGoos);
         var design = designGoo.Value;
         var types = typesGoos.Select(t => t.Value).ToArray();
-        var flatDesign = design.Flatten(types,Utility.ComputeChildPlane);
+        var flatDesign = design.Flatten(types, Utility.ComputeChildPlane);
         DA.SetData(0, new DesignGoo(flatDesign));
     }
 }

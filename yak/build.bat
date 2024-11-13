@@ -1,1 +1,1 @@
-"C:\Program Files\Rhino 7\System\Yak.exe" build --platform win
+"C:\Program Files\Rhino 8\System\Yak.exe" build --platform win

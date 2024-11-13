@@ -113,7 +113,7 @@ export type Locator = {
 /** 🖇️ A connection between two pieces of a design. */
 export type Connection = {
     __typename?: 'Connection'
-    offset: Scalars['Float']['output']
+    gap: Scalars['Float']['output']
     rotation: Scalars['Float']['output']
     design?: Maybe<Design>
     connected: Side
@@ -454,7 +454,7 @@ export type ScreenPointInput = {
 export type ConnectionInput = {
     connecting: SideInput
     connected: SideInput
-    offset?: InputMaybe<Scalars['Float']['input']>
+    gap?: InputMaybe<Scalars['Float']['input']>
     rotation?: InputMaybe<Scalars['Float']['input']>
 }
 

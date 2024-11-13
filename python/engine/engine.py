@@ -25,13 +25,14 @@ engine.py
 # TODOs
 
 
-# TODO: Think of revertable encoding for ids.
 # TODO: Automatic derive from Id model.
 # TODO: Automatic emptying.
 # TODO: Automatic updating based on props.
 # TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
 # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
 # TODO: Proper mechanism of nullable fields.
+# TODO: Generalize to non-zip kits.
+# TODO: Think of using memory sqlite for caching.
 
 # Copilot
 
@@ -50,13 +51,15 @@ engine.py
 # 📖,Df,Def,Definition,The optional definition [ text | url ] of the quality.
 # ✏️,Dg,Dgm,Diagram,The diagram of the design.
 # 📁,Di?,Dir,Directory,The optional directory where to find the kit.
-# ➡️,Dr,Drn,Direction,The direction of the port.
+# 🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
+# ➡️,Dr,Drn,Direction,The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
 # 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 # 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
 # 🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
 # 🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
 # ▢,En,Ent,Entity,An entity is a collection of properties and children.
 # 🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
+# ↕️,Gp?,Gap,Gap,The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
 # 🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
 # 👪,Gr,Grp,Group,The group of the locator.
 # 🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
@@ -71,14 +74,13 @@ engine.py
 # 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
 # 📛,Na,Nam,Name,The name of the {{NAME}}.
 # ✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
-# ↕️,Of?,Ofs,Offset,The optional offset distance (applied after rotation and tilt in port direction) between the connected and the connecting piece.
 # ⌱,Og,Org,Origin,The origin of the plane.
 # ↗️,Ou,Out,Output,The output for a {{NAME}}.
 # 👪,Pa,Par,Parent,The parent of {{NAME}}.
 # ⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
 # 🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
 # ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-# ⭕,Pc+,Pces,Pieces,The optional pieces of the design.
+# ⭕,Pc?,Pces,Pieces,The optional pieces of the design.
 # 🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
 # 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
 # 🔌,Po+,Pors,Ports,The ports of the type.
@@ -94,6 +96,7 @@ engine.py
 # 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 # 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
 # 🧱,Sd,Sde,Side,A side of a piece in a connection.
+# ↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
 # 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 # 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
 # ✅,Su,Suc,Success,{{NAME}} was successful.
@@ -140,6 +143,11 @@ import pathlib
 import sqlite3
 import typing
 import urllib
+import zipfile
+import io
+import shutil
+import stat
+import signal
 
 import fastapi
 import graphene
@@ -157,6 +165,7 @@ import uvicorn
 import networkx
 import numpy
 import pytransform3d
+import requests
 
 
 # Type Hints #
@@ -354,6 +363,24 @@ class NoKitToDelete(KitNotFound):
         return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
 
 
+class KitZipDoesNotContainSemioFolder(KitNotFound):
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
+
+
+class OnlyRemoteKitsCanBeCached(ClientError):
+
+    def __init__(self, nonRemoteUri: str) -> None:
+        self.nonRemoteUri = nonRemoteUri
+
+    def __str__(self):
+        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
+
+
 class KitUriNotValid(ClientError, abc.ABC):
     """🆔 The base for all kit uri not valid errors."""
 
@@ -429,6 +456,15 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
 
     def __str__(self) -> str:
         return f"♊ A kit under uri ({self.uri}) already exists."
+
+
+class TypeHasNotAllUsedPorts(SpecificationError):
+
+    def __init__(self, missingPorts: set[str]) -> None:
+        self.missingPorts = missingPorts
+
+    def __str__(self) -> str:
+        return f"🚫 A design is using some ports of the type. The new type is missing the following ports: {', '.join(self.missingPorts)}."
 
 
 class Semio(sqlmodel.SQLModel, table=True):
@@ -534,6 +570,10 @@ class Entity(Model, abc.ABC):
         parent = self.parent()
         parentId = f"{parent.guid()}/" if parent is not None else ""
         return parentId + localId
+
+    def clientId(self) -> str:
+        """🆔 The client id of the entity."""
+        return self.id()
 
     # TODO: Automatic emptying.
     # @abc.abstractmethod
@@ -1549,6 +1589,10 @@ class Port(TableEntity, table=True):
         self.directionY = direction.y
         self.directionZ = direction.z
 
+    def connections(self) -> list["Connection"]:
+        """🔗 Get the connections of the port."""
+        return self.connecteds + self.connectings
+
     def parent(self) -> "Type":
         """👪 The parent type of the port or otherwise `NoTypeAssigned` is raised."""
         if self.type is None:
@@ -2270,13 +2314,24 @@ class ConnectionTiltField(RealField, abc.ABC):
     """↗️ The tilt of the connection."""
 
 
-class ConnectionOffsetField(RealField, abc.ABC):
-    """↕️ The offset of the connection."""
+class ConnectionGapField(RealField, abc.ABC):
+    """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece."""
 
-    offset: float = sqlmodel.Field(
-        default=0, description="↕️ The offset of the connection."
+    gap: float = sqlmodel.Field(
+        default=0,
+        description="↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
     )
-    """↕️ The offset of the connection."""
+    """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. """
+
+
+class ConnectionShiftField(RealField, abc.ABC):
+    """↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."""
+
+    shift: float = sqlmodel.Field(
+        default=0,
+        description="↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+    )
+    """↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."""
 
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
@@ -2284,7 +2339,8 @@ class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
 
 
 class ConnectionProps(
-    ConnectionOffsetField,
+    ConnectionShiftField,
+    ConnectionGapField,
     ConnectionTiltField,
     ConnectionRotationField,
     Props,
@@ -2293,7 +2349,8 @@ class ConnectionProps(
 
 
 class ConnectionInput(
-    ConnectionOffsetField,
+    ConnectionShiftField,
+    ConnectionGapField,
     ConnectionTiltField,
     ConnectionRotationField,
     Input,
@@ -2311,7 +2368,8 @@ class ConnectionInput(
 
 
 class ConnectionOutput(
-    ConnectionOffsetField,
+    ConnectionShiftField,
+    ConnectionGapField,
     ConnectionTiltField,
     ConnectionRotationField,
     Output,
@@ -2329,7 +2387,8 @@ class ConnectionOutput(
 
 
 class Connection(
-    ConnectionOffsetField,
+    ConnectionShiftField,
+    ConnectionGapField,
     ConnectionTiltField,
     ConnectionRotationField,
     TableEntity,
@@ -2499,7 +2558,11 @@ class Connection(
         except KeyError:
             pass
         try:
-            entity.offset = obj["offset"]
+            entity.gap = obj["gap"]
+        except KeyError:
+            pass
+        try:
+            entity.shift = obj["shift"]
         except KeyError:
             pass
         return entity
@@ -3185,6 +3248,9 @@ class DatabaseStore(Store, abc.ABC):
         """🔧 Get a store from the uri."""
         pass
 
+    def postDeleteKit(self: "SqliteStore") -> None:
+        return None
+
     def get(self: "DatabaseStore", operation: dict) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
@@ -3207,6 +3273,10 @@ class DatabaseStore(Store, abc.ABC):
     def put(
         self: "DatabaseStore", operation: dict, input: KitInput | TypeInput
     ) -> typing.Any:
+        # General:
+        # - Wrap iteration over relationships in list() to avoid iterator bugs
+        # - When deleting relationships, set property = [] after deleting all items and then add the new ones
+
         kitUri = operation["kitUri"]
         kind = operation["kind"]
 
@@ -3239,35 +3309,35 @@ class DatabaseStore(Store, abc.ABC):
                     .filter(Kit.uri == kitUri)
                     .all()
                 ]
-                design = Design.parse(input, types)
-                design.kit = kit
-                existingDesign = (
+                existingDesignUnion = (
                     self.session.query(Design, Kit)
                     .filter(
                         Kit.uri == kitUri,
-                        Design.name == design.name,
-                        Design.variant == design.variant,
+                        Design.name == input.name,
+                        Design.variant == input.variant,
                     )
                     .one_or_none()
                 )
-                if existingDesign is not None:
-                    try:
-                        self.session.delete(existingDesign)
-                        self.session.commit()
-                    except Exception as e:
-                        self.session.rollback()
-                        raise e
                 try:
-                    self.session.add(design)
-                    self.session.commit()
-                    return design
+                    if existingDesignUnion is not None:
+                        existingDesign = existingDesignUnion.Design
+                        self.session.delete(existingDesign)
+                        design = Design.parse(input, types)
+                        design.kit = kit
+                        self.session.add(design)
+                        self.session.commit()
+                    else:
+                        design = Design.parse(input, types)
+                        design.kit = kit
+                        self.session.add(design)
+                        self.session.commit()
                 except Exception as e:
                     self.session.rollback()
                     raise e
             case "type":
                 type = Type.parse(input)
                 type.kit = kit
-                existingType = (
+                existingTypeUnion = (
                     self.session.query(Type, Kit)
                     .filter(
                         Kit.uri == kitUri,
@@ -3276,12 +3346,80 @@ class DatabaseStore(Store, abc.ABC):
                     )
                     .one_or_none()
                 )
-                if existingType is not None:
-                    # TODO: Check if type is used in pieces and update them.
-                    raise FeatureNotYetSupported()
                 try:
-                    self.session.add(type)
-                    self.session.commit()
+                    if existingTypeUnion is not None:
+
+                        # gather
+                        existingType = existingTypeUnion.Type
+                        existingPorts = {p.id_: p for p in existingType.ports}
+                        usedPorts = {}
+                        for port in list(existingType.ports):
+                            for connection in port.connections():
+                                if connection.connectedPiece.type == existingType:
+                                    usedPorts[connection.connectedPort.id_] = (
+                                        connection.connectedPort
+                                    )
+                                if connection.connectingPiece.type == existingType:
+                                    usedPorts[connection.connectingPort.id_] = (
+                                        connection.connectingPort
+                                    )
+                        newPorts = {p.id_: p for p in type.ports}
+                        missingPorts = set(usedPorts.keys()) - set(newPorts.keys())
+                        if missingPorts:
+                            raise TypeHasNotAllUsedPorts(missingPorts)
+                        unusedPorts = set(existingPorts.keys()) - set(usedPorts.keys())
+
+                        # update
+                        existingType.icon = type.icon
+                        existingType.description = type.description
+                        existingType.unit = type.unit
+                        existingType.lastUpdateAt = datetime.datetime.now()
+                        for usedPortId, usedPort in usedPorts.items():
+                            usedPort.point = newPorts[usedPortId].point
+                            usedPort.direction = newPorts[usedPortId].direction
+
+                            for locator in list(usedPort.locators):
+                                self.session.delete(locator)
+                            usedPort.locators = []
+                            self.session.flush()
+
+                            newLocators = []
+                            for newLocator in list(newPorts[usedPortId].locators):
+                                newLocator.port = usedPort
+                                self.session.add(newLocator)
+                                newLocators.append(newLocator)
+                            usedPort.locators = newLocators
+                            self.session.flush()
+
+                        for unusedPort in list(unusedPorts):
+                            self.session.delete(existingPorts[unusedPort])
+                        existingType.ports = [
+                            p for p in existingType.ports if p.id_ not in unusedPorts
+                        ]
+                        self.session.flush()
+
+                        for newPortId, newPort in newPorts.items():
+                            if newPortId not in usedPorts:
+                                newPort.type = existingType
+                                self.session.add(newPort)
+                        self.session.flush()
+
+                        existingType.representations = []
+                        for representation in list(type.representations):
+                            representation.type = existingType
+                            self.session.add(representation)
+                        self.session.flush()
+
+                        existingType.qualities = []
+                        for quality in list(type.qualities):
+                            quality.type = existingType
+                            self.session.add(quality)
+                        self.session.flush()
+
+                        self.session.commit()
+                    else:
+                        self.session.add(type)
+                        self.session.commit()
                 except Exception as e:
                     self.session.rollback()
                     raise e
@@ -3356,14 +3494,16 @@ class SqliteStore(DatabaseStore):
         self.path = path
 
     @classmethod
-    def fromUri(cls, uri: str) -> "SqliteStore":
-        if not os.path.isabs(uri):
-            raise LocalKitUriIsNotAbsolute(uri)  # Currently unreachable
-        path = (
-            pathlib.Path(uri)
-            / pathlib.Path(KIT_LOCAL_FOLDERNAME)
-            / pathlib.Path(KIT_LOCAL_FILENAME)
-        )
+    def fromUri(cls, uri: str, toCache=False, fromCache=False) -> "SqliteStore":
+
+        if toCache:
+            path = cls.cache(uri)
+        else:
+            path = (
+                pathlib.Path(uri)
+                / pathlib.Path(KIT_LOCAL_FOLDERNAME)
+                / pathlib.Path(KIT_LOCAL_FILENAME)
+            )
         connectionString = f"sqlite:///{path}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
         return SqliteStore(uri, engine, path)
@@ -3374,6 +3514,66 @@ class SqliteStore(DatabaseStore):
             exist_ok=True,
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
+
+    def postDeleteKit(self: "SqliteStore") -> None:
+        # sqlachemy can't maintain the connection to the database after the file is deleted.
+        # Therefore, the process is terminated and will be restarted by the client.
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    def cache(remoteUri: str) -> str:
+        """📦 Cache a remote kit and delete the existing cache if it was already cached."""
+        if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
+            raise OnlyRemoteKitsCanBeCached(remoteUri)
+
+        cacheDir = os.path.expanduser("~/.semio/cache")
+        os.makedirs(cacheDir, exist_ok=True)
+
+        encodedUri = encode(remoteUri)
+        cacheDir = os.path.join(cacheDir, encodedUri)
+        if os.path.exists(cacheDir):
+            shutil.rmtree(cacheDir)
+        os.makedirs(cacheDir)
+
+        # TODO: Generalize to non-zip kits.
+
+        try:
+            response = requests.get(remoteUri)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            # TODO: Better error message.
+            raise KitNotFound(remoteUri)
+
+        with zipfile.ZipFile(io.BytesIO(response.content)) as zip:
+            zip.extractall(cacheDir)
+            paths = os.listdir(cacheDir)
+            while not ".semio" in paths:
+                if len(paths) != 1:
+                    raise KitZipDoesNotContainSemioFolder()
+                nestedPath = os.path.join(cacheDir, paths[0])
+                nestedDirectories = os.listdir(nestedPath)
+                for nestedDirectory in nestedDirectories:
+                    shutil.move(os.path.join(nestedPath, nestedDirectory), cacheDir)
+                os.rmdir(nestedPath)
+                paths = os.listdir(cacheDir)
+            # for directory in paths:
+            #     if directory != ".semio":
+            #         if os.path.isfile(os.path.join(cacheDir, directory)):
+            #             os.remove(os.path.join(cacheDir, directory))
+            #         else:
+            #             shutil.rmtree(os.path.join(cacheDir, directory))
+            path = (
+                pathlib.Path(cacheDir)
+                / pathlib.Path(KIT_LOCAL_FOLDERNAME)
+                / pathlib.Path(KIT_LOCAL_FILENAME)
+            )
+            session = sqlalchemy.orm.sessionmaker(
+                bind=sqlalchemy.create_engine(f"sqlite:///{path}")
+            )()
+            kit = session.query(Kit).one_or_none()
+            kit.uri = remoteUri
+            session.commit()
+            session.close()
+        return cacheDir
 
 
 class PostgresStore(DatabaseStore):
@@ -3416,11 +3616,13 @@ class PostgresStore(DatabaseStore):
 # The cache is necessary to persist the session!
 # An other option would be to eager load the relationships.
 @functools.lru_cache
-def StoreFactory(uri: str) -> Store:
+def StoreFactory(uri: str, toCache=False, fromCache=False) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created."""
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
     if uri.startswith("http"):
+        if uri.endswith(".zip"):
+            return SqliteStore.fromUri(uri, toCache, fromCache)
         raise RemoteKitsNotYetSupported()
     raise LocalKitUriIsNotAbsolute(uri)
 
@@ -3432,7 +3634,7 @@ def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
     return store, operation
 
 
-def get(code: str) -> typing.Any:
+def get(code: str, cache=False) -> typing.Any:
     """🔍 Get an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)

@@ -157,13 +157,13 @@ entity Connection {
     *connectedPieceId : int <<PK,FK>>
     *connectedPieceTypePortId : int <<FK>>
     ..
-    *offset : float
+    *gap : float
     *rotation : float
     ..
     *designId : int <<FK>>
 }
 note right of Connection
-    offset is in normal 
+    gap is in normal 
     direction and optional
     (can be set to 0).
     rotation is azimuthal

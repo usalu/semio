@@ -121,7 +121,7 @@ export const TOLERANCE = 1e-5
 // /** 🖇️ A connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection'
-//     offset: Scalars['Float']['output']
+//     gap: Scalars['Float']['output']
 //     rotation: Scalars['Float']['output']
 //     design?: Maybe<Design>
 //     connected: Side
@@ -461,7 +461,7 @@ export const TOLERANCE = 1e-5
 // export type ConnectionInput = {
 //     connecting: SideInput
 //     connected: SideInput
-//     offset?: InputMaybe<Scalars['Float']['input']>
+//     gap?: InputMaybe<Scalars['Float']['input']>
 //     rotation?: InputMaybe<Scalars['Float']['input']>
 // }
 
@@ -1082,9 +1082,9 @@ export default Hierarchy
 //             centerConnecting = childPort.point.toVector().revert().toTransform()
 //             moveToConnected = parentPort.point.toVector().toTransform()
 //             transform = rotation.after(centerConnecting)
-//             if connection.offset != 0.0:
-//                 offset = parentPort.direction.amplify(connection.offset).toTransform()
-//                 transform = offset.after(transform)
+//             if connection.gap != 0.0:
+//                 gap = parentPort.direction.amplify(connection.gap).toTransform()
+//                 transform = gap.after(transform)
 //             transform = moveToConnected.after(transform)
 //             hierarchy = Hierarchy(
 //                 piece=component.nodes[child]["piece"],
@@ -1168,12 +1168,9 @@ export const designToHierarchies = (
                 const moveToParent = parentPoint.toVector().toTransform()
                 let transform = new Transform()
                 transform = rotation.after(centerChild)
-                if (connection.offset !== 0) {
-                    const offset = parentDirection
-                        .clone()
-                        .multiplyScalar(connection.offset)
-                        .toTransform()
-                    transform = offset.after(transform)
+                if (connection.gap !== 0) {
+                    const gap = parentDirection.clone().multiplyScalar(connection.gap).toTransform()
+                    transform = gap.after(transform)
                 }
                 transform = moveToParent.after(transform)
                 const hierarchy = new Hierarchy(childPiece, transform)

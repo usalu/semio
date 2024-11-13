@@ -97,7 +97,7 @@ kit : !Kit{
             }
             rotation : !Float
             tilt : !Float
-            offset : !Float
+            gap : !Float
         ]
         qualities : *Quality[
             name : !String

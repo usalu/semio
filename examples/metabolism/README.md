@@ -1,21 +1,21 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/kit-horizontal-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/kit-horizontal.svg">
-        <img alt="semio kit" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/kit-horizontal.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/kit-horizontal-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/kit-horizontal.svg">
+        <img alt="semio kit" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/kit-horizontal.svg">
     </picture>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/designs.svg" alt="Designs"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/pieces.svg" alt="Pieces"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/connections.svg" alt="Connections"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/designs.svg" alt="Designs"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/pieces.svg" alt="Pieces"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/connections.svg" alt="Connections"></a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/types.svg" alt="Types"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/ports.svg" alt="Ports"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/qualities.svg" alt="Qualities"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/types.svg" alt="Types"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/ports.svg" alt="Ports"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/qualities.svg" alt="Qualities"></a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/representations.svg" alt="Representations"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/lods.svg" alt="LoDs"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/badges/tags.svg" alt="Tags"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/representations.svg" alt="Representations"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/lods.svg" alt="LoDs"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/badges/tags.svg" alt="Tags"></a>
     <br/>
     <i>🫀 Metabolism</i>
 </p>
@@ -35,9 +35,9 @@ Assuming I would have been Kisho Kurokawa and used semio I would chosen the foll
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/artifacts-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/artifacts.svg">
-        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/artifacts.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/artifacts-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/artifacts.svg">
+        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/artifacts.svg">
     </picture>
 </p>
 
@@ -45,177 +45,63 @@ Based on this formalization the design can be synthesized like this:
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/computation-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/computation.svg">
-        <img alt="Capsule Tower Computation" src="https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/computation.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/computation-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/computation.svg">
+        <img alt="Capsule Tower Computation" src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/computation.svg">
     </picture>
 </p>
 
 ## 🔨 Practice ... yey
 
-A bit overwhelmed? Just take a look at the Grasshopper script `nakagin-capule-tower.gh`💡
+A bit overwhelmed? Just take a look at the source files 💡
 
 ### ✏️ sketchpad
 
-![Sketchpad Overview](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/sketchpad-overview.png)
+![Sketchpad Overview](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/sketchpad-overview.png)
 
 ### 🦗 Grasshopper
 
 > Make sure to open Rhino 8 and set the model units to `Meter`.
 
-After opening the main Grasshopper definition
+Just open the main Grasshopper definition `nakagin-capule-tower.gh`, hit the `Load kit` toggle, lean back and enjoy 🍸
 
-![Grasshopper Parametric Design](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/grasshopper-definition-main.png)
+![Grasshopper Parametric Design](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/grasshopper-definition.png)
 
-you will see the following model:
+After around a minute, you should see the preview of the designs in Rhino:
 
-![Rhino Default Variant 1to500 volume](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/rhino-default-variant-1to500-volume.png)
+![Design Variants](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/design-variants-rhino.png)
 
-You can easily change the level of detail 🔍
+Every model has a 1to500 representation:
 
-![Rhino Default Variant 1to200 volume](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/rhino-default-variant-1to200-volume.png)
+![Rhino Default Variant 1to500 volume](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/rhino-default-variant-1to500-volume.png)
 
-Or the typology 🔁
+and a 1to200 representation:
 
-![Rhino Futuristic Variant 1to500 volume](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/rhino-futuristic-variant-1to500-volume.png)
+![Rhino Default Variant 1to200 volume](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/rhino-default-variant-1to200-volume.png)
 
-Or both 🪄
+Changing the typology is a breeze 🔁
 
-![Rhino Futuristic Variant 1to200 volume](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/rhino-futuristic-variant-1to200-volume.png)
+![Rhino Futuristic Variant 1to500 volume](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/rhino-futuristic-variant-1to500-volume.png)
+
+1to200 is still there 🪄
+
+![Rhino Futuristic Variant 1to200 volume](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/rhino-futuristic-variant-1to200-volume.png)
 
 In a conventional block-based approach, block instances have insertion planes and are thus not linked 🪨
 
 Switching from one to another variant would look either like this:
 
-![Block-based Default to Futuristic](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/block-based-default-to-futuristic.png)
+![Block-based Default to Futuristic](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/block-based-default-to-futuristic.png)
 
 or this:
 
-![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/block-based-futuristic-to-default.png)
+![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/block-based-futuristic-to-default.png)
 
 Due to the port-mechanism of semio, types are not inserted but instead linked 🔗
 
 Further they have metadata attached:
 
-![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/rhino-default-variant-metrics.png)
-
-### ⭕ GraphQL
-
-If you go to `http://127.0.0.1:24103/graphql/`, you can find all the data that is persisted and query it:
-
-```graphql
-{
-  loadLocalKit(directory: "SOMEPARENTDIRECTORY\\examples\\metabolism") {
-    kit {
-      name
-      description
-      url
-      homepage
-      types {
-        name
-        description
-        variant
-        unit
-        representations {
-          url
-          lod
-          tags
-        }
-        ports {
-          id
-          point {
-            x
-            y
-            z
-          }
-          direction {
-            x
-            y
-            z
-          }
-          locators {
-            group
-            subgroup
-          }
-        }
-        qualities {
-          name
-          value
-          unit
-          definition
-        }
-      }
-      designs {
-        name
-        description
-        variant
-        unit
-        pieces {
-          id
-          type {
-            name
-            variant
-          }
-          root {
-            plane {
-              origin {
-                x
-                y
-                z
-              }
-              xAxis {
-                x
-                y
-                z
-              }
-              yAxis {
-                x
-                y
-                z
-              }
-            }
-          }
-          diagram {
-            point {
-              x
-              y
-            }
-          }
-        }
-        connections {
-          connected {
-            piece {
-              id
-              type {
-                port {
-                  id
-                }
-              }
-            }
-          }
-          connecting {
-            piece {
-              id
-              type {
-                port {
-                  id
-                }
-              }
-            }
-          }
-          offset
-          rotation
-        }
-      }
-    }
-    error
-  }
-}
-```
-
-and replace `SOMEPARENTDIRECTORY\\examples\\metabolism` with your actual directory path then you should see this:
-
-![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/graphql-query.png)
+![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/rhino-default-variant-metrics.png)
 
 ### 💻 Integrations
 
@@ -223,7 +109,13 @@ Looking closely at the `types`, you see that `representation` are not (only) lin
 
 [Here](https://app.speckle.systems/projects/e7de1a2f8f) you can view the models even on your phone 📱
 
-![Speckle Models Overview](https://raw.githubusercontent.com/usalu/semio/main-tag/examples/metabolism/docs/speckle-models-overview.png)
+![Speckle Models Overview](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/speckle-models-overview.png)
+
+Or load the geometry directly from Speckle into Grasshopper ⬇️
+
+![Speckle Models Overview](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/grasshopper-speckle.png)
+
+> The Speckle Grasshopper plugin is not particulary the best 🥴 Most likely your receive components are not fetching and instead showing errors or show no errors and still not fetch ❌ If you replace them with fresh receive components and hit `Receive` then it should work ✅ And yes, you have to do that every time you open the file again 🥵
 
 ### 🤔 Curious, how it works?
 

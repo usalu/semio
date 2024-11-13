@@ -1,6 +1,6 @@
 ---
 name: semio
-version: 3.0.1
+version: 4.0.0
 authors:
 - Ueli Saluz
 description: >
@@ -16,6 +16,7 @@ keywords:
 - design_prototypes
 - design_systems
 - computer-based_design_synthesis
+- computer-generated_architecture
 - generative_design
 - procedural_modelling
 - parametric_design

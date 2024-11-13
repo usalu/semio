@@ -23,6 +23,7 @@ networkx = "^3.4.1"
 pytransform3d = "^3.7.0"
 # pyside6 = "^6.7.2"
 lark = "^1.2.2"
+requests = "^2.32.3"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.1"

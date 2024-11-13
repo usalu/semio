@@ -128,7 +128,8 @@ CREATE TABLE locator (
 CREATE TABLE connection (
 	rotation FLOAT NOT NULL, 
 	tilt FLOAT NOT NULL, 
-	"offset" FLOAT NOT NULL, 
+	gap FLOAT NOT NULL, 
+	shift FLOAT NOT NULL, 
 	"connectedPieceId" INTEGER NOT NULL, 
 	"connectedPortId" INTEGER NOT NULL, 
 	"connectingPieceId" INTEGER NOT NULL, 
