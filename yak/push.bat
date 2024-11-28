@@ -1,1 +1,0 @@
-"C:\Program Files\Rhino 8\System\Yak.exe" push semio-4.0.0-rh6_35-win.yak

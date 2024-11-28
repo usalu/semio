@@ -1,21 +1,21 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/semio-horizontal-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/semio-horizontal.svg">
-        <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/logo/semio-horizontal.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.12-1/logo/semio-horizontal-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/r24.12-1/logo/semio-horizontal.svg">
+        <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/logo/semio-horizontal.svg">
     </picture>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/doi-zenodo.svg" alt="Cite"></a>
-    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/latest-release.svg" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/doi-zenodo.svg" alt="Cite"></a>
+    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/latest-release.svg" alt="Latest Release"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/powered-by-csharp.svg" alt="C#"></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.11-1/badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/r24.12-1/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
     <i>✏️ Design-Information-Modeling for Kit-of-Parts Architecture.</i>
 </p>
@@ -99,7 +99,9 @@ So, what **is** semio?
 - A _designer-affine_ pencil for a placeholder-based, non-linear and iterative design space exploration 🔀
 - A _collaboration-friendly_ platform to design effectively in large teams 🤝
 - A _local-first_ storage to link, reuse and develop design systems 🔗
+- A _decentralized_ technology of sharing online assets with metadata 🌐
 - An _ai-boosted_ design assistant, ready for LLM super powers 🤖
+- A _conversion-free_ interoperability standard that sits on top of existing software and is not trying to get in between 🪆
 - A _ready-to-use_ API for other developers 👩‍💻
 
 ## 🤔 When should I design with semio?
@@ -145,44 +147,66 @@ The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 1. Install the latest version ⬇️
 1. Restart Rhino 🔄
 
-![Rhino Package](https://raw.githubusercontent.com/usalu/semio/r24.11-1/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
+![Rhino Package](https://raw.githubusercontent.com/usalu/semio/r24.12-1/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
 
 That's it!
 
 ### ✏️ sketchpad
 
-> This is a prototype ✏️ It doesn't use the latest versions of the engine and Grasshopper ⚠️
+> Still a prototype ✏️ It doesn't use the latest versions of the engine and Grasshopper ⚠️
 
 [sketchpad](https://github.com/usalu/semio/releases/download/r24.07-1/sketchpad.exe) is a portable program and needs no installation. To use sketchpad with Grasshopper you need to download semio Grasshopper `2.1.2`. If you want to use sketchpad standalone you need to download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.07-1/engine.zip). After this you can open the [examples](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip)🏎️
 
 ## 🏘️ Examples
 
-![Design Variants](https://raw.githubusercontent.com/usalu/semio/r24.11-1/examples/metabolism/docs/design-variants.png)
+### 🫀 Metabolism
 
-You can download the latest [examples](https://github.com/usalu/semio/releases/download/r24.11-1/examples.zip) or take a look [here](https://github.com/usalu/semio/blob/r24.11-1/examples/metabolism/README.md) 👀
+<!-- ![Metabolism getting started](https://raw.githubusercontent.com/usalu/metabolism/r24.12-1/docs/getting-started.gif) -->
+
+![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/r24.12-1/docs/design-variants.png)
+
+You can fetch the kit directly from within Grasshopper, take a look at the [source](https://github.com/usalu/metabolism/archive/refs/tags/r24.12-1.zip) or the [documentation](https://github.com/usalu/metabolism/tree/r24.12-1) 👀
 
 # 🧑‍💻 Developers
 
-semio offers two APIs: a simple REST OpenAPI and a complex GraphQL Relay API.
+semio offers two APIs: a simple REST OpenAPI and a uncomplex GraphQL Relay API.
 
 ### {} REST OpenAPI
 
-If you go to `http://127.0.0.1:24111/docs/` you find the Swagger UI:
+If you go to `http://127.0.0.1:24112/docs/` you find the Swagger UI:
 
-![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.11-1/openapi/docs/swagger.png)
+![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.12-1/openapi/docs/swagger.png)
 
 ### ⭕ GraphQL Relay
 
-> The GraphQL Relay API is still a prototype ✏️
+> Still a prototype ✏️
 
-If you go to `http://127.0.0.1:24111/graphql/` you find the GraphiQL UI:
+If you go to `http://127.0.0.1:24112/graphql/` you find the GraphiQL UI:
 
-![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.11-1/graphql/docs/graphiql.png)
+![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.12-1/graphql/docs/graphiql.png)
 
 # ❤️ Contribution
 
 New platforms wait to be reached, bugs wait to be found, examples wait to be created, documentation waits to be written, ...
 Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues), take a look under the [project site](https://github.com/users/usalu/projects/2) or just write me an [e-mail](semio-community@posteo.org) 👋
+
+## 💻 Building from source
+
+You need the following tools:
+
+- Windows
+- [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
+- [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
+- Python 3.12
+- [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
+
+If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
+
+Afterwards you can install poetry with this Powershell command:
+
+`(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -`
+
+Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 # 📊 Stats
 

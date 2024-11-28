@@ -1,29 +1,31 @@
 [tool.poetry]
 name = "semio-engine"
-version = "4.0.0"
+version = "4.0.2"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <semio-community@posteo.org>"]
 maintainers = ["Ueli Saluz <semio-community@posteo.org>"]
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/usalu/semio"
-# homepage = "https://usalu.github.io/semio"
+homepage = "https://github.com/usalu/semio"
 
 [tool.poetry.dependencies]
-python = ">=3.12,<3.13"
-sqlalchemy = "^2.0.36"
-uvicorn = { extras = ["standard"], version = "^0.32.0" }
-starlette = "^0.41.0"
+fastapi = { extras = ["standard"], version = "^0.115.5" }
 graphene = "^3.4.1"
-graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
-starlette-graphene3 = "^0.6.0"
-pydantic = "^2.9.2"
 graphene-pydantic = "^0.6.1"
-pint = "^0.24.3"
-networkx = "^3.4.1"
-pytransform3d = "^3.7.0"
-# pyside6 = "^6.7.2"
+graphene-sqlalchemy = { version = "^3.0.0rc1", allow-prereleases = true }
 lark = "^1.2.2"
+networkx = "^3.4.1"
+numpy = "^2.1.3"
+pint = "^0.24.3"
+pydantic = "^2.9.2"
+python = ">=3.12,<3.13"
+pytransform3d = "^3.7.0"
 requests = "^2.32.3"
+sqlalchemy = "^2.0.36"
+sqlmodel = "^0.0.22"
+starlette = "^0.41.0"
+starlette-graphene3 = "^0.6.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.1"

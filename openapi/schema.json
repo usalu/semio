@@ -1,8 +1,8 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "FastAPI",
-        "version": "0.1.0"
+        "title": "semio REST API",
+        "version": "4.0.2"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -776,7 +776,7 @@
                 "properties": {
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
@@ -790,7 +790,7 @@
                 "properties": {
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
@@ -828,7 +828,7 @@
                 "properties": {
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
@@ -967,7 +967,7 @@
                 "properties": {
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the port.",
                         "default": ""
@@ -981,7 +981,7 @@
                 "properties": {
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the port.",
                         "default": ""
@@ -1023,7 +1023,7 @@
                     },
                     "id_": {
                         "type": "string",
-                        "maxLength": 64,
+                        "maxLength": 128,
                         "title": "Id ",
                         "description": "\ud83c\udd94 The id of the port.",
                         "default": ""

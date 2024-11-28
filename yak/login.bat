@@ -1,1 +1,0 @@
-"C:\Program Files\Rhino 8\System\Yak.exe" login

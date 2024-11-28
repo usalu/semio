@@ -1,0 +1,3 @@
+[submodule "metabolism"]
+	path = examples/metabolism
+	url = https://github.com/usalu/metabolism

@@ -34,10 +34,10 @@ engine.py
 # TODO: Generalize to non-zip kits.
 # TODO: Think of using memory sqlite for caching.
 
-# Copilot
+# Copilot #
 
 
-## Dictionary
+## Dictionary ##
 
 
 # Symbol,Code,Abbreviation,Name,Description
@@ -125,7 +125,7 @@ engine.py
 # 🎚️,Z,Z,Z,The z-coordinate of the point.
 # ➡️,ZA,ZAx,ZAxis,The z-axis of the plane.
 
-# Imports
+# Imports #
 
 
 import abc
@@ -154,18 +154,18 @@ import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
 import lark
+import networkx
+import numpy
 import pint
+import pytransform3d
 import pydantic
+import requests
 import sqlalchemy
 import sqlalchemy.exc
 import sqlmodel
 import starlette
 import starlette_graphene3
 import uvicorn
-import networkx
-import numpy
-import pytransform3d
-import requests
 
 
 # Type Hints #
@@ -178,10 +178,10 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 # Constants #
 
 
-RELEASE = "r24.11-1"
-VERSION = "3.0.0"
+RELEASE = "r24.12-1"
+VERSION = "4.0.2"
 HOST = "127.0.0.1"
-PORT = 24111
+PORT = 24121
 NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
 URL_LENGTH_LIMIT = 1024
@@ -1425,7 +1425,7 @@ class PortIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
         default="",
         # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        max_length=NAME_LENGTH_LIMIT,
+        max_length=ID_LENGTH_LIMIT,
         description="🆔 The id of the port.",
     )
     """🆔 The id of the port."""
@@ -1518,7 +1518,7 @@ class Port(TableEntity, table=True):
         # alias="id",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
             "localId",
-            sqlalchemy.String(NAME_LENGTH_LIMIT),
+            sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
     )
@@ -2027,7 +2027,7 @@ class PieceIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
         default="",
         # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        max_length=NAME_LENGTH_LIMIT,
+        max_length=ID_LENGTH_LIMIT,
         description="🆔 The id of the piece.",
     )
     """🆔 The id of the piece."""
@@ -2115,7 +2115,7 @@ class Piece(TableEntity, table=True):
     id_: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "localId",
-            sqlalchemy.String(NAME_LENGTH_LIMIT),
+            sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
         exclude=True,
@@ -3484,6 +3484,53 @@ class SSLMode(enum.Enum):
     VERIFY_FULL = "verify-full"
 
 
+def cacheDir(remoteUri: str) -> str:
+    cacheDir = os.path.expanduser("~/.semio/cache")
+    encodedUri = encode(remoteUri)
+    return os.path.join(cacheDir, encodedUri)
+
+
+def cache(remoteUri: str) -> str:
+    """📦 Cache a remote kit and delete the existing cache if it was already cached."""
+    if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
+        raise OnlyRemoteKitsCanBeCached(remoteUri)
+
+    path = cacheDir(remoteUri)
+    os.makedirs(path, exist_ok=True)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+
+    # TODO: Generalize to non-zip kits.
+
+    try:
+        response = requests.get(remoteUri)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        # TODO: Better error message.
+        raise KitNotFound(remoteUri)
+
+    with zipfile.ZipFile(io.BytesIO(response.content)) as zip:
+        zip.extractall(path)
+        paths = os.listdir(path)
+        while not ".semio" in paths:
+            if len(paths) != 1:
+                raise KitZipDoesNotContainSemioFolder()
+            nestedPath = os.path.join(path, paths[0])
+            nestedDirectories = os.listdir(nestedPath)
+            for nestedDirectory in nestedDirectories:
+                shutil.move(os.path.join(nestedPath, nestedDirectory), path)
+            os.rmdir(nestedPath)
+            paths = os.listdir(path)
+        # for directory in paths:
+        #     if directory != ".semio":
+        #         if os.path.isfile(os.path.join(path, directory)):
+        #             os.remove(os.path.join(path, directory))
+        #         else:
+        #             shutil.rmtree(os.path.join(path, directory))
+    return path
+
+
 class SqliteStore(DatabaseStore):
     path: pathlib.Path
 
@@ -3494,19 +3541,25 @@ class SqliteStore(DatabaseStore):
         self.path = path
 
     @classmethod
-    def fromUri(cls, uri: str, toCache=False, fromCache=False) -> "SqliteStore":
-
-        if toCache:
-            path = cls.cache(uri)
-        else:
-            path = (
-                pathlib.Path(uri)
-                / pathlib.Path(KIT_LOCAL_FOLDERNAME)
-                / pathlib.Path(KIT_LOCAL_FILENAME)
-            )
-        connectionString = f"sqlite:///{path}"
+    def fromUri(cls, uri: str, path: str = "") -> "SqliteStore":
+        if path == "":
+            path = uri
+        sqlitePath = (
+            pathlib.Path(path)
+            / pathlib.Path(KIT_LOCAL_FOLDERNAME)
+            / pathlib.Path(KIT_LOCAL_FILENAME)
+        )
+        connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
-        return SqliteStore(uri, engine, path)
+        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        try:  # change uri if local kit is already created
+            kit = session.query(Kit).first()
+            kit.uri = uri
+            session.commit()
+            session.close()
+        except sqlalchemy.exc.OperationalError:
+            pass
+        return SqliteStore(uri, engine, sqlitePath)
 
     def initialize(self: "DatabaseStore") -> None:
         os.makedirs(
@@ -3519,61 +3572,6 @@ class SqliteStore(DatabaseStore):
         # sqlachemy can't maintain the connection to the database after the file is deleted.
         # Therefore, the process is terminated and will be restarted by the client.
         os.kill(os.getpid(), signal.SIGTERM)
-
-    def cache(remoteUri: str) -> str:
-        """📦 Cache a remote kit and delete the existing cache if it was already cached."""
-        if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
-            raise OnlyRemoteKitsCanBeCached(remoteUri)
-
-        cacheDir = os.path.expanduser("~/.semio/cache")
-        os.makedirs(cacheDir, exist_ok=True)
-
-        encodedUri = encode(remoteUri)
-        cacheDir = os.path.join(cacheDir, encodedUri)
-        if os.path.exists(cacheDir):
-            shutil.rmtree(cacheDir)
-        os.makedirs(cacheDir)
-
-        # TODO: Generalize to non-zip kits.
-
-        try:
-            response = requests.get(remoteUri)
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            # TODO: Better error message.
-            raise KitNotFound(remoteUri)
-
-        with zipfile.ZipFile(io.BytesIO(response.content)) as zip:
-            zip.extractall(cacheDir)
-            paths = os.listdir(cacheDir)
-            while not ".semio" in paths:
-                if len(paths) != 1:
-                    raise KitZipDoesNotContainSemioFolder()
-                nestedPath = os.path.join(cacheDir, paths[0])
-                nestedDirectories = os.listdir(nestedPath)
-                for nestedDirectory in nestedDirectories:
-                    shutil.move(os.path.join(nestedPath, nestedDirectory), cacheDir)
-                os.rmdir(nestedPath)
-                paths = os.listdir(cacheDir)
-            # for directory in paths:
-            #     if directory != ".semio":
-            #         if os.path.isfile(os.path.join(cacheDir, directory)):
-            #             os.remove(os.path.join(cacheDir, directory))
-            #         else:
-            #             shutil.rmtree(os.path.join(cacheDir, directory))
-            path = (
-                pathlib.Path(cacheDir)
-                / pathlib.Path(KIT_LOCAL_FOLDERNAME)
-                / pathlib.Path(KIT_LOCAL_FILENAME)
-            )
-            session = sqlalchemy.orm.sessionmaker(
-                bind=sqlalchemy.create_engine(f"sqlite:///{path}")
-            )()
-            kit = session.query(Kit).one_or_none()
-            kit.uri = remoteUri
-            session.commit()
-            session.close()
-        return cacheDir
 
 
 class PostgresStore(DatabaseStore):
@@ -3616,13 +3614,16 @@ class PostgresStore(DatabaseStore):
 # The cache is necessary to persist the session!
 # An other option would be to eager load the relationships.
 @functools.lru_cache
-def StoreFactory(uri: str, toCache=False, fromCache=False) -> Store:
+def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created."""
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
     if uri.startswith("http"):
         if uri.endswith(".zip"):
-            return SqliteStore.fromUri(uri, toCache, fromCache)
+            path = cacheDir(uri)
+            if not os.path.exists(path):
+                cache(uri)
+            return SqliteStore.fromUri(uri, path)
         raise RemoteKitsNotYetSupported()
     raise LocalKitUriIsNotAbsolute(uri)
 
@@ -4005,7 +4006,9 @@ graphqlSchema = graphene.Schema(
 
 # Rest #
 
-rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
+rest = fastapi.FastAPI(
+    title="semio REST API", version=VERSION, max_request_body_size=MAX_REQUEST_BODY_SIZE
+)
 
 
 @rest.get("/kits/{encodedKitUri}")

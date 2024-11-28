@@ -1,1 +1,0 @@
-All scripts must be executed in the dist subfolder.

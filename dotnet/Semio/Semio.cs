@@ -42,9 +42,9 @@ public static class Constants
     public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 2048;
     public const int DescriptionLengthLimit = 4096;
-    public const string Release = "r24.11-1";
-    public const int EnginePort = 24111;
-    public const string EngineAddress = "http://127.0.0.1:24111";
+    public const string Release = "r24.12-1";
+    public const int EnginePort = 24121;
+    public const string EngineAddress = "http://127.0.0.1:24121";
     public const float Tolerance = 1e-5f;
 }
 

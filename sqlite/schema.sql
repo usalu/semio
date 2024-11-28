@@ -80,7 +80,7 @@ CREATE TABLE representation (
 );
 CREATE TABLE port (
 	id INTEGER NOT NULL, 
-	"localId" VARCHAR(64), 
+	"localId" VARCHAR(128), 
 	"pointX" FLOAT NOT NULL, 
 	"pointY" FLOAT NOT NULL, 
 	"pointZ" FLOAT NOT NULL, 
@@ -106,7 +106,7 @@ CREATE TABLE quality (
 );
 CREATE TABLE piece (
 	id INTEGER NOT NULL, 
-	"localId" VARCHAR(64), 
+	"localId" VARCHAR(128), 
 	"typeId" INTEGER, 
 	"planeId" INTEGER, 
 	"screenPointX" INTEGER NOT NULL, 
