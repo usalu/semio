@@ -4147,42 +4147,7 @@ engine.mount(
 )
 engine.mount("/", rest)
 
-
 def start_engine(debug: bool = False):
-
-    if debug:
-        if os.path.exists("debug"):
-            # delete all files and folders in debug folder
-            for root, dirs, files in os.walk("debug", topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-        else:
-            os.makedirs("debug")
-
-        # write openapi schema to file
-        with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
-            json.dump(rest.openapi(), f, indent=4)
-
-        # write sqlite schema to file
-        sqliteSchemaPath = "../../sqlite/schema.sql"
-        if os.path.exists(sqliteSchemaPath):
-            os.remove(sqliteSchemaPath)
-        metadata_engine = sqlalchemy.create_engine("sqlite:///debug/semio.db")
-        sqlmodel.SQLModel.metadata.create_all(metadata_engine)
-        conn = sqlite3.connect("debug/semio.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT sql FROM sqlite_master WHERE type='table';")
-        sqliteSchema = cursor.fetchall()
-        with open(sqliteSchemaPath, "w", encoding="utf-8") as f:
-            for table in sqliteSchema:
-                f.write(f"{table[0]};\n")
-        conn.close()
-
-        # write graphql schema to file
-        with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
-            f.write(str(graphqlSchema))
 
     logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
     uvicorn.run(
@@ -4194,6 +4159,37 @@ def start_engine(debug: bool = False):
         log_config=None,
     )
 
+def build():
+    if os.path.exists("temp"):
+        for root, dirs, files in os.walk("temp", topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+    else:
+        os.makedirs("temp")
+
+    # write openapi schema to file
+    with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
+        json.dump(rest.openapi(), f, indent=4)
+
+    # write sqlite schema to file
+    sqliteSchemaPath = "../../sqlite/schema.sql"
+    if os.path.exists(sqliteSchemaPath):
+        os.remove(sqliteSchemaPath)
+    metadata_engine = sqlalchemy.create_engine("sqlite:///temp/semio.db")
+    sqlmodel.SQLModel.metadata.create_all(metadata_engine)
+    conn = sqlite3.connect("temp/semio.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table';")
+    sqliteSchema = cursor.fetchall()
+    with open(sqliteSchemaPath, "w", encoding="utf-8") as f:
+        for table in sqliteSchema:
+            f.write(f"{table[0]};\n")
+    conn.close()
+
+    with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
+        f.write(str(graphqlSchema))
 
 def main():
     parser = argparse.ArgumentParser()

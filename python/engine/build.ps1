@@ -2,6 +2,7 @@ if (-not (Test-Path ".venv")) {
     poetry install
 }
 .venv/Scripts/activate.ps1
+python -c "from engine import build; build()"
 if (Test-Path "build") {
     Remove-Item "build" -Recurse
 }
