@@ -173,7 +173,7 @@ semio offers two APIs: a simple REST OpenAPI and a complex GraphQL Relay API.
 
 ### {} REST OpenAPI
 
-If you go to `http://127.0.0.1:24121/docs/` you find the Swagger UI:
+If you go to `http://127.0.0.1:2412/docs/` you find the Swagger UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.12-1/openapi/docs/swagger.png)
 
@@ -181,7 +181,7 @@ If you go to `http://127.0.0.1:24121/docs/` you find the Swagger UI:
 
 > Still a prototype ✏️
 
-If you go to `http://127.0.0.1:24121/graphql/` you find the GraphiQL UI:
+If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/r24.12-1/graphql/docs/graphiql.png)
 
