@@ -1038,7 +1038,7 @@ public class ConvertUnitComponent : Component
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item,1);
         pManager.AddTextParameter("From Unit", "FU", "Unit to convert from.", GH_ParamAccess.item);
         pManager.AddTextParameter("To Unit", "TU", "Unit to convert to.", GH_ParamAccess.item);
     }

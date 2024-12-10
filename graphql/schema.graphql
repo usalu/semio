@@ -16,6 +16,7 @@ type Kit implements Node {
   name: String!
   description: String!
   icon: String!
+  version: String!
   remote: String!
   homepage: String!
   createdAt: DateTime!
@@ -336,10 +337,17 @@ input KitInputNode {
   """🖼️ The icon of the kit."""
   icon: String = ""
 
-  """🌐 The remote of the kit."""
+  """
+  🔀 The optional version of the kit. No version means the latest version.
+  """
+  version: String = ""
+
+  """
+  ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+  """
   remote: String = ""
 
-  """🌐 The homepage of the kit."""
+  """🏠 The optional url of the homepage of the kit."""
   homepage: String = ""
 
   """🧩 The types of the kit."""
@@ -359,7 +367,9 @@ input TypeInputNode {
   """🖼️ The icon of the type."""
   icon: String = ""
 
-  """🔀 The variant of the type."""
+  """
+  🔀 The optional variant of the type. No variant means the default variant.
+  """
   variant: String = ""
 
   """📏 The unit of the type."""
@@ -461,7 +471,9 @@ input DesignInputNode {
   """🖼️ The icon of the design."""
   icon: String = ""
 
-  """🔀 The variant of the design."""
+  """
+  🔀 The optional variant of the design. No variant means the default variant.
+  """
   variant: String = ""
 
   """📏 The unit of the design."""
@@ -506,7 +518,9 @@ input TypeIdInputNode {
   """📛 The name of the type."""
   name: String!
 
-  """🔀 The variant of the type."""
+  """
+  🔀 The optional variant of the type. No variant means the default variant.
+  """
   variant: String = ""
 }
 

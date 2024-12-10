@@ -728,5 +728,17 @@ namespace Semio.Grasshopper
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap unit_convert_24x24
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("unit_convert_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

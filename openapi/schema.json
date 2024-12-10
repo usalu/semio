@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "semio REST API",
-        "version": "4.0.2"
+        "version": "4.1.0"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -458,7 +458,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the design.",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
@@ -523,7 +523,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the design.",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
@@ -609,18 +609,25 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
                     },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "description": "\ud83d\udd00 The optional version of the kit. No version means the latest version.",
+                        "default": ""
+                    },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "types": {
@@ -675,18 +682,25 @@
                         "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
                         "default": ""
                     },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "description": "\ud83d\udd00 The optional version of the kit. No version means the latest version.",
+                        "default": ""
+                    },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "createdAt": {
@@ -1281,7 +1295,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     }
                 },
@@ -1318,7 +1332,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
@@ -1383,7 +1397,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
