@@ -156,7 +156,6 @@ import graphene_sqlalchemy
 import lark
 import networkx
 import numpy
-import pint
 import pytransform3d
 import pydantic
 import requests
@@ -178,8 +177,8 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 # Constants #
 
 
-RELEASE = "r24.12-1"
-VERSION = "4.0.2"
+RELEASE = "r24.12-2"
+VERSION = "4.1.0"
 HOST = "127.0.0.1"
 PORT = 2412
 NAME_LENGTH_LIMIT = 64
@@ -220,8 +219,6 @@ ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[
 ]
 MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  # 50MB
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
-
-ureg = pint.UnitRegistry()
 
 
 # Utility
@@ -475,9 +472,14 @@ class Semio(sqlmodel.SQLModel, table=True):
     release: str = sqlmodel.Field(
         default=RELEASE,
         primary_key=True,
-        description="🍾 The release of the engine that created this database.",
+        description="🍾 The current release of semio.",
     )
-    """🍾 The release of the engine that created this database."""
+    """🍾 The current release of semio."""
+    engine: str = sqlmodel.Field(
+        default=VERSION,
+        description="⚙️ The version of the engine that created this database.",
+    )
+    """⚙️ The version of the engine that created this database."""
     createdAt: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="⌚ The time when the database was created.",
@@ -1810,14 +1812,14 @@ class TypeIconField(RealField, abc.ABC):
 
 
 class TypeVariantField(RealField, abc.ABC):
-    """🔀 The variant of the type."""
+    """🔀 The optional variant of the type. No variant means the default variant."""
 
     variant: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The variant of the type.",
+        description="🔀 The optional variant of the type. No variant means the default variant.",
     )
-    """🔀 The variant of the type."""
+    """🔀 The optional variant of the type. No variant means the default variant."""
 
 
 class TypeUnitField(RealField, abc.ABC):
@@ -2629,14 +2631,14 @@ class DesignIconField(RealField, abc.ABC):
 
 
 class DesignVariantField(RealField, abc.ABC):
-    """🔀 The variant of the design."""
+    """🔀 The optional variant of the design. No variant means the default variant."""
 
     variant: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The variant of the design.",
+        description="🔀 The optional variant of the design. No variant means the default variant.",
     )
-    """🔀 The variant of the design."""
+    """🔀 The optional variant of the design. No variant means the default variant."""
 
 
 class DesignUnitField(RealField, abc.ABC):
@@ -2880,26 +2882,37 @@ class KitIconField(RealField, abc.ABC):
     """🖼️ The icon of the kit."""
 
 
+class KitVersionField(RealField, abc.ABC):
+    """🔀 The optional version of the kit. No version means the latest version."""
+
+    version: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="🔀 The optional version of the kit. No version means the latest version.",
+    )
+    """🔀 The optional version of the kit. No version means the latest version."""
+
+
 class KitRemoteField(RealField, abc.ABC):
-    """🌐 The remote of the kit."""
+    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
 
     remote: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🌐 The remote of the kit.",
+        description="☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
     )
-    """🌐 The remote of the kit."""
+    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
 
 
 class KitHomepage(RealField, abc.ABC):
-    """🌐 The homepage of the kit."""
+    """🏠 The optional url of the homepage of the kit."""
 
     homepage: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🌐 The homepage of the kit.",
+        description="🏠 The optional url of the homepage of the kit.",
     )
-    """🌐 The homepage of the kit."""
+    """🏠 The optional url of the homepage of the kit."""
 
 
 class KitCreatedAtField(RealField, abc.ABC):
@@ -2929,6 +2942,7 @@ class KitId(KitUriField, Id):
 class KitProps(
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2941,6 +2955,7 @@ class KitProps(
 class KitInput(
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2963,6 +2978,7 @@ class KitOutput(
     KitCreatedAtField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2986,6 +3002,7 @@ class Kit(
     KitCreatedAtField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -4139,13 +4156,14 @@ async def delete_design(
 # Engine #
 
 engine = starlette.applications.Starlette()
+engine.mount("/api", rest)
 engine.mount(
     "/graphql",
     starlette_graphene3.GraphQLApp(
         graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()
     ),
 )
-engine.mount("/", rest)
+
 
 def start_engine(debug: bool = False):
 
@@ -4158,6 +4176,7 @@ def start_engine(debug: bool = False):
         access_log=False,
         log_config=None,
     )
+
 
 def build():
     if os.path.exists("temp"):
@@ -4190,6 +4209,7 @@ def build():
 
     with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))
+
 
 def main():
     parser = argparse.ArgumentParser()
