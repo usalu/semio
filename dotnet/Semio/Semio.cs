@@ -1593,27 +1593,27 @@ public class ClientException : ApiException
 
 public interface IApi
 {
-    [Get("api/kits/{encodedKitUri}")]
+    [Get("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
 
-    [Put("api/kits/{encodedKitUri}")]
+    [Put("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body] Kit input);
 
-    [Delete("api/kits/{encodedKitUri}")]
+    [Delete("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-    [Put("api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    [Put("/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
     Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeNameAndVariant, [Body] Type input);
 
-    [Delete("api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
     Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeNameAndVariant);
 
-    [Put("api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
     Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignNameAndVariant,
         [Body] Design input);
 
-    [Delete("api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
     Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignNameAndVariant);
 }
 

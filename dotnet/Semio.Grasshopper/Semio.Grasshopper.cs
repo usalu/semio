@@ -1050,14 +1050,14 @@ public class ConvertUnitComponent : Component
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var value = 0.0f;
+        var value = 0.0;
         var from = "";
         var to = "";
         DA.GetData(0, ref value);
         DA.GetData(1, ref from);
         DA.GetData(2, ref to);
-        var convertedValue = Semio.Utility.Units.Convert(value, from, to);
-        DA.SetData(0, convertedValue);
+        var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
+        DA.SetData(0, (double)convertedValue);
     }
 }
 
@@ -1817,8 +1817,6 @@ public class ClearCacheComponent : Component
     }
 }
 
-#endregion
-
 #region Putting
 
 public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new()
@@ -1976,6 +1974,8 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
         return null;
     }
 }
+
+#endregion
 
 #endregion
 

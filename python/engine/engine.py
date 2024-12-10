@@ -4034,7 +4034,7 @@ async def kit(
     encodedKitUri: ENCODED_PATH,
 ) -> KitOutput:
     try:
-        return get(request.url.path.removeprefix("/kits/"))
+        return get(request.url.path.removeprefix("/api/kits/"))
     except ClientError as e:
         statusCode = 400
         error = e
@@ -4051,7 +4051,7 @@ async def create_kit(
     encodedKitUri: ENCODED_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4068,7 +4068,7 @@ async def delete_kit(
     encodedKitUri: ENCODED_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
@@ -4087,7 +4087,7 @@ async def put_type(
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4105,7 +4105,7 @@ async def delete_type(
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
@@ -4124,7 +4124,7 @@ async def put_design(
     encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4142,7 +4142,7 @@ async def delete_design(
     encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
