@@ -68,7 +68,9 @@ Symbol,Code,Abbreviation,Name,Description
 Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
 Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
 🔄,Up,Upd,Update,Update the props of the {{NAME}}. Optionally empty the {{NAME}} before.
+🔀,Vn?,Vnt,Variant,The optional variant of the {{PARENT}}. No variant means the default variant.", 
 ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+🔀,Ve,Ver,Version,The optional version of the kit. No version means the latest version.
 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
 🏷️,Vl,Val,Value,The value of the tag.
 🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.

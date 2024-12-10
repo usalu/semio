@@ -25,6 +25,7 @@ using QuikGraph;
 using QuikGraph.Algorithms;
 using QuikGraph.Algorithms.Search;
 using Refit;
+using UnitsNet;
 
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
@@ -132,6 +133,153 @@ public static class Utility
         animal = char.ToUpper(animal[0]) + animal.Substring(1);
         return $"{adjective}{animal}{number}";
     }
+
+    public class Units
+    {
+        /// <summary>
+        /// Adapted from https://github.com/microsoft/PowerToys/tree/95919508758e71dca88632add8a03c089a822d1c/src/modules/launcher/Plugins/Community.PowerToys.Run.Plugin.UnitConverter
+        /// </summary>
+        private class PowerToysRunUnitConverter
+        {
+            internal class ConvertModel
+            {
+                internal double Value { get; set; }
+
+                internal string FromUnit { get; set; }
+
+                internal string ToUnit { get; set; }
+
+                internal ConvertModel()
+                {
+                }
+
+                internal ConvertModel(double value, string fromUnit, string toUnit)
+                {
+                    Value = value;
+                    FromUnit = fromUnit;
+                    ToUnit = toUnit;
+                }
+            }
+
+            internal class UnitConversionResult
+            {
+                internal static string TitleFormat { get; set; } = "G14";
+
+                internal static string CopyFormat { get; set; } = "R";
+
+                internal double ConvertedValue { get; }
+
+                internal string UnitName { get; }
+
+                internal QuantityInfo QuantityInfo { get; }
+
+                internal UnitConversionResult(double convertedValue, string unitName, QuantityInfo quantityInfo)
+                {
+                    ConvertedValue = convertedValue;
+                    UnitName = unitName;
+                    QuantityInfo = quantityInfo;
+                }
+            }
+
+            internal static class UnitHandler
+            {
+                private static readonly QuantityInfo[] _included = new QuantityInfo[]
+                {
+                    Length.Info,
+                    Area.Info,
+                    Volume.Info,
+                    Duration.Info,
+                    Energy.Info,
+                    Power.Info,
+                    Pressure.Info,
+                    Mass.Info,
+                    Angle.Info,
+                    Temperature.Info,
+                    Acceleration.Info,
+                    Speed.Info,
+                    Information.Info,
+                };
+
+                /// <summary>
+                /// Given string representation of unit, converts it to the enum.
+                /// </summary>
+                /// <returns>Corresponding enum or null.</returns>
+                private static Enum GetUnitEnum(string unit, QuantityInfo unitInfo)
+                {
+                    UnitInfo first = Array.Find(unitInfo.UnitInfos, info =>
+                        string.Equals(unit, info.Name, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(unit, info.PluralName, StringComparison.OrdinalIgnoreCase));
+
+                    if (first != null)
+                    {
+                        return first.Value;
+                    }
+
+                    if (UnitsNetSetup.Default.UnitParser.TryParse(unit, unitInfo.UnitType, out Enum enum_unit))
+                    {
+                        return enum_unit;
+                    }
+
+                    var cultureInfoEnglish = new System.Globalization.CultureInfo("en-US");
+                    if (UnitsNetSetup.Default.UnitParser.TryParse(unit, unitInfo.UnitType, cultureInfoEnglish, out Enum enum_unit_en))
+                    {
+                        return enum_unit_en;
+                    }
+
+                    return null;
+                }
+
+                /// <summary>
+                /// Given parsed ConvertModel, computes result. (E.g "1 foot in cm").
+                /// </summary>
+                /// <returns>The converted value as a double.</returns>
+                internal static double ConvertInput(ConvertModel convertModel, QuantityInfo quantityInfo)
+                {
+                    var fromUnit = GetUnitEnum(convertModel.FromUnit, quantityInfo);
+                    var toUnit = GetUnitEnum(convertModel.ToUnit, quantityInfo);
+
+                    if (fromUnit != null && toUnit != null)
+                    {
+                        return UnitsNet.UnitConverter.Convert(convertModel.Value, fromUnit, toUnit);
+                    }
+
+                    return double.NaN;
+                }
+
+                /// <summary>
+                /// Given ConvertModel returns collection of possible results.
+                /// </summary>
+                /// <returns>The converted value as a double.</returns>
+                internal static IEnumerable<UnitConversionResult> Convert(ConvertModel convertModel)
+                {
+                    var results = new List<UnitConversionResult>();
+                    foreach (var quantityInfo in _included)
+                    {
+                        double convertedValue = UnitHandler.ConvertInput(convertModel, quantityInfo);
+
+                        if (!double.IsNaN(convertedValue))
+                        {
+                            UnitConversionResult result = new UnitConversionResult(convertedValue, convertModel.ToUnit, quantityInfo);
+                            results.Add(result);
+                        }
+                    }
+
+                    return results;
+                }
+            }
+        }
+        public static float Convert(float value, string fromUnit, string toUnit)
+        {
+            var convertModel = new PowerToysRunUnitConverter.ConvertModel(value, fromUnit, toUnit);
+            var results = PowerToysRunUnitConverter.UnitHandler.Convert(convertModel);
+            if (results.Count() == 0)
+            {
+                return float.NaN;
+            }
+            return (float)results.First().ConvertedValue;
+        }
+    }
+
 }
 
 #endregion
@@ -748,14 +896,12 @@ public class Port : Model<Port>
         }
 
         if (Locators.Count != 0)
-        {
             foreach (var locator in Locators)
             {
                 var (isValidLocator, errorsLocator) = locator.Validate();
                 isValid = isValid && isValidLocator;
                 errors.AddRange(errorsLocator.Select(e => "A locator is invalid: " + e));
             }
-        }
 
         return (isValid, errors);
     }
@@ -980,6 +1126,7 @@ public class Piece : Model<Piece>
             isValid = isValid && isValidPlane;
             errors.AddRange(errorsPlane.Select(e => "The plane is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -1065,16 +1212,20 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
+    ///     connecting piece.
     /// </summary>
     [NumberProp("↕️", "Gp?", "Gap",
         "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
     public float Gap { get; set; } = 0;
+
     /// <summary>
-    ///    ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+    ///     ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the
+    ///     connecting piece.
     /// </summary>
 
-    [NumberProp("↔️", "Sf?", "Sft", "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
+    [NumberProp("↔️", "Sf?", "Sft",
+        "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
     public float Shift { get; set; } = 0;
 
     public override string ToString()
@@ -1120,9 +1271,9 @@ public class DesignProps : Model<Design>
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔀 The optional value of the design.
+    ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     /// <summary>
@@ -1198,13 +1349,15 @@ public class Design : DesignProps
                 foreach (var connection in clone.Connections)
                     if (component.Value.ContainsKey(connection.Connected.Piece.Id) &&
                         component.Value.ContainsKey(connection.Connecting.Piece.Id))
-                        subGraph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+                        subGraph.AddEdge(
+                            new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
                 var root = subGraph.Vertices.FirstOrDefault(p => pieces[p].Plane != null);
                 if (root == null)
                 {
                     root = subGraph.Vertices.First();
                     pieces[root].Plane = new Plane();
                 }
+
                 var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(subGraph);
                 bfs.SetRootVertex(root);
                 bfs.TreeEdge += (g, edge) =>
@@ -1222,7 +1375,8 @@ public class Design : DesignProps
                     var childPort =
                         ports[child.Type.Name][child.Type.Variant][
                             isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
-                    var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction, childPort.Point,
+                    var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
+                        childPort.Point,
                         childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
                     child.Plane = childPlane;
                 };
@@ -1272,19 +1426,24 @@ public class Design : DesignProps
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
 
-        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList().Select(c => c.Connected.Piece.Id).ToArray();
+        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList()
+            .Select(c => c.Connected.Piece.Id).ToArray();
         if (nonExistingConnectedPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectedPiece in nonExistingConnectedPieces)
-                errors.Add($"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
+                errors.Add(
+                    $"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
         }
-        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList().Select(c => c.Connecting.Piece.Id).ToArray();
+
+        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList()
+            .Select(c => c.Connecting.Piece.Id).ToArray();
         if (nonExistingConnectingPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectingPiece in nonExistingConnectingPieces)
-                errors.Add($"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
+                errors.Add(
+                    $"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
         }
 
         return (isValid, errors);
@@ -1304,9 +1463,9 @@ public class DesignId : Model<DesignId>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔀 The optional value of the design.
+    ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     public static implicit operator DesignId(DesignProps design)
@@ -1349,6 +1508,12 @@ public class KitProps : Model<Kit>
     public string Icon { get; set; } = "";
 
     /// <summary>
+    ///     🔀 The optional version of the kit. No version means the latest version.
+    /// </summary>
+    [Name("🔀", "Vr?", "Ver", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
+    public string Version { get; set; } = "";
+
+    /// <summary>
     ///     ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
     /// </summary>
     [Url("☁️", "Rm?", "Rmt", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
@@ -1389,12 +1554,14 @@ public class Kit : KitProps
             isValid = isValid && isValidType;
             errors.AddRange(errorsType.Select(e => "A type is invalid: " + e));
         }
+
         foreach (var design in Designs)
         {
             var (isValidDesign, errorsDesign) = design.Validate();
             isValid = isValid && isValidDesign;
             errors.AddRange(errorsDesign.Select(e => "A design is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
