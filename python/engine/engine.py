@@ -3584,6 +3584,10 @@ class SqliteStore(DatabaseStore):
             exist_ok=True,
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
+        session = sqlalchemy.orm.sessionmaker(bind=self.engine)()
+        session.add(Semio())
+        session.commit()
+        session.close()
 
     def postDeleteKit(self: "SqliteStore") -> None:
         # sqlachemy can't maintain the connection to the database after the file is deleted.
