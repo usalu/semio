@@ -1591,6 +1591,7 @@ class Port(TableEntity, table=True):
         self.directionY = direction.y
         self.directionZ = direction.z
 
+    @property
     def connections(self) -> list["Connection"]:
         """🔗 Get the connections of the port."""
         return self.connecteds + self.connectings
@@ -2120,7 +2121,6 @@ class Piece(TableEntity, table=True):
             sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
-        exclude=True,
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -2186,6 +2186,11 @@ class Piece(TableEntity, table=True):
         """↘️ Set the masked screen point of the piece."""
         self.screenPointX = screenPoint.x
         self.screenPointY = screenPoint.y
+
+    @property
+    def connections(self) -> list["Connection"]:
+        """🔗 Get the connections of the piece."""
+        return self.connecteds + self.connectings
 
     def parent(self) -> "Design":
         """👪 The parent design of the piece or otherwise `NoParentAssigned` is raised."""
@@ -3585,8 +3590,10 @@ class SqliteStore(DatabaseStore):
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
         session = sqlalchemy.orm.sessionmaker(bind=self.engine)()
-        session.add(Semio())
-        session.commit()
+        existingSemio = session.query(Semio).one_or_none()
+        if not existingSemio:
+            session.add(Semio())
+            session.commit()
         session.close()
 
     def postDeleteKit(self: "SqliteStore") -> None:
@@ -3678,35 +3685,38 @@ def delete(code: str) -> typing.Any:
 
 
 GRAPHQLTYPES = {
-    str: graphene.NonNull(graphene.String),
-    int: graphene.NonNull(graphene.Int),
-    float: graphene.NonNull(graphene.Float),
-    bool: graphene.NonNull(graphene.Boolean),
-    list[str]: graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    ScreenPoint: graphene.NonNull(lambda: ScreenPointNode),
-    Point: graphene.NonNull(lambda: PointNode),
-    Vector: graphene.NonNull(lambda: VectorNode),
-    Plane: graphene.NonNull(lambda: PlaneNode),
-    Representation: graphene.NonNull(lambda: RepresentationNode),
-    list[Representation]: graphene.NonNull(
+    "str": graphene.NonNull(graphene.String),
+    "int": graphene.NonNull(graphene.Int),
+    "float": graphene.NonNull(graphene.Float),
+    "bool": graphene.NonNull(graphene.Boolean),
+    "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
+    "ScreenPoint": graphene.NonNull(lambda: ScreenPointNode),
+    "Point": graphene.NonNull(lambda: PointNode),
+    "Vector": graphene.NonNull(lambda: VectorNode),
+    "Plane": graphene.NonNull(lambda: PlaneNode),
+    "Representation": graphene.NonNull(lambda: RepresentationNode),
+    "list[Representation]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: RepresentationNode))
     ),
-    Port: graphene.NonNull(lambda: PortNode),
-    PortId: graphene.NonNull(lambda: PortNode),
-    list[Port]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    Quality: graphene.NonNull(lambda: QualityNode),
-    list[Quality]: graphene.NonNull(
+    "Port": graphene.NonNull(lambda: PortNode),
+    "PortId": graphene.NonNull(lambda: PortNode),
+    "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "Quality": graphene.NonNull(lambda: QualityNode),
+    "list[Quality]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
     ),
-    Type: graphene.NonNull(lambda: TypeNode),
-    TypeId: graphene.NonNull(lambda: TypeNode),
-    list[Type]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    Piece: graphene.NonNull(lambda: PieceNode),
-    PieceId: graphene.NonNull(lambda: PieceNode),
-    Side: graphene.NonNull(lambda: SideNode),
-    Connection: graphene.NonNull(lambda: ConnectionNode),
-    Design: graphene.NonNull(lambda: DesignNode),
-    Kit: graphene.NonNull(lambda: KitNode),
+    "Type": graphene.NonNull(lambda: TypeNode),
+    "TypeId": graphene.NonNull(lambda: TypeNode),
+    "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "Piece": graphene.NonNull(lambda: PieceNode),
+    "PieceId": graphene.NonNull(lambda: PieceNode),
+    "Side": graphene.NonNull(lambda: SideNode),
+    "Connection": graphene.NonNull(lambda: ConnectionNode),
+    "list['Connection']": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: ConnectionNode))
+    ),
+    "Design": graphene.NonNull(lambda: DesignNode),
+    "Kit": graphene.NonNull(lambda: KitNode),
 }
 
 
@@ -3757,10 +3767,11 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, **options):
-        if "exclude_fields" not in options:
-            options["exclude_fields"] = tuple(
-                k for k, v in model.__fields__.items() if v.exclude
-            )
+        excludedFields = tuple(k for k, v in model.__fields__.items() if v.exclude)
+        if "exclude_fields" in options:
+            options["exclude_fields"] += excludedFields
+        else:
+            options["exclude_fields"] = excludedFields
         if "name" not in options:
             options["name"] = model.__name__
 
@@ -3781,7 +3792,17 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
             prop = getattr(model, name)
             prop_getter = prop.fget
             prop_return_type = inspect.signature(prop_getter).return_annotation
-            setattr(cls, name, GRAPHQLTYPES[prop_return_type])
+            setattr(
+                cls,
+                name,
+                GRAPHQLTYPES[
+                    (
+                        str(prop_return_type)
+                        if prop_return_type.__name__.startswith("list")
+                        else prop_return_type.__name__
+                    )
+                ],
+            )
             setattr(cls, f"resolve_{name}", make_resolve(name))
 
         super().__init_subclass_with_meta__(model=model, **options)
@@ -3871,6 +3892,7 @@ class PlaneInputNode(InputNode):
 class PortNode(TableEntityNode):
     class Meta:
         model = Port
+        exclude_fields = ("connecteds", "connectings")
 
     locators = graphene.List(graphene.NonNull(lambda: LocatorNode))
 
@@ -3916,6 +3938,7 @@ class TypeIdInputNode(InputNode):
 class PieceNode(TableEntityNode):
     class Meta:
         model = Piece
+        exclude_fields = ("connecteds", "connectings")
 
 
 class PieceInputNode(InputNode):
@@ -3965,14 +3988,14 @@ class ConnectionNode(TableEntityNode):
             "connectingPort",
         )
 
-    # connected = graphene.NonNull(SideNode)
-    # connecting = graphene.NonNull(SideNode)
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
 
-    # def resolve_connected(connection: Connection, info):
-    #     return connection.connected
+    def resolve_connected(self, info):
+        return self.connected
 
-    # def resolve_connecting(connection: Connection, info):
-    #     return connection.connecting
+    def resolve_connecting(self, info):
+        return self.connecting
 
 
 class ConnectionInputNode(InputNode):

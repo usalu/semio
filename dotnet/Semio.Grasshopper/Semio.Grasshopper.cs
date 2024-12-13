@@ -1059,6 +1059,7 @@ public class ConvertUnitComponent : Component
         var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
         DA.SetData(0, (double)convertedValue);
     }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
 #endregion

@@ -120,7 +120,6 @@ import {
     Plane,
     Transform,
     semioToThreeRotation,
-    Plane
 } from './semio'
 import adjectives from './assets/adjectives'
 import animals from './assets/animals'
@@ -1130,16 +1129,16 @@ const ArtifactAvatar = ({
     const [data, kind] = getIconData(icon)
     const draggableProps = draggableId
         ? (() => {
-              const { attributes, listeners, setNodeRef } = useDraggable({
-                  id: draggableId
-              })
+            const { attributes, listeners, setNodeRef } = useDraggable({
+                id: draggableId
+            })
 
-              return {
-                  ref: setNodeRef,
-                  ...listeners,
-                  ...attributes
-              }
-          })()
+            return {
+                ref: setNodeRef,
+                ...listeners,
+                ...attributes
+            }
+        })()
         : {}
 
     switch (kind) {
@@ -1203,7 +1202,7 @@ const Gizmo = (): JSX.Element => {
             <GizmoViewport
                 labels={['X', 'Z', '-Y']}
                 axisColors={[colors.primary, colors.tertiary, colors.secondary]}
-                // font='Anta'
+            // font='Anta'
             />
         </GizmoHelper>
     )
@@ -1916,14 +1915,14 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                         pieces: designRef.current.pieces.map((p) =>
                             p.id === node.id
                                 ? {
-                                      ...p,
-                                      diagram: {
-                                          point: {
-                                              x: Math.round(updatedNodePosition?.x ?? node.x),
-                                              y: Math.round(updatedNodePosition?.y ?? node.y)
-                                          }
-                                      }
-                                  }
+                                    ...p,
+                                    diagram: {
+                                        point: {
+                                            x: Math.round(updatedNodePosition?.x ?? node.x),
+                                            y: Math.round(updatedNodePosition?.y ?? node.y)
+                                        }
+                                    }
+                                }
                                 : p
                         )
                     } as DesignInput
@@ -1996,8 +1995,8 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
             }
             navigator.clipboard
                 .writeText(JSON.stringify(designSnippetToCopy))
-                .then(() => {})
-                .catch((err) => {})
+                .then(() => { })
+                .catch((err) => { })
         }
     }
 
@@ -2071,7 +2070,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
         return false
     }
 
-    const onContextMenu = (x: number, y: number, event: any): void => {}
+    const onContextMenu = (x: number, y: number, event: any): void => { }
 
     const renderNodeText = (
         data: IPieceNode,
@@ -2216,7 +2215,7 @@ const DiagramEditor = forwardRef((props: DiagramEditorProps, ref) => {
                     showGraphControls={false}
                     canSwapEdge={canSwapEdge}
                     onSwapEdge={onSwapEdge}
-                    onArrowClicked={(selectedEdge: IEdge): void => {}}
+                    onArrowClicked={(selectedEdge: IEdge): void => { }}
                     onSelect={onSelect}
                     onCreateNode={onCreateNode}
                     onUpdateNode={onUpdateNode}
@@ -2404,13 +2403,13 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
                                         pieces: designView.design.pieces.map((piece) =>
                                             selectedHierarchyRootPiecesIds.includes(piece.id)
                                                 ? {
-                                                      ...piece,
-                                                      root: {
-                                                          plane: Plane.parse(
-                                                              piece.root?.plane
-                                                          ).transform(transformControlMatrix)
-                                                      }
-                                                  }
+                                                    ...piece,
+                                                    root: {
+                                                        plane: Plane.parse(
+                                                            piece.root?.plane
+                                                        ).transform(transformControlMatrix)
+                                                    }
+                                                }
                                                 : piece
                                         )
                                     }
@@ -2430,9 +2429,9 @@ const DesignThree = ({ transformationMode = 'translate' }: DesignThreeProps) => 
 
 DesignThree.displayName = 'DesignThree'
 
-interface ShapeEditorProps {}
+interface ShapeEditorProps { }
 
-const ShapeEditor = ({}: ShapeEditorProps) => {
+const ShapeEditor = ({ }: ShapeEditorProps) => {
     const { designViewId } = useContext(EditorContext)
     const dispatch = useDispatch()
 
@@ -3234,8 +3233,8 @@ const ArtifactWizard = ({
                     {kitDirectory
                         ? kitDirectory
                         : onOpenDirectoryStatus === 'loading'
-                          ? 'Loading...'
-                          : 'Open Directory'}
+                            ? 'Loading...'
+                            : 'Open Directory'}
                 </Button>
             </Form.Item>
             <Form.Item<IArtifactView>
@@ -3419,13 +3418,13 @@ const App = ({
                                                 label:
                                                     view.kind === ViewKind.Type
                                                         ? view.type.name +
-                                                          (view.type.variant
-                                                              ? ` (${view.type.variant})`
-                                                              : '')
+                                                        (view.type.variant
+                                                            ? ` (${view.type.variant})`
+                                                            : '')
                                                         : view.design.name +
-                                                          (view.design.variant
-                                                              ? ` (${view.design.variant})`
-                                                              : '')
+                                                        (view.design.variant
+                                                            ? ` (${view.design.variant})`
+                                                            : '')
                                             }
                                         return {
                                             key: tab,
