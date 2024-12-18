@@ -1,0 +1,1 @@
+python -c "from engine import generateSchemas; generateSchemas()"

@@ -136,13 +136,12 @@ type Port implements Node {
   id_: String
   type: Type
   locators: [Locator!]
-  connecteds(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  connectings(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
 
   """The ID of the object"""
   id: ID!
   point: Point!
   direction: Vector!
+  connections: [Connection!]!
 }
 
 type Locator {
@@ -151,21 +150,28 @@ type Locator {
   port: Port
 }
 
-type ConnectionNodeConnection {
-  """Pagination data for this connection."""
-  pageInfo: PageInfo!
+"""✖️ A 3d-point (xyz) of floating point numbers."""
+type Point {
+  """🎚️ The x-coordinate of the point."""
+  x: Float!
 
-  """Contains the nodes in this connection."""
-  edges: [ConnectionNodeEdge]!
+  """🎚️ The y-coordinate of the point."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the point."""
+  z: Float!
 }
 
-"""A Relay edge containing a `ConnectionNode` and its cursor."""
-type ConnectionNodeEdge {
-  """The item at the end of the edge"""
-  node: Connection
+"""➡️ A 3d-vector (xyz) of floating point numbers."""
+type Vector {
+  """🎚️ The x-coordinate of the vector."""
+  x: Float!
 
-  """A cursor for use in pagination"""
-  cursor: String!
+  """🎚️ The y-coordinate of the vector."""
+  y: Float!
+
+  """🎚️ The z-coordinate of the vector."""
+  z: Float!
 }
 
 type Connection implements Node {
@@ -173,11 +179,6 @@ type Connection implements Node {
   tilt: Float!
   gap: Float!
   shift: Float!
-  connectedPiecePk: ID!
-  connectedPortPk: ID!
-  connectingPiecePk: ID!
-  connectingPortPk: ID!
-  designPk: ID!
   design: Design
 
   """The ID of the object"""
@@ -221,15 +222,15 @@ type PieceNodeEdge {
 }
 
 type Piece implements Node {
+  id_: String
   type: Type
   plane: Plane
   design: Design
-  connecteds(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  connectings(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
 
   """The ID of the object"""
   id: ID!
   screenPoint: ScreenPoint!
+  connections: [Connection!]!
 }
 
 type Plane {
@@ -239,30 +240,6 @@ type Plane {
   yAxis: Vector!
 }
 
-"""✖️ A 3d-point (xyz) of floating point numbers."""
-type Point {
-  """🎚️ The x-coordinate of the point."""
-  x: Float!
-
-  """🎚️ The y-coordinate of the point."""
-  y: Float!
-
-  """🎚️ The z-coordinate of the point."""
-  z: Float!
-}
-
-"""➡️ A 3d-vector (xyz) of floating point numbers."""
-type Vector {
-  """🎚️ The x-coordinate of the vector."""
-  x: Float!
-
-  """🎚️ The y-coordinate of the vector."""
-  y: Float!
-
-  """🎚️ The z-coordinate of the vector."""
-  z: Float!
-}
-
 """📺 A 2d-point (xy) of integers in screen coordinate system."""
 type ScreenPoint {
   """🏁 The x-coordinate of the screen point."""
@@ -270,6 +247,23 @@ type ScreenPoint {
 
   """🏁 The y-coordinate of the screen point."""
   y: Int!
+}
+
+type ConnectionNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [ConnectionNodeEdge]!
+}
+
+"""A Relay edge containing a `ConnectionNode` and its cursor."""
+type ConnectionNodeEdge {
+  """The item at the end of the edge"""
+  node: Connection
+
+  """A cursor for use in pagination"""
+  cursor: String!
 }
 
 type QualityNodeConnection {
@@ -292,8 +286,8 @@ type QualityNodeEdge {
 type Quality implements Node {
   name: String!
   value: String!
-  definition: String!
   unit: String!
+  definition: String!
   type: Type
   design: Design
 
@@ -454,11 +448,11 @@ input QualityInputNode {
   """📏 The value of the quality."""
   value: String = ""
 
-  """📏 The definition of the quality."""
-  definition: String = ""
-
   """📏 The unit of the quality."""
   unit: String = ""
+
+  """📏 The definition of the quality."""
+  definition: String = ""
 }
 
 input DesignInputNode {

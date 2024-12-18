@@ -97,8 +97,8 @@ CREATE TABLE port (
 CREATE TABLE quality (
 	name VARCHAR(64) NOT NULL, 
 	value VARCHAR(64) NOT NULL, 
-	definition VARCHAR(4096) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
+	definition VARCHAR(4096) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"typeId" INTEGER, 
 	"designId" INTEGER, 

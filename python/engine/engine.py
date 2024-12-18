@@ -150,6 +150,7 @@ import stat
 import signal
 
 import fastapi
+import fastapi.openapi
 import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
@@ -537,12 +538,19 @@ class Props(Base, abc.ABC):
 
 
 class Input(Base, abc.ABC):
-    """↘️ The base for inputs.  All fields that are required to create the entity."""
+    """↘️ The base for inputs. All fields that are required to create the entity."""
+
+
+class Context(Base, abc.ABC):
+    """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
 
 
 class Output(Base, abc.ABC):
     """↗️ The base for outputs. All fields that are returned when the entity is fetched."""
+    
 
+class Prediction(Base, abc.ABC):
+    """🔮 The base for predictions. All fields that are required to predict the entity by an llm."""
 
 ## Entities ##
 
@@ -667,6 +675,14 @@ class RepresentationInput(
 ):
     """↘️ The input for a representation."""
 
+
+class RepresentationContext(
+    RepresentationTagsField,
+    RepresentationLodField,
+    RepresentationMimeField,
+    Context,
+):
+    """📑 The context of a representation."""
 
 class RepresentationOutput(
     RepresentationUrlField,
@@ -800,6 +816,10 @@ class LocatorInput(LocatorSubgroupField, LocatorGroupField, Input):
     """↘️ The input for a locator."""
 
 
+class LocatorContext(LocatorSubgroupField, LocatorGroupField, Context):
+    """📑 The context of a locator."""
+
+
 class LocatorOutput(LocatorSubgroupField, LocatorGroupField, Output):
     """↗️ The output of a locator."""
 
@@ -843,22 +863,28 @@ class ScreenPoint(Model):
     y: int = sqlmodel.Field(description="🏁 The y-coordinate of the screen point.")
     """🏁 The y-coordinate of the screen point."""
 
-    def __init__(self, x: int = 0, y: int = 0):
-        super().__init__(x=x, y=y)
+    def __str__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __len__(self):
-        return 2
+    def __repr__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        else:
-            raise IndexError("Index out of range")
+    # def __init__(self, x: int = 0, y: int = 0):
+    #     super().__init__(x=x, y=y)
 
-    def __iter__(self):
-        return iter((self.x, self.y))
+    # def __len__(self):
+    #     return 2
+
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     else:
+    #         raise IndexError("Index out of range")
+
+    # def __iter__(self):
+    #     return iter((self.x, self.y))
 
 
 class ScreenPointInput(ScreenPoint, Input):
@@ -882,8 +908,8 @@ class Point(Model):
     z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the point.")
     """🎚️ The z-coordinate of the point."""
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        super().__init__(x=x, y=y, z=z)
+    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
+    #     super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -891,34 +917,34 @@ class Point(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __len__(self):
-        return 3
+    # def __len__(self):
+    #     return 3
 
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        elif key == 2:
-            return self.z
-        else:
-            raise IndexError("Index out of range")
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     elif key == 2:
+    #         return self.z
+    #     else:
+    #         raise IndexError("Index out of range")
 
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
+    # def __iter__(self):
+    #     return iter((self.x, self.y, self.z))
 
-    def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
-        return (
-            abs(self.x - other.x) < tol
-            and abs(self.y - other.y) < tol
-            and abs(self.z - other.z) < tol
-        )
+    # def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         abs(self.x - other.x) < tol
+    #         and abs(self.y - other.y) < tol
+    #         and abs(self.z - other.z) < tol
+    #     )
 
-    def transform(self, transform: "Transform") -> "Point":
-        return Transform.transformPoint(transform, self)
+    # def transform(self, transform: "Transform") -> "Point":
+    #     return Transform.transformPoint(transform, self)
 
-    def toVector(self) -> "Vector":
-        return Vector(self.x, self.y, self.z)
+    # def toVector(self) -> "Vector":
+    #     return Vector(self.x, self.y, self.z)
 
 
 class PointInput(Point, Input):
@@ -942,8 +968,8 @@ class Vector(Model):
     z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the vector.")
     """🎚️ The z-coordinate of the vector."""
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        super().__init__(x=x, y=y, z=z)
+    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
+    #     super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -951,76 +977,80 @@ class Vector(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __len__(self):
-        return 3
+    # def __len__(self):
+    #     return 3
 
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        elif key == 2:
-            return self.z
-        else:
-            raise IndexError("Index out of range")
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     elif key == 2:
+    #         return self.z
+    #     else:
+    #         raise IndexError("Index out of range")
 
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
+    # def __iter__(self):
+    #     return iter((self.x, self.y, self.z))
 
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
+    # def __add__(self, other):
+    #     return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    @property
-    def length(self) -> float:
-        return (self.x**2 + self.y**2 + self.z**2) ** 0.5
+    # @property
+    # def length(self) -> float:
+    #     return (self.x**2 + self.y**2 + self.z**2) ** 0.5
 
-    def revert(self) -> "Vector":
-        return Vector(-self.x, -self.y, -self.z)
+    # def revert(self) -> "Vector":
+    #     return Vector(-self.x, -self.y, -self.z)
 
-    def amplify(self, factor: float) -> "Vector":
-        return Vector(self.x * factor, self.y * factor, self.z * factor)
+    # def amplify(self, factor: float) -> "Vector":
+    #     return Vector(self.x * factor, self.y * factor, self.z * factor)
 
-    def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
-        return (
-            abs(self.x - other.x) < tol
-            and abs(self.y - other.y) < tol
-            and abs(self.z - other.z) < tol
-        )
+    # def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         abs(self.x - other.x) < tol
+    #         and abs(self.y - other.y) < tol
+    #         and abs(self.z - other.z) < tol
+    #     )
 
-    def normalize(self) -> "Vector":
-        length = self.length
-        return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
+    # def normalize(self) -> "Vector":
+    #     length = self.length
+    #     return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
 
-    def dot(self, other: "Vector") -> float:
-        return numpy.dot(self, other)
+    # def dot(self, other: "Vector") -> float:
+    #     return numpy.dot(self, other)
 
-    def cross(self, other: "Vector") -> "Vector":
-        return Vector(*numpy.cross(self, other))
+    # def cross(self, other: "Vector") -> "Vector":
+    #     return Vector(*numpy.cross(self, other))
 
-    def transform(self, transform: "Transform") -> "Vector":
-        return Transform.transformVector(transform, self)
+    # def transform(self, transform: "Transform") -> "Vector":
+    #     return Transform.transformVector(transform, self)
 
-    def toPoint(self) -> "Point":
-        return Point(self.x, self.y, self.z)
+    # def toPoint(self) -> "Point":
+    #     return Point(self.x, self.y, self.z)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromTranslation(self)
+    # def toTransform(self) -> "Transform":
+    #     return Transform.fromTranslation(self)
 
-    @staticmethod
-    def X() -> "Vector":
-        return Vector(x=1)
+    # @staticmethod
+    # def X() -> "Vector":
+    #     return Vector(x=1)
 
-    @staticmethod
-    def Y() -> "Vector":
-        return Vector(y=1)
+    # @staticmethod
+    # def Y() -> "Vector":
+    #     return Vector(y=1)
 
-    @staticmethod
-    def Z() -> "Vector":
-        return Vector(z=1)
+    # @staticmethod
+    # def Z() -> "Vector":
+    #     return Vector(z=1)
 
 
 class VectorInput(Vector, Input):
     """↘️ The input for a vector."""
+
+
+class VectorContext(Vector, Context):
+    """📑 The context of a vector."""
 
 
 class VectorOutput(Vector, Output):
@@ -1117,25 +1147,25 @@ class Plane(Table, table=True):
         ),
     )
 
-    def __init__(
-        self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
-    ):
-        if origin is None:
-            origin = Point()
-        if xAxis is None and yAxis is None:
-            xAxis = Vector.X()
-            yAxis = Vector.Y()
-        if xAxis is None:
-            xAxis = Vector()
-        if yAxis is None:
-            yAxis = Vector()
-        if abs(xAxis.length - 1) > TOLERANCE:
-            raise ValidationError("The x-axis must be normalized.")
-        if abs(yAxis.length - 1) > TOLERANCE:
-            raise ValidationError("The y-axis must be normalized.")
-        if abs(xAxis.dot(yAxis)) > TOLERANCE:
-            raise ValidationError("The x-axis and y-axis must be orthogonal.")
-        super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    # def __init__(
+    #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
+    # ):
+    #     if origin is None:
+    #         origin = Point()
+    #     if xAxis is None and yAxis is None:
+    #         xAxis = Vector.X()
+    #         yAxis = Vector.Y()
+    #     if xAxis is None:
+    #         xAxis = Vector()
+    #     if yAxis is None:
+    #         yAxis = Vector()
+    #     if abs(xAxis.length - 1) > TOLERANCE:
+    #         raise ValidationError("The x-axis must be normalized.")
+    #     if abs(yAxis.length - 1) > TOLERANCE:
+    #         raise ValidationError("The y-axis must be normalized.")
+    #     if abs(xAxis.dot(yAxis)) > TOLERANCE:
+    #         raise ValidationError("The x-axis and y-axis must be orthogonal.")
+    #     super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
     @property
     def origin(self) -> Point:
@@ -1179,37 +1209,37 @@ class Plane(Table, table=True):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
-        return (
-            self.origin.isCloseTo(other.origin, tol)
-            and self.xAxis.isCloseTo(other.xAxis, tol)
-            and self.yAxis.isCloseTo(other.yAxis, tol)
-        )
+    # def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         self.origin.isCloseTo(other.origin, tol)
+    #         and self.xAxis.isCloseTo(other.xAxis, tol)
+    #         and self.yAxis.isCloseTo(other.yAxis, tol)
+    #     )
 
-    def transform(self, transform: "Transform") -> "Plane":
-        return Transform.transformPlane(transform, self)
+    # def transform(self, transform: "Transform") -> "Plane":
+    #     return Transform.transformPlane(transform, self)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromPlane(self)
+    # def toTransform(self) -> "Transform":
+    #     return Transform.fromPlane(self)
 
-    @staticmethod
-    def XY() -> "Plane":
-        return Plane(
-            origin=Point(),
-            xAxis=Vector.X(),
-            yAxis=Vector.Y(),
-        )
+    # @staticmethod
+    # def XY() -> "Plane":
+    #     return Plane(
+    #         origin=Point(),
+    #         xAxis=Vector.X(),
+    #         yAxis=Vector.Y(),
+    #     )
 
-    @staticmethod
-    def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
-        if abs(yAxis.length - 1) > TOLERANCE:
-            raise SpecificationError("The yAxis must be normalized.")
-        if origin is None:
-            origin = Point()
-        orientation = Transform.fromDirections(Vector.Y(), yAxis)
-        rotation = Transform.fromAngle(yAxis, theta)
-        xAxis = Vector.X().transform(rotation.after(orientation))
-        return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    # @staticmethod
+    # def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
+    #     if abs(yAxis.length - 1) > TOLERANCE:
+    #         raise SpecificationError("The yAxis must be normalized.")
+    #     if origin is None:
+    #         origin = Point()
+    #     orientation = Transform.fromDirections(Vector.Y(), yAxis)
+    #     rotation = Transform.fromAngle(yAxis, theta)
+    #     xAxis = Vector.X().transform(rotation.after(orientation))
+    #     return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -1226,196 +1256,196 @@ class Plane(Table, table=True):
         origin = PointInput.model_validate(obj["origin"])
         xAxis = VectorInput.model_validate(obj["xAxis"])
         yAxis = VectorInput.model_validate(obj["yAxis"])
-        entity = Plane()
+        entity = PlaneInput.model_construct()
         entity.origin = origin
         entity.xAxis = xAxis
         entity.yAxis = yAxis
         return entity
 
 
-### Rotations ### TODO
+# ### Rotations ### TODO
 
 
-class Rotation(Model):
-    """🔄 A rotation is an axis and an angle."""
+# class Rotation(Model):
+#     """🔄 A rotation is an axis and an angle."""
 
-    axis: Vector
-    angle: float
+#     axis: Vector
+#     angle: float
 
-    def __init__(self, axis: Vector, angle: float):
-        super().__init__(axis=axis, angle=angle)
+#     def __init__(self, axis: Vector, angle: float):
+#         super().__init__(axis=axis, angle=angle)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromRotation(self)
-
-
-### Transforms ### TODO
+#     def toTransform(self) -> "Transform":
+#         return Transform.fromRotation(self)
 
 
-class Transform(numpy.ndarray):
-    """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
+# ### Transforms ### TODO
 
-    def __new__(cls, input_array=None):
-        if input_array is None:
-            input_array = numpy.eye(4, dtype=float)
-        else:
-            input_array = numpy.asarray(input_array).astype(float)
-        obj = input_array.view(cls)
-        return obj
 
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
+# class Transform(numpy.ndarray):
+#     """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
 
-    def __str__(self) -> str:
-        rounded_self = self.round()
-        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
+#     def __new__(cls, input_array=None):
+#         if input_array is None:
+#             input_array = numpy.eye(4, dtype=float)
+#         else:
+#             input_array = numpy.asarray(input_array).astype(float)
+#         obj = input_array.view(cls)
+#         return obj
 
-    def __repr__(self) -> str:
-        rounded_self = self.round()
-        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
+#     def __array_finalize__(self, obj):
+#         if obj is None:
+#             return
 
-    @property
-    def rotation(self) -> Rotation | None:
-        """🔄 The rotation part of the transform."""
-        rotationMatrix = self[:3, :3]
-        axisAngle = axis_angle_from_matrix(rotationMatrix)
-        if axisAngle[3] == 0:
-            return None
-        return Rotation(
-            axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
-            angle=float(numpy.degrees(axisAngle[3])),
-        )
+#     def __str__(self) -> str:
+#         rounded_self = self.round()
+#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
-    @property
-    def translation(self) -> Vector:
-        """➡️ The translation part of the transform."""
-        return Vector(*self[:3, 3])
+#     def __repr__(self) -> str:
+#         rounded_self = self.round()
+#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
-    # for pydantic
-    def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
-        return {
-            "rotation": self.rotation,
-            "translation": self.translation,
-        }
+#     @property
+#     def rotation(self) -> Rotation | None:
+#         """🔄 The rotation part of the transform."""
+#         rotationMatrix = self[:3, :3]
+#         axisAngle = axis_angle_from_matrix(rotationMatrix)
+#         if axisAngle[3] == 0:
+#             return None
+#         return Rotation(
+#             axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
+#             angle=float(numpy.degrees(axisAngle[3])),
+#         )
 
-    def after(self, before: "Transform") -> "Transform":
-        """✖️ Apply this transform after another transform.
+#     @property
+#     def translation(self) -> Vector:
+#         """➡️ The translation part of the transform."""
+#         return Vector(*self[:3, 3])
 
-        Args:
-            before (Transform): Transform to apply before this transform.
+#     # for pydantic
+#     def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
+#         return {
+#             "rotation": self.rotation,
+#             "translation": self.translation,
+#         }
 
-        Returns:
-            Transform: New transform.
-        """
-        return Transform(concat(before, self))
+#     def after(self, before: "Transform") -> "Transform":
+#         """✖️ Apply this transform after another transform.
 
-    def invert(self) -> "Transform":
-        return Transform(invert_transform(self))
+#         Args:
+#             before (Transform): Transform to apply before this transform.
 
-    def transformPoint(self, point: Point) -> Point:
-        transformedPoint = transform(self, vector_to_point(point))
-        return Point(*transformedPoint[:3])
+#         Returns:
+#             Transform: New transform.
+#         """
+#         return Transform(concat(before, self))
 
-    def transformVector(self, vector: Vector) -> Vector:
-        transformedVector = transform(self, vector_to_direction(vector))
-        return Vector(*transformedVector[:3])
+#     def invert(self) -> "Transform":
+#         return Transform(invert_transform(self))
 
-    def transformPlane(self, plane: Plane) -> Plane:
-        planeTransform = Transform.fromPlane(plane)
-        planeTransformed = planeTransform.after(self)
-        return Transform.toPlane(planeTransformed)
+#     def transformPoint(self, point: Point) -> Point:
+#         transformedPoint = transform(self, vector_to_point(point))
+#         return Point(*transformedPoint[:3])
 
-    def transform(
-        self, geometry: typing.Union[Point, Vector, Plane]
-    ) -> typing.Union[Point, Vector, Plane]:
-        if isinstance(geometry, Point):
-            return self.transformPoint(geometry)
-        elif isinstance(geometry, Vector):
-            return self.transformVector(geometry)
-        elif isinstance(geometry, Plane):
-            return self.transformPlane(geometry)
-        else:
-            raise FeatureNotYetSupported()
+#     def transformVector(self, vector: Vector) -> Vector:
+#         transformedVector = transform(self, vector_to_direction(vector))
+#         return Vector(*transformedVector[:3])
 
-    def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
-        return Transform(super().round(decimals=decimals))
+#     def transformPlane(self, plane: Plane) -> Plane:
+#         planeTransform = Transform.fromPlane(plane)
+#         planeTransformed = planeTransform.after(self)
+#         return Transform.toPlane(planeTransformed)
 
-    @staticmethod
-    def fromTranslation(vector: Vector) -> "Transform":
-        return Transform(
-            transform_from(
-                [
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                ],
-                vector,
-            )
-        )
+#     def transform(
+#         self, geometry: typing.Union[Point, Vector, Plane]
+#     ) -> typing.Union[Point, Vector, Plane]:
+#         if isinstance(geometry, Point):
+#             return self.transformPoint(geometry)
+#         elif isinstance(geometry, Vector):
+#             return self.transformVector(geometry)
+#         elif isinstance(geometry, Plane):
+#             return self.transformPlane(geometry)
+#         else:
+#             raise FeatureNotYetSupported()
 
-    @staticmethod
-    def fromRotation(rotation: Rotation) -> "Transform":
-        return Transform(
-            transform_from(
-                matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
-                Vector(),
-            )
-        )
+#     def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
+#         return Transform(super().round(decimals=decimals))
 
-    @staticmethod
-    def fromPlane(plane: Plane) -> "Transform":
-        # Assumes plane is normalized
-        return Transform(
-            transform_from(
-                [
-                    [
-                        plane.xAxis.x,
-                        plane.yAxis.x,
-                        plane.zAxis.x,
-                    ],
-                    [
-                        plane.xAxis.y,
-                        plane.yAxis.y,
-                        plane.zAxis.y,
-                    ],
-                    [
-                        plane.xAxis.z,
-                        plane.yAxis.z,
-                        plane.zAxis.z,
-                    ],
-                ],
-                plane.origin,
-            )
-        )
+#     @staticmethod
+#     def fromTranslation(vector: Vector) -> "Transform":
+#         return Transform(
+#             transform_from(
+#                 [
+#                     [1, 0, 0],
+#                     [0, 1, 0],
+#                     [0, 0, 1],
+#                 ],
+#                 vector,
+#             )
+#         )
 
-    @staticmethod
-    def fromAngle(axis: Vector, angle: float) -> "Transform":
-        return Transform(
-            transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
-        )
+#     @staticmethod
+#     def fromRotation(rotation: Rotation) -> "Transform":
+#         return Transform(
+#             transform_from(
+#                 matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
+#                 Vector(),
+#             )
+#         )
 
-    @staticmethod
-    def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
-        if startDirection.isCloseTo(endDirection):
-            return Transform()
-        axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
-        return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
+#     @staticmethod
+#     def fromPlane(plane: Plane) -> "Transform":
+#         # Assumes plane is normalized
+#         return Transform(
+#             transform_from(
+#                 [
+#                     [
+#                         plane.xAxis.x,
+#                         plane.yAxis.x,
+#                         plane.zAxis.x,
+#                     ],
+#                     [
+#                         plane.xAxis.y,
+#                         plane.yAxis.y,
+#                         plane.zAxis.y,
+#                     ],
+#                     [
+#                         plane.xAxis.z,
+#                         plane.yAxis.z,
+#                         plane.zAxis.z,
+#                     ],
+#                 ],
+#                 plane.origin,
+#             )
+#         )
 
-    def toPlane(self) -> Plane:
-        return Plane(
-            origin=Point(*self[:3, 3]),
-            xAxis=Vector(
-                self[0, 0],
-                self[1, 0],
-                self[2, 0],
-            ),
-            yAxis=Vector(
-                self[0, 1],
-                self[1, 1],
-                self[2, 1],
-            ),
-        )
+#     @staticmethod
+#     def fromAngle(axis: Vector, angle: float) -> "Transform":
+#         return Transform(
+#             transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
+#         )
+
+#     @staticmethod
+#     def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
+#         if startDirection.isCloseTo(endDirection):
+#             return Transform()
+#         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
+#         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
+
+#     def toPlane(self) -> Plane:
+#         return Plane(
+#             origin=Point(*self[:3, 3]),
+#             xAxis=Vector(
+#                 self[0, 0],
+#                 self[1, 0],
+#                 self[2, 0],
+#             ),
+#             yAxis=Vector(
+#                 self[0, 1],
+#                 self[1, 1],
+#                 self[2, 1],
+#             ),
+#         )
 
 
 ### Ports ###
@@ -1466,7 +1496,10 @@ class PortId(PortIdField, Id):
 
 
 class PortProps(
-    PortLocatorsField, PortDirectionField, PortPointField, PortIdField, Props
+    PortLocatorsField,
+    PortDirectionField,
+    PortPointField,
+    PortIdField, Props
 ):
     """🎫 The props of a port."""
 
@@ -1489,7 +1522,25 @@ class PortInput(PortIdField, Input):
     """🗺️ The locators of the port."""
 
 
-class PortOutput(PortIdField, PortPointField, PortDirectionField, Output):
+class PortContext(
+    PortDirectionField,
+    PortPointField,
+    PortIdField,
+    Context):
+    """📑 The context of a port."""
+
+    locators: list[LocatorContext] = sqlmodel.Field(
+        default_factory=list,
+        description="🗺️ The locators of the port.",
+    )
+    """🗺️ The locators of the port."""
+
+
+class PortOutput(
+    PortDirectionField,
+    PortPointField,
+    PortIdField,
+    Output):
     """↗️ The output of a port."""
 
     locators: list[LocatorOutput] = sqlmodel.Field(
@@ -1682,8 +1733,8 @@ class QualityId(QualityNameField, Id):
 
 
 class QualityProps(
-    QualityUnitField,
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     Props,
@@ -1692,14 +1743,26 @@ class QualityProps(
 
 
 class QualityInput(
-    QualityUnitField, QualityDefinitionField, QualityValueField, QualityNameField, Input
+    QualityDefinitionField,
+    QualityUnitField,
+    QualityValueField,
+    QualityNameField,
+    Input
 ):
     """↘️ The input for a quality."""
 
 
-class QualityOutput(
+class QualityContext(
     QualityUnitField,
+    QualityValueField,
+    QualityNameField,
+    Context):
+    """📑 The context of a quality."""
+
+
+class QualityOutput(
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     Output,
@@ -1708,8 +1771,8 @@ class QualityOutput(
 
 
 class Quality(
-    QualityUnitField,
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     TableEntity,
@@ -1899,6 +1962,20 @@ class TypeOutput(
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+
+
+class TypeContext(
+    TypeUnitField,
+    TypeVariantField,
+    TypeDescriptionField,
+    TypeNameField,
+    Context
+):
+    """📑 The context of a type."""
+
+    representations: list[RepresentationContext] = sqlmodel.Field(default_factory=list)
+    ports: list[PortContext] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class Type(
@@ -4050,9 +4127,7 @@ graphqlSchema = graphene.Schema(
 
 # Rest #
 
-rest = fastapi.FastAPI(
-    title="semio REST API", version=VERSION, max_request_body_size=MAX_REQUEST_BODY_SIZE
-)
+rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
 
 @rest.get("/kits/{encodedKitUri}")
@@ -4180,6 +4255,79 @@ async def delete_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
+def changeValues(d: dict, key: str, func: callable) -> dict:
+    if key in d:
+        d[key] = func(d[key])
+    for k, v in d.items():
+        if isinstance(v, dict):
+            changeValues(v, key, func)
+    return d
+
+
+def changeKeys(d: dict, func: callable) -> dict:
+    newDict = {}
+    for k, v in d.items():
+        newKey = func(k)
+        newDict[newKey] = v
+        if isinstance(v, dict):
+            newDict[newKey] = changeKeys(v, func)
+    return newDict
+
+
+class SemioGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode='validation'):
+        json_schema = super().generate(schema, mode=mode)
+        # Remove all Output suffixes
+        # newDefs = {}
+        # for dk,dv in json_schema['$defs'].items():
+        #     shortKey = dk
+        #     dv['title'] = dv['title'].removesuffix('Output')
+        #     shortKey = dk.removesuffix('Output')
+        #     for pv in dv['properties'].values():
+        #         if '$ref' in pv:
+        #             pv['$ref'] = pv['$ref'].removesuffix('Output')
+        #         if 'items' in pv and '$ref' in pv['items']:
+        #             pv['items']['$ref'] = pv['items']['$ref'].removesuffix('Output')
+        #         if 'anyOf' in pv:
+        #             for anyOf in pv['anyOf']:
+        #                 if '$ref' in anyOf:
+        #                     anyOf['$ref'] = anyOf['$ref'].removesuffix('Output')
+        #     newDefs[shortKey] = dv
+        # json_schema['$defs'] = newDefs
+        # for pv in json_schema['properties'].values():
+        #     if '$ref' in pv:
+        #         pv['$ref'] = pv['$ref'].removesuffix('Output')
+        #     if 'items' in pv and '$ref' in pv['items']:
+        #         pv['items']['$ref'] = pv['items']['$ref'].removesuffix('Output')
+        #     if 'anyOf' in pv:
+        #         for anyOf in pv['anyOf']:
+        #             if '$ref' in anyOf:
+        #                 anyOf['$ref'] = anyOf['$ref'].removesuffix('Output')
+        # json_schema['title'] = json_schema['title'].removesuffix('Output')
+        changeValues(json_schema, '$ref', lambda x: x.removesuffix('Output'))
+        changeValues(json_schema, 'title', lambda x: x.removesuffix('Output'))
+        changeKeys(json_schema, lambda x: x.removesuffix('Output'))
+        return json_schema
+
+
+def custom_openapi():
+    if rest.openapi_schema:
+        return rest.openapi_schema
+    openapi_schema = fastapi.openapi.utils.get_openapi(
+        title="semio REST API",
+        version=VERSION,
+        summary="This is the local rest API of the semio engine.",
+        routes=rest.routes,
+    )
+    changeValues(openapi_schema, '$ref', lambda x: x.removesuffix('Output'))
+    changeValues(openapi_schema, 'title', lambda x: x.removesuffix('Output'))
+    changeKeys(openapi_schema, lambda x: x.removesuffix('Output'))
+    rest.openapi_schema = openapi_schema
+    return rest.openapi_schema
+
+
+rest.openapi = custom_openapi
+
 # Engine #
 
 engine = starlette.applications.Starlette()
@@ -4193,7 +4341,6 @@ engine.mount(
 
 
 def start_engine(debug: bool = False):
-
     logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
     uvicorn.run(
         engine,
@@ -4205,7 +4352,7 @@ def start_engine(debug: bool = False):
     )
 
 
-def build():
+def generateSchemas():
     if os.path.exists("temp"):
         for root, dirs, files in os.walk("temp", topdown=False):
             for name in files:
@@ -4215,11 +4362,12 @@ def build():
     else:
         os.makedirs("temp")
 
-    # write openapi schema to file
     with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
         json.dump(rest.openapi(), f, indent=4)
+    
+    with open("../../jsonschema/kit.json", "w", encoding="utf-8") as f:
+        json.dump(KitOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
 
-    # write sqlite schema to file
     sqliteSchemaPath = "../../sqlite/schema.sql"
     if os.path.exists(sqliteSchemaPath):
         os.remove(sqliteSchemaPath)
@@ -4239,6 +4387,7 @@ def build():
 
 
 def main():
+    generateSchemas()
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     args = parser.parse_args()
