@@ -4255,23 +4255,31 @@ async def delete_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-def changeValues(d: dict, key: str, func: callable) -> dict:
-    if key in d:
-        d[key] = func(d[key])
-    for k, v in d.items():
-        if isinstance(v, dict):
-            changeValues(v, key, func)
-    return d
+def changeValues(c: dict | list, key: str, func: callable) -> None:
+    if isinstance(c, dict):
+        if key in c:
+            c[key] = func(c[key])
+        for v in c.values():
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
 
 
-def changeKeys(d: dict, func: callable) -> dict:
-    newDict = {}
-    for k, v in d.items():
-        newKey = func(k)
-        newDict[newKey] = v
-        if isinstance(v, dict):
-            newDict[newKey] = changeKeys(v, func)
-    return newDict
+def changeKeys(c: dict | list, func: callable) -> None:
+    if isinstance(c, dict):
+        for k in list(c.keys()):
+            newKey = func(k)
+            v = c.pop(k)
+            c[newKey] = v
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
 
 
 class SemioGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
@@ -4367,6 +4375,12 @@ def generateSchemas():
     
     with open("../../jsonschema/kit.json", "w", encoding="utf-8") as f:
         json.dump(KitOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
+    
+    with open("../../jsonschema/design.json", "w", encoding="utf-8") as f:
+        json.dump(DesignOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
+    
+    with open("../../jsonschema/type.json", "w", encoding="utf-8") as f:
+        json.dump(TypeOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
 
     sqliteSchemaPath = "../../sqlite/schema.sql"
     if os.path.exists(sqliteSchemaPath):
