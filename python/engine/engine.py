@@ -52,7 +52,7 @@ engine.py
 # ✏️,Dg,Dgm,Diagram,The diagram of the design.
 # 📁,Di?,Dir,Directory,The optional directory where to find the kit.
 # 🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
-# ➡️,Dr,Drn,Direction,The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+# ➡️,Dr,Drn,Direction,The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
 # 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 # 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
 # 🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
@@ -1526,12 +1526,12 @@ class PortPointField(MaskedField, abc.ABC):
 
 
 class PortDirectionField(MaskedField, abc.ABC):
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
 
     direction: Vector = sqlmodel.Field(
-        description="➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
     )
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
 
 
 class PortLocatorsField(MaskedField, abc.ABC):
@@ -1562,9 +1562,9 @@ class PortInput(PortIdField, Input):
     )
     """✖️ The connection point of the port that is attracted to another connection point."""
     direction: VectorInput = sqlmodel.Field(
-        description="➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
     )
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
     locators: list[LocatorInput] = sqlmodel.Field(
         default_factory=list,
         description="🗺️ The locators of the port.",

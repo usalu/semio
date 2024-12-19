@@ -404,7 +404,7 @@ input PortInputNode {
   point: PointInputNode!
 
   """
-  ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+  ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
   """
   direction: VectorInputNode!
 

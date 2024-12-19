@@ -855,10 +855,10 @@ public class Port : Model<Port>
     public Point? Point { get; set; } = null;
 
     /// <summary>
-    ///     ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+    ///     ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
     /// </summary>
     [ModelProp("➡️", "Dr", "Drn",
-        "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.")]
+        "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
 
     /// <summary>

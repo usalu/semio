@@ -1007,7 +1007,7 @@
                     },
                     "direction": {
                         "$ref": "#/components/schemas/VectorInput",
-                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                        "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                     },
                     "locators": {
                         "items": {
@@ -1041,7 +1041,7 @@
                     },
                     "direction": {
                         "$ref": "#/components/schemas/Vector",
-                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                        "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                     },
                     "locators": {
                         "items": {
