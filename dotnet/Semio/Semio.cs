@@ -930,9 +930,9 @@ public class PortId : Model<PortId>
 }
 
 /// <summary>
-///     📏 A quality is meta-data for decision making.
+///     📏 A quality is a named value with a unit and a definition.
 /// </summary>
-[Model("📏", "Ql", "Qal", "A quality is meta-data for decision making.")]
+[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
 public class Quality : Model<Quality>
 {
     /// <summary>
@@ -988,9 +988,9 @@ public class TypeProps : Model<Type>
     public string Variant { get; set; } = "";
 
     /// <summary>
-    ///     Ⓜ️ The length unit for all distance-related information of the type.
+    ///     Ⓜ️ The length unit of the point and the direction of the ports of the type.
     /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.",
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.",
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
 }

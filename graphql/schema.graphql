@@ -295,6 +295,7 @@ type Quality implements Node {
   id: ID!
 }
 
+"""🧱 A side of a piece in a connection."""
 type Side {
   piece: Piece!
   port: Port!
@@ -366,7 +367,7 @@ input TypeInputNode {
   """
   variant: String = ""
 
-  """📏 The unit of the type."""
+  """📏 The length unit of the point and the direction of the ports of the type."""
   unit: String = ""
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null

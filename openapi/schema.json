@@ -384,7 +384,7 @@
                     "connecting"
                 ],
                 "title": "ConnectionInput",
-                "description": "\u2198\ufe0f The input for a connection."
+                "description": "\ud83d\udd87\ufe0f A connection between two pieces of a design."
             },
             "Connection": {
                 "properties": {
@@ -431,7 +431,7 @@
                     "connecting"
                 ],
                 "title": "Connection",
-                "description": "\u2197\ufe0f The output of a connection."
+                "description": "\ud83d\udd87\ufe0f A connection between two pieces of a design."
             },
             "DesignInput": {
                 "properties": {
@@ -496,7 +496,7 @@
                     "name"
                 ],
                 "title": "DesignInput",
-                "description": "\u2198\ufe0f The input for a design."
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
             },
             "Design": {
                 "properties": {
@@ -573,7 +573,7 @@
                     "name"
                 ],
                 "title": "Design",
-                "description": "\u2197\ufe0f The output of a design."
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
             },
             "HTTPValidationError": {
                 "properties": {
@@ -762,7 +762,7 @@
                     "group"
                 ],
                 "title": "LocatorInput",
-                "description": "\u2198\ufe0f The input for a locator."
+                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
             "Locator": {
                 "properties": {
@@ -785,7 +785,7 @@
                     "group"
                 ],
                 "title": "Locator",
-                "description": "\u2197\ufe0f The output of a locator."
+                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
             "PieceId": {
                 "properties": {
@@ -837,7 +837,7 @@
                     "screenPoint"
                 ],
                 "title": "PieceInput",
-                "description": "\u2198\ufe0f The input for a piece."
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
             },
             "Piece": {
                 "properties": {
@@ -874,7 +874,7 @@
                     "screenPoint"
                 ],
                 "title": "Piece",
-                "description": "\u2197\ufe0f The output of a piece."
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
             },
             "PlaneInput": {
                 "properties": {
@@ -898,7 +898,7 @@
                     "yAxis"
                 ],
                 "title": "PlaneInput",
-                "description": "\u2198\ufe0f The input for a plane."
+                "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
             },
             "Plane": {
                 "properties": {
@@ -922,7 +922,7 @@
                     "yAxis"
                 ],
                 "title": "Plane",
-                "description": "\u2197\ufe0f The output of a plane."
+                "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
             },
             "Point": {
                 "properties": {
@@ -976,7 +976,7 @@
                     "z"
                 ],
                 "title": "PointInput",
-                "description": "\u2198\ufe0f The input for a point."
+                "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
             },
             "PortId": {
                 "properties": {
@@ -1024,7 +1024,7 @@
                     "direction"
                 ],
                 "title": "PortInput",
-                "description": "\u2198\ufe0f The input for a port."
+                "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
             "Port": {
                 "properties": {
@@ -1058,7 +1058,7 @@
                     "direction"
                 ],
                 "title": "Port",
-                "description": "\u2197\ufe0f The output of a port."
+                "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
             "QualityInput": {
                 "properties": {
@@ -1170,7 +1170,7 @@
                     "url"
                 ],
                 "title": "RepresentationInput",
-                "description": "\u2198\ufe0f The input for a representation."
+                "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
             "Representation": {
                 "properties": {
@@ -1208,7 +1208,7 @@
                     "url"
                 ],
                 "title": "Representation",
-                "description": "\u2197\ufe0f The output of a representation."
+                "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
             "ScreenPointInput": {
                 "properties": {
@@ -1229,7 +1229,7 @@
                     "y"
                 ],
                 "title": "ScreenPointInput",
-                "description": "\u2198\ufe0f The input for a screen point."
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "ScreenPoint": {
                 "properties": {
@@ -1250,7 +1250,7 @@
                     "y"
                 ],
                 "title": "ScreenPoint",
-                "description": "\u2197\ufe0f The output of a screen point."
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "SideInput": {
                 "properties": {
@@ -1266,7 +1266,8 @@
                     "piece",
                     "port"
                 ],
-                "title": "SideInput"
+                "title": "SideInput",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
             "Side": {
                 "properties": {
@@ -1282,7 +1283,8 @@
                     "piece",
                     "port"
                 ],
-                "title": "Side"
+                "title": "Side",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
             "TypeId": {
                 "properties": {
@@ -1340,7 +1342,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
+                        "description": "\ud83d\udccf The length unit of the point and the direction of the ports of the type.",
                         "default": ""
                     },
                     "representations": {
@@ -1370,7 +1372,7 @@
                     "name"
                 ],
                 "title": "TypeInput",
-                "description": "\u2198\ufe0f The input for a type."
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
             },
             "Type": {
                 "properties": {
@@ -1405,7 +1407,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
+                        "description": "\ud83d\udccf The length unit of the point and the direction of the ports of the type.",
                         "default": ""
                     },
                     "createdAt": {
@@ -1447,7 +1449,7 @@
                     "name"
                 ],
                 "title": "Type",
-                "description": "\u2197\ufe0f The output of a type."
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
             },
             "ValidationError": {
                 "properties": {
@@ -1534,7 +1536,7 @@
                     "z"
                 ],
                 "title": "VectorInput",
-                "description": "\u2198\ufe0f The input for a vector."
+                "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
             }
         }
     }

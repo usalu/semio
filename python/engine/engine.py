@@ -155,9 +155,10 @@ import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
 import lark
-import networkx
-import numpy
-import pytransform3d
+
+# import networkx
+# import numpy
+# import pytransform3d
 import pydantic
 import requests
 import sqlalchemy
@@ -263,6 +264,33 @@ def pretty(number: float) -> str:
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
+
+
+def changeValues(c: dict | list, key: str, func: callable) -> None:
+    if isinstance(c, dict):
+        if key in c:
+            c[key] = func(c[key])
+        for v in c.values():
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
+
+
+def changeKeys(c: dict | list, func: callable) -> None:
+    if isinstance(c, dict):
+        for k in list(c.keys()):
+            newKey = func(k)
+            v = c.pop(k)
+            c[newKey] = v
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
 
 
 # Exceptions #
@@ -547,10 +575,11 @@ class Context(Base, abc.ABC):
 
 class Output(Base, abc.ABC):
     """↗️ The base for outputs. All fields that are returned when the entity is fetched."""
-    
+
 
 class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by an llm."""
+
 
 ## Entities ##
 
@@ -673,7 +702,7 @@ class RepresentationInput(
     RepresentationMimeField,
     Input,
 ):
-    """↘️ The input for a representation."""
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
 
 
 class RepresentationContext(
@@ -682,7 +711,8 @@ class RepresentationContext(
     RepresentationMimeField,
     Context,
 ):
-    """📑 The context of a representation."""
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
+
 
 class RepresentationOutput(
     RepresentationUrlField,
@@ -691,7 +721,7 @@ class RepresentationOutput(
     RepresentationMimeField,
     Output,
 ):
-    """↗️ The output of a representation."""
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
 
 
 class Representation(
@@ -813,15 +843,15 @@ class LocatorProps(LocatorSubgroupField, LocatorGroupField, Props):
 
 
 class LocatorInput(LocatorSubgroupField, LocatorGroupField, Input):
-    """↘️ The input for a locator."""
+    """🗺️ A locator is meta-data for grouping ports."""
 
 
 class LocatorContext(LocatorSubgroupField, LocatorGroupField, Context):
-    """📑 The context of a locator."""
+    """🗺️ A locator is meta-data for grouping ports."""
 
 
 class LocatorOutput(LocatorSubgroupField, LocatorGroupField, Output):
-    """↗️ The output of a locator."""
+    """🗺️ A locator is meta-data for grouping ports."""
 
 
 class Locator(LocatorSubgroupField, Table, table=True):
@@ -888,11 +918,19 @@ class ScreenPoint(Model):
 
 
 class ScreenPointInput(ScreenPoint, Input):
-    """↘️ The input for a screen point."""
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+
+
+class ScreenPointContext(ScreenPoint, Context):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
 
 class ScreenPointOutput(ScreenPoint, Output):
-    """↗️ The output of a screen point."""
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+
+
+class ScreenPointPrediction(ScreenPoint, Prediction):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
 
 ### Points ###
@@ -948,11 +986,15 @@ class Point(Model):
 
 
 class PointInput(Point, Input):
-    """↘️ The input for a point."""
+    """✖️ A 3d-point (xyz) of floating point numbers."""
+
+
+class PointContext(Point, Context):
+    """✖️ A 3d-point (xyz) of floating point numbers."""
 
 
 class PointOutput(Point, Output):
-    """↗️ The output of a point."""
+    """✖️ A 3d-point (xyz) of floating point numbers."""
 
 
 ### Vectors ###
@@ -1046,15 +1088,15 @@ class Vector(Model):
 
 
 class VectorInput(Vector, Input):
-    """↘️ The input for a vector."""
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
 
 class VectorContext(Vector, Context):
-    """📑 The context of a vector."""
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
 
 class VectorOutput(Vector, Output):
-    """↗️ The output of a vector."""
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
 
 ### Planes ### TODO
@@ -1082,7 +1124,7 @@ class PlaneYAxisField(MaskedField, abc.ABC):
 
 
 class PlaneInput(Input):
-    """↘️ The input for a plane."""
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 
     origin: PointInput = sqlmodel.Field(description="⌱ The origin of the plane.")
     """⌱ The origin of the plane."""
@@ -1092,8 +1134,19 @@ class PlaneInput(Input):
     """➡️ The y-axis of the plane."""
 
 
+class PlaneContext(Context):
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+
+    origin: PointContext = sqlmodel.Field(description="⌱ The origin of the plane.")
+    """⌱ The origin of the plane."""
+    xAxis: VectorContext = sqlmodel.Field(description="➡️ The x-axis of the plane.")
+    """➡️ The x-axis of the plane."""
+    yAxis: VectorContext = sqlmodel.Field(description="➡️ The y-axis of the plane.")
+    """➡️ The y-axis of the plane."""
+
+
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """↗️ The output of a plane."""
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 
 
 class Plane(Table, table=True):
@@ -1496,16 +1549,13 @@ class PortId(PortIdField, Id):
 
 
 class PortProps(
-    PortLocatorsField,
-    PortDirectionField,
-    PortPointField,
-    PortIdField, Props
+    PortLocatorsField, PortDirectionField, PortPointField, PortIdField, Props
 ):
     """🎫 The props of a port."""
 
 
 class PortInput(PortIdField, Input):
-    """↘️ The input for a port."""
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     point: PointInput = sqlmodel.Field(
         description="✖️ The connection point of the port that is attracted to another connection point."
@@ -1522,12 +1572,8 @@ class PortInput(PortIdField, Input):
     """🗺️ The locators of the port."""
 
 
-class PortContext(
-    PortDirectionField,
-    PortPointField,
-    PortIdField,
-    Context):
-    """📑 The context of a port."""
+class PortContext(PortDirectionField, PortPointField, PortIdField, Context):
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     locators: list[LocatorContext] = sqlmodel.Field(
         default_factory=list,
@@ -1536,12 +1582,8 @@ class PortContext(
     """🗺️ The locators of the port."""
 
 
-class PortOutput(
-    PortDirectionField,
-    PortPointField,
-    PortIdField,
-    Output):
-    """↗️ The output of a port."""
+class PortOutput(PortDirectionField, PortPointField, PortIdField, Output):
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     locators: list[LocatorOutput] = sqlmodel.Field(
         default_factory=list,
@@ -1696,36 +1738,36 @@ class QualityNameField(RealField, abc.ABC):
 
 
 class QualityValueField(RealField, abc.ABC):
-    """📏 The value of the quality."""
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
 
     value: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The value of the quality.",
+        description="📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
     )
-    """📏 The value of the quality."""
-
-
-class QualityDefinitionField(RealField, abc.ABC):
-    """📏 The definition of the quality."""
-
-    definition: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="📏 The definition of the quality.",
-    )
-    """📏 The definition of the quality."""
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
 
 
 class QualityUnitField(RealField, abc.ABC):
-    """📏 The unit of the quality."""
+    """📏 The optional unit of the value of the quality."""
 
     unit: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The unit of the quality.",
+        description="📏 The optional unit of the value of the quality.",
     )
-    """📏 The unit of the quality."""
+    """📏 The optional unit of the value of the quality."""
+
+
+class QualityDefinitionField(RealField, abc.ABC):
+    """📏 The optional definition [ text | url ] of the quality."""
+
+    definition: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="📏 The optional definition [ text | url ] of the quality.",
+    )
+    """📏 The optional definition [ text | url ] of the quality."""
 
 
 class QualityId(QualityNameField, Id):
@@ -1743,20 +1785,12 @@ class QualityProps(
 
 
 class QualityInput(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Input
+    QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
 ):
     """↘️ The input for a quality."""
 
 
-class QualityContext(
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Context):
+class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
     """📑 The context of a quality."""
 
 
@@ -1778,7 +1812,7 @@ class Quality(
     TableEntity,
     table=True,
 ):
-    """📏 A quality is a named value with a definition and a unit."""
+    """📏 A quality is a named value with a unit and a definition."""
 
     PLURAL = "qualities"
     __tablename__ = "quality"
@@ -1887,14 +1921,14 @@ class TypeVariantField(RealField, abc.ABC):
 
 
 class TypeUnitField(RealField, abc.ABC):
-    """📏 The unit of the type."""
+    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
     unit: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The unit of the type.",
+        description="Ⓜ️ The length unit of the point and the direction of the ports of the type.",
     )
-    """📏 The unit of the type."""
+    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
 
 class TypeCreatedAtField(RealField, abc.ABC):
@@ -1940,7 +1974,7 @@ class TypeInput(
     TypeNameField,
     Input,
 ):
-    """↘️ The input for a type."""
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
@@ -1957,7 +1991,7 @@ class TypeOutput(
     TypeNameField,
     Output,
 ):
-    """↗️ The output of a type."""
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
@@ -1965,13 +1999,9 @@ class TypeOutput(
 
 
 class TypeContext(
-    TypeUnitField,
-    TypeVariantField,
-    TypeDescriptionField,
-    TypeNameField,
-    Context
+    TypeUnitField, TypeVariantField, TypeDescriptionField, TypeNameField, Context
 ):
-    """📑 The context of a type."""
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     representations: list[RepresentationContext] = sqlmodel.Field(default_factory=list)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
@@ -2151,7 +2181,7 @@ class PieceProps(
 
 
 class PieceInput(PieceTypeField, PieceIdField, Input):
-    """↘️ The input for a piece."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(
         description="◳ The plane of the piece.",
@@ -2163,8 +2193,22 @@ class PieceInput(PieceTypeField, PieceIdField, Input):
     """📺 The screen point of the piece."""
 
 
+class PieceContext(PieceTypeField, PieceIdField, Context):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    plane: typing.Optional[PlaneContext] = sqlmodel.Field(
+        default=None,
+        description="◳ The plane of the piece.",
+    )
+    """◳ The plane of the piece."""
+    # screenPoint: ScreenPointContext = sqlmodel.Field(
+    #     description="📺 The screen point of the piece.",
+    # )
+    # """📺 The screen point of the piece."""
+
+
 class PieceOutput(PieceTypeField, PieceIdField, Output):
-    """↗️ The output of a piece."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
         default=None,
@@ -2175,6 +2219,15 @@ class PieceOutput(PieceTypeField, PieceIdField, Output):
         description="📺 The screen point of the piece.",
     )
     """📺 The screen point of the piece."""
+
+
+class PiecePrediction(PieceTypeField, PieceIdField, Prediction):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    # screenPoint: ScreenPointPrediction = sqlmodel.Field(
+    #     description="📺 The screen point of the piece.",
+    # )
+    # """📺 The screen point of the piece."""
 
 
 class Piece(TableEntity, table=True):
@@ -2332,6 +2385,8 @@ class Piece(TableEntity, table=True):
 
 
 class Side(Model):
+    """🧱 A side of a piece in a connection."""
+
     piece: PieceId = sqlmodel.Field()
     port: PortId = sqlmodel.Field()
 
@@ -2351,12 +2406,20 @@ class Side(Model):
         return cls(piece=piece, port=port)
 
 
-class SideInput(Side):
-    pass
+class SideInput(Side, Input):
+    """🧱 A side of a piece in a connection."""
 
 
-class SideOutput(Side):
-    pass
+class SideContext(Side, Context):
+    """🧱 A side of a piece in a connection."""
+
+
+class SideOutput(Side, Output):
+    """🧱 A side of a piece in a connection."""
+
+
+class SidePrediction(Side, Prediction):
+    """🧱 A side of a piece in a connection."""
 
 
 ### Connections ###
@@ -2439,13 +2502,32 @@ class ConnectionInput(
     ConnectionRotationField,
     Input,
 ):
-    """↘️ The input for a connection."""
+    """🖇️ A connection between two pieces of a design."""
 
     connected: SideInput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
     )
     """🧲 The connected side of the connection."""
     connecting: SideInput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class ConnectionContext(
+    ConnectionShiftField,
+    ConnectionGapField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Context,
+):
+    """🖇️ A connection between two pieces of a design."""
+
+    connected: SideContext = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SideContext = sqlmodel.Field(
         description="🧲 The connecting side of the connection."
     )
     """🧲 The connecting side of the connection."""
@@ -2458,13 +2540,32 @@ class ConnectionOutput(
     ConnectionRotationField,
     Output,
 ):
-    """↗️ The output of a connection."""
+    """🖇️ A connection between two pieces of a design."""
 
     connected: SideOutput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
     )
     """🧲 The connected side of the connection."""
     connecting: SideOutput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class ConnectionPrediction(
+    ConnectionShiftField,
+    ConnectionGapField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Prediction,
+):
+    """🖇️ A connection between two pieces of a design."""
+
+    connected: SidePrediction = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SidePrediction = sqlmodel.Field(
         description="🧲 The connecting side of the connection."
     )
     """🧲 The connecting side of the connection."""
@@ -2777,11 +2878,25 @@ class DesignInput(
     DesignNameField,
     Input,
 ):
-    """↘️ The input for a design."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+
+
+class DesignContext(
+    DesignUnitField,
+    DesignVariantField,
+    DesignDescriptionField,
+    DesignNameField,
+    Context,
+):
+    """🏙️ A design is a collection of pieces that are connected."""
+
+    pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class DesignOutput(
@@ -2794,11 +2909,20 @@ class DesignOutput(
     DesignNameField,
     Output,
 ):
-    """↗️ The output of a design."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+
+
+class DesignPrediction(
+    Prediction,
+):
+    """🏙️ A design is a collection of pieces that are connected."""
+
+    pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 
 class Design(
@@ -4255,66 +4379,30 @@ async def delete_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-def changeValues(c: dict | list, key: str, func: callable) -> None:
-    if isinstance(c, dict):
-        if key in c:
-            c[key] = func(c[key])
-        for v in c.values():
-            if isinstance(v, dict) or isinstance(v, list):
-                changeValues(v, key, func)
-    if isinstance(c, list):
-        for v in c:
-            if isinstance(v, dict) or isinstance(v, list):
-                changeValues(v, key, func)
-
-
-def changeKeys(c: dict | list, func: callable) -> None:
-    if isinstance(c, dict):
-        for k in list(c.keys()):
-            newKey = func(k)
-            v = c.pop(k)
-            c[newKey] = v
-            if isinstance(v, dict) or isinstance(v, list):
-                changeKeys(v, func)
-    if isinstance(c, list):
-        for v in c:
-            if isinstance(v, dict) or isinstance(v, list):
-                changeKeys(v, func)
-
-
-class SemioGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
-    def generate(self, schema, mode='validation'):
+class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
-        # Remove all Output suffixes
-        # newDefs = {}
-        # for dk,dv in json_schema['$defs'].items():
-        #     shortKey = dk
-        #     dv['title'] = dv['title'].removesuffix('Output')
-        #     shortKey = dk.removesuffix('Output')
-        #     for pv in dv['properties'].values():
-        #         if '$ref' in pv:
-        #             pv['$ref'] = pv['$ref'].removesuffix('Output')
-        #         if 'items' in pv and '$ref' in pv['items']:
-        #             pv['items']['$ref'] = pv['items']['$ref'].removesuffix('Output')
-        #         if 'anyOf' in pv:
-        #             for anyOf in pv['anyOf']:
-        #                 if '$ref' in anyOf:
-        #                     anyOf['$ref'] = anyOf['$ref'].removesuffix('Output')
-        #     newDefs[shortKey] = dv
-        # json_schema['$defs'] = newDefs
-        # for pv in json_schema['properties'].values():
-        #     if '$ref' in pv:
-        #         pv['$ref'] = pv['$ref'].removesuffix('Output')
-        #     if 'items' in pv and '$ref' in pv['items']:
-        #         pv['items']['$ref'] = pv['items']['$ref'].removesuffix('Output')
-        #     if 'anyOf' in pv:
-        #         for anyOf in pv['anyOf']:
-        #             if '$ref' in anyOf:
-        #                 anyOf['$ref'] = anyOf['$ref'].removesuffix('Output')
-        # json_schema['title'] = json_schema['title'].removesuffix('Output')
-        changeValues(json_schema, '$ref', lambda x: x.removesuffix('Output'))
-        changeValues(json_schema, 'title', lambda x: x.removesuffix('Output'))
-        changeKeys(json_schema, lambda x: x.removesuffix('Output'))
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Context"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Context"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Context"))
+        return json_schema
+
+
+class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
+        json_schema = super().generate(schema, mode=mode)
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Output"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Output"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Output"))
+        return json_schema
+
+
+class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
+        json_schema = super().generate(schema, mode=mode)
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Prediction"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Prediction"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
         return json_schema
 
 
@@ -4327,9 +4415,9 @@ def custom_openapi():
         summary="This is the local rest API of the semio engine.",
         routes=rest.routes,
     )
-    changeValues(openapi_schema, '$ref', lambda x: x.removesuffix('Output'))
-    changeValues(openapi_schema, 'title', lambda x: x.removesuffix('Output'))
-    changeKeys(openapi_schema, lambda x: x.removesuffix('Output'))
+    changeValues(openapi_schema, "$ref", lambda x: x.removesuffix("Output"))
+    changeValues(openapi_schema, "title", lambda x: x.removesuffix("Output"))
+    changeKeys(openapi_schema, lambda x: x.removesuffix("Output"))
     rest.openapi_schema = openapi_schema
     return rest.openapi_schema
 
@@ -4372,15 +4460,50 @@ def generateSchemas():
 
     with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
         json.dump(rest.openapi(), f, indent=4)
-    
+
     with open("../../jsonschema/kit.json", "w", encoding="utf-8") as f:
-        json.dump(KitOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
-    
+        json.dump(
+            KitOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/design-context.json", "w", encoding="utf-8") as f:
+        json.dump(
+            DesignContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
     with open("../../jsonschema/design.json", "w", encoding="utf-8") as f:
-        json.dump(DesignOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
-    
+        json.dump(
+            DesignOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/design-prediction.json", "w", encoding="utf-8") as f:
+        json.dump(
+            DesignPrediction.model_json_schema(
+                schema_generator=PredictionGenerateJsonSchema
+            ),
+            f,
+            indent=4,
+        )
+
     with open("../../jsonschema/type.json", "w", encoding="utf-8") as f:
-        json.dump(TypeOutput.model_json_schema(schema_generator=SemioGenerateJsonSchema), f, indent=4)
+        json.dump(
+            TypeOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/type-context.json", "w", encoding="utf-8") as f:
+        json.dump(
+            TypeContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
+            f,
+            indent=4,
+        )
 
     sqliteSchemaPath = "../../sqlite/schema.sql"
     if os.path.exists(sqliteSchemaPath):
@@ -4401,7 +4524,6 @@ def generateSchemas():
 
 
 def main():
-    generateSchemas()
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     args = parser.parse_args()

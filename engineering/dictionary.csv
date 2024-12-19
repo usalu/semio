@@ -47,7 +47,7 @@ Symbol,Code,Abbreviation,Name,Description
 ◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
 ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 ✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
-📏,Ql,Qal,Quality,A quality is meta-data for decision making.
+📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 🍾,Rl,Rel,Release,The release of the engine that created this database.
 ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.

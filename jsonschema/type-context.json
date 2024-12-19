@@ -1,0 +1,187 @@
+{
+    "$defs": {
+        "Representation": {
+            "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+            "properties": {
+                "mime": {
+                    "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
+                    "type": "string"
+                },
+                "lod": {
+                    "description": "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "The optional tags to group representations. No tags means default.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "mime",
+                "lod"
+            ],
+            "title": "Representation",
+            "type": "object"
+        },
+        "Point": {
+            "description": "A 3d-point (xyz) of floating point numbers.",
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "type": "object"
+        },
+        "Vector": {
+            "description": "A 3d-vector (xyz) of floating point numbers.",
+            "properties": {
+                "x": {
+                    "description": "The x-coordinate of the vector.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "The y-coordinate of the vector.",
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "description": "The z-coordinate of the vector.",
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Vector",
+            "type": "object"
+        },
+        "Locator": {
+            "description": "A locator is meta-data for grouping ports.",
+            "properties": {
+                "group": {
+                    "description": "The group of the locator.",
+                    "type": "string"
+                },
+                "subgroup": {
+                    "default": "",
+                    "description": "The optional sub-group of the locator. No sub-group means true.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "group"
+            ],
+            "type": "object"
+        },
+        "Port": {
+            "description": "A port is a connection point (with a direction) of a type.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "type": "string"
+                },
+                "point": {
+                    "$ref": "#/$defs/Point",
+                    "description": "The connection point of the port that is attracted to another connection point."
+                },
+                "direction": {
+                    "$ref": "#/$defs/Vector",
+                    "description": "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                },
+                "locators": {
+                    "items": {
+                        "$ref": "#/$defs/Locator"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "point",
+                "direction"
+            ],
+            "type": "object"
+        },
+        "Quality": {
+            "description": "A quality is a named value with a unit and a definition.",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "default": "",
+                    "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+                    "type": "string"
+                },
+                "unit": {
+                    "default": "",
+                    "description": "The optional unit of the value of the quality."
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "type": "object"
+        }
+    },
+    "description": "A type is a reusable element that can be connected with other types over ports.",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "default": "",
+            "type": "string"
+        },
+        "variant": {
+            "default": "",
+            "description": "The optional variant of the type. No variant means the default variant.",
+            "type": "string"
+        },
+        "unit": {
+            "default": "",
+            "description": "The length unit of the point and the direction of the ports of the type.",
+            "title": "Unit",
+            "type": "string"
+        },
+        "representations": {
+            "items": {
+                "$ref": "#/$defs/Representation"
+            },
+            "type": "array"
+        },
+        "ports": {
+            "items": {
+                "$ref": "#/$defs/Port"
+            },
+            "type": "array"
+        },
+        "qualities": {
+            "items": {
+                "$ref": "#/$defs/Quality"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "name"
+    ],
+    "type": "object"
+}

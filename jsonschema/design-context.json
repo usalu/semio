@@ -47,20 +47,6 @@
             "title": "Connection",
             "type": "object"
         },
-        "PieceId": {
-            "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "\ud83c\udd94 The id of the piece.",
-                    "maxLength": 128,
-                    "title": "Id ",
-                    "type": "string"
-                }
-            },
-            "title": "PieceId",
-            "type": "object"
-        },
         "Piece": {
             "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
             "properties": {
@@ -86,17 +72,26 @@
                     ],
                     "default": null,
                     "description": "\u25f3 The plane of the piece."
-                },
-                "screenPoint": {
-                    "$ref": "#/$defs/ScreenPoint",
-                    "description": "\ud83d\udcfa The screen point of the piece."
                 }
             },
             "required": [
-                "type",
-                "screenPoint"
+                "type"
             ],
             "title": "Piece",
+            "type": "object"
+        },
+        "PieceId": {
+            "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "description": "\ud83c\udd94 The id of the piece.",
+                    "maxLength": 128,
+                    "title": "Id ",
+                    "type": "string"
+                }
+            },
+            "title": "PieceId",
             "type": "object"
         },
         "Plane": {
@@ -165,7 +160,7 @@
             "type": "object"
         },
         "Quality": {
-            "description": "\u2197\ufe0f The output of a quality.",
+            "description": "\ud83d\udcd1 The context of a quality.",
             "properties": {
                 "name": {
                     "description": "\ud83d\udccf The name of the quality.",
@@ -186,40 +181,12 @@
                     "maxLength": 64,
                     "title": "Unit",
                     "type": "string"
-                },
-                "definition": {
-                    "default": "",
-                    "description": "\ud83d\udccf The definition of the quality.",
-                    "maxLength": 4096,
-                    "title": "Definition",
-                    "type": "string"
                 }
             },
             "required": [
                 "name"
             ],
             "title": "Quality",
-            "type": "object"
-        },
-        "ScreenPoint": {
-            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
-            "properties": {
-                "x": {
-                    "description": "\ud83c\udfc1 The x-coordinate of the screen point.",
-                    "title": "X",
-                    "type": "integer"
-                },
-                "y": {
-                    "description": "\ud83c\udfc1 The y-coordinate of the screen point.",
-                    "title": "Y",
-                    "type": "integer"
-                }
-            },
-            "required": [
-                "x",
-                "y"
-            ],
-            "title": "ScreenPoint",
             "type": "object"
         },
         "Side": {
@@ -305,13 +272,6 @@
             "title": "Description",
             "type": "string"
         },
-        "icon": {
-            "default": "",
-            "description": "\ud83d\uddbc\ufe0f The icon of the design.",
-            "maxLength": 1024,
-            "title": "Icon",
-            "type": "string"
-        },
         "variant": {
             "default": "",
             "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
@@ -324,18 +284,6 @@
             "description": "\ud83d\udccf The unit of the design.",
             "maxLength": 64,
             "title": "Unit",
-            "type": "string"
-        },
-        "createdAt": {
-            "description": "\ud83d\udd52 The creation date of the design.",
-            "format": "date-time",
-            "title": "Createdat",
-            "type": "string"
-        },
-        "lastUpdateAt": {
-            "description": "\ud83d\udd52 The last update date of the design.",
-            "format": "date-time",
-            "title": "Lastupdateat",
             "type": "string"
         },
         "pieces": {

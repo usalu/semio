@@ -1,7 +1,7 @@
 {
     "$defs": {
         "Locator": {
-            "description": "\u2197\ufe0f The output of a locator.",
+            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
             "properties": {
                 "group": {
                     "description": "\ud83d\udc6a The group of the locator.",
@@ -51,7 +51,7 @@
             "type": "object"
         },
         "Port": {
-            "description": "\u2197\ufe0f The output of a port.",
+            "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type.",
             "properties": {
                 "id_": {
                     "default": "",
@@ -122,7 +122,7 @@
             "type": "object"
         },
         "Representation": {
-            "description": "\u2197\ufe0f The output of a representation.",
+            "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
                 "mime": {
                     "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
@@ -187,7 +187,7 @@
             "type": "object"
         }
     },
-    "description": "\u2197\ufe0f The output of a type.",
+    "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports.",
     "properties": {
         "name": {
             "description": "\ud83d\udcdb The name of the type.",
@@ -218,7 +218,7 @@
         },
         "unit": {
             "default": "",
-            "description": "\ud83d\udccf The unit of the type.",
+            "description": "\ud83d\udccf The length unit of the point and the direction of the ports of the type.",
             "maxLength": 64,
             "title": "Unit",
             "type": "string"

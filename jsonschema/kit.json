@@ -1,7 +1,7 @@
 {
     "$defs": {
         "Connection": {
-            "description": "\u2197\ufe0f The output of a connection.",
+            "description": "\ud83d\udd87\ufe0f A connection between two pieces of a design.",
             "properties": {
                 "rotation": {
                     "default": 0,
@@ -48,7 +48,7 @@
             "type": "object"
         },
         "Design": {
-            "description": "\u2197\ufe0f The output of a design.",
+            "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected.",
             "properties": {
                 "name": {
                     "description": "\ud83d\udcdb The name of the design.",
@@ -125,7 +125,7 @@
             "type": "object"
         },
         "Locator": {
-            "description": "\u2197\ufe0f The output of a locator.",
+            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
             "properties": {
                 "group": {
                     "description": "\ud83d\udc6a The group of the locator.",
@@ -162,7 +162,7 @@
             "type": "object"
         },
         "Piece": {
-            "description": "\u2197\ufe0f The output of a piece.",
+            "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
             "properties": {
                 "id_": {
                     "default": "",
@@ -200,7 +200,7 @@
             "type": "object"
         },
         "Plane": {
-            "description": "\u2197\ufe0f The output of a plane.",
+            "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis).",
             "properties": {
                 "origin": {
                     "$ref": "#/$defs/Point",
@@ -265,7 +265,7 @@
             "type": "object"
         },
         "Port": {
-            "description": "\u2197\ufe0f The output of a port.",
+            "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type.",
             "properties": {
                 "id_": {
                     "default": "",
@@ -336,7 +336,7 @@
             "type": "object"
         },
         "Representation": {
-            "description": "\u2197\ufe0f The output of a representation.",
+            "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
                 "mime": {
                     "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
@@ -374,7 +374,7 @@
             "type": "object"
         },
         "ScreenPoint": {
-            "description": "\u2197\ufe0f The output of a screen point.",
+            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
             "properties": {
                 "x": {
                     "description": "\ud83c\udfc1 The x-coordinate of the screen point.",
@@ -395,6 +395,7 @@
             "type": "object"
         },
         "Side": {
+            "description": "\ud83e\uddf1 A side of a piece in a connection.",
             "properties": {
                 "piece": {
                     "$ref": "#/$defs/PieceId"
@@ -434,7 +435,7 @@
             "type": "object"
         },
         "Type": {
-            "description": "\u2197\ufe0f The output of a type.",
+            "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports.",
             "properties": {
                 "name": {
                     "description": "\ud83d\udcdb The name of the type.",
@@ -465,7 +466,7 @@
                 },
                 "unit": {
                     "default": "",
-                    "description": "\ud83d\udccf The unit of the type.",
+                    "description": "\ud83d\udccf The length unit of the point and the direction of the ports of the type.",
                     "maxLength": 64,
                     "title": "Unit",
                     "type": "string"
