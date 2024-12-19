@@ -1386,9 +1386,9 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Rotation", "Rt?",
-            "The optional rotation between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Tilt", "Tl?",
-            "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.",
+            "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",

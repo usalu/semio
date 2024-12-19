@@ -520,10 +520,10 @@ input TypeIdInputNode {
 }
 
 input ConnectionInputNode {
-  """🔄 The rotation of the connection."""
+  """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
   rotation: Float = 0
 
-  """↗️ The tilt of the connection."""
+  """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
   tilt: Float = 0
 
   """

@@ -94,14 +94,14 @@ engine.py
 # 🍾,Rl,Rel,Release,The release of the engine that created this database.
 # ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 # 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
-# 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
+# 🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 # 🧱,Sd,Sde,Side,A side of a piece in a connection.
 # ↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
 # 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 # 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
 # ✅,Su,Suc,Success,{{NAME}} was successful.
 # 🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-# ↗️,Tl?,Tlt,Tilt,The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+# ↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
 # ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 # 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 # 🧩,Ty,Typ,Type,The type-related information of the side.
@@ -2444,21 +2444,21 @@ class ConnectionConnectingField(MaskedField, abc.ABC):
 
 
 class ConnectionRotationField(RealField, abc.ABC):
-    """🔄 The rotation of the connection."""
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
     rotation: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="🔄 The rotation of the connection."
+        ge=0, lt=360, default=0, description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
     )
-    """🔄 The rotation of the connection."""
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
 
 class ConnectionTiltField(RealField, abc.ABC):
-    """↗️ The tilt of the connection."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
     tilt: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="↗️ The tilt of the connection."
+        ge=0, lt=360, default=0, description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."
     )
-    """↗️ The tilt of the connection."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
 
 class ConnectionGapField(RealField, abc.ABC):
@@ -2502,7 +2502,7 @@ class ConnectionInput(
     ConnectionRotationField,
     Input,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SideInput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
@@ -2521,7 +2521,7 @@ class ConnectionContext(
     ConnectionRotationField,
     Context,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SideContext = sqlmodel.Field(
         description="🧲 The connected side of the connection."
@@ -2540,7 +2540,7 @@ class ConnectionOutput(
     ConnectionRotationField,
     Output,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SideOutput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
@@ -2559,7 +2559,7 @@ class ConnectionPrediction(
     ConnectionRotationField,
     Prediction,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SidePrediction = sqlmodel.Field(
         description="🧲 The connected side of the connection."
@@ -2579,7 +2579,7 @@ class Connection(
     TableEntity,
     table=True,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     PLURAL = "connections"
     __tablename__ = "connection"

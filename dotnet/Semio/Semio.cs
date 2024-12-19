@@ -1170,9 +1170,9 @@ public class Side : Model<Side>
 }
 
 /// <summary>
-///     🔗 A connection between two pieces in a design.
+///     🔗 A bidirectional connection between two pieces of a design.
 /// </summary>
-[Model("🔗", "Co", "Con", "A connection between two pieces in a design.")]
+[Model("🔗", "Co", "Con", "A bidirectional connection between two pieces of a design.")]
 public class Connection : Model<Connection>
 {
     private float _rotation;
@@ -1191,9 +1191,9 @@ public class Connection : Model<Connection>
     public Side Connecting { get; set; } = new();
 
     /// <summary>
-    ///     🔄 The optional rotation between the connected and the connecting piece in degrees.
+    ///     🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("🔄", "Rt?", "Rot", "The optional rotation between the connected and the connecting piece in degrees.")]
+    [AngleProp("🔄", "Rt?", "Rot", "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.")]
     public float Rotation
     {
         get => _rotation;
@@ -1201,10 +1201,10 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+    ///     ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
     /// </summary>
     [AngleProp("↗️", "Tl?", "Tlt",
-        "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
+        "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.")]
     public float Tilt
     {
         get => _tilt;

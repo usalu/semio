@@ -250,7 +250,7 @@ import { ThemeConfig } from 'antd/lib'
 //     port?: Maybe<Port>;
 // };
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection';
 //     gap: Scalars['Float']['output'];
@@ -589,7 +589,7 @@ import { ThemeConfig } from 'antd/lib'
 //     y?: InputMaybe<Scalars['Int']['input']>;
 // };
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type ConnectionInput = {
 //     connecting: SideInput;
 //     connected: SideInput;

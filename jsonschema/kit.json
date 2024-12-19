@@ -1,11 +1,11 @@
 {
     "$defs": {
         "Connection": {
-            "description": "\ud83d\udd87\ufe0f A connection between two pieces of a design.",
+            "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
                 "rotation": {
                     "default": 0,
-                    "description": "\ud83d\udd04 The rotation of the connection.",
+                    "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                     "exclusiveMaximum": 360.0,
                     "minimum": 0.0,
                     "title": "Rotation",
@@ -13,7 +13,7 @@
                 },
                 "tilt": {
                     "default": 0,
-                    "description": "\u2197\ufe0f The tilt of the connection.",
+                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
                     "exclusiveMaximum": 360.0,
                     "minimum": 0.0,
                     "title": "Tilt",

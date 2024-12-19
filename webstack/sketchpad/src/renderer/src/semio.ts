@@ -118,7 +118,7 @@ export const TOLERANCE = 1e-5
 //     port?: Maybe<Port>
 // }
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection'
 //     gap: Scalars['Float']['output']
@@ -457,7 +457,7 @@ export const TOLERANCE = 1e-5
 //     y?: InputMaybe<Scalars['Int']['input']>
 // }
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type ConnectionInput = {
 //     connecting: SideInput
 //     connected: SideInput
