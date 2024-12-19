@@ -1,33 +1,64 @@
 {
+    "type": "object",
+    "description": "A type is a reusable element that can be connected with other types over ports.",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "variant": {
+            "type": "string",
+            "description": "The optional variant of the type. No variant means the default variant."
+        },
+        "unit": {
+            "type": "string",
+            "description": "The length unit of the point and the direction of the ports of the type."
+        },
+        "representations": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/Representation"
+            }
+        },
+        "ports": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/Port"
+            }
+        },
+        "qualities": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/Quality"
+            }
+        }
+    },
     "$defs": {
         "Representation": {
+            "type": "object",
             "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
                 "mime": {
-                    "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
                 },
                 "lod": {
-                    "description": "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
                 },
                 "tags": {
+                    "type": "array",
                     "description": "The optional tags to group representations. No tags means default.",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 }
-            },
-            "required": [
-                "mime",
-                "lod"
-            ],
-            "title": "Representation",
-            "type": "object"
+            }
         },
         "Point": {
-            "description": "A 3d-point (xyz) of floating point numbers.",
+            "type": "object",
             "properties": {
                 "x": {
                     "type": "number"
@@ -38,42 +69,24 @@
                 "z": {
                     "type": "number"
                 }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "type": "object"
+            }
         },
         "Vector": {
-            "description": "A 3d-vector (xyz) of floating point numbers.",
+            "type": "object",
             "properties": {
                 "x": {
-                    "description": "The x-coordinate of the vector.",
-                    "title": "X",
                     "type": "number"
                 },
                 "y": {
-                    "description": "The y-coordinate of the vector.",
-                    "title": "Y",
                     "type": "number"
                 },
                 "z": {
-                    "description": "The z-coordinate of the vector.",
-                    "title": "Z",
                     "type": "number"
                 }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "title": "Vector",
-            "type": "object"
+            }
         },
         "Locator": {
+            "type": "object",
             "description": "A locator is meta-data for grouping ports.",
             "properties": {
                 "group": {
@@ -85,17 +98,13 @@
                     "description": "The optional sub-group of the locator. No sub-group means true.",
                     "type": "string"
                 }
-            },
-            "required": [
-                "group"
-            ],
-            "type": "object"
+            }
         },
         "Port": {
+            "type": "object",
             "description": "A port is a connection point (with a direction) of a type.",
             "properties": {
-                "id_": {
-                    "default": "",
+                "id": {
                     "type": "string"
                 },
                 "point": {
@@ -107,81 +116,29 @@
                     "description": "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
                 },
                 "locators": {
+                    "type": "array",
                     "items": {
                         "$ref": "#/$defs/Locator"
-                    },
-                    "type": "array"
+                    }
                 }
-            },
-            "required": [
-                "point",
-                "direction"
-            ],
-            "type": "object"
+            }
         },
         "Quality": {
+            "type": "object",
             "description": "A quality is a named value with a unit and a definition.",
             "properties": {
                 "name": {
                     "type": "string"
                 },
                 "value": {
-                    "default": "",
-                    "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name."
                 },
                 "unit": {
-                    "default": "",
+                    "type": "string",
                     "description": "The optional unit of the value of the quality."
                 }
-            },
-            "required": [
-                "name"
-            ],
-            "type": "object"
+            }
         }
-    },
-    "description": "A type is a reusable element that can be connected with other types over ports.",
-    "properties": {
-        "name": {
-            "type": "string"
-        },
-        "description": {
-            "default": "",
-            "type": "string"
-        },
-        "variant": {
-            "default": "",
-            "description": "The optional variant of the type. No variant means the default variant.",
-            "type": "string"
-        },
-        "unit": {
-            "default": "",
-            "description": "The length unit of the point and the direction of the ports of the type.",
-            "title": "Unit",
-            "type": "string"
-        },
-        "representations": {
-            "items": {
-                "$ref": "#/$defs/Representation"
-            },
-            "type": "array"
-        },
-        "ports": {
-            "items": {
-                "$ref": "#/$defs/Port"
-            },
-            "type": "array"
-        },
-        "qualities": {
-            "items": {
-                "$ref": "#/$defs/Quality"
-            },
-            "type": "array"
-        }
-    },
-    "required": [
-        "name"
-    ],
-    "type": "object"
+    }
 }
