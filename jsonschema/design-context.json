@@ -170,14 +170,14 @@
                 },
                 "value": {
                     "default": "",
-                    "description": "\ud83d\udccf The value of the quality.",
+                    "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
                     "maxLength": 64,
                     "title": "Value",
                     "type": "string"
                 },
                 "unit": {
                     "default": "",
-                    "description": "\ud83d\udccf The unit of the quality.",
+                    "description": "\ud83d\udccf The optional unit of the value of the quality.",
                     "maxLength": 64,
                     "title": "Unit",
                     "type": "string"

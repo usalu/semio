@@ -188,7 +188,7 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 # ❤️ Contribution
 
 New platforms wait to be reached, bugs wait to be found, examples wait to be created, documentation waits to be written, ...
-Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues), take a look under the [project site](https://github.com/users/usalu/projects/2) or just write me an [e-mail](semio-community@posteo.org) 👋
+Feel free to open a [discussion](https://github.com/usalu/semio/discussions), an [issue](https://github.com/usalu/semio/issues), take a look under the [project site](https://github.com/users/usalu/projects/2) or just write me an [e-mail](semio-tech@posteo.de) 👋
 
 ## 💻 Building from source
 

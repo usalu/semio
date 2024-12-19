@@ -1062,6 +1062,44 @@ public class ConvertUnitComponent : Component
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
+//public class UpdateComponents : Component
+//{
+//    public UpdateComponents()
+//    : base("Update Components", "↑Cmps", "Update all components.", "Util")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("51AC98FB-167F-41EC-9BBA-867A0B3F9E0A");
+
+//    protected override Bitmap Icon => Resources.components_update_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Update", "Up", "Update all components.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Updated", "Upd", "True if components were updated.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var update = false;
+//        DA.GetData(0, ref update);
+//        if (update)
+//        {
+//            foreach (var obj in Instances.ActiveCanvas.Document.Objects)
+//            {
+//                if (obj is GH_Component component)
+//                    component.ExpireSolution(true);
+//            }
+//        }
+
+//        DA.SetData(0, update);
+//    }
+//}
+
 #endregion
 
 #region Modelling

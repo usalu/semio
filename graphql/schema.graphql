@@ -367,7 +367,9 @@ input TypeInputNode {
   """
   variant: String = ""
 
-  """📏 The length unit of the point and the direction of the ports of the type."""
+  """
+  Ⓜ️ The length unit of the point and the direction of the ports of the type.
+  """
   unit: String = ""
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
@@ -446,13 +448,15 @@ input QualityInputNode {
   """📏 The name of the quality."""
   name: String!
 
-  """📏 The value of the quality."""
+  """
+  📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+  """
   value: String = ""
 
-  """📏 The unit of the quality."""
+  """📏 The optional unit of the value of the quality."""
   unit: String = ""
 
-  """📏 The definition of the quality."""
+  """📏 The optional definition [ text | url ] of the quality."""
   definition: String = ""
 }
 
@@ -520,10 +524,14 @@ input TypeIdInputNode {
 }
 
 input ConnectionInputNode {
-  """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
+  """
+  🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+  """
   rotation: Float = 0
 
-  """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
+  """
+  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+  """
   tilt: Float = 0
 
   """

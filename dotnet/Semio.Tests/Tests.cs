@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Semio.UnitTests;
+namespace Semio.Tests;
 
 public class KitTests
 {

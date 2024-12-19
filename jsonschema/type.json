@@ -95,21 +95,21 @@
                 },
                 "value": {
                     "default": "",
-                    "description": "\ud83d\udccf The value of the quality.",
+                    "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
                     "maxLength": 64,
                     "title": "Value",
                     "type": "string"
                 },
                 "unit": {
                     "default": "",
-                    "description": "\ud83d\udccf The unit of the quality.",
+                    "description": "\ud83d\udccf The optional unit of the value of the quality.",
                     "maxLength": 64,
                     "title": "Unit",
                     "type": "string"
                 },
                 "definition": {
                     "default": "",
-                    "description": "\ud83d\udccf The definition of the quality.",
+                    "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
                     "maxLength": 4096,
                     "title": "Definition",
                     "type": "string"
@@ -218,7 +218,7 @@
         },
         "unit": {
             "default": "",
-            "description": "\ud83d\udccf The length unit of the point and the direction of the ports of the type.",
+            "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
             "maxLength": 64,
             "title": "Unit",
             "type": "string"

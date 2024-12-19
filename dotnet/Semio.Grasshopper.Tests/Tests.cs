@@ -4,7 +4,7 @@ using System.Numerics;
 using Semio;
 using Semio.Grasshopper;
 
-namespace Semio.Grasshopper.UnitTests;
+namespace Semio.Grasshopper.Tests;
 
 public class DesignTests
 {
