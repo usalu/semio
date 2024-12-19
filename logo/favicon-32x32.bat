@@ -1,1 +1,0 @@
-magick emblem-256x256.png -resize 32x32 -define icon:auto-resize="32" favicon-32x32.ico

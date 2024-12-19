@@ -209,7 +209,7 @@
      style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1">
     <path
        id="path100"
-       style="fill:#fa9500;fill-opacity:1;stroke:#001117;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#fa9500;fill-opacity:1;stroke:#f7f3e3;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="m 357.48,8.7370864 -35,35.8075036 V 161.92 h 35 z" />
   </g>
   <g
@@ -217,11 +217,11 @@
      style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1">
     <path
        id="path104"
-       style="fill:#ff344f;fill-opacity:1;stroke:#001117;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ff344f;fill-opacity:1;stroke:#f7f3e3;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="M 357.47999,166.92 H 201.91662 l -37.65973,37.50001 h 193.2231 z" />
     <path
        id="path104-7"
-       style="display:inline;fill:#ff344f;fill-opacity:1;stroke:#001117;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="display:inline;fill:#ff344f;fill-opacity:1;stroke:#f7f3e3;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="M 197.46737,6.9198089 197.47996,162.52625 159.98,200.14545 V 6.9198191 Z" />
   </g>
   <g
@@ -229,11 +229,11 @@
      style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1">
     <path
        id="path96"
-       style="fill:#34d1bf;fill-opacity:1;stroke:#001117;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#34d1bf;fill-opacity:1;stroke:#f7f3e3;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="M 273.26254,6.9199992 H 202.47956 V 44.42 h 34.16918 z" />
     <path
        id="path98"
-       style="fill:#34d1bf;fill-opacity:1;stroke:#001117;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#34d1bf;fill-opacity:1;stroke:#f7f3e3;stroke-width:2.5;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="M 273.26243,86.92 H 202.48 v 37.5 h 34.16895 z" />
   </g>
 </g>
