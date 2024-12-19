@@ -1572,7 +1572,7 @@ class PortInput(PortIdField, Input):
     """🗺️ The locators of the port."""
 
 
-class PortContext(PortDirectionField, PortPointField, PortIdField, Context):
+class PortContext(PortIdField, Context):
     """🔌 A port is a connection point (with a direction) of a type."""
 
     locators: list[LocatorContext] = sqlmodel.Field(
@@ -2003,7 +2003,6 @@ class TypeContext(
 ):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
-    representations: list[RepresentationContext] = sqlmodel.Field(default_factory=list)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
@@ -2447,7 +2446,10 @@ class ConnectionRotationField(RealField, abc.ABC):
     """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
     rotation: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+        ge=0,
+        lt=360,
+        default=0,
+        description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
     )
     """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
@@ -2456,7 +2458,10 @@ class ConnectionTiltField(RealField, abc.ABC):
     """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
     tilt: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."
+        ge=0,
+        lt=360,
+        default=0,
+        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
     )
     """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
