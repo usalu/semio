@@ -23,7 +23,7 @@
           "z": -0.47200605
         }
       },
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -35,7 +35,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -47,7 +47,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -59,7 +59,7 @@
         "variant": "First Storey"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -71,7 +71,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -83,7 +83,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -95,7 +95,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -107,7 +107,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -119,7 +119,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -131,7 +131,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -143,7 +143,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -155,7 +155,7 @@
         "variant": "Last Storey"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -167,7 +167,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -179,7 +179,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -191,7 +191,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -203,7 +203,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -215,7 +215,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -227,7 +227,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -239,7 +239,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -251,7 +251,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -263,7 +263,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -275,7 +275,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -287,7 +287,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -299,7 +299,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -311,7 +311,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -323,7 +323,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -335,7 +335,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -347,7 +347,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -359,7 +359,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -371,7 +371,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -383,7 +383,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -395,7 +395,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -407,7 +407,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -419,7 +419,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -431,7 +431,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -443,7 +443,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -455,7 +455,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -467,7 +467,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -479,7 +479,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -491,7 +491,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -503,7 +503,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -515,7 +515,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -527,7 +527,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -539,7 +539,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -551,7 +551,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -563,7 +563,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -575,7 +575,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -587,7 +587,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -599,7 +599,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -611,7 +611,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -623,7 +623,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -635,7 +635,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -647,7 +647,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -659,7 +659,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -671,7 +671,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -683,7 +683,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -695,7 +695,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -707,7 +707,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -719,7 +719,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -731,7 +731,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -743,7 +743,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -755,7 +755,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -767,7 +767,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -779,7 +779,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -791,7 +791,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -803,7 +803,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -815,7 +815,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -827,7 +827,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -839,7 +839,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -851,7 +851,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -863,7 +863,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -875,7 +875,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -887,7 +887,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -899,7 +899,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -911,7 +911,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -923,7 +923,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -935,7 +935,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -947,7 +947,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -959,7 +959,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -971,7 +971,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -983,7 +983,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -995,7 +995,7 @@
         "variant": "First Storey"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1007,7 +1007,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1019,7 +1019,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1031,7 +1031,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1043,7 +1043,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1055,7 +1055,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1067,7 +1067,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1079,7 +1079,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1091,7 +1091,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1103,7 +1103,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1115,7 +1115,7 @@
         "variant": "Last Storey"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1127,7 +1127,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1139,7 +1139,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1151,7 +1151,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1163,7 +1163,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1175,7 +1175,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1187,7 +1187,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1199,7 +1199,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1211,7 +1211,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1223,7 +1223,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1235,7 +1235,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1247,7 +1247,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1259,7 +1259,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1271,7 +1271,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1283,7 +1283,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1295,7 +1295,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1307,7 +1307,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1319,7 +1319,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1331,7 +1331,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1343,7 +1343,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1355,7 +1355,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1367,7 +1367,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1379,7 +1379,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1391,7 +1391,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1403,7 +1403,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1415,7 +1415,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1427,7 +1427,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1439,7 +1439,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1451,7 +1451,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1463,7 +1463,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1475,7 +1475,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1487,7 +1487,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1499,7 +1499,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1511,7 +1511,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1523,7 +1523,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1535,7 +1535,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1547,7 +1547,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1559,7 +1559,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1571,7 +1571,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1583,7 +1583,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1595,7 +1595,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1607,7 +1607,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1619,7 +1619,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1631,7 +1631,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1643,7 +1643,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1655,7 +1655,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1667,7 +1667,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1679,7 +1679,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1691,7 +1691,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1703,7 +1703,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1715,7 +1715,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1727,7 +1727,7 @@
         "variant": "5"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1739,7 +1739,7 @@
         "variant": "1"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1751,7 +1751,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1763,7 +1763,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1775,7 +1775,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1787,7 +1787,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1799,7 +1799,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1811,7 +1811,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1823,7 +1823,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1835,7 +1835,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1847,7 +1847,7 @@
         "variant": "6"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1859,7 +1859,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1871,7 +1871,7 @@
         "variant": "2"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1883,7 +1883,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1895,7 +1895,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1907,7 +1907,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1919,7 +1919,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1931,7 +1931,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1943,7 +1943,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1955,7 +1955,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1967,7 +1967,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1979,7 +1979,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -1991,7 +1991,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2003,7 +2003,7 @@
         "variant": "7"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2015,7 +2015,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2027,7 +2027,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2039,7 +2039,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2051,7 +2051,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2063,7 +2063,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2075,7 +2075,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2087,7 +2087,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2099,7 +2099,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2111,7 +2111,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2123,7 +2123,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2135,7 +2135,7 @@
         "variant": "4"
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2147,7 +2147,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2159,7 +2159,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }
@@ -2171,7 +2171,7 @@
         "variant": ""
       },
       "plane": null,
-      "screenPoint": {
+      "center": {
         "x": 0,
         "y": 0
       }

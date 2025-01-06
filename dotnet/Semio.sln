@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio", "Semio\Semio.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.UnitTests", "Semio.UnitTests\Semio.UnitTests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Tests", "Semio.Tests\Semio.Tests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.UnitTests", "Semio.Grasshopper.UnitTests\Semio.Grasshopper.UnitTests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.Tests", "Semio.Grasshopper.Tests\Semio.Grasshopper.Tests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

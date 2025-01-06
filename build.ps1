@@ -1,10 +1,7 @@
-Set-Location dotnet
-.\build.ps1
-Set-Location ..
-Set-Location python\engine
-.\build.ps1
-Set-Location ..
-Set-Location ..
-Set-Location yak
-.\build.ps1
-Set-Location ..
+$directories = @("logo","icons", "dotnet", "python\engine", "yak")
+
+foreach ($dir in $directories) {
+    Set-Location $dir
+    .\build.ps1
+    Set-Location ..
+}

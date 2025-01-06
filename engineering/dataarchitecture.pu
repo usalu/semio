@@ -5,6 +5,7 @@ interface Artifact {
     *name : string
     *description : string
     *icon : string
+    *image : string
     ..
     *createdAt : datetime
     *lastUpdatedAt : datetime
@@ -20,15 +21,23 @@ end note
 entity Kit {
     *id : int <<PK,generated>> 
     ..
-    *url : string
-    *homePage : string
+    *uri : string
+    ..
+    *version : string
+    *remote : string
+    *homepage : string
+    *license : string
 }
 note left of Kit
-    url is unique.
-    url is optional
+    uri is unique.
+    version="" means latest.
+    remote is optional
     (can be set to "").
-    homePage is optional
+    homepage is optional
     (can be set to "").
+    license is optional
+    (can be set to "").
+
 end note
 
 entity Type {
@@ -108,6 +117,18 @@ note bottom of Quality
     (can be set to "").
 end note
 
+entity Author {
+    *name : string
+    *email : string
+    ..
+    *typeId : int <<PK,FK>>
+    *designId : int <<PK,FK>>
+}
+note right of Authors
+    Either typeId or designId
+    must be set.
+end note
+
 entity Locator {
     *group : string <<PK>>
     *subgroup : string
@@ -125,20 +146,20 @@ entity Piece {
     *localId : string
     *typeId : int <<FK>>
     ..
-    rootPlaneOriginX : float
-    rootPlaneOriginY : float
-    rootPlaneOriginZ : float
+    planeOriginX : float
+    planeOriginY : float
+    planeOriginZ : float
     ..
-    rootPlaneXAxisX : float
-    rootPlaneXAxisY : float
-    rootPlaneXAxisZ : float
+    planeXAxisX : float
+    planeXAxisY : float
+    planeXAxisZ : float
     ..
-    rootPlaneYAxisX : float
-    rootPlaneYAxisY : float
-    rootPlaneYAxisZ : float
+    planeYAxisX : float
+    planeYAxisY : float
+    planeYAxisZ : float
     ..
-    *diagramPointX : int
-    *diagramPointY : int
+    *centerX : int
+    *centerY : int
     ..
     *designId : int <<FK>>
 }
@@ -157,8 +178,13 @@ entity Connection {
     *connectedPieceId : int <<PK,FK>>
     *connectedPieceTypePortId : int <<FK>>
     ..
-    *gap : float
     *rotation : float
+    *tilt : float
+    *gap : float
+    *shift : float
+    ..
+    *x : float
+    *y : float
     ..
     *designId : int <<FK>>
 }
@@ -193,9 +219,11 @@ Tag }o--|| Representation
 Representation }|--|| Type
 Type ||--|{ Port
 Type ||--o{ Quality
+Type ||--o{ Author
 Design ||--|{ Piece
 Design ||--o{ Connection
 Design ||--o{ Quality
+Design ||--o{ Author
 Port ||--o{ Locator
 Type <-- Piece
 Piece <-- Connection

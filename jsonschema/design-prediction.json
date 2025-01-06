@@ -1,0 +1,159 @@
+{
+    "$defs": {
+        "Connection": {
+            "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
+            "properties": {
+                "rotation": {
+                    "default": 0,
+                    "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Rotation",
+                    "type": "number"
+                },
+                "tilt": {
+                    "default": 0,
+                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Tilt",
+                    "type": "number"
+                },
+                "gap": {
+                    "default": 0,
+                    "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                    "title": "Gap",
+                    "type": "number"
+                },
+                "shift": {
+                    "default": 0,
+                    "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                    "title": "Shift",
+                    "type": "number"
+                },
+                "connected": {
+                    "$ref": "#/$defs/Side",
+                    "description": "\ud83e\uddf2 The connected side of the connection."
+                },
+                "connecting": {
+                    "$ref": "#/$defs/Side",
+                    "description": "\ud83e\uddf2 The connecting side of the connection."
+                }
+            },
+            "required": [
+                "connected",
+                "connecting"
+            ],
+            "title": "Connection",
+            "type": "object"
+        },
+        "PieceId": {
+            "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "description": "\ud83c\udd94 The id of the piece.",
+                    "maxLength": 128,
+                    "title": "Id ",
+                    "type": "string"
+                }
+            },
+            "title": "PieceId",
+            "type": "object"
+        },
+        "Piece": {
+            "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "description": "\ud83c\udd94 The id of the piece.",
+                    "maxLength": 128,
+                    "title": "Id ",
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/$defs/TypeId",
+                    "description": "\ud83e\udde9 The type of the piece."
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "Piece",
+            "type": "object"
+        },
+        "PortId": {
+            "description": "\ud83e\udeaa The props to identify the port within the parent type.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "description": "\ud83c\udd94 The id of the port.",
+                    "maxLength": 128,
+                    "title": "Id ",
+                    "type": "string"
+                }
+            },
+            "title": "PortId",
+            "type": "object"
+        },
+        "Side": {
+            "description": "\ud83e\uddf1 A side of a piece in a connection.",
+            "properties": {
+                "piece": {
+                    "$ref": "#/$defs/PieceId"
+                },
+                "port": {
+                    "$ref": "#/$defs/PortId"
+                }
+            },
+            "required": [
+                "piece",
+                "port"
+            ],
+            "title": "Side",
+            "type": "object"
+        },
+        "TypeId": {
+            "description": "\ud83e\udeaa The props to identify the type.",
+            "properties": {
+                "name": {
+                    "description": "\ud83d\udcdb The name of the type.",
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "variant": {
+                    "default": "",
+                    "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
+                    "maxLength": 64,
+                    "title": "Variant",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "TypeId",
+            "type": "object"
+        }
+    },
+    "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected.",
+    "properties": {
+        "pieces": {
+            "items": {
+                "$ref": "#/$defs/Piece"
+            },
+            "title": "Pieces",
+            "type": "array"
+        },
+        "connections": {
+            "items": {
+                "$ref": "#/$defs/Connection"
+            },
+            "title": "Connections",
+            "type": "array"
+        }
+    },
+    "title": "Design",
+    "type": "object"
+}

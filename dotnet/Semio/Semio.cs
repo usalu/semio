@@ -1,3 +1,4 @@
+#region License
 //Semio.cs
 //Copyright (C) 2024 Ueli Saluz
 
@@ -13,9 +14,12 @@
 
 //You should have received a copy of the GNU Affero General Public License
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#endregion
 
+#region Usings
 using System.Collections;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.Net;
 using System.Reflection;
 using FluentValidation;
@@ -25,14 +29,21 @@ using QuikGraph;
 using QuikGraph.Algorithms;
 using QuikGraph.Algorithms.Search;
 using Refit;
+using Svg;
+using Svg.Transforms;
+using UnitsNet;
+#endregion
 
+namespace Semio;
+
+#region TODOs
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
 // TODO: Implement reflexive validation for model properties.
 // TODO: Add index to prop and add to list based on index not on source code order.
 // TODO: See if Utility.Encode(uri) can be added by attribute on parameters.
-
-namespace Semio;
+// TODO: Turn inplace and leave clone to the user of the function.
+#endregion
 
 #region Constants
 
@@ -42,9 +53,9 @@ public static class Constants
     public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 2048;
     public const int DescriptionLengthLimit = 4096;
-    public const string Release = "r24.12-1";
-    public const int EnginePort = 24121;
-    public const string EngineAddress = "http://127.0.0.1:24121";
+    public const string Release = "r25.01-1";
+    public const int EnginePort = 2501;
+    public const string EngineAddress = "http://127.0.0.1:2501";
     public const float Tolerance = 1e-5f;
 }
 
@@ -52,9 +63,97 @@ public static class Constants
 
 #region Copilot
 
-//GraphQL
+#region GraphQL
+#endregion
 
-//Dictionary
+#region Dictionary
+//Symbol,Code,Abbreviation,Name,Description
+//👥,Bs,Bas,Base,The shared base props for {{NAME}} models.
+//🧲,Cd,Cnd,Connected,The connected side of the piece of the connection.
+//🧲,Cg,Cng,Connecting,The connecting side of the piece of the connection.
+//🖇️,Co,Con,Connection,A connection between two pieces in a design.
+//🖇️,Co*,Cons,Connections,The optional connections of a design.
+//⌚,CA,CAt,Created At,The time when the {{NAME}} was created.
+//💬,Dc?,Dsc,Description,The optional human-readable description of the {{NAME}}.
+//📖,Df,Def,Definition,The optional definition [ text | url ] of the quality.
+//✏️,Dg,Dgm,Diagram,The diagram of the design.
+//📁,Di?,Dir,Directory,The optional directory where to find the kit.
+//🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
+//➡️,Dr,Drn,Direction,The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
+//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+//🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
+//📺,DP,DPt,Diagram Point,A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
+//🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
+//🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
+//▢,En,Ent,Entity,An entity is a collection of properties and children.
+//🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
+//↕️,Gp?,Gap,Gap,The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
+//🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
+//👪,Gr,Grp,Group,The group of the locator.
+//🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
+//🪙,Ic?,Ico,Icon,The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. {{NAME}}.
+//🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
+//🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
+//🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
+//↘️,In,Inp,Input,The input for a {{NAME}}.
+//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
+//🗺️,Lc,Loc,Locator,A locator is metadata for grouping ports.
+//🗺️,Lc*,Locs,Locators,The optional locators of the port.
+//🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+//📛,Na,Nam,Name,The name of the {{NAME}}.
+//✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+//⌱,Og,Org,Origin,The origin of the plane.
+//↗️,Ou,Out,Output,The output for a {{NAME}}.
+//👪,Pa,Par,Parent,The parent of {{NAME}}.
+//⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
+//🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
+//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+//⭕,Pc?,Pces,Pieces,The optional pieces of the design.
+//🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
+//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+//🔌,Po+,Pors,Ports,The ports of the type.
+//🎫,Pp,Prp,Props,The props are all values of an entity without its children.
+//◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+//◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
+//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+//✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
+//📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
+//🍾,Rl,Rel,Release,The release of the engine that created this database.
+//☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+//💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
+//🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+//🧱,Sd,Sde,Side,A side of a piece in a connection.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
+//✅,Su,Suc,Success,{{NAME}} was successful.
+//🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+//🧩,Ty,Typ,Type,The type-related information of the side.
+//🧩,Ty*,Typs,Types,The optional types of the kit.
+//🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to the resource of the representation.
+//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+//Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
+//🔄,Up,Upd,Update,Update the props of the {{NAME}}. Optionally empty the {{NAME}} before.
+//🔀,Vn?,Vnt,Variant,The optional variant of the {{PARENT_NAME}}. No variant means the default variant. 
+//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+//🔀,Ve,Ver,Version,The optional version of the kit. No version means the latest version.
+//🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
+//🏷️,Vl,Val,Value,The value of the tag.
+//🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+//🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
+//🏁,X,X,X,The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+//🎚️,X,X,X,The x-coordinate of the point.
+//➡️,XA,XAx,XAxis,The x-axis of the plane.
+//🏁,Y,Y,Y,The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+//🎚️,Y,Y,Y,The y-coordinate of the point.
+//➡️,YA,YAx,YAxis,The y-axis of the plane.
+//🏁,Z,Z,Z,The z-coordinate of the screen point.
+//🎚️,Z,Z,Z,The z-coordinate of the point.
+//➡️,ZA,ZAx,ZAxis,The z-axis of the plane.
+#endregion
 
 #endregion
 
@@ -89,6 +188,15 @@ public static class Utility
         {
             return "application/octet-stream";
         }
+    }
+
+    public static string ReadAndEncode(string filename)
+    {
+        var bytes = File.ReadAllBytes(filename);
+        var base64 = Convert.ToBase64String(bytes);
+        var mimeType = ParseMimeFromUrl(filename);
+        var dataUri = $"data:{mimeType};base64,{base64}";
+        return dataUri;
     }
 
     public static string Encode(string text)
@@ -131,6 +239,171 @@ public static class Utility
         adjective = char.ToUpper(adjective[0]) + adjective.Substring(1);
         animal = char.ToUpper(animal[0]) + animal.Substring(1);
         return $"{adjective}{animal}{number}";
+    }
+
+    public class Units
+    {
+        /// <summary>
+        /// Adapted from https://github.com/microsoft/PowerToys/tree/95919508758e71dca88632add8a03c089a822d1c/src/modules/launcher/Plugins/Community.PowerToys.Run.Plugin.UnitConverter
+        /// </summary>
+        private class PowerToysRunUnitConverter
+        {
+            internal class ConvertModel
+            {
+                internal double Value { get; set; }
+
+                internal string FromUnit { get; set; }
+
+                internal string ToUnit { get; set; }
+
+                internal ConvertModel()
+                {
+                }
+
+                internal ConvertModel(double value, string fromUnit, string toUnit)
+                {
+                    Value = value;
+                    FromUnit = fromUnit;
+                    ToUnit = toUnit;
+                }
+            }
+
+            internal class UnitConversionResult
+            {
+                internal static string TitleFormat { get; set; } = "G14";
+
+                internal static string CopyFormat { get; set; } = "R";
+
+                internal double ConvertedValue { get; }
+
+                internal string UnitName { get; }
+
+                internal QuantityInfo QuantityInfo { get; }
+
+                internal UnitConversionResult(double convertedValue, string unitName, QuantityInfo quantityInfo)
+                {
+                    ConvertedValue = convertedValue;
+                    UnitName = unitName;
+                    QuantityInfo = quantityInfo;
+                }
+            }
+
+            internal static class UnitHandler
+            {
+                private static readonly QuantityInfo[] _included = new QuantityInfo[]
+                {
+                    Length.Info,
+                    Area.Info,
+                    Volume.Info,
+                    Duration.Info,
+                    Energy.Info,
+                    Power.Info,
+                    Pressure.Info,
+                    Mass.Info,
+                    Angle.Info,
+                    Temperature.Info,
+                    Acceleration.Info,
+                    Speed.Info,
+                    Information.Info,
+                };
+
+                /// <summary>
+                /// Given string representation of unit, converts it to the enum.
+                /// </summary>
+                /// <returns>Corresponding enum or null.</returns>
+                private static Enum GetUnitEnum(string unit, QuantityInfo unitInfo)
+                {
+                    UnitInfo first = Array.Find(unitInfo.UnitInfos, info =>
+                        string.Equals(unit, info.Name, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(unit, info.PluralName, StringComparison.OrdinalIgnoreCase));
+
+                    if (first != null)
+                    {
+                        return first.Value;
+                    }
+
+                    if (UnitsNetSetup.Default.UnitParser.TryParse(unit, unitInfo.UnitType, out Enum enum_unit))
+                    {
+                        return enum_unit;
+                    }
+
+                    var cultureInfoEnglish = new System.Globalization.CultureInfo("en-US");
+                    if (UnitsNetSetup.Default.UnitParser.TryParse(unit, unitInfo.UnitType, cultureInfoEnglish, out Enum enum_unit_en))
+                    {
+                        return enum_unit_en;
+                    }
+
+                    return null;
+                }
+
+                /// <summary>
+                /// Given parsed ConvertModel, computes result. (E.g "1 foot in cm").
+                /// </summary>
+                /// <returns>The converted value as a double.</returns>
+                internal static double ConvertInput(ConvertModel convertModel, QuantityInfo quantityInfo)
+                {
+                    var fromUnit = GetUnitEnum(convertModel.FromUnit, quantityInfo);
+                    var toUnit = GetUnitEnum(convertModel.ToUnit, quantityInfo);
+
+                    if (fromUnit != null && toUnit != null)
+                    {
+                        return UnitsNet.UnitConverter.Convert(convertModel.Value, fromUnit, toUnit);
+                    }
+
+                    return double.NaN;
+                }
+
+                /// <summary>
+                /// Given ConvertModel returns collection of possible results.
+                /// </summary>
+                /// <returns>The converted value as a double.</returns>
+                internal static IEnumerable<UnitConversionResult> Convert(ConvertModel convertModel)
+                {
+                    var results = new List<UnitConversionResult>();
+                    foreach (var quantityInfo in _included)
+                    {
+                        double convertedValue = UnitHandler.ConvertInput(convertModel, quantityInfo);
+
+                        if (!double.IsNaN(convertedValue))
+                        {
+                            UnitConversionResult result = new UnitConversionResult(convertedValue, convertModel.ToUnit, quantityInfo);
+                            results.Add(result);
+                        }
+                    }
+
+                    return results;
+                }
+            }
+        }
+        public static float Convert(float value, string fromUnit, string toUnit)
+        {
+            var convertModel = new PowerToysRunUnitConverter.ConvertModel(value, fromUnit, toUnit);
+            var results = PowerToysRunUnitConverter.UnitHandler.Convert(convertModel);
+            if (results.Count() == 0)
+            {
+                return float.NaN;
+            }
+            return (float)results.First().ConvertedValue;
+        }
+    }
+
+    public static class Grammar
+    {
+        public static string GetArticle(string word)
+        {
+            if (string.IsNullOrEmpty(word))
+                return string.Empty;
+
+            char firstChar = word.ToLower()[0];
+            if ("aeiou".IndexOf(firstChar) >= 0)
+            {
+                return "an";
+            }
+            else
+            {
+                return "a";
+            }
+        }
     }
 }
 
@@ -216,6 +489,16 @@ public class IdAttribute : TextAttribute
         PropImportance importance = PropImportance.ID, bool isDefaultValid = false, bool skipValidation = false) : base(
         emoji, code,
         abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
+    {
+    }
+}
+
+public class EmailAttribute : TextAttribute
+{
+    public EmailAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
+        base(emoji, code,
+            abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
     {
     }
 }
@@ -549,16 +832,16 @@ public class Locator : Model<Locator>
 }
 
 /// <summary>
-///     📺 A 2d-point (xy) of integers in screen plane.
+///     📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
 /// </summary>
-[Model("📺", "SP", "SPt", "A 2d-point (xy) of integers in screen plane.")]
-public class ScreenPoint : Model<ScreenPoint>
+[Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]
+public class DiagramPoint : Model<DiagramPoint>
 {
-    [IntProp("🏁", "X", "X", "The x-coordinate of the screen point.", PropImportance.REQUIRED)]
-    public int X { get; set; } = 0;
+    [NumberProp("🎚️", "X", "X", "The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+    public float X { get; set; } = 0;
 
-    [IntProp("🏁", "Y", "Y", "The y-coordinate of the screen point.", PropImportance.REQUIRED)]
-    public int Y { get; set; } = 0;
+    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+    public float Y { get; set; } = 0;
 }
 
 /// <summary>
@@ -707,10 +990,10 @@ public class Port : Model<Port>
     public Point? Point { get; set; } = null;
 
     /// <summary>
-    ///     ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+    ///     ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
     /// </summary>
     [ModelProp("➡️", "Dr", "Drn",
-        "The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.")]
+        "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
 
     /// <summary>
@@ -748,14 +1031,12 @@ public class Port : Model<Port>
         }
 
         if (Locators.Count != 0)
-        {
             foreach (var locator in Locators)
             {
                 var (isValidLocator, errorsLocator) = locator.Validate();
                 isValid = isValid && isValidLocator;
                 errors.AddRange(errorsLocator.Select(e => "A locator is invalid: " + e));
             }
-        }
 
         return (isValid, errors);
     }
@@ -784,9 +1065,9 @@ public class PortId : Model<PortId>
 }
 
 /// <summary>
-///     📏 A quality is meta-data for decision making.
+///     📏 A quality is a named value with a unit and a definition.
 /// </summary>
-[Model("📏", "Ql", "Qal", "A quality is meta-data for decision making.")]
+[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
 public class Quality : Model<Quality>
 {
     /// <summary>
@@ -824,16 +1105,22 @@ public class TypeProps : Model<Type>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 The optional human description of the type.
+    ///     💬 The optional human-readable description of the type.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human description of the type.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the type.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [ emoji | name | url ] of the type.
+    ///     🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the type.")]
+    [Url("🪙", "Ic?", "Ico", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.")]
     public string Icon { get; set; } = "";
+
+    /// <summary>
+    ///    🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.
+    /// </summary>
+    [Url("🖼️", "Im?", "Img", "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.")]
+    public string Image { get; set; } = "";
 
     /// <summary>
     ///     🔀 The optional value of the type.
@@ -842,11 +1129,42 @@ public class TypeProps : Model<Type>
     public string Variant { get; set; } = "";
 
     /// <summary>
-    ///     Ⓜ️ The length unit for all distance-related information of the type.
+    ///     Ⓜ️ The length unit of the point and the direction of the ports of the type.
     /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the type.",
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.",
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+}
+
+/// <summary>
+///     👤 The information about the author.
+/// </summary>
+[Model("👤", "Au", "Aut", "The information about the author.")]
+public class Author : Model<Author>
+{
+    /// <summary>
+    ///     📛 The name of the author.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     📧 The email of the author.
+    /// </summary>
+    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
+    public string Email { get; set; } = "";
+
+    public override (bool, List<string>) Validate()
+    {
+        // TODO: proper email validation
+        var (isValid, errors) = base.Validate();
+        if (!Email.Contains("@"))
+        {
+            isValid = false;
+            errors.Add("The email must contain an @.");
+        }
+        return (isValid, errors);
+    }
 }
 
 /// <summary>
@@ -870,8 +1188,14 @@ public class Type : TypeProps
     /// <summary>
     ///     📏 The optional qualities of the type.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the type.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
+
+    /// <summary>
+    ///    👥 The optional authors of the type.
+    /// </summary>
+    [ModelProp("👥", "Au*", "Auts", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    public List<Author> Authors { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -896,6 +1220,13 @@ public class Type : TypeProps
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
+        }
+
+        foreach (var author in Authors)
+        {
+            var (isValidAuthor, errorsAuthor) = author.Validate();
+            isValid = isValid && isValidAuthor;
+            errors.AddRange(errorsAuthor.Select(e => "An author is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -960,12 +1291,12 @@ public class Piece : Model<Piece>
     public Plane? Plane { get; set; }
 
     /// <summary>
-    ///     📺 The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+    ///     ⌖ The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
     /// </summary>
-    [ModelProp("📺", "SP", "SPt",
-        "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.",
+    [ModelProp("⌖", "Ce", "Cen",
+        "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
         PropImportance.OPTIONAL)]
-    public ScreenPoint ScreenPoint { get; set; } = new();
+    public DiagramPoint Center { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -980,6 +1311,7 @@ public class Piece : Model<Piece>
             isValid = isValid && isValidPlane;
             errors.AddRange(errorsPlane.Select(e => "The plane is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -1023,9 +1355,9 @@ public class Side : Model<Side>
 }
 
 /// <summary>
-///     🔗 A connection between two pieces in a design.
+///     🔗 A bidirectional connection between two pieces of a design.
 /// </summary>
-[Model("🔗", "Co", "Con", "A connection between two pieces in a design.")]
+[Model("🔗", "Co", "Con", "A bidirectional connection between two pieces of a design.")]
 public class Connection : Model<Connection>
 {
     private float _rotation;
@@ -1044,9 +1376,9 @@ public class Connection : Model<Connection>
     public Side Connecting { get; set; } = new();
 
     /// <summary>
-    ///     🔄 The optional rotation between the connected and the connecting piece in degrees.
+    ///     🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("🔄", "Rt?", "Rot", "The optional rotation between the connected and the connecting piece in degrees.")]
+    [AngleProp("🔄", "Rt?", "Rot", "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.")]
     public float Rotation
     {
         get => _rotation;
@@ -1054,10 +1386,10 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     🔄 The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("↗️", "Tl?", "Tlt",
-        "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.")]
+    [AngleProp("∡", "Tl?", "Tlt",
+        "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.")]
     public float Tilt
     {
         get => _tilt;
@@ -1065,17 +1397,34 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
+    ///     connecting piece.
     /// </summary>
     [NumberProp("↕️", "Gp?", "Gap",
         "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
     public float Gap { get; set; } = 0;
+
     /// <summary>
-    ///    ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+    ///     ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the
+    ///     connecting piece.
     /// </summary>
 
-    [NumberProp("↔️", "Sf?", "Sft", "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
+    [NumberProp("↔️", "Sf?", "Sft",
+        "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
     public float Shift { get; set; } = 0;
+
+    /// <summary>
+    ///    ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+    /// </summary>
+    [NumberProp("➡️", "X?", "X", "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
+    public float X { get; set; } = 0;
+
+    /// <summary>
+    ///   ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+    /// </summary>
+    [NumberProp("⬆️", "Y?", "Y", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
+    public float Y { get; set; } = 0;
+
 
     public override string ToString()
     {
@@ -1108,21 +1457,27 @@ public class DesignProps : Model<Design>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 The optional human description of the design.
+    ///     💬 The optional human-readable description of the design.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human description of the design.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the design.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [ emoji | name | url ] of the design.
+    ///     🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the design.")]
+    [Url("🪙", "Ic?", "Ico", "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.")]
     public string Icon { get; set; } = "";
 
     /// <summary>
-    ///     🔀 The optional value of the design.
+    ///    🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
+    [Url("🖼️", "Im?", "Img", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.")]
+    public string Image { get; set; } = "";
+
+    /// <summary>
+    ///     🔀 The optional variant of the design. No variant means the default variant.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     /// <summary>
@@ -1154,16 +1509,96 @@ public class Design : DesignProps
     /// <summary>
     ///     📏 The optional qualities of the design.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qualities", "The optional qualities of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the design.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
-    public Design Flatten(Type[] types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float,float, Plane> computeChildPlane)
+    /// <summary>
+    ///    👥 The optional authors of the design.
+    /// </summary>
+    [ModelProp("👥", "Au*", "Auts", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    public List<Author> Authors { get; set; } = new();
+
+    public void Bfs(Action<Piece> onRoot, Action<Piece, Piece, Connection> onConnection)
     {
+        var pieces = Pieces.ToDictionary(p => p.Id);
+        var graph = new UndirectedGraph<string, Edge<string>>();
+        foreach (var piece in Pieces)
+            graph.AddVertex(piece.Id);
+        foreach (var connection in Connections)
+            graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+        var components = new Dictionary<string, int>();
+        graph.ConnectedComponents(components);
+        var componentPieces = new Dictionary<int, Dictionary<string, Piece>>();
+        foreach (var kvp in components)
+        {
+            if (!componentPieces.ContainsKey(kvp.Value))
+                componentPieces[kvp.Value] = new Dictionary<string, Piece>();
+            componentPieces[kvp.Value][kvp.Key] = pieces[kvp.Key];
+        }
+
+        foreach (var component in componentPieces)
+        {
+            var subGraph = new UndirectedGraph<string, Edge<string>>();
+            foreach (var piece in component.Value)
+                subGraph.AddVertex(piece.Key);
+            foreach (var connection in Connections)
+                if (component.Value.ContainsKey(connection.Connected.Piece.Id) &&
+                    component.Value.ContainsKey(connection.Connecting.Piece.Id))
+                    subGraph.AddEdge(
+                        new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+            var root = subGraph.Vertices.FirstOrDefault(p => pieces[p].Plane != null);
+            if (root == null)
+            {
+                root = subGraph.Vertices.First();
+                onRoot(pieces[root]);
+            }
+
+            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(subGraph);
+            bfs.SetRootVertex(root);
+            bfs.TreeEdge += (g, edge) =>
+            {
+                var parent = pieces[edge.Source];
+                var child = pieces[edge.Target];
+                var connection = Connections.First(c =>
+                    (c.Connected.Piece.Id == parent.Id && c.Connecting.Piece.Id == child.Id) ||
+                    (c.Connected.Piece.Id == child.Id && c.Connecting.Piece.Id == parent.Id));
+                onConnection(parent, child, connection);
+            };
+            bfs.Compute();
+        }
+    }
+
+    Design FlattenDiagram()
+    {
+        // TODO: Turn inplace and leave clone to the user of the function.
         var clone = DeepClone();
         if (clone.Pieces.Count > 1 && clone.Connections.Count > 0)
         {
-            var pieces = clone.Pieces.ToDictionary(p => p.Id);
+            var onRoot = new Action<Piece>(piece => { if (piece.Center == null) piece.Center = new DiagramPoint(); });
+            var onConnection = new Action<Piece, Piece, Connection>((parent, child, connection) =>
+            {
+                // TODO: Implement
+                var x = parent.Center.X;
+                var y = parent.Center.Y;
+                var childDiagramPoint = new DiagramPoint
+                {
+                    X = x,
+                    Y = y
+                };
+                child.Center = childDiagramPoint;
+            });
+            Bfs(onRoot, onConnection);
+        }
+        return clone;
+    }
+
+    Design FlattenConnections(Type[] types,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane)
+    {
+        // TODO: Turn inplace and leave clone to the user of the function.
+        var clone = DeepClone();
+        if (clone.Pieces.Count > 1 && clone.Connections.Count > 0)
+        {
             var ports = new Dictionary<string, Dictionary<string, Dictionary<string, Port>>>();
             foreach (var type in types)
             {
@@ -1175,65 +1610,223 @@ public class Design : DesignProps
                     ports[type.Name][type.Variant][port.Id] = port;
             }
 
-            var graph = new UndirectedGraph<string, Edge<string>>();
-            foreach (var piece in clone.Pieces)
-                graph.AddVertex(piece.Id);
-            foreach (var connection in clone.Connections)
-                graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
-            var components = new Dictionary<string, int>();
-            graph.ConnectedComponents(components);
-            var componentPieces = new Dictionary<int, Dictionary<string, Piece>>();
-            foreach (var kvp in components)
+            var onRoot = new Action<Piece>(piece => { if (piece.Plane == null) piece.Plane = new Plane(); });
+            var onConnection = new Action<Piece, Piece, Connection>((parent, child, connection) =>
             {
-                if (!componentPieces.ContainsKey(kvp.Value))
-                    componentPieces[kvp.Value] = new Dictionary<string, Piece>();
-                componentPieces[kvp.Value][kvp.Key] = pieces[kvp.Key];
-            }
-
-            foreach (var component in componentPieces)
-            {
-                var subGraph = new UndirectedGraph<string, Edge<string>>();
-                foreach (var piece in component.Value)
-                    subGraph.AddVertex(piece.Key);
-                foreach (var connection in clone.Connections)
-                    if (component.Value.ContainsKey(connection.Connected.Piece.Id) &&
-                        component.Value.ContainsKey(connection.Connecting.Piece.Id))
-                        subGraph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
-                var root = subGraph.Vertices.FirstOrDefault(p => pieces[p].Plane != null);
-                if (root == null)
-                {
-                    root = subGraph.Vertices.First();
-                    pieces[root].Plane = new Plane();
-                }
-                var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(subGraph);
-                bfs.SetRootVertex(root);
-                bfs.TreeEdge += (g, edge) =>
-                {
-                    var parent = pieces[edge.Source];
-                    var child = pieces[edge.Target];
-                    var connection = clone.Connections.First(c =>
-                        (c.Connected.Piece.Id == parent.Id && c.Connecting.Piece.Id == child.Id) ||
-                        (c.Connected.Piece.Id == child.Id && c.Connecting.Piece.Id == parent.Id));
-                    var isParentConnected = connection.Connected.Piece.Id == parent.Id;
-                    var parentPlane = parent.Plane;
-                    var parentPort =
-                        ports[parent.Type.Name][parent.Type.Variant][
-                            isParentConnected ? connection.Connected.Port.Id : connection.Connecting.Port.Id];
-                    var childPort =
-                        ports[child.Type.Name][child.Type.Variant][
-                            isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
-                    var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction, childPort.Point,
-                        childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
-                    child.Plane = childPlane;
-                };
-                bfs.Compute();
-            }
+                var isParentConnected = connection.Connected.Piece.Id == parent.Id;
+                var parentPlane = parent.Plane;
+                var parentPort =
+                    ports[parent.Type.Name][parent.Type.Variant][
+                        isParentConnected ? connection.Connected.Port.Id : connection.Connecting.Port.Id];
+                var childPort =
+                    ports[child.Type.Name][child.Type.Variant][
+                        isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
+                var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
+                    childPort.Point,
+                    childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
+                child.Plane = childPlane;
+            });
+            Bfs(onRoot, onConnection);
         }
 
         clone.Connections = new List<Connection>();
 
         return clone;
     }
+
+    public Design Flatten(Type[] types,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane)
+    {
+        // TODO: Turn inplace and leave clone to the user of the function.
+        var flattenedConnections = FlattenConnections(types, computeChildPlane);
+        var flattenedDiagram = flattenedConnections.FlattenDiagram();
+        return flattenedDiagram;
+    }
+
+    public string Diagram(float pieceWidth = 50, float pieceStroke = 1f, float connectionStroke = 2f)
+    {
+
+        var svgDoc = new SvgDocument();
+
+        var defs = new SvgDefinitionList();
+
+        var pieceCircle = new SvgCircle
+        {
+            ID = "piece",
+            CenterX = pieceWidth / 2,
+            CenterY = pieceWidth / 2,
+            Radius = pieceWidth / 2 - pieceStroke / 2,
+            Fill = new SvgColourServer(Color.White),
+            Stroke = new SvgColourServer(Color.Black),
+            StrokeWidth = pieceStroke,
+        };
+        defs.Children.Add(pieceCircle);
+
+        var root = new SvgCircle
+        {
+            ID = "root",
+            CenterX = pieceWidth / 2,
+            CenterY = pieceWidth / 2,
+            Radius = pieceWidth / 2 + pieceStroke,
+            Fill = new SvgColourServer(Color.White),
+            Stroke = new SvgColourServer(Color.Black),
+            StrokeWidth = pieceStroke,
+        };
+        defs.Children.Add(root);
+
+        var pieceMask = new SvgMask
+        {
+            ID = "pieceMask",
+            Children = {
+        new SvgCircle
+            {
+                CenterX = pieceWidth/2-pieceStroke,
+                CenterY = pieceWidth/2-pieceStroke,
+                Radius = pieceWidth/2-pieceStroke,
+                Fill = new SvgColourServer(Color.White)
+            }
+    }
+        };
+        defs.Children.Add(pieceMask);
+
+        // var building = SvgDocument.Open("building.svg");
+        // building.Width = 50-2*pieceStroke;
+        // building.Height = 50-2*pieceStroke;
+        // building.CustomAttributes.Add("pieceMask", "url(#pieceMask)");
+        var building = new SvgImage()
+        {
+            ID = "building",
+            Width = 50 - 2 * pieceStroke,
+            Height = 50 - 2 * pieceStroke,
+            CustomAttributes = {
+        {"href", "data:image/svg+xml;base64," + Convert.ToBase64String(File.ReadAllBytes("building.svg"))},
+        { "mask", "url(#pieceMask)" }
+        }
+        };
+        var buildingTransformed = new SvgGroup()
+        {
+            Children = { building }
+        };
+        var buildingTransform = new SvgTransformCollection
+        {
+            new SvgTranslate(pieceStroke, pieceStroke)
+        };
+        buildingTransformed.Transforms = buildingTransform;
+        var buildingDef = new SvgGroup()
+        {
+            ID = "building",
+            Children = {
+        new SvgUse(){CustomAttributes = { { "href", "#piece" } }},
+        buildingTransformed },
+        };
+        defs.Children.Add(buildingDef);
+
+        var capsule = new SvgImage()
+        {
+            ID = "capsule",
+            Width = 50 - 2 * pieceStroke,
+            Height = 50 - 2 * pieceStroke,
+            CustomAttributes = {
+        { "href", "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes("capsule.jpeg")) },
+        { "mask", "url(#pieceMask)" }
+        }
+        };
+        // capsule.CustomAttributes.Add("pieceMask", "url(#pieceMask)");
+        var capsuleTransformed = new SvgGroup()
+        {
+            Children = { capsule }
+        };
+        var capsuleTransform = new SvgTransformCollection();
+        capsuleTransform.Add(new SvgTranslate(pieceStroke, pieceStroke));
+        capsuleTransformed.Transforms = capsuleTransform;
+        var capsuleDef = new SvgGroup()
+        {
+            ID = "capsule",
+            Children = {
+        new SvgUse(){CustomAttributes = { { "href", "#piece" } }},
+        capsuleTransformed }
+        };
+        defs.Children.Add(capsuleDef);
+
+        svgDoc.Children.Add(defs);
+
+        var connections = new SvgGroup() { ID = "connections" };
+
+        var connection1 = new SvgLine
+        {
+            StartX = pieceWidth / 2,
+            StartY = pieceWidth / 2,
+            EndX = 75,
+            EndY = 75,
+            Stroke = new SvgColourServer(Color.Black),
+            StrokeWidth = connectionStroke,
+            Children = { new SvgTitle { Content = "b1 -- c0" } }
+        };
+        connections.Children.Add(connection1);
+
+        var connection2 = new SvgLine
+        {
+            StartX = 75,
+            StartY = 75,
+            EndX = 125,
+            EndY = pieceWidth / 2,
+            Stroke = new SvgColourServer(Color.Black),
+            StrokeWidth = connectionStroke,
+        };
+        connections.Children.Add(connection2);
+
+        svgDoc.Children.Add(connections);
+
+        var pieces = new SvgGroup() { ID = "pieces" };
+
+        foreach (var piece in Pieces)
+        {
+
+        }
+
+        var buildingUse = new SvgUse
+        {
+            // ReferencedElement produces deprecated xlink:href attribute
+            // See https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/xlink:href
+            // ReferencedElement = new Uri("#building", UriKind.Relative),
+            CustomAttributes = { { "href", "#building" } },
+            X = 0,
+            Y = 0,
+            Children = { new SvgTitle { Content = "b0" } }
+        };
+        pieces.Children.Add(buildingUse);
+
+        var buildingUse2Root = new SvgUse
+        {
+            CustomAttributes = { { "href", "#root" } },
+            X = 100,
+            Y = 0,
+        };
+        pieces.Children.Add(buildingUse2Root);
+        var buildingUse2 = new SvgUse
+        {
+            CustomAttributes = { { "href", "#building" } },
+            X = 100,
+            Y = 0,
+            Children = { new SvgTitle { Content = "b1" } }
+        };
+        pieces.Children.Add(buildingUse2);
+
+        var capsuleUse = new SvgUse
+        {
+            CustomAttributes = { { "href", "#capsule" } },
+            X = 50,
+            Y = 50,
+            Children = { new SvgTitle { Content = "c0" } }
+        };
+        pieces.Children.Add(capsuleUse);
+
+        svgDoc.Children.Add(pieces);
+
+        var svg = svgDoc.GetXML();
+        return svg;
+    }
+
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -1262,6 +1855,14 @@ public class Design : DesignProps
             errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
         }
 
+        var authorValidator = new ModelValidator<Author>();
+        foreach (var author in Authors)
+        {
+            var (isValidAuthor, errorsAuthor) = author.Validate();
+            isValid = isValid && isValidAuthor;
+            errors.AddRange(errorsAuthor.Select(e => "An author is invalid: " + e));
+        }
+
         var pieceIds = Pieces.Select(p => p.Id);
 
         var duplicatePieceIds = pieceIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
@@ -1272,19 +1873,24 @@ public class Design : DesignProps
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
 
-        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList().Select(c => c.Connected.Piece.Id).ToArray();
+        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList()
+            .Select(c => c.Connected.Piece.Id).ToArray();
         if (nonExistingConnectedPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectedPiece in nonExistingConnectedPieces)
-                errors.Add($"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
+                errors.Add(
+                    $"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
         }
-        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList().Select(c => c.Connecting.Piece.Id).ToArray();
+
+        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList()
+            .Select(c => c.Connecting.Piece.Id).ToArray();
         if (nonExistingConnectingPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectingPiece in nonExistingConnectingPieces)
-                errors.Add($"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
+                errors.Add(
+                    $"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
         }
 
         return (isValid, errors);
@@ -1304,9 +1910,9 @@ public class DesignId : Model<DesignId>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔀 The optional value of the design.
+    ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional value of the design.", PropImportance.ID, true)]
+    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     public static implicit operator DesignId(DesignProps design)
@@ -1337,16 +1943,28 @@ public class KitProps : Model<Kit>
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     💬 The optional human description of the kit.
+    ///     💬 The optional human-readable description of the kit.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human description of the kit.")]
+    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the kit.")]
     public string Description { get; set; } = "";
 
     /// <summary>
-    ///     🖼️ The optional icon [ emoji | name | url ] of the design.
+    ///     🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.
     /// </summary>
-    [Url("🖼️", "Ic?", "Ico", "The optional icon [ emoji | name | url ] of the design.")]
+    [Url("🪙", "Ic?", "Ico", "The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.")]
     public string Icon { get; set; } = "";
+
+    /// <summary>
+    ///    🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.
+    /// </summary>
+    [Url("🖼️", "Im?", "Img", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.")]
+    public string Image { get; set; } = "";
+
+    /// <summary>
+    ///     🔀 The optional version of the kit. No version means the latest version.
+    /// </summary>
+    [Name("🔀", "Vr?", "Ver", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
+    public string Version { get; set; } = "";
 
     /// <summary>
     ///     ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
@@ -1359,6 +1977,12 @@ public class KitProps : Model<Kit>
     /// </summary>
     [Url("🏠", "Hp?", "Hmp", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
+
+    /// <summary>
+    ///    ⚖️ The optional license [ spdx id | url ] of the kit.
+    /// </summary>
+    [Url("⚖️", "Ln?", "Lcn", "The optional license [ spdx id | url ] of the kit.")]
+    public string License { get; set; } = "";
 }
 
 /// <summary>
@@ -1389,12 +2013,14 @@ public class Kit : KitProps
             isValid = isValid && isValidType;
             errors.AddRange(errorsType.Select(e => "A type is invalid: " + e));
         }
+
         foreach (var design in Designs)
         {
             var (isValidDesign, errorsDesign) = design.Validate();
             isValid = isValid && isValidDesign;
             errors.AddRange(errorsDesign.Select(e => "A design is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -1426,27 +2052,27 @@ public class ClientException : ApiException
 
 public interface IApi
 {
-    [Get("/kits/{encodedKitUri}")]
+    [Get("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
 
-    [Put("/kits/{encodedKitUri}")]
+    [Put("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body] Kit input);
 
-    [Delete("/kits/{encodedKitUri}")]
+    [Delete("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-    [Put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    [Put("/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
     Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeNameAndVariant, [Body] Type input);
 
-    [Delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
+    [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
     Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeNameAndVariant);
 
-    [Put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
     Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignNameAndVariant,
         [Body] Design input);
 
-    [Delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
+    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
     Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignNameAndVariant);
 }
 
@@ -1541,6 +2167,7 @@ public static class Api
 
 #endregion
 
+#region Meta
 public static class Meta
 {
     /// <summary>
@@ -1656,3 +2283,4 @@ public static class Meta
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }
+#endregion

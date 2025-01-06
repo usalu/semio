@@ -1,13 +1,17 @@
 type Query {
   node(
-    """The ID of the object"""
+    """
+    The ID of the object
+    """
     id: ID!
   ): Node
   kit(uri: String!): Kit
 }
 
 interface Node {
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
 }
 
@@ -16,14 +20,27 @@ type Kit implements Node {
   name: String!
   description: String!
   icon: String!
+  version: String!
   remote: String!
   homepage: String!
   createdAt: DateTime!
   lastUpdateAt: DateTime!
-  types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
-  designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
+  types(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): TypeNodeConnection
+  designs(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): DesignNodeConnection
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
 }
 
@@ -35,10 +52,14 @@ value as specified by
 scalar DateTime
 
 type TypeNodeConnection {
-  """Pagination data for this connection."""
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
   edges: [TypeNodeEdge]!
 }
 
@@ -46,25 +67,39 @@ type TypeNodeConnection {
 The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
 """
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
 
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
 
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
 
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
-"""A Relay edge containing a `TypeNode` and its cursor."""
+"""
+A Relay edge containing a `TypeNode` and its cursor.
+"""
 type TypeNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Type
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
@@ -76,30 +111,62 @@ type Type implements Node {
   unit: String!
   createdAt: DateTime!
   lastUpdateAt: DateTime!
-  representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
-  ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  representations(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): RepresentationNodeConnection
+  ports(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): PortNodeConnection
+  qualities(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): QualityNodeConnection
   kit: Kit
-  pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
+  pieces(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): PieceNodeConnection
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
 }
 
 type RepresentationNodeConnection {
-  """Pagination data for this connection."""
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
   edges: [RepresentationNodeEdge]!
 }
 
-"""A Relay edge containing a `RepresentationNode` and its cursor."""
+"""
+A Relay edge containing a `RepresentationNode` and its cursor.
+"""
 type RepresentationNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Representation
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
@@ -109,25 +176,37 @@ type Representation implements Node {
   url: String!
   type: Type
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
   tags: [String!]!
 }
 
 type PortNodeConnection {
-  """Pagination data for this connection."""
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
   edges: [PortNodeEdge]!
 }
 
-"""A Relay edge containing a `PortNode` and its cursor."""
+"""
+A Relay edge containing a `PortNode` and its cursor.
+"""
 type PortNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Port
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
@@ -135,13 +214,14 @@ type Port implements Node {
   id_: String
   type: Type
   locators: [Locator!]
-  connecteds(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  connectings(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
   point: Point!
   direction: Vector!
+  connections: [Connection!]!
 }
 
 type Locator {
@@ -150,21 +230,44 @@ type Locator {
   port: Port
 }
 
-type ConnectionNodeConnection {
-  """Pagination data for this connection."""
-  pageInfo: PageInfo!
+"""
+✖️ A 3d-point (xyz) of floating point numbers.
+"""
+type Point {
+  """
+  🎚️ The x-coordinate of the point.
+  """
+  x: Float!
 
-  """Contains the nodes in this connection."""
-  edges: [ConnectionNodeEdge]!
+  """
+  🎚️ The y-coordinate of the point.
+  """
+  y: Float!
+
+  """
+  🎚️ The z-coordinate of the point.
+  """
+  z: Float!
 }
 
-"""A Relay edge containing a `ConnectionNode` and its cursor."""
-type ConnectionNodeEdge {
-  """The item at the end of the edge"""
-  node: Connection
+"""
+➡️ A 3d-vector (xyz) of floating point numbers.
+"""
+type Vector {
+  """
+  🎚️ The x-coordinate of the vector.
+  """
+  x: Float!
 
-  """A cursor for use in pagination"""
-  cursor: String!
+  """
+  🎚️ The y-coordinate of the vector.
+  """
+  y: Float!
+
+  """
+  🎚️ The z-coordinate of the vector.
+  """
+  z: Float!
 }
 
 type Connection implements Node {
@@ -172,14 +275,11 @@ type Connection implements Node {
   tilt: Float!
   gap: Float!
   shift: Float!
-  connectedPiecePk: ID!
-  connectedPortPk: ID!
-  connectingPiecePk: ID!
-  connectingPortPk: ID!
-  designPk: ID!
   design: Design
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
   connected: Side!
   connecting: Side!
@@ -193,42 +293,71 @@ type Design implements Node {
   unit: String!
   createdAt: DateTime!
   lastUpdateAt: DateTime!
-  pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
-  connections(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  pieces(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): PieceNodeConnection
+  connections(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): ConnectionNodeConnection
+  qualities(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): QualityNodeConnection
   kit: Kit
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
 }
 
 type PieceNodeConnection {
-  """Pagination data for this connection."""
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
   edges: [PieceNodeEdge]!
 }
 
-"""A Relay edge containing a `PieceNode` and its cursor."""
+"""
+A Relay edge containing a `PieceNode` and its cursor.
+"""
 type PieceNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Piece
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
 type Piece implements Node {
+  id_: String
   type: Type
   plane: Plane
   design: Design
-  connecteds(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  connectings(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
-  screenPoint: ScreenPoint!
+  center: DiagramPoint!
+  connections: [Connection!]!
 }
 
 type Plane {
@@ -238,87 +367,121 @@ type Plane {
   yAxis: Vector!
 }
 
-"""✖️ A 3d-point (xyz) of floating point numbers."""
-type Point {
-  """🎚️ The x-coordinate of the point."""
-  x: Float!
-
-  """🎚️ The y-coordinate of the point."""
-  y: Float!
-
-  """🎚️ The z-coordinate of the point."""
-  z: Float!
-}
-
-"""➡️ A 3d-vector (xyz) of floating point numbers."""
-type Vector {
-  """🎚️ The x-coordinate of the vector."""
-  x: Float!
-
-  """🎚️ The y-coordinate of the vector."""
-  y: Float!
-
-  """🎚️ The z-coordinate of the vector."""
-  z: Float!
-}
-
-"""📺 A 2d-point (xy) of integers in screen coordinate system."""
-type ScreenPoint {
-  """🏁 The x-coordinate of the screen point."""
+"""
+📺 A 2d-point (xy) of integers in screen coordinate system.
+"""
+type DiagramPoint {
+  """
+  🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  """
   x: Int!
 
-  """🏁 The y-coordinate of the screen point."""
+  """
+  🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  """
   y: Int!
 }
 
-type QualityNodeConnection {
-  """Pagination data for this connection."""
+type ConnectionNodeConnection {
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
+  edges: [ConnectionNodeEdge]!
+}
+
+"""
+A Relay edge containing a `ConnectionNode` and its cursor.
+"""
+type ConnectionNodeEdge {
+  """
+  The item at the end of the edge
+  """
+  node: Connection
+
+  """
+  A cursor for use in pagination
+  """
+  cursor: String!
+}
+
+type QualityNodeConnection {
+  """
+  Pagination data for this connection.
+  """
+  pageInfo: PageInfo!
+
+  """
+  Contains the nodes in this connection.
+  """
   edges: [QualityNodeEdge]!
 }
 
-"""A Relay edge containing a `QualityNode` and its cursor."""
+"""
+A Relay edge containing a `QualityNode` and its cursor.
+"""
 type QualityNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Quality
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
 type Quality implements Node {
   name: String!
   value: String!
-  definition: String!
   unit: String!
+  definition: String!
   type: Type
   design: Design
 
-  """The ID of the object"""
+  """
+  The ID of the object
+  """
   id: ID!
 }
 
+"""
+🧱 A side of a piece in a connection.
+"""
 type Side {
   piece: Piece!
   port: Port!
 }
 
 type DesignNodeConnection {
-  """Pagination data for this connection."""
+  """
+  Pagination data for this connection.
+  """
   pageInfo: PageInfo!
 
-  """Contains the nodes in this connection."""
+  """
+  Contains the nodes in this connection.
+  """
   edges: [DesignNodeEdge]!
 }
 
-"""A Relay edge containing a `DesignNode` and its cursor."""
+"""
+A Relay edge containing a `DesignNode` and its cursor.
+"""
 type DesignNodeEdge {
-  """The item at the end of the edge"""
+  """
+  The item at the end of the edge
+  """
   node: Design
 
-  """A cursor for use in pagination"""
+  """
+  A cursor for use in pagination
+  """
   cursor: String!
 }
 
@@ -327,42 +490,71 @@ type Mutation {
 }
 
 input KitInputNode {
-  """📛 The name of the kit."""
+  """
+  📛 The name of the kit.
+  """
   name: String!
 
-  """💬 The description of the kit."""
+  """
+  💬 The description of the kit.
+  """
   description: String = ""
 
-  """🖼️ The icon of the kit."""
+  """
+  🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.
+  """
   icon: String = ""
 
-  """🌐 The remote of the kit."""
+  """
+  🔀 The optional version of the kit. No version means the latest version.
+  """
+  version: String = ""
+
+  """
+  ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+  """
   remote: String = ""
 
-  """🌐 The homepage of the kit."""
+  """
+  🏠 The optional url of the homepage of the kit.
+  """
   homepage: String = ""
 
-  """🧩 The types of the kit."""
+  """
+  🧩 The types of the kit.
+  """
   types: [TypeInputNode] = null
 
-  """🏙️ The designs of the kit."""
+  """
+  🏙️ The designs of the kit.
+  """
   designs: [DesignInputNode] = null
 }
 
 input TypeInputNode {
-  """📛 The name of the type."""
+  """
+  📛 The name of the type.
+  """
   name: String!
 
-  """💬 The description of the type."""
+  """
+  💬 The description of the type.
+  """
   description: String = ""
 
-  """🖼️ The icon of the type."""
+  """
+  🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.
+  """
   icon: String = ""
 
-  """🔀 The variant of the type."""
+  """
+  🔀 The optional variant of the type. No variant means the default variant.
+  """
   variant: String = ""
 
-  """📏 The unit of the type."""
+  """
+  Ⓜ️ The length unit of the point and the direction of the ports of the type.
+  """
   unit: String = ""
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
@@ -380,7 +572,9 @@ input RepresentationInputNode {
   """
   lod: String!
 
-  """🏷️ The optional tags to group representations. No tags means default."""
+  """
+  🏷️ The optional tags to group representations. No tags means default.
+  """
   tags: [String] = null
 
   """
@@ -390,7 +584,9 @@ input RepresentationInputNode {
 }
 
 input PortInputNode {
-  """🆔 The id of the port."""
+  """
+  🆔 The id of the port.
+  """
   id_: String = ""
 
   """
@@ -399,72 +595,108 @@ input PortInputNode {
   point: PointInputNode!
 
   """
-  ➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+  ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
   """
   direction: VectorInputNode!
 
-  """🗺️ The locators of the port."""
+  """
+  🗺️ The locators of the port.
+  """
   locators: [LocatorInputNode] = null
 }
 
 input PointInputNode {
-  """🎚️ The x-coordinate of the point."""
+  """
+  🎚️ The x-coordinate of the point.
+  """
   x: Float!
 
-  """🎚️ The y-coordinate of the point."""
+  """
+  🎚️ The y-coordinate of the point.
+  """
   y: Float!
 
-  """🎚️ The z-coordinate of the point."""
+  """
+  🎚️ The z-coordinate of the point.
+  """
   z: Float!
 }
 
 input VectorInputNode {
-  """🎚️ The x-coordinate of the vector."""
+  """
+  🎚️ The x-coordinate of the vector.
+  """
   x: Float!
 
-  """🎚️ The y-coordinate of the vector."""
+  """
+  🎚️ The y-coordinate of the vector.
+  """
   y: Float!
 
-  """🎚️ The z-coordinate of the vector."""
+  """
+  🎚️ The z-coordinate of the vector.
+  """
   z: Float!
 }
 
 input LocatorInputNode {
-  """👪 The group of the locator."""
+  """
+  👪 The group of the locator.
+  """
   group: String!
 
-  """📌 The optional sub-group of the locator. No sub-group means true."""
+  """
+  📌 The optional sub-group of the locator. No sub-group means true.
+  """
   subgroup: String = ""
 }
 
 input QualityInputNode {
-  """📏 The name of the quality."""
+  """
+  📏 The name of the quality.
+  """
   name: String!
 
-  """📏 The value of the quality."""
+  """
+  📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+  """
   value: String = ""
 
-  """📏 The definition of the quality."""
-  definition: String = ""
-
-  """📏 The unit of the quality."""
+  """
+  📏 The optional unit of the value of the quality.
+  """
   unit: String = ""
+
+  """
+  📏 The optional definition [ text | url ] of the quality.
+  """
+  definition: String = ""
 }
 
 input DesignInputNode {
-  """📛 The name of the design."""
+  """
+  📛 The name of the design.
+  """
   name: String!
 
-  """💬 The description of the design."""
+  """
+  💬 The description of the design.
+  """
   description: String = ""
 
-  """🖼️ The icon of the design."""
+  """
+  🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.
+  """
   icon: String = ""
 
-  """🔀 The variant of the design."""
+  """
+  🔀 The optional variant of the design. No variant means the default variant.
+  """
   variant: String = ""
 
-  """📏 The unit of the design."""
+  """
+  📏 The unit of the design.
+  """
   unit: String = ""
   pieces: [PieceInputNode] = null
   connections: [ConnectionInputNode] = null
@@ -472,53 +704,77 @@ input DesignInputNode {
 }
 
 input PieceInputNode {
-  """🆔 The id of the piece."""
+  """
+  🆔 The id of the piece.
+  """
   id_: String = ""
 
-  """◳ The plane of the piece."""
+  """
+  ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
+  """
   plane: PlaneInputNode!
 
-  """📺 The screen point of the piece."""
-  screenPoint: ScreenPointInputNode!
+  """
+  📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
+  """
+  center: DiagramPointInputNode!
   type: TypeIdInputNode!
 }
 
 input PlaneInputNode {
-  """⌱ The origin of the plane."""
+  """
+  ⌱ The origin of the plane.
+  """
   origin: PointInputNode!
 
-  """➡️ The x-axis of the plane."""
+  """
+  ➡️ The x-axis of the plane.
+  """
   xAxis: VectorInputNode!
 
-  """➡️ The y-axis of the plane."""
+  """
+  ➡️ The y-axis of the plane.
+  """
   yAxis: VectorInputNode!
 }
 
-input ScreenPointInputNode {
-  """🏁 The x-coordinate of the screen point."""
+input DiagramPointInputNode {
+  """
+  🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  """
   x: Int!
 
-  """🏁 The y-coordinate of the screen point."""
+  """
+  🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  """
   y: Int!
 }
 
 input TypeIdInputNode {
-  """📛 The name of the type."""
+  """
+  📛 The name of the type.
+  """
   name: String!
 
-  """🔀 The variant of the type."""
+  """
+  🔀 The optional variant of the type. No variant means the default variant.
+  """
   variant: String = ""
 }
 
 input ConnectionInputNode {
-  """🔄 The rotation of the connection."""
+  """
+  🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+  """
   rotation: Float = 0
 
-  """↗️ The tilt of the connection."""
+  """
+  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+  """
   tilt: Float = 0
 
   """
-  ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
+  ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
   """
   gap: Float = 0
 
@@ -527,10 +783,14 @@ input ConnectionInputNode {
   """
   shift: Float = 0
 
-  """🧲 The connected side of the connection."""
+  """
+  🧲 The connected side of the connection.
+  """
   connected: SideInputNode!
 
-  """🧲 The connecting side of the connection."""
+  """
+  🧲 The connecting side of the connection.
+  """
   connecting: SideInputNode!
 }
 
@@ -540,11 +800,15 @@ input SideInputNode {
 }
 
 input PieceIdInputNode {
-  """🆔 The id of the piece."""
+  """
+  🆔 The id of the piece.
+  """
   id_: String = ""
 }
 
 input PortIdInputNode {
-  """🆔 The id of the port."""
+  """
+  🆔 The id of the port.
+  """
   id_: String = ""
 }

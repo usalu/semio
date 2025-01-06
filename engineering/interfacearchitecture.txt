@@ -2,12 +2,14 @@ kit : !Kit{
     name : !String
     description : ?String
     icon : ?String
+    image : ?String
     remote : ?String
     homepage : ?String
     types : +Type[
         name : !String
         description : ?String
         icon : ?String
+        image : ?String
         variant : ?String
         unit : !String
         representations : +Representations[
@@ -39,11 +41,16 @@ kit : !Kit{
             unit : ?String
             definition : ?String
         ]
+        authors : *Author[
+            name : ?String
+            email: !String
+        ]
     ]
     designs : +Design[
         name : !String
         description : ?String
         icon : ?String
+        image : ?String
         variant : ?String
         unit : !String
         pieces : !Piece[
@@ -69,7 +76,7 @@ kit : !Kit{
                     z : !Float
                 }
             }
-            screen_point :  ?ScreenPoint{
+            center :  ?DiagramPoint{
                 x : !Integer
                 y : !Integer
             }
@@ -98,11 +105,17 @@ kit : !Kit{
             rotation : !Float
             tilt : !Float
             gap : !Float
+            x : !Float
+            y : !Float
         ]
         qualities : *Quality[
             name : !String
             value : !String
             unit : ?String
+        ]
+        authors : *Author[
+            name : ?String
+            email: !String
         ]
     ]
 }

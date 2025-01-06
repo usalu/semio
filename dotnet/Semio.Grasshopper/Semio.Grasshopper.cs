@@ -1,4 +1,5 @@
 ﻿#region License
+
 //Semio.Grasshopper.cs
 //Copyright (C) 2024 Ueli Saluz
 
@@ -14,33 +15,31 @@
 
 //You should have received a copy of the GNU Affero General Public License
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #endregion
 
 #region Usings
-using System;
+
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Xml.Linq;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using Refit;
 using Rhino;
 using Rhino.Geometry;
+
 #endregion
 
 namespace Semio.Grasshopper;
 
 #region TODOs
+
 // TODO: Add toplevel scanning for kits wherever a directory is given
 // Maybe extension function for components. The repeated code looks something like this:
 // if (!DA.GetData(_, ref path))
@@ -51,6 +50,8 @@ namespace Semio.Grasshopper;
 // Think of a better way to handle this.
 // The invalid check happen twice and code is duplicated.
 // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
+// TODO: NameM.ToLower() doesn't work for composite names. E.g. "DiagramPoint" -> "diagrampoint".
+
 #endregion
 
 #region Constants
@@ -59,12 +60,13 @@ public static class Constants
 {
     public const string Name = "semio";
     public const string Category = Name;
-    public const string Version = "4.0.2";
+    public const string Version = "4.1.0";
 }
 
 #endregion
 
 #region General
+
 public class Semio_GrasshopperInfo : GH_AssemblyInfo
 {
     public override string Name => Constants.Name;
@@ -86,6 +88,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
         return GH_LoadingInstruction.Proceed;
     }
 }
+
 #endregion
 
 #region Copilot
@@ -96,12 +99,12 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 
 public static class Utility
 {
-    public static bool IsValidUnit(string unit)
+    public static bool IsValidLengthUnitSystem(string unit)
     {
         return new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
     }
 
-    public static string UnitSystemToAbbreviation(UnitSystem unitSystem)
+    public static string LengthUnitSystemToAbbreviation(UnitSystem unitSystem)
     {
         var unit = unitSystem switch
         {
@@ -115,10 +118,10 @@ public static class Utility
             UnitSystem.Inches => "in",
             UnitSystem.Feet => "ft",
             UnitSystem.Yards => "yd",
-            _ => "unsupported unit system"
+            _ => "unsupported length unit system"
         };
-        if (IsValidUnit(unit) == false)
-            throw new ArgumentException("Invalid unit system", nameof(unitSystem));
+        if (IsValidLengthUnitSystem(unit) == false)
+            throw new ArgumentException("Invalid length unit system", nameof(unitSystem));
         return unit;
     }
 
@@ -132,7 +135,8 @@ public static class Utility
         return new Rhino.Geometry.Plane(origin, xAxis, yAxis);
     }
 
-    public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection, Point childPoint, Vector childDirection, float rotation, float tilt, float gap, float shift)
+    public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
+        Point childPoint, Vector childDirection, float rotation, float tilt, float gap, float shift)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
@@ -158,10 +162,13 @@ public static class Utility
             if (Math.Abs(parentDirectionR.Z) < Semio.Constants.Tolerance)
                 directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.ZAxis, new Point3d());
             else
-                directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.CrossProduct(Vector3d.ZAxis, parentDirectionR), new Point3d());
+                directionT = Transform.Rotation(RhinoMath.ToRadians(180),
+                    Vector3d.CrossProduct(Vector3d.ZAxis, parentDirectionR), new Point3d());
         }
         else
+        {
             directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
+        }
 
         var tiltAxisRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
         var tiltAxis = Vector3d.XAxis;
@@ -187,10 +194,10 @@ public static class Utility
         var transform = orientationT * centerChild;
 
 
-        var gapTransform = Transform.Translation(gapDirection*gap);
+        var gapTransform = Transform.Translation(gapDirection * gap);
         var shiftDirection = new Vector3d(tiltAxis) * shift;
         var shiftTransform = Transform.Translation(shiftDirection);
-        var translation =  gapTransform * shiftTransform;
+        var translation = gapTransform * shiftTransform;
 
         transform = translation * transform;
 
@@ -214,10 +221,25 @@ public static class Utility
 
 public static class RhinoConverter
 {
-    public static object Convert(this object value) => value;
-    public static string Convert(this string value) => value;
-    public static int Convert(this int value) => value;
-    public static float Convert(this double value) => (float)value;
+    public static object Convert(this object value)
+    {
+        return value;
+    }
+
+    public static string Convert(this string value)
+    {
+        return value;
+    }
+
+    public static int Convert(this int value)
+    {
+        return value;
+    }
+
+    public static float Convert(this double value)
+    {
+        return (float)value;
+    }
 
     public static Point3d Convert(this Point point)
     {
@@ -476,6 +498,40 @@ public class QualityGoo : ModelGoo<Quality>
     }
 }
 
+public class AuthorGoo : ModelGoo<Author>
+{
+    public AuthorGoo()
+    {
+    }
+    public AuthorGoo(Author value) : base(value)
+    {
+    }
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Email);
+            target = (Q)ptr;
+            return true;
+        }
+        return false;
+    }
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
+        string str;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Author
+            {
+                Email = str
+            };
+            return true;
+        }
+        return false;
+    }
+}
+
 public class TypeGoo : ModelGoo<Type>
 {
     public TypeGoo()
@@ -487,13 +543,13 @@ public class TypeGoo : ModelGoo<Type>
     }
 }
 
-public class ScreenPointGoo : ModelGoo<ScreenPoint>
+public class DiagramPointGoo : ModelGoo<DiagramPoint>
 {
-    public ScreenPointGoo()
+    public DiagramPointGoo()
     {
     }
 
-    public ScreenPointGoo(ScreenPoint value) : base(value)
+    public DiagramPointGoo(DiagramPoint value) : base(value)
     {
     }
 
@@ -516,7 +572,7 @@ public class ScreenPointGoo : ModelGoo<ScreenPoint>
         var point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new ScreenPoint
+            Value = new DiagramPoint
             {
                 X = (int)point.X,
                 Y = (int)point.Y
@@ -609,7 +665,8 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
 {
     internal ModelParam() : base(typeof(U).Name,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
-        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description, Constants.Category,
+        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description,
+        Constants.Category,
         "Params")
     {
     }
@@ -647,12 +704,17 @@ public class QualityParam : ModelParam<QualityGoo, Quality>
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
 
+public class AuthorParam : ModelParam<AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
+}
+
 public class TypeParam : ModelParam<TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 }
 
-public class ScreenPointParam : ModelParam<ScreenPointGoo, ScreenPoint>
+public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
 {
     public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 }
@@ -698,6 +760,7 @@ public abstract class ScriptingComponent : Component
     {
     }
 }
+
 public class EncodeTextComponent : ScriptingComponent
 {
     public EncodeTextComponent()
@@ -738,6 +801,8 @@ public class DecodeTextComponent : ScriptingComponent
 
     protected override Bitmap Icon => Resources.decode_24x24;
 
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
@@ -754,9 +819,6 @@ public class DecodeTextComponent : ScriptingComponent
         DA.GetData(0, ref encodedText);
         DA.SetData(0, Semio.Utility.Decode(encodedText));
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.primary;
-
 }
 
 #region Serialize
@@ -777,9 +839,13 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
         ModelM = Semio.Meta.Model[NameM];
     }
 
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}", $"Serialize a {NameM.ToLower()}.")
+    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}",
+        $"Serialize a {NameM.ToLower()}.")
     {
     }
+
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -794,16 +860,15 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        U goo = new U();
+        var goo = new U();
         DA.GetData(0, ref goo);
         var text = goo.Value.Serialize(true);
         DA.SetData(0, text);
     }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class
+    SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
@@ -823,12 +888,17 @@ public class SerializeQualityComponent : SerializeComponent<QualityParam, Qualit
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
 }
 
+public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
+}
+
 public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
 }
 
-public class SerializeScreenPointComponent : SerializeComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
@@ -853,7 +923,6 @@ public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
     public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
 }
 
-
 #endregion
 
 #region Deserialize
@@ -874,9 +943,15 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
         ModelM = Semio.Meta.Model[NameM];
     }
 
-    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}", $"Deserialize a {NameM.ToLower()}.")
+    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
+        $"Deserialize a {NameM.ToLower()}.")
     {
     }
+
+    protected override Bitmap Icon =>
+        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -898,12 +973,10 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
         goo.Value = value;
         DA.SetData(0, goo);
     }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
 }
 
-public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class
+    DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
 }
@@ -921,50 +994,48 @@ public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo,
 public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
 {
     public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
+}
 
+public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
 }
 
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
-
 }
 
-public class DeserializeScreenPointComponent : DeserializeComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
     public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
-
 }
 
 public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
 {
     public override Guid ComponentGuid => new("1FB7F2FB-DCE2-4666-91B5-54DF6B6D9FA4");
-
 }
 
 public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("41C33A9F-15AC-4CD0-8A9D-4A75CE599282");
-
 }
 
 public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
-
 }
 
 public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("79AF9C1D-2B96-4D03-BDD9-C6514DA63E70");
-
 }
 
 #endregion
 
 #endregion
 
-#region Viewing
+#region Util
 
 public class FlattenDesignComponent : Component
 {
@@ -1004,93 +1075,78 @@ public class FlattenDesignComponent : Component
     }
 }
 
+public class ConvertUnitComponent : Component
+{
+    public ConvertUnitComponent()
+        : base("Convert Unit", "CnvUnt", "Convert a unit.", "Util")
+    {
+    }
 
+    public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
 
-//public class FilterSceneComponent : Component
+    protected override Bitmap Icon => Resources.unit_convert_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item, 1);
+        pManager.AddTextParameter("From Unit", "FU", "Unit to convert from.", GH_ParamAccess.item);
+        pManager.AddTextParameter("To Unit", "TU", "Unit to convert to.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Converted Value", "CV", "Converted value.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var value = 0.0;
+        var from = "";
+        var to = "";
+        DA.GetData(0, ref value);
+        DA.GetData(1, ref from);
+        DA.GetData(2, ref to);
+        var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
+        DA.SetData(0, (double)convertedValue);
+    }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+}
+
+//public class UpdateComponents : Component
 //{
-//    public FilterSceneComponent()
-//        : base("FilterScene", "|Scn",
-//            "Filter a scene.",
-//            Constants.Category, "Viewing")
+//    public UpdateComponents()
+//    : base("Update Components", "↑Cmps", "Update all components.", "Util")
 //    {
 //    }
 
-//    public override Guid ComponentGuid => new("232796C0-5ADF-47FF-9FC4-058CB7003C5A");
+//    public override Guid ComponentGuid => new("51AC98FB-167F-41EC-9BBA-867A0B3F9E0A");
 
-//    protected override Bitmap Icon => Resources.scene_filter_24x24;
+//    protected override Bitmap Icon => Resources.components_update_24x24;
 
 //    protected override void RegisterInputParams(GH_InputParamManager pManager)
 //    {
-//        pManager.AddParameter(new SceneParam(), "Scene", "Sc",
-//            "Scene to filter.", GH_ParamAccess.item);
-//        pManager.AddTextParameter("Level of Details", "LD*",
-//            "Optional level of details of the representations in the scene.",
-//            GH_ParamAccess.list);
-//        pManager[1].Optional = true;
-//        pManager.AddTextParameter("Tags", "Ta*", "Optional tags of the representations in the scene.",
-//            GH_ParamAccess.list);
-//        pManager[2].Optional = true;
-//        pManager.AddTextParameter("Mimes", "Mm*", "Optional mimes of the representations in the scene.",
-//            GH_ParamAccess.list);
-//        pManager[3].Optional = true;
+//        pManager.AddBooleanParameter("Update", "Up", "Update all components.", GH_ParamAccess.item);
 //    }
 
 //    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
 //    {
-//        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp+",
-//            "Representation of the objects of the scene.", GH_ParamAccess.list);
-//        pManager.AddPlaneParameter("Planes", "Pl+", "Planes of the objects of the scene.", GH_ParamAccess.list);
-//        pManager.AddTextParameter("Pieces Ids", "PcId+",
-//            "Ids of the pieces from the design that correspond to the objects of the scene.", GH_ParamAccess.list);
-//        pManager.AddTextParameter("Parents Pieces Ids", "PaPcId+",
-//            "Ids of the parent pieces from the design that correspond to the objects of the scene.",
-//            GH_ParamAccess.list);
+//        pManager.AddBooleanParameter("Updated", "Upd", "True if components were updated.", GH_ParamAccess.item);
 //    }
 
 //    protected override void SolveInstance(IGH_DataAccess DA)
 //    {
-//        var sceneGoo = new SceneGoo();
-//        var lods = new List<string>();
-//        var tags = new List<string>();
-//        var mimes = new List<string>();
+//        var update = false;
+//        DA.GetData(0, ref update);
+//        if (update)
+//        {
+//            foreach (var obj in Instances.ActiveCanvas.Document.Objects)
+//            {
+//                if (obj is GH_Component component)
+//                    component.ExpireSolution(true);
+//            }
+//        }
 
-//        DA.GetData(0, ref sceneGoo);
-//        DA.GetDataList(1, lods);
-//        DA.GetDataList(2, tags);
-//        DA.GetDataList(3, mimes);
-
-//        // filter the representations of the scene
-//        // if lods are used, only the representations with the specified lods are returned
-//        // if tags are used, each representations must have at least one of the specified tags
-//        // if mimes are used, only the representations with the specified mimes are returned
-//        var representations = sceneGoo.Value.Objects
-//            .Select(o => o.Piece.Type.Representations
-//                .First(r =>
-//                {
-//                    if (lods.Count > 0)
-//                        if (!lods.Contains(r.Lod))
-//                            return false;
-//                    if (tags.Count > 0)
-//                    {
-//                        if (r.Tags == null)
-//                            return false;
-//                        if (!r.Tags.Any(t => tags.Contains(t)))
-//                            return false;
-//                    }
-
-//                    if (mimes.Count > 0)
-//                        if (!mimes.Contains(r.Mime))
-//                            return false;
-//                    return true;
-//                })).ToList();
-//        var planes = sceneGoo.Value.Objects.Select(o => o.Plane).ToList();
-//        var piecesIds = sceneGoo.Value.Objects.Select(o => o.Piece.Id).ToList();
-//        var parentsPiecesIds = sceneGoo.Value.Objects.Select(o => o.Parent?.Piece?.Id).ToList();
-
-//        DA.SetDataList(0, representations.Select(r => new RepresentationGoo(r.DeepClone())));
-//        DA.SetDataList(1, planes.Select(p => p.Convert()));
-//        DA.SetDataList(2, piecesIds);
-//        DA.SetDataList(3, parentsPiecesIds);
+//        DA.SetData(0, update);
 //    }
 //}
 
@@ -1138,11 +1194,14 @@ public abstract class ModelComponent<T, U, V> : Component
     }
 
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify a {NameM.ToLower()}", "Modelling")
+        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modelling")
     {
     }
 
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
+    protected override Bitmap Icon =>
+        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected virtual void AddModelProps(dynamic pManager)
     {
@@ -1164,7 +1223,8 @@ public abstract class ModelComponent<T, U, V> : Component
             : $"The optional {NameM.ToLower()} to deconstruct or modify.";
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
-        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?", isOutput ? "True if the model is valid." : "Whether the model should be validated.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
+            isOutput ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed." : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
 
         AddModelProps(pManager);
 
@@ -1186,7 +1246,7 @@ public abstract class ModelComponent<T, U, V> : Component
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         dynamic modelGoo = Activator.CreateInstance(GooM);
-        bool validate = false;
+        var validate = false;
         if (DA.GetData(0, ref modelGoo))
             modelGoo = modelGoo.Duplicate();
         DA.GetData(1, ref validate);
@@ -1223,7 +1283,9 @@ public abstract class ModelComponent<T, U, V> : Component
                     var listType = typeof(List<>).MakeGenericType(itemType);
                     dynamic list = Activator.CreateInstance(listType);
                     foreach (var item in gooValue)
-                        list.Add((itemType == typeof(string) || itemType == typeof(int) || itemType == typeof(float)) ? item.Value : item.Value.DeepClone());
+                        list.Add(itemType == typeof(string) || itemType == typeof(int) || itemType == typeof(float)
+                            ? item.Value
+                            : item.Value.DeepClone());
 
                     value = list;
                     property.SetValue(modelGoo.Value, value);
@@ -1259,6 +1321,7 @@ public abstract class ModelComponent<T, U, V> : Component
                         var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
                         list.Add(itemGoo);
                     }
+
                     value = list;
                 }
             }
@@ -1287,8 +1350,6 @@ public abstract class ModelComponent<T, U, V> : Component
     {
         return model;
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.primary;
 }
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
@@ -1319,6 +1380,11 @@ public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
 }
 
+public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+}
+
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
@@ -1329,7 +1395,7 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
             try
             {
                 var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                type.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+                type.Unit = Utility.LengthUnitSystemToAbbreviation(documentUnits);
             }
             catch (Exception e)
             {
@@ -1340,7 +1406,7 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
     }
 }
 
-public class ScreenPointComponent : ModelComponent<ScreenPointParam, ScreenPointGoo, ScreenPoint>
+public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
 }
@@ -1361,8 +1427,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddPlaneParameter("Plane", "Pn?",
             "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new ScreenPointParam(), "Screen Point", "SP",
-            "The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.",
+        pManager.AddParameter(new DiagramPointParam(), "Diagram Point", "SP",
+            "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.",
             GH_ParamAccess.item);
     }
 
@@ -1371,8 +1437,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         var id = "";
         var typeName = "";
         var typeVariant = "";
-        var rootPlane = new Rhino.Geometry.Plane();
-        var screenPointGoo = new ScreenPointGoo();
+        var plane = new Rhino.Geometry.Plane();
+        var centerGoo = new DiagramPointGoo();
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
@@ -1380,10 +1446,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
             pieceGoo.Value.Type.Name = typeName;
         if (DA.GetData(4, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(5, ref rootPlane))
-            pieceGoo.Value.Plane = rootPlane.Convert();
-        if (DA.GetData(6, ref screenPointGoo))
-            pieceGoo.Value.ScreenPoint = screenPointGoo.Value;
+        if (DA.GetData(5, ref plane))
+            pieceGoo.Value.Plane = plane.Convert();
+        if (DA.GetData(6, ref centerGoo))
+            pieceGoo.Value.DiagramPoint = centerGoo.Value;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -1392,27 +1458,43 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(3, pieceGoo.Value.Type.Name);
         DA.SetData(4, pieceGoo.Value.Type.Variant);
         DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(6, new ScreenPointGoo(pieceGoo.Value.ScreenPoint as ScreenPoint));
+        DA.SetData(6, new DiagramPointGoo(pieceGoo.Value.DiagramPoint as DiagramPoint));
     }
 }
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+
     protected override void AddModelProps(dynamic pManager)
     {
-        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece of the side.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece of the side.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Connected Piece Type Port Id", "CdPo?",
             "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece of the side.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece of the side.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
             "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?", "The optional rotation between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Tl?", "The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Gap", "Gp?", "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Shift", "Sf?", "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?",
+            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?",
+            "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?",
+            "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?",
+            "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("X", "X?",
+            "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Y", "Y?",
+            "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+            GH_ParamAccess.item);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1425,6 +1507,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var tilt = 0.0;
         var gap = 0.0;
         var shift = 0.0;
+        var x = 0.0;
+        var y = 0.0;
 
         if (DA.GetData(2, ref connectedPieceId))
             connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
@@ -1442,6 +1526,10 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.Gap = (float)gap;
         if (DA.GetData(9, ref shift))
             connectionGoo.Value.Shift = (float)shift;
+        if (DA.GetData(10, ref x))
+            connectionGoo.Value.X = (float)x;
+        if (DA.GetData(11, ref y))
+            connectionGoo.Value.Y = (float)y;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1454,6 +1542,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(7, connectionGoo.Value.Tilt);
         DA.SetData(8, connectionGoo.Value.Gap);
         DA.SetData(9, connectionGoo.Value.Shift);
+        DA.SetData(10, connectionGoo.Value.X);
+        DA.SetData(11, connectionGoo.Value.Y);
     }
 }
 
@@ -1467,7 +1557,7 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
             try
             {
                 var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                design.Unit = Utility.UnitSystemToAbbreviation(documentUnits);
+                design.Unit = Utility.LengthUnitSystemToAbbreviation(documentUnits);
             }
             catch (Exception e)
             {
@@ -1493,6 +1583,8 @@ public class RandomIdsComponent : Component
     public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
 
     protected override Bitmap Icon => Resources.id_random_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1534,8 +1626,6 @@ public class RandomIdsComponent : Component
 
         DA.SetDataList(0, ids);
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
 #endregion
@@ -1543,16 +1633,17 @@ public class RandomIdsComponent : Component
 #region Persistence
 
 #region Engine
+
 public abstract class EngineComponent : Component
 {
-    protected virtual string RunDescription => "True to start the operation.";
-
-    protected virtual string SuccessDescription => "True if the operation was successful.";
-
     protected EngineComponent(string name, string nickname, string description)
         : base(name, nickname, description, "Persistence")
     {
     }
+
+    protected virtual string RunDescription => "True to start the operation.";
+
+    protected virtual string SuccessDescription => "True if the operation was successful.";
 
     protected virtual void RegisterCustomInputParams(GH_InputParamManager pManager)
     {
@@ -1561,7 +1652,7 @@ public abstract class EngineComponent : Component
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         RegisterCustomInputParams(pManager);
-        int amountCustomParams = pManager.ParamCount;
+        var amountCustomParams = pManager.ParamCount;
         pManager.AddTextParameter("Uri", "Ur?",
             "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
             "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
@@ -1580,7 +1671,11 @@ public abstract class EngineComponent : Component
         RegisterCustomOutputParams(pManager);
     }
 
-    protected virtual dynamic? GetInput(IGH_DataAccess DA) => null;
+    protected virtual dynamic? GetInput(IGH_DataAccess DA)
+    {
+        return null;
+    }
+
     protected abstract dynamic? Run(string url, dynamic? input = null);
 
     protected virtual void SetOutput(IGH_DataAccess DA, dynamic response)
@@ -1622,7 +1717,11 @@ public abstract class EngineComponent : Component
                 "ServerError: " + e.Message + "\n" +
                 "Semio.Release: " + Semio.Constants.Release + "\n" +
                 "Semio.Grasshopper: " + Constants.Version + "\n" +
-                (serializedInput != "" ? "Input: " + (serializedInput.Length < 1000 ? serializedInput : serializedInput.Substring(0, 1000) + "\n...\n") : ""));
+                (serializedInput != ""
+                    ? "Input: " + (serializedInput.Length < 1000
+                        ? serializedInput
+                        : serializedInput.Substring(0, 1000) + "\n...\n")
+                    : ""));
             DA.SetData(0, false);
         }
     }
@@ -1659,15 +1758,18 @@ public abstract class EngineComponent : Component
 
 public class LoadKitComponent : EngineComponent
 {
-    protected override string RunDescription => "True to load the kit.";
-    protected override string SuccessDescription => "True if the kit was successfully loaded. False otherwise.";
     public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit.")
     {
     }
 
+    protected override string RunDescription => "True to load the kit.";
+    protected override string SuccessDescription => "True if the kit was successfully loaded. False otherwise.";
+
     public override Guid ComponentGuid => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
 
     protected override Bitmap Icon => Resources.kit_load_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterCustomOutputParams(GH_OutputParamManager pManager)
     {
@@ -1689,11 +1791,13 @@ public class LoadKitComponent : EngineComponent
 
         var uri = "";
         DA.GetData(0, ref uri);
-        string directory ;
+        string directory;
         if (uri == "")
-            directory = this.OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(this.OnPingDocument().FilePath)
+        {
+            directory = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
+        }
         else if (uri.StartsWith("http") && uri.EndsWith(".zip"))
         {
             var encodedUri = Semio.Utility.Encode(uri);
@@ -1701,25 +1805,28 @@ public class LoadKitComponent : EngineComponent
             directory = Path.Combine(userPath, ".semio", "cache", encodedUri);
         }
         else
+        {
             directory = uri;
+        }
+
         DA.SetData(2, directory);
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.primary;
 }
 
 public class CreateKitComponent : EngineComponent
 {
-    protected override string RunDescription => "True to create the kit.";
-    protected override string SuccessDescription => "True if the kit was successfully created. False otherwise.";
-
     public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.")
     {
     }
 
+    protected override string RunDescription => "True to create the kit.";
+    protected override string SuccessDescription => "True if the kit was successfully created. False otherwise.";
+
     public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
 
     protected override Bitmap Icon => Resources.kit_create_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 
     protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
     {
@@ -1738,30 +1845,27 @@ public class CreateKitComponent : EngineComponent
         Api.CreateKit(url, input);
         return null;
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
 }
 
 public class DeleteKitComponent : EngineComponent
 {
-    protected override string RunDescription => "True to delete the kit.";
-    protected override string SuccessDescription => "True if the kit was successfully deleted. False otherwise.";
-
     public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.")
     {
     }
+
+    protected override string RunDescription => "True to delete the kit.";
+    protected override string SuccessDescription => "True if the kit was successfully deleted. False otherwise.";
     public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
 
     protected override Bitmap Icon => Resources.kit_delete_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
     protected override dynamic? Run(string url, dynamic? input = null)
     {
         Api.DeleteKit(url);
         return null;
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
 public class ClearCacheComponent : Component
@@ -1774,6 +1878,8 @@ public class ClearCacheComponent : Component
 
     protected override Bitmap Icon => Resources.cache_clear_24x24;
 
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddBooleanParameter("Run", "R", "True to clear the cache.", GH_ParamAccess.item, false);
@@ -1781,7 +1887,8 @@ public class ClearCacheComponent : Component
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the cache was successfully cleared.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the cache was successfully cleared.",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1796,15 +1903,13 @@ public class ClearCacheComponent : Component
             // find process semio-engine.exe and kill it
             var processes = Process.GetProcessesByName("semio-engine");
             if (processes.Length > 0)
-            {
                 foreach (var process in processes)
                 {
                     process.Kill();
                     process.WaitForExit();
                 }
-            }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
         }
 
@@ -1815,22 +1920,21 @@ public class ClearCacheComponent : Component
             Directory.Delete(cachePath, true);
             Directory.CreateDirectory(cachePath);
         }
+
         DA.SetData(0, true);
-
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
-
-#endregion
 
 #region Putting
 
-public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new()
+    where U : ModelGoo<V>, new()
+    where V : Model<V>, new()
 
 {
     public static readonly string NameM;
     public static readonly ModelAttribute ModelM;
+
     static PutComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
@@ -1839,13 +1943,19 @@ public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelPar
         NameM = typeof(V).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
+
+    protected PutComponent()
+        : base($"Put {NameM}", $"+{ModelM.Abbreviation}",
+            $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
+    {
+    }
+
     protected override string RunDescription => $"True to put the {NameM.ToLower()} to the kit.";
     protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
 
-    protected PutComponent()
-        : base($"Put {NameM}", $"+{ModelM.Abbreviation}", $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
-    {
-    }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 
     protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
     {
@@ -1858,11 +1968,6 @@ public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelPar
         DA.GetData(0, ref goo);
         return goo.Value;
     }
-
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
 }
 
 public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
@@ -1874,7 +1979,6 @@ public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
         Api.PutType(url, input);
         return null;
     }
-
 }
 
 public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
@@ -1892,10 +1996,13 @@ public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
 
 #region Removing
 
-public abstract class RemoveComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+public abstract class RemoveComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new()
+    where U : ModelGoo<V>, new()
+    where V : Model<V>, new()
 {
     public static readonly string NameM;
     public static readonly ModelAttribute ModelM;
+
     static RemoveComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
@@ -1904,8 +2011,6 @@ public abstract class RemoveComponent<T, U, V> : EngineComponent where T : Model
         NameM = typeof(V).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
-    protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
-    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
 
 
     public RemoveComponent()
@@ -1914,11 +2019,17 @@ public abstract class RemoveComponent<T, U, V> : EngineComponent where T : Model
     {
     }
 
+    protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
+    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
+
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
     protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.", GH_ParamAccess.item);
+        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter($"{NameM} Variant", "Vn?",
             $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.",
             GH_ParamAccess.item);
@@ -1938,16 +2049,17 @@ public abstract class RemoveComponent<T, U, V> : EngineComponent where T : Model
     {
         return new { Name = name, Variant = variant };
     }
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
 }
 
 public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
 
-    protected override dynamic ConstructId(string name, string variant) => new TypeId { Name = name, Variant = variant };
+    protected override dynamic ConstructId(string name, string variant)
+    {
+        return new TypeId { Name = name, Variant = variant };
+    }
+
     protected override dynamic? Run(string url, dynamic? input = null)
     {
         Api.RemoveType(url, input);
@@ -1959,7 +2071,10 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
 {
     public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
 
-    protected override dynamic ConstructId(string name, string variant) => new DesignId { Name = name, Variant = variant };
+    protected override dynamic ConstructId(string name, string variant)
+    {
+        return new DesignId { Name = name, Variant = variant };
+    }
 
     protected override dynamic? Run(string url, dynamic? input = null)
     {
@@ -1967,6 +2082,8 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
         return null;
     }
 }
+
+#endregion
 
 #endregion
 
@@ -2111,4 +2228,5 @@ public static class Meta
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }
+
 #endregion

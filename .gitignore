@@ -1,5 +1,6 @@
 local
 debug
+temp
 
 #--------------------------------------TEX--------------------------------------
 
@@ -848,13 +849,13 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
+# # VS Code files for those working on multiple tools
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+# *.code-workspace
 
 # Local History for Visual Studio Code
 .history/
@@ -889,7 +890,7 @@ out
 *.local
 
 # Editor directories and files
-.vscode/*
+# .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store

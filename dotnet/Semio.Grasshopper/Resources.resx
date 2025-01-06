@@ -118,6 +118,18 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="author_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\author_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="author_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\author_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="author_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\author_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="author_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\author_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="cache_clear_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\cache_clear_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -205,11 +217,11 @@
   <data name="representation_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\representation_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="screenpoint_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\screenpoint_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="diagrampoint_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\diagrampoint_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="screenpoint_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\screenpoint_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="diagrampoint_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\diagrampoint_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="semio_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\semio_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -280,10 +292,13 @@
   <data name="representation_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\representation_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="screenpoint_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\screenpoint_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="diagrampoint_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\diagrampoint_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="screenpoint_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\screenpoint_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="diagrampoint_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\diagrampoint_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="unit_convert_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\unit_convert_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

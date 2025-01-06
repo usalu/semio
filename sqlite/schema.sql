@@ -1,5 +1,6 @@
 CREATE TABLE semio (
 	release VARCHAR NOT NULL, 
+	engine VARCHAR NOT NULL, 
 	"createdAt" DATETIME NOT NULL, 
 	PRIMARY KEY (release)
 );
@@ -32,6 +33,7 @@ CREATE TABLE kit (
 	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(4096) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
+	version VARCHAR(64) NOT NULL, 
 	remote VARCHAR(1024) NOT NULL, 
 	homepage VARCHAR(1024) NOT NULL, 
 	"createdAt" DATETIME NOT NULL, 
@@ -95,8 +97,8 @@ CREATE TABLE port (
 CREATE TABLE quality (
 	name VARCHAR(64) NOT NULL, 
 	value VARCHAR(64) NOT NULL, 
-	definition VARCHAR(4096) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
+	definition VARCHAR(4096) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"typeId" INTEGER, 
 	"designId" INTEGER, 
@@ -109,8 +111,8 @@ CREATE TABLE piece (
 	"localId" VARCHAR(128), 
 	"typeId" INTEGER, 
 	"planeId" INTEGER, 
-	"screenPointX" INTEGER NOT NULL, 
-	"screenPointY" INTEGER NOT NULL, 
+	"centerX" INTEGER NOT NULL, 
+	"centerY" INTEGER NOT NULL, 
 	"designId" INTEGER, 
 	PRIMARY KEY (id), 
 	UNIQUE ("localId", "designId"), 

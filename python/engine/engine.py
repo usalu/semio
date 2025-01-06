@@ -25,6 +25,7 @@ engine.py
 # TODOs
 
 
+# TODO: Implement Author parse logic.
 # TODO: Automatic derive from Id model.
 # TODO: Automatic emptying.
 # TODO: Automatic updating based on props.
@@ -47,12 +48,12 @@ engine.py
 # 🖇️,Co,Con,Connection,A connection between two pieces in a design.
 # 🖇️,Co*,Cons,Connections,The optional connections of a design.
 # ⌚,CA,CAt,Created At,The time when the {{NAME}} was created.
-# 💬,Dc?,Dsc,Description,The optional human description of the {{NAME}}.
+# 💬,Dc?,Dsc,Description,The optional human-readable description of the {{NAME}}.
 # 📖,Df,Def,Definition,The optional definition [ text | url ] of the quality.
 # ✏️,Dg,Dgm,Diagram,The diagram of the design.
 # 📁,Di?,Dir,Directory,The optional directory where to find the kit.
 # 🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
-# ➡️,Dr,Drn,Direction,The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned.
+# ➡️,Dr,Drn,Direction,The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
 # 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
 # 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
 # 🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
@@ -63,7 +64,7 @@ engine.py
 # 🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
 # 👪,Gr,Grp,Group,The group of the locator.
 # 🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
-# 🖼️,Ic?,Ico,Icon,The optional icon [ emoji | name | url ] of the {{NAME}}.
+# 🪙,Ic?,Ico,Icon,The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. {{NAME}}.
 # 🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
 # 🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
 # 🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
@@ -94,14 +95,14 @@ engine.py
 # 🍾,Rl,Rel,Release,The release of the engine that created this database.
 # ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 # 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
-# 🔄,Rt?,Rot,Rotation,The optional rotation between the connected and the connecting piece in degrees.
+# 🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 # 🧱,Sd,Sde,Side,A side of a piece in a connection.
 # ↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
 # 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
-# 📺,SP,SPt,Screen Point,The 2d-point (xy) of integers in screen plane of the center of the icon in the diagram of the piece.
+# 📺,SP,SPt,Diagram Point,A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
 # ✅,Su,Suc,Success,{{NAME}} was successful.
 # 🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-# ↗️,Tl?,Tlt,Tilt,The optional tilt (applied after rotation) between the connected and the connecting piece in degrees.
+# ↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
 # ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 # 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 # 🧩,Ty,Typ,Type,The type-related information of the side.
@@ -115,10 +116,10 @@ engine.py
 # 🏷️,Vl,Val,Value,The value of the tag.
 # 🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
 # 🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
-# 🏁,X,X,X,The x-coordinate of the screen point.
+# 🏁,X,X,X,The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
 # 🎚️,X,X,X,The x-coordinate of the point.
 # ➡️,XA,XAx,XAxis,The x-axis of the plane.
-# 🏁,Y,Y,Y,The y-coordinate of the screen point.
+# 🏁,Y,Y,Y,The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
 # 🎚️,Y,Y,Y,The y-coordinate of the point.
 # ➡️,YA,YAx,YAxis,The y-axis of the plane.
 # 🏁,Z,Z,Z,The z-coordinate of the screen point.
@@ -150,14 +151,15 @@ import stat
 import signal
 
 import fastapi
+import fastapi.openapi
 import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
 import lark
-import networkx
-import numpy
-import pint
-import pytransform3d
+
+# import networkx
+# import numpy
+# import pytransform3d
 import pydantic
 import requests
 import sqlalchemy
@@ -178,10 +180,10 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 # Constants #
 
 
-RELEASE = "r24.12-1"
-VERSION = "4.0.2"
+RELEASE = "r24.12-2"
+VERSION = "4.1.0"
 HOST = "127.0.0.1"
-PORT = 24121
+PORT = 2501
 NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
 URL_LENGTH_LIMIT = 1024
@@ -220,8 +222,6 @@ ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[
 ]
 MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  # 50MB
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
-
-ureg = pint.UnitRegistry()
 
 
 # Utility
@@ -265,6 +265,33 @@ def pretty(number: float) -> str:
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
+
+
+def changeValues(c: dict | list, key: str, func: callable) -> None:
+    if isinstance(c, dict):
+        if key in c:
+            c[key] = func(c[key])
+        for v in c.values():
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeValues(v, key, func)
+
+
+def changeKeys(c: dict | list, func: callable) -> None:
+    if isinstance(c, dict):
+        for k in list(c.keys()):
+            newKey = func(k)
+            v = c.pop(k)
+            c[newKey] = v
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
+    if isinstance(c, list):
+        for v in c:
+            if isinstance(v, dict) or isinstance(v, list):
+                changeKeys(v, func)
 
 
 # Exceptions #
@@ -475,9 +502,14 @@ class Semio(sqlmodel.SQLModel, table=True):
     release: str = sqlmodel.Field(
         default=RELEASE,
         primary_key=True,
-        description="🍾 The release of the engine that created this database.",
+        description="🍾 The current release of semio.",
     )
-    """🍾 The release of the engine that created this database."""
+    """🍾 The current release of semio."""
+    engine: str = sqlmodel.Field(
+        default=VERSION,
+        description="⚙️ The version of the engine that created this database.",
+    )
+    """⚙️ The version of the engine that created this database."""
     createdAt: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="⌚ The time when the database was created.",
@@ -535,11 +567,19 @@ class Props(Base, abc.ABC):
 
 
 class Input(Base, abc.ABC):
-    """↘️ The base for inputs.  All fields that are required to create the entity."""
+    """↘️ The base for inputs. All fields that are required to create the entity."""
+
+
+class Context(Base, abc.ABC):
+    """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
 
 
 class Output(Base, abc.ABC):
     """↗️ The base for outputs. All fields that are returned when the entity is fetched."""
+
+
+class Prediction(Base, abc.ABC):
+    """🔮 The base for predictions. All fields that are required to predict the entity by an llm."""
 
 
 ## Entities ##
@@ -663,7 +703,16 @@ class RepresentationInput(
     RepresentationMimeField,
     Input,
 ):
-    """↘️ The input for a representation."""
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
+
+
+class RepresentationContext(
+    RepresentationTagsField,
+    RepresentationLodField,
+    RepresentationMimeField,
+    Context,
+):
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
 
 
 class RepresentationOutput(
@@ -673,7 +722,7 @@ class RepresentationOutput(
     RepresentationMimeField,
     Output,
 ):
-    """↗️ The output of a representation."""
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
 
 
 class Representation(
@@ -795,11 +844,15 @@ class LocatorProps(LocatorSubgroupField, LocatorGroupField, Props):
 
 
 class LocatorInput(LocatorSubgroupField, LocatorGroupField, Input):
-    """↘️ The input for a locator."""
+    """🗺️ A locator is meta-data for grouping ports."""
+
+
+class LocatorContext(LocatorSubgroupField, LocatorGroupField, Context):
+    """🗺️ A locator is meta-data for grouping ports."""
 
 
 class LocatorOutput(LocatorSubgroupField, LocatorGroupField, Output):
-    """↗️ The output of a locator."""
+    """🗺️ A locator is meta-data for grouping ports."""
 
 
 class Locator(LocatorSubgroupField, Table, table=True):
@@ -833,38 +886,56 @@ class Locator(LocatorSubgroupField, Table, table=True):
 ### Screen Points ###
 
 
-class ScreenPoint(Model):
+class DiagramPoint(Model):
+    """📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon."""
+
+    x: float = sqlmodel.Field(
+        description="🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+    )
+    """🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
+    y: float = sqlmodel.Field(
+        description="🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+    )
+    """🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
+
+    def __str__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}]"
+
+    def __repr__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}]"
+
+    # def __init__(self, x: int = 0, y: int = 0):
+    #     super().__init__(x=x, y=y)
+
+    # def __len__(self):
+    #     return 2
+
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     else:
+    #         raise IndexError("Index out of range")
+
+    # def __iter__(self):
+    #     return iter((self.x, self.y))
+
+
+class DiagramPointInput(DiagramPoint, Input):
     """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
-    x: int = sqlmodel.Field(description="🏁 The x-coordinate of the screen point.")
-    """🏁 The x-coordinate of the screen point."""
-    y: int = sqlmodel.Field(description="🏁 The y-coordinate of the screen point.")
-    """🏁 The y-coordinate of the screen point."""
 
-    def __init__(self, x: int = 0, y: int = 0):
-        super().__init__(x=x, y=y)
-
-    def __len__(self):
-        return 2
-
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        else:
-            raise IndexError("Index out of range")
-
-    def __iter__(self):
-        return iter((self.x, self.y))
+class DiagramPointContext(DiagramPoint, Context):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
 
-class ScreenPointInput(ScreenPoint, Input):
-    """↘️ The input for a screen point."""
+class DiagramPointOutput(DiagramPoint, Output):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
 
-class ScreenPointOutput(ScreenPoint, Output):
-    """↗️ The output of a screen point."""
+class DiagramPointPrediction(DiagramPoint, Prediction):
+    """📺 A 2d-point (xy) of integers in screen coordinate system."""
 
 
 ### Points ###
@@ -880,8 +951,8 @@ class Point(Model):
     z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the point.")
     """🎚️ The z-coordinate of the point."""
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        super().__init__(x=x, y=y, z=z)
+    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
+    #     super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -889,42 +960,46 @@ class Point(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __len__(self):
-        return 3
+    # def __len__(self):
+    #     return 3
 
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        elif key == 2:
-            return self.z
-        else:
-            raise IndexError("Index out of range")
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     elif key == 2:
+    #         return self.z
+    #     else:
+    #         raise IndexError("Index out of range")
 
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
+    # def __iter__(self):
+    #     return iter((self.x, self.y, self.z))
 
-    def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
-        return (
-            abs(self.x - other.x) < tol
-            and abs(self.y - other.y) < tol
-            and abs(self.z - other.z) < tol
-        )
+    # def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         abs(self.x - other.x) < tol
+    #         and abs(self.y - other.y) < tol
+    #         and abs(self.z - other.z) < tol
+    #     )
 
-    def transform(self, transform: "Transform") -> "Point":
-        return Transform.transformPoint(transform, self)
+    # def transform(self, transform: "Transform") -> "Point":
+    #     return Transform.transformPoint(transform, self)
 
-    def toVector(self) -> "Vector":
-        return Vector(self.x, self.y, self.z)
+    # def toVector(self) -> "Vector":
+    #     return Vector(self.x, self.y, self.z)
 
 
 class PointInput(Point, Input):
-    """↘️ The input for a point."""
+    """✖️ A 3d-point (xyz) of floating point numbers."""
+
+
+class PointContext(Point, Context):
+    """✖️ A 3d-point (xyz) of floating point numbers."""
 
 
 class PointOutput(Point, Output):
-    """↗️ The output of a point."""
+    """✖️ A 3d-point (xyz) of floating point numbers."""
 
 
 ### Vectors ###
@@ -940,8 +1015,8 @@ class Vector(Model):
     z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the vector.")
     """🎚️ The z-coordinate of the vector."""
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        super().__init__(x=x, y=y, z=z)
+    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
+    #     super().__init__(x=x, y=y, z=z)
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -949,80 +1024,84 @@ class Vector(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    def __len__(self):
-        return 3
+    # def __len__(self):
+    #     return 3
 
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        elif key == 2:
-            return self.z
-        else:
-            raise IndexError("Index out of range")
+    # def __getitem__(self, key):
+    #     if key == 0:
+    #         return self.x
+    #     elif key == 1:
+    #         return self.y
+    #     elif key == 2:
+    #         return self.z
+    #     else:
+    #         raise IndexError("Index out of range")
 
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
+    # def __iter__(self):
+    #     return iter((self.x, self.y, self.z))
 
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
+    # def __add__(self, other):
+    #     return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    @property
-    def length(self) -> float:
-        return (self.x**2 + self.y**2 + self.z**2) ** 0.5
+    # @property
+    # def length(self) -> float:
+    #     return (self.x**2 + self.y**2 + self.z**2) ** 0.5
 
-    def revert(self) -> "Vector":
-        return Vector(-self.x, -self.y, -self.z)
+    # def revert(self) -> "Vector":
+    #     return Vector(-self.x, -self.y, -self.z)
 
-    def amplify(self, factor: float) -> "Vector":
-        return Vector(self.x * factor, self.y * factor, self.z * factor)
+    # def amplify(self, factor: float) -> "Vector":
+    #     return Vector(self.x * factor, self.y * factor, self.z * factor)
 
-    def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
-        return (
-            abs(self.x - other.x) < tol
-            and abs(self.y - other.y) < tol
-            and abs(self.z - other.z) < tol
-        )
+    # def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         abs(self.x - other.x) < tol
+    #         and abs(self.y - other.y) < tol
+    #         and abs(self.z - other.z) < tol
+    #     )
 
-    def normalize(self) -> "Vector":
-        length = self.length
-        return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
+    # def normalize(self) -> "Vector":
+    #     length = self.length
+    #     return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
 
-    def dot(self, other: "Vector") -> float:
-        return numpy.dot(self, other)
+    # def dot(self, other: "Vector") -> float:
+    #     return numpy.dot(self, other)
 
-    def cross(self, other: "Vector") -> "Vector":
-        return Vector(*numpy.cross(self, other))
+    # def cross(self, other: "Vector") -> "Vector":
+    #     return Vector(*numpy.cross(self, other))
 
-    def transform(self, transform: "Transform") -> "Vector":
-        return Transform.transformVector(transform, self)
+    # def transform(self, transform: "Transform") -> "Vector":
+    #     return Transform.transformVector(transform, self)
 
-    def toPoint(self) -> "Point":
-        return Point(self.x, self.y, self.z)
+    # def toPoint(self) -> "Point":
+    #     return Point(self.x, self.y, self.z)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromTranslation(self)
+    # def toTransform(self) -> "Transform":
+    #     return Transform.fromTranslation(self)
 
-    @staticmethod
-    def X() -> "Vector":
-        return Vector(x=1)
+    # @staticmethod
+    # def X() -> "Vector":
+    #     return Vector(x=1)
 
-    @staticmethod
-    def Y() -> "Vector":
-        return Vector(y=1)
+    # @staticmethod
+    # def Y() -> "Vector":
+    #     return Vector(y=1)
 
-    @staticmethod
-    def Z() -> "Vector":
-        return Vector(z=1)
+    # @staticmethod
+    # def Z() -> "Vector":
+    #     return Vector(z=1)
 
 
 class VectorInput(Vector, Input):
-    """↘️ The input for a vector."""
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
+
+
+class VectorContext(Vector, Context):
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
 
 class VectorOutput(Vector, Output):
-    """↗️ The output of a vector."""
+    """➡️ A 3d-vector (xyz) of floating point numbers."""
 
 
 ### Planes ### TODO
@@ -1050,7 +1129,7 @@ class PlaneYAxisField(MaskedField, abc.ABC):
 
 
 class PlaneInput(Input):
-    """↘️ The input for a plane."""
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 
     origin: PointInput = sqlmodel.Field(description="⌱ The origin of the plane.")
     """⌱ The origin of the plane."""
@@ -1060,8 +1139,19 @@ class PlaneInput(Input):
     """➡️ The y-axis of the plane."""
 
 
+class PlaneContext(Context):
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+
+    origin: PointContext = sqlmodel.Field(description="⌱ The origin of the plane.")
+    """⌱ The origin of the plane."""
+    xAxis: VectorContext = sqlmodel.Field(description="➡️ The x-axis of the plane.")
+    """➡️ The x-axis of the plane."""
+    yAxis: VectorContext = sqlmodel.Field(description="➡️ The y-axis of the plane.")
+    """➡️ The y-axis of the plane."""
+
+
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """↗️ The output of a plane."""
+    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
 
 
 class Plane(Table, table=True):
@@ -1115,25 +1205,25 @@ class Plane(Table, table=True):
         ),
     )
 
-    def __init__(
-        self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
-    ):
-        if origin is None:
-            origin = Point()
-        if xAxis is None and yAxis is None:
-            xAxis = Vector.X()
-            yAxis = Vector.Y()
-        if xAxis is None:
-            xAxis = Vector()
-        if yAxis is None:
-            yAxis = Vector()
-        if abs(xAxis.length - 1) > TOLERANCE:
-            raise ValidationError("The x-axis must be normalized.")
-        if abs(yAxis.length - 1) > TOLERANCE:
-            raise ValidationError("The y-axis must be normalized.")
-        if abs(xAxis.dot(yAxis)) > TOLERANCE:
-            raise ValidationError("The x-axis and y-axis must be orthogonal.")
-        super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    # def __init__(
+    #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
+    # ):
+    #     if origin is None:
+    #         origin = Point()
+    #     if xAxis is None and yAxis is None:
+    #         xAxis = Vector.X()
+    #         yAxis = Vector.Y()
+    #     if xAxis is None:
+    #         xAxis = Vector()
+    #     if yAxis is None:
+    #         yAxis = Vector()
+    #     if abs(xAxis.length - 1) > TOLERANCE:
+    #         raise ValidationError("The x-axis must be normalized.")
+    #     if abs(yAxis.length - 1) > TOLERANCE:
+    #         raise ValidationError("The y-axis must be normalized.")
+    #     if abs(xAxis.dot(yAxis)) > TOLERANCE:
+    #         raise ValidationError("The x-axis and y-axis must be orthogonal.")
+    #     super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
     @property
     def origin(self) -> Point:
@@ -1177,37 +1267,37 @@ class Plane(Table, table=True):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
-        return (
-            self.origin.isCloseTo(other.origin, tol)
-            and self.xAxis.isCloseTo(other.xAxis, tol)
-            and self.yAxis.isCloseTo(other.yAxis, tol)
-        )
+    # def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
+    #     return (
+    #         self.origin.isCloseTo(other.origin, tol)
+    #         and self.xAxis.isCloseTo(other.xAxis, tol)
+    #         and self.yAxis.isCloseTo(other.yAxis, tol)
+    #     )
 
-    def transform(self, transform: "Transform") -> "Plane":
-        return Transform.transformPlane(transform, self)
+    # def transform(self, transform: "Transform") -> "Plane":
+    #     return Transform.transformPlane(transform, self)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromPlane(self)
+    # def toTransform(self) -> "Transform":
+    #     return Transform.fromPlane(self)
 
-    @staticmethod
-    def XY() -> "Plane":
-        return Plane(
-            origin=Point(),
-            xAxis=Vector.X(),
-            yAxis=Vector.Y(),
-        )
+    # @staticmethod
+    # def XY() -> "Plane":
+    #     return Plane(
+    #         origin=Point(),
+    #         xAxis=Vector.X(),
+    #         yAxis=Vector.Y(),
+    #     )
 
-    @staticmethod
-    def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
-        if abs(yAxis.length - 1) > TOLERANCE:
-            raise SpecificationError("The yAxis must be normalized.")
-        if origin is None:
-            origin = Point()
-        orientation = Transform.fromDirections(Vector.Y(), yAxis)
-        rotation = Transform.fromAngle(yAxis, theta)
-        xAxis = Vector.X().transform(rotation.after(orientation))
-        return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    # @staticmethod
+    # def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
+    #     if abs(yAxis.length - 1) > TOLERANCE:
+    #         raise SpecificationError("The yAxis must be normalized.")
+    #     if origin is None:
+    #         origin = Point()
+    #     orientation = Transform.fromDirections(Vector.Y(), yAxis)
+    #     rotation = Transform.fromAngle(yAxis, theta)
+    #     xAxis = Vector.X().transform(rotation.after(orientation))
+    #     return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -1224,196 +1314,196 @@ class Plane(Table, table=True):
         origin = PointInput.model_validate(obj["origin"])
         xAxis = VectorInput.model_validate(obj["xAxis"])
         yAxis = VectorInput.model_validate(obj["yAxis"])
-        entity = Plane()
+        entity = PlaneInput.model_construct()
         entity.origin = origin
         entity.xAxis = xAxis
         entity.yAxis = yAxis
         return entity
 
 
-### Rotations ### TODO
+# ### Rotations ### TODO
 
 
-class Rotation(Model):
-    """🔄 A rotation is an axis and an angle."""
+# class Rotation(Model):
+#     """🔄 A rotation is an axis and an angle."""
 
-    axis: Vector
-    angle: float
+#     axis: Vector
+#     angle: float
 
-    def __init__(self, axis: Vector, angle: float):
-        super().__init__(axis=axis, angle=angle)
+#     def __init__(self, axis: Vector, angle: float):
+#         super().__init__(axis=axis, angle=angle)
 
-    def toTransform(self) -> "Transform":
-        return Transform.fromRotation(self)
-
-
-### Transforms ### TODO
+#     def toTransform(self) -> "Transform":
+#         return Transform.fromRotation(self)
 
 
-class Transform(numpy.ndarray):
-    """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
+# ### Transforms ### TODO
 
-    def __new__(cls, input_array=None):
-        if input_array is None:
-            input_array = numpy.eye(4, dtype=float)
-        else:
-            input_array = numpy.asarray(input_array).astype(float)
-        obj = input_array.view(cls)
-        return obj
 
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
+# class Transform(numpy.ndarray):
+#     """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
 
-    def __str__(self) -> str:
-        rounded_self = self.round()
-        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
+#     def __new__(cls, input_array=None):
+#         if input_array is None:
+#             input_array = numpy.eye(4, dtype=float)
+#         else:
+#             input_array = numpy.asarray(input_array).astype(float)
+#         obj = input_array.view(cls)
+#         return obj
 
-    def __repr__(self) -> str:
-        rounded_self = self.round()
-        return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
+#     def __array_finalize__(self, obj):
+#         if obj is None:
+#             return
 
-    @property
-    def rotation(self) -> Rotation | None:
-        """🔄 The rotation part of the transform."""
-        rotationMatrix = self[:3, :3]
-        axisAngle = axis_angle_from_matrix(rotationMatrix)
-        if axisAngle[3] == 0:
-            return None
-        return Rotation(
-            axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
-            angle=float(numpy.degrees(axisAngle[3])),
-        )
+#     def __str__(self) -> str:
+#         rounded_self = self.round()
+#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
-    @property
-    def translation(self) -> Vector:
-        """➡️ The translation part of the transform."""
-        return Vector(*self[:3, 3])
+#     def __repr__(self) -> str:
+#         rounded_self = self.round()
+#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
 
-    # for pydantic
-    def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
-        return {
-            "rotation": self.rotation,
-            "translation": self.translation,
-        }
+#     @property
+#     def rotation(self) -> Rotation | None:
+#         """🔄 The rotation part of the transform."""
+#         rotationMatrix = self[:3, :3]
+#         axisAngle = axis_angle_from_matrix(rotationMatrix)
+#         if axisAngle[3] == 0:
+#             return None
+#         return Rotation(
+#             axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
+#             angle=float(numpy.degrees(axisAngle[3])),
+#         )
 
-    def after(self, before: "Transform") -> "Transform":
-        """✖️ Apply this transform after another transform.
+#     @property
+#     def translation(self) -> Vector:
+#         """➡️ The translation part of the transform."""
+#         return Vector(*self[:3, 3])
 
-        Args:
-            before (Transform): Transform to apply before this transform.
+#     # for pydantic
+#     def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
+#         return {
+#             "rotation": self.rotation,
+#             "translation": self.translation,
+#         }
 
-        Returns:
-            Transform: New transform.
-        """
-        return Transform(concat(before, self))
+#     def after(self, before: "Transform") -> "Transform":
+#         """✖️ Apply this transform after another transform.
 
-    def invert(self) -> "Transform":
-        return Transform(invert_transform(self))
+#         Args:
+#             before (Transform): Transform to apply before this transform.
 
-    def transformPoint(self, point: Point) -> Point:
-        transformedPoint = transform(self, vector_to_point(point))
-        return Point(*transformedPoint[:3])
+#         Returns:
+#             Transform: New transform.
+#         """
+#         return Transform(concat(before, self))
 
-    def transformVector(self, vector: Vector) -> Vector:
-        transformedVector = transform(self, vector_to_direction(vector))
-        return Vector(*transformedVector[:3])
+#     def invert(self) -> "Transform":
+#         return Transform(invert_transform(self))
 
-    def transformPlane(self, plane: Plane) -> Plane:
-        planeTransform = Transform.fromPlane(plane)
-        planeTransformed = planeTransform.after(self)
-        return Transform.toPlane(planeTransformed)
+#     def transformPoint(self, point: Point) -> Point:
+#         transformedPoint = transform(self, vector_to_point(point))
+#         return Point(*transformedPoint[:3])
 
-    def transform(
-        self, geometry: typing.Union[Point, Vector, Plane]
-    ) -> typing.Union[Point, Vector, Plane]:
-        if isinstance(geometry, Point):
-            return self.transformPoint(geometry)
-        elif isinstance(geometry, Vector):
-            return self.transformVector(geometry)
-        elif isinstance(geometry, Plane):
-            return self.transformPlane(geometry)
-        else:
-            raise FeatureNotYetSupported()
+#     def transformVector(self, vector: Vector) -> Vector:
+#         transformedVector = transform(self, vector_to_direction(vector))
+#         return Vector(*transformedVector[:3])
 
-    def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
-        return Transform(super().round(decimals=decimals))
+#     def transformPlane(self, plane: Plane) -> Plane:
+#         planeTransform = Transform.fromPlane(plane)
+#         planeTransformed = planeTransform.after(self)
+#         return Transform.toPlane(planeTransformed)
 
-    @staticmethod
-    def fromTranslation(vector: Vector) -> "Transform":
-        return Transform(
-            transform_from(
-                [
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                ],
-                vector,
-            )
-        )
+#     def transform(
+#         self, geometry: typing.Union[Point, Vector, Plane]
+#     ) -> typing.Union[Point, Vector, Plane]:
+#         if isinstance(geometry, Point):
+#             return self.transformPoint(geometry)
+#         elif isinstance(geometry, Vector):
+#             return self.transformVector(geometry)
+#         elif isinstance(geometry, Plane):
+#             return self.transformPlane(geometry)
+#         else:
+#             raise FeatureNotYetSupported()
 
-    @staticmethod
-    def fromRotation(rotation: Rotation) -> "Transform":
-        return Transform(
-            transform_from(
-                matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
-                Vector(),
-            )
-        )
+#     def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
+#         return Transform(super().round(decimals=decimals))
 
-    @staticmethod
-    def fromPlane(plane: Plane) -> "Transform":
-        # Assumes plane is normalized
-        return Transform(
-            transform_from(
-                [
-                    [
-                        plane.xAxis.x,
-                        plane.yAxis.x,
-                        plane.zAxis.x,
-                    ],
-                    [
-                        plane.xAxis.y,
-                        plane.yAxis.y,
-                        plane.zAxis.y,
-                    ],
-                    [
-                        plane.xAxis.z,
-                        plane.yAxis.z,
-                        plane.zAxis.z,
-                    ],
-                ],
-                plane.origin,
-            )
-        )
+#     @staticmethod
+#     def fromTranslation(vector: Vector) -> "Transform":
+#         return Transform(
+#             transform_from(
+#                 [
+#                     [1, 0, 0],
+#                     [0, 1, 0],
+#                     [0, 0, 1],
+#                 ],
+#                 vector,
+#             )
+#         )
 
-    @staticmethod
-    def fromAngle(axis: Vector, angle: float) -> "Transform":
-        return Transform(
-            transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
-        )
+#     @staticmethod
+#     def fromRotation(rotation: Rotation) -> "Transform":
+#         return Transform(
+#             transform_from(
+#                 matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
+#                 Vector(),
+#             )
+#         )
 
-    @staticmethod
-    def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
-        if startDirection.isCloseTo(endDirection):
-            return Transform()
-        axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
-        return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
+#     @staticmethod
+#     def fromPlane(plane: Plane) -> "Transform":
+#         # Assumes plane is normalized
+#         return Transform(
+#             transform_from(
+#                 [
+#                     [
+#                         plane.xAxis.x,
+#                         plane.yAxis.x,
+#                         plane.zAxis.x,
+#                     ],
+#                     [
+#                         plane.xAxis.y,
+#                         plane.yAxis.y,
+#                         plane.zAxis.y,
+#                     ],
+#                     [
+#                         plane.xAxis.z,
+#                         plane.yAxis.z,
+#                         plane.zAxis.z,
+#                     ],
+#                 ],
+#                 plane.origin,
+#             )
+#         )
 
-    def toPlane(self) -> Plane:
-        return Plane(
-            origin=Point(*self[:3, 3]),
-            xAxis=Vector(
-                self[0, 0],
-                self[1, 0],
-                self[2, 0],
-            ),
-            yAxis=Vector(
-                self[0, 1],
-                self[1, 1],
-                self[2, 1],
-            ),
-        )
+#     @staticmethod
+#     def fromAngle(axis: Vector, angle: float) -> "Transform":
+#         return Transform(
+#             transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
+#         )
+
+#     @staticmethod
+#     def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
+#         if startDirection.isCloseTo(endDirection):
+#             return Transform()
+#         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
+#         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
+
+#     def toPlane(self) -> Plane:
+#         return Plane(
+#             origin=Point(*self[:3, 3]),
+#             xAxis=Vector(
+#                 self[0, 0],
+#                 self[1, 0],
+#                 self[2, 0],
+#             ),
+#             yAxis=Vector(
+#                 self[0, 1],
+#                 self[1, 1],
+#                 self[2, 1],
+#             ),
+#         )
 
 
 ### Ports ###
@@ -1441,12 +1531,12 @@ class PortPointField(MaskedField, abc.ABC):
 
 
 class PortDirectionField(MaskedField, abc.ABC):
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
 
     direction: Vector = sqlmodel.Field(
-        description="➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
     )
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
 
 
 class PortLocatorsField(MaskedField, abc.ABC):
@@ -1470,16 +1560,16 @@ class PortProps(
 
 
 class PortInput(PortIdField, Input):
-    """↘️ The input for a port."""
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     point: PointInput = sqlmodel.Field(
         description="✖️ The connection point of the port that is attracted to another connection point."
     )
     """✖️ The connection point of the port that is attracted to another connection point."""
     direction: VectorInput = sqlmodel.Field(
-        description="➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
     )
-    """➡️ The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."""
+    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
     locators: list[LocatorInput] = sqlmodel.Field(
         default_factory=list,
         description="🗺️ The locators of the port.",
@@ -1487,8 +1577,18 @@ class PortInput(PortIdField, Input):
     """🗺️ The locators of the port."""
 
 
-class PortOutput(PortIdField, PortPointField, PortDirectionField, Output):
-    """↗️ The output of a port."""
+class PortContext(PortIdField, Context):
+    """🔌 A port is a connection point (with a direction) of a type."""
+
+    locators: list[LocatorContext] = sqlmodel.Field(
+        default_factory=list,
+        description="🗺️ The locators of the port.",
+    )
+    """🗺️ The locators of the port."""
+
+
+class PortOutput(PortDirectionField, PortPointField, PortIdField, Output):
+    """🔌 A port is a connection point (with a direction) of a type."""
 
     locators: list[LocatorOutput] = sqlmodel.Field(
         default_factory=list,
@@ -1589,6 +1689,7 @@ class Port(TableEntity, table=True):
         self.directionY = direction.y
         self.directionZ = direction.z
 
+    @property
     def connections(self) -> list["Connection"]:
         """🔗 Get the connections of the port."""
         return self.connecteds + self.connectings
@@ -1642,36 +1743,36 @@ class QualityNameField(RealField, abc.ABC):
 
 
 class QualityValueField(RealField, abc.ABC):
-    """📏 The value of the quality."""
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
 
     value: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The value of the quality.",
+        description="📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
     )
-    """📏 The value of the quality."""
-
-
-class QualityDefinitionField(RealField, abc.ABC):
-    """📏 The definition of the quality."""
-
-    definition: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="📏 The definition of the quality.",
-    )
-    """📏 The definition of the quality."""
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
 
 
 class QualityUnitField(RealField, abc.ABC):
-    """📏 The unit of the quality."""
+    """📏 The optional unit of the value of the quality."""
 
     unit: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The unit of the quality.",
+        description="📏 The optional unit of the value of the quality.",
     )
-    """📏 The unit of the quality."""
+    """📏 The optional unit of the value of the quality."""
+
+
+class QualityDefinitionField(RealField, abc.ABC):
+    """📏 The optional definition [ text | url ] of the quality."""
+
+    definition: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="📏 The optional definition [ text | url ] of the quality.",
+    )
+    """📏 The optional definition [ text | url ] of the quality."""
 
 
 class QualityId(QualityNameField, Id):
@@ -1679,8 +1780,8 @@ class QualityId(QualityNameField, Id):
 
 
 class QualityProps(
-    QualityUnitField,
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     Props,
@@ -1689,14 +1790,18 @@ class QualityProps(
 
 
 class QualityInput(
-    QualityUnitField, QualityDefinitionField, QualityValueField, QualityNameField, Input
+    QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
 ):
     """↘️ The input for a quality."""
 
 
+class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
+    """📑 The context of a quality."""
+
+
 class QualityOutput(
-    QualityUnitField,
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     Output,
@@ -1705,14 +1810,14 @@ class QualityOutput(
 
 
 class Quality(
-    QualityUnitField,
     QualityDefinitionField,
+    QualityUnitField,
     QualityValueField,
     QualityNameField,
     TableEntity,
     table=True,
 ):
-    """📏 A quality is a named value with a definition and a unit."""
+    """📏 A quality is a named value with a unit and a definition."""
 
     PLURAL = "qualities"
     __tablename__ = "quality"
@@ -1774,6 +1879,95 @@ class Quality(
         return self.name
 
 
+### Authors ###
+
+
+class AuthorNameField(RealField, abc.ABC):
+    """📛 The name of the author."""
+
+    name: str = sqlmodel.Field(
+        max_length=NAME_LENGTH_LIMIT,
+        description="📛 The name of the author.",
+    )
+    """📛 The name of the author."""
+
+
+class AuthorEmailField(RealField, abc.ABC):
+    """📧 The email of the author."""
+
+    email: str = sqlmodel.Field(
+        max_length=ID_LENGTH_LIMIT,
+        description="📧 The email of the author.",
+    )
+    """📧 The email of the author."""
+
+
+class AuthorId(AuthorEmailField, Id):
+    """🪪 The props to identify the author."""
+
+
+class AuthorProps(AuthorEmailField, AuthorNameField, Props):
+    """🎫 The props of an author."""
+
+
+class AuthorInput(AuthorEmailField, AuthorNameField, Input):
+    """👤 The input for an author."""
+
+
+class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
+    """📑 The output of an author."""
+
+
+class Author(AuthorEmailField, AuthorNameField, TableEntity, table=True):
+    """👤 The information about the author."""
+
+    PLURAL = "authors"
+    __tablename__ = "author"
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The primary key of the author in the database."""
+    typePk: typing.Optional[int] = sqlmodel.Field(
+        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "typeId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("type.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The optional foreign primary key of the parent type of the author in the database."""
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="authors")
+    """👪 The optional parent type of the author."""
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "designId",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The optional foreign primary key of the parent design of the author in the database."""
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors")
+    __tableargs__ = (
+        sqlalchemy.CheckConstraint(
+            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
+            name="typeOrDesignSet",
+        ),
+        sqlalchemy.UniqueConstraint("email", "typeId", "designId"),
+    )
+    """🔑 The optional parent design of the author."""
+
+
 ### Types ###
 
 
@@ -1799,36 +1993,47 @@ class TypeDescriptionField(RealField, abc.ABC):
 
 
 class TypeIconField(RealField, abc.ABC):
-    """🖼️ The icon of the type."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle."""
 
     icon: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The icon of the type.",
+        description="🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
     )
-    """🖼️ The icon of the type."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle."""
+
+
+class TypeImageField(RealField, abc.ABC):
+    """🖼️ The optional url to the icon of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels."""
+
+    image: str = sqlmodel.Field(
+        default="",
+        max_length=URL_LENGTH_LIMIT,
+        description="🖼️ The optional url to the icon of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.",
+    )
+    """🖼️ The optional url to the icon of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels."""
 
 
 class TypeVariantField(RealField, abc.ABC):
-    """🔀 The variant of the type."""
+    """🔀 The optional variant of the type. No variant means the default variant."""
 
     variant: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The variant of the type.",
+        description="🔀 The optional variant of the type. No variant means the default variant.",
     )
-    """🔀 The variant of the type."""
+    """🔀 The optional variant of the type. No variant means the default variant."""
 
 
 class TypeUnitField(RealField, abc.ABC):
-    """📏 The unit of the type."""
+    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
     unit: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="📏 The unit of the type.",
+        description="Ⓜ️ The length unit of the point and the direction of the ports of the type.",
     )
-    """📏 The unit of the type."""
+    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
 
 class TypeCreatedAtField(RealField, abc.ABC):
@@ -1858,6 +2063,7 @@ class TypeId(TypeVariantField, TypeNameField, Id):
 class TypeProps(
     TypeUnitField,
     TypeVariantField,
+    TypeImageField,
     TypeIconField,
     TypeDescriptionField,
     TypeNameField,
@@ -1869,16 +2075,18 @@ class TypeProps(
 class TypeInput(
     TypeUnitField,
     TypeVariantField,
+    TypeImageField,
     TypeIconField,
     TypeDescriptionField,
     TypeNameField,
     Input,
 ):
-    """↘️ The input for a type."""
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(
@@ -1886,16 +2094,27 @@ class TypeOutput(
     TypeCreatedAtField,
     TypeUnitField,
     TypeVariantField,
+    TypeImageField,
     TypeIconField,
     TypeDescriptionField,
     TypeNameField,
     Output,
 ):
-    """↗️ The output of a type."""
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
 
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+
+
+class TypeContext(
+    TypeUnitField, TypeVariantField, TypeDescriptionField, TypeNameField, Context
+):
+    """🧩 A type is a reusable element that can be connected with other types over ports."""
+
+    ports: list[PortContext] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class Type(
@@ -1903,6 +2122,7 @@ class Type(
     TypeCreatedAtField,
     TypeUnitField,
     TypeVariantField,
+    TypeImageField,
     TypeIconField,
     TypeDescriptionField,
     TypeNameField,
@@ -1936,6 +2156,10 @@ class Type(
         back_populates="type", cascade_delete=True
     )
     """📏 The qualities of the type."""
+    authors: list[Author] = sqlmodel.Relationship(
+        back_populates="type", cascade_delete=True
+    )
+    """👤 The authors of the type."""
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
@@ -1991,6 +2215,11 @@ class Type(
             entity.qualities = qualities
         except KeyError:
             pass
+        try:
+            authors = [Author.parse(a) for a in obj["authors"]]
+            entity.authors = authors
+        except KeyError:
+            pass
         return entity
 
     # TODO: Automatic emptying.
@@ -2043,21 +2272,21 @@ class PieceTypeField(MaskedField, abc.ABC):
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
-    """◳ The plane of the piece."""
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
 
     plane: Plane = sqlmodel.Field(
-        description="◳ The plane of the piece.",
+        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
     )
-    """◳ The plane of the piece."""
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
 
 
-class PieceScreenPointField(MaskedField, abc.ABC):
-    """📺 The screen point of the piece."""
+class PieceCenterField(MaskedField, abc.ABC):
+    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
-    screenPoint: ScreenPoint = sqlmodel.Field(
-        description="📺 The screen point of the piece.",
+    center: DiagramPoint = sqlmodel.Field(
+        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
     )
-    """📺 The screen point of the piece."""
+    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
 class PieceId(PieceIdField, Id):
@@ -2065,36 +2294,59 @@ class PieceId(PieceIdField, Id):
 
 
 class PieceProps(
-    PieceScreenPointField, PiecePlaneField, PieceTypeField, PieceIdField, Props
+    PieceCenterField, PiecePlaneField, PieceTypeField, PieceIdField, Props
 ):
     """🎫 The props of a piece."""
 
 
 class PieceInput(PieceTypeField, PieceIdField, Input):
-    """↘️ The input for a piece."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(
-        description="◳ The plane of the piece.",
+        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
     )
-    """◳ The plane of the piece."""
-    screenPoint: ScreenPointInput = sqlmodel.Field(
-        description="📺 The screen point of the piece.",
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
+    center: DiagramPointInput = sqlmodel.Field(
+        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
     )
-    """📺 The screen point of the piece."""
+    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+
+
+class PieceContext(PieceTypeField, PieceIdField, Context):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    plane: typing.Optional[PlaneContext] = sqlmodel.Field(
+        default=None,
+        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
+    )
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
+    # center: DiagramPointContext = sqlmodel.Field(
+    #     description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
+    # )
+    # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
 class PieceOutput(PieceTypeField, PieceIdField, Output):
-    """↗️ The output of a piece."""
+    """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
         default=None,
-        description="◳ The plane of the piece.",
+        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
     )
-    """◳ The plane of the piece."""
-    screenPoint: ScreenPointOutput = sqlmodel.Field(
-        description="📺 The screen point of the piece.",
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
+    center: DiagramPointOutput = sqlmodel.Field(
+        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
     )
-    """📺 The screen point of the piece."""
+    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+
+
+class PiecePrediction(PieceTypeField, PieceIdField, Prediction):
+    """⭕ A piece is a 3d-instance of a type in a design."""
+
+    # center: DiagramPointPrediction = sqlmodel.Field(
+    #     description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
+    # )
+    # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
 class Piece(TableEntity, table=True):
@@ -2118,7 +2370,6 @@ class Piece(TableEntity, table=True):
             sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
-        exclude=True,
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
@@ -2144,11 +2395,11 @@ class Piece(TableEntity, table=True):
     )
     """🔑 The foreign primary key of the plane of the piece in the database."""
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
-    """◳ The plane of the piece."""
-    screenPointX: int = sqlmodel.Field(exclude=True)
-    """📏 The x-coordinate of the screen point of the piece."""
-    screenPointY: int = sqlmodel.Field(exclude=True)
-    """📏 The y-coordinate of the screen point of the piece."""
+    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
+    centerX: float = sqlmodel.Field(exclude=True)
+    """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
+    centerY: float = sqlmodel.Field(exclude=True)
+    """🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
     designPk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "designId",
@@ -2175,15 +2426,20 @@ class Piece(TableEntity, table=True):
     __table_args__ = (sqlalchemy.UniqueConstraint("localId", "designId"),)
 
     @property
-    def screenPoint(self) -> ScreenPoint:
+    def center(self) -> DiagramPoint:
         """↗️ Get the masked screen point of the piece."""
-        return ScreenPoint(self.screenPointX, self.screenPointY)
+        return DiagramPoint(self.centerX, self.centerY)
 
-    @screenPoint.setter
-    def screenPoint(self, screenPoint: ScreenPoint):
+    @center.setter
+    def center(self, center: DiagramPoint):
         """↘️ Set the masked screen point of the piece."""
-        self.screenPointX = screenPoint.x
-        self.screenPointY = screenPoint.y
+        self.centerX = center.x
+        self.centerY = center.y
+
+    @property
+    def connections(self) -> list["Connection"]:
+        """🔗 Get the connections of the piece."""
+        return self.connecteds + self.connectings
 
     def parent(self) -> "Design":
         """👪 The parent design of the piece or otherwise `NoParentAssigned` is raised."""
@@ -2211,8 +2467,8 @@ class Piece(TableEntity, table=True):
             entity.type = types[type.name][type.variant]
         except KeyError:
             raise TypeNotFound(type)
-        screenPoint = ScreenPoint.parse(obj["screenPoint"])
-        entity.screenPoint = screenPoint
+        center = DiagramPoint.parse(obj["center"])
+        entity.center = center
         try:
             plane = Plane.parse(obj["plane"])
             # TODO: Proper mechanism of nullable fields.
@@ -2248,6 +2504,8 @@ class Piece(TableEntity, table=True):
 
 
 class Side(Model):
+    """🧱 A side of a piece in a connection."""
+
     piece: PieceId = sqlmodel.Field()
     port: PortId = sqlmodel.Field()
 
@@ -2267,12 +2525,20 @@ class Side(Model):
         return cls(piece=piece, port=port)
 
 
-class SideInput(Side):
-    pass
+class SideInput(Side, Input):
+    """🧱 A side of a piece in a connection."""
 
 
-class SideOutput(Side):
-    pass
+class SideContext(Side, Context):
+    """🧱 A side of a piece in a connection."""
+
+
+class SideOutput(Side, Output):
+    """🧱 A side of a piece in a connection."""
+
+
+class SidePrediction(Side, Prediction):
+    """🧱 A side of a piece in a connection."""
 
 
 ### Connections ###
@@ -2297,21 +2563,27 @@ class ConnectionConnectingField(MaskedField, abc.ABC):
 
 
 class ConnectionRotationField(RealField, abc.ABC):
-    """🔄 The rotation of the connection."""
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
     rotation: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="🔄 The rotation of the connection."
+        ge=0,
+        lt=360,
+        default=0,
+        description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
     )
-    """🔄 The rotation of the connection."""
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
 
 class ConnectionTiltField(RealField, abc.ABC):
-    """↗️ The tilt of the connection."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
     tilt: float = sqlmodel.Field(
-        ge=0, lt=360, default=0, description="↗️ The tilt of the connection."
+        ge=0,
+        lt=360,
+        default=0,
+        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
     )
-    """↗️ The tilt of the connection."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
 
 
 class ConnectionGapField(RealField, abc.ABC):
@@ -2355,13 +2627,32 @@ class ConnectionInput(
     ConnectionRotationField,
     Input,
 ):
-    """↘️ The input for a connection."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SideInput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
     )
     """🧲 The connected side of the connection."""
     connecting: SideInput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class ConnectionContext(
+    ConnectionShiftField,
+    ConnectionGapField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Context,
+):
+    """🖇️ A bidirectional connection between two pieces of a design."""
+
+    connected: SideContext = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SideContext = sqlmodel.Field(
         description="🧲 The connecting side of the connection."
     )
     """🧲 The connecting side of the connection."""
@@ -2374,13 +2665,32 @@ class ConnectionOutput(
     ConnectionRotationField,
     Output,
 ):
-    """↗️ The output of a connection."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     connected: SideOutput = sqlmodel.Field(
         description="🧲 The connected side of the connection."
     )
     """🧲 The connected side of the connection."""
     connecting: SideOutput = sqlmodel.Field(
+        description="🧲 The connecting side of the connection."
+    )
+    """🧲 The connecting side of the connection."""
+
+
+class ConnectionPrediction(
+    ConnectionShiftField,
+    ConnectionGapField,
+    ConnectionTiltField,
+    ConnectionRotationField,
+    Prediction,
+):
+    """🖇️ A bidirectional connection between two pieces of a design."""
+
+    connected: SidePrediction = sqlmodel.Field(
+        description="🧲 The connected side of the connection."
+    )
+    """🧲 The connected side of the connection."""
+    connecting: SidePrediction = sqlmodel.Field(
         description="🧲 The connecting side of the connection."
     )
     """🧲 The connecting side of the connection."""
@@ -2394,7 +2704,7 @@ class Connection(
     TableEntity,
     table=True,
 ):
-    """🖇️ A connection between two pieces of a design."""
+    """🖇️ A bidirectional connection between two pieces of a design."""
 
     PLURAL = "connections"
     __tablename__ = "connection"
@@ -2618,25 +2928,36 @@ class DesignDescriptionField(RealField, abc.ABC):
 
 
 class DesignIconField(RealField, abc.ABC):
-    """🖼️ The icon of the design."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the design. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design."""
 
     icon: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The icon of the design.",
+        description="🪙 The optional icon [ emoji | logogram | url ] of the design. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
     )
-    """🖼️ The icon of the design."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the design. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design."""
+
+
+class DesignImageField(RealField, abc.ABC):
+    """🖼️ The optional url to the image of the design."""
+
+    image: str = sqlmodel.Field(
+        default="",
+        max_length=URL_LENGTH_LIMIT,
+        description="🖼️ The optional url to the image of the design.",
+    )
+    """🖼️ The optional url to the image of the design."""
 
 
 class DesignVariantField(RealField, abc.ABC):
-    """🔀 The variant of the design."""
+    """🔀 The optional variant of the design. No variant means the default variant."""
 
     variant: str = sqlmodel.Field(
         default="",
         max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The variant of the design.",
+        description="🔀 The optional variant of the design. No variant means the default variant.",
     )
-    """🔀 The variant of the design."""
+    """🔀 The optional variant of the design. No variant means the default variant."""
 
 
 class DesignUnitField(RealField, abc.ABC):
@@ -2677,6 +2998,7 @@ class DesignId(DesignNameField, DesignVariantField, Id):
 class DesignProps(
     DesignUnitField,
     DesignVariantField,
+    DesignImageField,
     DesignIconField,
     DesignDescriptionField,
     DesignNameField,
@@ -2688,16 +3010,32 @@ class DesignProps(
 class DesignInput(
     DesignUnitField,
     DesignVariantField,
+    DesignImageField,
     DesignIconField,
     DesignDescriptionField,
     DesignNameField,
     Input,
 ):
-    """↘️ The input for a design."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
+
+
+class DesignContext(
+    DesignUnitField,
+    DesignVariantField,
+    DesignDescriptionField,
+    DesignNameField,
+    Context,
+):
+    """🏙️ A design is a collection of pieces that are connected."""
+
+    pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class DesignOutput(
@@ -2705,16 +3043,27 @@ class DesignOutput(
     DesignCreatedAtField,
     DesignUnitField,
     DesignVariantField,
+    DesignImageField,
     DesignIconField,
     DesignDescriptionField,
     DesignNameField,
     Output,
 ):
-    """↗️ The output of a design."""
+    """🏙️ A design is a collection of pieces that are connected."""
 
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+
+
+class DesignPrediction(
+    Prediction,
+):
+    """🏙️ A design is a collection of pieces that are connected."""
+
+    pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
+    connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 
 class Design(
@@ -2722,6 +3071,7 @@ class Design(
     DesignCreatedAtField,
     DesignUnitField,
     DesignVariantField,
+    DesignImageField,
     DesignIconField,
     DesignDescriptionField,
     DesignNameField,
@@ -2748,6 +3098,9 @@ class Design(
         back_populates="design", cascade_delete=True
     )
     qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="design", cascade_delete=True
+    )
+    authors: list[Author] = sqlmodel.Relationship(
         back_populates="design", cascade_delete=True
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
@@ -2807,6 +3160,11 @@ class Design(
         try:
             qualities = [Quality.parse(q) for q in obj["qualities"]]
             entity.qualities = qualities
+        except KeyError:
+            pass
+        try:
+            authors = [Author.parse(a) for a in obj["authors"]]
+            entity.authors = authors
         except KeyError:
             pass
         return entity
@@ -2870,36 +3228,69 @@ class KitDescriptionField(RealField, abc.ABC):
 
 
 class KitIconField(RealField, abc.ABC):
-    """🖼️ The icon of the kit."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit."""
 
     icon: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The icon of the kit.",
+        description="🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
     )
-    """🖼️ The icon of the kit."""
+    """🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit."""
+
+
+class KitImageField(RealField, abc.ABC):
+    """🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels."""
+
+    image: str = sqlmodel.Field(
+        default="",
+        max_length=URL_LENGTH_LIMIT,
+        description="🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels.",
+    )
+    """🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image resolution should be at least 512x512 pixels."""
+
+
+class KitVersionField(RealField, abc.ABC):
+    """🔀 The optional version of the kit. No version means the latest version."""
+
+    version: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="🔀 The optional version of the kit. No version means the latest version.",
+    )
+    """🔀 The optional version of the kit. No version means the latest version."""
 
 
 class KitRemoteField(RealField, abc.ABC):
-    """🌐 The remote of the kit."""
+    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
 
     remote: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🌐 The remote of the kit.",
+        description="☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
     )
-    """🌐 The remote of the kit."""
+    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
 
 
 class KitHomepage(RealField, abc.ABC):
-    """🌐 The homepage of the kit."""
+    """🏠 The optional url of the homepage of the kit."""
 
     homepage: str = sqlmodel.Field(
         default="",
         max_length=URL_LENGTH_LIMIT,
-        description="🌐 The homepage of the kit.",
+        description="🏠 The optional url of the homepage of the kit.",
     )
-    """🌐 The homepage of the kit."""
+    """🏠 The optional url of the homepage of the kit."""
+
+
+class KitLicenseField(RealField, abc.ABC):
+    """⚖️ The optional license [ spdx id | url ] of the kit."""
+
+    license: str = sqlmodel.Field(
+        default="",
+        max_length=URL_LENGTH_LIMIT,
+        description="⚖️ The optional license [ spdx id | url ] of the kit.",
+    )
+    """⚖️ The optional license [ spdx id | url ] of the kit."""
 
 
 class KitCreatedAtField(RealField, abc.ABC):
@@ -2927,8 +3318,11 @@ class KitId(KitUriField, Id):
 
 
 class KitProps(
+    KitLicenseField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
+    KitImageField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2939,8 +3333,11 @@ class KitProps(
 
 
 class KitInput(
+    KitLicenseField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
+    KitImageField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2961,8 +3358,11 @@ class KitInput(
 class KitOutput(
     KitLastUpdateAtField,
     KitCreatedAtField,
+    KitLicenseField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
+    KitImageField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -2984,8 +3384,11 @@ class KitOutput(
 class Kit(
     KitLastUpdateAtField,
     KitCreatedAtField,
+    KitLicenseField,
     KitHomepage,
     KitRemoteField,
+    KitVersionField,
+    KitImageField,
     KitIconField,
     KitDescriptionField,
     KitNameField,
@@ -3567,6 +3970,12 @@ class SqliteStore(DatabaseStore):
             exist_ok=True,
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
+        session = sqlalchemy.orm.sessionmaker(bind=self.engine)()
+        existingSemio = session.query(Semio).one_or_none()
+        if not existingSemio:
+            session.add(Semio())
+            session.commit()
+        session.close()
 
     def postDeleteKit(self: "SqliteStore") -> None:
         # sqlachemy can't maintain the connection to the database after the file is deleted.
@@ -3657,35 +4066,38 @@ def delete(code: str) -> typing.Any:
 
 
 GRAPHQLTYPES = {
-    str: graphene.NonNull(graphene.String),
-    int: graphene.NonNull(graphene.Int),
-    float: graphene.NonNull(graphene.Float),
-    bool: graphene.NonNull(graphene.Boolean),
-    list[str]: graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    ScreenPoint: graphene.NonNull(lambda: ScreenPointNode),
-    Point: graphene.NonNull(lambda: PointNode),
-    Vector: graphene.NonNull(lambda: VectorNode),
-    Plane: graphene.NonNull(lambda: PlaneNode),
-    Representation: graphene.NonNull(lambda: RepresentationNode),
-    list[Representation]: graphene.NonNull(
+    "str": graphene.NonNull(graphene.String),
+    "int": graphene.NonNull(graphene.Int),
+    "float": graphene.NonNull(graphene.Float),
+    "bool": graphene.NonNull(graphene.Boolean),
+    "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
+    "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
+    "Point": graphene.NonNull(lambda: PointNode),
+    "Vector": graphene.NonNull(lambda: VectorNode),
+    "Plane": graphene.NonNull(lambda: PlaneNode),
+    "Representation": graphene.NonNull(lambda: RepresentationNode),
+    "list[Representation]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: RepresentationNode))
     ),
-    Port: graphene.NonNull(lambda: PortNode),
-    PortId: graphene.NonNull(lambda: PortNode),
-    list[Port]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    Quality: graphene.NonNull(lambda: QualityNode),
-    list[Quality]: graphene.NonNull(
+    "Port": graphene.NonNull(lambda: PortNode),
+    "PortId": graphene.NonNull(lambda: PortNode),
+    "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "Quality": graphene.NonNull(lambda: QualityNode),
+    "list[Quality]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
     ),
-    Type: graphene.NonNull(lambda: TypeNode),
-    TypeId: graphene.NonNull(lambda: TypeNode),
-    list[Type]: graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    Piece: graphene.NonNull(lambda: PieceNode),
-    PieceId: graphene.NonNull(lambda: PieceNode),
-    Side: graphene.NonNull(lambda: SideNode),
-    Connection: graphene.NonNull(lambda: ConnectionNode),
-    Design: graphene.NonNull(lambda: DesignNode),
-    Kit: graphene.NonNull(lambda: KitNode),
+    "Type": graphene.NonNull(lambda: TypeNode),
+    "TypeId": graphene.NonNull(lambda: TypeNode),
+    "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "Piece": graphene.NonNull(lambda: PieceNode),
+    "PieceId": graphene.NonNull(lambda: PieceNode),
+    "Side": graphene.NonNull(lambda: SideNode),
+    "Connection": graphene.NonNull(lambda: ConnectionNode),
+    "list['Connection']": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: ConnectionNode))
+    ),
+    "Design": graphene.NonNull(lambda: DesignNode),
+    "Kit": graphene.NonNull(lambda: KitNode),
 }
 
 
@@ -3736,10 +4148,11 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, **options):
-        if "exclude_fields" not in options:
-            options["exclude_fields"] = tuple(
-                k for k, v in model.__fields__.items() if v.exclude
-            )
+        excludedFields = tuple(k for k, v in model.__fields__.items() if v.exclude)
+        if "exclude_fields" in options:
+            options["exclude_fields"] += excludedFields
+        else:
+            options["exclude_fields"] = excludedFields
         if "name" not in options:
             options["name"] = model.__name__
 
@@ -3760,7 +4173,17 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
             prop = getattr(model, name)
             prop_getter = prop.fget
             prop_return_type = inspect.signature(prop_getter).return_annotation
-            setattr(cls, name, GRAPHQLTYPES[prop_return_type])
+            setattr(
+                cls,
+                name,
+                GRAPHQLTYPES[
+                    (
+                        str(prop_return_type)
+                        if prop_return_type.__name__.startswith("list")
+                        else prop_return_type.__name__
+                    )
+                ],
+            )
             setattr(cls, f"resolve_{name}", make_resolve(name))
 
         super().__init_subclass_with_meta__(model=model, **options)
@@ -3807,14 +4230,14 @@ class LocatorInputNode(InputNode):
         model = LocatorInput
 
 
-class ScreenPointNode(Node):
+class DiagramPointNode(Node):
     class Meta:
-        model = ScreenPoint
+        model = DiagramPoint
 
 
-class ScreenPointInputNode(InputNode):
+class DiagramPointInputNode(InputNode):
     class Meta:
-        model = ScreenPointInput
+        model = DiagramPointInput
 
 
 class PointNode(Node):
@@ -3850,6 +4273,7 @@ class PlaneInputNode(InputNode):
 class PortNode(TableEntityNode):
     class Meta:
         model = Port
+        exclude_fields = ("connecteds", "connectings")
 
     locators = graphene.List(graphene.NonNull(lambda: LocatorNode))
 
@@ -3895,6 +4319,7 @@ class TypeIdInputNode(InputNode):
 class PieceNode(TableEntityNode):
     class Meta:
         model = Piece
+        exclude_fields = ("connecteds", "connectings")
 
 
 class PieceInputNode(InputNode):
@@ -3944,14 +4369,14 @@ class ConnectionNode(TableEntityNode):
             "connectingPort",
         )
 
-    # connected = graphene.NonNull(SideNode)
-    # connecting = graphene.NonNull(SideNode)
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
 
-    # def resolve_connected(connection: Connection, info):
-    #     return connection.connected
+    def resolve_connected(self, info):
+        return self.connected
 
-    # def resolve_connecting(connection: Connection, info):
-    #     return connection.connecting
+    def resolve_connecting(self, info):
+        return self.connecting
 
 
 class ConnectionInputNode(InputNode):
@@ -4006,9 +4431,7 @@ graphqlSchema = graphene.Schema(
 
 # Rest #
 
-rest = fastapi.FastAPI(
-    title="semio REST API", version=VERSION, max_request_body_size=MAX_REQUEST_BODY_SIZE
-)
+rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
 
 @rest.get("/kits/{encodedKitUri}")
@@ -4017,7 +4440,7 @@ async def kit(
     encodedKitUri: ENCODED_PATH,
 ) -> KitOutput:
     try:
-        return get(request.url.path.removeprefix("/kits/"))
+        return get(request.url.path.removeprefix("/api/kits/"))
     except ClientError as e:
         statusCode = 400
         error = e
@@ -4034,7 +4457,7 @@ async def create_kit(
     encodedKitUri: ENCODED_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4051,7 +4474,7 @@ async def delete_kit(
     encodedKitUri: ENCODED_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
@@ -4070,7 +4493,7 @@ async def put_type(
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4088,7 +4511,7 @@ async def delete_type(
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
@@ -4107,7 +4530,7 @@ async def put_design(
     encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        put(request.url.path.removeprefix("/kits/"), input)
+        put(request.url.path.removeprefix("/api/kits/"), input)
         return None
     except ClientError as e:
         statusCode = 400
@@ -4125,7 +4548,7 @@ async def delete_design(
     encodedDesignNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
     try:
-        delete(request.url.path.removeprefix("/kits/"))
+        delete(request.url.path.removeprefix("/api/kits/"))
         return None
     except ClientError as e:
         statusCode = 400
@@ -4136,54 +4559,64 @@ async def delete_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
+class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
+        json_schema = super().generate(schema, mode=mode)
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Context"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Context"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Context"))
+        return json_schema
+
+
+class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
+        json_schema = super().generate(schema, mode=mode)
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Output"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Output"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Output"))
+        return json_schema
+
+
+class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    def generate(self, schema, mode="validation"):
+        json_schema = super().generate(schema, mode=mode)
+        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Prediction"))
+        changeValues(json_schema, "title", lambda x: x.removesuffix("Prediction"))
+        changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
+        return json_schema
+
+
+def custom_openapi():
+    if rest.openapi_schema:
+        return rest.openapi_schema
+    openapi_schema = fastapi.openapi.utils.get_openapi(
+        title="semio REST API",
+        version=VERSION,
+        summary="This is the local rest API of the semio engine.",
+        routes=rest.routes,
+    )
+    changeValues(openapi_schema, "$ref", lambda x: x.removesuffix("Output"))
+    changeValues(openapi_schema, "title", lambda x: x.removesuffix("Output"))
+    changeKeys(openapi_schema, lambda x: x.removesuffix("Output"))
+    rest.openapi_schema = openapi_schema
+    return rest.openapi_schema
+
+
+rest.openapi = custom_openapi
+
 # Engine #
 
 engine = starlette.applications.Starlette()
+engine.mount("/api", rest)
 engine.mount(
     "/graphql",
     starlette_graphene3.GraphQLApp(
         graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()
     ),
 )
-engine.mount("/", rest)
 
 
 def start_engine(debug: bool = False):
-
-    if debug:
-        if os.path.exists("debug"):
-            # delete all files and folders in debug folder
-            for root, dirs, files in os.walk("debug", topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-        else:
-            os.makedirs("debug")
-
-        # write openapi schema to file
-        with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
-            json.dump(rest.openapi(), f, indent=4)
-
-        # write sqlite schema to file
-        sqliteSchemaPath = "../../sqlite/schema.sql"
-        if os.path.exists(sqliteSchemaPath):
-            os.remove(sqliteSchemaPath)
-        metadata_engine = sqlalchemy.create_engine("sqlite:///debug/semio.db")
-        sqlmodel.SQLModel.metadata.create_all(metadata_engine)
-        conn = sqlite3.connect("debug/semio.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT sql FROM sqlite_master WHERE type='table';")
-        sqliteSchema = cursor.fetchall()
-        with open(sqliteSchemaPath, "w", encoding="utf-8") as f:
-            for table in sqliteSchema:
-                f.write(f"{table[0]};\n")
-        conn.close()
-
-        # write graphql schema to file
-        with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
-            f.write(str(graphqlSchema))
-
     logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
     uvicorn.run(
         engine,
@@ -4193,6 +4626,81 @@ def start_engine(debug: bool = False):
         access_log=False,
         log_config=None,
     )
+
+
+def generateSchemas():
+    if os.path.exists("temp"):
+        for root, dirs, files in os.walk("temp", topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+    else:
+        os.makedirs("temp")
+
+    with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
+        json.dump(rest.openapi(), f, indent=4)
+
+    with open("../../jsonschema/kit.json", "w", encoding="utf-8") as f:
+        json.dump(
+            KitOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/design-context.json", "w", encoding="utf-8") as f:
+        json.dump(
+            DesignContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/design.json", "w", encoding="utf-8") as f:
+        json.dump(
+            DesignOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/design-prediction.json", "w", encoding="utf-8") as f:
+        json.dump(
+            DesignPrediction.model_json_schema(
+                schema_generator=PredictionGenerateJsonSchema
+            ),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/type.json", "w", encoding="utf-8") as f:
+        json.dump(
+            TypeOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    with open("../../jsonschema/type-context.json", "w", encoding="utf-8") as f:
+        json.dump(
+            TypeContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
+            f,
+            indent=4,
+        )
+
+    sqliteSchemaPath = "../../sqlite/schema.sql"
+    if os.path.exists(sqliteSchemaPath):
+        os.remove(sqliteSchemaPath)
+    metadata_engine = sqlalchemy.create_engine("sqlite:///temp/semio.db")
+    sqlmodel.SQLModel.metadata.create_all(metadata_engine)
+    conn = sqlite3.connect("temp/semio.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table';")
+    sqliteSchema = cursor.fetchall()
+    with open(sqliteSchemaPath, "w", encoding="utf-8") as f:
+        for table in sqliteSchema:
+            f.write(f"{table[0]};\n")
+    conn.close()
+
+    with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
+        f.write(str(graphqlSchema))
 
 
 def main():

@@ -1,0 +1,15 @@
+{
+  "terminal.integrated.profiles.windows": {
+    "PowerShell 7": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+    },
+    "PowerShell 7 ARM": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "path": "C:\\Program Files\\WindowsApps\\Microsoft.PowerShell_7.4.6.0_arm64__8wekyb3d8bbwe\\pwsh.exe"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell 7 ARM"
+}

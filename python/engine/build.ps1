@@ -2,6 +2,7 @@ if (-not (Test-Path ".venv")) {
     poetry install
 }
 .venv/Scripts/activate.ps1
+.\generate-schemas.ps1
 if (Test-Path "build") {
     Remove-Item "build" -Recurse
 }

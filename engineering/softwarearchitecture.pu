@@ -5,21 +5,23 @@ interface Artifact {
     name : String
     description : String
     icon : String
+    image : String
 }
 
 class Kit {
     url : String
     homepage : String
+    remote : String
 }
 
 class Type {
 }
 
 class Representation{
-    url : String
     mime : String
     lod : String
     tags: String[]
+    url : String
 }
 
 class Point {
@@ -46,6 +48,11 @@ class Quality {
     value : String
     unit : String
     definition : String
+}
+
+class Author {
+    name : String
+    email : String
 }
 
 class Locator {
@@ -79,11 +86,13 @@ Kit *-- "0..*" Design
 Representation "1..*" --* Type
 Type *-- "1..*" Port
 Type *-- "0..*" Quality
+Type *-- "0..*" Author
 Design *-- "1..*" Piece
 Piece *-- "0..1" Root
 Root *-- Plane
 Design *-- "0..*" Connection
 Design *-- "0..*" Quality
+Design *-- "0..*" Author
 Connection *-- Side : connected
 Connection *-- Side : connecting
 

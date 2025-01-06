@@ -118,7 +118,7 @@ export const TOLERANCE = 1e-5
 //     port?: Maybe<Port>
 // }
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type Connection = {
 //     __typename?: 'Connection'
 //     gap: Scalars['Float']['output']
@@ -189,12 +189,12 @@ export const TOLERANCE = 1e-5
 // /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagram = {
 //     __typename?: 'PieceDiagram'
-//     point: ScreenPoint
+//     point: DiagramPoint
 // }
 
 // /** 📺 A 2d-point (xy) of integers in screen plane. */
-// export type ScreenPoint = {
-//     __typename?: 'ScreenPoint'
+// export type DiagramPoint = {
+//     __typename?: 'DiagramPoint'
 //     x: Scalars['Int']['output']
 //     y: Scalars['Int']['output']
 // }
@@ -448,16 +448,16 @@ export const TOLERANCE = 1e-5
 
 // /** ✏️ The diagram indesign of a piece. */
 // export type PieceDiagramInput = {
-//     point: ScreenPointInput
+//     point: DiagramPointInput
 // }
 
 // /** 📺 A 2d-point (xy) of integers in screen plane. */
-// export type ScreenPointInput = {
+// export type DiagramPointInput = {
 //     x?: InputMaybe<Scalars['Int']['input']>
 //     y?: InputMaybe<Scalars['Int']['input']>
 // }
 
-// /** 🖇️ A connection between two pieces of a design. */
+// /** 🖇️ A bidirectional connection between two pieces of a design. */
 // export type ConnectionInput = {
 //     connecting: SideInput
 //     connected: SideInput

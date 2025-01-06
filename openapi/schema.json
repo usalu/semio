@@ -2,7 +2,8 @@
     "openapi": "3.1.0",
     "info": {
         "title": "semio REST API",
-        "version": "4.0.2"
+        "summary": "This is the local rest API of the semio engine.",
+        "version": "4.1.0"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -27,7 +28,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/KitOutput"
+                                    "$ref": "#/components/schemas/Kit"
                                 }
                             }
                         }
@@ -345,7 +346,7 @@
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Rotation",
-                        "description": "\ud83d\udd04 The rotation of the connection.",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "tilt": {
@@ -353,7 +354,7 @@
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The tilt of the connection.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -383,16 +384,16 @@
                     "connecting"
                 ],
                 "title": "ConnectionInput",
-                "description": "\u2198\ufe0f The input for a connection."
+                "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
             },
-            "ConnectionOutput": {
+            "Connection": {
                 "properties": {
                     "rotation": {
                         "type": "number",
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Rotation",
-                        "description": "\ud83d\udd04 The rotation of the connection.",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "tilt": {
@@ -400,7 +401,7 @@
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The tilt of the connection.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -416,11 +417,11 @@
                         "default": 0
                     },
                     "connected": {
-                        "$ref": "#/components/schemas/SideOutput",
+                        "$ref": "#/components/schemas/Side",
                         "description": "\ud83e\uddf2 The connected side of the connection."
                     },
                     "connecting": {
-                        "$ref": "#/components/schemas/SideOutput",
+                        "$ref": "#/components/schemas/Side",
                         "description": "\ud83e\uddf2 The connecting side of the connection."
                     }
                 },
@@ -429,8 +430,8 @@
                     "connected",
                     "connecting"
                 ],
-                "title": "ConnectionOutput",
-                "description": "\u2197\ufe0f The output of a connection."
+                "title": "Connection",
+                "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
             },
             "DesignInput": {
                 "properties": {
@@ -451,14 +452,14 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the design.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
                         "default": ""
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the design.",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
@@ -495,9 +496,9 @@
                     "name"
                 ],
                 "title": "DesignInput",
-                "description": "\u2198\ufe0f The input for a design."
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
             },
-            "DesignOutput": {
+            "Design": {
                 "properties": {
                     "name": {
                         "type": "string",
@@ -516,14 +517,14 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the design.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
                         "default": ""
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the design.",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
@@ -547,21 +548,21 @@
                     },
                     "pieces": {
                         "items": {
-                            "$ref": "#/components/schemas/PieceOutput"
+                            "$ref": "#/components/schemas/Piece"
                         },
                         "type": "array",
                         "title": "Pieces"
                     },
                     "connections": {
                         "items": {
-                            "$ref": "#/components/schemas/ConnectionOutput"
+                            "$ref": "#/components/schemas/Connection"
                         },
                         "type": "array",
                         "title": "Connections"
                     },
                     "qualities": {
                         "items": {
-                            "$ref": "#/components/schemas/QualityOutput"
+                            "$ref": "#/components/schemas/Quality"
                         },
                         "type": "array",
                         "title": "Qualities"
@@ -571,8 +572,8 @@
                 "required": [
                     "name"
                 ],
-                "title": "DesignOutput",
-                "description": "\u2197\ufe0f The output of a design."
+                "title": "Design",
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
             },
             "HTTPValidationError": {
                 "properties": {
@@ -606,21 +607,28 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
+                        "default": ""
+                    },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "description": "\ud83d\udd00 The optional version of the kit. No version means the latest version.",
                         "default": ""
                     },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "types": {
@@ -647,7 +655,7 @@
                 "title": "KitInput",
                 "description": "\u2198\ufe0f The input for a kit."
             },
-            "KitOutput": {
+            "Kit": {
                 "properties": {
                     "uri": {
                         "type": "string",
@@ -672,21 +680,28 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the kit.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
+                        "default": ""
+                    },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "description": "\ud83d\udd00 The optional version of the kit. No version means the latest version.",
                         "default": ""
                     },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Remote",
-                        "description": "\ud83c\udf10 The remote of the kit.",
+                        "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Homepage",
-                        "description": "\ud83c\udf10 The homepage of the kit.",
+                        "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "createdAt": {
@@ -703,7 +718,7 @@
                     },
                     "types": {
                         "items": {
-                            "$ref": "#/components/schemas/TypeOutput"
+                            "$ref": "#/components/schemas/Type"
                         },
                         "type": "array",
                         "title": "Types",
@@ -711,7 +726,7 @@
                     },
                     "designs": {
                         "items": {
-                            "$ref": "#/components/schemas/DesignOutput"
+                            "$ref": "#/components/schemas/Design"
                         },
                         "type": "array",
                         "title": "Designs",
@@ -723,7 +738,7 @@
                     "uri",
                     "name"
                 ],
-                "title": "KitOutput",
+                "title": "Kit",
                 "description": "\u2197\ufe0f The output of a kit."
             },
             "LocatorInput": {
@@ -747,9 +762,9 @@
                     "group"
                 ],
                 "title": "LocatorInput",
-                "description": "\u2198\ufe0f The input for a locator."
+                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
-            "LocatorOutput": {
+            "Locator": {
                 "properties": {
                     "group": {
                         "type": "string",
@@ -769,8 +784,8 @@
                 "required": [
                     "group"
                 ],
-                "title": "LocatorOutput",
-                "description": "\u2197\ufe0f The output of a locator."
+                "title": "Locator",
+                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
             "PieceId": {
                 "properties": {
@@ -808,23 +823,23 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "\u25f3 The plane of the piece."
+                        "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
                     },
-                    "screenPoint": {
-                        "$ref": "#/components/schemas/ScreenPointInput",
-                        "description": "\ud83d\udcfa The screen point of the piece."
+                    "center": {
+                        "$ref": "#/components/schemas/DiagramPointInput",
+                        "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
                     }
                 },
                 "type": "object",
                 "required": [
                     "type",
                     "plane",
-                    "screenPoint"
+                    "center"
                 ],
                 "title": "PieceInput",
-                "description": "\u2198\ufe0f The input for a piece."
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
             },
-            "PieceOutput": {
+            "Piece": {
                 "properties": {
                     "id_": {
                         "type": "string",
@@ -840,26 +855,26 @@
                     "plane": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/PlaneOutput"
+                                "$ref": "#/components/schemas/Plane"
                             },
                             {
                                 "type": "null"
                             }
                         ],
-                        "description": "\u25f3 The plane of the piece."
+                        "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
                     },
-                    "screenPoint": {
-                        "$ref": "#/components/schemas/ScreenPointOutput",
-                        "description": "\ud83d\udcfa The screen point of the piece."
+                    "center": {
+                        "$ref": "#/components/schemas/DiagramPoint",
+                        "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
                     }
                 },
                 "type": "object",
                 "required": [
                     "type",
-                    "screenPoint"
+                    "center"
                 ],
-                "title": "PieceOutput",
-                "description": "\u2197\ufe0f The output of a piece."
+                "title": "Piece",
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
             },
             "PlaneInput": {
                 "properties": {
@@ -883,9 +898,9 @@
                     "yAxis"
                 ],
                 "title": "PlaneInput",
-                "description": "\u2198\ufe0f The input for a plane."
+                "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
             },
-            "PlaneOutput": {
+            "Plane": {
                 "properties": {
                     "origin": {
                         "$ref": "#/components/schemas/Point",
@@ -906,8 +921,8 @@
                     "xAxis",
                     "yAxis"
                 ],
-                "title": "PlaneOutput",
-                "description": "\u2197\ufe0f The output of a plane."
+                "title": "Plane",
+                "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
             },
             "Point": {
                 "properties": {
@@ -961,7 +976,7 @@
                     "z"
                 ],
                 "title": "PointInput",
-                "description": "\u2198\ufe0f The input for a point."
+                "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
             },
             "PortId": {
                 "properties": {
@@ -992,7 +1007,7 @@
                     },
                     "direction": {
                         "$ref": "#/components/schemas/VectorInput",
-                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
+                        "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                     },
                     "locators": {
                         "items": {
@@ -1009,18 +1024,10 @@
                     "direction"
                 ],
                 "title": "PortInput",
-                "description": "\u2198\ufe0f The input for a port."
+                "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
-            "PortOutput": {
+            "Port": {
                 "properties": {
-                    "direction": {
-                        "$ref": "#/components/schemas/Vector",
-                        "description": "\u27a1\ufe0f The direction of the port. The direction of the other port will be flipped and then the pieces will be aligned."
-                    },
-                    "point": {
-                        "$ref": "#/components/schemas/Point",
-                        "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
-                    },
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
@@ -1028,9 +1035,17 @@
                         "description": "\ud83c\udd94 The id of the port.",
                         "default": ""
                     },
+                    "point": {
+                        "$ref": "#/components/schemas/Point",
+                        "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/Vector",
+                        "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+                    },
                     "locators": {
                         "items": {
-                            "$ref": "#/components/schemas/LocatorOutput"
+                            "$ref": "#/components/schemas/Locator"
                         },
                         "type": "array",
                         "title": "Locators",
@@ -1039,11 +1054,11 @@
                 },
                 "type": "object",
                 "required": [
-                    "direction",
-                    "point"
+                    "point",
+                    "direction"
                 ],
-                "title": "PortOutput",
-                "description": "\u2197\ufe0f The output of a port."
+                "title": "Port",
+                "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
             "QualityInput": {
                 "properties": {
@@ -1057,21 +1072,21 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Value",
-                        "description": "\ud83d\udccf The value of the quality.",
-                        "default": ""
-                    },
-                    "definition": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Definition",
-                        "description": "\ud83d\udccf The definition of the quality.",
+                        "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
                         "default": ""
                     },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the quality.",
+                        "description": "\ud83d\udccf The optional unit of the value of the quality.",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Definition",
+                        "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
                         "default": ""
                     }
                 },
@@ -1082,7 +1097,7 @@
                 "title": "QualityInput",
                 "description": "\u2198\ufe0f The input for a quality."
             },
-            "QualityOutput": {
+            "Quality": {
                 "properties": {
                     "name": {
                         "type": "string",
@@ -1094,21 +1109,21 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Value",
-                        "description": "\ud83d\udccf The value of the quality.",
-                        "default": ""
-                    },
-                    "definition": {
-                        "type": "string",
-                        "maxLength": 4096,
-                        "title": "Definition",
-                        "description": "\ud83d\udccf The definition of the quality.",
+                        "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
                         "default": ""
                     },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the quality.",
+                        "description": "\ud83d\udccf The optional unit of the value of the quality.",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Definition",
+                        "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
                         "default": ""
                     }
                 },
@@ -1116,7 +1131,7 @@
                 "required": [
                     "name"
                 ],
-                "title": "QualityOutput",
+                "title": "Quality",
                 "description": "\u2197\ufe0f The output of a quality."
             },
             "RepresentationInput": {
@@ -1155,9 +1170,9 @@
                     "url"
                 ],
                 "title": "RepresentationInput",
-                "description": "\u2198\ufe0f The input for a representation."
+                "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
-            "RepresentationOutput": {
+            "Representation": {
                 "properties": {
                     "mime": {
                         "type": "string",
@@ -1192,20 +1207,20 @@
                     "lod",
                     "url"
                 ],
-                "title": "RepresentationOutput",
-                "description": "\u2197\ufe0f The output of a representation."
+                "title": "Representation",
+                "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
-            "ScreenPointInput": {
+            "DiagramPointInput": {
                 "properties": {
                     "x": {
                         "type": "integer",
                         "title": "X",
-                        "description": "\ud83c\udfc1 The x-coordinate of the screen point."
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
                     },
                     "y": {
                         "type": "integer",
                         "title": "Y",
-                        "description": "\ud83c\udfc1 The y-coordinate of the screen point."
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
                     }
                 },
                 "type": "object",
@@ -1213,20 +1228,20 @@
                     "x",
                     "y"
                 ],
-                "title": "ScreenPointInput",
-                "description": "\u2198\ufe0f The input for a screen point."
+                "title": "DiagramPointInput",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
-            "ScreenPointOutput": {
+            "DiagramPoint": {
                 "properties": {
                     "x": {
                         "type": "integer",
                         "title": "X",
-                        "description": "\ud83c\udfc1 The x-coordinate of the screen point."
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
                     },
                     "y": {
                         "type": "integer",
                         "title": "Y",
-                        "description": "\ud83c\udfc1 The y-coordinate of the screen point."
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
                     }
                 },
                 "type": "object",
@@ -1234,8 +1249,8 @@
                     "x",
                     "y"
                 ],
-                "title": "ScreenPointOutput",
-                "description": "\u2197\ufe0f The output of a screen point."
+                "title": "DiagramPoint",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "SideInput": {
                 "properties": {
@@ -1251,9 +1266,10 @@
                     "piece",
                     "port"
                 ],
-                "title": "SideInput"
+                "title": "SideInput",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
-            "SideOutput": {
+            "Side": {
                 "properties": {
                     "piece": {
                         "$ref": "#/components/schemas/PieceId"
@@ -1267,7 +1283,8 @@
                     "piece",
                     "port"
                 ],
-                "title": "SideOutput"
+                "title": "Side",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
             "TypeId": {
                 "properties": {
@@ -1281,7 +1298,7 @@
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     }
                 },
@@ -1311,21 +1328,21 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the type.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
                         "default": ""
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
+                        "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
                     },
                     "representations": {
@@ -1355,9 +1372,9 @@
                     "name"
                 ],
                 "title": "TypeInput",
-                "description": "\u2198\ufe0f The input for a type."
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
             },
-            "TypeOutput": {
+            "Type": {
                 "properties": {
                     "name": {
                         "type": "string",
@@ -1376,21 +1393,21 @@
                         "type": "string",
                         "maxLength": 1024,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The icon of the type.",
+                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
                         "default": ""
                     },
                     "variant": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Variant",
-                        "description": "\ud83d\udd00 The variant of the type.",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
-                        "description": "\ud83d\udccf The unit of the type.",
+                        "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
                     },
                     "createdAt": {
@@ -1407,21 +1424,21 @@
                     },
                     "representations": {
                         "items": {
-                            "$ref": "#/components/schemas/RepresentationOutput"
+                            "$ref": "#/components/schemas/Representation"
                         },
                         "type": "array",
                         "title": "Representations"
                     },
                     "ports": {
                         "items": {
-                            "$ref": "#/components/schemas/PortOutput"
+                            "$ref": "#/components/schemas/Port"
                         },
                         "type": "array",
                         "title": "Ports"
                     },
                     "qualities": {
                         "items": {
-                            "$ref": "#/components/schemas/QualityOutput"
+                            "$ref": "#/components/schemas/Quality"
                         },
                         "type": "array",
                         "title": "Qualities"
@@ -1431,8 +1448,8 @@
                 "required": [
                     "name"
                 ],
-                "title": "TypeOutput",
-                "description": "\u2197\ufe0f The output of a type."
+                "title": "Type",
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
             },
             "ValidationError": {
                 "properties": {
@@ -1519,7 +1536,7 @@
                     "z"
                 ],
                 "title": "VectorInput",
-                "description": "\u2198\ufe0f The input for a vector."
+                "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
             }
         }
     }
