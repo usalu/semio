@@ -1,5 +1,28 @@
 {
     "$defs": {
+        "Author": {
+            "description": "\ud83d\udcd1 The output of an author.",
+            "properties": {
+                "name": {
+                    "description": "\ud83d\udcdb The name of the author.",
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "\ud83d\udce7 The email of the author.",
+                    "maxLength": 128,
+                    "title": "Email",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "email"
+            ],
+            "title": "Author",
+            "type": "object"
+        },
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
@@ -31,6 +54,18 @@
                     "title": "Shift",
                     "type": "number"
                 },
+                "x": {
+                    "default": 0,
+                    "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "default": 0,
+                    "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "Y",
+                    "type": "number"
+                },
                 "connected": {
                     "$ref": "#/$defs/Side",
                     "description": "\ud83e\uddf2 The connected side of the connection."
@@ -58,16 +93,23 @@
                 },
                 "description": {
                     "default": "",
-                    "description": "\ud83d\udcac The description of the design.",
+                    "description": "\ud83d\udcac The optional human-readable description of the design.",
                     "maxLength": 4096,
                     "title": "Description",
                     "type": "string"
                 },
                 "icon": {
                     "default": "",
-                    "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
-                    "maxLength": 1024,
+                    "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                    "maxLength": 2048,
                     "title": "Icon",
+                    "type": "string"
+                },
+                "image": {
+                    "default": "",
+                    "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+                    "maxLength": 2048,
+                    "title": "Image",
                     "type": "string"
                 },
                 "variant": {
@@ -75,6 +117,13 @@
                     "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
                     "maxLength": 64,
                     "title": "Variant",
+                    "type": "string"
+                },
+                "view": {
+                    "default": "",
+                    "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
+                    "maxLength": 64,
+                    "title": "View",
                     "type": "string"
                 },
                 "unit": {
@@ -116,12 +165,40 @@
                     },
                     "title": "Qualities",
                     "type": "array"
+                },
+                "authors": {
+                    "items": {
+                        "$ref": "#/$defs/Author"
+                    },
+                    "title": "Authors",
+                    "type": "array"
                 }
             },
             "required": [
                 "name"
             ],
             "title": "Design",
+            "type": "object"
+        },
+        "DiagramPoint": {
+            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
+            "properties": {
+                "x": {
+                    "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "Y",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "title": "DiagramPoint",
             "type": "object"
         },
         "Locator": {
@@ -154,7 +231,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 }
             },
@@ -168,7 +245,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 },
                 "type": {
@@ -188,13 +265,20 @@
                     "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
                 },
                 "center": {
-                    "$ref": "#/$defs/DiagramPoint",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DiagramPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
                     "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
                 }
             },
             "required": [
-                "type",
-                "center"
+                "type"
             ],
             "title": "Piece",
             "type": "object"
@@ -257,7 +341,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the port.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 }
             },
@@ -271,7 +355,14 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the port.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the port.",
+                    "maxLength": 4096,
+                    "title": "Description",
                     "type": "string"
                 },
                 "point": {
@@ -323,7 +414,7 @@
                 },
                 "definition": {
                     "default": "",
-                    "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
+                    "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                     "maxLength": 4096,
                     "title": "Definition",
                     "type": "string"
@@ -360,7 +451,7 @@
                 },
                 "url": {
                     "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 1024,
+                    "maxLength": 2048,
                     "title": "Url",
                     "type": "string"
                 }
@@ -371,27 +462,6 @@
                 "url"
             ],
             "title": "Representation",
-            "type": "object"
-        },
-        "DiagramPoint": {
-            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
-            "properties": {
-                "x": {
-                    "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "X",
-                    "type": "integer"
-                },
-                "y": {
-                    "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "Y",
-                    "type": "integer"
-                }
-            },
-            "required": [
-                "x",
-                "y"
-            ],
-            "title": "DiagramPoint",
             "type": "object"
         },
         "Side": {
@@ -445,16 +515,23 @@
                 },
                 "description": {
                     "default": "",
-                    "description": "\ud83d\udcac The description of the type.",
+                    "description": "\ud83d\udcac The optional human-readable description of the type.",
                     "maxLength": 4096,
                     "title": "Description",
                     "type": "string"
                 },
                 "icon": {
                     "default": "",
-                    "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
-                    "maxLength": 1024,
+                    "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                    "maxLength": 2048,
                     "title": "Icon",
+                    "type": "string"
+                },
+                "image": {
+                    "default": "",
+                    "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+                    "maxLength": 2048,
+                    "title": "Image",
                     "type": "string"
                 },
                 "variant": {
@@ -502,6 +579,13 @@
                         "$ref": "#/$defs/Quality"
                     },
                     "title": "Qualities",
+                    "type": "array"
+                },
+                "authors": {
+                    "items": {
+                        "$ref": "#/$defs/Author"
+                    },
+                    "title": "Authors",
                     "type": "array"
                 }
             },
@@ -555,16 +639,30 @@
         },
         "description": {
             "default": "",
-            "description": "\ud83d\udcac The description of the kit.",
+            "description": "\ud83d\udcac The optional human-readable description of the kit.",
             "maxLength": 4096,
             "title": "Description",
             "type": "string"
         },
         "icon": {
             "default": "",
-            "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
-            "maxLength": 1024,
+            "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
+            "maxLength": 2048,
             "title": "Icon",
+            "type": "string"
+        },
+        "image": {
+            "default": "",
+            "description": "\ud83d\uddbc\ufe0f The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+            "maxLength": 2048,
+            "title": "Image",
+            "type": "string"
+        },
+        "preview": {
+            "default": "",
+            "description": "\ud83d\udd2e The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
+            "maxLength": 2048,
+            "title": "Preview",
             "type": "string"
         },
         "version": {
@@ -577,15 +675,22 @@
         "remote": {
             "default": "",
             "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
-            "maxLength": 1024,
+            "maxLength": 2048,
             "title": "Remote",
             "type": "string"
         },
         "homepage": {
             "default": "",
             "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
-            "maxLength": 1024,
+            "maxLength": 2048,
             "title": "Homepage",
+            "type": "string"
+        },
+        "license": {
+            "default": "",
+            "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
+            "maxLength": 2048,
+            "title": "License",
             "type": "string"
         },
         "createdAt": {

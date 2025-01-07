@@ -335,10 +335,184 @@
                     }
                 }
             }
+        },
+        "/assistant/predictDesign": {
+            "get": {
+                "summary": "Predict Design",
+                "operationId": "predict_design_assistant_predictDesign_get",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_predict_design_assistant_predictDesign_get"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DesignPrediction"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "AuthorInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the author."
+                    },
+                    "email": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Email",
+                        "description": "\ud83d\udce7 The email of the author."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "title": "AuthorInput",
+                "description": "\ud83d\udc64 The input for an author."
+            },
+            "Author": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the author."
+                    },
+                    "email": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Email",
+                        "description": "\ud83d\udce7 The email of the author."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "title": "Author",
+                "description": "\ud83d\udcd1 The output of an author."
+            },
+            "Body_predict_design_assistant_predictDesign_get": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeContext"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "design": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "description",
+                    "types"
+                ],
+                "title": "Body_predict_design_assistant_predictDesign_get"
+            },
+            "ConnectionContext": {
+                "properties": {
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideContext",
+                        "description": "\ud83e\uddf2 The connected side of the connection."
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideContext",
+                        "description": "\ud83e\uddf2 The connecting side of the connection."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionContext",
+                "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
+            },
             "ConnectionInput": {
                 "properties": {
                     "rotation": {
@@ -367,6 +541,18 @@
                         "type": "number",
                         "title": "Shift",
                         "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
                         "default": 0
                     },
                     "connected": {
@@ -416,6 +602,18 @@
                         "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
                     "connected": {
                         "$ref": "#/components/schemas/Side",
                         "description": "\ud83e\uddf2 The connected side of the connection."
@@ -433,6 +631,130 @@
                 "title": "Connection",
                 "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
             },
+            "ConnectionPrediction": {
+                "properties": {
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SidePrediction",
+                        "description": "\ud83e\uddf2 The connected side of the connection."
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SidePrediction",
+                        "description": "\ud83e\uddf2 The connecting side of the connection."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionPrediction",
+                "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
+            },
+            "DesignContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the design."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the design.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "view": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "View",
+                        "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the design.",
+                        "default": ""
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceContext"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionContext"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignContext",
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
             "DesignInput": {
                 "properties": {
                     "name": {
@@ -445,14 +767,21 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the design.",
+                        "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "variant": {
@@ -460,6 +789,13 @@
                         "maxLength": 64,
                         "title": "Variant",
                         "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "view": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "View",
+                        "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
                         "default": ""
                     },
                     "unit": {
@@ -489,6 +825,13 @@
                         },
                         "type": "array",
                         "title": "Qualities"
+                    },
+                    "authors": {
+                        "items": {
+                            "$ref": "#/components/schemas/AuthorInput"
+                        },
+                        "type": "array",
+                        "title": "Authors"
                     }
                 },
                 "type": "object",
@@ -510,14 +853,21 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the design.",
+                        "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. design.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "variant": {
@@ -525,6 +875,13 @@
                         "maxLength": 64,
                         "title": "Variant",
                         "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "view": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "View",
+                        "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
                         "default": ""
                     },
                     "unit": {
@@ -566,6 +923,13 @@
                         },
                         "type": "array",
                         "title": "Qualities"
+                    },
+                    "authors": {
+                        "items": {
+                            "$ref": "#/components/schemas/Author"
+                        },
+                        "type": "array",
+                        "title": "Authors"
                     }
                 },
                 "type": "object",
@@ -574,6 +938,76 @@
                 ],
                 "title": "Design",
                 "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
+            "DesignPrediction": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the design.",
+                        "default": ""
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PiecePrediction"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionPrediction"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    }
+                },
+                "type": "object",
+                "title": "DesignPrediction",
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
+            "DiagramPointInput": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "DiagramPointInput",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
+            },
+            "DiagramPoint": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "DiagramPoint",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "HTTPValidationError": {
                 "properties": {
@@ -600,14 +1034,28 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the kit.",
+                        "description": "\ud83d\udcac The optional human-readable description of the kit.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+                        "default": ""
+                    },
+                    "preview": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Preview",
+                        "description": "\ud83d\udd2e The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
                         "default": ""
                     },
                     "version": {
@@ -619,16 +1067,23 @@
                     },
                     "remote": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Remote",
                         "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Homepage",
                         "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
+                        "default": ""
+                    },
+                    "license": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "License",
+                        "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
                         "default": ""
                     },
                     "types": {
@@ -673,14 +1128,28 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the kit.",
+                        "description": "\ud83d\udcac The optional human-readable description of the kit.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. kit.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+                        "default": ""
+                    },
+                    "preview": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Preview",
+                        "description": "\ud83d\udd2e The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
                         "default": ""
                     },
                     "version": {
@@ -692,16 +1161,23 @@
                     },
                     "remote": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Remote",
                         "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Homepage",
                         "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
+                        "default": ""
+                    },
+                    "license": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "License",
+                        "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
                         "default": ""
                     },
                     "createdAt": {
@@ -740,6 +1216,29 @@
                 ],
                 "title": "Kit",
                 "description": "\u2197\ufe0f The output of a kit."
+            },
+            "LocatorContext": {
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Group",
+                        "description": "\ud83d\udc6a The group of the locator."
+                    },
+                    "subgroup": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Subgroup",
+                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "group"
+                ],
+                "title": "LocatorContext",
+                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
             "LocatorInput": {
                 "properties": {
@@ -787,12 +1286,44 @@
                 "title": "Locator",
                 "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
             },
+            "PieceContext": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeId",
+                        "description": "\ud83e\udde9 The type of the piece."
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type"
+                ],
+                "title": "PieceContext",
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
+            },
             "PieceId": {
                 "properties": {
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     }
@@ -806,7 +1337,7 @@
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
@@ -826,15 +1357,20 @@
                         "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
                     },
                     "center": {
-                        "$ref": "#/components/schemas/DiagramPointInput",
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DiagramPointInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "type",
-                    "plane",
-                    "center"
+                    "type"
                 ],
                 "title": "PieceInput",
                 "description": "\u2b55 A piece is a 3d-instance of a type in a design."
@@ -844,7 +1380,7 @@
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
@@ -864,17 +1400,68 @@
                         "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
                     },
                     "center": {
-                        "$ref": "#/components/schemas/DiagramPoint",
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DiagramPoint"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "type",
-                    "center"
+                    "type"
                 ],
                 "title": "Piece",
                 "description": "\u2b55 A piece is a 3d-instance of a type in a design."
+            },
+            "PiecePrediction": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeId",
+                        "description": "\ud83e\udde9 The type of the piece."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type"
+                ],
+                "title": "PiecePrediction",
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
+            },
+            "PlaneContext": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/PointContext",
+                        "description": "\u2331 The origin of the plane."
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/VectorContext",
+                        "description": "\u27a1\ufe0f The x-axis of the plane."
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/VectorContext",
+                        "description": "\u27a1\ufe0f The y-axis of the plane."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "PlaneContext",
+                "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
             },
             "PlaneInput": {
                 "properties": {
@@ -951,6 +1538,33 @@
                 "title": "Point",
                 "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
             },
+            "PointContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "PointContext",
+                "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
+            },
             "PointInput": {
                 "properties": {
                     "x": {
@@ -978,12 +1592,41 @@
                 "title": "PointInput",
                 "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
             },
+            "PortContext": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the port.",
+                        "default": ""
+                    },
+                    "locators": {
+                        "items": {
+                            "$ref": "#/components/schemas/LocatorContext"
+                        },
+                        "type": "array",
+                        "title": "Locators",
+                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                    }
+                },
+                "type": "object",
+                "title": "PortContext",
+                "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
+            },
             "PortId": {
                 "properties": {
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the port.",
                         "default": ""
                     }
@@ -997,8 +1640,15 @@
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
                     "point": {
@@ -1031,8 +1681,15 @@
                     "id_": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Id ",
+                        "title": "Id",
                         "description": "\ud83c\udd94 The id of the port.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
                     "point": {
@@ -1060,6 +1717,36 @@
                 "title": "Port",
                 "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
+            "QualityContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udccf The name of the quality."
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The optional unit of the value of the quality.",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "QualityContext",
+                "description": "\ud83d\udcd1 The context of a quality."
+            },
             "QualityInput": {
                 "properties": {
                     "name": {
@@ -1086,7 +1773,7 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Definition",
-                        "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
+                        "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                         "default": ""
                     }
                 },
@@ -1123,7 +1810,7 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Definition",
-                        "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
+                        "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                         "default": ""
                     }
                 },
@@ -1158,7 +1845,7 @@
                     },
                     "url": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Url",
                         "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     }
@@ -1196,7 +1883,7 @@
                     },
                     "url": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Url",
                         "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     }
@@ -1210,47 +1897,22 @@
                 "title": "Representation",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
-            "DiagramPointInput": {
+            "SideContext": {
                 "properties": {
-                    "x": {
-                        "type": "integer",
-                        "title": "X",
-                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
                     },
-                    "y": {
-                        "type": "integer",
-                        "title": "Y",
-                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    "port": {
+                        "$ref": "#/components/schemas/PortId"
                     }
                 },
                 "type": "object",
                 "required": [
-                    "x",
-                    "y"
+                    "piece",
+                    "port"
                 ],
-                "title": "DiagramPointInput",
-                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
-            },
-            "DiagramPoint": {
-                "properties": {
-                    "x": {
-                        "type": "integer",
-                        "title": "X",
-                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
-                    },
-                    "y": {
-                        "type": "integer",
-                        "title": "Y",
-                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "x",
-                    "y"
-                ],
-                "title": "DiagramPoint",
-                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
+                "title": "SideContext",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
             "SideInput": {
                 "properties": {
@@ -1285,6 +1947,74 @@
                 ],
                 "title": "Side",
                 "description": "\ud83e\uddf1 A side of a piece in a connection."
+            },
+            "SidePrediction": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "port": {
+                        "$ref": "#/components/schemas/PortId"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece",
+                    "port"
+                ],
+                "title": "SidePrediction",
+                "description": "\ud83e\uddf1 A side of a piece in a connection."
+            },
+            "TypeContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the type.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
+                        "default": ""
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortContext"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeContext",
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
             },
             "TypeId": {
                 "properties": {
@@ -1321,14 +2051,21 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the type.",
+                        "description": "\ud83d\udcac The optional human-readable description of the type.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "variant": {
@@ -1365,6 +2102,13 @@
                         },
                         "type": "array",
                         "title": "Qualities"
+                    },
+                    "authors": {
+                        "items": {
+                            "$ref": "#/components/schemas/AuthorInput"
+                        },
+                        "type": "array",
+                        "title": "Authors"
                     }
                 },
                 "type": "object",
@@ -1386,14 +2130,21 @@
                         "type": "string",
                         "maxLength": 4096,
                         "title": "Description",
-                        "description": "\ud83d\udcac The description of the type.",
+                        "description": "\ud83d\udcac The optional human-readable description of the type.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 1024,
+                        "maxLength": 2048,
                         "title": "Icon",
-                        "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
+                        "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Image",
+                        "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "variant": {
@@ -1442,6 +2193,13 @@
                         },
                         "type": "array",
                         "title": "Qualities"
+                    },
+                    "authors": {
+                        "items": {
+                            "$ref": "#/components/schemas/Author"
+                        },
+                        "type": "array",
+                        "title": "Authors"
                     }
                 },
                 "type": "object",
@@ -1509,6 +2267,33 @@
                     "z"
                 ],
                 "title": "Vector",
+                "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
+            },
+            "VectorContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector."
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z",
+                        "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "VectorContext",
                 "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
             },
             "VectorInput": {

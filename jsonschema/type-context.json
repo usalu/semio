@@ -30,7 +30,14 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the port.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the port.",
+                    "maxLength": 4096,
+                    "title": "Description",
                     "type": "string"
                 },
                 "locators": {
@@ -86,7 +93,7 @@
         },
         "description": {
             "default": "",
-            "description": "\ud83d\udcac The description of the type.",
+            "description": "\ud83d\udcac The optional human-readable description of the type.",
             "maxLength": 4096,
             "title": "Description",
             "type": "string"

@@ -1,1 +1,65 @@
-{"type":"object","description":"A type is a reusable element that can be connected with other types over ports.","properties":{"name":{"type":"string"},"description":{"type":"string"},"variant":{"type":"string","description":"The optional variant of the type. No variant means the default variant."},"ports":{"type":"array","items":{"type":"object","description":"A port is a connection point (with a direction) of a type.","properties":{"id":{"type":"string"},"locators":{"type":"array","items":{"type":"object","description":"A locator is meta-data for grouping ports.","properties":{"group":{"type":"string"},"subgroup":{"default":"","description":"The optional sub-group of the locator. No sub-group means true.","type":"string"}}}}}}},"qualities":{"type":"array","items":{"type":"object","description":"A quality is a named value with a unit and a definition.","properties":{"name":{"type":"string"},"value":{"type":"string","description":"The optional value [ text | url ] of the quality. No value is equivalent to true for the name."},"unit":{"type":"string","description":"The optional unit of the value of the quality."}}}}}}
+{
+    "type": "object",
+    "description": "A type is a reusable element that can be connected with other types over ports.",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "variant": {
+            "type": "string",
+            "description": "The optional variant of the type. No variant means the default variant."
+        },
+        "ports": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "A port is a connection point (with a direction) of a type.",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "locators": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "description": "A locator is meta-data for grouping ports.",
+                            "properties": {
+                                "group": {
+                                    "type": "string"
+                                },
+                                "subgroup": {
+                                    "default": "",
+                                    "description": "The optional sub-group of the locator. No sub-group means true.",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "qualities": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "A quality is a named value with a unit and a definition.",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name."
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "The optional unit of the value of the quality."
+                    }
+                }
+            }
+        }
+    }
+}

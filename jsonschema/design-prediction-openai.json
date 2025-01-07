@@ -1,1 +1,97 @@
-{"name":"design","strict":true,"schema":{"type":"object","description":"A design is a collection of pieces that are connected.","properties":{"pieces":{"type":"array","items":{"type":"object","description":" A piece is a 3d-instance of a type in a design.","properties":{"id":{"type":"string"},"typeName":{"type":"string","description":"The name of the type."},"typeVariant":{"default":"","type":"string"}},"required":["id","typeName","typeVariant"],"additionalProperties":false}},"connections":{"type":"array","items":{"type":"object","description":"A bidirectional connection between two pieces of a design.","properties":{"connectedPieceId":{"type":"string"},"connectedPieceTypePortId":{"type":"string"},"connectingPieceId":{"type":"string"},"connectingPieceTypePortId":{"type":"string"},"rotation":{"type":"number","description":"The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.","default":0},"tilt":{"type":"number","description":"The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.","default":0},"gap":{"type":"number","description":"The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ","default":0},"shift":{"type":"number","description":"The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..","default":0}},"required":["connectedPieceId","connectedPieceTypePortId","connectingPieceId","connectingPieceTypePortId","rotation","tilt","gap","shift"],"additionalProperties":false}}},"additionalProperties":false}}
+{
+    "name": "design",
+    "strict": true,
+    "schema": {
+        "type": "object",
+        "description": "A design is a collection of pieces that are connected.",
+        "properties": {
+            "pieces": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "description": " A piece is a 3d-instance of a type in a design.",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "typeName": {
+                            "type": "string"
+                        },
+                        "typeVariant": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "typeName",
+                        "typeVariant"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "connections": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "description": "A bidirectional connection between two pieces of a design.",
+                    "properties": {
+                        "connectedPieceId": {
+                            "type": "string"
+                        },
+                        "connectedPieceTypePortId": {
+                            "type": "string"
+                        },
+                        "connectingPieceId": {
+                            "type": "string"
+                        },
+                        "connectingPieceTypePortId": {
+                            "type": "string"
+                        },
+                        "rotation": {
+                            "type": "number",
+                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+                        },
+                        "tilt": {
+                            "type": "number",
+                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."
+                        },
+                        "gap": {
+                            "type": "number",
+                            "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. "
+                        },
+                        "shift": {
+                            "type": "number",
+                            "description": "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."
+                        },
+                        "diagramX": {
+                            "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                            "type": "number"
+                        },
+                        "diagramY": {
+                            "description": "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "connectedPieceId",
+                        "connectedPieceTypePortId",
+                        "connectingPieceId",
+                        "connectingPieceTypePortId",
+                        "rotation",
+                        "tilt",
+                        "gap",
+                        "shift",
+                        "diagramX",
+                        "diagramY"
+                    ],
+                    "additionalProperties": false
+                }
+            }
+        },
+        "required": [
+            "pieces",
+            "connections"
+        ],
+        "additionalProperties": false
+    }
+}

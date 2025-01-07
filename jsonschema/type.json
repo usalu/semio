@@ -1,5 +1,28 @@
 {
     "$defs": {
+        "Author": {
+            "description": "\ud83d\udcd1 The output of an author.",
+            "properties": {
+                "name": {
+                    "description": "\ud83d\udcdb The name of the author.",
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "\ud83d\udce7 The email of the author.",
+                    "maxLength": 128,
+                    "title": "Email",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "email"
+            ],
+            "title": "Author",
+            "type": "object"
+        },
         "Locator": {
             "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
             "properties": {
@@ -57,7 +80,14 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the port.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the port.",
+                    "maxLength": 4096,
+                    "title": "Description",
                     "type": "string"
                 },
                 "point": {
@@ -109,7 +139,7 @@
                 },
                 "definition": {
                     "default": "",
-                    "description": "\ud83d\udccf The optional definition [ text | url ] of the quality.",
+                    "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                     "maxLength": 4096,
                     "title": "Definition",
                     "type": "string"
@@ -146,7 +176,7 @@
                 },
                 "url": {
                     "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 1024,
+                    "maxLength": 2048,
                     "title": "Url",
                     "type": "string"
                 }
@@ -197,16 +227,23 @@
         },
         "description": {
             "default": "",
-            "description": "\ud83d\udcac The description of the type.",
+            "description": "\ud83d\udcac The optional human-readable description of the type.",
             "maxLength": 4096,
             "title": "Description",
             "type": "string"
         },
         "icon": {
             "default": "",
-            "description": "\ud83d\uddbc\ufe0f The optional icon [ emoji | logogram | url ] of the type. The url has to point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle.",
-            "maxLength": 1024,
+            "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
+            "maxLength": 2048,
             "title": "Icon",
+            "type": "string"
+        },
+        "image": {
+            "default": "",
+            "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+            "maxLength": 2048,
+            "title": "Image",
             "type": "string"
         },
         "variant": {
@@ -254,6 +291,13 @@
                 "$ref": "#/$defs/Quality"
             },
             "title": "Qualities",
+            "type": "array"
+        },
+        "authors": {
+            "items": {
+                "$ref": "#/$defs/Author"
+            },
+            "title": "Authors",
             "type": "array"
         }
     },

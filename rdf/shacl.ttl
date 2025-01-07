@@ -1,0 +1,926 @@
+# baseURI: https://usalu.github.io/semio/2/shacl#
+# semio Vocabulary
+# Version 2
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix se: <https://usalu.github.io/semio/2/shacl#> .
+se:
+  a owl:Ontology ;
+  rdfs:label "semio Vocabulary"@en ;
+  rdfs:comment "This vocabulary defines terms used in semio."@en ;
+  sh:declare
+    [
+      sh:prefix "se" ;
+      sh:namespace "https://usalu.github.io/semio/2/shacl#"^^xsd:anyURI ;
+    ] ;
+  sh:suggestedShapesGraph <http://www.w3.org/ns/shacl-shacl#> ;
+.
+se:Kit
+  a sh:NodeShape ;
+  sh:targetClass se:Kit ;
+  sh:name "Kit"@en ;
+  sh:description "An kit is a container for a bundle of related artifacts."@en ;
+  sh:property
+    [
+      sh:path se:dependency ;
+      sh:name "kit dependency"@en ;
+      sh:description "Another kit that this kit depends on."@en ;
+      sh:class se:Kit;
+    ] ,
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the kit."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the kit."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "A type of the kit."@en ;
+      sh:class se:Type ;
+    ] ,
+    [
+      sh:path se:design ;
+      sh:name "design"@en ;
+      sh:description "A design of the kit."@en ;
+      sh:class se:Design ;
+    ] ;
+.
+se:Design
+  a sh:NodeShape ;
+  sh:name "Design"@en ;
+  sh:description "A design is like the assembly manual for a LEGO set."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the design."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the design."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "A piece of the design."@en ;
+      sh:minCount 1 ;
+    ] ,
+    [
+      sh:path se:connection ;
+      sh:name "connection"@en ;
+      sh:description "An connection of the design."@en ;
+      sh:class se:Connection ;
+    ] ;
+.
+se:Piece
+  a sh:NodeShape ;
+  sh:targetClass se:Piece ;
+  sh:name "Piece"@en ;
+  sh:description "An piece is like a LEGO piece inside a set."@en ;
+  sh:property
+    [
+      sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "The type of the piece."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Type ;
+    ] ;
+.
+se:Connection
+  a sh:NodeShape ;
+  sh:targetClass se:Connection ;
+  sh:name "Connection"@en ;
+  sh:description "An connection makes the connected piece being pulled to the connecting piece."@en ;
+  sh:property
+    [
+      sh:path se:connecting ;
+      sh:name "connecting side"@en ;
+      sh:description "The side of the connecting piece. This piece does not move."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Side ;
+    ] ,
+    [
+      sh:path se:connected ;
+      sh:name "connected side"@en ;
+      sh:description "The side of the connected piece. This piece does move."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Side ;
+    ] ;
+.
+se:Side
+  a sh:NodeShape ;
+  sh:targetClass se:Side ;
+  sh:name "Side"@en ;
+  sh:description "A side is a port of the type of a piece and the a piece."@en ;
+  sh:property
+    [
+      sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "The piece of the side."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Piece ;
+    ] ,
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "The port of the type of the piece of the side."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Port ;
+    ] ;
+.
+se:Type
+  a sh:NodeShape ;
+  sh:targetClass se:Type ;
+  sh:name "type"@en ;
+  sh:description "A type is like a LEGO piece type. It has ports to connect with other types and it consits of many pieces of indesign in different formats. In CAD lingo a type is a block (definition)."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the type."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the type."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:quality ;
+      sh:name "quality"@en ;
+      sh:description "A quality of the type."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalQuality ;
+          sh:name "decimal quality"@en ;
+          sh:description "A decimal quality of the type."@en ;
+        ]
+        [
+          sh:class se:IntegerQuality ;
+          sh:name "integer quality"@en ;
+          sh:description "A integer quality of the type."@en ;
+        ]
+        [
+          sh:class se:NaturalQuality ;
+          sh:name "natural quality"@en ;
+          sh:description "A natural quality of the type."@en ;
+        ]
+        [
+          sh:class se:BooleanQuality ;
+          sh:name "boolean quality"@en ;
+          sh:description "A boolean quality of the type."@en ;
+        ]
+        [
+          sh:class se:FuzzyQuality ;
+          sh:name "fuzzy quality"@en ;
+          sh:description "A fuzzy quality of the type."@en ;
+        ]
+        [
+          sh:class se:ChoiceQuality ;
+          sh:name "choice quality"@en ;
+          sh:description "A choice quality of the type."@en ;
+        ]
+        [
+          sh:class se:BlobQuality ;
+          sh:name "blob quality"@en ;
+          sh:description "A blob quality of the type."@en ;
+        ]
+        [
+          sh:class se:PointQuality ;
+          sh:name "point quality"@en ;
+          sh:description "A point quality of the type."@en ;
+        ]
+        [
+          sh:class se:VectorQuality ;
+          sh:name "vector quality"@en ;
+          sh:description "A vector quality of the type."@en ;
+        ]
+        [
+          sh:class se:PlaneQuality ;
+          sh:name "plane quality"@en ;
+          sh:description "A plane quality of the type."@en ;
+        ]
+      )
+    ] ,
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "A port of the type."@en ;
+      sh:minCount 1 ;
+      sh:class se:Port ;
+    ] ;
+.
+se:Port
+  a sh:NodeShape ;
+  sh:targetClass se:Port ;
+  sh:name "port"@en ;
+  sh:description "A port is a 3d interface."@en ;
+  sh:property
+    [
+      sh:path se:plane ;
+      sh:name "plane"@en ;
+      sh:description "The plane of the port."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Plane ;
+    ] ,
+    [
+      sh:path se:quality ;
+      sh:name "quality"@en ;
+      sh:description "A quality for the port."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalQuality ;
+          sh:name "decimal quality"@en ;
+          sh:description "A decimal quality of the port."@en ;
+        ]
+        [
+          sh:class se:IntegerQuality ;
+          sh:name "integer quality"@en ;
+          sh:description "A integer quality of the port."@en ;
+        ]
+        [
+          sh:class se:NaturalQuality ;
+          sh:name "natural quality"@en ;
+          sh:description "A natural quality of the port."@en ;
+        ]
+        [
+          sh:class se:BooleanQuality ;
+          sh:name "boolean quality"@en ;
+          sh:description "A boolean quality of the port."@en ;
+        ]
+        [
+          sh:class se:FuzzyQuality ;
+          sh:name "fuzzy quality"@en ;
+          sh:description "A fuzzy quality of the port."@en ;
+        ]
+        [
+          sh:class se:ChoiceQuality ;
+          sh:name "choice quality"@en ;
+          sh:description "A choice quality of the port."@en ;
+        ]
+        [
+          sh:class se:BlobQuality ;
+          sh:name "blob quality"@en ;
+          sh:description "A blob quality of the port."@en ;
+        ]
+        [
+          sh:class se:PointQuality ;
+          sh:name "point quality"@en ;
+          sh:description "A point quality of the port."@en ;
+        ]
+        [
+          sh:class se:VectorQuality ;
+          sh:name "vector quality"@en ;
+          sh:description "A vector quality of the port."@en ;
+        ]
+        [
+          sh:class se:PlaneQuality ;
+          sh:name "plane quality"@en ;
+          sh:description "A plane quality of the port."@en ;
+        ]
+      )
+    ] ;
+.
+se:DecimalQuality
+  a sh:NodeShape ;
+  sh:targetClass se:DecimalQuality ;
+  sh:name "decimal (number) quality"@en ;
+  sh:description "A decimal (number) quality is a quality with a real number (floating point arithmetic and double precision) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the decimal (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "decimal (number) value"@en ;
+      sh:description "The decimal (number) value of the decimal (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:unit ;
+      sh:name "unit"@en ;
+      sh:description "The unit of the decimal (number) quality."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the decimal (number) quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:IntegerQuality
+  a sh:NodeShape ;
+  sh:targetClass se:IntegerQuality ;
+  sh:name "integer (number) quality"@en ;
+  sh:description "An integer (number) quality is a quality with a whole number (without decimals) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the integer (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "integer (number) value"@en ;
+      sh:description "The integer (number) value of the integer (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:integer ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the integer (number) quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:NaturalQuality
+  a sh:NodeShape ;
+  sh:targetClass se:NaturalQuality ;
+  sh:name "natural (number) quality"@en ;
+  sh:description "A natural (number) quality is a quality with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the natural (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "natural (number) value"@en ;
+      sh:description "The natural (number) value of the natural (number) quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:positiveInteger ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the natural (number) quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:BooleanQuality
+  a sh:NodeShape ;
+  sh:targetClass se:BooleanQuality ;
+  sh:name "boolean quality"@en ;
+  sh:description "A boolean quality is quality with a boolean (either true or false) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the boolean quality."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "boolean value"@en ;
+      sh:description "The boolean value of the boolean quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:boolean ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the boolean quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:FuzzyQuality
+  a sh:NodeShape ;
+  sh:targetClass se:FuzzyQuality ;
+  sh:name "fuzzy (logic) quality"@en ;
+  sh:description "A fuzzy (logic) quality is a quality with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the fuzzy (logic) quality."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "fuzzy (logic) value"@en ;
+      sh:description "The fuzzy (logic) value of the fuzzy (logic) quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ;
+      sh:minInclusive "0"^^xsd:double ;
+      sh:maxInclusive "1"^^xsd:double ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the fuzzy quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:ChoiceQuality
+  a sh:NodeShape ;
+  sh:targetClass se:ChoiceQuality ;
+  sh:name "choice quality"@en ;
+  sh:description "A choice quality is a quality with a textual value which represents one choice from a known finite amount of possible choises."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the choice quality."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "choice value"@en ;
+      sh:description "The choice value of the choice quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the choice quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:BlobQuality
+  a sh:NodeShape ;
+  sh:targetClass se:BlobQuality ;
+  sh:name "blob quality"@en ;
+  sh:description "A binary large object (blob) quality is a quality with a blob value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the blob quality."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      se:name "blob value"@en ;
+      se:description "The blob value of the blob quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Blob ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the blob quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Blob
+  a sh:NodeShape ;
+  sh:targetClass se:Blob ;
+  sh:name "blob"@en ;
+  sh:description "A binary large object (blob) is an array of bytes with metadata in order to interpret the bytes."@en ;
+  sh:property
+    [
+      sh:path se:url ;
+      se:name "url"@en ;
+      se:description "The url where the blob is stored."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:nodeKind sh:IRI ;
+    ] ,
+    [
+      sh:path se:endianness ;
+      sh:name "endianness"@en ;
+      se:description "The endianness specifcies the order of bytes. Either big-endian (BE) with most siginificant bit first or little-endian (LE) with least significant first."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:BigEndian
+        se:LittleEndian
+      ) ;
+    ] ,
+    [
+      sh:path se:encoding ;
+      sh:name "encoding"@en ;
+      sh:description "The encoding format of the blob quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:Utf8Encoding
+        se:Utf16Encoding
+        se:ASCIIEncoding
+        se:BASE32Encoding
+        se:BASE64Encoding
+      ) ;
+    ] ,
+    [
+      sh:path se:dataFormat ;
+      sh:name "data format"@en ;
+      sh:description "The data format of the blob quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:CustomDataFormat
+        se:JsonDataFormat
+        se:XmlDataFormat
+        se:YamlDataFormat
+        se:TomlDataFormat
+        se:RdfDataFormat
+      ) ;
+    ] ,
+    [
+      sh:path se:schema ;
+      sh:name "schema"@en ;
+      sh:description "The schema of the blob quality."@en ;
+      sh:nodeKind sh:IRI ; 
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+    ] ;
+.
+se:PlaneQuality
+  a sh:NodeShape ;
+  sh:targetClass se:PlaneQuality ;
+  sh:name "plane quality"@en ;
+  sh:description "A plane quality is a quality with a plane (3d reference frame) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the plane quality."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      se:name "plane value"@en ;
+      se:description "The plane value of the plane quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Plane ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the plane quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Plane
+  a sh:NodeShape ;
+  sh:targetClass se:Plane ;
+  sh:name "plane"@en ;
+  sh:description "A plane is a 3d reference frame defined by an origin point, a unitized x-axis vector and unitized y-axis vector."@en ;
+  sh:property
+    [
+      sh:path se:origin ;
+      sh:name "origin point"@en ;
+      sh:description "The origin point of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Point ; 
+    ] ,
+    # TODO: check how to integrate unitizing heuristic (-1<=x,y,z<=1) or advanced shacl feature
+    [
+      sh:path se:x ;
+      sh:name "unitized x-axis vector"@en ;
+      sh:description "The unitized x-axis vector of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "unitized y-axis vector"@en ;
+      sh:description "The unitized y-axis vector of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ;
+.
+se:VectorQuality
+  a sh:NodeShape ;
+  sh:targetClass se:VectorQuality ;
+  sh:name "vector quality"@en ;
+  sh:description "A vector quality has a vector as a value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the vector quality."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "vector value"@en ;
+      sh:description "The vector value of the vector quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the vector quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Vector
+  a sh:NodeShape ;
+  sh:targetClass se:Vector ;
+  sh:name "vector"@en ;
+  sh:description "A vector is a 3d vector of decimal numbers."@en ;
+  sh:property
+    [
+      sh:path se:x ;
+      sh:name "x number"@en ;
+      sh:description "The first number (x) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "y number"@en ;
+      sh:description "The second number (y) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:z ;
+      sh:name "z number"@en ;
+      sh:description "The third number (z) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ;
+.
+se:PointQuality
+  a sh:NodeShape ;
+  sh:targetClass se:PointQuality ;
+  sh:name "point quality"@en ;
+  sh:description "A point quality has a point as a value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the point quality."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "point value"@en ;
+      sh:description "The point value of the point quality."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Point ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the point quality."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Point
+  a sh:NodeShape ;
+  sh:targetClass se:Point ;
+  sh:name "point"@en ;
+  sh:description "A point is a 3d point of decimal numbers."@en ;
+  sh:property
+    [
+      sh:path se:x ;
+      sh:name "x coordinate"@en ;
+      sh:description "The first coordinate (x) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "y coordinate"@en ;
+      sh:description "The second coordinate (y) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:z ;
+      sh:name "z coordinate"@en ;
+      sh:description "The third coordinate (z) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ;
+.
+se:Context
+  a sh:NodeShape ;
+  sh:targetClass se:Context ;
+  sh:name "context"@en ;
+  sh:description "A context allows to (re)create complex data structures from single values."
+  sh:property
+    [
+      sh:path se:category ;
+      sh:name "category"@en ;
+      sh:description "The category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:order ;
+      sh:name "order"@en ;
+      sh:description "The order of the the category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ;
+.
+# se:Enumeration
+#   a sh:NodeShape ;
+#   sh:targetClass se:Enumeration ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:ordering ;
+#       sh:minCount 1 ;
+#       sh:class se:Ordering; 
+#     ] ;
+# .
+# se:Ordering
+#   a sh:NodeShape ;
+#   sh:targetClass se:Map ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:category ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ,
+#     [
+#       sh:path se:integer ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:integer ; 
+#     ] ;
+# .
+# Runtime
+se:InitializeKitCommand
+  a sh:NodeShape ;
+  sh:targetClass se:InitializeKitCommand ;
+  sh:name "initialize kit command"@en ;
+  sh:description "Initializes an kit in a directory. Uses the "@en ;
+  sh:property
+    [
+      sh:path se:kit ;
+      sh:name "kit"@en ;
+      sh:description "The kit to initialization command."@en ;
+      sh:maxCount 1 ;
+      sh:class se:Kit ; 
+    ] ,
+    [
+      sh:path se:directory ;
+      sh:name "directory"@en ;
+      sh:description "The directory to write the kit into. If none is provided then the current directory will be used."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:anyURI ; 
+    ] ;
+.
+# se:Transdesign
+#   a sh:NodeShape ;
+#   sh:targetClass se:Transdesign ;
+#   sh:name "transdesign"@en ;
+#   sh:description "A transdesign transformed one design into another design according to properties."
+#   sh:property
+#     [
+#       sh:path se:initial ;
+#       sh:name "initial design"@en ;
+#       sh:description "The initial design before the transdesign."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Design ; 
+#     ] ,
+#     [
+#       sh:path se:transformed ;
+#       sh:name "transformed design"@en ;
+#       sh:description "The transformed design after the transdesign."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Design ; 
+#     ] ,
+#     [
+#       sh:path se:parameter ;
+#       sh:name "parameter"@en ;
+#       sh:description "A parameter of the transdesign."@en ;
+#       sh:or (
+#         [
+#           sh:class se:DecimalQuality ;
+#           sh:name "decimal quality parameter"@en ;
+#           sh:description "A decimal quality of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:IntegerQuality ;
+#           sh:name "integer quality parameter"@en ;
+#           sh:description "A integer quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:NaturalQuality ;
+#           sh:name "natural quality parameter"@en ;
+#           sh:description "A natural quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:BooleanQuality ;
+#           sh:name "boolean quality parameter"@en ;
+#           sh:description "A boolean quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:FuzzyQuality ;
+#           sh:name "fuzzy quality parameter"@en ;
+#           sh:description "A fuzzy quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:ChoiceQuality ;
+#           sh:name "choice quality parameter"@en ;
+#           sh:description "A choice quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:BlobQuality ;
+#           sh:name "blob quality parameter"@en ;
+#           sh:description "A blob quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:PointQuality ;
+#           sh:name "point quality parameter"@en ;
+#           sh:description "A point quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:VectorQuality ;
+#           sh:name "vector quality parameter"@en ;
+#           sh:description "A vector quality parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:PlaneQuality ;
+#           sh:name "plane quality parameter"@en ;
+#           sh:description "A plane quality parameter of the transdesign."@en ;
+#         ]
+#       )
+#     ] ;
+# .

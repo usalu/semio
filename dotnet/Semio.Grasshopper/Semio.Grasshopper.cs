@@ -1,7 +1,7 @@
 ﻿#region License
 
 //Semio.Grasshopper.cs
-//Copyright (C) 2024 Ueli Saluz
+//2020-2025 Ueli Saluz
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU Affero General Public License as
@@ -18,6 +18,26 @@
 
 #endregion
 
+#region TODOs
+
+// TODO: Think of modelling components that are resilient to future schema changes.
+// TODO: Refactor EngineComponent with GetInput and GetPersitanceInput etc. Very confusing. Probably no abstracting is better.
+// TODO: GetProps and SetProps (includes children) is not consistent with the prop naming in python (does not include children).
+// TODO: Add toplevel scanning for kits wherever a directory is given
+// Maybe extension function for components. The repeated code looks something like this:
+// if (!DA.GetData(_, ref path))
+//      path = OnPingDocument().IsFilePathDefined
+//          ? Path.GetDirectoryName(OnPingDocument().FilePath)
+//          : Directory.GetCurrentDirectory();
+// TODO: IsInvalid is used to check null state which is not clean.
+// Think of a better way to handle this.
+// The invalid check happen twice and code is duplicated.
+// TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
+// TODO: NameM.ToLower() doesn't work for composite names. E.g. "DiagramPoint" -> "diagrampoint".
+// TODO: Implement a status check and wait for the engine to be ready
+
+#endregion
+
 #region Usings
 
 using System.Collections.Immutable;
@@ -26,6 +46,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using FluentValidation;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
@@ -38,29 +59,12 @@ using Rhino.Geometry;
 
 namespace Semio.Grasshopper;
 
-#region TODOs
-
-// TODO: Add toplevel scanning for kits wherever a directory is given
-// Maybe extension function for components. The repeated code looks something like this:
-// if (!DA.GetData(_, ref path))
-//      path = OnPingDocument().IsFilePathDefined
-//          ? Path.GetDirectoryName(OnPingDocument().FilePath)
-//          : Directory.GetCurrentDirectory();
-// TODO: IsInvalid is used to check null state which is not clean.
-// Think of a better way to handle this.
-// The invalid check happen twice and code is duplicated.
-// TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
-// TODO: NameM.ToLower() doesn't work for composite names. E.g. "DiagramPoint" -> "diagrampoint".
-
-#endregion
-
 #region Constants
 
 public static class Constants
 {
-    public const string Name = "semio";
-    public const string Category = Name;
-    public const string Version = "4.1.0";
+    public const string Category = Semio.Constants.Name;
+    public const string Version = "5.0.0-beta";
 }
 
 #endregion
@@ -69,14 +73,14 @@ public static class Constants
 
 public class Semio_GrasshopperInfo : GH_AssemblyInfo
 {
-    public override string Name => Constants.Name;
+    public override string Name => Semio.Constants.Name;
     public override Bitmap Icon => Resources.semio_24x24;
     public override Bitmap AssemblyIcon => Resources.semio_24x24;
     public override string Description => "semio within 🦗.";
     public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
     public override string Version => Constants.Version;
     public override string AuthorName => "Ueli Saluz";
-    public override string AuthorContact => "semio-community@posteo.org";
+    public override string AuthorContact => "ueli@semio-tech.org";
 }
 
 public class SemioCategoryIcon : GH_AssemblyPriority
@@ -92,6 +96,101 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 #endregion
 
 #region Copilot
+
+#region GraphQL
+
+#endregion
+
+#region Dictionary
+
+//Symbol,Code,Abbreviation,Name,Description
+//👥,Bs,Bas,Base,The shared base props for {{NAME}} models.
+//🧲,Cd,Cnd,Connected,The connected side of the piece of the connection.
+//🧲,Cg,Cng,Connecting,The connecting side of the piece of the connection.
+//🖇️,Co,Con,Connection,A connection between two pieces in a design.
+//🖇️,Co*,Cons,Connections,The optional connections of a design.
+//⌚,CA,CAt,Created At,The time when the {{NAME}} was created.
+//💬,Dc?,Dsc,Description,The optional human-readable description of the {{NAME}}.
+//📖,Df,Def,Definition,The optional definition [ text | uri ] of the quality.
+//✏️,Dg,Dgm,Diagram,The diagram of the design.
+//📁,Di?,Dir,Directory,The optional directory where to find the kit.
+//🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
+//➡️,Dr,Drn,Direction,The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
+//🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
+//🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
+//📺,DP,DPt,Diagram Point,A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
+//🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
+//🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
+//▢,En,Ent,Entity,An entity is a collection of properties and children.
+//🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
+//↕️,Gp?,Gap,Gap,The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
+//🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
+//👪,Gr,Grp,Group,The group of the locator.
+//🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
+//🪙,Ic?,Ico,Icon,The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. {{NAME}}.
+//🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
+//🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
+//🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
+//↘️,In,Inp,Input,The input for a {{NAME}}.
+//🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
+//🗺️,Lc,Loc,Locator,A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between ports based on individual locators.
+//🗺️,Lc*,Locs,Locators,The optional machine-readable locators of the port. Every port should have a unique set of locators.
+//🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+//📛,Na,Nam,Name,The name of the {{NAME}}.
+//✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+//⌱,Og,Org,Origin,The origin of the plane.
+//↗️,Ou,Out,Output,The output for a {{NAME}}.
+//👪,Pa,Par,Parent,The parent of {{NAME}}.
+//⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
+//🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
+//⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
+//⭕,Pc?,Pces,Pieces,The optional pieces of the design.
+//🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
+//🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
+//🔌,Po+,Pors,Ports,The ports of the type.
+//🎫,Pp,Prp,Props,The props are all values of an entity without its children.
+//◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
+//◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
+//✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
+//✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
+//📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
+//📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+//🍾,Rl,Rel,Release,The release of the engine that created this database.
+//☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+//💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
+//🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+//🧱,Sd,Sde,Side,A side of a piece in a connection.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
+//✅,Su,Suc,Success,{{NAME}} was successful.
+//🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
+//🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
+//🧩,Ty,Typ,Type,The type-related information of the side.
+//🧩,Ty*,Typs,Types,The optional types of the kit.
+//🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to the resource of the representation.
+//Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
+//Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
+//🔄,Up,Upd,Update,Update the props of the {{NAME}}. Optionally empty the {{NAME}} before.
+//🔀,Vn?,Vnt,Variant,The optional variant of the {{PARENT_NAME}}. No variant means the default variant. 
+//➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
+//🔀,Ve,Ver,Version,The optional version of the kit. No version means the latest version.
+//🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
+//🏷️,Vl,Val,Value,The value of the tag.
+//🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+//🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
+//🏁,X,X,X,The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+//🎚️,X,X,X,The x-coordinate of the point.
+//➡️,XA,XAx,XAxis,The x-axis of the plane.
+//🏁,Y,Y,Y,The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+//🎚️,Y,Y,Y,The y-coordinate of the point.
+//➡️,YA,YAx,YAxis,The y-axis of the plane.
+//🏁,Z,Z,Z,The z-coordinate of the screen point.
+//🎚️,Z,Z,Z,The z-coordinate of the point.
+//➡️,ZA,ZAx,ZAxis,The z-axis of the plane.
+
+#endregion
 
 #endregion
 
@@ -324,7 +423,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 
     public override bool IsValid { get; }
 
-    public override string TypeName => Value.GetType().Name;
+    public override string TypeName => typeof(T).Name;
 
     public override string TypeDescription =>
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
@@ -338,6 +437,8 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 
     public override string ToString()
     {
+        if (Value == null)
+            return null;
         return Value.ToString();
     }
 
@@ -503,9 +604,11 @@ public class AuthorGoo : ModelGoo<Author>
     public AuthorGoo()
     {
     }
+
     public AuthorGoo(Author value) : base(value)
     {
     }
+
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -514,8 +617,10 @@ public class AuthorGoo : ModelGoo<Author>
             target = (Q)ptr;
             return true;
         }
+
         return false;
     }
+
     public override bool CastFrom(object source)
     {
         if (source == null) return false;
@@ -528,6 +633,7 @@ public class AuthorGoo : ModelGoo<Author>
             };
             return true;
         }
+
         return false;
     }
 }
@@ -557,6 +663,8 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
         {
+            if (Value == null)
+                return false;
             object ptr = new GH_Point(new Point3d(Value.X, Value.Y, 0));
             target = (Q)ptr;
             return true;
@@ -574,8 +682,8 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
         {
             Value = new DiagramPoint
             {
-                X = (int)point.X,
-                Y = (int)point.Y
+                X = (float)point.X,
+                Y = (float)point.Y
             };
             return true;
         }
@@ -850,7 +958,9 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new T(), NameM, ModelM.Code,
-            $"The {typeof(T).Name} to serialize.", GH_ParamAccess.item);
+            $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
+        pManager[1].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -861,8 +971,10 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var goo = new U();
+        var indent = "";
         DA.GetData(0, ref goo);
-        var text = goo.Value.Serialize(true);
+        DA.GetData(1, ref indent);
+        var text = goo.Value.Serialize(indent);
         DA.SetData(0, text);
     }
 }
@@ -1035,6 +1147,65 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 
 #endregion
 
+#region Diagram
+
+public class DrawDiagramComponent : Component
+{
+    public DrawDiagramComponent()
+        : base("Draw Diagram", ":Dgm", "Draw the diagram from a design.", "Display")
+    {
+    }
+
+    public override Guid ComponentGuid => new("C53A0CC8-6DD7-415E-A20A-C5887CBE0DB9");
+
+    protected override Bitmap Icon => Resources.diagram_draw_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam());
+        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
+            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Uri", "Ur?",
+            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
+            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
+            GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddBooleanParameter("Run", "R", "True to create the diagram of the design.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Scalable Vector Graphics", "SVG",
+            "The diagram as a Scalable Vector Graphics (SVG).", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        var typesGoos = new List<TypeGoo>();
+        var uri = "";
+        var run = false;
+
+        DA.GetData(0, ref designGoo);
+        DA.GetDataList(1, typesGoos);
+        if (!DA.GetData(2, ref uri))
+            uri = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
+        DA.GetData(3, ref run);
+        if (!run)
+            return;
+        var design = designGoo.Value;
+        var types = typesGoos.Select(t => t.Value).ToArray();
+        var svg = design.Diagram(types, Utility.ComputeChildPlane, uri);
+        DA.SetData(0, svg);
+    }
+}
+
+#endregion
+
 #region Util
 
 public class FlattenDesignComponent : Component
@@ -1058,7 +1229,7 @@ public class FlattenDesignComponent : Component
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new DesignParam(), "Design", "D",
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
             "Flat Design with no connections.", GH_ParamAccess.item);
     }
 
@@ -1070,7 +1241,7 @@ public class FlattenDesignComponent : Component
         DA.GetDataList(1, typesGoos);
         var design = designGoo.Value;
         var types = typesGoos.Select(t => t.Value).ToArray();
-        var flatDesign = design.Flatten(types, Utility.ComputeChildPlane);
+        var flatDesign = design.DeepClone().Flatten(types, Utility.ComputeChildPlane);
         DA.SetData(0, new DesignGoo(flatDesign));
     }
 }
@@ -1109,7 +1280,6 @@ public class ConvertUnitComponent : Component
         var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
         DA.SetData(0, (double)convertedValue);
     }
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
 //public class UpdateComponents : Component
@@ -1224,7 +1394,9 @@ public abstract class ModelComponent<T, U, V> : Component
         pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
             description, GH_ParamAccess.item);
         pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
-            isOutput ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed." : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
+            isOutput
+                ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed."
+                : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
 
         AddModelProps(pManager);
 
@@ -1402,6 +1574,8 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
                 type.Unit = "m";
             }
 
+        type.Icon = type.Icon.Replace('\\', '/');
+        type.Image = type.Image.Replace('\\', '/');
         return type;
     }
 }
@@ -1427,8 +1601,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddPlaneParameter("Plane", "Pn?",
             "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new DiagramPointParam(), "Diagram Point", "SP",
-            "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.",
+        pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
+            "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
             GH_ParamAccess.item);
     }
 
@@ -1449,7 +1623,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         if (DA.GetData(5, ref plane))
             pieceGoo.Value.Plane = plane.Convert();
         if (DA.GetData(6, ref centerGoo))
-            pieceGoo.Value.DiagramPoint = centerGoo.Value;
+            pieceGoo.Value.Center = centerGoo.Value;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -1458,7 +1632,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(3, pieceGoo.Value.Type.Name);
         DA.SetData(4, pieceGoo.Value.Type.Variant);
         DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(6, new DiagramPointGoo(pieceGoo.Value.DiagramPoint as DiagramPoint));
+        DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
     }
 }
 
@@ -1468,18 +1642,19 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
 
     protected override void AddModelProps(dynamic pManager)
     {
-        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece of the side.",
+        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece.",
             GH_ParamAccess.item);
         pManager.AddTextParameter("Connected Piece Type Port Id", "CdPo?",
-            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece of the side.",
+        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece.",
             GH_ParamAccess.item);
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
-            "Optional id of the port of type of the piece of the side. Otherwise the default port will be selected.",
+            "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Rotation", "Rt?",
-            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            GH_ParamAccess.item);
         pManager.AddNumberParameter("Tilt", "Tl?",
             "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
@@ -1564,6 +1739,9 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
                 design.Unit = "m";
             }
 
+        design.Icon = design.Icon.Replace('\\', '/');
+        design.Image = design.Image.Replace('\\', '/');
+
         return design;
     }
 }
@@ -1571,7 +1749,17 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+
+    protected override Kit ProcessModel(Kit kit)
+    {
+        kit.Icon = kit.Icon.Replace('\\', '/');
+        kit.Image = kit.Image.Replace('\\', '/');
+        kit.Preview = kit.Preview.Replace('\\', '/');
+        return kit;
+    }
 }
+
+#endregion
 
 public class RandomIdsComponent : Component
 {
@@ -1628,16 +1816,12 @@ public class RandomIdsComponent : Component
     }
 }
 
-#endregion
-
-#region Persistence
-
 #region Engine
 
 public abstract class EngineComponent : Component
 {
-    protected EngineComponent(string name, string nickname, string description)
-        : base(name, nickname, description, "Persistence")
+    protected EngineComponent(string name, string nickname, string description, string subcategory = "Persistence")
+        : base(name, nickname, description, subcategory)
     {
     }
 
@@ -1645,30 +1829,24 @@ public abstract class EngineComponent : Component
 
     protected virtual string SuccessDescription => "True if the operation was successful.";
 
-    protected virtual void RegisterCustomInputParams(GH_InputParamManager pManager)
+    protected virtual void RegisterEngineInputParams(GH_InputParamManager pManager)
     {
     }
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        RegisterCustomInputParams(pManager);
-        var amountCustomParams = pManager.ParamCount;
-        pManager.AddTextParameter("Uri", "Ur?",
-            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
-            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
-            GH_ParamAccess.item);
-        pManager[amountCustomParams].Optional = true;
+        RegisterEngineInputParams(pManager);
         pManager.AddBooleanParameter("Run", "R", RunDescription, GH_ParamAccess.item, false);
     }
 
-    protected virtual void RegisterCustomOutputParams(GH_OutputParamManager pManager)
+    protected virtual void RegisterEngineOutputParams(GH_OutputParamManager pManager)
     {
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddBooleanParameter("Success", "Sc", SuccessDescription, GH_ParamAccess.item);
-        RegisterCustomOutputParams(pManager);
+        RegisterEngineOutputParams(pManager);
     }
 
     protected virtual dynamic? GetInput(IGH_DataAccess DA)
@@ -1676,7 +1854,7 @@ public abstract class EngineComponent : Component
         return null;
     }
 
-    protected abstract dynamic? Run(string url, dynamic? input = null);
+    protected abstract dynamic? Run(dynamic? input = null);
 
     protected virtual void SetOutput(IGH_DataAccess DA, dynamic response)
     {
@@ -1684,13 +1862,7 @@ public abstract class EngineComponent : Component
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var url = "";
         var run = false;
-
-        if (!DA.GetData(Params.Input.Count - 2, ref url))
-            url = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
 
         DA.GetData(Params.Input.Count - 1, ref run);
         if (!run) return;
@@ -1698,7 +1870,7 @@ public abstract class EngineComponent : Component
         var input = GetInput(DA);
         try
         {
-            var response = Run(url, input);
+            var response = Run(input);
             SetOutput(DA, response);
             DA.SetData(0, true);
         }
@@ -1713,7 +1885,7 @@ public abstract class EngineComponent : Component
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
                 "The engine didn't like it ¯\\_(ツ)_/¯\n" +
                 "If you want, you can report this under: https://github.com/usalu/semio/issues\n" +
-                "Or write me an email: semio-community@posteo.org\n\n" +
+                $"Or write me an email: {Semio.Constants.Email}\n\n" +
                 "ServerError: " + e.Message + "\n" +
                 "Semio.Release: " + Semio.Constants.Release + "\n" +
                 "Semio.Grasshopper: " + Constants.Version + "\n" +
@@ -1752,11 +1924,73 @@ public abstract class EngineComponent : Component
                 engine.Kill();
                 engine.WaitForExit();
             };
+            // TODO: Implement a status check and wait for the engine to be ready
+            Thread.Sleep(1000);
         }
     }
 }
 
-public class LoadKitComponent : EngineComponent
+#region Persistence
+
+public abstract class PersistenceComponent : EngineComponent
+{
+    protected PersistenceComponent(string name, string nickname, string description, string subcategory = "Persistence")
+        : base(name, nickname, description, subcategory)
+    {
+    }
+
+    protected virtual void RegisterPersitenceInputParams(GH_InputParamManager pManager)
+    {
+    }
+
+    protected override void RegisterEngineInputParams(GH_InputParamManager pManager)
+    {
+        RegisterPersitenceInputParams(pManager);
+        var amountCustomParams = pManager.ParamCount;
+        pManager.AddTextParameter("Uri", "Ur?",
+            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
+            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
+            GH_ParamAccess.item);
+        pManager[amountCustomParams].Optional = true;
+    }
+
+    protected virtual void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
+    {
+    }
+
+    protected override void RegisterEngineOutputParams(GH_OutputParamManager pManager)
+    {
+        RegisterPersitenceOutputParams(pManager);
+    }
+
+    protected virtual dynamic? GetPersistentInput(IGH_DataAccess DA)
+    {
+        return null;
+    }
+
+    protected override dynamic? GetInput(IGH_DataAccess DA)
+    {
+        var uri = "";
+
+        if (!DA.GetData(Params.Input.Count - 2, ref uri))
+            uri = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
+        var input = GetPersistentInput(DA);
+
+        return new { Uri = uri, Input = input };
+    }
+
+    protected abstract dynamic? RunOnKit(string url, dynamic? input);
+
+    protected override dynamic? Run(dynamic? input = null)
+    {
+        var output = RunOnKit(input.Uri, input.Input);
+        return output;
+    }
+}
+
+public class LoadKitComponent : PersistenceComponent
 {
     public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit.")
     {
@@ -1771,7 +2005,7 @@ public class LoadKitComponent : EngineComponent
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
-    protected override void RegisterCustomOutputParams(GH_OutputParamManager pManager)
+    protected override void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
         pManager.AddTextParameter("Local Directory", "Di",
@@ -1779,9 +2013,9 @@ public class LoadKitComponent : EngineComponent
             GH_ParamAccess.item);
     }
 
-    protected override dynamic? Run(string url, dynamic? input = null)
+    protected override dynamic? RunOnKit(string uri, dynamic? input)
     {
-        var kit = Api.GetKit(url);
+        var kit = Api.GetKit(uri);
         return kit;
     }
 
@@ -1813,7 +2047,7 @@ public class LoadKitComponent : EngineComponent
     }
 }
 
-public class CreateKitComponent : EngineComponent
+public class CreateKitComponent : PersistenceComponent
 {
     public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.")
     {
@@ -1828,26 +2062,26 @@ public class CreateKitComponent : EngineComponent
 
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
-    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
+    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
     }
 
-    protected override dynamic GetInput(IGH_DataAccess DA)
+    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
     {
         var kitGoo = new KitGoo();
         DA.GetData(0, ref kitGoo);
         return kitGoo.Value;
     }
 
-    protected override dynamic? Run(string url, dynamic? input = null)
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
-        Api.CreateKit(url, input);
+        Api.CreateKit(uri, input);
         return null;
     }
 }
 
-public class DeleteKitComponent : EngineComponent
+public class DeleteKitComponent : PersistenceComponent
 {
     public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.")
     {
@@ -1861,12 +2095,172 @@ public class DeleteKitComponent : EngineComponent
 
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
-    protected override dynamic? Run(string url, dynamic? input = null)
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
-        Api.DeleteKit(url);
+        Api.DeleteKit(uri);
         return null;
     }
 }
+
+#region Putting
+
+public abstract class PutComponent<T, U, V> : PersistenceComponent where T : ModelParam<U, V>, new()
+    where U : ModelGoo<V>, new()
+    where V : Model<V>, new()
+
+{
+    public static readonly string NameM;
+    public static readonly ModelAttribute ModelM;
+
+    static PutComponent()
+    {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMetaGrasshopper = Meta.Goo;
+
+        NameM = typeof(V).Name;
+        ModelM = Semio.Meta.Model[NameM];
+    }
+
+    protected PutComponent()
+        : base($"Put {NameM}", $"+{ModelM.Abbreviation}",
+            $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
+    {
+    }
+
+    protected override string RunDescription => $"True to put the {NameM.ToLower()} to the kit.";
+    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
+
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new T());
+    }
+
+    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
+    {
+        var goo = new U();
+        DA.GetData(0, ref goo);
+        return goo.Value;
+    }
+}
+
+public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
+{
+    public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
+
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
+    {
+        Api.PutType(uri, input);
+        return null;
+    }
+}
+
+public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
+
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
+    {
+        Api.PutDesign(uri, input);
+        return null;
+    }
+}
+
+#endregion
+
+#region Removing
+
+public abstract class RemoveComponent<T, U, V> : PersistenceComponent where T : ModelParam<U, V>, new()
+    where U : ModelGoo<V>, new()
+    where V : Model<V>, new()
+{
+    public static readonly string NameM;
+    public static readonly ModelAttribute ModelM;
+
+    static RemoveComponent()
+    {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMetaGrasshopper = Meta.Goo;
+
+        NameM = typeof(V).Name;
+        ModelM = Semio.Meta.Model[NameM];
+    }
+
+
+    public RemoveComponent()
+        : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}",
+            $"Remove a {NameM.ToLower()} from a kit.")
+    {
+    }
+
+    protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
+    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
+
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter($"{NameM} Variant", "Vn?",
+            $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.",
+            GH_ParamAccess.item);
+        pManager[pManager.ParamCount - 1].Optional = true;
+    }
+
+    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
+    {
+        var name = "";
+        var variant = "";
+        DA.GetData(0, ref name);
+        DA.GetData(1, ref variant);
+        return ConstructId(name, variant);
+    }
+
+    protected virtual dynamic ConstructId(string name, string variant)
+    {
+        return new { Name = name, Variant = variant };
+    }
+}
+
+public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
+{
+    public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
+
+    protected override dynamic ConstructId(string name, string variant)
+    {
+        return new TypeId { Name = name, Variant = variant };
+    }
+
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
+    {
+        Api.RemoveType(uri, input);
+        return null;
+    }
+}
+
+public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
+
+    protected override dynamic ConstructId(string name, string variant)
+    {
+        return new DesignId { Name = name, Variant = variant };
+    }
+
+    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
+    {
+        Api.RemoveDesign(uri, input);
+        return null;
+    }
+}
+
+#endregion
 
 public class ClearCacheComponent : Component
 {
@@ -1925,165 +2319,75 @@ public class ClearCacheComponent : Component
     }
 }
 
-#region Putting
-
-public abstract class PutComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new()
-    where U : ModelGoo<V>, new()
-    where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static PutComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected PutComponent()
-        : base($"Put {NameM}", $"+{ModelM.Abbreviation}",
-            $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
-    {
-    }
-
-    protected override string RunDescription => $"True to put the {NameM.ToLower()} to the kit.";
-    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
-
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
-    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new T());
-    }
-
-    protected override dynamic GetInput(IGH_DataAccess DA)
-    {
-        var goo = new U();
-        DA.GetData(0, ref goo);
-        return goo.Value;
-    }
-}
-
-public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
-
-    protected override dynamic? Run(string url, dynamic? input = null)
-    {
-        Api.PutType(url, input);
-        return null;
-    }
-}
-
-public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
-
-    protected override dynamic? Run(string url, dynamic? input = null)
-    {
-        Api.PutDesign(url, input);
-        return null;
-    }
-}
-
 #endregion
 
-#region Removing
+#region Assistant
 
-public abstract class RemoveComponent<T, U, V> : EngineComponent where T : ModelParam<U, V>, new()
-    where U : ModelGoo<V>, new()
-    where V : Model<V>, new()
+public abstract class AssistantComponent : EngineComponent
 {
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static RemoveComponent()
+    public AssistantComponent(string name, string nickname, string description) : base(name, nickname, description,
+        "Assistant")
     {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
     }
+}
 
-
-    public RemoveComponent()
-        : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}",
-            $"Remove a {NameM.ToLower()} from a kit.")
+public class PredictDesignComponent : AssistantComponent
+{
+    public PredictDesignComponent() : base("Predict Design", "%Dsn", "Predict a design.")
     {
     }
 
-    protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
-    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
+    protected override string RunDescription => "True to predict the design.";
+    protected override string SuccessDescription => "True if the design was successfully predicted. False otherwise.";
 
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
+    public override Guid ComponentGuid => new("1EAD6636-2D8C-47CC-894A-E4FE2465AAA7");
 
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+    protected override Bitmap Icon => Resources.design_predict_24x24;
 
-    protected override void RegisterCustomInputParams(GH_InputParamManager pManager)
+    protected override void RegisterEngineInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.",
+        var pCount = pManager.ParamCount;
+        pManager.AddTextParameter("Description", "Dc",
+            "The description of the design or an instruction how to change the base design.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty+", "The types to use in the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn?", "The optional design to use a base.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter($"{NameM} Variant", "Vn?",
-            $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.",
-            GH_ParamAccess.item);
-        pManager[pManager.ParamCount - 1].Optional = true;
+        pManager[pCount + 2].Optional = true;
     }
 
-    protected override dynamic GetInput(IGH_DataAccess DA)
+    protected override void RegisterEngineOutputParams(GH_OutputParamManager pManager)
     {
-        var name = "";
-        var variant = "";
-        DA.GetData(0, ref name);
-        DA.GetData(1, ref variant);
-        return ConstructId(name, variant);
+        pManager.AddParameter(new DesignParam(), "Design", "Dsn", "Predicted design.", GH_ParamAccess.item);
     }
 
-    protected virtual dynamic ConstructId(string name, string variant)
+    protected override dynamic? GetInput(IGH_DataAccess DA)
     {
-        return new { Name = name, Variant = variant };
+        var description = "";
+        var types = new List<TypeGoo>();
+        var designGoo = new DesignGoo();
+
+        DA.GetData(0, ref description);
+        DA.GetDataList(1, types);
+        Design? design;
+        if (DA.GetData(2, ref designGoo))
+            design = designGoo.Value;
+        else
+            design = null;
+
+        return new { Description = description, Types = types.Select(t => t.Value).ToArray(), Design = design };
+    }
+
+    protected override dynamic? Run(dynamic? input = null)
+    {
+        var design = Api.PredictDesign(input.Description, input.Types, input.Design);
+        return design;
+    }
+
+    protected override void SetOutput(IGH_DataAccess DA, dynamic response)
+    {
+        DA.SetData(1, new DesignGoo(response));
     }
 }
-
-public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
-
-    protected override dynamic ConstructId(string name, string variant)
-    {
-        return new TypeId { Name = name, Variant = variant };
-    }
-
-    protected override dynamic? Run(string url, dynamic? input = null)
-    {
-        Api.RemoveType(url, input);
-        return null;
-    }
-}
-
-public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
-
-    protected override dynamic ConstructId(string name, string variant)
-    {
-        return new DesignId { Name = name, Variant = variant };
-    }
-
-    protected override dynamic? Run(string url, dynamic? input = null)
-    {
-        Api.RemoveDesign(url, input);
-        return null;
-    }
-}
-
-#endregion
 
 #endregion
 

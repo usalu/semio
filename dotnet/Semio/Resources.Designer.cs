@@ -8,11 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Semio
-{
+namespace Semio {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,73 +22,78 @@ namespace Semio
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources
-    {
-
+    internal class Resources {
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources()
-        {
+        internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager
-        {
-            get
-            {
-                if (object.ReferenceEquals(resourceMan, null))
-                {
+        internal static global::System.Resources.ResourceManager ResourceManager {
+            get {
+                if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Semio.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture
-        {
-            get
-            {
+        internal static global::System.Globalization.CultureInfo Culture {
+            get {
                 return resourceCulture;
             }
-            set
-            {
+            set {
                 resourceCulture = value;
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to [&quot;cowardly&quot;, &quot;xylographic&quot;, &quot;dynamic&quot;, &quot;xenophobic&quot;, &quot;distant&quot;, &quot;lost&quot;, &quot;quick&quot;, &quot;zippy&quot;, &quot;trim&quot;, &quot;living&quot;, &quot;eager&quot;, &quot;infantile&quot;, &quot;worn&quot;, &quot;live&quot;, &quot;knowing&quot;, &quot;next&quot;, &quot;zesty&quot;, &quot;utter&quot;, &quot;rusty&quot;, &quot;formal&quot;, &quot;quizzical&quot;, &quot;knobby&quot;, &quot;little&quot;, &quot;amazing&quot;, &quot;vigilant&quot;, &quot;primary&quot;, &quot;meaty&quot;, &quot;phony&quot;, &quot;quixotic&quot;, &quot;mute&quot;, &quot;young&quot;, &quot;jolly&quot;, &quot;key&quot;, &quot;positive&quot;, &quot;miniature&quot;, &quot;mild&quot;, &quot;winged&quot;, &quot;cheerful&quot;, &quot;flashy&quot;, &quot;habitual&quot;, &quot;oceanic&quot;, &quot;alike&quot;, &quot;knotty&quot;, &quot;holistic&quot;, &quot;xylophonic&quot;, &quot;generous&quot;, &quot;quarterly&quot;, &quot;yielding&quot;, &quot;aquatic&quot;, [rest of string wa....
         /// </summary>
-        internal static string adjectives
-        {
-            get
-            {
+        internal static string adjectives {
+            get {
                 return ResourceManager.GetString("adjectives", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to [&quot;cowbird&quot;, &quot;kite&quot;, &quot;hoopoe&quot;, &quot;vulture&quot;, &quot;whapuku&quot;, &quot;yearling&quot;, &quot;narwhal&quot;, &quot;nandu&quot;, &quot;cassowary&quot;, &quot;cooter&quot;, &quot;iguana&quot;, &quot;spoonbill&quot;, &quot;waterstrider&quot;, &quot;davidstiger&quot;, &quot;erne&quot;, &quot;shark&quot;, &quot;pachyderm&quot;, &quot;diplodocus&quot;, &quot;jerboa&quot;, &quot;invisiblerail&quot;, &quot;dipper&quot;, &quot;tick&quot;, &quot;junco&quot;, &quot;frenchbulldog&quot;, &quot;nightingale&quot;, &quot;moa&quot;, &quot;cutworm&quot;, &quot;goosefish&quot;, &quot;bullfrog&quot;, &quot;urutu&quot;, &quot;jay&quot;, &quot;nightjar&quot;, &quot;zander&quot;, &quot;redhead&quot;, &quot;rockrat&quot;, &quot;bittern&quot;, &quot;coqui&quot;, &quot;tilefish&quot;, &quot;xantus&quot;, &quot;woodborer&quot;, &quot;xeme&quot;, &quot;nyala&quot;, &quot;guanaco&quot;, &quot;foxhound&quot;, &quot;jabiru&quot;, &quot;aurochs&quot;, &quot;k [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string animals
-        {
-            get
-            {
+        internal static string animals {
+            get {
                 return ResourceManager.GetString("animals", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AAEAAAATAQAABAAwR1NVQlieG7EAALyIAACQMkhWQVJuf3gTAAAIjAAABfBPUy8yYLkLWwAAApwAAABgU1RBVHu9cNkAAAJQAAAASlZWQVIHZwAmAAABrAAAAC5jbWFwbqt/wAAADnwAAA0wZnZhcoVyaZIAAAIUAAAAPGdhc3AAAAALAAABPAAAAAhnbHlmwIIc0wABTLwADCNKZ3ZhcoPaquwADXAIABCQlGhlYWQmXrXuAAAB3AAAADZoaGVhEZYOUQAAAWQAAAAkaG10eHhutj8AACpUAAAawGxvY2Ex3wUPAABFFAAAHVBtYXhwB80LOgAAAUQAAAAgbmFtZZ4huaUAAAL8AAAFkHBvc3QlkxUpAABiZAAAWiN2aGVhEZYY7wAAAYgAAAAkdm10eGQ4aPsAABusAAAOqAABAAH//wAKAAEAAAdTCa8AYgGIABMAAQAAAAAAAAAAAAAAAAAEAAIAAQAAB2z+DAAACigADwAPChkAAQAAAAAAAAAA [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Anta {
+            get {
+                return ResourceManager.GetString("Anta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AAEAAAATAQAABAAwR1NVQlieG7EAALyIAACQMkhWQVJuf3gTAAAIjAAABfBPUy8yYLkLWwAAApwAAABgU1RBVHu9cNkAAAJQAAAASlZWQVIHZwAmAAABrAAAAC5jbWFwbqt/wAAADnwAAA0wZnZhcoVyaZIAAAIUAAAAPGdhc3AAAAALAAABPAAAAAhnbHlmwIIc0wABTLwADCNKZ3ZhcoPaquwADXAIABCQlGhlYWQmXrXuAAAB3AAAADZoaGVhEZYOUQAAAWQAAAAkaG10eHhutj8AACpUAAAawGxvY2Ex3wUPAABFFAAAHVBtYXhwB80LOgAAAUQAAAAgbmFtZZ4huaUAAAL8AAAFkHBvc3QlkxUpAABiZAAAWiN2aGVhEZYY7wAAAYgAAAAkdm10eGQ4aPsAABusAAAOqAABAAH//wAKAAEAAAdTCa8AYgGIABMAAQAAAAAAAAAAAAAAAAAEAAIAAQAAB2z+DAAACigADwAPChkAAQAAAAAAAAAA [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NotoEmoji {
+            get {
+                return ResourceManager.GetString("NotoEmoji", resourceCulture);
+            }
+        }
     }
 }

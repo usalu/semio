@@ -31,6 +31,18 @@
                     "title": "Shift",
                     "type": "number"
                 },
+                "x": {
+                    "default": 0,
+                    "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "default": 0,
+                    "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "Y",
+                    "type": "number"
+                },
                 "connected": {
                     "$ref": "#/$defs/Side",
                     "description": "\ud83e\uddf2 The connected side of the connection."
@@ -54,7 +66,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 },
                 "type": {
@@ -87,7 +99,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 }
             },
@@ -152,7 +164,7 @@
                     "default": "",
                     "description": "\ud83c\udd94 The id of the port.",
                     "maxLength": 128,
-                    "title": "Id ",
+                    "title": "Id",
                     "type": "string"
                 }
             },
@@ -267,7 +279,7 @@
         },
         "description": {
             "default": "",
-            "description": "\ud83d\udcac The description of the design.",
+            "description": "\ud83d\udcac The optional human-readable description of the design.",
             "maxLength": 4096,
             "title": "Description",
             "type": "string"
@@ -277,6 +289,13 @@
             "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
             "maxLength": 64,
             "title": "Variant",
+            "type": "string"
+        },
+        "view": {
+            "default": "",
+            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
+            "maxLength": 64,
+            "title": "View",
             "type": "string"
         },
         "unit": {

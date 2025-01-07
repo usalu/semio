@@ -1,10 +1,10 @@
 ---
 name: semio
-version: 4.1.0
+version: 5.0.0-beta
 authors:
 - Ueli Saluz
 description: >
-  ✏️Design kit-of-parts architecture.
+ ✏️ Design-Information-Modeling for Kit-of-Parts Architecture.
 url: https://github.com/usalu/semio
 keywords:
 - kit-of-parts

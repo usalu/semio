@@ -32,10 +32,13 @@ CREATE TABLE kit (
 	uri VARCHAR(4096) NOT NULL, 
 	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(4096) NOT NULL, 
-	icon VARCHAR(1024) NOT NULL, 
+	icon VARCHAR(2048) NOT NULL, 
+	image VARCHAR(2048) NOT NULL, 
+	preview VARCHAR(2048) NOT NULL, 
 	version VARCHAR(64) NOT NULL, 
-	remote VARCHAR(1024) NOT NULL, 
-	homepage VARCHAR(1024) NOT NULL, 
+	remote VARCHAR(2048) NOT NULL, 
+	homepage VARCHAR(2048) NOT NULL, 
+	license VARCHAR(2048) NOT NULL, 
 	"createdAt" DATETIME NOT NULL, 
 	"lastUpdateAt" DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
@@ -45,7 +48,8 @@ CREATE TABLE kit (
 CREATE TABLE type (
 	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(4096) NOT NULL, 
-	icon VARCHAR(1024) NOT NULL, 
+	icon VARCHAR(2048) NOT NULL, 
+	image VARCHAR(2048) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
 	"createdAt" DATETIME NOT NULL, 
@@ -59,8 +63,10 @@ CREATE TABLE type (
 CREATE TABLE design (
 	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(4096) NOT NULL, 
-	icon VARCHAR(1024) NOT NULL, 
+	icon VARCHAR(2048) NOT NULL, 
+	image VARCHAR(2048) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
+	"view" VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
 	"createdAt" DATETIME NOT NULL, 
 	"lastUpdateAt" DATETIME NOT NULL, 
@@ -73,7 +79,7 @@ CREATE TABLE design (
 CREATE TABLE representation (
 	mime VARCHAR(64) NOT NULL, 
 	lod VARCHAR(64) NOT NULL, 
-	url VARCHAR(1024) NOT NULL, 
+	url VARCHAR(2048) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"encodedTags" VARCHAR(1039) NOT NULL, 
 	"typeId" INTEGER, 
@@ -81,6 +87,7 @@ CREATE TABLE representation (
 	FOREIGN KEY("typeId") REFERENCES type (id)
 );
 CREATE TABLE port (
+	description VARCHAR(4096) NOT NULL, 
 	id INTEGER NOT NULL, 
 	"localId" VARCHAR(128), 
 	"pointX" FLOAT NOT NULL, 
@@ -106,13 +113,24 @@ CREATE TABLE quality (
 	FOREIGN KEY("typeId") REFERENCES type (id), 
 	FOREIGN KEY("designId") REFERENCES design (id)
 );
+CREATE TABLE author (
+	name VARCHAR(64) NOT NULL, 
+	email VARCHAR(128) NOT NULL, 
+	rank INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	"typeId" INTEGER, 
+	"designId" INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY("typeId") REFERENCES type (id), 
+	FOREIGN KEY("designId") REFERENCES design (id)
+);
 CREATE TABLE piece (
 	id INTEGER NOT NULL, 
 	"localId" VARCHAR(128), 
 	"typeId" INTEGER, 
 	"planeId" INTEGER, 
-	"centerX" INTEGER NOT NULL, 
-	"centerY" INTEGER NOT NULL, 
+	"centerX" FLOAT, 
+	"centerY" FLOAT, 
 	"designId" INTEGER, 
 	PRIMARY KEY (id), 
 	UNIQUE ("localId", "designId"), 
@@ -132,6 +150,8 @@ CREATE TABLE connection (
 	tilt FLOAT NOT NULL, 
 	gap FLOAT NOT NULL, 
 	shift FLOAT NOT NULL, 
+	x FLOAT NOT NULL, 
+	y FLOAT NOT NULL, 
 	"connectedPieceId" INTEGER NOT NULL, 
 	"connectedPortId" INTEGER NOT NULL, 
 	"connectingPieceId" INTEGER NOT NULL, 

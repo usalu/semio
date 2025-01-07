@@ -1,0 +1,235 @@
+# ↗️ The output of a kit.
+type Kit {
+    # 🕒 The creation string of the kit.
+    createdAt?: string;
+    # 💬 The optional human-readable description of the kit.
+    description?: string;
+    # 🏙️ The designs of the kit.
+    designs?: Design[];
+    # 🏠 The optional url of the homepage of the kit.
+    homepage?: string;
+    # 🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.
+    icon?: string;
+    # 🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+    image?: string;
+    # 🕒 The last upstring string of the kit.
+    lastUpstringAt?: string;
+    # ⚖️ The optional license [ spdx id | url ] of the kit.
+    license?: string;
+    # 📛 The name of the kit.
+    name: string;
+    # 🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
+    preview?: string;
+    # ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+    remote?: string;
+    # 🧩 The types of the kit.
+    types?: Type[];
+    # 🆔 The uri of the kit.
+    uri: string;
+    # 🔀 The optional version of the kit. No version means the latest version.
+    version?: string;
+}
+
+# 🏙️ A design is a collection of pieces that are connected.
+type Design {
+    authors?: Author[];
+    connections?: Connection[];
+    # 🕒 The creation string of the design.
+    createdAt?: string;
+    # 💬 The optional human-readable description of the design.
+    description?: string;
+    # 🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.
+    icon?: string;
+    # 🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+    image?: string;
+    # 🕒 The last upstring string of the design.
+    lastUpstringAt?: string;
+    # 📛 The name of the design.
+    name: string;
+    pieces?: Piece[];
+    qualities?: Quality[];
+    # 📏 The unit of the design.
+    unit?: string;
+    # 🔀 The optional variant of the design. No variant means the default variant.
+    variant?: string;
+    # 🥽 The optional view of the design. No view means the default view.
+    view?: string;
+}
+
+# 📑 The output of an author.
+type Author {
+    # 📧 The email of the author.
+    email: string;
+    # 📛 The name of the author.
+    name: string;
+}
+
+# 🖇️ A bidirectional connection between two pieces of a design.
+type Connection {
+    # 🧲 The connected side of the connection.
+    connected: Side;
+    # 🧲 The connecting side of the connection.
+    connecting: Side;
+    # ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+    gap?: number;
+    # 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+    rotation?: number;
+    # ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
+    shift?: number;
+    # ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+    tilt?: number;
+    # ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+    x?: number;
+    # ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+    y?: number;
+}
+
+# 🧱 A side of a piece in a connection.
+type Side {
+    piece: PieceID;
+    port: PortID;
+}
+
+# 🪪 The props to identify the piece within the parent design.
+type PieceID {
+    # 🆔 The id of the piece.
+    id_?: string;
+}
+
+# 🪪 The props to identify the port within the parent type.
+type PortID {
+    # 🆔 The id of the port.
+    id_?: string;
+}
+
+# ⭕ A piece is a 3d-instance of a type in a design.
+type Piece {
+    # 📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
+    center?: null | DiagramPoint;
+    # 🆔 The id of the piece.
+    id_?: string;
+    # ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
+    plane?: null | Plane;
+    # 🧩 The type of the piece.
+    type: TypeID;
+}
+
+# 📺 A 2d-point (xy) of integers in screen coordinate system.
+type DiagramPoint {
+    # 🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+    x: number;
+    # 🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+    y: number;
+}
+
+# ◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+type Plane {
+    # ⌱ The origin of the plane.
+    origin: Point;
+    # ➡️ The x-axis of the plane.
+    xAxis: Vector;
+    # ➡️ The y-axis of the plane.
+    yAxis: Vector;
+}
+
+# ✖️ A 3d-point (xyz) of floating point numbers.
+type Point {
+    # 🎚️ The x-coordinate of the point.
+    x: number;
+    # 🎚️ The y-coordinate of the point.
+    y: number;
+    # 🎚️ The z-coordinate of the point.
+    z: number;
+}
+
+# ➡️ A 3d-vector (xyz) of floating point numbers.
+type Vector {
+    # 🎚️ The x-coordinate of the vector.
+    x: number;
+    # 🎚️ The y-coordinate of the vector.
+    y: number;
+    # 🎚️ The z-coordinate of the vector.
+    z: number;
+}
+
+# 🪪 The props to identify the type.
+type TypeID {
+    # 📛 The name of the type.
+    name: string;
+    # 🔀 The optional variant of the type. No variant means the default variant.
+    variant?: string;
+}
+
+# ↗️ The output of a quality.
+type Quality {
+    # 📏 The optional definition [ text | url ] of the quality.
+    definition?: string;
+    # 📏 The name of the quality.
+    name: string;
+    # 📏 The optional unit of the value of the quality.
+    unit?: string;
+    # 📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+    value?: string;
+}
+
+# 🧩 A type is a reusable element that can be connected with other types over ports.
+type Type {
+    authors?: Author[];
+    # 🕒 The creation string of the type.
+    createdAt?: string;
+    # 💬 The optional human-readable description of the type.
+    description?: string;
+    # 🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
+    icon?: string;
+    # 🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+    image?: string;
+    # 🕒 The last upstring string of the type.
+    lastUpstringAt?: string;
+    # 📛 The name of the type.
+    name: string;
+    ports?: Port[];
+    qualities?: Quality[];
+    representations?: Representation[];
+    # Ⓜ️ The length unit of the point and the direction of the ports of the type.
+    unit?: string;
+    # 🔀 The optional variant of the type. No variant means the default variant.
+    variant?: string;
+}
+
+# 🔌 A port is a connection point (with a direction) of a type.
+type Port {
+    # 💬 The optional human-readable description of the port.
+    description?: string;
+    # ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
+    direction: Vector;
+    # 🆔 The id of the port.
+    id_?: string;
+    # 🗺️ The locators of the port.
+    locators?: Locator[];
+    # ✖️ The connection point of the port that is attracted to another connection point.
+    point: Point;
+}
+
+# 🗺️ A locator is meta-data for grouping ports.
+type Locator {
+    # 👪 The group of the locator.
+    group: string;
+    # 📌 The optional sub-group of the locator. No sub-group means true.
+    subgroup?: string;
+}
+
+# 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
+type Representation {
+    # 🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+    lod: string;
+    # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+    mime: string;
+    # 🏷️ The optional tags to group representations. No tags means default.
+    tags?: string[];
+    # 🔗 The Unique Resource Locator (URL) to the resource of the representation.
+    url: string;
+}
+
+type Storage { 
+    kit?: LiveObject<Kit> 
+}
