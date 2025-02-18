@@ -47,21 +47,29 @@
                         "connectingPieceTypePortId": {
                             "type": "string"
                         },
-                        "rotation": {
-                            "type": "number",
-                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
-                        },
-                        "tilt": {
-                            "type": "number",
-                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."
-                        },
                         "gap": {
                             "type": "number",
                             "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. "
                         },
                         "shift": {
                             "type": "number",
-                            "description": "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."
+                            "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
+                        },
+                        "raise": {
+                            "type": "number",
+                            "description": "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                        },
+                        "rotation": {
+                            "type": "number",
+                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+                        },
+                        "turn": {
+                            "type": "number",
+                            "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                        },
+                        "tilt": {
+                            "type": "number",
+                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
                         },
                         "diagramX": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "semio-engine"
-version = "4.0.2"
+version = "4.3.0-beta"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <ueli@semio-tech.com>"]
 maintainers = ["Ueli Saluz <ueli@semio-tech.com>"]
@@ -31,6 +31,7 @@ sqlmodel = "^0.0.22"
 starlette = "^0.41.3"
 starlette-graphene3 = "^0.6.0"
 uvicorn = { extras = ["standard"], version = "^0.32.1" }
+loguru = "^0.7.3"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.4"

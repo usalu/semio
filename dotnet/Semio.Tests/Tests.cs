@@ -4,6 +4,7 @@ namespace Semio.Tests;
 
 public class KitTests
 {
+
     [Theory]
     [InlineData("../../../../../tests/kit_complex.json")]
     public void ComplexKit(string kitPath)

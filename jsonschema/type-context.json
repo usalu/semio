@@ -1,28 +1,5 @@
 {
     "$defs": {
-        "Locator": {
-            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
-            "properties": {
-                "group": {
-                    "description": "\ud83d\udc6a The group of the locator.",
-                    "maxLength": 64,
-                    "title": "Group",
-                    "type": "string"
-                },
-                "subgroup": {
-                    "default": "",
-                    "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                    "maxLength": 64,
-                    "title": "Subgroup",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "group"
-            ],
-            "title": "Locator",
-            "type": "object"
-        },
         "Port": {
             "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type.",
             "properties": {
@@ -40,12 +17,27 @@
                     "title": "Description",
                     "type": "string"
                 },
-                "locators": {
-                    "description": "\ud83d\uddfa\ufe0f The locators of the port.",
+                "family": {
+                    "default": "",
+                    "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                    "maxLength": 64,
+                    "title": "Family",
+                    "type": "string"
+                },
+                "compatibleFamilies": {
+                    "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
                     "items": {
-                        "$ref": "#/$defs/Locator"
+                        "type": "string"
                     },
-                    "title": "Locators",
+                    "title": "Compatiblefamilies",
+                    "type": "array"
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the port.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
                     "type": "array"
                 }
             },

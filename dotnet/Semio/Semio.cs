@@ -43,6 +43,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Xml;
 using FluentValidation;
 using Newtonsoft.Json;
@@ -92,6 +93,13 @@ public enum IconKind
     Logogram,
     Filepath,
     RemoteUrl
+}
+
+public enum EncodeMode
+{
+    Urlsafe,
+    Base64,
+    DictionaryOnly
 }
 
 #endregion
@@ -155,17 +163,17 @@ public enum IconKind
 //✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 //✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 //📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
-//📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 //🍾,Rl,Rel,Release,The release of the engine that created this database.
 //☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 //🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 //🧱,Sd,Sde,Side,A side of a piece in a connection.
-//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
 //📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 //✅,Su,Suc,Success,{{NAME}} was successful.
 //🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
 //▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 //🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 //🧩,Ty,Typ,Type,The type-related information of the side.
@@ -284,14 +292,54 @@ public static class Utility
         return dataUri;
     }
 
-    public static string Encode(string text)
+    public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+        Tuple<List<string>, List<string>>? replace = null)
     {
-        return Uri.EscapeDataString(text);
+        var encoded = text;
+        if (mode == EncodeMode.Urlsafe)
+            encoded = Uri.EscapeDataString(text);
+        if (mode == EncodeMode.Base64)
+            encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
+        if (replace != null)
+        {
+            var keys = replace.Item1;
+            var values = replace.Item2;
+            if (keys.Count != values.Count)
+                throw new ArgumentException("Both replace lists must have the same length.");
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var key = keys[i];
+                var value = values[i];
+                encoded = encoded.Replace(key, value);
+            }
+        }
+
+        return encoded;
     }
 
-    public static string Decode(string text)
+    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+        Tuple<List<string>, List<string>>? replace = null)
     {
-        return Uri.UnescapeDataString(text);
+        var decoded = text;
+        if (replace != null)
+        {
+            var keys = replace.Item1;
+            var values = replace.Item2;
+            if (keys.Count != values.Count)
+                throw new ArgumentException("Both replace lists must have the same length.");
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var key = keys[i];
+                var value = values[i];
+                decoded = decoded.Replace(key, value);
+            }
+        }
+
+        if (mode == EncodeMode.Urlsafe)
+            decoded = Uri.UnescapeDataString(decoded);
+        if (mode == EncodeMode.Base64)
+            decoded = Encoding.UTF8.GetString(Convert.FromBase64String(decoded));
+        return decoded;
     }
 
     public static string Serialize(this object obj, string indent = "")
@@ -304,10 +352,7 @@ public static class Utility
             Formatting = formatting
         };
 
-        if (formatting == Formatting.None)
-        {
-            return JsonConvert.SerializeObject(obj, settings);
-        }
+        if (formatting == Formatting.None) return JsonConvert.SerializeObject(obj, settings);
 
         var stringWriter = new StringWriter();
         using (var jsonWriter = new JsonTextWriter(stringWriter))
@@ -863,6 +908,53 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 }
 
 /// <summary>
+///     📏 A quality is a named value with a unit and a definition.
+/// </summary>
+[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
+public class Quality : Model<Quality>
+{
+    /// <summary>
+    ///     📛 The name of the quality.
+    /// </summary>
+    [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+    /// </summary>
+    [Description("🔢", "Vl?", "Val?",
+        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
+    public string Value { get; set; } = "";
+
+    /// <summary>
+    ///     Ⓜ️ The optional unit of the value of the quality.
+    /// </summary>
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the value of the quality.", isDefaultValid: true)]
+    public string Unit { get; set; } = "";
+
+    /// <summary>
+    ///     📖 The optional definition [ text | uri ] of the quality.
+    /// </summary>
+    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the quality.")]
+    public string Definition { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Name}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Qal({ToHumanIdString()})";
+    }
+}
+
+/// <summary>
 ///     💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
 /// </summary>
 [Model("💾", "Rp", "Rep",
@@ -877,6 +969,12 @@ public class Representation : Model<Representation>
     public string Url { get; set; } = "";
 
     /// <summary>
+    ///     💬 The optional human-readable description of the representation.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
     ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
     /// </summary>
     [Id("✉️", "Mm", "Mim",
@@ -884,22 +982,19 @@ public class Representation : Model<Representation>
     public string Mime { get; set; } = "";
 
     /// <summary>
-    ///     🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.
-    /// </summary>
-
-    [Name("🔍", "Ld?", "Lod",
-        "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
-        PropImportance.ID,
-        true)]
-    public string Lod { get; set; } = "";
-
-    /// <summary>
     ///     🏷️ The optional tags to group representations. No tags means default.
     /// </summary>
 
-    [Name("🏷️", "Tg*", "Tags", "The optional tags to group representations. No tags means default.", PropImportance.ID,
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.",
+        PropImportance.ID,
         skipValidation: true)]
     public List<string> Tags { get; set; } = new();
+
+    /// <summary>
+    ///     📏 The optional qualities of the representation.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the representation.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     public override (bool, List<string>) Validate()
     {
@@ -919,38 +1014,32 @@ public class Representation : Model<Representation>
                 errors.Add(
                     $"A tag must be at most {Constants.NameLengthLimit} characters long. The provided tag ({preview}) has {tag.Length} characters.");
             }
+
+            foreach (var quality in Qualities)
+            {
+                var (isValidQuality, errorsQuality) = quality.Validate();
+                isValid = isValid && isValidQuality;
+                errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            }
         }
 
         return (isValid, errors);
     }
 
+    public string ToIdString()
+    {
+        return $"{Mime}#{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Mime}" + (Tags.Count == 0 ? "" : "," + string.Join(" ", Tags));
+    }
+
     public override string ToString()
     {
-        var lod = Lod == "" ? "" : ", " + Lod;
-        var tags = Tags.Count == 0 ? "" : ", " + string.Join(" ", Tags);
-        return $"Rep({Mime}{lod}{tags})";
+        return $"Rep({ToHumanIdString()})";
     }
-}
-
-/// <summary>
-///     🗺️ A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between
-///     ports based on individual locators.
-/// </summary>
-[Model("🗺️", "Lc", "Loc",
-    "A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between ports based on individual locators.")]
-public class Locator : Model<Locator>
-{
-    /// <summary>
-    ///     👪 The group of the locator.
-    /// </summary>
-    [Name("👪", "Gr", "Grp", "The group of the locator.", PropImportance.ID)]
-    public string Group { get; set; } = "";
-
-    /// <summary>
-    ///     📌 The optional sub-group of the locator. No sub-group means true.
-    /// </summary>
-    [Name("📌", "SG?", "SGr", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
-    public string Subgroup { get; set; } = "";
 }
 
 /// <summary>
@@ -1110,7 +1199,7 @@ public class Port : Model<Port>
     /// <summary>
     ///     🆔 The optional local identifier of the port within the type. No id means the default port.
     /// </summary>
-    [Id("🆔", "Id?", "Idn", "The optional local identifier of the port within the type. No id means the default port.",
+    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port within the type. No id means the default port.",
         isDefaultValid: true)]
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
@@ -1118,8 +1207,23 @@ public class Port : Model<Port>
     /// <summary>
     ///     💬 The optional human-readable description of the port.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the port.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string Description { get; set; } = "";
+
+    /// <summary>
+    ///     👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
+    /// </summary>
+    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?",
+        "The optional family of the port. This allows to define explicit compatibility with other ports.")]
+    public string Family { get; set; } = "";
+
+    /// <summary>
+    ///     ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other
+    ///     ports.
+    /// </summary>
+    [Name("✅", "CF*", "CFas*",
+        "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.")]
+    public List<string> CompatibleFamilies { get; set; } = new();
 
     /// <summary>
     ///     ❌ The connection point of the port that is attracted to another connection point.
@@ -1135,13 +1239,31 @@ public class Port : Model<Port>
         "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
 
+    [NumberProp("💍", "T", "T",
+        "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+        PropImportance.REQUIRED)]
+    public float T { get; set; } = 0;
+
     /// <summary>
-    ///     🗺️ The optional machine-readable locators of the port. Every port should have a unique set of locators.
+    ///     📏 The optional qualities of the port.
     /// </summary>
-    [ModelProp("🗺️", "Lc*", "Locs",
-        "The optional machine-readable locators of the port. Every port should have a unique set of locators.",
-        PropImportance.OPTIONAL)]
-    public List<Locator> Locators { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the port.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+
+    public string ToIdString()
+    {
+        return $"{Id}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Por({ToHumanIdString()})";
+    }
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -1158,7 +1280,6 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The point must not be null.");
         }
-
         if (Direction != null)
         {
             var (isValidDirection, errorsDirection) = Direction.Validate();
@@ -1170,15 +1291,12 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The direction must not be null.");
         }
-
-        if (Locators.Count != 0)
-            foreach (var locator in Locators)
-            {
-                var (isValidLocator, errorsLocator) = locator.Validate();
-                isValid = isValid && isValidLocator;
-                errors.AddRange(errorsLocator.Select(e => "A locator is invalid: " + e));
-            }
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
         return (isValid, errors);
     }
 }
@@ -1192,7 +1310,7 @@ public class PortId : Model<PortId>
     /// <summary>
     ///     🆔 The optional local identifier of the port within the type. No id means the default port.
     /// </summary>
-    [Id("🆔", "Id?", "Id", "The local identifier of the port within the type.", isDefaultValid: true)]
+    [Id("🆔", "Id?", "Id?", "The local identifier of the port within the type.", isDefaultValid: true)]
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
 
@@ -1203,83 +1321,21 @@ public class PortId : Model<PortId>
             Id = port.Id
         };
     }
-}
 
-/// <summary>
-///     📏 A quality is a named value with a unit and a definition.
-/// </summary>
-[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
-public class Quality : Model<Quality>
-{
-    /// <summary>
-    ///     📛 The name of the quality.
-    /// </summary>
-    [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
-    public string Name { get; set; } = "";
+    public string ToIdString()
+    {
+        return $"{Id}";
+    }
 
-    /// <summary>
-    ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
-    /// </summary>
-    [Description("🔢", "Vl?", "Val",
-        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
-    public string Value { get; set; } = "";
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
 
-    /// <summary>
-    ///     Ⓜ️ The optional unit of the value of the quality.
-    /// </summary>
-    [Name("Ⓜ️", "Ut?", "Unt", "The optional unit of the value of the quality.", isDefaultValid: true)]
-    public string Unit { get; set; } = "";
-
-    /// <summary>
-    ///     📖 The optional definition [ text | uri ] of the quality.
-    /// </summary>
-    [Description("📖", "Df?", "Def", "The optional definition [ text | uri ] of the quality.")]
-    public string Definition { get; set; } = "";
-}
-
-public class TypeProps : Model<Type>
-{
-    /// <summary>
-    ///     📛 Name of the type.
-    /// </summary>
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
-    public string Name { get; set; } = "";
-
-    /// <summary>
-    ///     💬 The optional human-readable description of the type.
-    /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the type.")]
-    public string Description { get; set; } = "";
-
-    /// <summary>
-    ///     🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg |
-    ///     svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-    /// </summary>
-    [Url("🪙", "Ic?", "Ico",
-        "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
-    public string Icon { get; set; } = "";
-
-    /// <summary>
-    ///     🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which
-    ///     will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-    /// </summary>
-    [Url("🖼️", "Im?", "Img",
-        "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
-    public string Image { get; set; } = "";
-
-    /// <summary>
-    ///     🔀 The optional variant of the type. No variant means the default variant.
-    /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional variant of the type. No variant means the default variant. ",
-        PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-
-    /// <summary>
-    ///     Ⓜ️ The length unit of the point and the direction of the ports of the type.
-    /// </summary>
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.",
-        PropImportance.REQUIRED)]
-    public string Unit { get; set; } = "";
+    public override string ToString()
+    {
+        return $"Por({ToHumanIdString()})";
+    }
 }
 
 /// <summary>
@@ -1300,6 +1356,21 @@ public class Author : Model<Author>
     [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
     public string Email { get; set; } = "";
 
+    public string ToIdString()
+    {
+        return $"{Email}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Aut({ToHumanIdString()})";
+    }
+
     public override (bool, List<string>) Validate()
     {
         // TODO: proper email validation
@@ -1314,6 +1385,66 @@ public class Author : Model<Author>
     }
 }
 
+public class TypeProps : Model<Type>
+{
+    /// <summary>
+    ///     📛 Name of the type.
+    /// </summary>
+    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     💬 The optional human-readable description of the type.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
+    ///     🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg |
+    ///     svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
+    /// </summary>
+    [Url("🪙", "Ic?", "Ico?",
+        "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
+    public string Icon { get; set; } = "";
+
+    /// <summary>
+    ///     🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which
+    ///     will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+    /// </summary>
+    [Url("🖼️", "Im?", "Img?",
+        "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
+    public string Image { get; set; } = "";
+
+    /// <summary>
+    ///     🔀 The optional variant of the type. No variant means the default variant.
+    /// </summary>
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant. ",
+        PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+
+    /// <summary>
+    ///     Ⓜ️ The length unit of the point and the direction of the ports of the type.
+    /// </summary>
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.",
+        PropImportance.REQUIRED)]
+    public string Unit { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Name}#{Variant}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
+    }
+
+    public override string ToString()
+    {
+        return $"Typ({ToHumanIdString()})";
+    }
+}
+
 /// <summary>
 ///     🧩 A type is a reusable element that can be connected with other types over ports.
 /// </summary>
@@ -1323,61 +1454,58 @@ public class Type : TypeProps
     /// <summary>
     ///     💾 The optional representations of the type.
     /// </summary>
-    [ModelProp("💾", "Rp*", "Reps", "The optional representations of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
     public List<Representation> Representations { get; set; } = new();
 
     /// <summary>
     ///     🔌 The optional ports of the type.
     /// </summary>
-    [ModelProp("🔌", "Po*", "Pors", "The optional ports of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
-
-    /// <summary>
-    ///     📏 The optional machine-readable qualities of the  type.
-    /// </summary>
-    [ModelProp("📏", "Ql*", "Qals", "The optional machine-readable qualities of the  type.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
 
     /// <summary>
     ///     👥 The optional authors of the type.
     /// </summary>
-    [ModelProp("👥", "Au*", "Auts", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("👥", "Au*", "Auts*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
+
+    /// <summary>
+    ///     📏 The optional qualities of the type.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the type.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-
         foreach (var port in Ports)
         {
             var (isValidPort, errorsPort) = port.Validate();
             isValid = isValid && isValidPort;
-            errors.AddRange(errorsPort.Select(e => "A port is invalid: " + e));
+            errors.AddRange(errorsPort.Select(e => $"A port({port.ToHumanIdString()}) is invalid: " + e));
         }
-
         foreach (var representation in Representations)
         {
             var (isValidRepresentation, errorsRepresentation) = representation.Validate();
             isValid = isValid && isValidRepresentation;
-            errors.AddRange(errorsRepresentation.Select(e => "A representation is invalid: " + e));
+            errors.AddRange(errorsRepresentation.Select(e =>
+                $"A representation({representation.ToHumanIdString()}) is invalid: " + e));
         }
-
-        foreach (var quality in Qualities)
-        {
-            var (isValidQuality, errorsQuality) = quality.Validate();
-            isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
-        }
-
         foreach (var author in Authors)
         {
             var (isValidAuthor, errorsAuthor) = author.Validate();
             isValid = isValid && isValidAuthor;
-            errors.AddRange(errorsAuthor.Select(e => "An author is invalid: " + e));
+            errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
         return (isValid, errors);
+
     }
 
     public static Dictionary<string, Dictionary<string, Type>> EnumerableToDict(IEnumerable<Type> types)
@@ -1388,13 +1516,7 @@ public class Type : TypeProps
             if (!typesDict.ContainsKey(type.Name)) typesDict[type.Name] = new Dictionary<string, Type>();
             typesDict[type.Name][type.Variant] = type;
         }
-
         return typesDict;
-    }
-
-    public string ToIdString()
-    {
-        return $"{Name}#{Variant}";
     }
 }
 
@@ -1413,9 +1535,24 @@ public class TypeId : Model<TypeId>
     /// <summary>
     ///     🔀 The optional variant of the type. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional variant of the type. No variant means the default variant. ",
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant. ",
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Name}#{Variant}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
+    }
+
+    public override string ToString()
+    {
+        return $"Typ({ToHumanIdString()})";
+    }
 
     public static implicit operator TypeId(Type type)
     {
@@ -1443,6 +1580,12 @@ public class Piece : Model<Piece>
     public string Id { get; set; } = "";
 
     /// <summary>
+    ///     💬 The optional human-readable description of the piece.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
     ///     🧩 The local identifier of the type of the piece within the kit.
     /// </summary>
     [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type of the piece within the kit.")]
@@ -1451,7 +1594,7 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     /// </summary>
-    [ModelProp("◳", "Pn?", "Pln",
+    [ModelProp("◳", "Pn?", "Pln?",
         "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
         PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
@@ -1459,10 +1602,31 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     ⌖ The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
     /// </summary>
-    [ModelProp("⌖", "Ce?", "Cen",
+    [ModelProp("⌖", "Ce?", "Cen?",
         "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
         PropImportance.OPTIONAL)]
     public DiagramPoint? Center { get; set; }
+
+    /// <summary>
+    ///     📏 The optional qualities of the piece.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the piece.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+
+    public string ToIdString()
+    {
+        return $"{Id}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Pce({ToHumanIdString()})";
+    }
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -1470,21 +1634,25 @@ public class Piece : Model<Piece>
         var (isValid, errors) = base.Validate();
         var (isValidType, errorsType) = Type.Validate();
         isValid = isValid && isValidType;
-        errors.AddRange(errorsType.Select(e => "The type is invalid: " + e));
+        errors.AddRange(errorsType.Select(e => $"The type({Type.ToHumanIdString()}) is invalid: " + e));
         if (Plane != null)
         {
             var (isValidPlane, errorsPlane) = Plane.Validate();
             isValid = isValid && isValidPlane;
             errors.AddRange(errorsPlane.Select(e => "The plane is invalid: " + e));
         }
-
         if (Center != null)
         {
             var (isValidCenter, errorsCenter) = Center.Validate();
             isValid = isValid && isValidCenter;
             errors.AddRange(errorsCenter.Select(e => "The center is invalid: " + e));
         }
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
         return (isValid, errors);
     }
 }
@@ -1496,11 +1664,26 @@ public class PieceId : Model<PieceId>
     /// <summary>
     ///     🆔 The optional local identifier of the piece within the design. No id means the default piece.
     /// </summary>
-    [Id("🆔", "Id?", "Id",
+    [Id("🆔", "Id?", "Id?",
         "The optional local identifier of the piece within the design. No id means the default piece.",
         isDefaultValid: true)]
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Id}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Pce({ToHumanIdString()})";
+    }
 }
 
 /// <summary>
@@ -1535,6 +1718,7 @@ public class Connection : Model<Connection>
 {
     private float _rotation;
     private float _tilt;
+    private float _turn;
 
     /// <summary>
     ///     🧲 The connected side of the piece of the connection.
@@ -1549,9 +1733,43 @@ public class Connection : Model<Connection>
     public Side Connecting { get; set; } = new();
 
     /// <summary>
+    ///     💬 The optional human-readable description of the connection.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
+    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
+    ///     connecting piece.
+    /// </summary>
+    [NumberProp("↕️", "Gp?", "Gap?",
+        "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
+    public float Gap { get; set; } = 0;
+
+    /// <summary>
+    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the
+    ///     connected and the
+    ///     connecting piece.
+    /// </summary>
+
+    [NumberProp("↔️", "Sf?", "Sft?",
+        "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.")]
+    public float Shift { get; set; } = 0;
+
+    /// <summary>
+    ///     🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when
+    ///     necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it
+    ///     yields a different result.
+    /// </summary>
+
+    [NumberProp("🪜", "Rs", "Ris",
+        "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+    public float Raise { get; set; } = 0;
+
+    /// <summary>
     ///     🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("🔄", "Rt?", "Rot",
+    [AngleProp("🔄", "Rt?", "Rot?",
         "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.")]
     public float Rotation
     {
@@ -1560,11 +1778,25 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected
+    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the
+    ///     connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property
+    ///     which means that when the parent piece and child piece are flipped it yields a different result.
+    /// </summary>
+    [AngleProp("🛞", "Tu", "Tur",
+        "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+    public float Turn
+    {
+        get => _turn;
+        set => _turn = (value % 360 + 360) % 360;
+    }
+
+    /// <summary>
+    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between
+    ///     the connected
     ///     and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("∡", "Tl?", "Tlt",
-        "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.")]
+    [AngleProp("∡", "Tl?", "Tlt?",
+        "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
     public float Tilt
     {
         get => _tilt;
@@ -1572,27 +1804,10 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
-    ///     connecting piece.
-    /// </summary>
-    [NumberProp("↕️", "Gp?", "Gap",
-        "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
-    public float Gap { get; set; } = 0;
-
-    /// <summary>
-    ///     ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the
-    ///     connecting piece.
-    /// </summary>
-
-    [NumberProp("↔️", "Sf?", "Sft",
-        "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
-    public float Shift { get; set; } = 0;
-
-    /// <summary>
     ///     ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit
     ///     is equal the width of a piece icon.
     /// </summary>
-    [NumberProp("➡️", "X?", "X",
+    [NumberProp("➡️", "X?", "X?",
         "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
     public float X { get; set; }
 
@@ -1600,9 +1815,15 @@ public class Connection : Model<Connection>
     ///     ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit
     ///     is equal the width of a piece icon.
     /// </summary>
-    [NumberProp("⬆️", "Y?", "Y",
+    [NumberProp("⬆️", "Y?", "Y?",
         "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
     public float Y { get; set; } = 1;
+
+    /// <summary>
+    ///     📏 The optional qualities of the connection.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the connection.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     public string ToIdString()
     {
@@ -1610,6 +1831,11 @@ public class Connection : Model<Connection>
         var cng = (Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") +
                   Connecting.Piece.Id;
         return $"{ctd}--{cng}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
     }
 
     public override string ToString()
@@ -1626,13 +1852,17 @@ public class Connection : Model<Connection>
             isValid = false;
             errors.Add("The connected and connecting pieces must be different.");
         }
-
         if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance)
         {
             isValid = false;
             errors.Add("The offset (x,y) must not be the zero vector.");
         }
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
         return (isValid, errors);
     }
 }
@@ -1648,14 +1878,14 @@ public class DesignProps : Model<Design>
     /// <summary>
     ///     💬 The optional human-readable description of the design.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the design.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
     public string Description { get; set; } = "";
 
     /// <summary>
     ///     🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg
     ///     | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
     /// </summary>
-    [Url("🪙", "Ic?", "Ico",
+    [Url("🪙", "Ic?", "Ico?",
         "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
 
@@ -1663,21 +1893,21 @@ public class DesignProps : Model<Design>
     ///     🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which
     ///     will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
     /// </summary>
-    [Url("🖼️", "Im?", "Img",
+    [Url("🖼️", "Im?", "Img?",
         "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
 
     /// <summary>
     ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.",
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.",
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
     /// <summary>
     ///     🥽 The optional view of the design. No view means the default view.
     /// </summary>
-    [Name("🥽", "Vw?", "Vew", "The optional view of the design. No view means the default view.", PropImportance.ID,
+    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID,
         true)]
     public string View { get; set; } = "";
 
@@ -1687,6 +1917,22 @@ public class DesignProps : Model<Design>
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.",
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Name}#{Variant}#{View}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") +
+               (View.Length == 0 ? "" : $", {View}");
+    }
+
+    public override string ToString()
+    {
+        return $"Dsn({ToHumanIdString()})";
+    }
 }
 
 /// <summary>
@@ -1698,31 +1944,27 @@ public class Design : DesignProps
     /// <summary>
     ///     ⭕ The optional pieces of the design.
     /// </summary>
-    [ModelProp("⭕", "Pc*", "Pcs", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
 
     /// <summary>
     ///     🔗 The optional connections of the design.
     /// </summary>
-    [ModelProp("🔗", "Co*", "Cons", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-
-    /// <summary>
-    ///     📏 The optional machine-readable qualities of the  design.
-    /// </summary>
-    [ModelProp("📏", "Ql*", "Qals", "The optional machine-readable qualities of the  design.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
 
     /// <summary>
     ///     👥 The optional authors of the design.
     /// </summary>
-    [ModelProp("👥", "Au*", "Auts", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("👥", "Au*", "Auts*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
 
-    public string ToIdString()
-    {
-        return $"{Name}#{Variant}#{View}";
-    }
+    /// <summary>
+    ///     📏 The optional qualities of the design.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the design.",
+        PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     public void Bfs(Action<Piece> onRoot, Action<Piece, Piece, Connection> onConnection)
     {
@@ -1774,7 +2016,7 @@ public class Design : DesignProps
     }
 
     public Design Flatten(IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane)
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane)
     {
         if (Pieces.Count > 1 && Connections.Count > 0)
         {
@@ -1805,8 +2047,9 @@ public class Design : DesignProps
                     ports[child.Type.Name][child.Type.Variant][
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
-                    childPort.Point,
-                    childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
+                    childPort.Point, childPort.Direction,
+                    connection.Gap, connection.Shift, connection.Raise,
+                    connection.Rotation, connection.Turn, connection.Tilt);
                 child.Plane = childPlane;
 
                 var direction = new DiagramPoint
@@ -1825,6 +2068,37 @@ public class Design : DesignProps
         }
 
         Connections = new List<Connection>();
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Sort a design by reordering pieces and connections to appear in order that they are discovered by
+    ///     breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the
+    ///     connecting.
+    /// </summary>
+    /// <returns></returns>
+    public Design Sort()
+    {
+        var sortedPieces = new List<Piece>();
+        var sortedConnections = new List<Connection>();
+
+        Bfs(
+            piece => { sortedPieces.Add(piece); },
+            (parent, child, connection) =>
+            {
+                sortedPieces.Add(child);
+                if (connection.Connected.Piece.Id != parent.Id)
+                {
+                    connection.Connected.Piece = new PieceId { Id = child.Id };
+                    connection.Connecting.Piece = new PieceId { Id = parent.Id };
+                }
+
+                sortedConnections.Add(connection);
+            });
+
+        Pieces = sortedPieces;
+        Connections = sortedConnections;
 
         return this;
     }
@@ -1871,7 +2145,7 @@ public class Design : DesignProps
     // TODO: Make remote uris work for diagram.
     public string Diagram(
         IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane,
         string kitDirectory = "",
         float iconWidth = 48, float iconStroke = 1f, float connectionStroke = 2f, float margin = 0)
     {
@@ -2082,37 +2356,32 @@ text {
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-
         foreach (var piece in Pieces)
         {
             var (isValidPiece, errorsPiece) = piece.Validate();
             isValid = isValid && isValidPiece;
-            errors.AddRange(errorsPiece.Select(e => "A piece is invalid: " + e));
+            errors.AddRange(errorsPiece.Select(e => $"A piece({piece.ToHumanIdString()}) is invalid: " + e));
         }
-
         foreach (var connection in Connections)
         {
             var (isValidConnection, errorsConnection) = connection.Validate();
             isValid = isValid && isValidConnection;
-            errors.AddRange(errorsConnection.Select(e => "A connection is invalid: " + e));
+            errors.AddRange(errorsConnection.Select(e =>
+                $"A connection({connection.ToHumanIdString()}) is invalid: " + e));
         }
-
-        foreach (var quality in Qualities)
-        {
-            var (isValidQuality, errorsQuality) = quality.Validate();
-            isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => "A quality is invalid: " + e));
-        }
-
         foreach (var author in Authors)
         {
             var (isValidAuthor, errorsAuthor) = author.Validate();
             isValid = isValid && isValidAuthor;
-            errors.AddRange(errorsAuthor.Select(e => "An author is invalid: " + e));
+            errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
         var pieceIds = Pieces.Select(p => p.Id);
-
         var duplicatePieceIds = pieceIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
         if (duplicatePieceIds.Length != 0)
         {
@@ -2120,7 +2389,6 @@ text {
             foreach (var duplicatePieceId in duplicatePieceIds)
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
-
         var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList()
             .Select(c => c.Connected.Piece.Id).ToArray();
         if (nonExistingConnectedPieces.Length != 0)
@@ -2130,7 +2398,6 @@ text {
                 errors.Add(
                     $"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
         }
-
         var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList()
             .Select(c => c.Connecting.Piece.Id).ToArray();
         if (nonExistingConnectingPieces.Length != 0)
@@ -2140,7 +2407,6 @@ text {
                 errors.Add(
                     $"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
         }
-
         return (isValid, errors);
     }
 }
@@ -2160,16 +2426,24 @@ public class DesignId : Model<DesignId>
     /// <summary>
     ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt", "The optional variant of the design. No variant means the default variant.",
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.",
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
+
+    /// <summary>
+    ///     🥽 The optional view of the design. No view means the default view.
+    /// </summary>
+    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID,
+        true)]
+    public string View { get; set; } = "";
 
     public static implicit operator DesignId(DesignProps design)
     {
         return new DesignId
         {
             Name = design.Name,
-            Variant = design.Variant
+            Variant = design.Variant,
+            View = design.View
         };
     }
 
@@ -2178,7 +2452,8 @@ public class DesignId : Model<DesignId>
         return new DesignId
         {
             Name = design.Name,
-            Variant = design.Variant
+            Variant = design.Variant,
+            View = design.View
         };
     }
 }
@@ -2194,14 +2469,14 @@ public class KitProps : Model<Kit>
     /// <summary>
     ///     💬 The optional human-readable description of the kit.
     /// </summary>
-    [Description("💬", "Dc?", "Dsc", "The optional human-readable description of the kit.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
     public string Description { get; set; } = "";
 
     /// <summary>
     ///     🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg |
     ///     svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
     /// </summary>
-    [Url("🪙", "Ic?", "Ico",
+    [Url("🪙", "Ic?", "Ico?",
         "The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
 
@@ -2209,7 +2484,7 @@ public class KitProps : Model<Kit>
     ///     🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which
     ///     will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
     /// </summary>
-    [Url("🖼️", "Im?", "Img",
+    [Url("🖼️", "Im?", "Img?",
         "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
 
@@ -2217,33 +2492,33 @@ public class KitProps : Model<Kit>
     ///     🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ]
     ///     which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
     /// </summary>
-    [Url("🔮", "Pv?", "Prv",
+    [Url("🔮", "Pv?", "Prv?",
         "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
     public string Preview { get; set; } = "";
 
     /// <summary>
     ///     🔀 The optional version of the kit. No version means the latest version.
     /// </summary>
-    [Name("🔀", "Vr?", "Ver", "The optional version of the kit. No version means the latest version.",
+    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.",
         PropImportance.ID, true)]
     public string Version { get; set; } = "";
 
     /// <summary>
     ///     ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
     /// </summary>
-    [Url("☁️", "Rm?", "Rmt", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
+    [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
     public string Remote { get; set; } = "";
 
     /// <summary>
     ///     🏠 The optional Unique Resource Locator (URL) of the homepage of the kit.
     /// </summary>
-    [Url("🏠", "Hp?", "Hmp", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
+    [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
 
     /// <summary>
     ///     ⚖️ The optional license [ spdx id | url ] of the kit.
     /// </summary>
-    [Url("⚖️", "Ln?", "Lcn", "The optional license [ spdx id | url ] of the kit.")]
+    [Url("⚖️", "Ln?", "Lcn?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
 }
 
@@ -2256,14 +2531,20 @@ public class Kit : KitProps
     /// <summary>
     ///     🧩 The optional types of the kit.
     /// </summary>
-    [ModelProp("🧩", "Ty*", "Typs", "The optional types of the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("🧩", "Ty*", "Typs*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
 
     /// <summary>
     ///     🏙️ The optional designs of the kit.
     /// </summary>
-    [ModelProp("🏙️", "Dn*", "Dsns", "The optional designs of the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("🏙️", "Dn*", "Dsns*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+
+    /// <summary>
+    ///     📏 The optional qualities of the kit.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -2285,21 +2566,18 @@ public class Kit : KitProps
         //    isValid = false;
         //    errors.Add("The preview url can't be absolute.");
         //}
-
         foreach (var type in Types)
         {
             var (isValidType, errorsType) = type.Validate();
             isValid = isValid && isValidType;
             errors.AddRange(errorsType.Select(e => $"A type ({type.ToIdString()}) is invalid: " + e));
         }
-
         foreach (var design in Designs)
         {
             var (isValidDesign, errorsDesign) = design.Validate();
             isValid = isValid && isValidDesign;
             errors.AddRange(errorsDesign.Select(e => $"A design ({design.ToIdString()}) is invalid: " + e));
         }
-
         var typeIds = Types.Select(t => (t.Name, t.Variant));
         var duplicateTypeIds = typeIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
         if (duplicateTypeIds.Length != 0)
@@ -2332,8 +2610,12 @@ public class Kit : KitProps
                 errors.Add(message);
             }
         }
-
-
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality ({quality.ToIdString()}) is invalid: " + e));
+        }
         return (isValid, errors);
     }
 }
@@ -2388,12 +2670,12 @@ public interface IApi
     [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")]
     Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeNameAndVariant);
 
-    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
-    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignNameAndVariant,
+    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")]
+    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignNameAndVariantAndView,
         [Body] Design input);
 
-    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}")]
-    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignNameAndVariant);
+    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")]
+    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignNameAndVariantAndView);
 
     [Get("/api/assistant/predictDesign")]
     Task<ApiResponse<Design>> PredictDesign([Body] PredictDesignBody body);
@@ -2443,6 +2725,11 @@ public static class Api
         return Utility.Encode(name) + "," + Utility.Encode(variant);
     }
 
+    public static string EncodeNameAndVariantAndView(string name, string variant = "", string view = "")
+    {
+        return EncodeNameAndVariant(name, variant) + "," + Utility.Encode(view);
+    }
+
     public static Kit GetKit(string uri)
     {
         var response = GetApi().GetKit(Utility.Encode(uri)).Result;
@@ -2481,14 +2768,15 @@ public static class Api
     public static void PutDesign(string kitUrl, Design input)
     {
         var response = GetApi()
-            .PutDesign(Utility.Encode(kitUrl), EncodeNameAndVariant(input.Name, input.Variant), input).Result;
+            .PutDesign(Utility.Encode(kitUrl), EncodeNameAndVariantAndView(input.Name, input.Variant, input.View),
+                input).Result;
         HandleErrors(response);
     }
 
     public static void RemoveDesign(string kitUrl, DesignId id)
     {
         var response = GetApi()
-            .RemoveDesign(Utility.Encode(kitUrl), EncodeNameAndVariant(id.Name, id.Variant)).Result;
+            .RemoveDesign(Utility.Encode(kitUrl), EncodeNameAndVariantAndView(id.Name, id.Variant, id.View)).Result;
         HandleErrors(response);
     }
 
@@ -2496,7 +2784,7 @@ public static class Api
     public static Design PredictDesign(string description, Type[] types, Design design)
     {
         var response = GetApi().PredictDesign(new PredictDesignBody
-        { Description = description, Types = types, Design = design }).Result;
+            { Description = description, Types = types, Design = design }).Result;
         if (response.IsSuccessStatusCode)
             return response.Content;
         HandleErrors(response);

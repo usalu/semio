@@ -3,21 +3,12 @@
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
-                "rotation": {
-                    "default": 0,
-                    "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
-                    "title": "Rotation",
-                    "type": "number"
-                },
-                "tilt": {
-                    "default": 0,
-                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
-                    "title": "Tilt",
-                    "type": "number"
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
                 },
                 "gap": {
                     "default": 0,
@@ -27,8 +18,38 @@
                 },
                 "shift": {
                     "default": 0,
-                    "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                    "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                     "title": "Shift",
+                    "type": "number"
+                },
+                "raise_": {
+                    "default": 0,
+                    "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                    "title": "Raise",
+                    "type": "number"
+                },
+                "rotation": {
+                    "default": 0,
+                    "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Rotation",
+                    "type": "number"
+                },
+                "turn": {
+                    "default": 0,
+                    "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Turn",
+                    "type": "number"
+                },
+                "tilt": {
+                    "default": 0,
+                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Tilt",
                     "type": "number"
                 },
                 "x": {
@@ -59,6 +80,27 @@
             "title": "Connection",
             "type": "object"
         },
+        "DiagramPoint": {
+            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
+            "properties": {
+                "x": {
+                    "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "Y",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "title": "DiagramPoint",
+            "type": "object"
+        },
         "Piece": {
             "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
             "properties": {
@@ -67,6 +109,13 @@
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
                     "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                    "maxLength": 4096,
+                    "title": "Description",
                     "type": "string"
                 },
                 "type": {
@@ -84,6 +133,26 @@
                     ],
                     "default": null,
                     "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                },
+                "center": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DiagramPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the piece.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
+                    "type": "array"
                 }
             },
             "required": [

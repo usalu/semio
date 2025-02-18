@@ -1,15 +1,19 @@
 1.0.0 (yanked) [not functional]
 1.0.1 (yanked) [not functional]
 1.0.2
-2.0.0
-2.1.0
+2.0.0 (yanked)
+2.1.0 (yanked)
 2.1.1 (yanked) [not functional]
-2.2.0
+2.2.0 (yanked)
 2.2.1
-2.3.0
+2.3.0 (yanked)
 2.4.0
 3.0.0 (yanked) [not functional]
 3.0.1
 4.0.0 (yanked) [not functional]
 4.0.2
 5.0.0-beta
+5.1.0-beta (yanked) [not functional]
+5.1.1-beta (yanked) [not functional]
+5.2.0-beta (yanked) [not functional]
+5.3.0-beta

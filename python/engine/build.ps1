@@ -1,3 +1,7 @@
+param (
+    [switch]$SkipPostBuild
+)
+
 if (-not (Test-Path ".venv")) {
     poetry install
 }
@@ -16,6 +20,8 @@ pyinstaller `
     --noconfirm `
     --copy-metadata graphene `
     --copy-metadata sqlalchemy `
+    --copy-metadata loguru `
+    --hidden-import=loguru `
     --add-data "../../icons/semio_16x16.png;icons/" `
     --add-data "../../icons/semio_32x32.png;icons/" `
     --add-data "../../icons/semio_48x48.png;icons/" `
@@ -23,4 +29,7 @@ pyinstaller `
     --add-data "../../icons/semio_256x256.png;icons/" `
     --icon "..\..\icons\semio.ico" `
     engine.py
-.\post-build.ps1
+
+if (-not $SkipPostBuild) {
+    .\post-build.ps1
+}
