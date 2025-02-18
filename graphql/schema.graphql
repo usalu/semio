@@ -22,10 +22,11 @@ type Kit implements Node {
   remote: String!
   homepage: String!
   license: String!
-  createdAt: DateTime!
-  lastUpdateAt: DateTime!
+  created: DateTime!
+  updated: DateTime!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
   designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
 
   """The ID of the object"""
   id: ID!
@@ -79,12 +80,12 @@ type Type implements Node {
   image: String!
   variant: String!
   unit: String!
-  createdAt: DateTime!
-  lastUpdateAt: DateTime!
+  created: DateTime!
+  updated: DateTime!
   representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
   ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
 
@@ -111,9 +112,10 @@ type RepresentationNodeEdge {
 }
 
 type Representation implements Node {
-  mime: String!
-  lod: String!
   url: String!
+  description: String!
+  mime: String!
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
   """The ID of the object"""
@@ -121,40 +123,54 @@ type Representation implements Node {
   tags: [String!]!
 }
 
-type PortNodeConnection {
+type QualityNodeConnection {
   """Pagination data for this connection."""
   pageInfo: PageInfo!
 
   """Contains the nodes in this connection."""
-  edges: [PortNodeEdge]!
+  edges: [QualityNodeEdge]!
 }
 
-"""A Relay edge containing a `PortNode` and its cursor."""
-type PortNodeEdge {
+"""A Relay edge containing a `QualityNode` and its cursor."""
+type QualityNodeEdge {
   """The item at the end of the edge"""
-  node: Port
+  node: Quality
 
   """A cursor for use in pagination"""
   cursor: String!
 }
 
-type Port implements Node {
-  description: String!
-  id_: String
+type Quality implements Node {
+  name: String!
+  value: String!
+  unit: String!
+  definition: String!
+  representation: Representation
+  port: Port
   type: Type
-  locators: [Locator!]
+  piece: Piece
+  connection: Connection
+  design: Design
+  kit: Kit
 
   """The ID of the object"""
   id: ID!
+}
+
+type Port implements Node {
+  description: String!
+  family: String!
+  t: Float!
+  id_: String
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  type: Type
+
+  """The ID of the object"""
+  id: ID!
+  compatibleFamilies: [String!]!
   point: Point!
   direction: Vector!
   connections: [Connection!]!
-}
-
-type Locator {
-  subgroup: String!
-  group: String!
-  port: Port
 }
 
 """✖️ A 3d-point (xyz) of floating point numbers."""
@@ -182,12 +198,16 @@ type Vector {
 }
 
 type Connection implements Node {
-  rotation: Float!
-  tilt: Float!
+  description: String!
   gap: Float!
   shift: Float!
+  raise_: Float!
+  rotation: Float!
+  turn: Float!
+  tilt: Float!
   x: Float!
   y: Float!
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   design: Design
 
   """The ID of the object"""
@@ -204,12 +224,12 @@ type Design implements Node {
   variant: String!
   view: String!
   unit: String!
-  createdAt: DateTime!
-  lastUpdateAt: DateTime!
+  created: DateTime!
+  updated: DateTime!
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
   connections(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
 
   """The ID of the object"""
@@ -235,9 +255,11 @@ type PieceNodeEdge {
 }
 
 type Piece implements Node {
+  description: String!
   id_: String
   type: Type
   plane: Plane
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   design: Design
 
   """The ID of the object"""
@@ -285,35 +307,6 @@ type ConnectionNodeEdge {
   cursor: String!
 }
 
-type QualityNodeConnection {
-  """Pagination data for this connection."""
-  pageInfo: PageInfo!
-
-  """Contains the nodes in this connection."""
-  edges: [QualityNodeEdge]!
-}
-
-"""A Relay edge containing a `QualityNode` and its cursor."""
-type QualityNodeEdge {
-  """The item at the end of the edge"""
-  node: Quality
-
-  """A cursor for use in pagination"""
-  cursor: String!
-}
-
-type Quality implements Node {
-  name: String!
-  value: String!
-  unit: String!
-  definition: String!
-  type: Type
-  design: Design
-
-  """The ID of the object"""
-  id: ID!
-}
-
 type AuthorNodeConnection {
   """Pagination data for this connection."""
   pageInfo: PageInfo!
@@ -346,6 +339,23 @@ type Author implements Node {
 type Side {
   piece: Piece!
   port: Port!
+}
+
+type PortNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [PortNodeEdge]!
+}
+
+"""A Relay edge containing a `PortNode` and its cursor."""
+type PortNodeEdge {
+  """The item at the end of the edge"""
+  node: Port
+
+  """A cursor for use in pagination"""
+  cursor: String!
 }
 
 type DesignNodeConnection {
@@ -412,6 +422,9 @@ input KitInputNode {
 
   """🏙️ The designs of the kit."""
   designs: [DesignInputNode] = null
+
+  """📏 The qualities of the kit."""
+  qualities: [QualityInputNode] = null
 }
 
 input TypeInputNode {
@@ -442,28 +455,45 @@ input TypeInputNode {
   unit: String = ""
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
-  qualities: [QualityInputNode] = null
   authors: [AuthorInputNode] = null
+  qualities: [QualityInputNode] = null
 }
 
 input RepresentationInputNode {
+  """
+  🔗 The Unique Resource Locator (URL) to the resource of the representation.
+  """
+  url: String!
+
+  """💬 The optional human-readable description of the representation."""
+  description: String = ""
+
   """
   ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
   """
   mime: String!
 
-  """
-  🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
-  """
-  lod: String!
-
   """🏷️ The optional tags to group representations. No tags means default."""
   tags: [String] = null
 
+  """📏 The qualities of the representation."""
+  qualities: [QualityInputNode] = null
+}
+
+input QualityInputNode {
+  """📏 The name of the quality."""
+  name: String!
+
   """
-  🔗 The Unique Resource Locator (URL) to the resource of the representation.
+  📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
   """
-  url: String!
+  value: String = ""
+
+  """📏 The optional unit of the value of the quality."""
+  unit: String = ""
+
+  """📏 The optional definition [ text | uri ] of the quality."""
+  definition: String = ""
 }
 
 input PortInputNode {
@@ -472,6 +502,21 @@ input PortInputNode {
 
   """💬 The optional human-readable description of the port."""
   description: String = ""
+
+  """
+  👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
+  """
+  family: String = ""
+
+  """
+  ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.
+  """
+  compatibleFamilies: [String] = null
+
+  """
+  💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
+  """
+  t: Float = 0
 
   """
   ✖️ The connection point of the port that is attracted to another connection point.
@@ -483,8 +528,8 @@ input PortInputNode {
   """
   direction: VectorInputNode!
 
-  """🗺️ The locators of the port."""
-  locators: [LocatorInputNode] = null
+  """📏 The qualities of the port."""
+  qualities: [QualityInputNode] = null
 }
 
 input PointInputNode {
@@ -507,30 +552,6 @@ input VectorInputNode {
 
   """🎚️ The z-coordinate of the vector."""
   z: Float!
-}
-
-input LocatorInputNode {
-  """👪 The group of the locator."""
-  group: String!
-
-  """📌 The optional sub-group of the locator. No sub-group means true."""
-  subgroup: String = ""
-}
-
-input QualityInputNode {
-  """📏 The name of the quality."""
-  name: String!
-
-  """
-  📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
-  """
-  value: String = ""
-
-  """📏 The optional unit of the value of the quality."""
-  unit: String = ""
-
-  """📏 The optional definition [ text | uri ] of the quality."""
-  definition: String = ""
 }
 
 input AuthorInputNode {
@@ -570,13 +591,16 @@ input DesignInputNode {
   unit: String = ""
   pieces: [PieceInputNode] = null
   connections: [ConnectionInputNode] = null
-  qualities: [QualityInputNode] = null
   authors: [AuthorInputNode] = null
+  qualities: [QualityInputNode] = null
 }
 
 input PieceInputNode {
   """🆔 The id of the piece."""
   id_: String = ""
+
+  """💬 The optional human-readable description of the piece."""
+  description: String = ""
 
   """
   ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
@@ -587,6 +611,9 @@ input PieceInputNode {
   📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
   """
   center: DiagramPointInputNode = null
+
+  """📏 The qualities of the piece."""
+  qualities: [QualityInputNode] = null
   type: TypeIdInputNode!
 }
 
@@ -624,15 +651,8 @@ input TypeIdInputNode {
 }
 
 input ConnectionInputNode {
-  """
-  🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
-  """
-  rotation: Float = 0
-
-  """
-  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
-  """
-  tilt: Float = 0
+  """💬 The optional human-readable description of the connection."""
+  description: String = ""
 
   """
   ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. 
@@ -640,9 +660,29 @@ input ConnectionInputNode {
   gap: Float = 0
 
   """
-  ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
+  ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..
   """
   shift: Float = 0
+
+  """
+  🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  """
+  raise_: Float = 0
+
+  """
+  🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+  """
+  rotation: Float = 0
+
+  """
+  🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  """
+  turn: Float = 0
+
+  """
+  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+  """
+  tilt: Float = 0
 
   """
   ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.

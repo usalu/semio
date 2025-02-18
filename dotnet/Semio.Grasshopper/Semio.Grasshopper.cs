@@ -46,7 +46,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using FluentValidation;
+using System.Net;
+using System.Net.Http;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
@@ -64,7 +65,7 @@ namespace Semio.Grasshopper;
 public static class Constants
 {
     public const string Category = Semio.Constants.Name;
-    public const string Version = "5.0.0-beta";
+    public const string Version = "5.3.0-beta";
 }
 
 #endregion
@@ -154,17 +155,17 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 //✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 //✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 //📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
-//📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 //🍾,Rl,Rel,Release,The release of the engine that created this database.
 //☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 //🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 //🧱,Sd,Sde,Side,A side of a piece in a connection.
-//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
 //📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 //✅,Su,Suc,Success,{{NAME}} was successful.
 //🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
 //▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 //🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 //🧩,Ty,Typ,Type,The type-related information of the side.
@@ -235,16 +236,17 @@ public static class Utility
     }
 
     public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
-        Point childPoint, Vector childDirection, float rotation, float tilt, float gap, float shift)
+        Point childPoint, Vector childDirection, float gap, float shift, float raise, float rotation, float turn, float tilt)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
         var revertedChildPointR = new Vector3d(childPoint.Convert());
         revertedChildPointR.Reverse();
-        var gapDirectionR = new Vector3d(parentDirectionR);
+        //var gapDirectionR = new Vector3d(parentDirectionR);
         var reverseChildDirectionR = childDirection.Convert();
         reverseChildDirectionR.Reverse();
         var rotationRad = RhinoMath.ToRadians(rotation);
+        var turnRad = RhinoMath.ToRadians(turn);
         var tiltRad = RhinoMath.ToRadians(tilt);
 
         // orient
@@ -269,22 +271,36 @@ public static class Utility
             directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
         }
 
-        var tiltAxisRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
+        var rotationAxis = Vector3d.YAxis;
+        var turnAxis = Vector3d.ZAxis;
         var tiltAxis = Vector3d.XAxis;
-        tiltAxis.Transform(tiltAxisRotation);
+        var gapDirection = Vector3d.YAxis;
+        var shiftDirection = Vector3d.XAxis;
+        var raiseDirection = Vector3d.ZAxis;
 
-        var gapDirection = gapDirectionR;
+        var parentRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
+
+        gapDirection.Transform(parentRotation);
+        shiftDirection.Transform(parentRotation);
+        raiseDirection.Transform(parentRotation);
+        turnAxis.Transform(parentRotation);
+        tiltAxis.Transform(parentRotation);
 
         var orientationT = directionT;
 
         var rotateT = Transform.Rotation(-rotationRad, parentDirectionR, new Point3d());
-        orientationT = rotateT * directionT;
+        orientationT = rotateT * orientationT;
+        turnAxis.Transform(rotateT);
         tiltAxis.Transform(rotateT);
-        gapDirection.Transform(rotateT);
+        //gapDirection.Transform(rotateT);
+
+        var turnT = Transform.Rotation(turnRad, turnAxis, new Point3d());
+        orientationT = turnT * orientationT;
+        //gapDirection.Transform(turnT);
 
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
-        gapDirection.Transform(tiltT);
+        //gapDirection.Transform(tiltT);
 
         // move
 
@@ -294,9 +310,10 @@ public static class Utility
 
 
         var gapTransform = Transform.Translation(gapDirection * gap);
-        var shiftDirection = new Vector3d(tiltAxis) * shift;
-        var shiftTransform = Transform.Translation(shiftDirection);
+        var shiftTransform = Transform.Translation(shiftDirection * shift);
+        var raiseTransform = Transform.Translation(raiseDirection * raise);
         var translation = gapTransform * shiftTransform;
+        translation = raiseTransform * translation;
 
         transform = translation * transform;
 
@@ -421,7 +438,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
         Value = value;
     }
 
-    public override bool IsValid { get; }
+    public override bool IsValid => Value != null;
 
     public override string TypeName => typeof(T).Name;
 
@@ -453,6 +470,40 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
         Value = reader.GetString(typeof(T).Name).Deserialize<T>();
         return base.Read(reader);
     }
+
+    internal virtual bool CustomCastTo<Q>(ref Q target)
+    {
+        return false;
+    }
+
+    internal virtual bool CustomCastFrom(object source)
+    {
+        return false;
+    }
+
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(T)))
+        {
+            target = (Q)(object)this;
+            return true;
+        }
+
+        return CustomCastTo(ref target);
+    }
+
+    public override bool CastFrom(object source)
+    {
+        if (source == null) return false;
+
+        if (source is T model)
+        {
+            Value = model;
+            return true;
+        }
+
+        return CustomCastFrom(source);
+    }
 }
 
 public class RepresentationGoo : ModelGoo<Representation>
@@ -464,23 +515,12 @@ public class RepresentationGoo : ModelGoo<Representation>
     public RepresentationGoo(Representation value) : base(value)
     {
     }
-}
 
-public class LocatorGoo : ModelGoo<Locator>
-{
-    public LocatorGoo()
-    {
-    }
-
-    public LocatorGoo(Locator value) : base(value)
-    {
-    }
-
-    public override bool CastTo<Q>(ref Q target)
+    internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Group);
+            object ptr = new GH_String(Value.Url);
             target = (Q)ptr;
             return true;
         }
@@ -488,16 +528,16 @@ public class LocatorGoo : ModelGoo<Locator>
         return false;
     }
 
-    public override bool CastFrom(object source)
+    internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
 
         string str = null;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
         {
-            Value = new Locator
+            Value = new Representation
             {
-                Group = str
+                Url = str
             };
             return true;
         }
@@ -516,7 +556,7 @@ public class PortGoo : ModelGoo<Port>
     {
     }
 
-    public override bool CastTo<Q>(ref Q target)
+    internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
         {
@@ -535,7 +575,7 @@ public class PortGoo : ModelGoo<Port>
         return false;
     }
 
-    public override bool CastFrom(object source)
+    internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
 
@@ -569,7 +609,7 @@ public class QualityGoo : ModelGoo<Quality>
     {
     }
 
-    public override bool CastTo<Q>(ref Q target)
+    internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
@@ -581,7 +621,7 @@ public class QualityGoo : ModelGoo<Quality>
         return false;
     }
 
-    public override bool CastFrom(object source)
+    internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
 
@@ -609,7 +649,7 @@ public class AuthorGoo : ModelGoo<Author>
     {
     }
 
-    public override bool CastTo<Q>(ref Q target)
+    internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
@@ -621,7 +661,7 @@ public class AuthorGoo : ModelGoo<Author>
         return false;
     }
 
-    public override bool CastFrom(object source)
+    internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
         string str;
@@ -647,6 +687,59 @@ public class TypeGoo : ModelGoo<Type>
     public TypeGoo(Type value) : base(value)
     {
     }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (target is PieceGoo piece)
+        {
+            piece.Value = new Piece
+            {
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId
+                {
+                    Name = Value.Name,
+                    Variant = Value.Variant
+                }
+            };
+            return true;
+        }
+
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Name);
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        if (source is PieceGoo piece)
+        {
+            Value = new Type
+            {
+                Name = piece.Value.Type.Name,
+                Variant = piece.Value.Type.Variant
+            };
+            return true;
+        }
+
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Type
+            {
+                Name = str
+            };
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class DiagramPointGoo : ModelGoo<DiagramPoint>
@@ -659,7 +752,7 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
     {
     }
 
-    public override bool CastTo<Q>(ref Q target)
+    internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
         {
@@ -673,7 +766,7 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
         return false;
     }
 
-    public override bool CastFrom(object source)
+    internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
 
@@ -702,34 +795,58 @@ public class PieceGoo : ModelGoo<Piece>
     {
     }
 
-    // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
-    //public override bool CastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        object ptr = new GH_String(Value.Id);
-    //        target = (Q)ptr;
-    //        return true;
-    //    }
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (target is TypeGoo type)
+        {
+            type.Value = new Type
+            {
+                Name = Value.Type.Name,
+                Variant = Value.Type.Variant
+            };
+            return true;
+        }
 
-    //    return false;
-    //}
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Id);
+            target = (Q)ptr;
+            return true;
+        }
 
-    //public override bool CastFrom(object source)
-    //{
-    //    if (source == null) return false;
+        return false;
+    }
 
-    //    string str;
-    //    if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-    //    {
-    //        Value = new Piece
-    //        {
-    //            Id = str
-    //        };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        if (source is TypeGoo type)
+        {
+            Value = new Piece
+            {
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId
+                {
+                    Name = type.Value.Name,
+                    Variant = type.Value.Variant
+                }
+            };
+            return true;
+        }
+
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Piece
+            {
+                Id = str
+            };
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class ConnectionGoo : ModelGoo<Connection>
@@ -795,11 +912,6 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
 public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
-}
-
-public class LocatorParam : ModelParam<LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
 }
 
 public class PortParam : ModelParam<PortGoo, Port>
@@ -883,6 +995,15 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
+            GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.",
+            GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -893,8 +1014,15 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var text = "";
+        var mode = 0;
+        var forbidden = new List<string>();
+        var replace = new List<string>();
         DA.GetData(0, ref text);
-        DA.SetData(0, Semio.Utility.Encode(text));
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, forbidden);
+        DA.GetDataList(3, replace);
+        DA.SetData(0,
+            Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
     }
 }
 
@@ -914,6 +1042,17 @@ public class DecodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
+            GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Replace", "Re",
+            "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Original", "Or",
+            "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -923,9 +1062,16 @@ public class DecodeTextComponent : ScriptingComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var encodedText = "";
-        DA.GetData(0, ref encodedText);
-        DA.SetData(0, Semio.Utility.Decode(encodedText));
+        var encoded = "";
+        var mode = 0;
+        var replace = new List<string>();
+        var original = new List<string>();
+        DA.GetData(0, ref encoded);
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, replace);
+        DA.GetDataList(3, original);
+        DA.SetData(0,
+            Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
     }
 }
 
@@ -959,7 +1105,9 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     {
         pManager.AddParameter(new T(), NameM, ModelM.Code,
             $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
+        pManager.AddTextParameter("Indent", "In?",
+            $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs",
+            GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
 
@@ -983,11 +1131,6 @@ public class
     SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
-}
-
-public class SerializeLocatorComponent : SerializeComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("7AFC411B-57D4-4B36-982C-495E14E7520E");
 }
 
 public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
@@ -1093,11 +1236,6 @@ public class
     public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
 }
 
-public class DeserializeLocatorComponent : DeserializeComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("F3501014-D011-4421-9750-861B6479C83C");
-}
-
 public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
@@ -1152,7 +1290,7 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 public class DrawDiagramComponent : Component
 {
     public DrawDiagramComponent()
-        : base("Draw Diagram", ":Dgm", "Draw the diagram from a design.", "Display")
+        : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display")
     {
     }
 
@@ -1246,10 +1384,44 @@ public class FlattenDesignComponent : Component
     }
 }
 
+public class SortDesignComponent : Component
+{
+    public SortDesignComponent()
+        : base("Sort Design", "⁐Dsn",
+            "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.",
+            "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
+    protected override Bitmap Icon => Resources.design_sort_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to sort.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Sorted Design.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        DA.GetData(0, ref designGoo);
+        var design = designGoo.Value;
+        var sortedDesign = design.DeepClone().Sort();
+        DA.SetData(0, new DesignGoo(sortedDesign));
+    }
+}
+
 public class ConvertUnitComponent : Component
 {
     public ConvertUnitComponent()
-        : base("Convert Unit", "CnvUnt", "Convert a unit.", "Util")
+        : base("Convert Unit", "↦Unt", "Convert a unit.", "Util")
     {
     }
 
@@ -1537,11 +1709,6 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     }
 }
 
-public class LocatorComponent : ModelComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
-}
-
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
@@ -1594,6 +1761,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddTextParameter("Id", "Id",
             "Id of the piece.",
             GH_ParamAccess.item);
+        pManager.AddTextParameter("Description","Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "Na", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Variant", "Vn?",
             "The optional variant of the type of the piece. No variant means the default variant.",
@@ -1604,35 +1772,48 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
             "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
             GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
+            "The optional qualities of the piece.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
     {
         var id = "";
+        var description = "";
         var typeName = "";
         var typeVariant = "";
         var plane = new Rhino.Geometry.Plane();
         var centerGoo = new DiagramPointGoo();
+        var qualitiesGoos = new List<QualityGoo>();
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
-        if (DA.GetData(3, ref typeName))
+        if(DA.GetData(3, ref description))
+            pieceGoo.Value.Description = description;
+        if (DA.GetData(4, ref typeName))
             pieceGoo.Value.Type.Name = typeName;
-        if (DA.GetData(4, ref typeVariant))
+        if (DA.GetData(5, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(5, ref plane))
+        if (DA.GetData(6, ref plane))
             pieceGoo.Value.Plane = plane.Convert();
-        if (DA.GetData(6, ref centerGoo))
+        if (DA.GetData(7, ref centerGoo))
             pieceGoo.Value.Center = centerGoo.Value;
+        if (DA.GetDataList(8, qualitiesGoos))
+            pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
     {
         DA.SetData(2, pieceGoo.Value.Id);
-        DA.SetData(3, pieceGoo.Value.Type.Name);
-        DA.SetData(4, pieceGoo.Value.Type.Variant);
-        DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
+        DA.SetData(3, pieceGoo.Value.Description);
+        DA.SetData(4, pieceGoo.Value.Type.Name);
+        DA.SetData(5, pieceGoo.Value.Type.Variant);
+        DA.SetData(6, (pieceGoo.Value.Plane as Plane)?.Convert());
+        DA.SetData(7, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
+        var qualityGoos = new List<QualityGoo>();
+        foreach (Quality quality in pieceGoo.Value.Qualities)
+            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(8, qualityGoos);
     }
 }
 
@@ -1652,17 +1833,24 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
             "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?",
-            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Tl?",
-            "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Shift", "Sf?",
             "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Raise", "Rs?",
+            "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?",
+            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu?",
+            "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?",
+            "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("X", "X?",
             "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -1670,6 +1858,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Y", "Y?",
             "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
             GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1678,12 +1867,16 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectedPortId = "";
         var connectingPieceId = "";
         var connectingPortId = "";
-        var rotation = 0.0;
-        var tilt = 0.0;
+        var description = "";
         var gap = 0.0;
-        var shift = 0.0;
+        var shift = 0.0; 
+        var raise = 0.0;
+        var rotation = 0.0;
+        var turn = 0.0;
+        var tilt = 0.0;
         var x = 0.0;
         var y = 0.0;
+        var qualitiesGoos = new List<QualityGoo>();
 
         if (DA.GetData(2, ref connectedPieceId))
             connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
@@ -1693,18 +1886,26 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
         if (DA.GetData(5, ref connectingPortId))
             connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(6, ref rotation))
-            connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(7, ref tilt))
-            connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(8, ref gap))
+        if (DA.GetData(6, ref description))
+            connectionGoo.Value.Description = description;
+        if (DA.GetData(7, ref gap))
             connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(9, ref shift))
+        if (DA.GetData(8, ref shift))
             connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(10, ref x))
+        if (DA.GetData(9, ref raise))
+            connectionGoo.Value.Raise = (float)raise;
+        if (DA.GetData(10, ref rotation))
+            connectionGoo.Value.Rotation = (float)rotation;
+        if (DA.GetData(11, ref turn))
+            connectionGoo.Value.Turn = (float)turn;
+        if (DA.GetData(12, ref tilt))
+            connectionGoo.Value.Tilt = (float)tilt;
+        if (DA.GetData(13, ref x))
             connectionGoo.Value.X = (float)x;
-        if (DA.GetData(11, ref y))
+        if (DA.GetData(14, ref y))
             connectionGoo.Value.Y = (float)y;
+        if (DA.GetDataList(15, qualitiesGoos))
+            connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1713,12 +1914,19 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(3, connectionGoo.Value.Connected.Port.Id);
         DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
         DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(6, connectionGoo.Value.Rotation);
-        DA.SetData(7, connectionGoo.Value.Tilt);
-        DA.SetData(8, connectionGoo.Value.Gap);
-        DA.SetData(9, connectionGoo.Value.Shift);
-        DA.SetData(10, connectionGoo.Value.X);
-        DA.SetData(11, connectionGoo.Value.Y);
+        DA.SetData(6, connectionGoo.Value.Description);
+        DA.SetData(7, connectionGoo.Value.Gap);
+        DA.SetData(8, connectionGoo.Value.Shift);
+        DA.SetData(9, connectionGoo.Value.Raise);
+        DA.SetData(10, connectionGoo.Value.Rotation);
+        DA.SetData(11, connectionGoo.Value.Turn);
+        DA.SetData(12, connectionGoo.Value.Tilt);
+        DA.SetData(13, connectionGoo.Value.X);
+        DA.SetData(14, connectionGoo.Value.Y);
+        var qualityGoos = new List<QualityGoo>();
+        foreach (Quality quality in connectionGoo.Value.Qualities)
+            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(15, qualityGoos);
     }
 }
 
@@ -2262,9 +2470,67 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
 
 #endregion
 
+public class CacheRepresentationComponent : Component
+{
+    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep",
+        "Download and cache a remote representation.", "Persistence")
+    {
+    }
+
+    public override Guid ComponentGuid => new("56673DF0-4524-40BC-AB26-37920F71E3E0");
+    protected override Bitmap Icon => Resources.representation_cache_24x24;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.",
+            GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.",
+            GH_ParamAccess.item, false);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.",
+            GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc",
+            "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var url = "";
+        var run = false;
+        DA.GetData(0, ref url);
+        DA.GetData(1, ref run);
+        DA.SetData(1, false);
+        if (!run) return;
+        var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var cachePath = Path.Combine(userPath, ".semio", "cache");
+        if (!Directory.Exists(cachePath))
+            Directory.CreateDirectory(cachePath);
+        var encodedUri = Semio.Utility.Encode(url);
+        var path = Path.Combine(cachePath, encodedUri);
+        if (File.Exists(path))
+        {
+            DA.SetData(0, path);
+            DA.SetData(1, true);
+            return;
+        }
+
+        var http = new HttpClient();
+        var response = http.GetAsync(url).Result;
+        if (!response.IsSuccessStatusCode) return;
+        var content = response.Content.ReadAsByteArrayAsync().Result;
+        File.WriteAllBytes(path, content);
+        DA.SetData(0, path);
+        DA.SetData(1, true);
+    }
+}
+
 public class ClearCacheComponent : Component
 {
-    public ClearCacheComponent() : base("Clear Cache", "-Ca", "Clear the cache of all the remote kits.", "Persistence")
+    public ClearCacheComponent() : base("Clear Cache", "-Cac", "Clear the cache of all the remote kits.", "Persistence")
     {
     }
 
@@ -2276,6 +2542,9 @@ public class ClearCacheComponent : Component
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
+        pManager.AddTextParameter("Uri|Url", "Ur?",
+            "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a representation. If None is provided, it will clear the entire cache.",
+            GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "True to clear the cache.", GH_ParamAccess.item, false);
     }
 
@@ -2287,8 +2556,10 @@ public class ClearCacheComponent : Component
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
+        var ur = "";
         var run = false;
-        DA.GetData(0, ref run);
+        DA.GetData(0, ref ur);
+        DA.GetData(1, ref run);
         DA.SetData(0, false);
         if (!run) return;
 
@@ -2311,8 +2582,18 @@ public class ClearCacheComponent : Component
         var cachePath = Path.Combine(userPath, ".semio", "cache");
         if (Directory.Exists(cachePath))
         {
-            Directory.Delete(cachePath, true);
-            Directory.CreateDirectory(cachePath);
+            if (ur != "")
+            {
+                var encodedUri = Semio.Utility.Encode(ur);
+                var path = Path.Combine(cachePath, encodedUri);
+                if (Directory.Exists(path))
+                    Directory.Delete(path, true);
+            }
+            else
+            {
+                Directory.Delete(cachePath, true);
+                Directory.CreateDirectory(cachePath);
+            }
         }
 
         DA.SetData(0, true);

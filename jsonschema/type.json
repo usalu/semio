@@ -23,29 +23,6 @@
             "title": "Author",
             "type": "object"
         },
-        "Locator": {
-            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
-            "properties": {
-                "group": {
-                    "description": "\ud83d\udc6a The group of the locator.",
-                    "maxLength": 64,
-                    "title": "Group",
-                    "type": "string"
-                },
-                "subgroup": {
-                    "default": "",
-                    "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                    "maxLength": 64,
-                    "title": "Subgroup",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "group"
-            ],
-            "title": "Locator",
-            "type": "object"
-        },
         "Point": {
             "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
             "properties": {
@@ -90,6 +67,21 @@
                     "title": "Description",
                     "type": "string"
                 },
+                "family": {
+                    "default": "",
+                    "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                    "maxLength": 64,
+                    "title": "Family",
+                    "type": "string"
+                },
+                "compatibleFamilies": {
+                    "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Compatiblefamilies",
+                    "type": "array"
+                },
                 "point": {
                     "$ref": "#/$defs/Point",
                     "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
@@ -98,12 +90,18 @@
                     "$ref": "#/$defs/Vector",
                     "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                 },
-                "locators": {
-                    "description": "\ud83d\uddfa\ufe0f The locators of the port.",
+                "t": {
+                    "default": 0.0,
+                    "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+                    "title": "T",
+                    "type": "number"
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the port.",
                     "items": {
-                        "$ref": "#/$defs/Locator"
+                        "$ref": "#/$defs/Quality"
                     },
-                    "title": "Locators",
+                    "title": "Qualities",
                     "type": "array"
                 }
             },
@@ -154,16 +152,23 @@
         "Representation": {
             "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
+                "url": {
+                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
+                    "maxLength": 2048,
+                    "title": "Url",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "mime": {
                     "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
                     "maxLength": 64,
                     "title": "Mime",
-                    "type": "string"
-                },
-                "lod": {
-                    "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.",
-                    "maxLength": 64,
-                    "title": "Lod",
                     "type": "string"
                 },
                 "tags": {
@@ -174,17 +179,18 @@
                     "title": "Tags",
                     "type": "array"
                 },
-                "url": {
-                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 2048,
-                    "title": "Url",
-                    "type": "string"
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the representation.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
+                    "type": "array"
                 }
             },
             "required": [
-                "mime",
-                "lod",
-                "url"
+                "url",
+                "mime"
             ],
             "title": "Representation",
             "type": "object"
@@ -260,16 +266,16 @@
             "title": "Unit",
             "type": "string"
         },
-        "createdAt": {
+        "created": {
             "description": "\ud83d\udd52 The creation date of the type.",
             "format": "date-time",
-            "title": "Createdat",
+            "title": "Created",
             "type": "string"
         },
-        "lastUpdateAt": {
+        "updated": {
             "description": "\ud83d\udd52 The last update date of the type.",
             "format": "date-time",
-            "title": "Lastupdateat",
+            "title": "Updated",
             "type": "string"
         },
         "representations": {
@@ -286,18 +292,18 @@
             "title": "Ports",
             "type": "array"
         },
-        "qualities": {
-            "items": {
-                "$ref": "#/$defs/Quality"
-            },
-            "title": "Qualities",
-            "type": "array"
-        },
         "authors": {
             "items": {
                 "$ref": "#/$defs/Author"
             },
             "title": "Authors",
+            "type": "array"
+        },
+        "qualities": {
+            "items": {
+                "$ref": "#/$defs/Quality"
+            },
+            "title": "Qualities",
             "type": "array"
         }
     },

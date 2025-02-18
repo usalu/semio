@@ -3,7 +3,7 @@
     "info": {
         "title": "semio REST API",
         "summary": "This is the local rest API of the semio engine.",
-        "version": "4.1.0"
+        "version": "4.3.0-beta"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -232,10 +232,10 @@
                 }
             }
         },
-        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}": {
+        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
             "put": {
                 "summary": "Put Design",
-                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__put",
+                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__put",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -248,13 +248,13 @@
                         }
                     },
                     {
-                        "name": "encodedDesignNameAndVariant",
+                        "name": "encodedDesignNameAndVariantAndView",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-                            "title": "Encodeddesignnameandvariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
                         }
                     }
                 ],
@@ -291,7 +291,7 @@
             },
             "delete": {
                 "summary": "Delete Design",
-                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__delete",
+                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__delete",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -304,13 +304,13 @@
                         }
                     },
                     {
-                        "name": "encodedDesignNameAndVariant",
+                        "name": "encodedDesignNameAndVariantAndView",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-                            "title": "Encodeddesignnameandvariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
                         }
                     }
                 ],
@@ -456,21 +456,12 @@
             },
             "ConnectionContext": {
                 "properties": {
-                    "rotation": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Rotation",
-                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                        "default": 0
-                    },
-                    "tilt": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-                        "default": 0
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
                     },
                     "gap": {
                         "type": "number",
@@ -481,7 +472,37 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "raise_": {
+                        "type": "number",
+                        "title": "Raise",
+                        "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "x": {
@@ -515,21 +536,12 @@
             },
             "ConnectionInput": {
                 "properties": {
-                    "rotation": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Rotation",
-                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                        "default": 0
-                    },
-                    "tilt": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-                        "default": 0
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
                     },
                     "gap": {
                         "type": "number",
@@ -540,7 +552,37 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "raise_": {
+                        "type": "number",
+                        "title": "Raise",
+                        "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "x": {
@@ -574,21 +616,12 @@
             },
             "Connection": {
                 "properties": {
-                    "rotation": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Rotation",
-                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                        "default": 0
-                    },
-                    "tilt": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-                        "default": 0
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
                     },
                     "gap": {
                         "type": "number",
@@ -599,7 +632,37 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "raise_": {
+                        "type": "number",
+                        "title": "Raise",
+                        "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "x": {
@@ -633,21 +696,12 @@
             },
             "ConnectionPrediction": {
                 "properties": {
-                    "rotation": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Rotation",
-                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                        "default": 0
-                    },
-                    "tilt": {
-                        "type": "number",
-                        "exclusiveMaximum": 360.0,
-                        "minimum": 0.0,
-                        "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-                        "default": 0
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
                     },
                     "gap": {
                         "type": "number",
@@ -658,7 +712,37 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "raise_": {
+                        "type": "number",
+                        "title": "Raise",
+                        "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "x": {
@@ -819,19 +903,19 @@
                         "type": "array",
                         "title": "Connections"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/QualityInput"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/AuthorInput"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -891,16 +975,16 @@
                         "description": "\ud83d\udccf The unit of the design.",
                         "default": ""
                     },
-                    "createdAt": {
+                    "created": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Createdat",
+                        "title": "Created",
                         "description": "\ud83d\udd52 The creation date of the design."
                     },
-                    "lastUpdateAt": {
+                    "updated": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Lastupdateat",
+                        "title": "Updated",
                         "description": "\ud83d\udd52 The last update date of the design."
                     },
                     "pieces": {
@@ -917,19 +1001,19 @@
                         "type": "array",
                         "title": "Connections"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/Quality"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/Author"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -966,6 +1050,27 @@
                 "type": "object",
                 "title": "DesignPrediction",
                 "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
+            "DiagramPointContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "DiagramPointContext",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "DiagramPointInput": {
                 "properties": {
@@ -1101,6 +1206,14 @@
                         "type": "array",
                         "title": "Designs",
                         "description": "\ud83c\udfd9\ufe0f The designs of the kit."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the kit."
                     }
                 },
                 "type": "object",
@@ -1180,16 +1293,16 @@
                         "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
                         "default": ""
                     },
-                    "createdAt": {
+                    "created": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Createdat",
+                        "title": "Created",
                         "description": "\ud83d\udd52 The creation date of the kit."
                     },
-                    "lastUpdateAt": {
+                    "updated": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Lastupdateat",
+                        "title": "Updated",
                         "description": "\ud83d\udd52 The last update date of the kit."
                     },
                     "types": {
@@ -1207,6 +1320,14 @@
                         "type": "array",
                         "title": "Designs",
                         "description": "\ud83c\udfd9\ufe0f The designs of the kit."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the kit."
                     }
                 },
                 "type": "object",
@@ -1217,75 +1338,6 @@
                 "title": "Kit",
                 "description": "\u2197\ufe0f The output of a kit."
             },
-            "LocatorContext": {
-                "properties": {
-                    "group": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Group",
-                        "description": "\ud83d\udc6a The group of the locator."
-                    },
-                    "subgroup": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Subgroup",
-                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                        "default": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "group"
-                ],
-                "title": "LocatorContext",
-                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
-            },
-            "LocatorInput": {
-                "properties": {
-                    "group": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Group",
-                        "description": "\ud83d\udc6a The group of the locator."
-                    },
-                    "subgroup": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Subgroup",
-                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                        "default": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "group"
-                ],
-                "title": "LocatorInput",
-                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
-            },
-            "Locator": {
-                "properties": {
-                    "group": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Group",
-                        "description": "\ud83d\udc6a The group of the locator."
-                    },
-                    "subgroup": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Subgroup",
-                        "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                        "default": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "group"
-                ],
-                "title": "Locator",
-                "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports."
-            },
             "PieceContext": {
                 "properties": {
                     "id_": {
@@ -1293,6 +1345,13 @@
                         "maxLength": 128,
                         "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
                     },
                     "type": {
@@ -1309,6 +1368,25 @@
                             }
                         ],
                         "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DiagramPointContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -1341,6 +1419,13 @@
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                        "default": ""
+                    },
                     "type": {
                         "$ref": "#/components/schemas/TypeId",
                         "description": "\ud83e\udde9 The type of the piece."
@@ -1366,6 +1451,14 @@
                             }
                         ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -1382,6 +1475,13 @@
                         "maxLength": 128,
                         "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
                     },
                     "type": {
@@ -1409,6 +1509,14 @@
                             }
                         ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -1425,6 +1533,13 @@
                         "maxLength": 128,
                         "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
                     },
                     "type": {
@@ -1608,13 +1723,28 @@
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
-                    "locators": {
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
                         "items": {
-                            "$ref": "#/components/schemas/LocatorContext"
+                            "type": "string"
                         },
                         "type": "array",
-                        "title": "Locators",
-                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the port."
                     }
                 },
                 "type": "object",
@@ -1651,6 +1781,27 @@
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
+                    },
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+                        "default": 0.0
+                    },
                     "point": {
                         "$ref": "#/components/schemas/PointInput",
                         "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
@@ -1659,13 +1810,13 @@
                         "$ref": "#/components/schemas/VectorInput",
                         "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                     },
-                    "locators": {
+                    "qualities": {
                         "items": {
-                            "$ref": "#/components/schemas/LocatorInput"
+                            "$ref": "#/components/schemas/QualityInput"
                         },
                         "type": "array",
-                        "title": "Locators",
-                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the port."
                     }
                 },
                 "type": "object",
@@ -1692,6 +1843,21 @@
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
+                    },
                     "point": {
                         "$ref": "#/components/schemas/Point",
                         "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
@@ -1700,13 +1866,19 @@
                         "$ref": "#/components/schemas/Vector",
                         "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
                     },
-                    "locators": {
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+                        "default": 0.0
+                    },
+                    "qualities": {
                         "items": {
-                            "$ref": "#/components/schemas/Locator"
+                            "$ref": "#/components/schemas/Quality"
                         },
                         "type": "array",
-                        "title": "Locators",
-                        "description": "\ud83d\uddfa\ufe0f The locators of the port."
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the port."
                     }
                 },
                 "type": "object",
@@ -1823,17 +1995,24 @@
             },
             "RepresentationInput": {
                 "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                        "default": ""
+                    },
                     "mime": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Mime",
                         "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
-                    },
-                    "lod": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Lod",
-                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
                     },
                     "tags": {
                         "items": {
@@ -1843,35 +2022,43 @@
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
                     },
-                    "url": {
-                        "type": "string",
-                        "maxLength": 2048,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "mime",
-                    "lod",
-                    "url"
+                    "url",
+                    "mime"
                 ],
                 "title": "RepresentationInput",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
             "Representation": {
                 "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                        "default": ""
+                    },
                     "mime": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Mime",
                         "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
-                    },
-                    "lod": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Lod",
-                        "description": "\ud83d\udd0d The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod."
                     },
                     "tags": {
                         "items": {
@@ -1881,18 +2068,19 @@
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
                     },
-                    "url": {
-                        "type": "string",
-                        "maxLength": 2048,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the representation."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "mime",
-                    "lod",
-                    "url"
+                    "url",
+                    "mime"
                 ],
                 "title": "Representation",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
@@ -2096,19 +2284,19 @@
                         "type": "array",
                         "title": "Ports"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/QualityInput"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/AuthorInput"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -2161,16 +2349,16 @@
                         "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
                     },
-                    "createdAt": {
+                    "created": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Createdat",
+                        "title": "Created",
                         "description": "\ud83d\udd52 The creation date of the type."
                     },
-                    "lastUpdateAt": {
+                    "updated": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Lastupdateat",
+                        "title": "Updated",
                         "description": "\ud83d\udd52 The last update date of the type."
                     },
                     "representations": {
@@ -2187,19 +2375,19 @@
                         "type": "array",
                         "title": "Ports"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/Quality"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/Author"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",

@@ -1,15 +1,37 @@
-## sketchpad
+# TODO
 
-A user interface for creating designs.
+1. Investigate why imported component from `@semio/core` doesn't work
 
-## Install
+```
+Uncaught SyntaxError: The requested module '/@fs/C:/git/semio/javascript/node_modules/use-sync-external-store/shim/with-selector.js?v=928a5be9' does not provide an export named 'default' (at traditional.mjs?v=928a5be9:2:8)
+```
 
-`npm install --legacy-peer-deps`
+Seems to be related to xyflow and zustand:
 
-> NOTE: The --legacy-peer-deps is necissary because react-digraph has a dependency on react 16. But according to this [issue](https://github.com/uber/react-digraph/issues/336) it works even on react 18. So far they seemed right.
+- https://github.com/xyflow/xyflow/issues/4893
+- https://github.com/Uniswap/web3-react/issues/379
+- https://github.com/pmndrs/zustand/pull/550
 
-## Building from source
+1. Setup `vite.main.config.mts`, `vite.main.config.mts` and `vite.renderer.config.mts` in `forge.config.ts`
 
-### Windows
+# Compatibility
 
-You need to copy semio.ico to build/semio.ico in order for the electron builder to link the icon.
+- Mac OS @electron/notarize
+
+```ts
+import { defineConfig } from "vite";
+import baseConfig from "@semio/core/vite.config";
+
+export default defineConfig({
+  ...baseConfig,
+});
+```
+
+See: https://stackoverflow.com/questions/75132236/how-to-share-vite-config-in-monorepo
+https://github.com/vercel/turborepo/discussions/3323
+
+- https://www.electronforge.io/config/configuration with https://github.com/electron/rebuild
+
+# Useful links
+
+- https://github.com/stephenhandley/electron-forge-vite-typescript/blob/typescript-react/forge.config.js

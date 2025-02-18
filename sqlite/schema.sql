@@ -1,32 +1,21 @@
 CREATE TABLE semio (
 	release VARCHAR NOT NULL, 
 	engine VARCHAR NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
 	PRIMARY KEY (release)
 );
 CREATE TABLE plane (
 	id INTEGER NOT NULL, 
-	"originX" FLOAT NOT NULL, 
-	"originY" FLOAT NOT NULL, 
-	"originZ" FLOAT NOT NULL, 
-	"xAxisX" FLOAT NOT NULL, 
-	"xAxisY" FLOAT NOT NULL, 
-	"xAxisZ" FLOAT NOT NULL, 
-	"yAxisX" FLOAT NOT NULL, 
-	"yAxisY" FLOAT NOT NULL, 
-	"yAxisZ" FLOAT NOT NULL, 
-	PRIMARY KEY (id), 
-	CONSTRAINT "planeSetOrNotSet" CHECK (
-            (
-                (originX IS NULL AND originY IS NULL AND originZ IS NULL AND
-                 xAxisX IS NULL AND xAxisY IS NULL AND xAxisZ IS NULL AND
-                 yAxisX IS NULL AND yAxisY IS NULL AND yAxisZ IS NULL)
-            OR
-                (originX IS NOT NULL AND originY IS NOT NULL AND originZ IS NOT NULL AND
-                 xAxisX IS NOT NULL AND xAxisY IS NOT NULL AND xAxisZ IS NOT NULL AND
-                 yAxisX IS NOT NULL AND yAxisY IS NOT NULL AND yAxisZ IS NOT NULL)
-            )
-            )
+	origin_x FLOAT, 
+	origin_y FLOAT, 
+	origin_z FLOAT, 
+	x_axis_x FLOAT, 
+	x_axis_y FLOAT, 
+	x_axis_z FLOAT, 
+	y_axis_x FLOAT, 
+	y_axis_y FLOAT, 
+	y_axis_z FLOAT, 
+	PRIMARY KEY (id)
 );
 CREATE TABLE kit (
 	uri VARCHAR(4096) NOT NULL, 
@@ -39,8 +28,8 @@ CREATE TABLE kit (
 	remote VARCHAR(2048) NOT NULL, 
 	homepage VARCHAR(2048) NOT NULL, 
 	license VARCHAR(2048) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	UNIQUE (uri)
@@ -52,13 +41,13 @@ CREATE TABLE type (
 	image VARCHAR(2048) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
-	"kitId" INTEGER, 
+	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	CONSTRAINT "Unique name and variant" UNIQUE (name, variant, "kitId"), 
-	FOREIGN KEY("kitId") REFERENCES kit (id)
+	CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), 
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE design (
 	name VARCHAR(64) NOT NULL, 
@@ -68,38 +57,105 @@ CREATE TABLE design (
 	variant VARCHAR(64) NOT NULL, 
 	"view" VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
-	"kitId" INTEGER, 
+	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	UNIQUE (name, variant, "kitId"), 
-	FOREIGN KEY("kitId") REFERENCES kit (id)
+	UNIQUE (name, variant, "view", kit_id), 
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE representation (
-	mime VARCHAR(64) NOT NULL, 
-	lod VARCHAR(64) NOT NULL, 
 	url VARCHAR(2048) NOT NULL, 
+	description VARCHAR(4096) NOT NULL, 
+	mime VARCHAR(64) NOT NULL, 
 	id INTEGER NOT NULL, 
-	"encodedTags" VARCHAR(1039) NOT NULL, 
-	"typeId" INTEGER, 
+	type_id INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY("typeId") REFERENCES type (id)
+	FOREIGN KEY(type_id) REFERENCES type (id)
 );
 CREATE TABLE port (
 	description VARCHAR(4096) NOT NULL, 
+	family VARCHAR(64) NOT NULL, 
+	t FLOAT NOT NULL, 
 	id INTEGER NOT NULL, 
-	"localId" VARCHAR(128), 
-	"pointX" FLOAT NOT NULL, 
-	"pointY" FLOAT NOT NULL, 
-	"pointZ" FLOAT NOT NULL, 
-	"directionX" FLOAT NOT NULL, 
-	"directionY" FLOAT NOT NULL, 
-	"directionZ" FLOAT NOT NULL, 
-	"typeId" INTEGER, 
+	local_id VARCHAR(128), 
+	point_x VARCHAR(128), 
+	point_y FLOAT, 
+	point_z FLOAT, 
+	direction_x FLOAT, 
+	direction_y FLOAT, 
+	direction_z FLOAT, 
+	type_id INTEGER, 
 	PRIMARY KEY (id), 
-	CONSTRAINT "Unique localId" UNIQUE ("localId", "typeId"), 
-	FOREIGN KEY("typeId") REFERENCES type (id)
+	CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), 
+	FOREIGN KEY(type_id) REFERENCES type (id)
+);
+CREATE TABLE author (
+	name VARCHAR(64) NOT NULL, 
+	email VARCHAR(128) NOT NULL, 
+	rank INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	type_id INTEGER, 
+	design_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(type_id) REFERENCES type (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id)
+);
+CREATE TABLE piece (
+	description VARCHAR(4096) NOT NULL, 
+	id INTEGER NOT NULL, 
+	local_id VARCHAR(128), 
+	type_id INTEGER, 
+	plane_id INTEGER, 
+	"centerX" FLOAT, 
+	"centerY" FLOAT, 
+	design_id INTEGER, 
+	PRIMARY KEY (id), 
+	UNIQUE (local_id, design_id), 
+	FOREIGN KEY(type_id) REFERENCES type (id), 
+	FOREIGN KEY(plane_id) REFERENCES plane (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id)
+);
+CREATE TABLE tag (
+	name VARCHAR(64) NOT NULL, 
+	"order" INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	representation_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(representation_id) REFERENCES representation (id)
+);
+CREATE TABLE compatible_family (
+	name VARCHAR(64) NOT NULL, 
+	"order" INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	port_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(port_id) REFERENCES port (id)
+);
+CREATE TABLE connection (
+	description VARCHAR(4096) NOT NULL, 
+	gap FLOAT NOT NULL, 
+	shift FLOAT NOT NULL, 
+	raise_ FLOAT NOT NULL, 
+	rotation FLOAT NOT NULL, 
+	turn FLOAT NOT NULL, 
+	tilt FLOAT NOT NULL, 
+	x FLOAT NOT NULL, 
+	y FLOAT NOT NULL, 
+	id INTEGER NOT NULL, 
+	connected_piece_id INTEGER, 
+	connected_port_id INTEGER, 
+	connecting_piece_id INTEGER, 
+	connecting_port_id INTEGER, 
+	design_id INTEGER, 
+	PRIMARY KEY (id), 
+	CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), 
+	FOREIGN KEY(connected_piece_id) REFERENCES piece (id), 
+	FOREIGN KEY(connected_port_id) REFERENCES port (id), 
+	FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), 
+	FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id)
 );
 CREATE TABLE quality (
 	name VARCHAR(64) NOT NULL, 
@@ -107,61 +163,19 @@ CREATE TABLE quality (
 	unit VARCHAR(64) NOT NULL, 
 	definition VARCHAR(4096) NOT NULL, 
 	id INTEGER NOT NULL, 
-	"typeId" INTEGER, 
-	"designId" INTEGER, 
+	representation_id INTEGER, 
+	port_id INTEGER, 
+	type_id INTEGER, 
+	piece_id INTEGER, 
+	connection_id INTEGER, 
+	design_id INTEGER, 
+	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY("typeId") REFERENCES type (id), 
-	FOREIGN KEY("designId") REFERENCES design (id)
-);
-CREATE TABLE author (
-	name VARCHAR(64) NOT NULL, 
-	email VARCHAR(128) NOT NULL, 
-	rank INTEGER NOT NULL, 
-	id INTEGER NOT NULL, 
-	"typeId" INTEGER, 
-	"designId" INTEGER, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY("typeId") REFERENCES type (id), 
-	FOREIGN KEY("designId") REFERENCES design (id)
-);
-CREATE TABLE piece (
-	id INTEGER NOT NULL, 
-	"localId" VARCHAR(128), 
-	"typeId" INTEGER, 
-	"planeId" INTEGER, 
-	"centerX" FLOAT, 
-	"centerY" FLOAT, 
-	"designId" INTEGER, 
-	PRIMARY KEY (id), 
-	UNIQUE ("localId", "designId"), 
-	FOREIGN KEY("typeId") REFERENCES type (id), 
-	FOREIGN KEY("planeId") REFERENCES plane (id), 
-	FOREIGN KEY("designId") REFERENCES design (id)
-);
-CREATE TABLE locator (
-	subgroup VARCHAR(64) NOT NULL, 
-	"groupName" VARCHAR(64) NOT NULL, 
-	"portId" INTEGER NOT NULL, 
-	PRIMARY KEY ("groupName", "portId"), 
-	FOREIGN KEY("portId") REFERENCES port (id)
-);
-CREATE TABLE connection (
-	rotation FLOAT NOT NULL, 
-	tilt FLOAT NOT NULL, 
-	gap FLOAT NOT NULL, 
-	shift FLOAT NOT NULL, 
-	x FLOAT NOT NULL, 
-	y FLOAT NOT NULL, 
-	"connectedPieceId" INTEGER NOT NULL, 
-	"connectedPortId" INTEGER NOT NULL, 
-	"connectingPieceId" INTEGER NOT NULL, 
-	"connectingPortId" INTEGER NOT NULL, 
-	"designId" INTEGER NOT NULL, 
-	PRIMARY KEY ("connectedPieceId", "connectedPortId", "connectingPieceId", "connectingPortId", "designId"), 
-	CONSTRAINT "noReflexiveConnection" CHECK (connectingPieceId != connectedPieceId), 
-	FOREIGN KEY("connectedPieceId") REFERENCES piece (id), 
-	FOREIGN KEY("connectedPortId") REFERENCES port (id), 
-	FOREIGN KEY("connectingPieceId") REFERENCES piece (id), 
-	FOREIGN KEY("connectingPortId") REFERENCES port (id), 
-	FOREIGN KEY("designId") REFERENCES design (id)
+	FOREIGN KEY(representation_id) REFERENCES representation (id), 
+	FOREIGN KEY(port_id) REFERENCES port (id), 
+	FOREIGN KEY(type_id) REFERENCES type (id), 
+	FOREIGN KEY(piece_id) REFERENCES piece (id), 
+	FOREIGN KEY(connection_id) REFERENCES connection (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id), 
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );

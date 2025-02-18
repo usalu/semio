@@ -11,7 +11,9 @@ $images = @(
 foreach ($image in $images) {
     & magick $image.source -define icon:auto-resize="256,128,96,64,48,32,16" "$($image.target).ico"
     & magick $image.source -define icon:auto-resize="32" "$($image.target)_32x32.ico"
-    ResizeImage -sourcePath $image.source -targetPathBase $image.target -targetResolutions $resolutions
+    $sourcePath = Join-Path -Path $PSScriptRoot -ChildPath $image.source
+    $targetPathBase = Join-Path -Path $PSScriptRoot -ChildPath $image.target
+    ResizeImage -sourcePath $sourcePath -targetPathBase $targetPathBase -targetResolutions $resolutions
 }
 
 #copy emblem_dark_round* to ..\icons\semio*
