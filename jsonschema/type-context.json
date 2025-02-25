@@ -40,11 +40,20 @@
                     "title": "Description",
                     "type": "string"
                 },
-                "t": {
-                    "default": 0.0,
-                    "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
-                    "title": "T",
-                    "type": "number"
+                "family": {
+                    "default": "",
+                    "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                    "maxLength": 64,
+                    "title": "Family",
+                    "type": "string"
+                },
+                "compatibleFamilies": {
+                    "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Compatiblefamilies",
+                    "type": "array"
                 },
                 "locators": {
                     "description": "\ud83d\uddfa\ufe0f The locators of the port.",

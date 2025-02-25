@@ -712,7 +712,7 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
     representationPk: typing.Optional[int] = sqlmodel.Field(
         # alias="representationId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "representationId",
+            "representation_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("representation.id"),
         ),
@@ -825,7 +825,7 @@ class Representation(
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "typeId",
+            "type_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("type.id"),
         ),
@@ -931,7 +931,7 @@ class Locator(LocatorSubgroupField, Table, table=True):
     __tablename__ = "locator"
     group: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            "groupName",  # group is a reserved word in SQL
+            "group_name",  # group is a reserved word in SQL
             sqlalchemy.String(NAME_LENGTH_LIMIT),
             primary_key=True,
         ),
@@ -940,7 +940,7 @@ class Locator(LocatorSubgroupField, Table, table=True):
     portPk: typing.Optional[int] = sqlmodel.Field(
         # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "portId",
+            "port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
@@ -1238,40 +1238,93 @@ class Plane(Table, table=True):
         exclude=True,
     )
     """🔑 The primary key of the plane in the database."""
-    originX: float = sqlmodel.Field(exclude=True)
+    originX: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "origin_x",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the origin point of the plane."""
-    originY: float = sqlmodel.Field(exclude=True)
+    originY: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "origin_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the origin point of the plane."""
-    originZ: float = sqlmodel.Field(exclude=True)
+    originZ: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "origin_z",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The z-coordinate of the origin point of the plane."""
-    xAxisX: float = sqlmodel.Field(exclude=True)
+    xAxisX: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "x_axis_x",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the x-axis vector of the plane."""
-    xAxisY: float = sqlmodel.Field(exclude=True)
+    xAxisY: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "x_axis_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the x-axis vector of the plane."""
-    xAxisZ: float = sqlmodel.Field(exclude=True)
+    xAxisZ: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "x_axis_z",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The z-coordinate of the x-axis vector of the plane."""
-    yAxisX: float = sqlmodel.Field(exclude=True)
+    yAxisX: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "y_axis_x",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the y-axis vector of the plane."""
-    yAxisY: float = sqlmodel.Field(exclude=True)
+    yAxisY: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "y_axis_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the y-axis vector of the plane."""
-    yAxisZ: float = sqlmodel.Field(exclude=True)
-    """🎚️ The z-coordinate of the y-axis vector of the plane."""
+    yAxisZ: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "y_axis_z",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
     """👪 The parent piece of the plane."""
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
             (
-                (originX IS NULL AND originY IS NULL AND originZ IS NULL AND
-                 xAxisX IS NULL AND xAxisY IS NULL AND xAxisZ IS NULL AND
-                 yAxisX IS NULL AND yAxisY IS NULL AND yAxisZ IS NULL)
+                (origin_x IS NULL AND origin_y IS NULL AND origin_z IS NULL AND
+                 x_axis_x IS NULL AND x_axis_y IS NULL AND x_axis_z IS NULL AND
+                 y_axis_x IS NULL AND y_axis_y IS NULL AND y_axis_z IS NULL)
             OR
-                (originX IS NOT NULL AND originY IS NOT NULL AND originZ IS NOT NULL AND
-                 xAxisX IS NOT NULL AND xAxisY IS NOT NULL AND xAxisZ IS NOT NULL AND
-                 yAxisX IS NOT NULL AND yAxisY IS NOT NULL AND yAxisZ IS NOT NULL)
+                (origin_x IS NOT NULL AND origin_y IS NOT NULL AND origin_z IS NOT NULL AND
+                 x_axis_x IS NOT NULL AND x_axis_y IS NOT NULL AND x_axis_z IS NOT NULL AND
+                 y_axis_x IS NOT NULL AND y_axis_y IS NOT NULL AND y_axis_z IS NOT NULL)
             )
             """,
-            name="planeSetOrNotSet",
+            name="plane set or not set",
         ),
     )
 
@@ -1607,7 +1660,7 @@ class CompatibleFamily(CompatibleFamilyNameField, Table, table=True):
     portPk: typing.Optional[int] = sqlmodel.Field(
         # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "portId",
+            "port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
         ),
@@ -1804,7 +1857,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     id_: str = sqlmodel.Field(
         # alias="id",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "localId",
+            "local_id",
             sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
@@ -1814,19 +1867,54 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         back_populates="port", cascade_delete=True
     )
     """✅ The compatible families of the port."""
-    pointX: float = sqlmodel.Field(exclude=True)
+    pointX: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "point_x",
+            sqlalchemy.String(ID_LENGTH_LIMIT),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the connection point of the port."""
-    pointY: float = sqlmodel.Field(exclude=True)
+    pointY: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "point_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the connection point of the port."""
-    pointZ: float = sqlmodel.Field(exclude=True)
+    pointZ: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "point_z",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The z-coordinate of the connection point of the port."""
-    directionX: float = sqlmodel.Field(exclude=True)
+    directionX: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "direction_x",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the direction of the port."""
-    directionY: float = sqlmodel.Field(exclude=True)
+    directionY: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "direction_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the direction of the port."""
-    directionZ: float = sqlmodel.Field(exclude=True)
+    directionZ: float = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "direction_z",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The z-coordinate of the direction of the port."""
-    """👪 The parent type of the port."""
     locators: list[Locator] = sqlmodel.Relationship(
         back_populates="port", cascade_delete=True
     )
@@ -1834,7 +1922,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "typeId",
+            "type_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("type.id"),
         ),
@@ -1843,6 +1931,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     )
     """🔑 The foreign primary key of the parent type of the port in the database."""
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
+    """👪 The parent type of the port."""
     connecteds: list["Connection"] = sqlmodel.Relationship(
         back_populates="connectedPort",
         sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"},
@@ -1853,7 +1942,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     )
 
     __table_args__ = (
-        sqlalchemy.UniqueConstraint("localId", "typeId", name="Unique localId"),
+        sqlalchemy.UniqueConstraint("local_id", "type_id", name="Unique local_id"),
     )
 
     @property
@@ -2033,7 +2122,7 @@ class Quality(
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "typeId",
+            "type_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("type.id"),
         ),
@@ -2046,7 +2135,7 @@ class Quality(
     designPk: typing.Optional[int] = sqlmodel.Field(
         # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "designId",
+            "design_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("design.id"),
         ),
@@ -2146,7 +2235,7 @@ class Author(
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "typeId",
+            "type_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("type.id"),
         ),
@@ -2159,7 +2248,7 @@ class Author(
     designPk: typing.Optional[int] = sqlmodel.Field(
         # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "designId",
+            "design_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("design.id"),
         ),
@@ -2386,7 +2475,7 @@ class Type(
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
-            "kitId",
+            "kit_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("kit.id"),
         ),
@@ -2400,7 +2489,7 @@ class Type(
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
-            "name", "variant", "kitId", name="Unique name and variant"
+            "name", "variant", "kit_id", name="Unique name and variant"
         ),
     )
 
@@ -2610,14 +2699,14 @@ class Piece(TableEntity, table=True):
     """🔑 The primary key of the piece in the database."""
     id_: str = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            "localId",
+            "local_id",
             sqlalchemy.String(ID_LENGTH_LIMIT),
         ),
         default="",
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            "typeId",
+            "type_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("type.id"),
         ),
@@ -2629,7 +2718,7 @@ class Piece(TableEntity, table=True):
     """🆔 The id of the piece within the design."""
     planePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            "planeId",
+            "plane_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("plane.id"),
             nullable=True,
@@ -2646,7 +2735,7 @@ class Piece(TableEntity, table=True):
     """🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
     designPk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
-            "designId",
+            "design_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("design.id"),
         ),
@@ -2667,7 +2756,7 @@ class Piece(TableEntity, table=True):
     )
     """🖇️ The connections where the piece is the connecting from another piece."""
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("localId", "designId"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id"),)
 
     @property
     def center(self) -> typing.Optional[DiagramPoint]:
@@ -2999,7 +3088,7 @@ class Connection(
     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedPieceId",
         sa_column=sqlmodel.Column(
-            "connectedPieceId",
+            "connected_piece_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("piece.id"),
             primary_key=True,
@@ -3017,7 +3106,7 @@ class Connection(
     connectedPortPk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedPortId",
         sa_column=sqlmodel.Column(
-            "connectedPortId",
+            "connected_port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
@@ -3035,7 +3124,7 @@ class Connection(
     connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectingPieceId",
         sa_column=sqlmodel.Column(
-            "connectingPieceId",
+            "connecting_piece_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("piece.id"),
             primary_key=True,
@@ -3053,7 +3142,7 @@ class Connection(
     connectingPortPk: typing.Optional[int] = sqlmodel.Field(
         alias="connectingPortId",
         sa_column=sqlmodel.Column(
-            "connectingPortId",
+            "connecting_port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
             primary_key=True,
@@ -3071,7 +3160,7 @@ class Connection(
     designPk: typing.Optional[int] = sqlmodel.Field(
         alias="designId",
         sa_column=sqlmodel.Column(
-            "designId",
+            "design_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("design.id"),
             primary_key=True,
@@ -3082,8 +3171,8 @@ class Connection(
     design: "Design" = sqlmodel.Relationship(back_populates="connections")
     __table_args__ = (
         sqlalchemy.CheckConstraint(
-            "connectingPieceId != connectedPieceId",
-            name="noReflexiveConnection",
+            "connecting_piece_id != connected_piece_id",
+            name="no reflexive connection",
         ),
     )
 
@@ -3418,7 +3507,7 @@ class Design(
     kitPk: typing.Optional[int] = sqlmodel.Field(
         alias="kitId",
         sa_column=sqlmodel.Column(
-            "kitId",
+            "kit_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("kit.id"),
         ),
@@ -3427,7 +3516,7 @@ class Design(
     )
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kitId"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id"),)
 
     @property
     def authors(self) -> list[Author]:

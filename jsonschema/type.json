@@ -90,6 +90,21 @@
                     "title": "Description",
                     "type": "string"
                 },
+                "family": {
+                    "default": "",
+                    "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                    "maxLength": 64,
+                    "title": "Family",
+                    "type": "string"
+                },
+                "compatibleFamilies": {
+                    "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Compatiblefamilies",
+                    "type": "array"
+                },
                 "point": {
                     "$ref": "#/$defs/Point",
                     "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."

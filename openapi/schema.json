@@ -232,10 +232,10 @@
                 }
             }
         },
-        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariant}": {
+        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
             "put": {
                 "summary": "Put Design",
-                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__put",
+                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__put",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -248,13 +248,13 @@
                         }
                     },
                     {
-                        "name": "encodedDesignNameAndVariant",
+                        "name": "encodedDesignNameAndVariantAndView",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-                            "title": "Encodeddesignnameandvariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
                         }
                     }
                 ],
@@ -291,7 +291,7 @@
             },
             "delete": {
                 "summary": "Delete Design",
-                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariant__delete",
+                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__delete",
                 "parameters": [
                     {
                         "name": "encodedKitUri",
@@ -304,13 +304,13 @@
                         }
                     },
                     {
-                        "name": "encodedDesignNameAndVariant",
+                        "name": "encodedDesignNameAndVariantAndView",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-                            "title": "Encodeddesignnameandvariant"
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
                         }
                     }
                 ],
@@ -1608,11 +1608,20 @@
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
-                    "t": {
-                        "type": "number",
-                        "title": "T",
-                        "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
-                        "default": 0.0
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
                     },
                     "locators": {
                         "items": {
@@ -1656,6 +1665,21 @@
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
+                    },
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
                     },
                     "t": {
                         "type": "number",
@@ -1703,6 +1727,21 @@
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
+                    },
+                    "family": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Family",
+                        "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+                        "default": ""
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatiblefamilies",
+                        "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
                     },
                     "point": {
                         "$ref": "#/components/schemas/Point",
