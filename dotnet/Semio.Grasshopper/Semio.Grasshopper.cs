@@ -920,6 +920,12 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.", GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.", GH_ParamAccess.list);
+        pManager[3].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -930,8 +936,14 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var text = "";
+        var mode = 0;
+        var forbidden = new List<string>();
+        var replace = new List<string>();
         DA.GetData(0, ref text);
-        DA.SetData(0, Semio.Utility.Encode(text));
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, forbidden);
+        DA.GetDataList(3, replace);
+        DA.SetData(0, Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
     }
 }
 
@@ -951,6 +963,13 @@ public class DecodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe decoding\n1: base64 decoding\n2: base32 decoding", GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Original", "Or", "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
+        pManager[3].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -960,9 +979,15 @@ public class DecodeTextComponent : ScriptingComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var encodedText = "";
-        DA.GetData(0, ref encodedText);
-        DA.SetData(0, Semio.Utility.Decode(encodedText));
+        var encoded = "";
+        var mode = 0;
+        var replace = new List<string>();
+        var original = new List<string>();
+        DA.GetData(0, ref encoded);
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, replace);
+        DA.GetDataList(3, original);
+        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace,original)));
     }
 }
 

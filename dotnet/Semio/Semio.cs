@@ -43,6 +43,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using FluentValidation;
@@ -93,6 +94,13 @@ public enum IconKind
     Logogram,
     Filepath,
     RemoteUrl
+}
+
+public enum EncodeMode
+{
+    Urlsafe,
+    Base64,
+    DictionaryOnly
 }
 
 #endregion
@@ -285,14 +293,50 @@ public static class Utility
         return dataUri;
     }
 
-    public static string Encode(string text)
+    public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>, List<string>>? replace = null)
     {
-        return Uri.EscapeDataString(text);
+        string encoded = text;
+        if(mode == EncodeMode.Urlsafe)
+            encoded = Uri.EscapeDataString(text);
+        if (mode == EncodeMode.Base64)
+            encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
+        if (replace != null)
+        {
+            var keys = replace.Item1;
+            var values = replace.Item2;
+            if (keys.Count != values.Count)
+                throw new ArgumentException("Both replace lists must have the same length.");
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var key = keys[i];
+                var value = values[i];
+                encoded = encoded.Replace(key, value);
+            }
+        }
+        return encoded;
     }
 
-    public static string Decode(string text)
+    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>,List<string>>? replace = null)
     {
-        return Uri.UnescapeDataString(text);
+        string decoded = text;
+        if (replace != null)
+        {
+            var keys = replace.Item1;
+            var values = replace.Item2;
+            if (keys.Count != values.Count)
+                throw new ArgumentException("Both replace lists must have the same length.");
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var key = keys[i];
+                var value = values[i];
+                decoded = decoded.Replace(key, value);
+            }
+        }
+        if (mode == EncodeMode.Urlsafe)
+            decoded = Uri.UnescapeDataString(decoded);
+        if (mode == EncodeMode.Base64)
+            decoded = Encoding.UTF8.GetString(Convert.FromBase64String(decoded));
+        return decoded;
     }
 
     public static string Serialize(this object obj, string indent = "")
