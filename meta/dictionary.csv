@@ -71,6 +71,7 @@ Symbol,Code,Abbreviation,Name,Description
 ?,?Pc,?Pce,Select Piece,"Select a piece with the id."
 ?,?Pc,?Pces,Select Pieces,"Select pieces of a certain type. If no variant is provided it will select all variants. If you want to select the default type then use the empty text."
 ?,?Rp,?Rep,Select Representation,"Select exactly one representation based on mime and tags. The tag matching is based on the highest Jaccard index (|∩|/|∪|). If the mime type is not given or does not exist, then all representations are used to search for closest match. If index is equally high the first representation is picked."
+?,?Ro,?Roo,Select Root,"Select the root of the design."
 🧱,Sd,Sde,Side,"A side of a piece in a connection."
 ↔️,Sf,Sft,Shift,"The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece."
 :,:Dn,:Dsn,Show Design,"Show a design by flattening it and selecting representations based on mime and tags. Select exactly one representation based on mime and tags. The tag matching is based on the highest Jaccard index (|∩|/|∪|). If the mime type is not given or does not exist, then all representations are used to search for closest match. If index is equally high the first representation is picked."

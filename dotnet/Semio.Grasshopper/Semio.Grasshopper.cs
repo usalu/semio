@@ -66,7 +66,7 @@ namespace Semio.Grasshopper;
 public static class Constants
 {
     public const string Category = Semio.Constants.Name;
-    public const string Version = "5.0.0-beta";
+    public const string Version = "5.1.0-beta";
 }
 
 #endregion
@@ -2354,12 +2354,12 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
 
 public class CacheRepresentationComponent : Component
 {
-    public CacheRepresentationComponent() : base("Cache Representation", "+Rep", "Download and cache a remote representation.", "Persistence")
+    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep", "Download and cache a remote representation.", "Persistence")
     {
     }
     public override Guid ComponentGuid => new("56673DF0-4524-40BC-AB26-37920F71E3E0");
     protected override Bitmap Icon => Resources.representation_cache_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.", GH_ParamAccess.item);

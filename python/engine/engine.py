@@ -24,6 +24,7 @@ engine.py
 
 # TODOs #
 
+# TODO: Make loguru work on extra uvicorn engine process.
 # TODO: Replace prototype healing with one that makes more for every single property.
 # TODO: Try closest embedding instead of smallest Levenshtein distance.
 # TODO: Automatic derive from Id model.
@@ -188,7 +189,7 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
 RELEASE = "r25.03-1"
-VERSION = "4.1.0"
+VERSION = "4.1.0-beta"
 HOST = "127.0.0.1"
 PORT = 2503
 ADDRESS = "http://127.0.0.1:2503"
@@ -5610,6 +5611,7 @@ def generateSchemas():
 
 
 def start_engine():
+    # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
     uvicorn.run(
         engine,
