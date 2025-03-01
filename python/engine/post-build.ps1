@@ -1,10 +1,13 @@
-$exePath = "..\..\dotnet\Semio.Grasshopper\bin\Debug\net48\semio-engine.exe"
-$internalPath = "..\..\dotnet\Semio.Grasshopper\bin\Debug\net48\_internal"
-if (Test-Path $exePath) {
-    Remove-Item $exePath
+$exePath = "dist\semio-engine\semio-engine.exe"
+$internalPath = "dist\semio-engine\_internal"
+$grasshopperBinPath = "..\..\dotnet\Semio.Grasshopper\bin\Debug\net48"
+$grasshopperExePath = "$grasshopperBinPath\semio-engine.exe"
+$grasshopperInternalPath = "$grasshopperBinPath\_internal"
+if (Test-Path $grasshopperExePath) {
+    Remove-Item $grasshopperExePath
 }
-if (Test-Path $internalPath) {
-    Remove-Item $internalPath -Recurse
+if (Test-Path $grasshopperInternalPath) {
+    Remove-Item $grasshopperInternalPath -Recurse
 }
-Move-Item "dist\semio-engine\semio-engine.exe" $exePath
-Move-Item "dist\semio-engine\_internal" $internalPath 
+Move-Item $exePath $grasshopperExePath
+Move-Item  $internalPath $grasshopperInternalPath

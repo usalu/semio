@@ -5644,8 +5644,8 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    logger.add(sys.stderr, level="INFO")
     if args.debug:
+        logger.add(sys.stderr, level="INFO")
         logger.add(DEBUG_LOG_FILE, level="DEBUG", rotation="10 MB")
 
     ui = PySide6.QtWidgets.QApplication(sys.argv)

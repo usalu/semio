@@ -3,7 +3,7 @@
     "info": {
         "title": "semio REST API",
         "summary": "This is the local rest API of the semio engine.",
-        "version": "4.1.0"
+        "version": "4.1.0-beta"
     },
     "paths": {
         "/kits/{encodedKitUri}": {

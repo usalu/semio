@@ -66,7 +66,7 @@ namespace Semio.Grasshopper;
 public static class Constants
 {
     public const string Category = Semio.Constants.Name;
-    public const string Version = "5.1.0-beta";
+    public const string Version = "5.1.1-beta";
 }
 
 #endregion
@@ -501,6 +501,35 @@ public class RepresentationGoo : ModelGoo<Representation>
     public RepresentationGoo(Representation value) : base(value)
     {
     }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Url);
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Representation()
+            {
+                Url = str
+            };
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class LocatorGoo : ModelGoo<Locator>
@@ -515,6 +544,15 @@ public class LocatorGoo : ModelGoo<Locator>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (target is QualityGoo quality)
+        {
+            quality.Value = new Quality
+            {
+                Name = Value.Group,
+                Value = Value.Subgroup
+            };
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             object ptr = new GH_String(Value.Group);
@@ -528,6 +566,16 @@ public class LocatorGoo : ModelGoo<Locator>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+
+        if (source is QualityGoo quality)
+        {
+            Value = new Locator
+            {
+                Group = quality.Value.Name,
+                Subgroup = quality.Value.Value
+            };
+            return true;
+        }
 
         string str = null;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
@@ -622,6 +670,16 @@ public class QualityGoo : ModelGoo<Quality>
     {
         if (source == null) return false;
 
+        if (source is LocatorGoo locator)
+        {
+            Value = new Quality()
+            {
+                Name = locator.Value.Group,
+                Value = locator.Value.Subgroup
+            };
+            return true;
+        }
+
         string str;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
         {
@@ -684,6 +742,59 @@ public class TypeGoo : ModelGoo<Type>
     public TypeGoo(Type value) : base(value)
     {
     }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (target is PieceGoo piece)
+        {
+            piece.Value = new Piece
+            {
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId()
+                {
+                    Name = Value.Name,
+                    Variant = Value.Variant
+                }
+            };
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Name);
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        if (source is PieceGoo piece)
+        {
+            Value = new Type
+            {
+                Name = piece.Value.Type.Name,
+                Variant = piece.Value.Type.Variant
+            };
+            return true;
+        }
+
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Type
+            {
+                Name = str
+            };
+            return true;
+        }
+
+        return false;
+    }
+
 }
 
 public class DiagramPointGoo : ModelGoo<DiagramPoint>
@@ -739,34 +850,58 @@ public class PieceGoo : ModelGoo<Piece>
     {
     }
 
-    // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
-    //public override bool CastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        object ptr = new GH_String(Value.Id);
-    //        target = (Q)ptr;
-    //        return true;
-    //    }
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (target is TypeGoo type)
+        {
+            type.Value = new Type
+            {
+                Name = Value.Type.Name,
+                Variant = Value.Type.Variant
+            };
+            return true;
+        }
 
-    //    return false;
-    //}
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            object ptr = new GH_String(Value.Id);
+            target = (Q)ptr;
+            return true;
+        }
 
-    //public override bool CastFrom(object source)
-    //{
-    //    if (source == null) return false;
+        return false;
+    }
 
-    //    string str;
-    //    if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-    //    {
-    //        Value = new Piece
-    //        {
-    //            Id = str
-    //        };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        if (source is TypeGoo type)
+        {
+            Value = new Piece
+            {
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId()
+                {
+                    Name = type.Value.Name,
+                    Variant = type.Value.Variant
+                }
+            };
+            return true;
+        }
+
+        string str = null;
+        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        {
+            Value = new Piece
+            {
+                Id = str
+            };
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class ConnectionGoo : ModelGoo<Connection>
