@@ -48,7 +48,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Net;
 using System.Net.Http;
-using FluentValidation;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
@@ -56,7 +55,6 @@ using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino;
 using Rhino.Geometry;
-using Grasshopper.Kernel.Types.Transforms;
 
 #endregion
 
@@ -272,6 +270,7 @@ public static class Utility
         {
             directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
         }
+
         var turnAxis = Vector3d.ZAxis;
         var tiltAxis = Vector3d.XAxis;
         var gapDirection = Vector3d.YAxis;
@@ -499,7 +498,6 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
         }
 
         return CustomCastFrom(source);
-
     }
 }
 
@@ -532,7 +530,7 @@ public class RepresentationGoo : ModelGoo<Representation>
         string str = null;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
         {
-            Value = new Representation()
+            Value = new Representation
             {
                 Url = str
             };
@@ -564,6 +562,7 @@ public class LocatorGoo : ModelGoo<Locator>
             };
             return true;
         }
+
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             object ptr = new GH_String(Value.Group);
@@ -683,7 +682,7 @@ public class QualityGoo : ModelGoo<Quality>
 
         if (source is LocatorGoo locator)
         {
-            Value = new Quality()
+            Value = new Quality
             {
                 Name = locator.Value.Group,
                 Value = locator.Value.Subgroup
@@ -761,7 +760,7 @@ public class TypeGoo : ModelGoo<Type>
             piece.Value = new Piece
             {
                 Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId()
+                Type = new TypeId
                 {
                     Name = Value.Name,
                     Variant = Value.Variant
@@ -769,6 +768,7 @@ public class TypeGoo : ModelGoo<Type>
             };
             return true;
         }
+
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             object ptr = new GH_String(Value.Name);
@@ -805,7 +805,6 @@ public class TypeGoo : ModelGoo<Type>
 
         return false;
     }
-
 }
 
 public class DiagramPointGoo : ModelGoo<DiagramPoint>
@@ -892,7 +891,7 @@ public class PieceGoo : ModelGoo<Piece>
             Value = new Piece
             {
                 Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId()
+                Type = new TypeId
                 {
                     Name = type.Value.Name,
                     Variant = type.Value.Variant
@@ -1066,11 +1065,14 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
+            GH_ParamAccess.item, 0);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.",
+            GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.",
+            GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1089,7 +1091,8 @@ public class EncodeTextComponent : ScriptingComponent
         DA.GetData(1, ref mode);
         DA.GetDataList(2, forbidden);
         DA.GetDataList(3, replace);
-        DA.SetData(0, Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
+        DA.SetData(0,
+            Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
     }
 }
 
@@ -1109,13 +1112,17 @@ public class DecodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe decoding\n1: base64 decoding\n2: base32 decoding", GH_ParamAccess.item, 0);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe decoding\n1: base64 decoding\n2: base32 decoding",
+            GH_ParamAccess.item, 0);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Replace", "Re", "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Replace", "Re",
+            "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Original", "Or", "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Original", "Or",
+            "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
         pManager[3].Optional = true;
-
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1133,7 +1140,8 @@ public class DecodeTextComponent : ScriptingComponent
         DA.GetData(1, ref mode);
         DA.GetDataList(2, replace);
         DA.GetDataList(3, original);
-        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
+        DA.SetData(0,
+            Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
     }
 }
 
@@ -1167,7 +1175,9 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     {
         pManager.AddParameter(new T(), NameM, ModelM.Code,
             $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
+        pManager.AddTextParameter("Indent", "In?",
+            $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs",
+            GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
 
@@ -1457,21 +1467,27 @@ public class FlattenDesignComponent : Component
 public class SortDesignComponent : Component
 {
     public SortDesignComponent()
-        : base("Sort Design", "⁐Dsn", "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.", "Util")
+        : base("Sort Design", "⁐Dsn",
+            "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.",
+            "Util")
     {
     }
+
     public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
     protected override Bitmap Icon => Resources.design_sort_24x24;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "Dn",
             "Design to sort.", GH_ParamAccess.item);
     }
+
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "Dn",
             "Sorted Design.", GH_ParamAccess.item);
     }
+
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var designGoo = new DesignGoo();
@@ -1891,10 +1907,12 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Rotation", "Rt?",
             "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn","Tu?", "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu?",
+            "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+            GH_ParamAccess.item);
         pManager.AddNumberParameter("Tilt", "Tl?",
             "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-        GH_ParamAccess.item);
+            GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
@@ -2505,22 +2523,29 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
 
 public class CacheRepresentationComponent : Component
 {
-    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep", "Download and cache a remote representation.", "Persistence")
+    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep",
+        "Download and cache a remote representation.", "Persistence")
     {
     }
+
     public override Guid ComponentGuid => new("56673DF0-4524-40BC-AB26-37920F71E3E0");
     protected override Bitmap Icon => Resources.representation_cache_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.", GH_ParamAccess.item, false);
+        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.",
+            GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.",
+            GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Success", "Sc", "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
+        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.",
+            GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc",
+            "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2543,6 +2568,7 @@ public class CacheRepresentationComponent : Component
             DA.SetData(1, true);
             return;
         }
+
         var http = new HttpClient();
         var response = http.GetAsync(url).Result;
         if (!response.IsSuccessStatusCode) return;
@@ -2551,8 +2577,8 @@ public class CacheRepresentationComponent : Component
         DA.SetData(0, path);
         DA.SetData(1, true);
     }
-
 }
+
 public class ClearCacheComponent : Component
 {
     public ClearCacheComponent() : base("Clear Cache", "-Cac", "Clear the cache of all the remote kits.", "Persistence")

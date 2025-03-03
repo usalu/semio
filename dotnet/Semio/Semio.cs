@@ -45,7 +45,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using FluentValidation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -293,9 +292,10 @@ public static class Utility
         return dataUri;
     }
 
-    public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>, List<string>>? replace = null)
+    public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+        Tuple<List<string>, List<string>>? replace = null)
     {
-        string encoded = text;
+        var encoded = text;
         if (mode == EncodeMode.Urlsafe)
             encoded = Uri.EscapeDataString(text);
         if (mode == EncodeMode.Base64)
@@ -313,12 +313,14 @@ public static class Utility
                 encoded = encoded.Replace(key, value);
             }
         }
+
         return encoded;
     }
 
-    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>, List<string>>? replace = null)
+    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+        Tuple<List<string>, List<string>>? replace = null)
     {
-        string decoded = text;
+        var decoded = text;
         if (replace != null)
         {
             var keys = replace.Item1;
@@ -332,6 +334,7 @@ public static class Utility
                 decoded = decoded.Replace(key, value);
             }
         }
+
         if (mode == EncodeMode.Urlsafe)
             decoded = Uri.UnescapeDataString(decoded);
         if (mode == EncodeMode.Base64)
@@ -929,7 +932,8 @@ public class Representation : Model<Representation>
     ///     🏷️ The optional tags to group representations. No tags means default.
     /// </summary>
 
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID,
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.",
+        PropImportance.ID,
         skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
@@ -1179,14 +1183,18 @@ public class Port : Model<Port>
     /// <summary>
     ///     👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
     /// </summary>
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port. This allows to define explicit compatibility with other ports.")]
+    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?",
+        "The optional family of the port. This allows to define explicit compatibility with other ports.")]
     public string Family { get; set; } = "";
 
     /// <summary>
-    ///     ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.
+    ///     ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other
+    ///     ports.
     /// </summary>
-    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.")]
+    [Name("✅", "CF*", "CFas*",
+        "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.")]
     public List<string> CompatibleFamilies { get; set; } = new();
+
     /// <summary>
     ///     ❌ The connection point of the port that is attracted to another connection point.
     /// </summary>
@@ -1721,8 +1729,8 @@ public class Side : Model<Side>
 public class Connection : Model<Connection>
 {
     private float _rotation;
-    private float _turn;
     private float _tilt;
+    private float _turn;
 
     /// <summary>
     ///     🧲 The connected side of the piece of the connection.
@@ -1748,9 +1756,11 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the
+    ///     connected and the connecting piece in degrees.
     /// </summary>
-    [AngleProp("🛞", "Tu", "Tur", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+    [AngleProp("🛞", "Tu", "Tur",
+        "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
     public float Turn
     {
         get => _turn;
@@ -1758,7 +1768,8 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected
+    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between
+    ///     the connected
     ///     and the connecting piece in degrees.
     /// </summary>
     [AngleProp("∡", "Tl?", "Tlt?",
@@ -1778,7 +1789,8 @@ public class Connection : Model<Connection>
     public float Gap { get; set; } = 0;
 
     /// <summary>
-    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the
+    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the
+    ///     connected and the
     ///     connecting piece.
     /// </summary>
 
@@ -1809,6 +1821,7 @@ public class Connection : Model<Connection>
                   Connecting.Piece.Id;
         return $"{ctd}--{cng}";
     }
+
     public string ToHumanIdString()
     {
         return $"{ToIdString()}";
@@ -1928,7 +1941,8 @@ public class Design : DesignProps
     /// <summary>
     ///     📏 The optional machine-readable qualities of the  design.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qals*", "The optional machine-readable qualities of the  design.", PropImportance.OPTIONAL)]
+    [ModelProp("📏", "Ql*", "Qals*", "The optional machine-readable qualities of the  design.",
+        PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
     /// <summary>
@@ -2019,7 +2033,8 @@ public class Design : DesignProps
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
                     childPort.Point,
-                    childPort.Direction, connection.Rotation, connection.Turn, connection.Tilt, connection.Gap, connection.Shift);
+                    childPort.Direction, connection.Rotation, connection.Turn, connection.Tilt, connection.Gap,
+                    connection.Shift);
                 child.Plane = childPlane;
 
                 var direction = new DiagramPoint
@@ -2043,7 +2058,9 @@ public class Design : DesignProps
     }
 
     /// <summary>
-    /// Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.
+    ///     Sort a design by reordering pieces and connections to appear in order that they are discovered by
+    ///     breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the
+    ///     connecting.
     /// </summary>
     /// <returns></returns>
     public Design Sort()
@@ -2061,6 +2078,7 @@ public class Design : DesignProps
                     connection.Connected.Piece = new PieceId { Id = child.Id };
                     connection.Connecting.Piece = new PieceId { Id = parent.Id };
                 }
+
                 sortedConnections.Add(connection);
             });
 
@@ -2335,7 +2353,8 @@ text {
         {
             var (isValidConnection, errorsConnection) = connection.Validate();
             isValid = isValid && isValidConnection;
-            errors.AddRange(errorsConnection.Select(e => $"A connection({connection.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsConnection.Select(e =>
+                $"A connection({connection.ToHumanIdString()}) is invalid: " + e));
         }
 
         foreach (var quality in Qualities)
@@ -2736,7 +2755,8 @@ public static class Api
     public static void PutDesign(string kitUrl, Design input)
     {
         var response = GetApi()
-            .PutDesign(Utility.Encode(kitUrl), EncodeNameAndVariantAndView(input.Name, input.Variant, input.View), input).Result;
+            .PutDesign(Utility.Encode(kitUrl), EncodeNameAndVariantAndView(input.Name, input.Variant, input.View),
+                input).Result;
         HandleErrors(response);
     }
 
@@ -2751,7 +2771,7 @@ public static class Api
     public static Design PredictDesign(string description, Type[] types, Design design)
     {
         var response = GetApi().PredictDesign(new PredictDesignBody
-        { Description = description, Types = types, Design = design }).Result;
+            { Description = description, Types = types, Design = design }).Result;
         if (response.IsSuccessStatusCode)
             return response.Content;
         HandleErrors(response);
