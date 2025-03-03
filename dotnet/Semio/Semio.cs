@@ -1748,9 +1748,9 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
     /// </summary>
-    [AngleProp("🛞","Tu","Tur", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
+    [AngleProp("🛞", "Tu", "Tur", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
     public float Turn
     {
         get => _turn;
@@ -2019,7 +2019,7 @@ public class Design : DesignProps
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
                     childPort.Point,
-                    childPort.Direction, connection.Rotation, connection.Turn ,connection.Tilt, connection.Gap, connection.Shift);
+                    childPort.Direction, connection.Rotation, connection.Turn, connection.Tilt, connection.Gap, connection.Shift);
                 child.Plane = childPlane;
 
                 var direction = new DiagramPoint

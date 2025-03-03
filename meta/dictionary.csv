@@ -82,7 +82,7 @@ Symbol,Code,Abbreviation,Name,Description
 🏷️,Tg*,Tags,Tags,"The optional tags to group representations. No tags means default."
 ∡,Tl?,Tlt,Tilt,"The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
 ▦,Tf,Trf,Transform,"A 4x4 translation and rotation transformation matrix (no scaling or shearing)."
-🛞,Tu,Tur,Turn,"The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
+🛞,Tu,Tur,Turn,"The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
 🧩,Ty,Typ,Type,"A type is a reusable element that can be connected with other types over ports."
 🧩,Ty,Typ,Type,"The type-related information of the side."
 🧩,Ty*,Typs,Types,"The optional types of the kit."

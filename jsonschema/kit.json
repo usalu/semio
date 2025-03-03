@@ -36,7 +36,7 @@
                 },
                 "turn": {
                     "default": 0,
-                    "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                    "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
                     "exclusiveMaximum": 360.0,
                     "minimum": 0.0,
                     "title": "Turn",

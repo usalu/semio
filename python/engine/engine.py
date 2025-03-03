@@ -673,6 +673,241 @@ class TableEntity(Entity, Table, abc.ABC):
     """📛 The lowercase name of the table in the database."""
 
 
+### Qualities ###
+
+
+class QualityNameField(RealField, abc.ABC):
+    """📏 The name of the quality."""
+
+    name: str = sqlmodel.Field(
+        max_length=NAME_LENGTH_LIMIT,
+        description="📏 The name of the quality.",
+    )
+    """📏 The name of the quality."""
+
+
+class QualityValueField(RealField, abc.ABC):
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
+
+    value: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+    )
+    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
+
+
+class QualityUnitField(RealField, abc.ABC):
+    """📏 The optional unit of the value of the quality."""
+
+    unit: str = sqlmodel.Field(
+        default="",
+        max_length=NAME_LENGTH_LIMIT,
+        description="📏 The optional unit of the value of the quality.",
+    )
+    """📏 The optional unit of the value of the quality."""
+
+
+class QualityDefinitionField(RealField, abc.ABC):
+    """📏 The optional definition [ text | uri ] of the quality."""
+
+    definition: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="📏 The optional definition [ text | uri ] of the quality.",
+    )
+    """📏 The optional definition [ text | uri ] of the quality."""
+
+
+class QualityId(QualityNameField, Id):
+    """🪪 The props to identify the quality within the parent type."""
+
+
+class QualityProps(
+    QualityDefinitionField,
+    QualityUnitField,
+    QualityValueField,
+    QualityNameField,
+    Props,
+):
+    """🎫 The props of a quality."""
+
+
+class QualityInput(
+    QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
+):
+    """↘️ The input for a quality."""
+
+
+class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
+    """📑 The context of a quality."""
+
+
+class QualityOutput(
+    QualityDefinitionField,
+    QualityUnitField,
+    QualityValueField,
+    QualityNameField,
+    Output,
+):
+    """↗️ The output of a quality."""
+
+
+class Quality(
+    QualityDefinitionField,
+    QualityUnitField,
+    QualityValueField,
+    QualityNameField,
+    TableEntity,
+    table=True,
+):
+    """📏 A quality is a named value with a unit and a definition."""
+
+    PLURAL = "qualities"
+    __tablename__ = "quality"
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The primary key of the quality in the database."""
+    representationPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="representationId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "representation_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("representation.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent representation of the quality in the database."""
+    representation: typing.Optional["Representation"] = sqlmodel.Relationship(
+        back_populates="qualities"
+    )
+    """👪 The parent representation of the quality."""
+    portPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "port_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("port.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent port of the quality in the database."""
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="qualities")
+    """👪 The parent port of the quality."""
+    typePk: typing.Optional[int] = sqlmodel.Field(
+        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "type_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("type.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent type of the quality in the database."""
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
+    """👪 The parent type of the quality."""
+    piecePk: typing.Optional[int] = sqlmodel.Field(
+        # alias="pieceId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "piece_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("piece.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent piece of the quality in the database."""
+    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="qualities")
+    """👪 The parent piece of the quality."""
+    connectionPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="connectionId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "connection_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("connection.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent connection of the quality in the database."""
+    connection: typing.Optional["Connection"] = sqlmodel.Relationship(
+        back_populates="qualities"
+    )
+    """👪 The parent connection of the quality."""
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "design_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent design of the quality in the database."""
+    design: typing.Optional["Design"] = sqlmodel.Relationship(
+        back_populates="qualities"
+    )
+    kitPk: typing.Optional[int] = sqlmodel.Field(
+        # alias="kitId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
+        sa_column=sqlmodel.Column(
+            "kit_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("kit.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent kit of the quality in the database."""
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
+    """👪 The parent kit of the quality."""
+    __tableargs__ = (
+        sqlalchemy.CheckConstraint(
+            """
+        (
+            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
+        )
+        """,
+            name="parent set",
+        ),
+        sqlalchemy.UniqueConstraint("name", "type_id", "design_id"),
+    )
+
+    def parent(self) -> "Type":
+        """👪 The parent type or design of the quality or otherwise `NoTypeOrDesignAssigned` is raised."""
+        if self.type is not None:
+            return self.type
+        if self.design is not None:
+            return self.design
+        raise NoTypeOrDesignAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        """🪪 The members that form the id of the quality within its parent type."""
+        return self.name
+
+
 ### Tags
 
 
@@ -781,6 +1016,12 @@ class RepresentationInput(
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
 
+    qualities: list[QualityInput] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the representation.",
+    )
+    """📏 The qualities of the representation."""
+
 
 class RepresentationContext(
     RepresentationTagsField,
@@ -788,6 +1029,12 @@ class RepresentationContext(
     Context,
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
+
+    qualities: list[QualityContext] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the representation.",
+    )
+    """📏 The qualities of the representation."""
 
 
 class RepresentationOutput(
@@ -797,6 +1044,12 @@ class RepresentationOutput(
     Output,
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
+
+    qualities: list[QualityOutput] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the representation.",
+    )
+    """📏 The qualities of the representation."""
 
 
 class Representation(
@@ -823,6 +1076,10 @@ class Representation(
         back_populates="representation", cascade_delete=True
     )
     """🧑 The real tags of the representation in the database."""
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="representation", cascade_delete=True
+    )
+    """📏 The qualities of the type."""
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
@@ -881,77 +1138,6 @@ class Representation(
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the representation within its parent type."""
         return [self.mime, self.lod, self.tags]
-
-
-### Locators ###
-
-
-class LocatorGroupField(MaskedField, abc.ABC):
-    """👪 The group of the locator."""
-
-    group: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT, description="👪 The group of the locator."
-    )
-    """👪 The group of the locator."""
-
-
-class LocatorSubgroupField(RealField, abc.ABC):
-    """📌 The optional sub-group of the locator. No sub-group means true."""
-
-    subgroup: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📌 The optional sub-group of the locator. No sub-group means true.",
-    )
-    """📌 The optional sub-group of the locator. No sub-group means true."""
-
-
-class LocatorId(LocatorGroupField, Id):
-    """🪪 The props to identify the locator within the parent port."""
-
-
-class LocatorProps(LocatorSubgroupField, LocatorGroupField, Props):
-    """🎫 The props of a locator."""
-
-
-class LocatorInput(LocatorSubgroupField, LocatorGroupField, Input):
-    """🗺️ A locator is meta-data for grouping ports."""
-
-
-class LocatorContext(LocatorSubgroupField, LocatorGroupField, Context):
-    """🗺️ A locator is meta-data for grouping ports."""
-
-
-class LocatorOutput(LocatorSubgroupField, LocatorGroupField, Output):
-    """🗺️ A locator is meta-data for grouping ports."""
-
-
-class Locator(LocatorSubgroupField, Table, table=True):
-    """🗺️ A locator is meta-data for grouping ports."""
-
-    __tablename__ = "locator"
-    group: str = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "group_name",  # group is a reserved word in SQL
-            sqlalchemy.String(NAME_LENGTH_LIMIT),
-            primary_key=True,
-        ),
-    )
-    """🧑 The real group in the database."""
-    portPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "port_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("port.id"),
-            primary_key=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent port of the locator in the database."""
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="locators")
-    """👪 The parent port of the locator."""
 
 
 ### Screen Points ###
@@ -1740,16 +1926,6 @@ class PortDirectionField(MaskedField, abc.ABC):
     """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
 
 
-class PortLocatorsField(MaskedField, abc.ABC):
-    """🗺️ The locators of the port."""
-
-    locators: list[Locator] = sqlmodel.Field(
-        default_factory=list,
-        description="🗺️ The locators of the port.",
-    )
-    """🗺️ The locators of the port."""
-
-
 class PortTField(RealField, abc.ABC):
     """💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise."""
 
@@ -1766,7 +1942,6 @@ class PortId(PortIdField, Id):
 
 class PortProps(
     PortTField,
-    PortLocatorsField,
     PortDirectionField,
     PortPointField,
     PortCompatibleFamiliesField,
@@ -1796,11 +1971,11 @@ class PortInput(
         description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
     )
     """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
-    locators: list[LocatorInput] = sqlmodel.Field(
+    qualities: list[QualityInput] = sqlmodel.Field(
         default_factory=list,
-        description="🗺️ The locators of the port.",
+        description="📏 The qualities of the port.",
     )
-    """🗺️ The locators of the port."""
+    """📏 The qualities of the port."""
 
 
 class PortContext(
@@ -1812,11 +1987,11 @@ class PortContext(
 ):
     """🔌 A port is a connection point (with a direction) of a type."""
 
-    locators: list[LocatorContext] = sqlmodel.Field(
+    qualities: list[QualityContext] = sqlmodel.Field(
         default_factory=list,
-        description="🗺️ The locators of the port.",
+        description="📏 The qualities of the port.",
     )
-    """🗺️ The locators of the port."""
+    """📏 The qualities of the port."""
 
 
 class PortOutput(
@@ -1831,11 +2006,11 @@ class PortOutput(
 ):
     """🔌 A port is a connection point (with a direction) of a type."""
 
-    locators: list[LocatorOutput] = sqlmodel.Field(
+    qualities: list[QualityOutput] = sqlmodel.Field(
         default_factory=list,
-        description="🗺️ The locators of the port.",
+        description="📏 The qualities of the port.",
     )
-    """🗺️ The locators of the port."""
+    """📏 The qualities of the port."""
 
 
 class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table=True):
@@ -1916,10 +2091,10 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         exclude=True,
     )
     """🎚️ The z-coordinate of the direction of the port."""
-    locators: list[Locator] = sqlmodel.Relationship(
+    qualities: list["Quality"] = sqlmodel.Relationship(
         back_populates="port", cascade_delete=True
     )
-    """🗺️ The locators of the port."""
+    """📏 The qualities of the port."""
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
@@ -2006,8 +2181,8 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         entity.point = point
         entity.direction = direction
         try:
-            locators = [Locator.parse(l) for l in obj["locators"]]
-            entity.locators = locators
+            qualities = [Quality.parse(l) for l in obj["locators"]]
+            entity.qualities = qualities
         except KeyError:
             pass
         return entity
@@ -2016,156 +2191,6 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the port within its parent type."""
         return self.id_
-
-
-### Qualities ### TODO
-
-
-class QualityNameField(RealField, abc.ABC):
-    """📏 The name of the quality."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The name of the quality.",
-    )
-    """📏 The name of the quality."""
-
-
-class QualityValueField(RealField, abc.ABC):
-    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
-
-    value: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
-    )
-    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
-
-
-class QualityUnitField(RealField, abc.ABC):
-    """📏 The optional unit of the value of the quality."""
-
-    unit: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The optional unit of the value of the quality.",
-    )
-    """📏 The optional unit of the value of the quality."""
-
-
-class QualityDefinitionField(RealField, abc.ABC):
-    """📏 The optional definition [ text | uri ] of the quality."""
-
-    definition: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="📏 The optional definition [ text | uri ] of the quality.",
-    )
-    """📏 The optional definition [ text | uri ] of the quality."""
-
-
-class QualityId(QualityNameField, Id):
-    """🪪 The props to identify the quality within the parent type."""
-
-
-class QualityProps(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Props,
-):
-    """🎫 The props of a quality."""
-
-
-class QualityInput(
-    QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
-):
-    """↘️ The input for a quality."""
-
-
-class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
-    """📑 The context of a quality."""
-
-
-class QualityOutput(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Output,
-):
-    """↗️ The output of a quality."""
-
-
-class Quality(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    TableEntity,
-    table=True,
-):
-    """📏 A quality is a named value with a unit and a definition."""
-
-    PLURAL = "qualities"
-    __tablename__ = "quality"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the quality in the database."""
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent type of the quality in the database."""
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
-    """👪 The parent type of the quality."""
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "design_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent design of the quality in the database."""
-    design: typing.Optional["Design"] = sqlmodel.Relationship(
-        back_populates="qualities"
-    )
-    __tableargs__ = (
-        sqlalchemy.CheckConstraint(
-            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
-            name="typeOrDesignSet",
-        ),
-        sqlalchemy.UniqueConstraint("name", "typeId", "designId"),
-    )
-
-    def parent(self) -> "Type":
-        """👪 The parent type or design of the quality or otherwise `NoTypeOrDesignAssigned` is raised."""
-        if self.type is not None:
-            return self.type
-        if self.design is not None:
-            return self.design
-        raise NoTypeOrDesignAssigned()
-
-    def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the quality within its parent type."""
-        return self.name
 
 
 ### Authors ###
@@ -2907,42 +2932,6 @@ class ConnectionConnectingField(MaskedField, abc.ABC):
     """🧲 The connecting side of the connection."""
 
 
-class ConnectionRotationField(RealField, abc.ABC):
-    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
-
-    rotation: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-    )
-    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
-
-
-class ConnectionTurnField(RealField, abc.ABC):
-    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
-
-    turn: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-    )
-    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
-
-
-class ConnectionTiltField(RealField, abc.ABC):
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
-
-    tilt: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-    )
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
-
-
 class ConnectionGapField(RealField, abc.ABC):
     """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece."""
 
@@ -2961,6 +2950,63 @@ class ConnectionShiftField(RealField, abc.ABC):
         description="↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
     )
     """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
+
+
+class ConnectionRaiseField(MaskedField, abc.ABC):
+    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+
+    raise_: float = sqlmodel.Field(
+        alias="raise",
+        default=0,
+        description="🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+    )
+    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+
+
+class ConnectionRotationField(RealField, abc.ABC):
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
+
+    rotation: float = sqlmodel.Field(
+        ge=0,
+        lt=360,
+        default=0,
+        description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+    )
+    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
+
+
+class ConnectionTurnField(RealField, abc.ABC):
+    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+
+    turn: float = sqlmodel.Field(
+        ge=0,
+        lt=360,
+        default=0,
+        description="🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+    )
+    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+
+
+class ConnectionTiltField(RealField, abc.ABC):
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
+
+    tilt: float = sqlmodel.Field(
+        ge=0,
+        lt=360,
+        default=0,
+        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+    )
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
+
+
+# class ConnectionOrientationFirstField(RealField, abc.ABC):
+#     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
+
+#     orientationFirst: bool = sqlmodel.Field(
+#         default=False,
+#         description="🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation.",
+#     )
+#     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
 
 
 class ConnectionXField(RealField, abc.ABC):
@@ -2990,11 +3036,12 @@ class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
 class ConnectionProps(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     Props,
 ):
     """🎫 The props of a connection."""
@@ -3003,11 +3050,12 @@ class ConnectionProps(
 class ConnectionInput(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     Input,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3025,11 +3073,12 @@ class ConnectionInput(
 class ConnectionContext(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     Context,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3047,11 +3096,12 @@ class ConnectionContext(
 class ConnectionOutput(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     Output,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3069,11 +3119,12 @@ class ConnectionOutput(
 class ConnectionPrediction(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     Prediction,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3091,11 +3142,12 @@ class ConnectionPrediction(
 class Connection(
     ConnectionYField,
     ConnectionXField,
-    ConnectionShiftField,
-    ConnectionGapField,
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
+    ConnectionRaiseField,
+    ConnectionShiftField,
+    ConnectionGapField,
     TableEntity,
     table=True,
 ):
@@ -3255,19 +3307,27 @@ class Connection(
             connectingPort=connectingPort,
         )
         try:
-            entity.rotation = obj["rotation"]
-        except KeyError:
-            pass
-        try:
-            entity.tilt = obj["tilt"]
-        except KeyError:
-            pass
-        try:
             entity.gap = obj["gap"]
         except KeyError:
             pass
         try:
             entity.shift = obj["shift"]
+        except KeyError:
+            pass
+        try:
+            entity.raise_ = obj["raise"]
+        except KeyError:
+            pass
+        try:
+            entity.rotation = obj["rotation"]
+        except KeyError:
+            pass
+        try:
+            entity.turn = obj["turn"]
+        except KeyError:
+            pass
+        try:
+            entity.tilt = obj["tilt"]
         except KeyError:
             pass
         try:
