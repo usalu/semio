@@ -236,7 +236,7 @@ public static class Utility
     }
 
     public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
-        Point childPoint, Vector childDirection, float rotation, float turn, float tilt, float gap, float shift)
+        Point childPoint, Vector childDirection, float gap, float shift, float raise, float rotation, float turn, float tilt)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
@@ -271,18 +271,22 @@ public static class Utility
             directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
         }
 
+        var rotationAxis = Vector3d.YAxis;
         var turnAxis = Vector3d.ZAxis;
         var tiltAxis = Vector3d.XAxis;
         var gapDirection = Vector3d.YAxis;
         var shiftDirection = Vector3d.XAxis;
-        var orientationT = directionT;
+        var raiseDirection = Vector3d.ZAxis;
 
         var parentRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
 
-        turnAxis.Transform(parentRotation);
-        tiltAxis.Transform(parentRotation);
         gapDirection.Transform(parentRotation);
         shiftDirection.Transform(parentRotation);
+        raiseDirection.Transform(parentRotation);
+        turnAxis.Transform(parentRotation);
+        tiltAxis.Transform(parentRotation);
+
+        var orientationT = directionT;
 
         var rotateT = Transform.Rotation(-rotationRad, parentDirectionR, new Point3d());
         orientationT = rotateT * orientationT;
@@ -306,9 +310,10 @@ public static class Utility
 
 
         var gapTransform = Transform.Translation(gapDirection * gap);
-        //var shiftDirection = new Vector3d(tiltAxis) * shift;
         var shiftTransform = Transform.Translation(shiftDirection * shift);
+        var raiseTransform = Transform.Translation(raiseDirection * raise);
         var translation = gapTransform * shiftTransform;
+        translation = raiseTransform * translation;
 
         transform = translation * transform;
 
@@ -1856,7 +1861,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
             "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
             GH_ParamAccess.item);
-        pManager.AddPlaneParameter(new QualityParam(), "Qualities", "Ql*",
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
             "The optional qualities of the piece.", GH_ParamAccess.list);
     }
 
@@ -1890,7 +1895,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(4, pieceGoo.Value.Type.Variant);
         DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
         DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
-        DA.SetDataList(7, pieceGoo.Value.Qualities.Select((Func<Quality, QualityGoo>)(q => new QualityGoo(q))).ToList());
+        var pieceGoos = new List<QualityGoo>();
+        foreach (Quality quality in pieceGoo.Value.Qualities)
+            pieceGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(7, pieceGoos);
     }
 }
 

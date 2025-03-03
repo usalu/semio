@@ -2048,7 +2048,7 @@ public class Design : DesignProps
     }
 
     public Design Flatten(IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, Plane> computeChildPlane)
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane)
     {
         if (Pieces.Count > 1 && Connections.Count > 0)
         {
@@ -2079,9 +2079,9 @@ public class Design : DesignProps
                     ports[child.Type.Name][child.Type.Variant][
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
-                    childPort.Point,
-                    childPort.Direction, connection.Rotation, connection.Turn, connection.Tilt, connection.Gap,
-                    connection.Shift);
+                    childPort.Point, childPort.Direction,
+                    connection.Gap, connection.Shift, connection.Raise,
+                    connection.Rotation, connection.Turn, connection.Tilt);
                 child.Plane = childPlane;
 
                 var direction = new DiagramPoint
@@ -2177,7 +2177,7 @@ public class Design : DesignProps
     // TODO: Make remote uris work for diagram.
     public string Diagram(
         IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, Plane> computeChildPlane,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane,
         string kitDirectory = "",
         float iconWidth = 48, float iconStroke = 1f, float connectionStroke = 2f, float margin = 0)
     {
