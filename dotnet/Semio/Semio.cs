@@ -163,7 +163,7 @@ public enum EncodeMode
 //✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 //✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 //📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
-//📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 //🍾,Rl,Rel,Release,The release of the engine that created this database.
 //☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
@@ -908,6 +908,53 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 }
 
 /// <summary>
+///     📏 A quality is a named value with a unit and a definition.
+/// </summary>
+[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
+public class Quality : Model<Quality>
+{
+    /// <summary>
+    ///     📛 The name of the quality.
+    /// </summary>
+    [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+
+    /// <summary>
+    ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+    /// </summary>
+    [Description("🔢", "Vl?", "Val?",
+        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
+    public string Value { get; set; } = "";
+
+    /// <summary>
+    ///     Ⓜ️ The optional unit of the value of the quality.
+    /// </summary>
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the value of the quality.", isDefaultValid: true)]
+    public string Unit { get; set; } = "";
+
+    /// <summary>
+    ///     📖 The optional definition [ text | uri ] of the quality.
+    /// </summary>
+    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the quality.")]
+    public string Definition { get; set; } = "";
+
+    public string ToIdString()
+    {
+        return $"{Name}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{ToIdString()}";
+    }
+
+    public override string ToString()
+    {
+        return $"Qal({ToHumanIdString()})";
+    }
+}
+
+/// <summary>
 ///     💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
 /// </summary>
 [Model("💾", "Rp", "Rep",
@@ -937,6 +984,12 @@ public class Representation : Model<Representation>
         skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
+    /// <summary>
+    ///     📏 The optional qualities of the representation.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the representation.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -954,6 +1007,13 @@ public class Representation : Model<Representation>
                 var preview = tag.Length > 10 ? tag.Substring(0, 10) + "..." : tag;
                 errors.Add(
                     $"A tag must be at most {Constants.NameLengthLimit} characters long. The provided tag ({preview}) has {tag.Length} characters.");
+            }
+
+            foreach (var quality in Qualities)
+            {
+                var (isValidQuality, errorsQuality) = quality.Validate();
+                isValid = isValid && isValidQuality;
+                errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
             }
         }
 
@@ -1210,12 +1270,10 @@ public class Port : Model<Port>
     public Vector? Direction { get; set; } = null;
 
     /// <summary>
-    ///     🗺️ The optional machine-readable locators of the port. Every port should have a unique set of locators.
+    ///     📏 The optional qualities of the port.
     /// </summary>
-    [ModelProp("🗺️", "Lc*", "Locs*",
-        "The optional machine-readable locators of the port. Every port should have a unique set of locators.",
-        PropImportance.OPTIONAL)]
-    public List<Locator> Locators { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the port.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     [NumberProp("💍", "T", "T",
         "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
@@ -1265,13 +1323,12 @@ public class Port : Model<Port>
             errors.Add("The direction must not be null.");
         }
 
-        if (Locators.Count != 0)
-            foreach (var locator in Locators)
-            {
-                var (isValidLocator, errorsLocator) = locator.Validate();
-                isValid = isValid && isValidLocator;
-                errors.AddRange(errorsLocator.Select(e => $"A locator ({locator.ToHumanIdString()}) is invalid: " + e));
-            }
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+        }
 
         return (isValid, errors);
     }
@@ -1315,39 +1372,26 @@ public class PortId : Model<PortId>
 }
 
 /// <summary>
-///     📏 A quality is a named value with a unit and a definition.
+///     👤 The information about the author.
 /// </summary>
-[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
-public class Quality : Model<Quality>
+[Model("👤", "Au", "Aut", "The information about the author.")]
+public class Author : Model<Author>
 {
     /// <summary>
-    ///     📛 The name of the quality.
+    ///     📛 The name of the author.
     /// </summary>
-    [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
+    [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
 
     /// <summary>
-    ///     🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+    ///     📧 The email of the author.
     /// </summary>
-    [Description("🔢", "Vl?", "Val?",
-        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
-    public string Value { get; set; } = "";
-
-    /// <summary>
-    ///     Ⓜ️ The optional unit of the value of the quality.
-    /// </summary>
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the value of the quality.", isDefaultValid: true)]
-    public string Unit { get; set; } = "";
-
-    /// <summary>
-    ///     📖 The optional definition [ text | uri ] of the quality.
-    /// </summary>
-    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the quality.")]
-    public string Definition { get; set; } = "";
+    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
+    public string Email { get; set; } = "";
 
     public string ToIdString()
     {
-        return $"{Name}";
+        return $"{Email}";
     }
 
     public string ToHumanIdString()
@@ -1357,7 +1401,20 @@ public class Quality : Model<Quality>
 
     public override string ToString()
     {
-        return $"Qal({ToHumanIdString()})";
+        return $"Aut({ToHumanIdString()})";
+    }
+
+    public override (bool, List<string>) Validate()
+    {
+        // TODO: proper email validation
+        var (isValid, errors) = base.Validate();
+        if (!Email.Contains("@"))
+        {
+            isValid = false;
+            errors.Add("The email must contain an @.");
+        }
+
+        return (isValid, errors);
     }
 }
 
@@ -1422,53 +1479,6 @@ public class TypeProps : Model<Type>
 }
 
 /// <summary>
-///     👤 The information about the author.
-/// </summary>
-[Model("👤", "Au", "Aut", "The information about the author.")]
-public class Author : Model<Author>
-{
-    /// <summary>
-    ///     📛 The name of the author.
-    /// </summary>
-    [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
-    public string Name { get; set; } = "";
-
-    /// <summary>
-    ///     📧 The email of the author.
-    /// </summary>
-    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
-    public string Email { get; set; } = "";
-
-    public string ToIdString()
-    {
-        return $"{Email}";
-    }
-
-    public string ToHumanIdString()
-    {
-        return $"{ToIdString()}";
-    }
-
-    public override string ToString()
-    {
-        return $"Aut({ToHumanIdString()})";
-    }
-
-    public override (bool, List<string>) Validate()
-    {
-        // TODO: proper email validation
-        var (isValid, errors) = base.Validate();
-        if (!Email.Contains("@"))
-        {
-            isValid = false;
-            errors.Add("The email must contain an @.");
-        }
-
-        return (isValid, errors);
-    }
-}
-
-/// <summary>
 ///     🧩 A type is a reusable element that can be connected with other types over ports.
 /// </summary>
 [Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
@@ -1487,9 +1497,9 @@ public class Type : TypeProps
     public List<Port> Ports { get; set; } = new();
 
     /// <summary>
-    ///     📏 The optional machine-readable qualities of the  type.
+    ///     📏 The optional qualities of the type.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qals*", "The optional machine-readable qualities of the  type.", PropImportance.OPTIONAL)]
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the type.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
     /// <summary>
@@ -1629,6 +1639,12 @@ public class Piece : Model<Piece>
         PropImportance.OPTIONAL)]
     public DiagramPoint? Center { get; set; }
 
+    /// <summary>
+    ///     📏 The optional qualities of the piece.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the piece.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+
     public string ToIdString()
     {
         return $"{Id}";
@@ -1663,6 +1679,13 @@ public class Piece : Model<Piece>
             var (isValidCenter, errorsCenter) = Center.Validate();
             isValid = isValid && isValidCenter;
             errors.AddRange(errorsCenter.Select(e => "The center is invalid: " + e));
+        }
+
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -1745,6 +1768,34 @@ public class Connection : Model<Connection>
     public Side Connecting { get; set; } = new();
 
     /// <summary>
+    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
+    ///     connecting piece.
+    /// </summary>
+    [NumberProp("↕️", "Gp?", "Gap?",
+        "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
+    public float Gap { get; set; } = 0;
+
+    /// <summary>
+    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the
+    ///     connected and the
+    ///     connecting piece.
+    /// </summary>
+
+    [NumberProp("↔️", "Sf?", "Sft?",
+        "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.")]
+    public float Shift { get; set; } = 0;
+
+    /// <summary>
+    ///     🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when
+    ///     necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it
+    ///     yields a different result.
+    /// </summary>
+
+    [NumberProp("🪜", "Rs", "Ris",
+        "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+    public float Raise { get; set; } = 0;
+
+    /// <summary>
     ///     🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
     /// </summary>
     [AngleProp("🔄", "Rt?", "Rot?",
@@ -1757,10 +1808,11 @@ public class Connection : Model<Connection>
 
     /// <summary>
     ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the
-    ///     connected and the connecting piece in degrees.
+    ///     connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property
+    ///     which means that when the parent piece and child piece are flipped it yields a different result.
     /// </summary>
     [AngleProp("🛞", "Tu", "Tur",
-        "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
+        "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
     public float Turn
     {
         get => _turn;
@@ -1781,24 +1833,6 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
-    ///     connecting piece.
-    /// </summary>
-    [NumberProp("↕️", "Gp?", "Gap?",
-        "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
-    public float Gap { get; set; } = 0;
-
-    /// <summary>
-    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the
-    ///     connected and the
-    ///     connecting piece.
-    /// </summary>
-
-    [NumberProp("↔️", "Sf?", "Sft?",
-        "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.")]
-    public float Shift { get; set; } = 0;
-
-    /// <summary>
     ///     ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit
     ///     is equal the width of a piece icon.
     /// </summary>
@@ -1813,6 +1847,12 @@ public class Connection : Model<Connection>
     [NumberProp("⬆️", "Y?", "Y?",
         "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
     public float Y { get; set; } = 1;
+
+    /// <summary>
+    ///     📏 The optional qualities of the connection.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the connection.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     public string ToIdString()
     {
@@ -1846,6 +1886,13 @@ public class Connection : Model<Connection>
         {
             isValid = false;
             errors.Add("The offset (x,y) must not be the zero vector.");
+        }
+
+        foreach (var quality in Qualities)
+        {
+            var (isValidQuality, errorsQuality) = quality.Validate();
+            isValid = isValid && isValidQuality;
+            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -1939,9 +1986,9 @@ public class Design : DesignProps
     public List<Connection> Connections { get; set; } = new();
 
     /// <summary>
-    ///     📏 The optional machine-readable qualities of the  design.
+    ///     📏 The optional qualities of the design.
     /// </summary>
-    [ModelProp("📏", "Ql*", "Qals*", "The optional machine-readable qualities of the  design.",
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the design.",
         PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
 
@@ -2533,6 +2580,12 @@ public class Kit : KitProps
     /// </summary>
     [ModelProp("🏙️", "Dn*", "Dsns*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+
+    /// <summary>
+    ///     📏 The optional qualities of the kit.
+    /// </summary>
+    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()

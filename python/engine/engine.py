@@ -92,7 +92,7 @@ engine.py
 # ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 # ✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 # 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
-# 📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+# 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 # 🍾,Rl,Rel,Release,The release of the engine that created this database.
 # ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 # 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
@@ -546,7 +546,7 @@ class Semio(sqlmodel.SQLModel, table=True):
         description="⚙️ The version of the engine that created this database.",
     )
     """⚙️ The version of the engine that created this database."""
-    createdAt: datetime.datetime = sqlmodel.Field(
+    created: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="⌚ The time when the database was created.",
     )
@@ -2374,20 +2374,20 @@ class TypeUnitField(RealField, abc.ABC):
     """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
 
-class TypeCreatedAtField(RealField, abc.ABC):
+class TypeCreatedField(RealField, abc.ABC):
     """🕒 The creation date of the type."""
 
-    createdAt: datetime.datetime = sqlmodel.Field(
+    created: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The creation date of the type.",
     )
     """🕒 The creation date of the type."""
 
 
-class TypeLastUpdateAtField(RealField, abc.ABC):
+class TypeUpdatedField(RealField, abc.ABC):
     """🕒 The last update date of the type."""
 
-    lastUpdateAt: datetime.datetime = sqlmodel.Field(
+    updated: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The last update date of the type.",
     )
@@ -2428,8 +2428,8 @@ class TypeInput(
 
 
 class TypeOutput(
-    TypeLastUpdateAtField,
-    TypeCreatedAtField,
+    TypeUpdatedField,
+    TypeCreatedField,
     TypeUnitField,
     TypeVariantField,
     TypeImageField,
@@ -2456,8 +2456,8 @@ class TypeContext(
 
 
 class Type(
-    TypeLastUpdateAtField,
-    TypeCreatedAtField,
+    TypeUpdatedField,
+    TypeCreatedField,
     TypeUnitField,
     TypeVariantField,
     TypeImageField,
@@ -3445,20 +3445,20 @@ class DesignUnitField(RealField, abc.ABC):
     """📏 The unit of the design."""
 
 
-class DesignCreatedAtField(RealField, abc.ABC):
+class DesignCreatedField(RealField, abc.ABC):
     """🕒 The creation date of the design."""
 
-    createdAt: datetime.datetime = sqlmodel.Field(
+    created: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The creation date of the design.",
     )
     """🕒 The creation date of the design."""
 
 
-class DesignLastUpdateAtField(RealField, abc.ABC):
+class DesignUpdatedField(RealField, abc.ABC):
     """🕒 The last update date of the design."""
 
-    lastUpdateAt: datetime.datetime = sqlmodel.Field(
+    updated: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The last update date of the design.",
     )
@@ -3516,8 +3516,8 @@ class DesignContext(
 
 
 class DesignOutput(
-    DesignLastUpdateAtField,
-    DesignCreatedAtField,
+    DesignUpdatedField,
+    DesignCreatedField,
     DesignUnitField,
     DesignViewField,
     DesignVariantField,
@@ -3546,8 +3546,8 @@ class DesignPrediction(
 
 
 class Design(
-    DesignLastUpdateAtField,
-    DesignCreatedAtField,
+    DesignUpdatedField,
+    DesignCreatedField,
     DesignUnitField,
     DesignViewField,
     DesignVariantField,
@@ -3794,20 +3794,20 @@ class KitLicenseField(RealField, abc.ABC):
     """⚖️ The optional license [ spdx id | url ] of the kit."""
 
 
-class KitCreatedAtField(RealField, abc.ABC):
+class KitCreatedField(RealField, abc.ABC):
     """🕒 The creation date of the kit."""
 
-    createdAt: datetime.datetime = sqlmodel.Field(
+    created: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The creation date of the kit.",
     )
     """🕒 The creation date of the kit."""
 
 
-class KitLastUpdateAtField(RealField, abc.ABC):
+class KitUpdatedField(RealField, abc.ABC):
     """🕒 The last update date of the kit."""
 
-    lastUpdateAt: datetime.datetime = sqlmodel.Field(
+    updated: datetime.datetime = sqlmodel.Field(
         default_factory=datetime.datetime.now,
         description="🕒 The last update date of the kit.",
     )
@@ -3859,8 +3859,8 @@ class KitInput(
 
 
 class KitOutput(
-    KitLastUpdateAtField,
-    KitCreatedAtField,
+    KitUpdatedField,
+    KitCreatedField,
     KitLicenseField,
     KitHomepage,
     KitRemoteField,
@@ -3886,8 +3886,8 @@ class KitOutput(
 
 
 class Kit(
-    KitLastUpdateAtField,
-    KitCreatedAtField,
+    KitUpdatedField,
+    KitCreatedField,
     KitLicenseField,
     KitHomepage,
     KitRemoteField,
@@ -4284,7 +4284,7 @@ class DatabaseStore(Store, abc.ABC):
                         existingType.image = type.image
                         existingType.description = type.description
                         existingType.unit = type.unit
-                        existingType.lastUpdateAt = datetime.datetime.now()
+                        existingType.updated = datetime.datetime.now()
                         for usedPortId, usedPort in usedPorts.items():
                             usedPort.point = newPorts[usedPortId].point
                             usedPort.direction = newPorts[usedPortId].direction

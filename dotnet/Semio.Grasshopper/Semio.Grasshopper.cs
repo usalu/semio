@@ -155,7 +155,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 //✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
 //✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
 //📏,Ql,Qal,Quality,A quality is a named value with a unit and a definition.
-//📏,Ql*,Qals,Qualities,The optional machine-readable qualities of the  {{NAME}}.
+//📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
 //🍾,Rl,Rel,Release,The release of the engine that created this database.
 //☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
@@ -1856,6 +1856,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
             "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
             GH_ParamAccess.item);
+        pManager.AddPlaneParameter(new QualityParam(), "Qualities", "Ql*",
+            "The optional qualities of the piece.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
@@ -1865,6 +1867,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         var typeVariant = "";
         var plane = new Rhino.Geometry.Plane();
         var centerGoo = new DiagramPointGoo();
+        var qualitiesGoos = new List<QualityGoo>();
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
@@ -1876,6 +1879,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
             pieceGoo.Value.Plane = plane.Convert();
         if (DA.GetData(6, ref centerGoo))
             pieceGoo.Value.Center = centerGoo.Value;
+        if (DA.GetDataList(7, qualitiesGoos))
+            pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -1885,6 +1890,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(4, pieceGoo.Value.Type.Variant);
         DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
         DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
+        DA.SetDataList(7, pieceGoo.Value.Qualities.Select((Func<Quality, QualityGoo>)(q => new QualityGoo(q))).ToList());
     }
 }
 
@@ -1904,20 +1910,23 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
             "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?",
-            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn", "Tu?",
-            "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Tl?",
-            "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Shift", "Sf?",
             "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Raise", "Rs?",
+            "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?",
+            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu?",
+            "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?",
+            "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("X", "X?",
             "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -1933,11 +1942,12 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectedPortId = "";
         var connectingPieceId = "";
         var connectingPortId = "";
+        var gap = 0.0;
+        var shift = 0.0; 
+        var raise = 0.0;
         var rotation = 0.0;
         var turn = 0.0;
         var tilt = 0.0;
-        var gap = 0.0;
-        var shift = 0.0;
         var x = 0.0;
         var y = 0.0;
 
@@ -1949,19 +1959,21 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
         if (DA.GetData(5, ref connectingPortId))
             connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(6, ref rotation))
-            connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(7, ref turn))
-            connectionGoo.Value.Turn = (float)turn;
-        if (DA.GetData(8, ref tilt))
-            connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(9, ref gap))
+        if (DA.GetData(6, ref gap))
             connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(10, ref shift))
+        if (DA.GetData(7, ref shift))
             connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(11, ref x))
+        if (DA.GetData(8, ref raise))
+            connectionGoo.Value.Raise = (float)raise;
+        if (DA.GetData(9, ref rotation))
+            connectionGoo.Value.Rotation = (float)rotation;
+        if (DA.GetData(10, ref turn))
+            connectionGoo.Value.Turn = (float)turn;
+        if (DA.GetData(11, ref tilt))
+            connectionGoo.Value.Tilt = (float)tilt;
+        if (DA.GetData(12, ref x))
             connectionGoo.Value.X = (float)x;
-        if (DA.GetData(12, ref y))
+        if (DA.GetData(13, ref y))
             connectionGoo.Value.Y = (float)y;
     }
 
@@ -1971,13 +1983,14 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(3, connectionGoo.Value.Connected.Port.Id);
         DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
         DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(6, connectionGoo.Value.Rotation);
-        DA.SetData(7, connectionGoo.Value.Turn);
-        DA.SetData(8, connectionGoo.Value.Tilt);
-        DA.SetData(9, connectionGoo.Value.Gap);
-        DA.SetData(10, connectionGoo.Value.Shift);
-        DA.SetData(11, connectionGoo.Value.X);
-        DA.SetData(12, connectionGoo.Value.Y);
+        DA.SetData(6, connectionGoo.Value.Gap);
+        DA.SetData(7, connectionGoo.Value.Shift);
+        DA.SetData(8, connectionGoo.Value.Raise);
+        DA.SetData(9, connectionGoo.Value.Rotation);
+        DA.SetData(10, connectionGoo.Value.Turn);
+        DA.SetData(11, connectionGoo.Value.Tilt);
+        DA.SetData(12, connectionGoo.Value.X);
+        DA.SetData(13, connectionGoo.Value.Y);
     }
 }
 
