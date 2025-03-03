@@ -98,12 +98,12 @@ engine.py
 # 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 # 🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 # 🧱,Sd,Sde,Side,A side of a piece in a connection.
-# ↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+# ↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
 # 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 # 📺,SP,SPt,Diagram Point,A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
 # ✅,Su,Suc,Success,{{NAME}} was successful.
 # 🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-# ↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+# ↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
 # ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 # 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 # 🧩,Ty,Typ,Type,The type-related information of the side.
@@ -189,7 +189,7 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
 RELEASE = "r25.03-1"
-VERSION = "4.1.0-beta"
+VERSION = "4.2.0-beta"
 HOST = "127.0.0.1"
 PORT = 2503
 ADDRESS = "http://127.0.0.1:2503"
@@ -2919,16 +2919,28 @@ class ConnectionRotationField(RealField, abc.ABC):
     """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
 
 
+class ConnectionTurnField(RealField, abc.ABC):
+    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
+
+    turn: float = sqlmodel.Field(
+        ge=0,
+        lt=360,
+        default=0,
+        description="🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+    )
+    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
+
+
 class ConnectionTiltField(RealField, abc.ABC):
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
 
     tilt: float = sqlmodel.Field(
         ge=0,
         lt=360,
         default=0,
-        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
     )
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."""
+    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
 
 
 class ConnectionGapField(RealField, abc.ABC):
@@ -2942,13 +2954,13 @@ class ConnectionGapField(RealField, abc.ABC):
 
 
 class ConnectionShiftField(RealField, abc.ABC):
-    """↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."""
+    """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
 
     shift: float = sqlmodel.Field(
         default=0,
-        description="↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+        description="↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
     )
-    """↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."""
+    """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
 
 
 class ConnectionXField(RealField, abc.ABC):
@@ -2981,6 +2993,7 @@ class ConnectionProps(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     Props,
 ):
@@ -2993,6 +3006,7 @@ class ConnectionInput(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     Input,
 ):
@@ -3014,6 +3028,7 @@ class ConnectionContext(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     Context,
 ):
@@ -3035,6 +3050,7 @@ class ConnectionOutput(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     Output,
 ):
@@ -3056,6 +3072,7 @@ class ConnectionPrediction(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     Prediction,
 ):
@@ -3077,6 +3094,7 @@ class Connection(
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionTiltField,
+    ConnectionTurnField,
     ConnectionRotationField,
     TableEntity,
     table=True,
@@ -4793,7 +4811,7 @@ designResponseFormat = json.loads(
                         },
                         "tilt": {
                             "type": "number",
-                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees."
+                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
                         },
                         "gap": {
                             "type": "number",
@@ -4801,7 +4819,7 @@ designResponseFormat = json.loads(
                         },
                         "shift": {
                             "type": "number",
-                            "description": "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.."
+                            "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
                         },
                         "diagramX": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",

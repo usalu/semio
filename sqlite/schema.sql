@@ -162,6 +162,7 @@ CREATE TABLE compatible_family (
 );
 CREATE TABLE connection (
 	rotation FLOAT NOT NULL, 
+	turn FLOAT NOT NULL, 
 	tilt FLOAT NOT NULL, 
 	gap FLOAT NOT NULL, 
 	shift FLOAT NOT NULL, 

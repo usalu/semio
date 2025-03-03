@@ -3,7 +3,7 @@
     "info": {
         "title": "semio REST API",
         "summary": "This is the local rest API of the semio engine.",
-        "version": "4.1.0-beta"
+        "version": "4.2.0-beta"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -464,12 +464,20 @@
                         "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
                     "tilt": {
                         "type": "number",
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -481,7 +489,7 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "x": {
@@ -523,12 +531,20 @@
                         "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
                     "tilt": {
                         "type": "number",
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -540,7 +556,7 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "x": {
@@ -582,12 +598,20 @@
                         "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
                     "tilt": {
                         "type": "number",
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -599,7 +623,7 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "x": {
@@ -641,12 +665,20 @@
                         "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
                     "tilt": {
                         "type": "number",
                         "exclusiveMaximum": 360.0,
                         "minimum": 0.0,
                         "title": "Tilt",
-                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                         "default": 0
                     },
                     "gap": {
@@ -658,7 +690,7 @@
                     "shift": {
                         "type": "number",
                         "title": "Shift",
-                        "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                         "default": 0
                     },
                     "x": {

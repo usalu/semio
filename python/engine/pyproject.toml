@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "semio-engine"
-version = "4.1.0-beta"
+version = "4.2.0-beta"
 description = "The engine that powers semio."
 authors = ["Ueli Saluz <ueli@semio-tech.com>"]
 maintainers = ["Ueli Saluz <ueli@semio-tech.com>"]

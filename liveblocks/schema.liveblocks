@@ -74,9 +74,9 @@ type Connection {
     gap?: number;
     # 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
     rotation?: number;
-    # ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
+    # ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..
     shift?: number;
-    # ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+    # ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
     tilt?: number;
     # ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
     x?: number;

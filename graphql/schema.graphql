@@ -185,6 +185,7 @@ type Vector {
 
 type Connection implements Node {
   rotation: Float!
+  turn: Float!
   tilt: Float!
   gap: Float!
   shift: Float!
@@ -642,7 +643,12 @@ input ConnectionInputNode {
   rotation: Float = 0
 
   """
-  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+  🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+  """
+  turn: Float = 0
+
+  """
+  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
   """
   tilt: Float = 0
 
@@ -652,7 +658,7 @@ input ConnectionInputNode {
   gap: Float = 0
 
   """
-  ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
+  ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..
   """
   shift: Float = 0
 

@@ -170,11 +170,11 @@ public enum EncodeMode
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 //🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 //🧱,Sd,Sde,Side,A side of a piece in a connection.
-//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
 //📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 //✅,Su,Suc,Success,{{NAME}} was successful.
 //🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
 //▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 //🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 //🧩,Ty,Typ,Type,The type-related information of the side.
@@ -296,7 +296,7 @@ public static class Utility
     public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>, List<string>>? replace = null)
     {
         string encoded = text;
-        if(mode == EncodeMode.Urlsafe)
+        if (mode == EncodeMode.Urlsafe)
             encoded = Uri.EscapeDataString(text);
         if (mode == EncodeMode.Base64)
             encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
@@ -316,7 +316,7 @@ public static class Utility
         return encoded;
     }
 
-    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>,List<string>>? replace = null)
+    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe, Tuple<List<string>, List<string>>? replace = null)
     {
         string decoded = text;
         if (replace != null)
@@ -1721,6 +1721,7 @@ public class Side : Model<Side>
 public class Connection : Model<Connection>
 {
     private float _rotation;
+    private float _turn;
     private float _tilt;
 
     /// <summary>
@@ -1747,11 +1748,21 @@ public class Connection : Model<Connection>
     }
 
     /// <summary>
-    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected
+    ///     🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+    /// </summary>
+    [AngleProp("🛞","Tu","Tur", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
+    public float Turn
+    {
+        get => _turn;
+        set => _turn = (value % 360 + 360) % 360;
+    }
+
+    /// <summary>
+    ///     ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected
     ///     and the connecting piece in degrees.
     /// </summary>
     [AngleProp("∡", "Tl?", "Tlt?",
-        "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.")]
+        "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
     public float Tilt
     {
         get => _tilt;
@@ -1767,12 +1778,12 @@ public class Connection : Model<Connection>
     public float Gap { get; set; } = 0;
 
     /// <summary>
-    ///     ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the
+    ///     ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the
     ///     connecting piece.
     /// </summary>
 
     [NumberProp("↔️", "Sf?", "Sft?",
-        "The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.")]
+        "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.")]
     public float Shift { get; set; } = 0;
 
     /// <summary>
@@ -1976,7 +1987,7 @@ public class Design : DesignProps
     }
 
     public Design Flatten(IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane)
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, Plane> computeChildPlane)
     {
         if (Pieces.Count > 1 && Connections.Count > 0)
         {
@@ -2008,7 +2019,7 @@ public class Design : DesignProps
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
                     childPort.Point,
-                    childPort.Direction, connection.Rotation, connection.Tilt, connection.Gap, connection.Shift);
+                    childPort.Direction, connection.Rotation, connection.Turn ,connection.Tilt, connection.Gap, connection.Shift);
                 child.Plane = childPlane;
 
                 var direction = new DiagramPoint
@@ -2101,7 +2112,7 @@ public class Design : DesignProps
     // TODO: Make remote uris work for diagram.
     public string Diagram(
         IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, Plane> computeChildPlane,
+        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, Plane> computeChildPlane,
         string kitDirectory = "",
         float iconWidth = 48, float iconStroke = 1f, float connectionStroke = 2f, float margin = 0)
     {

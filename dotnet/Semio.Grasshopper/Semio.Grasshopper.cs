@@ -56,6 +56,7 @@ using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino;
 using Rhino.Geometry;
+using Grasshopper.Kernel.Types.Transforms;
 
 #endregion
 
@@ -66,7 +67,7 @@ namespace Semio.Grasshopper;
 public static class Constants
 {
     public const string Category = Semio.Constants.Name;
-    public const string Version = "5.1.1-beta";
+    public const string Version = "5.2.0-beta";
 }
 
 #endregion
@@ -162,11 +163,11 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 //💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
 //🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
 //🧱,Sd,Sde,Side,A side of a piece in a connection.
-//↔️,Sf,Sft,Shift,The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece.
+//↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
 //📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
 //✅,Su,Suc,Success,{{NAME}} was successful.
 //🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
+//↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
 //▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
 //🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
 //🧩,Ty,Typ,Type,The type-related information of the side.
@@ -237,16 +238,17 @@ public static class Utility
     }
 
     public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
-        Point childPoint, Vector childDirection, float rotation, float tilt, float gap, float shift)
+        Point childPoint, Vector childDirection, float rotation, float turn, float tilt, float gap, float shift)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
         var revertedChildPointR = new Vector3d(childPoint.Convert());
         revertedChildPointR.Reverse();
-        var gapDirectionR = new Vector3d(parentDirectionR);
+        //var gapDirectionR = new Vector3d(parentDirectionR);
         var reverseChildDirectionR = childDirection.Convert();
         reverseChildDirectionR.Reverse();
         var rotationRad = RhinoMath.ToRadians(rotation);
+        var turnRad = RhinoMath.ToRadians(turn);
         var tiltRad = RhinoMath.ToRadians(tilt);
 
         // orient
@@ -270,23 +272,32 @@ public static class Utility
         {
             directionT = Transform.Rotation(reverseChildDirectionR, parentDirectionR, new Point3d());
         }
-
-        var tiltAxisRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
+        var turnAxis = Vector3d.ZAxis;
         var tiltAxis = Vector3d.XAxis;
-        tiltAxis.Transform(tiltAxisRotation);
-
-        var gapDirection = gapDirectionR;
-
+        var gapDirection = Vector3d.YAxis;
+        var shiftDirection = Vector3d.XAxis;
         var orientationT = directionT;
 
+        var parentRotation = Transform.Rotation(Vector3d.YAxis, parentDirectionR, new Point3d());
+
+        turnAxis.Transform(parentRotation);
+        tiltAxis.Transform(parentRotation);
+        gapDirection.Transform(parentRotation);
+        shiftDirection.Transform(parentRotation);
+
         var rotateT = Transform.Rotation(-rotationRad, parentDirectionR, new Point3d());
-        orientationT = rotateT * directionT;
+        orientationT = rotateT * orientationT;
+        turnAxis.Transform(rotateT);
         tiltAxis.Transform(rotateT);
-        gapDirection.Transform(rotateT);
+        //gapDirection.Transform(rotateT);
+
+        var turnT = Transform.Rotation(turnRad, turnAxis, new Point3d());
+        orientationT = turnT * orientationT;
+        //gapDirection.Transform(turnT);
 
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
-        gapDirection.Transform(tiltT);
+        //gapDirection.Transform(tiltT);
 
         // move
 
@@ -296,8 +307,8 @@ public static class Utility
 
 
         var gapTransform = Transform.Translation(gapDirection * gap);
-        var shiftDirection = new Vector3d(tiltAxis) * shift;
-        var shiftTransform = Transform.Translation(shiftDirection);
+        //var shiftDirection = new Vector3d(tiltAxis) * shift;
+        var shiftTransform = Transform.Translation(shiftDirection * shift);
         var translation = gapTransform * shiftTransform;
 
         transform = translation * transform;
@@ -1122,7 +1133,7 @@ public class DecodeTextComponent : ScriptingComponent
         DA.GetData(1, ref mode);
         DA.GetDataList(2, replace);
         DA.GetDataList(3, original);
-        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace,original)));
+        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
     }
 }
 
@@ -1880,9 +1891,10 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Rotation", "Rt?",
             "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
             GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn","Tu?", "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Tilt", "Tl?",
-            "The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
+            "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+        GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
@@ -1904,6 +1916,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectingPieceId = "";
         var connectingPortId = "";
         var rotation = 0.0;
+        var turn = 0.0;
         var tilt = 0.0;
         var gap = 0.0;
         var shift = 0.0;
@@ -1920,15 +1933,17 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.Connecting.Port.Id = connectingPortId;
         if (DA.GetData(6, ref rotation))
             connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(7, ref tilt))
+        if (DA.GetData(7, ref turn))
+            connectionGoo.Value.Turn = (float)turn;
+        if (DA.GetData(8, ref tilt))
             connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(8, ref gap))
+        if (DA.GetData(9, ref gap))
             connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(9, ref shift))
+        if (DA.GetData(10, ref shift))
             connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(10, ref x))
+        if (DA.GetData(11, ref x))
             connectionGoo.Value.X = (float)x;
-        if (DA.GetData(11, ref y))
+        if (DA.GetData(12, ref y))
             connectionGoo.Value.Y = (float)y;
     }
 
@@ -1939,11 +1954,12 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
         DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
         DA.SetData(6, connectionGoo.Value.Rotation);
-        DA.SetData(7, connectionGoo.Value.Tilt);
-        DA.SetData(8, connectionGoo.Value.Gap);
-        DA.SetData(9, connectionGoo.Value.Shift);
-        DA.SetData(10, connectionGoo.Value.X);
-        DA.SetData(11, connectionGoo.Value.Y);
+        DA.SetData(7, connectionGoo.Value.Turn);
+        DA.SetData(8, connectionGoo.Value.Tilt);
+        DA.SetData(9, connectionGoo.Value.Gap);
+        DA.SetData(10, connectionGoo.Value.Shift);
+        DA.SetData(11, connectionGoo.Value.X);
+        DA.SetData(12, connectionGoo.Value.Y);
     }
 }
 

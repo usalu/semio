@@ -34,9 +34,17 @@
                     "title": "Rotation",
                     "type": "number"
                 },
+                "turn": {
+                    "default": 0,
+                    "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                    "exclusiveMaximum": 360.0,
+                    "minimum": 0.0,
+                    "title": "Turn",
+                    "type": "number"
+                },
                 "tilt": {
                     "default": 0,
-                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.",
+                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
                     "exclusiveMaximum": 360.0,
                     "minimum": 0.0,
                     "title": "Tilt",
@@ -50,7 +58,7 @@
                 },
                 "shift": {
                     "default": 0,
-                    "description": "\u2194\ufe0f The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..",
+                    "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
                     "title": "Shift",
                     "type": "number"
                 },
