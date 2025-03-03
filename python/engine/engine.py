@@ -2759,6 +2759,10 @@ class Piece(TableEntity, table=True):
     """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
     centerY: typing.Optional[float] = sqlmodel.Field(default=None, exclude=True)
     """🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="piece", cascade_delete=True
+    )
+    """📏 The qualities of the type."""
     designPk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "design_id",
@@ -3156,13 +3160,22 @@ class Connection(
     PLURAL = "connections"
     __tablename__ = "connection"
 
+    pk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "id",
+            sqlalchemy.Integer(),
+            primary_key=True,
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The primary key of the piece in the database."""
     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedPieceId",
         sa_column=sqlmodel.Column(
             "connected_piece_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("piece.id"),
-            primary_key=True,
         ),
         default=None,
         exclude=True,
@@ -3180,7 +3193,6 @@ class Connection(
             "connected_port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
-            primary_key=True,
         ),
         default=None,
         exclude=True,
@@ -3198,7 +3210,6 @@ class Connection(
             "connecting_piece_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("piece.id"),
-            primary_key=True,
         ),
         exclude=True,
         default=None,
@@ -3216,7 +3227,6 @@ class Connection(
             "connecting_port_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("port.id"),
-            primary_key=True,
         ),
         default=None,
         exclude=True,
@@ -3228,6 +3238,10 @@ class Connection(
             foreign_keys="[Connection.connectingPortPk]",
         )
     )
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="connection", cascade_delete=True
+    )
+    """📏 The qualities of the type."""
     designPk: typing.Optional[int] = sqlmodel.Field(
         alias="designId",
         sa_column=sqlmodel.Column(
@@ -3922,6 +3936,10 @@ class Kit(
         back_populates="kit", cascade_delete=True
     )
     """🏙️ The designs of the kit."""
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="kit", cascade_delete=True
+    )
+    """📏 The qualities of the kit."""
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri"),)
 
@@ -4289,17 +4307,17 @@ class DatabaseStore(Store, abc.ABC):
                             usedPort.point = newPorts[usedPortId].point
                             usedPort.direction = newPorts[usedPortId].direction
 
-                            for locator in list(usedPort.locators):
-                                self.session.delete(locator)
-                            usedPort.locators = []
+                            for quality in list(usedPort.qualities):
+                                self.session.delete(quality)
+                            usedPort.qualities = []
                             self.session.flush()
 
-                            newLocators = []
-                            for newLocator in list(newPorts[usedPortId].locators):
-                                newLocator.port = usedPort
-                                self.session.add(newLocator)
-                                newLocators.append(newLocator)
-                            usedPort.locators = newLocators
+                            newQualities = []
+                            for newQuality in list(newPorts[usedPortId].qualities):
+                                newQuality.port = usedPort
+                                self.session.add(newQuality)
+                                newQualities.append(newQuality)
+                            usedPort.qualities = newQualities
                             self.session.flush()
 
                         for unusedPort in list(unusedPorts):
@@ -4600,8 +4618,8 @@ def encodeType(type: TypeContext):
     )
     for port in typeClone.ports:
         port.id_ = replaceDefault(port.id_, "DEFAULT")
-        for locator in port.locators:
-            locator.subgroup = replaceDefault(locator.subgroup, "TRUE")
+        # for quality in port.qualities:
+        #     quality.value = replaceDefault(quality.value, "TRUE")
     return typeClone
 
 
@@ -4792,18 +4810,18 @@ designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
 
 TYPE{NAME;VARIANT;DESCRIPTION;PORTS}
-PORT{ID;DESCRIPTION,LOCATORS}
-LOCATOR{GROUP;SUBGROUP}
+PORT{ID;DESCRIPTION,FAMILY,COMPATIBLEFAMILIES}
+COMPATIBLEFAMILY{NAME}
 
 Available types:
 {% for type in types %}
 {% raw %}{{% endraw -%}
 {{ type.name }};{{ type.variant }};{{ type.description }};
 {%- for port in type.ports %}
-{%- raw %}{{% endraw -%}{{ port.id_ }};{{ port.description }};
-{%- for locator in port.locators %}
+{%- raw %}{{% endraw -%}{{ port.id_ }};{{ port.description }};{{ port.family }}
+{%- for compatibleFamily in port.compatibleFamilies %}
 {%- raw %}{{% endraw -%}
-{{ locator.group }};{{ locator.subgroup }}}
+{{ compatibleFamily }}
 {%- endfor -%}
 {%- raw %}}{% endraw -%}
 {%- endfor -%}
@@ -4865,14 +4883,6 @@ designResponseFormat = json.loads(
                         "connectingPieceTypePortId": {
                             "type": "string"
                         },
-                        "rotation": {
-                            "type": "number",
-                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
-                        },
-                        "tilt": {
-                            "type": "number",
-                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
-                        },
                         "gap": {
                             "type": "number",
                             "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. "
@@ -4880,6 +4890,22 @@ designResponseFormat = json.loads(
                         "shift": {
                             "type": "number",
                             "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
+                        },
+                        "raise": {
+                            "type": "number",
+                            "description": "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                        },
+                        "rotation": {
+                            "type": "number",
+                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+                        },
+                        "turn": {
+                            "type": "number",
+                            "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                        },
+                        "tilt": {
+                            "type": "number",
+                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
                         },
                         "diagramX": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -5178,25 +5204,30 @@ class TableEntityNode(TableNode):
         super().__init_subclass_with_meta__(model=model, **options)
 
 
+class QualityNode(TableEntityNode):
+    class Meta:
+        model = Quality
+
+
+class QualityInputNode(InputNode):
+    class Meta:
+        model = QualityInput
+
+
 class RepresentationNode(TableEntityNode):
     class Meta:
         model = Representation
         excludedFields = ("tags_",)
 
+    qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+
+    def resolve_qualities(self, info):
+        return self.qualities
+
 
 class RepresentationInputNode(InputNode):
     class Meta:
         model = RepresentationInput
-
-
-class LocatorNode(TableNode):
-    class Meta:
-        model = Locator
-
-
-class LocatorInputNode(InputNode):
-    class Meta:
-        model = LocatorInput
 
 
 class DiagramPointNode(Node):
@@ -5244,10 +5275,10 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    locators = graphene.List(graphene.NonNull(lambda: LocatorNode))
+    qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
 
-    def resolve_locators(self, info):
-        return self.locators
+    def resolve_qualities(self, info):
+        return self.qualities
 
 
 class PortInputNode(InputNode):
@@ -5258,16 +5289,6 @@ class PortInputNode(InputNode):
 class PortIdInputNode(InputNode):
     class Meta:
         model = PortId
-
-
-class QualityNode(TableEntityNode):
-    class Meta:
-        model = Quality
-
-
-class QualityInputNode(InputNode):
-    class Meta:
-        model = QualityInput
 
 
 class AuthorNode(TableEntityNode):

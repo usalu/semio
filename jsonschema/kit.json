@@ -26,6 +26,24 @@
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
+                "gap": {
+                    "default": 0,
+                    "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                    "title": "Gap",
+                    "type": "number"
+                },
+                "shift": {
+                    "default": 0,
+                    "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                    "title": "Shift",
+                    "type": "number"
+                },
+                "raise_": {
+                    "default": 0,
+                    "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                    "title": "Raise",
+                    "type": "number"
+                },
                 "rotation": {
                     "default": 0,
                     "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
@@ -48,18 +66,6 @@
                     "exclusiveMaximum": 360.0,
                     "minimum": 0.0,
                     "title": "Tilt",
-                    "type": "number"
-                },
-                "gap": {
-                    "default": 0,
-                    "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
-                    "title": "Gap",
-                    "type": "number"
-                },
-                "shift": {
-                    "default": 0,
-                    "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
-                    "title": "Shift",
                     "type": "number"
                 },
                 "x": {
@@ -141,16 +147,16 @@
                     "title": "Unit",
                     "type": "string"
                 },
-                "createdAt": {
+                "created": {
                     "description": "\ud83d\udd52 The creation date of the design.",
                     "format": "date-time",
-                    "title": "Createdat",
+                    "title": "Created",
                     "type": "string"
                 },
-                "lastUpdateAt": {
+                "updated": {
                     "description": "\ud83d\udd52 The last update date of the design.",
                     "format": "date-time",
-                    "title": "Lastupdateat",
+                    "title": "Updated",
                     "type": "string"
                 },
                 "pieces": {
@@ -207,29 +213,6 @@
                 "y"
             ],
             "title": "DiagramPoint",
-            "type": "object"
-        },
-        "Locator": {
-            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
-            "properties": {
-                "group": {
-                    "description": "\ud83d\udc6a The group of the locator.",
-                    "maxLength": 64,
-                    "title": "Group",
-                    "type": "string"
-                },
-                "subgroup": {
-                    "default": "",
-                    "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                    "maxLength": 64,
-                    "title": "Subgroup",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "group"
-            ],
-            "title": "Locator",
             "type": "object"
         },
         "PieceId": {
@@ -402,12 +385,12 @@
                     "title": "T",
                     "type": "number"
                 },
-                "locators": {
-                    "description": "\ud83d\uddfa\ufe0f The locators of the port.",
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the port.",
                     "items": {
-                        "$ref": "#/$defs/Locator"
+                        "$ref": "#/$defs/Quality"
                     },
-                    "title": "Locators",
+                    "title": "Qualities",
                     "type": "array"
                 }
             },
@@ -477,6 +460,14 @@
                     "maxLength": 2048,
                     "title": "Url",
                     "type": "string"
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the representation.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
+                    "type": "array"
                 }
             },
             "required": [
@@ -570,16 +561,16 @@
                     "title": "Unit",
                     "type": "string"
                 },
-                "createdAt": {
+                "created": {
                     "description": "\ud83d\udd52 The creation date of the type.",
                     "format": "date-time",
-                    "title": "Createdat",
+                    "title": "Created",
                     "type": "string"
                 },
-                "lastUpdateAt": {
+                "updated": {
                     "description": "\ud83d\udd52 The last update date of the type.",
                     "format": "date-time",
-                    "title": "Lastupdateat",
+                    "title": "Updated",
                     "type": "string"
                 },
                 "representations": {
@@ -715,16 +706,16 @@
             "title": "License",
             "type": "string"
         },
-        "createdAt": {
+        "created": {
             "description": "\ud83d\udd52 The creation date of the kit.",
             "format": "date-time",
-            "title": "Createdat",
+            "title": "Created",
             "type": "string"
         },
-        "lastUpdateAt": {
+        "updated": {
             "description": "\ud83d\udd52 The last update date of the kit.",
             "format": "date-time",
-            "title": "Lastupdateat",
+            "title": "Updated",
             "type": "string"
         },
         "types": {

@@ -23,29 +23,6 @@
             "title": "Author",
             "type": "object"
         },
-        "Locator": {
-            "description": "\ud83d\uddfa\ufe0f A locator is meta-data for grouping ports.",
-            "properties": {
-                "group": {
-                    "description": "\ud83d\udc6a The group of the locator.",
-                    "maxLength": 64,
-                    "title": "Group",
-                    "type": "string"
-                },
-                "subgroup": {
-                    "default": "",
-                    "description": "\ud83d\udccc The optional sub-group of the locator. No sub-group means true.",
-                    "maxLength": 64,
-                    "title": "Subgroup",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "group"
-            ],
-            "title": "Locator",
-            "type": "object"
-        },
         "Point": {
             "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
             "properties": {
@@ -119,12 +96,12 @@
                     "title": "T",
                     "type": "number"
                 },
-                "locators": {
-                    "description": "\ud83d\uddfa\ufe0f The locators of the port.",
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the port.",
                     "items": {
-                        "$ref": "#/$defs/Locator"
+                        "$ref": "#/$defs/Quality"
                     },
-                    "title": "Locators",
+                    "title": "Qualities",
                     "type": "array"
                 }
             },
@@ -194,6 +171,14 @@
                     "maxLength": 2048,
                     "title": "Url",
                     "type": "string"
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the representation.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
+                    "type": "array"
                 }
             },
             "required": [
@@ -274,16 +259,16 @@
             "title": "Unit",
             "type": "string"
         },
-        "createdAt": {
+        "created": {
             "description": "\ud83d\udd52 The creation date of the type.",
             "format": "date-time",
-            "title": "Createdat",
+            "title": "Created",
             "type": "string"
         },
-        "lastUpdateAt": {
+        "updated": {
             "description": "\ud83d\udd52 The last update date of the type.",
             "format": "date-time",
-            "title": "Lastupdateat",
+            "title": "Updated",
             "type": "string"
         },
         "representations": {

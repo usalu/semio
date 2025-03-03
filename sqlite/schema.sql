@@ -1,7 +1,7 @@
 CREATE TABLE semio (
 	release VARCHAR NOT NULL, 
 	engine VARCHAR NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
 	PRIMARY KEY (release)
 );
 CREATE TABLE plane (
@@ -39,8 +39,8 @@ CREATE TABLE kit (
 	remote VARCHAR(2048) NOT NULL, 
 	homepage VARCHAR(2048) NOT NULL, 
 	license VARCHAR(2048) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	UNIQUE (uri)
@@ -52,8 +52,8 @@ CREATE TABLE type (
 	image VARCHAR(2048) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
@@ -68,8 +68,8 @@ CREATE TABLE design (
 	variant VARCHAR(64) NOT NULL, 
 	"view" VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
-	"createdAt" DATETIME NOT NULL, 
-	"lastUpdateAt" DATETIME NOT NULL, 
+	created DATETIME NOT NULL, 
+	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
@@ -100,18 +100,6 @@ CREATE TABLE port (
 	PRIMARY KEY (id), 
 	CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), 
 	FOREIGN KEY(type_id) REFERENCES type (id)
-);
-CREATE TABLE quality (
-	name VARCHAR(64) NOT NULL, 
-	value VARCHAR(64) NOT NULL, 
-	unit VARCHAR(64) NOT NULL, 
-	definition VARCHAR(4096) NOT NULL, 
-	id INTEGER NOT NULL, 
-	type_id INTEGER, 
-	design_id INTEGER, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(type_id) REFERENCES type (id), 
-	FOREIGN KEY(design_id) REFERENCES design (id)
 );
 CREATE TABLE author (
 	name VARCHAR(64) NOT NULL, 
@@ -146,13 +134,6 @@ CREATE TABLE tag (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(representation_id) REFERENCES representation (id)
 );
-CREATE TABLE locator (
-	subgroup VARCHAR(64) NOT NULL, 
-	group_name VARCHAR(64) NOT NULL, 
-	port_id INTEGER NOT NULL, 
-	PRIMARY KEY (group_name, port_id), 
-	FOREIGN KEY(port_id) REFERENCES port (id)
-);
 CREATE TABLE compatible_family (
 	name VARCHAR(64) NOT NULL, 
 	id INTEGER NOT NULL, 
@@ -161,23 +142,47 @@ CREATE TABLE compatible_family (
 	FOREIGN KEY(port_id) REFERENCES port (id)
 );
 CREATE TABLE connection (
+	gap FLOAT NOT NULL, 
+	shift FLOAT NOT NULL, 
+	raise_ FLOAT NOT NULL, 
 	rotation FLOAT NOT NULL, 
 	turn FLOAT NOT NULL, 
 	tilt FLOAT NOT NULL, 
-	gap FLOAT NOT NULL, 
-	shift FLOAT NOT NULL, 
 	x FLOAT NOT NULL, 
 	y FLOAT NOT NULL, 
-	connected_piece_id INTEGER NOT NULL, 
-	connected_port_id INTEGER NOT NULL, 
-	connecting_piece_id INTEGER NOT NULL, 
-	connecting_port_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	connected_piece_id INTEGER, 
+	connected_port_id INTEGER, 
+	connecting_piece_id INTEGER, 
+	connecting_port_id INTEGER, 
 	design_id INTEGER NOT NULL, 
-	PRIMARY KEY (connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id), 
+	PRIMARY KEY (id, design_id), 
 	CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), 
 	FOREIGN KEY(connected_piece_id) REFERENCES piece (id), 
 	FOREIGN KEY(connected_port_id) REFERENCES port (id), 
 	FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), 
 	FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
 	FOREIGN KEY(design_id) REFERENCES design (id)
+);
+CREATE TABLE quality (
+	name VARCHAR(64) NOT NULL, 
+	value VARCHAR(64) NOT NULL, 
+	unit VARCHAR(64) NOT NULL, 
+	definition VARCHAR(4096) NOT NULL, 
+	id INTEGER NOT NULL, 
+	representation_id INTEGER, 
+	port_id INTEGER, 
+	type_id INTEGER, 
+	piece_id INTEGER, 
+	connection_id INTEGER, 
+	design_id INTEGER, 
+	kit_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(representation_id) REFERENCES representation (id), 
+	FOREIGN KEY(port_id) REFERENCES port (id), 
+	FOREIGN KEY(type_id) REFERENCES type (id), 
+	FOREIGN KEY(piece_id) REFERENCES piece (id), 
+	FOREIGN KEY(connection_id) REFERENCES connection (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id), 
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
