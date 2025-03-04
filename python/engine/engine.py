@@ -508,6 +508,17 @@ class NoKitAssigned(NoParentAssigned):
         return "👪 The entity has no parent kit assigned."
 
 
+class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(
+    NoRepresentationAssigned,
+    NoTypeAssigned,
+    NoDesignAssigned,
+    NoKitAssigned,
+):
+
+    def __str__(self):
+        return "👪 The entity has no parent representation, port, type, piece, connection, design or kit assigned."
+
+
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
 
@@ -615,7 +626,7 @@ class Output(Base, abc.ABC):
 
 
 class Prediction(Base, abc.ABC):
-    """🔮 The base for predictions. All fields that are required to predict the entity by an llm."""
+    """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
 ## Entities ##
@@ -895,13 +906,34 @@ class Quality(
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id"),
     )
 
-    def parent(self) -> "Type":
-        """👪 The parent type or design of the quality or otherwise `NoTypeOrDesignAssigned` is raised."""
+    def parent(
+        self,
+    ) -> (
+        "Representation"
+        | "Port"
+        | "Type"
+        | "Piece"
+        | "Connection"
+        | "Design"
+        | "Kit"
+        | None
+    ):
+        """👪 The parent type or design of the quality or otherwise `NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned` is raised."""
+        if self.representation is not None:
+            return self.representation
+        if self.port is not None:
+            return self.port
         if self.type is not None:
             return self.type
+        if self.piece is not None:
+            return self.piece
+        if self.connection is not None:
+            return self.connection
         if self.design is not None:
             return self.design
-        raise NoTypeOrDesignAssigned()
+        if self.kit is not None:
+            return self.kit
+        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the quality within its parent type."""
@@ -1132,12 +1164,16 @@ class Representation(
             entity.tags = obj["tags"]
         except KeyError:
             pass
+        try:
+            entity.qualities = [Quality.parse(quality) for quality in obj["qualities"]]
+        except KeyError:
+            pass
         return entity
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the representation within its parent type."""
-        return [self.mime, self.lod, self.tags]
+        return [self.mime, self.tags]
 
 
 ### Screen Points ###
@@ -1498,22 +1534,6 @@ class Plane(Table, table=True):
     )
     piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
     """👪 The parent piece of the plane."""
-    __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            """
-            (
-                (origin_x IS NULL AND origin_y IS NULL AND origin_z IS NULL AND
-                 x_axis_x IS NULL AND x_axis_y IS NULL AND x_axis_z IS NULL AND
-                 y_axis_x IS NULL AND y_axis_y IS NULL AND y_axis_z IS NULL)
-            OR
-                (origin_x IS NOT NULL AND origin_y IS NOT NULL AND origin_z IS NOT NULL AND
-                 x_axis_x IS NOT NULL AND x_axis_y IS NOT NULL AND x_axis_z IS NOT NULL AND
-                 y_axis_x IS NOT NULL AND y_axis_y IS NOT NULL AND y_axis_z IS NOT NULL)
-            )
-            """,
-            name="plane set or not set",
-        ),
-    )
 
     # def __init__(
     #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
@@ -1830,7 +1850,18 @@ class CompatibleFamilyNameField(RealField, abc.ABC):
     """📛 The name of the compatible port family."""
 
 
-class CompatibleFamily(CompatibleFamilyNameField, Table, table=True):
+class CompatibleFamilyOrderField(RealField, abc.ABC):
+    """🔢 The order of the compatible port family."""
+
+    order: int = sqlmodel.Field(
+        description="🔢 The order of the compatible port family.",
+    )
+    """🔢 The order of the compatible port family."""
+
+
+class CompatibleFamily(
+    CompatibleFamilyOrderField, CompatibleFamilyNameField, Table, table=True
+):
     """✅ A compatible family is a label to group representations."""
 
     __tablename__ = "compatible_family"
@@ -1942,8 +1973,6 @@ class PortId(PortIdField, Id):
 
 class PortProps(
     PortTField,
-    PortDirectionField,
-    PortPointField,
     PortCompatibleFamiliesField,
     PortFamilyField,
     PortDescriptionField,
@@ -2123,11 +2152,16 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
 
     @property
     def compatibleFamilies(self) -> list[str]:
-        return [f.name for f in self.compatibleFamilies_]
+        return sorted(
+            [cf.name for cf in self.compatibleFamilies_], key=lambda x: x.order
+        )
 
     @compatibleFamilies.setter
-    def compatibleFamilies(self, families: list[str]):
-        self.compatibleFamilies_ = [CompatibleFamily(name=f) for f in families]
+    def compatibleFamilies(self, compatibleFamilies: list[str]):
+        self.compatibleFamilies_ = [
+            CompatibleFamily(name=cf, order=i)
+            for i, cf in enumerate(compatibleFamilies)
+        ]
 
     @property
     def point(self) -> Point:
@@ -2175,14 +2209,18 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
             if isinstance(input, str)
             else input if isinstance(input, dict) else input.__dict__
         )
+        props = PortProps.model_validate(obj)
+        entity = cls(**props.model_dump())
         point = Point.parse(obj["point"])
         direction = Vector.parse(obj["direction"])
-        entity = cls(id_=obj["id_"])
         entity.point = point
         entity.direction = direction
         try:
-            qualities = [Quality.parse(l) for l in obj["locators"]]
-            entity.qualities = qualities
+            entity.compatibleFamilies = obj["compatibleFamilies"]
+        except KeyError:
+            pass
+        try:
+            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
         except KeyError:
             pass
         return entity
