@@ -202,7 +202,7 @@ DESCRIPTION_LENGTH_LIMIT = 4096
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
-KIT_LOCAL_FILENAME = "kit.sqlite3"
+KIT_LOCAL_FILENAME = "kit.db"
 KIT_LOCAL_SUFFIX = str(
     pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
 )
@@ -777,11 +777,7 @@ class Quality(
     PLURAL = "qualities"
     __tablename__ = "quality"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -961,11 +957,7 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
 
     __tablename__ = "tag"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -1088,11 +1080,7 @@ class Representation(
     PLURAL = "representations"
     __tablename__ = "representation"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -1445,11 +1433,7 @@ class Plane(Table, table=True):
 
     __tablename__ = "plane"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -1859,11 +1843,7 @@ class CompatibleFamily(
 
     __tablename__ = "compatible_family"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -2041,11 +2021,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     PLURAL = "ports"
     __tablename__ = "port"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -2281,11 +2257,7 @@ class Author(
     PLURAL = "authors"
     __tablename__ = "author"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -2504,11 +2476,7 @@ class Type(
     PLURAL = "types"
     __tablename__ = "type"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -2760,11 +2728,7 @@ class Piece(TableEntity, table=True):
     PLURAL = "pieces"
     __tablename__ = "piece"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -3207,11 +3171,7 @@ class Connection(
     __tablename__ = "connection"
 
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -3294,7 +3254,6 @@ class Connection(
             "design_id",
             sqlalchemy.Integer(),
             sqlalchemy.ForeignKey("design.id"),
-            primary_key=True,
         ),
         default=None,
         exclude=True,
@@ -3623,11 +3582,7 @@ class Design(
     PLURAL = "designs"
     __tablename__ = "design"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
@@ -3974,11 +3929,7 @@ class Kit(
     PLURAL = "kits"
     __tablename__ = "kit"
     pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "id",
-            sqlalchemy.Integer(),
-            primary_key=True,
-        ),
+        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
