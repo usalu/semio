@@ -2289,6 +2289,7 @@ class Author(
         default=None,
         exclude=True,
     )
+    """🔑 The primary key of the author in the database."""
     typePk: typing.Optional[int] = sqlmodel.Field(
         # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
@@ -3214,7 +3215,7 @@ class Connection(
         default=None,
         exclude=True,
     )
-    """🔑 The primary key of the piece in the database."""
+    """🔑 The primary key of the connection in the database."""
     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedPieceId",
         sa_column=sqlmodel.Column(
