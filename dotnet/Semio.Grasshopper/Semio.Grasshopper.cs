@@ -1895,10 +1895,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(4, pieceGoo.Value.Type.Variant);
         DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
         DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
-        var pieceGoos = new List<QualityGoo>();
+        var qualityGoos = new List<QualityGoo>();
         foreach (Quality quality in pieceGoo.Value.Qualities)
-            pieceGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(7, pieceGoos);
+            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(7, qualityGoos);
     }
 }
 
@@ -1942,6 +1942,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Y", "Y?",
             "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
             GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1958,6 +1959,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var tilt = 0.0;
         var x = 0.0;
         var y = 0.0;
+        var qualitiesGoos = new List<QualityGoo>();
 
         if (DA.GetData(2, ref connectedPieceId))
             connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
@@ -1983,6 +1985,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.X = (float)x;
         if (DA.GetData(13, ref y))
             connectionGoo.Value.Y = (float)y;
+        if (DA.GetDataList(14, qualitiesGoos))
+            connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1999,6 +2003,10 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(11, connectionGoo.Value.Tilt);
         DA.SetData(12, connectionGoo.Value.X);
         DA.SetData(13, connectionGoo.Value.Y);
+        var qualityGoos = new List<QualityGoo>();
+        foreach (Quality quality in connectionGoo.Value.Qualities)
+            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(14, qualityGoos);
     }
 }
 

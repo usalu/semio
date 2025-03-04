@@ -908,16 +908,9 @@ class Quality(
 
     def parent(
         self,
-    ) -> (
-        "Representation"
-        | "Port"
-        | "Type"
-        | "Piece"
-        | "Connection"
-        | "Design"
-        | "Kit"
-        | None
-    ):
+    ) -> typing.Union[
+        "Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", None
+    ]:
         """👪 The parent type or design of the quality or otherwise `NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned` is raised."""
         if self.representation is not None:
             return self.representation
@@ -2153,7 +2146,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
     @property
     def compatibleFamilies(self) -> list[str]:
         return sorted(
-            [cf.name for cf in self.compatibleFamilies_], key=lambda x: x.order
+            [cf.name for cf in self.compatibleFamilies_], key=lambda cf: cf.order
         )
 
     @compatibleFamilies.setter
@@ -2461,8 +2454,8 @@ class TypeInput(
 
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(
@@ -2480,8 +2473,8 @@ class TypeOutput(
 
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeContext(
@@ -2528,14 +2521,14 @@ class Type(
         back_populates="type", cascade_delete=True
     )
     """🔌 The ports of the type."""
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="type", cascade_delete=True
-    )
-    """📏 The qualities of the type."""
     authors_: list[Author] = sqlmodel.Relationship(
         back_populates="type", cascade_delete=True
     )
     """👤 The authors of the type."""
+    qualities: list[Quality] = sqlmodel.Relationship(
+        back_populates="type", cascade_delete=True
+    )
+    """📏 The qualities of the type."""
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column(
@@ -2599,8 +2592,7 @@ class Type(
         except KeyError:
             pass
         try:
-            qualities = [Quality.parse(q) for q in obj["qualities"]]
-            entity.qualities = qualities
+            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
         except KeyError:
             pass
         try:
@@ -2704,6 +2696,11 @@ class PieceInput(PieceTypeField, PieceIdField, Input):
         description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
     )
     """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    qualities: list[QualityInput] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the piece.",
+    )
+    """📏 The qualities of the piece."""
 
 
 class PieceContext(PieceTypeField, PieceIdField, Context):
@@ -2714,11 +2711,16 @@ class PieceContext(PieceTypeField, PieceIdField, Context):
         description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
     )
     """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    # center: typing.Optional[DiagramPointContext] = sqlmodel.Field(
-    #     default=None,
-    #     description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-    # )
-    # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    center: typing.Optional[DiagramPointContext] = sqlmodel.Field(
+        default=None,
+        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
+    )
+    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    qualities: list[QualityContext] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the piece.",
+    )
+    """📏 The qualities of the piece."""
 
 
 class PieceOutput(PieceTypeField, PieceIdField, Output):
@@ -2734,6 +2736,11 @@ class PieceOutput(PieceTypeField, PieceIdField, Output):
         description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
     )
     """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    qualities: list[QualityOutput] = sqlmodel.Field(
+        default_factory=list,
+        description="📏 The qualities of the piece.",
+    )
+    """📏 The qualities of the piece."""
 
 
 class PiecePrediction(PieceTypeField, PieceIdField, Prediction):
@@ -3548,8 +3555,8 @@ class DesignInput(
 
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignContext(
@@ -3583,8 +3590,8 @@ class DesignOutput(
 
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignPrediction(
@@ -3629,10 +3636,10 @@ class Design(
     connections: list[Connection] = sqlmodel.Relationship(
         back_populates="design", cascade_delete=True
     )
-    qualities: list[Quality] = sqlmodel.Relationship(
+    authors_: list[Author] = sqlmodel.Relationship(
         back_populates="design", cascade_delete=True
     )
-    authors_: list[Author] = sqlmodel.Relationship(
+    qualities: list[Quality] = sqlmodel.Relationship(
         back_populates="design", cascade_delete=True
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
@@ -3647,7 +3654,7 @@ class Design(
     )
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id"),)
 
     @property
     def authors(self) -> list[Author]:
@@ -3908,6 +3915,10 @@ class KitInput(
         default_factory=list, description="🏙️ The designs of the kit."
     )
     """🏙️ The designs of the kit."""
+    qualities: list[QualityInput] = sqlmodel.Field(
+        default_factory=list, description="📏 The qualities of the kit."
+    )
+    """📏 The qualities of the kit."""
 
 
 class KitOutput(
@@ -3935,6 +3946,10 @@ class KitOutput(
         default_factory=list, description="🏙️ The designs of the kit."
     )
     """🏙️ The designs of the kit."""
+    qualities: list[QualityOutput] = sqlmodel.Field(
+        default_factory=list, description="📏 The qualities of the kit."
+    )
+    """📏 The qualities of the kit."""
 
 
 class Kit(
@@ -4236,7 +4251,9 @@ class DatabaseStore(Store, abc.ABC):
                 raise FeatureNotYetSupported()
 
     def put(
-        self: "DatabaseStore", operation: dict, input: KitInput | TypeInput
+        self: "DatabaseStore",
+        operation: dict,
+        input: KitInput | DesignInput | TypeInput,
     ) -> typing.Any:
         # General:
         # - Wrap iteration over relationships in list() to avoid iterator bugs
@@ -4709,10 +4726,12 @@ def decodeDesign(design: dict):
                         ),
                     },
                 },
-                "rotation": normalizeAngle(c["rotation"]),
-                "tilt": normalizeAngle(c["tilt"]),
                 "gap": c["gap"],
                 "shift": c["shift"],
+                "raise": c["raise"],
+                "rotation": normalizeAngle(c["rotation"]),
+                "turn": normalizeAngle(c["turn"]),
+                "tilt": normalizeAngle(c["tilt"]),
                 "x": c["diagramX"],
                 "y": c["diagramY"],
             }
@@ -4817,12 +4836,6 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     return designClone
 
 
-# with open("temp/007/predicted-design.json", "w") as f:
-#     with open("temp/007/predicted-design-raw.json", "r") as d:
-#         design = json.load(d)
-#         decodedDesign = decodeDesign(design)
-#         json.dump(decodedDesign.model_dump(), f, indent=4)
-
 try:
     openaiClient = openai.Client()
 except openai.OpenAIError as e:
@@ -4843,6 +4856,7 @@ Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D representation of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connecting between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
+logger.debug("System prompt: {}", systemPrompt)
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -5098,11 +5112,38 @@ GRAPHQLTYPES = {
     "list[Representation]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: RepresentationNode))
     ),
+    "list[__main__.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    "list[__mp_main__.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    "list[engine.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
     "Port": graphene.NonNull(lambda: PortNode),
     "PortId": graphene.NonNull(lambda: PortNode),
     "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "list[__main__.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    "list[__mp_main__.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    "list[engine.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
     "Quality": graphene.NonNull(lambda: QualityNode),
     "list[Quality]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: QualityNode))
+    ),
+    "list[__main__.Quality]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: QualityNode))
+    ),
+    "list[__mp_main__.Quality]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: QualityNode))
+    ),
+    "list[engine.Quality]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
     ),
     "Author": graphene.NonNull(lambda: AuthorNode),
@@ -5121,11 +5162,29 @@ GRAPHQLTYPES = {
     "Type": graphene.NonNull(lambda: TypeNode),
     "TypeId": graphene.NonNull(lambda: TypeNode),
     "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "list[__main__.Type]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: TypeNode))
+    ),
+    "list[__mp_main__.Type]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: TypeNode))
+    ),
+    "list[engine.Type]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: TypeNode))
+    ),
     "Piece": graphene.NonNull(lambda: PieceNode),
     "PieceId": graphene.NonNull(lambda: PieceNode),
     "Side": graphene.NonNull(lambda: SideNode),
     "Connection": graphene.NonNull(lambda: ConnectionNode),
     "list['Connection']": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: ConnectionNode))
+    ),
+    "list[__main__.Connection]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: ConnectionNode))
+    ),
+    "list[__mp_main__.Connection]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: ConnectionNode))
+    ),
+    "list[engine.Connection]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: ConnectionNode))
     ),
     "Design": graphene.NonNull(lambda: DesignNode),
@@ -5257,10 +5316,10 @@ class RepresentationNode(TableEntityNode):
         model = Representation
         excludedFields = ("tags_",)
 
-    qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
 
-    def resolve_qualities(self, info):
-        return self.qualities
+    # def resolve_qualities(self, info):
+    #     return self.qualities
 
 
 class RepresentationInputNode(InputNode):
@@ -5313,10 +5372,10 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
 
-    def resolve_qualities(self, info):
-        return self.qualities
+    # def resolve_qualities(self, info):
+    #     return self.qualities
 
 
 class PortInputNode(InputNode):
