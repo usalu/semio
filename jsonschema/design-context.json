@@ -73,6 +73,27 @@
             "title": "Connection",
             "type": "object"
         },
+        "DiagramPoint": {
+            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
+            "properties": {
+                "x": {
+                    "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+                    "title": "Y",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "title": "DiagramPoint",
+            "type": "object"
+        },
         "Piece": {
             "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
             "properties": {
@@ -98,6 +119,26 @@
                     ],
                     "default": null,
                     "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                },
+                "center": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DiagramPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                },
+                "qualities": {
+                    "description": "\ud83d\udccf The qualities of the piece.",
+                    "items": {
+                        "$ref": "#/$defs/Quality"
+                    },
+                    "title": "Qualities",
+                    "type": "array"
                 }
             },
             "required": [

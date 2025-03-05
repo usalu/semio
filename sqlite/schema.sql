@@ -15,18 +15,7 @@ CREATE TABLE plane (
 	y_axis_x FLOAT, 
 	y_axis_y FLOAT, 
 	y_axis_z FLOAT, 
-	PRIMARY KEY (id), 
-	CONSTRAINT "plane set or not set" CHECK (
-            (
-                (origin_x IS NULL AND origin_y IS NULL AND origin_z IS NULL AND
-                 x_axis_x IS NULL AND x_axis_y IS NULL AND x_axis_z IS NULL AND
-                 y_axis_x IS NULL AND y_axis_y IS NULL AND y_axis_z IS NULL)
-            OR
-                (origin_x IS NOT NULL AND origin_y IS NOT NULL AND origin_z IS NOT NULL AND
-                 x_axis_x IS NOT NULL AND x_axis_y IS NOT NULL AND x_axis_z IS NOT NULL AND
-                 y_axis_x IS NOT NULL AND y_axis_y IS NOT NULL AND y_axis_z IS NOT NULL)
-            )
-            )
+	PRIMARY KEY (id)
 );
 CREATE TABLE kit (
 	uri VARCHAR(4096) NOT NULL, 
@@ -73,7 +62,7 @@ CREATE TABLE design (
 	id INTEGER NOT NULL, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	UNIQUE (name, variant, kit_id), 
+	UNIQUE (name, variant, "view", kit_id), 
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE representation (
@@ -136,6 +125,7 @@ CREATE TABLE tag (
 );
 CREATE TABLE compatible_family (
 	name VARCHAR(64) NOT NULL, 
+	"order" INTEGER NOT NULL, 
 	id INTEGER NOT NULL, 
 	port_id INTEGER, 
 	PRIMARY KEY (id), 
@@ -155,8 +145,8 @@ CREATE TABLE connection (
 	connected_port_id INTEGER, 
 	connecting_piece_id INTEGER, 
 	connecting_port_id INTEGER, 
-	design_id INTEGER NOT NULL, 
-	PRIMARY KEY (id, design_id), 
+	design_id INTEGER, 
+	PRIMARY KEY (id), 
 	CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), 
 	FOREIGN KEY(connected_piece_id) REFERENCES piece (id), 
 	FOREIGN KEY(connected_port_id) REFERENCES port (id), 

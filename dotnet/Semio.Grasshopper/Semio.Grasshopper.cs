@@ -65,7 +65,7 @@ namespace Semio.Grasshopper;
 public static class Constants
 {
     public const string Category = Semio.Constants.Name;
-    public const string Version = "5.2.0-beta";
+    public const string Version = "5.3.0-beta";
 }
 
 #endregion
@@ -546,66 +546,6 @@ public class RepresentationGoo : ModelGoo<Representation>
     }
 }
 
-public class LocatorGoo : ModelGoo<Locator>
-{
-    public LocatorGoo()
-    {
-    }
-
-    public LocatorGoo(Locator value) : base(value)
-    {
-    }
-
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (target is QualityGoo quality)
-        {
-            quality.Value = new Quality
-            {
-                Name = Value.Group,
-                Value = Value.Subgroup
-            };
-            return true;
-        }
-
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            object ptr = new GH_String(Value.Group);
-            target = (Q)ptr;
-            return true;
-        }
-
-        return false;
-    }
-
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-
-        if (source is QualityGoo quality)
-        {
-            Value = new Locator
-            {
-                Group = quality.Value.Name,
-                Subgroup = quality.Value.Value
-            };
-            return true;
-        }
-
-        string str = null;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
-        {
-            Value = new Locator
-            {
-                Group = str
-            };
-            return true;
-        }
-
-        return false;
-    }
-}
-
 public class PortGoo : ModelGoo<Port>
 {
     public PortGoo()
@@ -684,16 +624,6 @@ public class QualityGoo : ModelGoo<Quality>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
-        if (source is LocatorGoo locator)
-        {
-            Value = new Quality
-            {
-                Name = locator.Value.Group,
-                Value = locator.Value.Subgroup
-            };
-            return true;
-        }
 
         string str;
         if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
@@ -984,11 +914,6 @@ public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
 }
 
-public class LocatorParam : ModelParam<LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("DBE104DA-63FA-4C68-8D41-834DD962F1D7");
-}
-
 public class PortParam : ModelParam<PortGoo, Port>
 {
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
@@ -1208,11 +1133,6 @@ public class
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
 
-public class SerializeLocatorComponent : SerializeComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("7AFC411B-57D4-4B36-982C-495E14E7520E");
-}
-
 public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
@@ -1314,11 +1234,6 @@ public class
     DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
-}
-
-public class DeserializeLocatorComponent : DeserializeComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("F3501014-D011-4421-9750-861B6479C83C");
 }
 
 public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
@@ -1792,11 +1707,6 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
         model.Url = model.Url.Replace('\\', '/');
         return model;
     }
-}
-
-public class LocatorComponent : ModelComponent<LocatorParam, LocatorGoo, Locator>
-{
-    public override Guid ComponentGuid => new("2552DB71-8459-4DB5-AD66-723573E771A2");
 }
 
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>

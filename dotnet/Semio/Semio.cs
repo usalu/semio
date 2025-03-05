@@ -1037,42 +1037,6 @@ public class Representation : Model<Representation>
 }
 
 /// <summary>
-///     🗺️ A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between
-///     ports based on individual locators.
-/// </summary>
-[Model("🗺️", "Lc", "Loc",
-    "A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between ports based on individual locators.")]
-public class Locator : Model<Locator>
-{
-    /// <summary>
-    ///     👪 The group of the locator.
-    /// </summary>
-    [Name("👪", "Gr", "Grp", "The group of the locator.", PropImportance.ID)]
-    public string Group { get; set; } = "";
-
-    /// <summary>
-    ///     📌 The optional sub-group of the locator. No sub-group means true.
-    /// </summary>
-    [Name("📌", "SG?", "SGr?", "The optional sub-group of the locator. No sub-group means true.", isDefaultValid: true)]
-    public string Subgroup { get; set; } = "";
-
-    public string ToIdString()
-    {
-        return $"{Group}";
-    }
-
-    public string ToHumanIdString()
-    {
-        return $"{ToIdString()}";
-    }
-
-    public override string ToString()
-    {
-        return $"Loc({ToHumanIdString()})";
-    }
-}
-
-/// <summary>
 ///     📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
 /// </summary>
 [Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]

@@ -84,8 +84,8 @@ type Type implements Node {
   updated: DateTime!
   representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
   ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
 
@@ -114,12 +114,29 @@ type RepresentationNodeEdge {
 type Representation implements Node {
   mime: String!
   url: String!
-  qualities: [Quality!]
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
   """The ID of the object"""
   id: ID!
   tags: [String!]!
+}
+
+type QualityNodeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [QualityNodeEdge]!
+}
+
+"""A Relay edge containing a `QualityNode` and its cursor."""
+type QualityNodeEdge {
+  """The item at the end of the edge"""
+  node: Quality
+
+  """A cursor for use in pagination"""
+  cursor: String!
 }
 
 type Quality implements Node {
@@ -144,7 +161,7 @@ type Port implements Node {
   family: String!
   t: Float!
   id_: String
-  qualities: [Quality!]
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
   """The ID of the object"""
@@ -197,23 +214,6 @@ type Connection implements Node {
   connecting: Side!
 }
 
-type QualityNodeConnection {
-  """Pagination data for this connection."""
-  pageInfo: PageInfo!
-
-  """Contains the nodes in this connection."""
-  edges: [QualityNodeEdge]!
-}
-
-"""A Relay edge containing a `QualityNode` and its cursor."""
-type QualityNodeEdge {
-  """The item at the end of the edge"""
-  node: Quality
-
-  """A cursor for use in pagination"""
-  cursor: String!
-}
-
 type Design implements Node {
   name: String!
   description: String!
@@ -226,8 +226,8 @@ type Design implements Node {
   updated: DateTime!
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
   connections(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
+  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
 
   """The ID of the object"""
@@ -419,6 +419,9 @@ input KitInputNode {
 
   """🏙️ The designs of the kit."""
   designs: [DesignInputNode] = null
+
+  """📏 The qualities of the kit."""
+  qualities: [QualityInputNode] = null
 }
 
 input TypeInputNode {
@@ -449,8 +452,8 @@ input TypeInputNode {
   unit: String = ""
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
-  qualities: [QualityInputNode] = null
   authors: [AuthorInputNode] = null
+  qualities: [QualityInputNode] = null
 }
 
 input RepresentationInputNode {
@@ -582,8 +585,8 @@ input DesignInputNode {
   unit: String = ""
   pieces: [PieceInputNode] = null
   connections: [ConnectionInputNode] = null
-  qualities: [QualityInputNode] = null
   authors: [AuthorInputNode] = null
+  qualities: [QualityInputNode] = null
 }
 
 input PieceInputNode {
@@ -599,6 +602,9 @@ input PieceInputNode {
   📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
   """
   center: DiagramPointInputNode = null
+
+  """📏 The qualities of the piece."""
+  qualities: [QualityInputNode] = null
   type: TypeIdInputNode!
 }
 

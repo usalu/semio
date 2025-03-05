@@ -3,7 +3,7 @@
     "info": {
         "title": "semio REST API",
         "summary": "This is the local rest API of the semio engine.",
-        "version": "4.2.0-beta"
+        "version": "4.3.0-beta"
     },
     "paths": {
         "/kits/{encodedKitUri}": {
@@ -875,19 +875,19 @@
                         "type": "array",
                         "title": "Connections"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/QualityInput"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/AuthorInput"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -973,19 +973,19 @@
                         "type": "array",
                         "title": "Connections"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/Quality"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/Author"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -1022,6 +1022,27 @@
                 "type": "object",
                 "title": "DesignPrediction",
                 "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
+            "DiagramPointContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y"
+                ],
+                "title": "DiagramPointContext",
+                "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
             },
             "DiagramPointInput": {
                 "properties": {
@@ -1157,6 +1178,14 @@
                         "type": "array",
                         "title": "Designs",
                         "description": "\ud83c\udfd9\ufe0f The designs of the kit."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the kit."
                     }
                 },
                 "type": "object",
@@ -1263,6 +1292,14 @@
                         "type": "array",
                         "title": "Designs",
                         "description": "\ud83c\udfd9\ufe0f The designs of the kit."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the kit."
                     }
                 },
                 "type": "object",
@@ -1296,6 +1333,25 @@
                             }
                         ],
                         "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DiagramPointContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -1353,6 +1409,14 @@
                             }
                         ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -1396,6 +1460,14 @@
                             }
                         ],
                         "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
                     }
                 },
                 "type": "object",
@@ -2142,19 +2214,19 @@
                         "type": "array",
                         "title": "Ports"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/QualityInput"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/AuthorInput"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityInput"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
@@ -2233,19 +2305,19 @@
                         "type": "array",
                         "title": "Ports"
                     },
-                    "qualities": {
-                        "items": {
-                            "$ref": "#/components/schemas/Quality"
-                        },
-                        "type": "array",
-                        "title": "Qualities"
-                    },
                     "authors": {
                         "items": {
                             "$ref": "#/components/schemas/Author"
                         },
                         "type": "array",
                         "title": "Authors"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/Quality"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
                     }
                 },
                 "type": "object",
