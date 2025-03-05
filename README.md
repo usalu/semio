@@ -67,7 +67,7 @@ Let me start by what semio is **not**:
 
   > In semio you **link** static designs 🩻
 
-- Wasp, Assembler, Monocerous, ComputerGeneratedArchitecture …
+- Wasp, Assembler, Monoceros, ComputerGeneratedArchitecture …
 
   A _solver_ tool 🎰
 
