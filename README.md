@@ -159,7 +159,7 @@ That's it!
 
 ### ✏️ sketchpad
 
-> Still a prototype ✏️ It doesn't use the latest versions of the engine and Grasshopper ⚠️
+> Still a prototype 🧑‍💻 It doesn't use the latest versions of the engine and Grasshopper ⚠️
 
 ![sketchpad demo](https://raw.githubusercontent.com/usalu/semio/main-tag/javascript/sketchpad/docs/demo.gif)
 

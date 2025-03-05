@@ -438,7 +438,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
         Value = value;
     }
 
-    public override bool IsValid { get; }
+    public override bool IsValid => Value != null;
 
     public override string TypeName => typeof(T).Name;
 
@@ -1042,7 +1042,7 @@ public class DecodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe decoding\n1: base64 decoding\n2: base32 decoding",
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
             GH_ParamAccess.item, 0);
         pManager[1].Optional = true;
         pManager.AddTextParameter("Replace", "Re",
