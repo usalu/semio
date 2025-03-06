@@ -1,0 +1,8 @@
+{
+  "name": "semio",
+  "version": "0.1.0",
+  "description": "All shared functionality of the javascript semio ecosystem 🧩",
+  "author": "Ueli Saluz",
+  "scripts": {},
+  "exports": {}
+}
