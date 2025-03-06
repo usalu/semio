@@ -1,5 +1,5 @@
 {
-  "name": "semio-sketchpad",
+  "name": "@semio/sketchpad",
   "version": "1.0.0",
   "description": "A sketchpad to design with semio.",
   "main": "./out/main/index.js",
