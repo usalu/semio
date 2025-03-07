@@ -4,5 +4,11 @@
   "description": "All shared functionality of the javascript semio ecosystem 🧩",
   "author": "Ueli Saluz",
   "scripts": {},
-  "exports": {}
+  "exports": {},
+  "devDependencies": {
+    "gatsby-cli": "^5.14.0"
+  },
+  "dependencies": {
+    "gatsby": "^5.14.1"
+  }
 }

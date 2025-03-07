@@ -9,7 +9,11 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/react": "^19.0.10",
+    "eslint": "^8.57.1",
     "prettier": "^3.5.3",
+    "react": "^19.0.0",
     "turbo": "^2.4.4",
     "typescript": "5.8.2"
   },
