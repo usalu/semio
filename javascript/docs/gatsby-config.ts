@@ -13,6 +13,7 @@ const config: GatsbyConfig = {
     //         },
     //     },
     // ],
+    plugins: [`gatsby-plugin-mdx`, `gatsby-plugin-postcss`, `gatsby-plugin-sass`]
 };
 
 export default config;

@@ -1,5 +1,5 @@
 {
-    "extends": "@semio/configs/tsconfig.json",
+    "extends": "semio/tsconfig.json",
     "include": [
         "**/*.ts",
         "**/*.tsx"
