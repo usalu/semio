@@ -11,7 +11,13 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/react": "^19.0.10",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "@vercel/style-guide": "^5.2.0",
     "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-turbo": "^2.0.0",
+    "eslint-plugin-only-warn": "^1.1.0",
     "prettier": "^3.5.3",
     "react": "^19.0.0",
     "tailwindcss": "^4.0.12",
@@ -23,9 +29,11 @@
   },
   "packageManager": "npm@10.8.2",
   "workspaces": [
-    "configs",
-    "semio",
-    "sketchpad",
-    "docs"
-  ]
+    "docs",
+    "sketchpad"
+  ],
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.12",
+    "postcss": "^8.5.3"
+  }
 }
