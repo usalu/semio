@@ -3,34 +3,69 @@
   "version": "0.1.0",
   "dependencies": {
     "@react-three/fiber": "^9.1.0",
+    "@xyflow/react": "^12.4.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion-3d": "^12.4.10",
+    "ink": "^5.1.1",
+    "jotai": "^2.12.1",
     "lucide-react": "^0.479.0",
     "motion": "^12.4.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "three": "^0.174.0"
+    "three": "^0.174.0",
+    "yjs": "^13.6.24"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.5",
     "@eslint/js": "^9.21.0",
+    "@storybook/addon-essentials": "^8.6.4",
+    "@storybook/addon-onboarding": "^8.6.4",
+    "@storybook/blocks": "^8.6.4",
+    "@storybook/experimental-addon-test": "^8.6.4",
+    "@storybook/react": "^8.6.4",
+    "@storybook/react-vite": "^8.6.4",
+    "@storybook/test": "^8.6.4",
     "@tailwindcss/postcss": "^4.0.12",
+    "@tailwindcss/vite": "^4.0.12",
     "@types/mdx": "^2.0.13",
     "@types/react": "^18.0.10",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "@vercel/style-guide": "^5.2.0",
+    "@vitest/browser": "^3.0.8",
+    "@vitest/coverage-v8": "^3.0.8",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-turbo": "^2.0.0",
     "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-plugin-storybook": "^0.11.4",
+    "jest": "^29.7.0",
+    "playwright": "^1.51.0",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "sass": "^1.85.1",
+    "storybook": "^8.6.4",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.12",
     "tailwindcss-animate": "^1.0.7",
     "turbo": "^2.4.4",
-    "typescript": "5.8.2"
+    "typescript": "5.7.2",
+    "vite": "^6.2.1",
+    "vitest": "^3.0.8"
+  },
+  "overrides": {
+    "eslint-plugin-storybook": {
+      "typescript": "$typescript"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "plugin:storybook/recommended"
+    ]
+  },
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   }
 }
