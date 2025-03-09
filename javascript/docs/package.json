@@ -9,7 +9,6 @@
     "gatsby-cli": "^5.14.0"
   },
   "dependencies": {
-    "@mdx-js/react": "^2.3.0",
     "@semio/core": "*",
     "gatsby": "^5.14.1",
     "gatsby-plugin-mdx": "^5.14.0",
