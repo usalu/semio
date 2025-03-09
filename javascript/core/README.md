@@ -1,9 +1,15 @@
-React 19 compatiblity:
+# Compatibility
+
+## Typescript 5.8
+
+- Storybook https://github.com/storybookjs/eslint-plugin-storybook/issues/193
+
+## React 19
 
 - Shadcn https://ui.shadcn.com/docs/react-19
 - Gatsby https://github.com/gatsbyjs/gatsby/issues/39180
-- Motion https://motion.dev/docs/react-three-fiber and Nextjs 15 https://github.com/motiondivision/motion/issues/2854
+- Motion https://motion.dev/docs/react-three-fiber
 
-Typescript 5.8
+## Nextjs 15
 
-- Storybook https://github.com/storybookjs/eslint-plugin-storybook/issues/193
+- Motion three https://github.com/motiondivision/motion/issues/2854

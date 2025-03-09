@@ -54,11 +54,6 @@
     "vite": "^6.2.1",
     "vitest": "^3.0.8"
   },
-  "overrides": {
-    "eslint-plugin-storybook": {
-      "typescript": "$typescript"
-    }
-  },
   "eslintConfig": {
     "extends": [
       "plugin:storybook/recommended"
