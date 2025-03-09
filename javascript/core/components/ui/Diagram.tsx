@@ -1,6 +1,9 @@
+import '@xyflow/react/dist/base.css';
+
 import React, { FC, useCallback, useMemo } from 'react';
 import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
 import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../semio';
+import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 
 type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
 type DiagramNode = PieceNode;
@@ -38,11 +41,9 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
     return (
         <div className={`h-[${ICON_WIDTH}] w-[${ICON_WIDTH}]`
         }>
-            <Avatar
-                className={`cursor-pointer ${selected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}
-                size={ICON_WIDTH}
-            >
-                {id_}
+            <Avatar className={`cursor-pointer ${selected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}>
+                <AvatarImage src="https://github.com/usalu.png" />
+                <AvatarFallback>Pc</AvatarFallback>
             </Avatar>
             < PortHandle port={{ id_: 'top', t: 0 }} />
             < PortHandle port={{ id_: 'e', t: 0.25 }} />
@@ -166,7 +167,7 @@ const DiagramCore: FC = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onMoveEnd={onUpdateCursor}
+            // onMoveEnd={onUpdateCursor}
             // onPointerLeave={() =>
             //     setPresence({
             //         cursor: null,
@@ -175,7 +176,7 @@ const DiagramCore: FC = () => {
             proOptions={{ hideAttribution: true }
             }
         >
-            <ViewportPortal>
+            {/* <ViewportPortal>
                 {
                     Array.from(presenceMap.entries()).map(([user, presence]) => {
                         if (presence.cursor === null || presence.cursor === undefined) {
@@ -192,7 +193,7 @@ const DiagramCore: FC = () => {
                             </div>
                         );
                     })}
-            </ViewportPortal>
+            </ViewportPortal> */}
             {/* {others.map((user) => {
                 if (user.presence.cursor === null || user.presence.cursor === undefined) {
                     return null;
@@ -231,3 +232,20 @@ const DiagramCore: FC = () => {
         </ReactFlow>
     )
 }
+
+const Diagram: FC = () => {
+
+    // const { isOver, setNodeRef } = useDroppable({
+    //     id: 'diagram',
+    // });
+
+    return (
+        // <div ref={setNodeRef}>
+        <ReactFlowProvider >
+            <DiagramCore />
+        </ReactFlowProvider>
+        // </div>
+    );
+};
+
+export default Diagram;
