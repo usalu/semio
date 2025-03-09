@@ -1,10 +1,7 @@
 {
   "name": "@semio/docs",
   "version": "0.1.0",
-  "description": "All shared functionality of the javascript semio ecosystem 🧩",
-  "author": "Ueli Saluz",
-  "scripts": {},
-  "exports": {},
+  "description": "Docs for semio 🧩",
   "devDependencies": {
     "gatsby-cli": "^5.14.0"
   },

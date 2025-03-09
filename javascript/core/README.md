@@ -4,6 +4,10 @@
 
 - Storybook https://github.com/storybookjs/eslint-plugin-storybook/issues/193
 
+## Vite
+
+https://github.com/remix-run/react-router/issues/12168
+
 ## React 19
 
 - Shadcn https://ui.shadcn.com/docs/react-19
