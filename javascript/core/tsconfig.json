@@ -4,7 +4,7 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "jsx": "react-jsxdev",
-    "baseUrl": ".",
+    // "baseUrl": ".",
     // "paths": {
     //   "semio": [
     //     "semio.ts"

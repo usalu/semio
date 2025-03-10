@@ -1,9 +1,9 @@
-import '@xyflow/react/dist/base.css';
-
 import React, { FC, useCallback, useMemo } from 'react';
 import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
 import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../semio';
 import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
+
+import '@xyflow/react/dist/base.css';
 
 type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
 type DiagramNode = PieceNode;
@@ -240,10 +240,10 @@ const Diagram: FC = () => {
     // });
 
     return (
-        // <div ref={setNodeRef}>
         <ReactFlowProvider >
             <DiagramCore />
         </ReactFlowProvider>
+        // <div ref={setNodeRef}>
         // </div>
     );
 };
