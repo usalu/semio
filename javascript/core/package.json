@@ -53,6 +53,7 @@
     "playwright": "^1.51.0",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "sass": "^1.85.1",
     "storybook": "^8.6.4",
     "tailwind-merge": "^3.0.2",

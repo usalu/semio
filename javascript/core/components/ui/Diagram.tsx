@@ -3,7 +3,8 @@ import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, Connecti
 import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../semio';
 import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 
-import '@xyflow/react/dist/base.css';
+// import '@xyflow/react/dist/base.css';
+import '@xyflow/react/dist/style.css';
 
 type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
 type DiagramNode = PieceNode;
@@ -239,12 +240,22 @@ const Diagram: FC = () => {
     //     id: 'diagram',
     // });
 
+    // return (
+    //     <ReactFlowProvider >
+    //         <DiagramCore />
+    //     </ReactFlowProvider>
+    //     // <div ref={setNodeRef}>
+    //     // </div>
+    // );
+    const initialNodes = [
+        { id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
+        { id: '2', position: { x: 0, y: 100 }, data: { label: '2' } },
+    ];
+    const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
     return (
-        <ReactFlowProvider >
-            <DiagramCore />
-        </ReactFlowProvider>
-        // <div ref={setNodeRef}>
-        // </div>
+        <div className="" style={{ width: '100vw', height: '100vh' }}>
+            <ReactFlow nodes={initialNodes} edges={initialEdges} />
+        </div>
     );
 };
 

@@ -4,10 +4,7 @@ import Diagram from '@semio/core/components/ui/Diagram'
 const IndexPage = () => {
     return (
         <main>
-            <div className='h-100vh w-100vw'>
-                <>Hallo</>
-                <Diagram />
-            </div>
+            <Diagram />
         </main>
     )
 }
