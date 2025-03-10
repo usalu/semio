@@ -17,13 +17,13 @@ const config: GatsbyConfig = {
         `gatsby-plugin-mdx`,
         `gatsby-plugin-postcss`,
         `gatsby-plugin-sass`,
-        {
-            resolve: `gatsby-source-filesystem`,
-            options: {
-                name: `root`,
-                path: `${__dirname}`,
-            },
-        },
+        // {
+        //     resolve: `gatsby-source-filesystem`,
+        //     options: {
+        //         name: `root`,
+        //         path: `${__dirname}`,
+        //     },
+        // },
     ],
 };
 

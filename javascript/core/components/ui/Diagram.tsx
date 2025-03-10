@@ -42,7 +42,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
         <div className={`h-[${ICON_WIDTH}] w-[${ICON_WIDTH}]`
         }>
             <Avatar className={`cursor-pointer ${selected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}>
-                <AvatarImage src="https://github.com/usalu.png" />
+                {/* <AvatarImage src="https://github.com/usalu.png" /> */}
                 <AvatarFallback>Pc</AvatarFallback>
             </Avatar>
             < PortHandle port={{ id_: 'top', t: 0 }} />
