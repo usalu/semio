@@ -17,12 +17,5 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
-  },
-  "dependencies": {
-    "@mdx-js/rollup": "^3.1.0",
-    "@vitejs/plugin-react": "^4.3.4"
-  },
-  "devDependencies": {
-    "@types/node": "^22.13.10"
   }
 }
