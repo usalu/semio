@@ -1,8 +1,8 @@
-import tailwindcss from "@tailwindcss/vite"
+import tailwindcss from '@tailwindcss/vite'
 import react from "@vitejs/plugin-react"
 // import mdx from '@mdx-js/rollup'
 import { defineConfig } from "vite"
-import { resolve } from 'path'
+// import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({

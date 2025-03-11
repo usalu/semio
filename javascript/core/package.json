@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build": "storybook build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

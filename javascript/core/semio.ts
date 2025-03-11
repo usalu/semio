@@ -12,7 +12,6 @@
 
 export const ICON_WIDTH = 50;
 
-
 // ↗️ The output of a kit.
 export type Kit = {
     // 🕒 The creation date of the kit.

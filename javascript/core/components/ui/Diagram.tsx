@@ -4,6 +4,7 @@ import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../se
 import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 
 // import '@xyflow/react/dist/base.css';
+import '../../globals.css';
 import '@xyflow/react/dist/style.css';
 
 type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
@@ -253,7 +254,8 @@ const Diagram: FC = () => {
     ];
     const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
     return (
-        <div className="" style={{ width: '100vw', height: '100vh' }}>
+        <div className="bg-pink-600" style={{ height: '100vh' }}>
+            <text className="p-6 text-9xl text-pink-600">Hello</text>
             <ReactFlow nodes={initialNodes} edges={initialEdges} />
         </div>
     );
