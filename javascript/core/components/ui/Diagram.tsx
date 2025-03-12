@@ -4,7 +4,6 @@ import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../se
 import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 
 // import '@xyflow/react/dist/base.css';
-import '../../globals.css';
 import '@xyflow/react/dist/style.css';
 
 type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
