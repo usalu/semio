@@ -6,7 +6,7 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'semio Documentation',
+			title: 'semio Docs',
 			social: {
 				github: 'https://github.com/usalu/semio',
 			},

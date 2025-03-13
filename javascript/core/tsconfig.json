@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "module": "nodenext",
+    "jsx": "preserve",
     "resolveJsonModule": true,
-    "jsx": "react",
     "baseUrl": ".",
     "paths": {
       "@/*": [
