@@ -3,8 +3,8 @@ import type { Config } from "tailwindcss";
 
 const config: Pick<Config, "content" | "presets"> = {
   content: [
-    "./src/pages/**/*.tsx",
-    "../core/components/**/**.{js,ts,jsx,tsx,mdx}"
+    "./src/pages/**/*.{tsx,mdx}",
+    "../core/components/**/**.{ts,tsx,mdx}"
   ],
   // presets: [sharedConfig],
 };

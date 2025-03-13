@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
-import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '../../semio';
-import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
+import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '@semio/core/semio'
+import { Avatar, AvatarFallback, AvatarImage } from '@semio/core/components/ui/Avatar';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
@@ -11,7 +11,8 @@ type DiagramNode = PieceNode;
 
 type ConnectionEdge = Edge<{ connection: Connection }, 'connection'>;
 type DiagramEdge = ConnectionEdge;
-type PortHandleProps = HandleProps & { port: Port };
+// type PortHandleProps = HandleProps & { port: Port };
+type PortHandleProps = { port: Port };
 
 const portPositionStyle = (port: Port): { x: number, y: number } => {
     // t is normalized in [0,1[ and clockwise and starts at 12 o'clock
@@ -46,10 +47,10 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                 {/* <AvatarImage src="https://github.com/usalu.png" /> */}
                 <AvatarFallback>Pc</AvatarFallback>
             </Avatar>
-            < PortHandle port={{ id_: 'top', t: 0 }} />
-            < PortHandle port={{ id_: 'e', t: 0.25 }} />
-            < PortHandle port={{ id_: 'bottom', t: 0.5 }} />
-            < PortHandle port={{ id_: 'sw', t: 0.66 }} />
+            < PortHandle port={{ id_: 'top', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            < PortHandle port={{ id_: 'e', t: 0.25, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            < PortHandle port={{ id_: 'bottom', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            < PortHandle port={{ id_: 'sw', t: 0.66, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
         </div>
     );
 };

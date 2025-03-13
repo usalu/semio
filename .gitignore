@@ -904,3 +904,5 @@ out
 *.sln
 *.sw?
 *storybook.log
+
+!javascript/core/lib
