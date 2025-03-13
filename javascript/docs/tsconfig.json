@@ -1,4 +1,5 @@
 {
-    // "extends": "@semio/core/tsconfig.json",
-    "extends": "../core/tsconfig.json",
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"]
 }

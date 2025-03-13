@@ -1,1 +1,0 @@
-import "@semio/core/globals.css";
