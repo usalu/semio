@@ -19,3 +19,7 @@ See: https://stackoverflow.com/questions/75132236/how-to-share-vite-config-in-mo
 https://github.com/vercel/turborepo/discussions/3323
 
 - https://www.electronforge.io/config/configuration with https://github.com/electron/rebuild
+
+# Useful links
+
+- https://github.com/stephenhandley/electron-forge-vite-typescript/blob/typescript-react/forge.config.js

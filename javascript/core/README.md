@@ -17,3 +17,7 @@ https://github.com/remix-run/react-router/issues/12168
 ## Nextjs 15
 
 - Motion three https://github.com/motiondivision/motion/issues/2854
+
+## Motion
+
+- Look for successor: https://www.npmjs.com/package/framer-motion-3d
