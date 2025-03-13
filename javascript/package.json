@@ -1,6 +1,5 @@
 {
   "name": "semio",
-  "author": "Ueli Saluz",
   "workspaces": [
     "core",
     "docs",

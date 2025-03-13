@@ -15,5 +15,10 @@
   },
   "devDependencies": {
     "gatsby-cli": "^5.14.0"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }
