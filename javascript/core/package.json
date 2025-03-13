@@ -12,7 +12,7 @@
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@react-three/postprocessing": "^2.19.1",
-    "@xyflow/react": "^12.3.6",
+    "@xyflow/react": "^12.4.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cytoscape": "^3.31.1",

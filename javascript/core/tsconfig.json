@@ -7,19 +7,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
-    // "baseUrl": ".",
-    // "paths": {
-    //   "semio": [
-    //     "semio.ts"
-    //   ]
-    // }
-    // "baseUrl": ".",
-    // "paths": {
-    //   "@semio/core/*": [
-    //     "./*"
-    //   ]
-    // },
+    "incremental": true
   },
   "exclude": [
     "node_modules"
