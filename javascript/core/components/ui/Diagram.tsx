@@ -255,7 +255,7 @@ const Diagram: FC = () => {
     return (
         <div className="bg-pink-600" style={{ height: '100vh' }}>
             <text className="p-6 text-9xl text-pink-600">Hello</text>
-            {/* <ReactFlow nodes={initialNodes} edges={initialEdges} /> */}
+            <ReactFlow nodes={initialNodes} edges={initialEdges} />
         </div>
     );
 };

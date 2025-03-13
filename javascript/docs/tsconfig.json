@@ -1,3 +1,4 @@
 {
-    "extends": "@semio/core/tsconfig.json",
+    // "extends": "@semio/core/tsconfig.json",
+    "extends": "../core/tsconfig.json",
 }
