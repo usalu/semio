@@ -1,6 +1,7 @@
 {
   "name": "@semio/core",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "dev": "storybook dev -p 6006 --no-open",
     "build": "storybook build"
