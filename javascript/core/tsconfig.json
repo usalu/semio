@@ -1,22 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES6",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "resolveJsonModule": true,
     "strict": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
   "exclude": [
     "node_modules"
   ]

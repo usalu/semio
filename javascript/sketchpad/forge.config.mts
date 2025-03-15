@@ -18,19 +18,19 @@ const config: ForgeConfig = {
                         entry: 'main.ts',
                         // config: '../core/vite.config.mts'
                         // config: 'vite.main.config.mts'
-                        config: 'vite.main.config.mts'
+                        config: 'vite.main.config.ts'
                     },
                     {
                         entry: 'preload.ts',
                         // config: '../core/vite.config.mts'
-                        config: 'vite.preload.config.mts'
+                        config: 'vite.preload.config.ts'
                     }
                 ],
                 renderer: [
                     {
                         name: 'main_window',
                         // config: '../core/vite.config.mts'
-                        config: 'vite.renderer.config.mts'
+                        config: 'vite.renderer.config.ts'
                     }
                 ]
             }

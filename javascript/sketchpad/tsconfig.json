@@ -1,12 +1,7 @@
 {
     "extends": "../core/tsconfig.json",
     "compilerOptions": {
-        "module": "NodeNext",
-        "skipLibCheck": true,
         "esModuleInterop": true,
-        "noImplicitAny": true,
-        "sourceMap": true,
-        "baseUrl": ".",
         "outDir": "dist",
     }
 }
