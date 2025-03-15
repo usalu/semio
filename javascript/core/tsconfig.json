@@ -2,9 +2,10 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES6",
-    "module": "nodenext",
-    "jsx": "preserve",
+    "module": "CommonJS",
+    "jsx": "react-jsx",
     "resolveJsonModule": true,
+    "strict": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -12,6 +13,10 @@
       ]
     }
   },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+  ],
   "exclude": [
     "node_modules"
   ]
