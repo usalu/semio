@@ -2,6 +2,7 @@
   "name": "@semio/sketchpad",
   "version": "2.0.0-alpha",
   "description": "A sketchpad for semio 🧩",
+  "type": "module",
   "main": ".vite/build/main.js",
   "scripts": {
     "dev": "electron-forge start",
