@@ -9,12 +9,9 @@ const config: ForgeConfig = {
         {
             name: '@electron-forge/plugin-vite',
             config: {
-                // `build` can specify multiple entry builds, which can be
                 // Main process, Preload scripts, Worker process, etc.
                 build: [
                     {
-                        // `entry` is an alias for `build.lib.entry`
-                        // in the corresponding file of `config`.
                         entry: 'main.ts',
                         // config: '../core/vite.config.mts'
                         // config: 'vite.main.config.mts'

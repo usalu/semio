@@ -1,0 +1,1 @@
+export { default as Diagram } from '@semio/core/components/ui/Diagram';
