@@ -10,8 +10,12 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "resolveJsonModule": true,
-    "strict": true,
+    // "strict": true,
+    "types": [
+      "react",
+      "react-dom"
+    ],
+    "outDir": "dist"
   },
   "exclude": [
     "node_modules"

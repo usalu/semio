@@ -142,9 +142,9 @@ semio has two user-interfaces:
 
 > The binaries are not signed (yet) ✒️ Therefor Windows might give a warning ⚠️
 
-### 🦗 Grasshopper
+### 🦗 Grasshopper (Rhino 8)
 
-> Are you interested in the latest version? Then hit `Include pre-releases` and download `5.0.0-beta` ⬇️
+> Are you interested in the latest version? Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
 
 The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 
@@ -203,17 +203,29 @@ You need the following tools:
 - [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
 - [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
 - Python 3.12
-- [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
+- Poetry
+- [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
 
 If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
 
 Afterwards you can install poetry with this Powershell command:
 
-`(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -`
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+```
 
-> In the console you might see a warning that the `poetry.exe` is not installed in the normal folder 📁 Then copy the actual path and add it to your environmental variables ➕
+In the console you will see a warning that the `poetry.exe` is not installed in the requested location 📁
+![Actual Location](https://raw.githubusercontent.com/usalu/semio/main-tag/poetry/python_ms-store_location.png)
+Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
 
 Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+
+If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
+If you don't care just run
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
+```
 
 # 📊 Stats
 
