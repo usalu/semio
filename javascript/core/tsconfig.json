@@ -7,15 +7,15 @@
       "DOM",
       "ESNext"
     ],
-    "moduleResolution": "bundler",
+    "moduleResolution": "bundler", // Vite
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     // "strict": true,
+    "esModuleInterop": true, // Needed for Nextjs and Electron
     "types": [
       "react",
       "react-dom"
-    ],
-    "outDir": "dist"
+    ]
   },
   "exclude": [
     "node_modules"
