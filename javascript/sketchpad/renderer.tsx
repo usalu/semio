@@ -6,10 +6,7 @@ import ReactDOM from 'react-dom/client'
 
 function App() {
     return (
-        <div className="h-screen w-screen flex justify-center items-center bg-pink-600">
-            <h1>semio</h1>
-        </div>
-        // <Diagram />
+        <h1>semio </h1>
     );
 }
 
