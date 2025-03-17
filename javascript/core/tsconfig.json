@@ -7,16 +7,25 @@
       "DOM",
       "ESNext"
     ],
-    "moduleResolution": "bundler", // Vite
+    "moduleResolution": "bundler", // Don't change. Needed for Vite
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    // "strict": true,
-    "esModuleInterop": true, // Needed for Nextjs and Electron
+    "strict": true, // Must be present for Nextjs, value optional
+    "esModuleInterop": true, // Don't change. Needed for Nextjs and Electron
+    "isolatedModules": true, // Don't change. Needed for Nextjs
+    "resolveJsonModule": true, // Must be present for Nextjs, value optional
+    "skipLibCheck": false, // Must be present for Nextjs, value optional
+    "allowJs": false, // Must be present for Nextjs, value optional
+    "incremental": false, // Must be present for Nextjs, value optional
+    "noEmit": true, // Must be present for Nextjs, value optional
     "types": [
       "react",
       "react-dom"
     ]
   },
+  "include": [
+    "./components/**/*.{ts,tsx,mdx}",
+  ],
   "exclude": [
     "node_modules"
   ]
