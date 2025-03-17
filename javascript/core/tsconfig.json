@@ -8,7 +8,8 @@
       "ESNext"
     ],
     "moduleResolution": "bundler", // Don't change. Needed for Vite
-    "jsx": "react-jsx",
+    "jsx": "preserve", // Don't change. Needed for Nextjs
+    // "jsx": "react-jsx",
     "jsxImportSource": "react",
     "strict": true, // Must be present for Nextjs, value optional
     "esModuleInterop": true, // Don't change. Needed for Nextjs and Electron

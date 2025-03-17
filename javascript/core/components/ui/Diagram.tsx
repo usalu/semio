@@ -17,6 +17,9 @@ type PortHandleProps = { port: Port };
 const portPositionStyle = (port: Port): { x: number, y: number } => {
     // t is normalized in [0,1[ and clockwise and starts at 12 o'clock
     const { t } = port;
+    if (t === undefined) {
+        return { x: 0, y: 0 };
+    }
     const angle = t * 2 * Math.PI;
     const radius = ICON_WIDTH / 2;
     return {
@@ -26,6 +29,7 @@ const portPositionStyle = (port: Port): { x: number, y: number } => {
 }
 
 const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
+    // TODO: If port is default port then t is undefined and the whole piece should be clickable
     const { x, y } = portPositionStyle(port);
 
     return <Handle
@@ -151,7 +155,7 @@ const DiagramCore: FC = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
+        (params: any) => setEdges((eds) => addEdge(params, eds)),
         [setEdges],
     );
     return (

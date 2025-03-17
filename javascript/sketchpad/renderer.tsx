@@ -2,11 +2,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-// import Diagram from '@semio/core/components/ui/Diagram'
+import './globals.css'
+
+// import Diagram from '@semio/core'
 
 function App() {
     return (
-        <h1>semio </h1>
+        <h1 className='text-pink-600 text-center'>semio </h1>
     );
 }
 
