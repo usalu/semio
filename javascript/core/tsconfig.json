@@ -23,9 +23,9 @@
       "react-dom"
     ]
   },
-  "include": [
-    "./components/**/*.{ts,tsx,mdx}",
-  ],
+  // "include": [
+  //   "./components/**/*.{ts,tsx,mdx}",
+  // ],
   "exclude": [
     "node_modules"
   ]
