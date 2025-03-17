@@ -2,8 +2,9 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import react from '@astrojs/react';
-
 import mdx from '@astrojs/mdx';
+// import tailwind from '@astrojs/tailwind';
+// import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
@@ -25,5 +26,13 @@ export default defineConfig({
                 autogenerate: { directory: 'reference' },
             },
         ],
-		}), react(), mdx()],
+        customCss: ['./globals.css'],
+    }), react(), mdx(),
+        // tailwind({
+        // applyBaseStyles: false, // Disable default base styles
+        // }),
+    ],
+    // vite: {
+    // plugins: [tailwindcss()],
+    // },
 });
