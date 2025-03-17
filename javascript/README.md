@@ -6,4 +6,4 @@
 
 # TODO:
 
-- Proper export and imports of internal packages 🔃
+- figure out why postcss config can't be imported.
