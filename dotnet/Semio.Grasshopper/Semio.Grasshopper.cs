@@ -1761,6 +1761,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddTextParameter("Id", "Id",
             "Id of the piece.",
             GH_ParamAccess.item);
+        pManager.AddTextParameter("Description","Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "Na", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Variant", "Vn?",
             "The optional variant of the type of the piece. No variant means the default variant.",
@@ -1778,6 +1779,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
     protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
     {
         var id = "";
+        var description = "";
         var typeName = "";
         var typeVariant = "";
         var plane = new Rhino.Geometry.Plane();
@@ -1786,29 +1788,32 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
-        if (DA.GetData(3, ref typeName))
+        if(DA.GetData(3, ref description))
+            pieceGoo.Value.Description = description;
+        if (DA.GetData(4, ref typeName))
             pieceGoo.Value.Type.Name = typeName;
-        if (DA.GetData(4, ref typeVariant))
+        if (DA.GetData(5, ref typeVariant))
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(5, ref plane))
+        if (DA.GetData(6, ref plane))
             pieceGoo.Value.Plane = plane.Convert();
-        if (DA.GetData(6, ref centerGoo))
+        if (DA.GetData(7, ref centerGoo))
             pieceGoo.Value.Center = centerGoo.Value;
-        if (DA.GetDataList(7, qualitiesGoos))
+        if (DA.GetDataList(8, qualitiesGoos))
             pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
     {
         DA.SetData(2, pieceGoo.Value.Id);
-        DA.SetData(3, pieceGoo.Value.Type.Name);
-        DA.SetData(4, pieceGoo.Value.Type.Variant);
-        DA.SetData(5, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(6, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
+        DA.SetData(3, pieceGoo.Value.Description);
+        DA.SetData(4, pieceGoo.Value.Type.Name);
+        DA.SetData(5, pieceGoo.Value.Type.Variant);
+        DA.SetData(6, (pieceGoo.Value.Plane as Plane)?.Convert());
+        DA.SetData(7, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
         var qualityGoos = new List<QualityGoo>();
         foreach (Quality quality in pieceGoo.Value.Qualities)
             qualityGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(7, qualityGoos);
+        DA.SetDataList(8, qualityGoos);
     }
 }
 
@@ -1828,6 +1833,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
             "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
@@ -1861,6 +1867,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectedPortId = "";
         var connectingPieceId = "";
         var connectingPortId = "";
+        var description = "";
         var gap = 0.0;
         var shift = 0.0; 
         var raise = 0.0;
@@ -1879,23 +1886,25 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
         if (DA.GetData(5, ref connectingPortId))
             connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(6, ref gap))
+        if (DA.GetData(6, ref description))
+            connectionGoo.Value.Description = description;
+        if (DA.GetData(7, ref gap))
             connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(7, ref shift))
+        if (DA.GetData(8, ref shift))
             connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(8, ref raise))
+        if (DA.GetData(9, ref raise))
             connectionGoo.Value.Raise = (float)raise;
-        if (DA.GetData(9, ref rotation))
+        if (DA.GetData(10, ref rotation))
             connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(10, ref turn))
+        if (DA.GetData(11, ref turn))
             connectionGoo.Value.Turn = (float)turn;
-        if (DA.GetData(11, ref tilt))
+        if (DA.GetData(12, ref tilt))
             connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(12, ref x))
+        if (DA.GetData(13, ref x))
             connectionGoo.Value.X = (float)x;
-        if (DA.GetData(13, ref y))
+        if (DA.GetData(14, ref y))
             connectionGoo.Value.Y = (float)y;
-        if (DA.GetDataList(14, qualitiesGoos))
+        if (DA.GetDataList(15, qualitiesGoos))
             connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
@@ -1905,18 +1914,19 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(3, connectionGoo.Value.Connected.Port.Id);
         DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
         DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(6, connectionGoo.Value.Gap);
-        DA.SetData(7, connectionGoo.Value.Shift);
-        DA.SetData(8, connectionGoo.Value.Raise);
-        DA.SetData(9, connectionGoo.Value.Rotation);
-        DA.SetData(10, connectionGoo.Value.Turn);
-        DA.SetData(11, connectionGoo.Value.Tilt);
-        DA.SetData(12, connectionGoo.Value.X);
-        DA.SetData(13, connectionGoo.Value.Y);
+        DA.SetData(6, connectionGoo.Value.Description);
+        DA.SetData(7, connectionGoo.Value.Gap);
+        DA.SetData(8, connectionGoo.Value.Shift);
+        DA.SetData(9, connectionGoo.Value.Raise);
+        DA.SetData(10, connectionGoo.Value.Rotation);
+        DA.SetData(11, connectionGoo.Value.Turn);
+        DA.SetData(12, connectionGoo.Value.Tilt);
+        DA.SetData(13, connectionGoo.Value.X);
+        DA.SetData(14, connectionGoo.Value.Y);
         var qualityGoos = new List<QualityGoo>();
         foreach (Quality quality in connectionGoo.Value.Qualities)
             qualityGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(14, qualityGoos);
+        DA.SetDataList(15, qualityGoos);
     }
 }
 

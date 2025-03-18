@@ -969,6 +969,12 @@ public class Representation : Model<Representation>
     public string Url { get; set; } = "";
 
     /// <summary>
+    ///     💬 The optional human-readable description of the representation.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
     ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
     /// </summary>
     [Id("✉️", "Mm", "Mim",
@@ -1574,6 +1580,12 @@ public class Piece : Model<Piece>
     public string Id { get; set; } = "";
 
     /// <summary>
+    ///     💬 The optional human-readable description of the piece.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+    public string Description { get; set; } = "";
+
+    /// <summary>
     ///     🧩 The local identifier of the type of the piece within the kit.
     /// </summary>
     [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type of the piece within the kit.")]
@@ -1719,6 +1731,12 @@ public class Connection : Model<Connection>
     /// </summary>
     [ModelProp("🧲", "Cg", "Cng", "The connected side of the piece of the connection.")]
     public Side Connecting { get; set; } = new();
+
+    /// <summary>
+    ///     💬 The optional human-readable description of the connection.
+    /// </summary>
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
+    public string Description { get; set; } = "";
 
     /// <summary>
     ///     ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the
