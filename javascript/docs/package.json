@@ -14,6 +14,7 @@
     "@astrojs/starlight": "^0.32.2",
     "@astrojs/starlight-tailwind": "^3.0.0",
     "@astrojs/tailwind": "^6.0.0",
+    "@astrojs/ts-plugin": "^1.10.4",
     "@semio/core": "*",
     "astro": "^5.1.5",
     "sharp": "^0.32.5"

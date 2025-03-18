@@ -29,7 +29,7 @@ You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But �
 
 # 🤖 What is semio?
 
-Let me start by what semio is **not**:
+### Let me start by what semio is **not**:
 
 - Rhino, SketchUp, 3ds Max, Blender, ...
 
@@ -97,7 +97,11 @@ Let me start by what semio is **not**:
 
   > In semio you **link** urls 🔗
 
-So, what **is** semio?
+### So, what **is** semio?
+
+A tool that can bring all the other tools together for **modular** architecture 🤝
+
+In other words:
 
 - An _open-source_ ecosystem for designing kit-of-parts architecture 🧩
 - A _designer-affine_ pencil for a placeholder-based, non-linear and iterative design space exploration 🔀

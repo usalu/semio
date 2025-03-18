@@ -17,6 +17,7 @@
     "allowJs": false, // Must be present for Nextjs, value optional
     "incremental": false, // Must be present for Nextjs, value optional
     "noEmit": true, // Must be present for Nextjs, value optional
+    "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional
     "types": [
       "react",
       "react-dom"
