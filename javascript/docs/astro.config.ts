@@ -39,13 +39,13 @@ export default defineConfig({
         sidebar: [
             {
                 label: 'Tutorials',
-                items: [
-                    { label: 'Hello World', slug: 'tutorials/hello-world' },
-                ],
+                autogenerate: { directory: 'tutorials' }
             },
             {
-                label: 'Reference',
-                autogenerate: { directory: 'reference' },
+                label: 'Installation',
+                items: [
+                    { label: 'Getting Started', slug: 'installation' }
+                ]
             },
         ],
         customCss: ['./globals.css'],
