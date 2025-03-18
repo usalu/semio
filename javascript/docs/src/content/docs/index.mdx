@@ -7,11 +7,11 @@ hero:
   image:
     file: ../../assets/design-variants.png
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get started
+      link: /getting-started/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: Get involved
+      link: https://github.com/usalu/semio
       icon: external
       variant: minimal
 ---
@@ -23,21 +23,21 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## Next steps
 
-<div class="text-pink-600 text-center">
+{/* <div class="text-pink-600 text-center">
   <p>A tailwind example</p>
-</div>
+</div> */}
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="Overwiew about the framework" icon="star">
+		Understand what _semio_ is and what we envision.
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="Installing everything" icon="down-arrow">
+		How to setup the components of _semio_.
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="Tutorials to follow" icon="right-arrow">
+		See _semio_ in action with our tutorials.
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="Theory behind semio" icon="open-book">
+		Learn more about [the theory behind _semio_](/theory/).
 	</Card>
 </CardGrid>

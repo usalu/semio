@@ -38,10 +38,9 @@ export default defineConfig({
         },
         sidebar: [
             {
-                label: 'Guides',
+                label: 'Tutorials',
                 items: [
-                    // Each item here is one entry in the navigation menu.
-                    { label: 'Example Guide', slug: 'guides/example' },
+                    { label: 'Hello World', slug: 'tutorials/hello-world' },
                 ],
             },
             {
