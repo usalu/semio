@@ -456,6 +456,13 @@
             },
             "ConnectionContext": {
                 "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
+                    },
                     "gap": {
                         "type": "number",
                         "title": "Gap",
@@ -529,6 +536,13 @@
             },
             "ConnectionInput": {
                 "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
+                    },
                     "gap": {
                         "type": "number",
                         "title": "Gap",
@@ -602,6 +616,13 @@
             },
             "Connection": {
                 "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
+                    },
                     "gap": {
                         "type": "number",
                         "title": "Gap",
@@ -675,6 +696,13 @@
             },
             "ConnectionPrediction": {
                 "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
+                    },
                     "gap": {
                         "type": "number",
                         "title": "Gap",
@@ -1319,6 +1347,13 @@
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                        "default": ""
+                    },
                     "type": {
                         "$ref": "#/components/schemas/TypeId",
                         "description": "\ud83e\udde9 The type of the piece."
@@ -1384,6 +1419,13 @@
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                        "default": ""
+                    },
                     "type": {
                         "$ref": "#/components/schemas/TypeId",
                         "description": "\ud83e\udde9 The type of the piece."
@@ -1435,6 +1477,13 @@
                         "description": "\ud83c\udd94 The id of the piece.",
                         "default": ""
                     },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                        "default": ""
+                    },
                     "type": {
                         "$ref": "#/components/schemas/TypeId",
                         "description": "\ud83e\udde9 The type of the piece."
@@ -1484,6 +1533,13 @@
                         "maxLength": 128,
                         "title": "Id",
                         "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
                     },
                     "type": {
@@ -1939,6 +1995,19 @@
             },
             "RepresentationInput": {
                 "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                        "default": ""
+                    },
                     "mime": {
                         "type": "string",
                         "maxLength": 64,
@@ -1952,12 +2021,6 @@
                         "type": "array",
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
-                    },
-                    "url": {
-                        "type": "string",
-                        "maxLength": 2048,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     },
                     "qualities": {
                         "items": {
@@ -1970,14 +2033,27 @@
                 },
                 "type": "object",
                 "required": [
-                    "mime",
-                    "url"
+                    "url",
+                    "mime"
                 ],
                 "title": "RepresentationInput",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
             },
             "Representation": {
                 "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Url",
+                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4096,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                        "default": ""
+                    },
                     "mime": {
                         "type": "string",
                         "maxLength": 64,
@@ -1992,12 +2068,6 @@
                         "title": "Tags",
                         "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
                     },
-                    "url": {
-                        "type": "string",
-                        "maxLength": 2048,
-                        "title": "Url",
-                        "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
-                    },
                     "qualities": {
                         "items": {
                             "$ref": "#/components/schemas/Quality"
@@ -2009,8 +2079,8 @@
                 },
                 "type": "object",
                 "required": [
-                    "mime",
-                    "url"
+                    "url",
+                    "mime"
                 ],
                 "title": "Representation",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."

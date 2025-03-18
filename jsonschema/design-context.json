@@ -3,6 +3,13 @@
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "gap": {
                     "default": 0,
                     "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
@@ -102,6 +109,13 @@
                     "description": "\ud83c\udd94 The id of the piece.",
                     "maxLength": 128,
                     "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                    "maxLength": 4096,
+                    "title": "Description",
                     "type": "string"
                 },
                 "type": {

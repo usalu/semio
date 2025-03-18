@@ -982,16 +982,6 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
 ### Representations
 
 
-class RepresentationMimeField(RealField, abc.ABC):
-    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
-
-    mime: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-    )
-    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
-
-
 class RepresentationUrlField(RealField, abc.ABC):
     """🔗 The Unique Resource Locator (URL) to the resource of the representation."""
 
@@ -1000,6 +990,27 @@ class RepresentationUrlField(RealField, abc.ABC):
         description="🔗 The Unique Resource Locator (URL) to the resource of the representation.",
     )
     """🔗 The Unique Resource Locator (URL) to the resource of the representation."""
+
+
+class RepresentationDescriptionField(RealField, abc.ABC):
+    """💬 The optional human-readable description of the representation."""
+
+    description: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="💬 The optional human-readable description of the representation.",
+    )
+    """💬 The optional human-readable description of the representation."""
+
+
+class RepresentationMimeField(RealField, abc.ABC):
+    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
+
+    mime: str = sqlmodel.Field(
+        max_length=NAME_LENGTH_LIMIT,
+        description="✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
+    )
+    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
 
 
 class RepresentationTagsField(MaskedField, abc.ABC):
@@ -1017,18 +1028,20 @@ class RepresentationId(RepresentationTagsField, RepresentationMimeField, Id):
 
 
 class RepresentationProps(
-    RepresentationUrlField,
     RepresentationTagsField,
     RepresentationMimeField,
+    RepresentationDescriptionField,
+    RepresentationUrlField,
     Props,
 ):
     """🎫 The props of a representation."""
 
 
 class RepresentationInput(
-    RepresentationUrlField,
     RepresentationTagsField,
     RepresentationMimeField,
+    RepresentationDescriptionField,
+    RepresentationUrlField,
     Input,
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
@@ -1043,6 +1056,7 @@ class RepresentationInput(
 class RepresentationContext(
     RepresentationTagsField,
     RepresentationMimeField,
+    RepresentationDescriptionField,
     Context,
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
@@ -1055,9 +1069,10 @@ class RepresentationContext(
 
 
 class RepresentationOutput(
-    RepresentationUrlField,
     RepresentationTagsField,
     RepresentationMimeField,
+    RepresentationDescriptionField,
+    RepresentationUrlField,
     Output,
 ):
     """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
@@ -1070,8 +1085,9 @@ class RepresentationOutput(
 
 
 class Representation(
-    RepresentationUrlField,
     RepresentationMimeField,
+    RepresentationDescriptionField,
+    RepresentationUrlField,
     TableEntity,
     table=True,
 ):
@@ -2613,6 +2629,17 @@ class PieceIdField(MaskedField, abc.ABC):
     """🆔 The id of the piece."""
 
 
+class PieceDescriptionField(RealField, abc.ABC):
+    """💬 The optional human-readable description of the piece."""
+
+    description: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="💬 The optional human-readable description of the piece.",
+    )
+    """💬 The optional human-readable description of the piece."""
+
+
 class PieceTypeField(MaskedField, abc.ABC):
     """🧩 The type of the piece."""
 
@@ -2647,12 +2674,12 @@ class PieceId(PieceIdField, Id):
 
 
 class PieceProps(
-    PieceCenterField, PiecePlaneField, PieceTypeField, PieceIdField, Props
+    PieceCenterField, PiecePlaneField, PieceTypeField, PieceDescriptionField, PieceIdField, Props
 ):
     """🎫 The props of a piece."""
 
 
-class PieceInput(PieceTypeField, PieceIdField, Input):
+class PieceInput(PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(
@@ -2672,7 +2699,7 @@ class PieceInput(PieceTypeField, PieceIdField, Input):
     """📏 The qualities of the piece."""
 
 
-class PieceContext(PieceTypeField, PieceIdField, Context):
+class PieceContext(PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(
@@ -2692,7 +2719,7 @@ class PieceContext(PieceTypeField, PieceIdField, Context):
     """📏 The qualities of the piece."""
 
 
-class PieceOutput(PieceTypeField, PieceIdField, Output):
+class PieceOutput(PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
@@ -2712,7 +2739,7 @@ class PieceOutput(PieceTypeField, PieceIdField, Output):
     """📏 The qualities of the piece."""
 
 
-class PiecePrediction(PieceTypeField, PieceIdField, Prediction):
+class PiecePrediction(PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     # center: typing.Optional[DiagramPointPrediction] = sqlmodel.Field(
@@ -2722,7 +2749,7 @@ class PiecePrediction(PieceTypeField, PieceIdField, Prediction):
     # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
-class Piece(TableEntity, table=True):
+class Piece(PieceDescriptionField, TableEntity, table=True):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     PLURAL = "pieces"
@@ -2946,6 +2973,17 @@ class ConnectionConnectingField(MaskedField, abc.ABC):
     """🧲 The connecting side of the connection."""
 
 
+class ConnectionDescriptionField(RealField, abc.ABC):
+    """💬 The optional human-readable description of the connection."""
+
+    description: str = sqlmodel.Field(
+        default="",
+        max_length=DESCRIPTION_LENGTH_LIMIT,
+        description="💬 The optional human-readable description of the connection.",
+    )
+    """💬 The optional human-readable description of the connection."""
+
+
 class ConnectionGapField(RealField, abc.ABC):
     """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece."""
 
@@ -3056,6 +3094,7 @@ class ConnectionProps(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     Props,
 ):
     """🎫 The props of a connection."""
@@ -3070,6 +3109,7 @@ class ConnectionInput(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     Input,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3093,6 +3133,7 @@ class ConnectionContext(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     Context,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3116,6 +3157,7 @@ class ConnectionOutput(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     Output,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3139,6 +3181,7 @@ class ConnectionPrediction(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     Prediction,
 ):
     """🖇️ A bidirectional connection between two pieces of a design."""
@@ -3162,6 +3205,7 @@ class Connection(
     ConnectionRaiseField,
     ConnectionShiftField,
     ConnectionGapField,
+    ConnectionDescriptionField,
     TableEntity,
     table=True,
 ):
@@ -3325,6 +3369,10 @@ class Connection(
             connectingPiece=connectingPiece,
             connectingPort=connectingPort,
         )
+        try:
+            entity.description = obj["description"]
+        except KeyError:
+            pass
         try:
             entity.gap = obj["gap"]
         except KeyError:

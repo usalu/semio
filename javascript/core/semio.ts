@@ -1,3 +1,6 @@
+// TODOs
+// Update to latest schema and unify docstrings
+
 // Initially created from json-schema-to-typescript: https://app.quicktype.io/
 // Manually edited.
 
@@ -84,6 +87,8 @@ export type Connection = {
     connected: Side;
     // 🧲 The connecting side of the connection.
     connecting: Side;
+    // 💬 The optional human-readable description of the connection.
+    description?: string;
     // ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
     gap?: number;
     // 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
@@ -122,6 +127,8 @@ export type Piece = {
     center?: null | DiagramPoint;
     // 🆔 The id of the piece.
     id_?: string;
+    // 💬 The optional human-readable description of the piece.
+    description?: string;
     // ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     plane?: null | Plane;
     // 🧩 The type of the piece.
@@ -224,27 +231,24 @@ export type Port = {
     locators?: Locator[];
     // ✖️ The connection point of the port that is attracted to another connection point.
     point: Point;
+    // 💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
     t?: number;
-}
-
-// 🗺️ A locator is meta-data for grouping ports.
-export type Locator = {
-    // 👪 The group of the locator.
-    group: string;
-    // 📌 The optional sub-group of the locator. No sub-group means true.
-    subgroup?: string;
+    // 📏 The optional qualities of the port.
+    qualities?: Quality[];
 }
 
 // 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
 export type Representation = {
-    // 🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
-    lod: string;
+    // 🔗 The Unique Resource Locator (URL) to the resource of the representation.
+    url: string;
+    // 💬 The optional human-readable description of the representation.
+    description?: string;
     // ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
     mime: string;
     // 🏷️ The optional tags to group representations. No tags means default.
     tags?: string[];
-    // 🔗 The Unique Resource Locator (URL) to the resource of the representation.
-    url: string;
+    // 📏 The optional qualities of the representation.
+    qualities?: Quality[];
 }
 
 // Converts JSON strings to/from your types
@@ -469,6 +473,7 @@ const typeMap: any = {
     ], "any"),
     "Piece": o([
         { json: "center", js: "center", typ: u(undefined, u(null, r("DiagramPoint"))) },
+        { json: "description", js: "description", typ: u(undefined, "") },
         { json: "id_", js: "id_", typ: u(undefined, "") },
         { json: "plane", js: "plane", typ: u(undefined, u(null, r("Plane"))) },
         { json: "type", js: "type", typ: r("TypeID") },
@@ -520,17 +525,15 @@ const typeMap: any = {
         { json: "description", js: "description", typ: u(undefined, "") },
         { json: "direction", js: "direction", typ: r("Vector") },
         { json: "id_", js: "id_", typ: u(undefined, "") },
-        { json: "locators", js: "locators", typ: u(undefined, a(r("Locator"))) },
         { json: "point", js: "point", typ: r("Point") },
-    ], "any"),
-    "Locator": o([
-        { json: "group", js: "group", typ: "" },
-        { json: "subgroup", js: "subgroup", typ: u(undefined, "") },
+        { json: "t", js: "t", typ: u(undefined, 3.14) },
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
     "Representation": o([
-        { json: "lod", js: "lod", typ: "" },
+        { json: "url", js: "url", typ: "" },
+        { json: "description", js: "description", typ: u(undefined, "") },
         { json: "mime", js: "mime", typ: "" },
         { json: "tags", js: "tags", typ: u(undefined, a("")) },
-        { json: "url", js: "url", typ: "" },
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
 };

@@ -26,6 +26,13 @@
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "gap": {
                     "default": 0,
                     "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
@@ -239,6 +246,13 @@
                     "title": "Id",
                     "type": "string"
                 },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "type": {
                     "$ref": "#/$defs/TypeId",
                     "description": "\ud83e\udde9 The type of the piece."
@@ -449,6 +463,19 @@
         "Representation": {
             "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
+                "url": {
+                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
+                    "maxLength": 2048,
+                    "title": "Url",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "mime": {
                     "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
                     "maxLength": 64,
@@ -463,12 +490,6 @@
                     "title": "Tags",
                     "type": "array"
                 },
-                "url": {
-                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 2048,
-                    "title": "Url",
-                    "type": "string"
-                },
                 "qualities": {
                     "description": "\ud83d\udccf The qualities of the representation.",
                     "items": {
@@ -479,8 +500,8 @@
                 }
             },
             "required": [
-                "mime",
-                "url"
+                "url",
+                "mime"
             ],
             "title": "Representation",
             "type": "object"

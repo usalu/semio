@@ -152,6 +152,19 @@
         "Representation": {
             "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
             "properties": {
+                "url": {
+                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
+                    "maxLength": 2048,
+                    "title": "Url",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "description": "\ud83d\udcac The optional human-readable description of the representation.",
+                    "maxLength": 4096,
+                    "title": "Description",
+                    "type": "string"
+                },
                 "mime": {
                     "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
                     "maxLength": 64,
@@ -166,12 +179,6 @@
                     "title": "Tags",
                     "type": "array"
                 },
-                "url": {
-                    "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 2048,
-                    "title": "Url",
-                    "type": "string"
-                },
                 "qualities": {
                     "description": "\ud83d\udccf The qualities of the representation.",
                     "items": {
@@ -182,8 +189,8 @@
                 }
             },
             "required": [
-                "mime",
-                "url"
+                "url",
+                "mime"
             ],
             "title": "Representation",
             "type": "object"

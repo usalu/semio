@@ -66,8 +66,9 @@ CREATE TABLE design (
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE representation (
-	mime VARCHAR(64) NOT NULL, 
 	url VARCHAR(2048) NOT NULL, 
+	description VARCHAR(4096) NOT NULL, 
+	mime VARCHAR(64) NOT NULL, 
 	id INTEGER NOT NULL, 
 	type_id INTEGER, 
 	PRIMARY KEY (id), 
@@ -102,6 +103,7 @@ CREATE TABLE author (
 	FOREIGN KEY(design_id) REFERENCES design (id)
 );
 CREATE TABLE piece (
+	description VARCHAR(4096) NOT NULL, 
 	id INTEGER NOT NULL, 
 	local_id VARCHAR(128), 
 	type_id INTEGER, 
@@ -132,6 +134,7 @@ CREATE TABLE compatible_family (
 	FOREIGN KEY(port_id) REFERENCES port (id)
 );
 CREATE TABLE connection (
+	description VARCHAR(4096) NOT NULL, 
 	gap FLOAT NOT NULL, 
 	shift FLOAT NOT NULL, 
 	raise_ FLOAT NOT NULL, 

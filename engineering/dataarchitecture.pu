@@ -58,8 +58,8 @@ entity Representation {
     *id : int <<PK,generated>>
     ..
     *url : string
+    *description : string
     *mime : string
-    *lod : string
     ..
     *typeId : int <<FK>>
 }
