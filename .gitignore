@@ -4,8 +4,7 @@ temp
 log
 #--------------------------------------TURBO--------------------------------------
 .turbo
-#--------------------------------------GATSBY--------------------------------------
-public
+#--------------------------------------ASTRO--------------------------------------
 #--------------------------------------TEX--------------------------------------
 
 ## Core latex/pdflatex auxiliary files:
@@ -874,10 +873,7 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-
 #--------------------------------------WEBSTACK--------------------------------------
-
-# Logs
 logs
 *.log*
 npm-debug.log*
@@ -890,42 +886,32 @@ node_modules
 dist
 dist-ssr
 out
-.DS_Store
 *.local
 
 # Editor directories and files
 # .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 *storybook.log
-
-!javascript/core/lib
-
-#--------------------------------------ASTRO--------------------------------------
-# build output
-dist/
-# generated types
-.astro/
-
-# dependencies
-node_modules/
-
-# logs
+#--------------------------------------MACOS--------------------------------------
+.DS_Store
+#--------------------------------------JAVASCRIPT--------------------------------------
+node_modules
+.env
+.env.production
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+#--------------------------------------ASTRO--------------------------------------
+.astro
 
-# environment variables
-.env
-.env.production
-
-# macOS-specific files
-.DS_Store
+#--------------------------------------EXCEPTIONS--------------------------------------
+!javascript/**/public
+!javascript/core/lib

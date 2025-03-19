@@ -12,7 +12,6 @@
     "@astrojs/mdx": "^4.2.0",
     "@astrojs/react": "^4.2.1",
     "@astrojs/starlight": "^0.32.2",
-    "@astrojs/starlight-tailwind": "^3.0.0",
     "@astrojs/tailwind": "^6.0.0",
     "@astrojs/ts-plugin": "^1.10.4",
     "@semio/core": "*",
