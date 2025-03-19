@@ -1,16 +1,92 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
-            "name": "PowerShell: Launch Current File",
-            "type": "PowerShell",
+            "name": "everything",
+            "preLaunchTask": "dev",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/python/engine",
+                    "remoteRoot": ".",
+                }
+            ],
+        },
+        {
+            "name": "javascript",
+            "type": "node",
             "request": "launch",
-            "script": "${file}",
-            "args": []
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "run-many",
+                "-t",
+                "dev",
+                "--projects=@semio/core,@semio/docs,@semio/sketchpad"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "engine",
+            "preLaunchTask": "dev engine",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/python/engine",
+                    "remoteRoot": ".",
+                }
+            ],
+        },
+        {
+            "name": "core",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "dev",
+                "@semio/core"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "docs",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "dev",
+                "@semio/docs"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "sketchpad",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "dev",
+                "@semio/sketchpad"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
         }
     ]
 }

@@ -195,10 +195,16 @@ PORT = 2503
 ADDRESS = "http://127.0.0.1:2503"
 NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
-URL_LENGTH_LIMIT = 2048
-URI_LENGTH_LIMIT = 4096
-TAGS_MAX = 16
-DESCRIPTION_LENGTH_LIMIT = 4096
+URL_LENGTH_LIMIT = 1024
+URI_LENGTH_LIMIT = 2048
+QUALITIES_MAX = 64
+TAGS_MAX = 8
+REPRESENTATIONS_MAX = 32
+TYPES_MAX = 256
+PIECES_MAX = 512
+DESIGNS_MAX = 128
+KITS_MAX = 64
+DESCRIPTION_LENGTH_LIMIT = 256
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
@@ -2792,9 +2798,21 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     """🔑 The optional foreign primary key of the plane of the piece in the database."""
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    centerX: typing.Optional[float] = sqlmodel.Field(default=None, exclude=True)
+    center_x: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "center_x",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    centerY: typing.Optional[float] = sqlmodel.Field(default=None, exclude=True)
+    center_y: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "center_y",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+    )
     """🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
     qualities: list[Quality] = sqlmodel.Relationship(
         back_populates="piece", cascade_delete=True
@@ -4856,7 +4874,7 @@ Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D representation of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connecting between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
-logger.debug("System prompt: {}", systemPrompt)
+# logger.debug("System prompt: {}", systemPrompt)
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -5828,7 +5846,8 @@ def restart_engine():
     ui_instance.engine_process.start()
 
 
-if __name__ == "__main__":
+def run():
+    logger.debug("Starting engine")
     multiprocessing.freeze_support()  # needed for pyinstaller on Windows
 
     parser = argparse.ArgumentParser(description="semio engine")
@@ -5889,3 +5908,14 @@ if __name__ == "__main__":
     ui.engine_process.start()
 
     sys.exit(ui.exec())
+
+def dev():
+    logger.debug("Starting debugpy for semio engine")
+    import debugpy
+    debugpy.listen(("0.0.0.0", 5678))  # Start debug server
+    logger.debug("Waiting for debugger to attach to semio engine")
+    debugpy.wait_for_client()
+    run()
+
+if __name__ == "__main__":
+    run()

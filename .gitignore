@@ -5,6 +5,9 @@ temp
 log
 #--------------------------------------MACOS--------------------------------------
 .DS_Store
+#--------------------------------------NX--------------------------------------
+.nx/cache
+.nx/workspace-data
 #--------------------------------------JAVASCRIPT--------------------------------------
 node_modules
 .env
@@ -273,7 +276,8 @@ cython_debug/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
+!.vscode/*.code-workspace
+# *.code-workspace
 #--------------------------------------VISUALSTUDIO--------------------------------------
 *.rsuser
 *.suo

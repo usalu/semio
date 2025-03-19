@@ -1,7 +1,6 @@
 param (
     [switch]$SkipPostBuild
 )
-
 if (-not (Test-Path ".venv")) {
     poetry install
 }

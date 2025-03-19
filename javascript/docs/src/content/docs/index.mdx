@@ -5,17 +5,16 @@ template: splash
 hero:
   tagline: Welcome to semio Docs 👋
   image:
-    file: ../../assets/design-variants.png
+    file: design-variants.png
   actions:
     - text: Get started
       link: /getting-started/
       icon: right-arrow
     - text: Get involved
-      link: https://github.com/usalu/semio
+      link: https://discord.gg/m6nnf6pQRc
       icon: external
       variant: minimal
 ---
-
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
 {/* import Diagram from '@semio/core';
@@ -27,17 +26,22 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
   <p>A tailwind example</p>
 </div> */}
 
+
 <CardGrid stagger>
 	<Card title="Overwiew about the framework" icon="star">
-		Understand what _semio_ is and what we envision.
-	</Card>
-	<Card title="Installing everything" icon="down-arrow">
-		How to [install and setup](/installation) the components of _semio_.
+		See [what _semio_ is and what we envision](/overview).
 	</Card>
 	<Card title="Tutorials to follow" icon="right-arrow">
-		See _semio_ in action with our [tutorials](/tutorials/).
+		Learn _semio_ by [using our tutorials](/tutorials/).
 	</Card>
 	<Card title="Theory behind semio" icon="open-book">
-		Learn more about [the theory behind _semio_](/theory/).
+		Understand more about [the theory behind _semio_](/theory/).
+	</Card>
+	<Card title="Reference for the details" icon="down-arrow">
+		Read specifically about [the components of _semio_](/reference/).
 	</Card>
 </CardGrid>
+
+
+{/* ![A rocketship in space](../../assets/bild.png){style="float: right; margin-left: 20px;"} */}
+{/* ![A rocketship in space](../../assets/bild.png){className="right-aligned"} */}

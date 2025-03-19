@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "dev",
+            "type": "shell",
+            "command": "npx nx run-many -t dev",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting debugpy for semio engine", // When server starts
+                    "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
+                }
+            }
+        },
+        {
+            "label": "dev engine",
+            "type": "shell",
+            "command": "npx nx dev @semio/engine",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting debugpy for semio engine", // When server starts
+                    "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
+                }
+            }
+        }
+    ]
+}

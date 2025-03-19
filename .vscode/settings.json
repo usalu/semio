@@ -1,15 +1,46 @@
 {
-  "terminal.integrated.profiles.windows": {
-    "PowerShell 7": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell",
-      "path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+  "sqltools.useNodeRuntime": true,
+  "sqltools.connections": [
+    {
+      "name": "metabolism",
+      "database": "./examples/metabolism/.semio/kit.sqlite3",
+      "driver": "SQLite",
+      "previewLimit": 50
     },
-    "PowerShell 7 ARM": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell",
-      "path": "C:\\Program Files\\WindowsApps\\Microsoft.PowerShell_7.4.6.0_arm64__8wekyb3d8bbwe\\pwsh.exe"
+    {
+      "name": "tests",
+      "database": "./dotnet/Semio.Grasshopper.UnitTests/local/kit/.semio/kit.sqlite3",
+      "driver": "SQLite",
+      "previewLimit": 50
     }
+  ],
+  "editor.formatOnSave": true,
+  "pylint.args": [
+    "--variable-naming-style=camelCase",
+    "--function-naming-style=camelCase",
+    "--method-naming-style=camelCase",
+    "--attribute-naming-style=camelCase",
+    "--class-naming-style=PascalCase" // Assuming you want classes in PascalCase
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
   },
-  "terminal.integrated.defaultProfile.windows": "PowerShell 7 ARM"
+  // "[json]": {
+  //     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  // "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
+  // "python.venvPath": ".venv",
+  "python.analysis.typeCheckingMode": "off",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  // "python.testing.pytestArgs": [
+  //     "--cov",
+  //     "--cov-config=pyproject.toml",
+  //     "--cov-report html",
+  //     "--import-mode importlib"
+  // ],
+  "dotnet.defaultSolution": "dotnet/Semio.sln"
 }

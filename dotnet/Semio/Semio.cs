@@ -73,10 +73,16 @@ public static class Constants
     public const string EngineAddress = "http://127.0.0.1:2503";
     public const int NameLengthLimit = 64;
     public const int IdLengthLimit = 128;
-    public const int UrlLengthLimit = 2048;
-    public const int UriLengthLimit = 4096;
-    public const int TagsMax = 16;
-    public const int DescriptionLengthLimit = 4096;
+    public const int UrlLengthLimit = 1024;
+    public const int UriLengthLimit = 2048;
+    public const int QualitiesMax = 64;
+    public const int TagsMax = 8;
+    public const int RepresentationsMax = 32;
+    public const int TypesMax = 256;
+    public const int PiecesMax = 512;
+    public const int DesignsMax = 128;
+    public const int KitsMax = 64;
+    public const int DescriptionLengthLimit = 256;
     public const float Tolerance = 1e-5f;
 }
 

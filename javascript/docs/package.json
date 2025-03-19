@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
   "name": "@semio/docs",
   "type": "module",
   "version": "0.0.1",
@@ -9,12 +11,14 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/markdoc": "^0.13.1",
     "@astrojs/mdx": "^4.2.0",
     "@astrojs/react": "^4.2.1",
+    "@astrojs/sitemap": "^3.3.0",
     "@astrojs/starlight": "^0.32.2",
     "@astrojs/tailwind": "^6.0.0",
     "@astrojs/ts-plugin": "^1.10.4",
-    "@semio/core": "*",
+    "@semio/javascript": "*",
     "astro": "^5.1.5",
     "sharp": "^0.32.5"
   },

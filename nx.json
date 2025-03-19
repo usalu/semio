@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "cache": false
+    },
+    "update": {
+      "dependsOn": [
+        "^update"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
+      "cache": true
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nxlv/python",
+      "options": {}
+    }
+  ]
+}

@@ -1,3 +1,7 @@
+# Develop
+
+See [semio/javascript](../README.md)
+
 # TODO
 
 1. Investigate why imported component from `@semio/core` doesn't work
