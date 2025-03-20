@@ -30,22 +30,47 @@ export default defineConfig({
             discord: 'https://discord.gg/m6nnf6pQRc'
         },
         logo: {
-            light: './src/assets/emblem_round.svg',
-            dark: './src/assets/emblem_dark_round.svg',
+            light: './emblem_round.svg',
+            dark: './emblem_dark_round.svg',
         },
         editLink: {
             baseUrl: 'https://github.com/usalu/semio/edit/main/javascript/docs',
         },
         sidebar: [
             {
-                label: 'Tutorials',
-                autogenerate: { directory: 'tutorials' }
+                label: '📌 Start here',
+                items: [
+                    { label: '🚀 Getting Started', slug: 'getting-started' }
+                ],
+                translations: {
+                    'de': 'Erste Schritte',
+                },
             },
             {
-                label: 'Installation',
+                label: '📝 Tutorials',
+                autogenerate: { directory: 'tutorials' }
+
+            },
+            {
+                label: '🌟 Showcases',
+                autogenerate: { directory: 'showcases' }
+            },
+            {
+                label: '🦮 Guides',
                 items: [
-                    { label: 'Getting Started', slug: 'installation' }
+                    { label: '⬇️ Installation', slug: 'installation' },
+                    { label: '🥽 Overview', slug: 'overview' }
                 ]
+            },
+            {
+                label: '📚 Theory',
+                autogenerate: { directory: 'theory' }
+
+            },
+            {
+                label: '📖 Reference',
+                autogenerate: { directory: 'reference' }
+
             },
         ],
         customCss: ['./globals.css'],
