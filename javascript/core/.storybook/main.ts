@@ -15,18 +15,27 @@ const config: StorybookConfig = {
     "../**/*.stories.@(js|jsx|mjs|ts|tsx)",
     "!../dist/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
+
   addons: [
     getAbsolutePath('@storybook/addon-essentials'),
     getAbsolutePath('@storybook/addon-onboarding'),
     getAbsolutePath('@chromatic-com/storybook'),
-    getAbsolutePath("@storybook/experimental-addon-test")
+    getAbsolutePath("@storybook/experimental-addon-test"),
+    getAbsolutePath("@storybook/addon-mdx-gfm"),
+    "@chromatic-com/storybook"
   ],
+
   framework: {
-    name: getAbsolutePath('@storybook/react-vite'),
+    name: getAbsolutePath("@storybook/react-vite"),
     options: {}
   },
-  core: {
-    builder: '@storybook/builder-vite',
+
+  docs: {
+    autodocs: true
   },
+
+  typescript: {
+    reactDocgen: "react-docgen-typescript"
+  }
 };
 export default config;

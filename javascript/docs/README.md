@@ -1,6 +1,6 @@
 # Develop
 
-See in semio/javascript
+See [semio/javascript](../README.md)
 
 # Compatibility
 
