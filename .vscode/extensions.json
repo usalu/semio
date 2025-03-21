@@ -24,6 +24,7 @@
     "astro-build.astro-vscode",
     "gruntfuggly.todo-tree",
     "vitest.explorer",
+    "stripe.markdoc-language-support",
     // dotnet
     "ms-dotnettools.vscode-dotnet-pack",
     "ms-dotnettools.vscode-dotnet-runtime",
