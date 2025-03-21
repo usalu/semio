@@ -273,7 +273,8 @@ cython_debug/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
+!.vscode/*.code-workspace
+# *.code-workspace
 #--------------------------------------VISUALSTUDIO--------------------------------------
 *.rsuser
 *.suo
