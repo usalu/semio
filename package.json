@@ -1,0 +1,25 @@
+{
+  "name": "semio",
+  "workspaces": [
+    "python/engine",
+    "javascript/core",
+    "javascript/docs",
+    "javascript/sketchpad"
+  ],
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.8.2",
+  "scripts": {
+    "build": "npx nx build",
+    "dev": "npx nx dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "nx": "20.6.2"
+  },
+  "plugins": [
+    "@nxlv/python"
+  ]
+}

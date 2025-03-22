@@ -486,3 +486,7 @@ FodyWeavers.xsd
 #--------------------------------------EXCEPTIONS--------------------------------------
 !javascript/**/public
 !javascript/core/lib
+
+
+.nx/cache
+.nx/workspace-data
