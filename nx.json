@@ -14,5 +14,10 @@
     "dev": {
       "cache": false
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nxlv/python"
+    }
+  ]
 }

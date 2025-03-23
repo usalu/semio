@@ -4,8 +4,5 @@
     "dev": "powershell -ExecutionPolicy Bypass -File ./dev.ps1",
     "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
     "test": "powershell -ExecutionPolicy Bypass -File ./test.ps1"
-  },
-  "devDependencies": {
-    "@nxlv/python": "^20.10.0"
   }
 }

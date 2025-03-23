@@ -12,14 +12,13 @@
   },
   "packageManager": "npm@10.8.2",
   "scripts": {
-    "build": "npx nx build",
-    "dev": "npx nx dev",
+    "build": "npx nx run-many -t dev",
+    "dev": "npx nx run-many -t dev",
+    "dev-engine": "npx nx dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "nx": "20.6.2"
-  },
-  "plugins": [
-    "@nxlv/python"
-  ]
+    "nx": "20.6.2",
+    "@nxlv/python": "^20.10.0"
+  }
 }
