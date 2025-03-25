@@ -27,3 +27,15 @@ function Rename {
         Move-Item -Path $file.FullName -Destination $newFileName -Force
     }
 }
+function Kill-ProcessOnPort {
+    param (
+        [int]$Port
+    )
+    $processInfo = netstat -ano | Select-String ":$Port\s+.*LISTENING" | ForEach-Object {
+        ($_ -split '\s+')[-1]
+    } | Select-Object -First 1
+
+    if ($processInfo) {
+        Stop-Process -Id $processInfo -Force
+    }
+}

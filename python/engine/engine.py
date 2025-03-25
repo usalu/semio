@@ -4856,7 +4856,7 @@ Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D representation of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connecting between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
-logger.debug("System prompt: {}", systemPrompt)
+# logger.debug("System prompt: {}", systemPrompt)
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -5829,7 +5829,7 @@ def restart_engine():
 
 
 def run():
-    logger.debug("Starting engine...")
+    logger.debug("Starting engine")
     multiprocessing.freeze_support()  # needed for pyinstaller on Windows
 
     parser = argparse.ArgumentParser(description="semio engine")
@@ -5892,9 +5892,10 @@ def run():
     sys.exit(ui.exec())
 
 def dev():
+    logger.debug("Starting debugging server")
     import debugpy
     debugpy.listen(("0.0.0.0", 5678))  # Start debug server
-    logger.debug("Waiting for debugger to attach...")
+    logger.debug("Waiting for debugger to attach")
     debugpy.wait_for_client()
     run()
 

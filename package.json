@@ -12,10 +12,9 @@
   },
   "packageManager": "npm@10.8.2",
   "scripts": {
-    "build": "npx nx run-many -t dev",
     "dev": "npx nx run-many -t dev",
-    "dev-engine": "npx nx dev",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "build": "npx nx run-many -t dev",
+    "update": "npx nx run-many -t update"
   },
   "devDependencies": {
     "nx": "20.6.2",

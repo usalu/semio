@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run engine",
+            "type": "shell",
+            "command": "npx nx dev @semio/engine",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting debugging server", // When server starts
+                    "endsPattern": "Waiting for debugger to attach" // When server is ready
+                }
+            }
+        }
+    ]
+}
