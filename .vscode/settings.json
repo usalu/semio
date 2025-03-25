@@ -9,7 +9,7 @@
     },
     {
       "name": "tests",
-      "database": "../../dotnet/Semio.Grasshopper.UnitTests/local/kit/.semio/kit.sqlite3",
+      "database": "./dotnet/Semio.Grasshopper.UnitTests/local/kit/.semio/kit.sqlite3",
       "driver": "SQLite",
       "previewLimit": 50
     }

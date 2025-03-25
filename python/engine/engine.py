@@ -203,6 +203,7 @@ REPRESENTATIONS_MAX = 32
 TYPES_MAX = 256
 PIECES_MAX = 512
 DESIGNS_MAX = 128
+KITS_MAX = 64
 DESCRIPTION_LENGTH_LIMIT = 256
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
@@ -5909,10 +5910,10 @@ def run():
     sys.exit(ui.exec())
 
 def dev():
-    logger.debug("Starting debugging server")
+    logger.debug("Starting debugpy for semio engine")
     import debugpy
     debugpy.listen(("0.0.0.0", 5678))  # Start debug server
-    logger.debug("Waiting for debugger to attach")
+    logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
     run()
 
