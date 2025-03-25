@@ -42,4 +42,5 @@
   //     "--cov-report html",
   //     "--import-mode importlib"
   // ],
+  "dotnet.defaultSolution": "dotnet/Semio.sln"
 }

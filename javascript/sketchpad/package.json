@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
   "name": "@semio/sketchpad",
   "version": "2.0.0-alpha",
   "description": "A sketchpad for semio 🧩",
@@ -9,7 +11,7 @@
     "publish": "electron-forge publish"
   },
   "dependencies": {
-    "@semio/core": "*",
+    "@semio/javascript": "*",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

@@ -15,5 +15,8 @@
     "lock": {
       "executor": "@nxlv/python:lock"
     }
+  },
+  "devDependencies": {
+    "@semio/icons": "*"
   }
 }

@@ -1,0 +1,12 @@
+{
+  "name": "@semio/icons",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "icons",
+  "projectType": "library",
+  "scripts": {
+    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+  },
+  "devDependencies": {
+    "@semio/logo": "*"
+  }
+}

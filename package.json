@@ -1,10 +1,15 @@
 {
   "name": "semio",
   "workspaces": [
+    "logo",
+    "icons",
     "python/engine",
     "javascript/core",
     "javascript/docs",
-    "javascript/sketchpad"
+    "javascript/sketchpad",
+    "dotnet/Semio",
+    "dotnet/Semio.Grasshopper",
+    "yak"
   ],
   "private": true,
   "engines": {
@@ -12,12 +17,11 @@
   },
   "packageManager": "npm@10.8.2",
   "scripts": {
-    "dev": "npx nx run-many -t dev",
     "build": "npx nx run-many -t dev",
     "update": "npx nx run-many -t update"
   },
   "devDependencies": {
-    "nx": "20.6.2",
-    "@nxlv/python": "^20.10.0"
+    "@nxlv/python": "^20.10.0",
+    "nx": "20.6.2"
   }
 }
