@@ -1,7 +1,7 @@
 {
   "name": "@semio/engine",
   "scripts": {
-    "dev": "powershell -ExecutionPolicy Bypass -File ./dev.ps1",
+    "dev": "poetry run dev",
     "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
     "test": "powershell -ExecutionPolicy Bypass -File ./test.ps1"
   }

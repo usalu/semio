@@ -5828,7 +5828,8 @@ def restart_engine():
     ui_instance.engine_process.start()
 
 
-if __name__ == "__main__":
+def run():
+    logger.debug("Starting engine...")
     multiprocessing.freeze_support()  # needed for pyinstaller on Windows
 
     parser = argparse.ArgumentParser(description="semio engine")
@@ -5889,3 +5890,13 @@ if __name__ == "__main__":
     ui.engine_process.start()
 
     sys.exit(ui.exec())
+
+def dev():
+    import debugpy
+    debugpy.listen(("0.0.0.0", 5678))  # Start debug server
+    logger.debug("Waiting for debugger to attach...")
+    debugpy.wait_for_client()
+    run()
+
+if __name__ == "__main__":
+    run()
