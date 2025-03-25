@@ -1,8 +1,19 @@
 {
   "name": "@semio/engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "python/engine",
+  "projectType": "application",
   "scripts": {
     "dev": "poetry run dev",
     "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
     "test": "powershell -ExecutionPolicy Bypass -File ./test.ps1"
+  },
+  "targets": {
+    "update": {
+      "executor": "@nxlv/python:update"
+    },
+    "lock": {
+      "executor": "@nxlv/python:lock"
+    }
   }
 }

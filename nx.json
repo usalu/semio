@@ -13,11 +13,22 @@
     },
     "dev": {
       "cache": false
+    },
+    "update": {
+      "dependsOn": [
+        "^update"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
+      "cache": true
     }
   },
   "plugins": [
     {
-      "plugin": "@nxlv/python"
+      "plugin": "@nxlv/python",
+      "options": {}
     }
   ]
 }

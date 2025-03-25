@@ -42,5 +42,4 @@
   //     "--cov-report html",
   //     "--import-mode importlib"
   // ],
-  "debug.allowBreakpointsEverywhere": true, // Allow 
 }
