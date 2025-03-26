@@ -13,16 +13,16 @@ export default defineConfig({
     site: 'https://docs.semio-tech.com',
     integrations: [starlight({
         title: {
-            'en': 'Docs',
-            'de': 'Dokumentation',
+            en: 'semio Docs',
+            de: 'semio Dokumentation'
         },
-        defaultLocale: 'en',
+        defaultLocale: 'root',
         locales: {
-            'en': {
+            root: {
                 label: 'English',
                 lang: 'en',
             },
-            'de': {
+            de: {
                 label: 'Deutsch',
                 lang: 'de',
             },
@@ -53,6 +53,11 @@ export default defineConfig({
             {
                 label: '📝 Tutorials',
                 autogenerate: { directory: 'tutorials' }
+
+            },
+            {
+                label: '🔀 Integrations',
+                autogenerate: { directory: 'integrations' }
 
             },
             {
