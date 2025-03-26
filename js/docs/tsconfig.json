@@ -1,0 +1,17 @@
+{
+  "extends": "@semio/js/tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@astrojs/ts-plugin"
+      },
+    ],
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "**/*"
+  ],
+  "exclude": [
+    "dist"
+  ]
+}

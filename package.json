@@ -4,9 +4,9 @@
     "logo",
     "icons",
     "python/engine",
-    "javascript/core",
-    "javascript/docs",
-    "javascript/sketchpad",
+    "js/core",
+    "js/docs",
+    "js/sketchpad",
     "dotnet/Semio",
     "dotnet/Semio.Grasshopper",
     "yak"

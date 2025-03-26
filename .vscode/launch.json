@@ -19,7 +19,7 @@
             ],
         },
         {
-            "name": "javascript",
+            "name": "everything-js",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "npx",
@@ -28,7 +28,7 @@
                 "run-many",
                 "-t",
                 "dev",
-                "--projects=@semio/core,@semio/docs,@semio/sketchpad"
+                "--projects=@semio/js,@semio/docs,@semio/sketchpad"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
@@ -50,14 +50,14 @@
             ],
         },
         {
-            "name": "core",
+            "name": "js-core",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "npx",
             "runtimeArgs": [
                 "nx",
                 "dev",
-                "@semio/core"
+                "@semio/js"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"

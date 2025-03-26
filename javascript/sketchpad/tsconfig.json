@@ -1,4 +1,0 @@
-{
-  "extends": "@semio/core/tsconfig.json",
-  "compilerOptions": {}
-}

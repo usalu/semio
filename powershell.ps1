@@ -27,7 +27,7 @@ function Rename {
         Move-Item -Path $file.FullName -Destination $newFileName -Force
     }
 }
-function Kill-ProcessOnPort {
+function StopProcessOnPort {
     param (
         [int]$Port
     )
