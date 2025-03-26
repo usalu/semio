@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
-import markdoc from '@astrojs/markdoc';
+// import markdoc from '@astrojs/markdoc';
 import sitemap from '@astrojs/sitemap';
 // tailwind is loaded over postcss.config.ts and if loaded again it breaks ⚠️
 // import tailwind from '@astrojs/tailwind';
@@ -56,13 +56,13 @@ export default defineConfig({
 
             },
             {
-                label: '📚 Theory',
-                autogenerate: { directory: 'theory' }
+                label: '📖 Reference',
+                autogenerate: { directory: 'reference' }
 
             },
             {
-                label: '📖 Reference',
-                autogenerate: { directory: 'reference' }
+                label: '📚 Theory',
+                autogenerate: { directory: 'theory' }
 
             },
             {
@@ -74,7 +74,7 @@ export default defineConfig({
     }),
     react(), // tailwind({ applyBaseStyles: false, Disable default base styles }),
     mdx(),
-    markdoc(),
+    // markdoc(),
     sitemap()],
     // vite: {
     // plugins: [tailwindcss()],
