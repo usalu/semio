@@ -1,4 +1,8 @@
 {
+  "workbench.editorAssociations": {
+    "*.svg": "default",
+    "*.copilotmd": "vscode.markdown.preview.editor"
+  },
   "sqltools.useNodeRuntime": true,
   "sqltools.connections": [
     {
