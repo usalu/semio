@@ -15,8 +15,7 @@ function ResizeImage {
         $newImage.Dispose()
     }
 }
-
-function Rename {
+function RenameFilesByPrefix {
     param (
         [string]$prefix,
         [string]$newPrefix
@@ -25,6 +24,15 @@ function Rename {
     foreach ($file in $files) {
         $newFileName = $file.FullName -replace $prefix, $newPrefix
         Move-Item -Path $file.FullName -Destination $newFileName -Force
+    }
+}
+function DeleteFilesByPattern {
+    param (
+        [string]$pattern
+    )
+    $files = Get-ChildItem -Path . -File -Filter $pattern -Recurse
+    foreach ($file in $files) {
+        Remove-Item -Path $file.FullName -Force
     }
 }
 function StopProcessOnPort {
