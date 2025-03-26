@@ -1,7 +1,7 @@
 > 👀 Do you want to develop the next AI with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
 
 <p align="center">
-    <a href="https://github.com/semio">
+    <a href="https://docs.semio-tech.com">
       <picture>
           <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal-dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
