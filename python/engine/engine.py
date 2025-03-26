@@ -5870,23 +5870,11 @@ def run():
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
-        basedir = "../.."
+        basedir = "../../assets"
 
     icon = PySide6.QtGui.QIcon()
     icon.addFile(
-        os.path.join(basedir, "icons/semio_16x16.png"), PySide6.QtCore.QSize(16, 16)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_32x32.png"), PySide6.QtCore.QSize(32, 32)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_48x48.png"), PySide6.QtCore.QSize(48, 48)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_128x128.png"), PySide6.QtCore.QSize(128, 128)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_256x256.png"), PySide6.QtCore.QSize(256, 256)
+        os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512)
     )
 
     tray = PySide6.QtWidgets.QSystemTrayIcon()

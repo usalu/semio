@@ -1,4 +1,3 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import react from '@astrojs/react';
@@ -33,17 +32,19 @@ export default defineConfig({
             discord: 'https://discord.gg/m6nnf6pQRc'
         },
         logo: {
-            light: './emblem_round.svg',
-            dark: './emblem_dark_round.svg',
+            light: '../../assets/logo/emblem_round.svg',
+            dark: '../../assets/logo/emblem_dark_round.svg',
         },
         editLink: {
-            baseUrl: 'https://github.com/usalu/semio/edit/main/javascript/docs',
+            baseUrl: 'https://github.com/usalu/semio/edit/main/js/docs',
         },
         sidebar: [
             {
-                label: '📌 Start here',
+                label: '🚀 Getting Started',
                 items: [
-                    { label: '🚀 Getting Started', slug: 'getting-started' }
+                    { label: '', slug: 'intro' },
+                    { label: '', slug: 'installation' },
+                    { label: '', slug: 'starter' }
                 ],
                 translations: {
                     'de': 'Erste Schritte',
@@ -55,17 +56,6 @@ export default defineConfig({
 
             },
             {
-                label: '🌟 Showcases',
-                autogenerate: { directory: 'showcases' }
-            },
-            {
-                label: '🦮 Guides',
-                items: [
-                    { label: '⬇️ Installation', slug: 'installation' },
-                    { label: '🥽 Overview', slug: 'overview' }
-                ]
-            },
-            {
                 label: '📚 Theory',
                 autogenerate: { directory: 'theory' }
 
@@ -75,9 +65,14 @@ export default defineConfig({
                 autogenerate: { directory: 'reference' }
 
             },
+            {
+                label: '🌟 Showcases',
+                autogenerate: { directory: 'showcases' }
+            },
         ],
         customCss: ['./globals.css'],
-    }), react(), // tailwind({ applyBaseStyles: false, Disable default base styles }),
+    }),
+    react(), // tailwind({ applyBaseStyles: false, Disable default base styles }),
     mdx(),
     markdoc(),
     sitemap()],
