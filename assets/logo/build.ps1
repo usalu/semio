@@ -1,6 +1,7 @@
 . ..\powershell.ps1
 
-$resolutions = @(512, 256, 192, 180, 152, 144, 120, 114, 96, 72, 60, 57, 48, 36, 32, 24, 16)
+# $resolutions = @(512, 256, 192, 180, 152, 144, 120, 114, 96, 72, 60, 57, 48, 36, 32, 24, 16)
+$resolutions = @(24, 512)
 $images = @(
     @{source = "emblem_1920x1920.png"; target = "emblem" },
     @{source = "emblem_round_1920x1920.png"; target = "emblem_round" },

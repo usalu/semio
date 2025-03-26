@@ -1,8 +1,9 @@
 {
   "name": "semio",
   "workspaces": [
-    "logo",
-    "icons",
+    "assets/logo",
+    "assets/icons",
+    "assets",
     "python/engine",
     "js/core",
     "js/docs",

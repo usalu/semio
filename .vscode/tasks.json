@@ -44,6 +44,11 @@
                     "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
                 }
             }
+        },
+        {
+            "label": "build icons",
+            "type": "shell",
+            "command": "npx nx build @semio/icons",
         }
     ]
 }

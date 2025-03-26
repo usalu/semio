@@ -5,7 +5,7 @@
         {
             "name": "dev everything",
             "preLaunchTask": "dev",
-            "type": "debugpy",
+            "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
             "request": "attach",
             "connect": {
                 "host": "localhost",
@@ -103,17 +103,19 @@
         },
         {
             "name": "build icons",
-            "type": "node",
+            "type": "PowerShell",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/icons"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "script": "${workspaceFolder}/assets/icons/build.ps1",
+            "cwd": "${workspaceFolder}/assets/icons/"
         },
+        // TODO: Invoke build task over nx and attach debugger to it
+        // Problem: Need to get process id or find a different way
+        // {
+        //     "name": "build icons",
+        //     "type": "PowerShell",
+        //     "request": "attach",
+        //     "preLaunchTask": "build icons"
+        // },
         {
             "name": "build everything js",
             "type": "node",
