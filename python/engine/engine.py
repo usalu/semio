@@ -204,7 +204,7 @@ TYPES_MAX = 256
 PIECES_MAX = 512
 DESIGNS_MAX = 128
 KITS_MAX = 64
-DESCRIPTION_LENGTH_LIMIT = 256
+DESCRIPTION_LENGTH_LIMIT = 2560  # TODO: Change all types to be 256
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
@@ -585,6 +585,10 @@ class Model(sqlmodel.SQLModel, abc.ABC):
             return cls.model_validate_json(input)
         return cls.model_validate(input)
 
+    def dump(self) -> "Output":
+        """📦 Dump the entity to a dictionary."""
+        return self.model_dump()
+
 
 ## Fields ##
 
@@ -747,17 +751,17 @@ class QualityProps(
     QualityNameField,
     Props,
 ):
-    """🎫 The props of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityInput(
     QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
 ):
-    """↘️ The input for a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
-    """📑 The context of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityOutput(
@@ -767,7 +771,7 @@ class QualityOutput(
     QualityNameField,
     Output,
 ):
-    """↗️ The output of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class Quality(
@@ -1172,6 +1176,15 @@ class Representation(
         except KeyError:
             pass
         return entity
+
+    def dump(self) -> "RepresentationOutput":
+        entity = {**RepresentationProps.model_validate(self).model_dump()}
+        #  TODO: Fix bug with tags not being dumped correctly.
+        # Probably some sqlmodel issue with transient objects that are never written to the database.
+        # 'str' object has no attribute 'order'
+        # entity["tags"] = self.tags
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return RepresentationOutput(**entity)
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
@@ -1649,6 +1662,12 @@ class Plane(Table, table=True):
         entity.yAxis = yAxis
 
         return entity
+
+    def dump(self) -> PlaneOutput:
+        entity = {**PlaneOriginField.model_validate(self).model_dump()}
+        entity["xAxis"] = self.xAxis
+        entity["yAxis"] = self.yAxis
+        return PlaneOutput(**entity)
 
 
 # ### Rotations ### TODO
@@ -2216,6 +2235,14 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
             pass
         return entity
 
+    def dump(self) -> "PortOutput":
+        entity = {**PortProps.model_validate(self).model_dump()}
+        entity["point"] = self.point.dump()
+        entity["direction"] = self.direction.dump()
+        entity["compatibleFamilies"] = self.compatibleFamilies
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return PortOutput(**entity)
+
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the port within its parent type."""
@@ -2595,6 +2622,14 @@ class Type(
             pass
         return entity
 
+    def dump(self) -> "TypeOutput":
+        entity = {**TypeProps.model_validate(self).model_dump()}
+        entity["representations"] = [r.dump() for r in self.representations]
+        entity["ports"] = [p.dump() for p in self.ports]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["authors"] = [a.dump() for a in self.authors]
+        return TypeOutput(**entity)
+
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
         """🪣 Empty the type."""
@@ -2680,7 +2715,12 @@ class PieceId(PieceIdField, Id):
 
 
 class PieceProps(
-    PieceCenterField, PiecePlaneField, PieceTypeField, PieceDescriptionField, PieceIdField, Props
+    PieceCenterField,
+    PiecePlaneField,
+    PieceTypeField,
+    PieceDescriptionField,
+    PieceIdField,
+    Props,
 ):
     """🎫 The props of a piece."""
 
@@ -2798,7 +2838,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     """🔑 The optional foreign primary key of the plane of the piece in the database."""
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    center_x: typing.Optional[float] = sqlmodel.Field(
+    centerX: typing.Optional[float] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "center_x",
             sqlalchemy.Float(),
@@ -2806,7 +2846,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         exclude=True,
     )
     """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    center_y: typing.Optional[float] = sqlmodel.Field(
+    centerY: typing.Optional[float] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "center_y",
             sqlalchemy.Float(),
@@ -2906,6 +2946,13 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         except KeyError:
             pass
         return entity
+
+    def dump(self) -> "PieceOutput":
+        entity = {**PieceProps.model_validate(self).model_dump()}
+        entity["plane"] = self.plane.dump() if self.plane is not None else None
+        entity["center"] = self.center.dump() if self.center is not None else None
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return PieceOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Piece":
@@ -3425,6 +3472,13 @@ class Connection(
             pass
         return entity
 
+    def dump(self) -> "ConnectionOutput":
+        entity = {**ConnectionProps.model_validate(self).model_dump()}
+        entity["connected"] = self.connected.dump()
+        entity["connecting"] = self.connecting.dump()
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return ConnectionOutput(**entity)
+
     # TODO: Automatic emptying.
     def empty(self) -> "Connection":
         for key, value in ConnectionProps.model_dump().items():
@@ -3740,6 +3794,14 @@ class Design(
             pass
         return entity
 
+    def dump(self) -> "DesignOutput":
+        entity = {**DesignProps.model_validate(self).model_dump()}
+        entity["pieces"] = [p.dump() for p in self.pieces]
+        entity["connections"] = [c.dump() for c in self.connections]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["authors"] = [a.dump() for a in self.authors]
+        return DesignOutput(**entity)
+
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
         """🪣 Empty the design."""
@@ -3943,6 +4005,27 @@ class KitInput(
     """📏 The qualities of the kit."""
 
 
+class KitContext(
+    KitDescriptionField,
+    KitNameField,
+    Context,
+):
+    """🗃️ A kit is a collection of types and designs."""
+
+    types: list[TypeContext] = sqlmodel.Field(
+        default_factory=list, description="🧩 The types of the kit."
+    )
+    """🧩 The types of the kit."""
+    designs: list[DesignContext] = sqlmodel.Field(
+        default_factory=list, description="🏙️ The designs of the kit."
+    )
+    """🏙️ The designs of the kit."""
+    qualities: list[QualityContext] = sqlmodel.Field(
+        default_factory=list, description="📏 The qualities of the kit."
+    )
+    """📏 The qualities of the kit."""
+
+
 class KitOutput(
     KitUpdatedField,
     KitCreatedField,
@@ -3958,7 +4041,7 @@ class KitOutput(
     KitUriField,
     Output,
 ):
-    """↗️ The output of a kit."""
+    """🗃️ A kit is a collection of types and designs."""
 
     types: list[TypeOutput] = sqlmodel.Field(
         default_factory=list, description="🧩 The types of the kit."
@@ -4038,6 +4121,13 @@ class Kit(
         except KeyError:
             pass
         return entity
+
+    def dump(self) -> "KitOutput":
+        entity = {**KitProps.model_validate(self).model_dump()}
+        entity["types"] = [t.dump() for t in self.types]
+        entity["designs"] = [d.dump() for d in self.designs]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return KitOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
@@ -5015,7 +5105,7 @@ designResponseFormat = json.loads(
 
 
 def predictDesign(
-    description: str, types: list[TypeContext], design: DesignContext | None = None
+    description: str, types: list[TypeContext], design: DesignInput | None = None
 ) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
     prompt = designGenerationPromptTemplate.render(
@@ -5692,6 +5782,21 @@ async def predict_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
+@rest.post("/prepare/kit")
+async def prepare_kit(
+    request: fastapi.Request, kit: KitInput = fastapi.Body(...)
+) -> KitContext:
+    try:
+        return kit
+    except ClientError as e:
+        statusCode = 400
+        error = e
+    except Exception as e:
+        statusCode = 500
+        error = e
+    return fastapi.Response(content=str(error), status_code=statusCode)
+
+
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -5728,6 +5833,12 @@ def custom_openapi():
         summary="This is the local rest API of the semio engine.",
         routes=rest.routes,
     )
+    # Prepend `/api` to all paths in the OpenAPI schema
+    updated_paths = {}
+    for path, path_item in openapi_schema["paths"].items():
+        updated_paths[f"/api{path}"] = path_item
+    openapi_schema["paths"] = updated_paths
+
     changeValues(openapi_schema, "$ref", lambda x: x.removesuffix("Output"))
     changeValues(openapi_schema, "title", lambda x: x.removesuffix("Output"))
     changeKeys(openapi_schema, lambda x: x.removesuffix("Output"))
@@ -5870,23 +5981,11 @@ def run():
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
-        basedir = "../.."
+        basedir = "../../assets"
 
     icon = PySide6.QtGui.QIcon()
     icon.addFile(
-        os.path.join(basedir, "icons/semio_16x16.png"), PySide6.QtCore.QSize(16, 16)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_32x32.png"), PySide6.QtCore.QSize(32, 32)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_48x48.png"), PySide6.QtCore.QSize(48, 48)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_128x128.png"), PySide6.QtCore.QSize(128, 128)
-    )
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_256x256.png"), PySide6.QtCore.QSize(256, 256)
+        os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512)
     )
 
     tray = PySide6.QtWidgets.QSystemTrayIcon()
@@ -5909,13 +6008,28 @@ def run():
 
     sys.exit(ui.exec())
 
+
+def preDev():
+    """Runs before dev()"""
+    # testCaseDict = json.load(open("temp/test-case.json", "r"))
+    # testCaseDict["uri"] = "test-case"
+    # kit = Kit.parse(testCaseDict)
+    # dumpedKit = kit.dump()
+    # testDesign = DesignContext(**dumpedKit.designs[0].model_dump())
+    # with open("temp/test-case-cleaned.json", "w") as f:
+    #     json.dump(testDesign.model_dump(), f)
+
+
 def dev():
     logger.debug("Starting debugpy for semio engine")
     import debugpy
+
     debugpy.listen(("0.0.0.0", 5678))  # Start debug server
     logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
+    preDev()
     run()
+
 
 if __name__ == "__main__":
     run()

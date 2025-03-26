@@ -1,0 +1,18 @@
+{
+  "extends": "@semio/js/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "plugins": [
+      {
+        "name": "@astrojs/ts-plugin"
+      },
+    ],
+  },
+  "include": [
+    ".astro/types.d.ts",
+  ],
+  "exclude": [
+    "dist"
+  ]
+}

@@ -1,0 +1,240 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from '@storybook/test';
+import React, { FC, useState, useCallback, useEffect } from 'react';
+// import { useKit, StudioProvider, useStudio } from './studiostore';
+
+// interface KitNodeProps {
+//     nodeId: string;
+//     depth: number;
+// }
+
+// const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
+//     const { getKit, updateNodeName, addDesign, deleteDesign } = useKit("shared");
+//     const node = getKit(nodeId);
+
+//     const [name, setName] = useState('');
+
+//     useEffect(() => {
+//         if (!node) return;
+//         setName(node.name);
+//     }, [node]);
+
+//     if (!node) return null;
+
+//     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//         const newName = e.target.value;
+//         setName(newName);
+//         updateNodeName(nodeId, newName);
+//     };
+
+//     const handleAddDesign = () => {
+//         addDesign(nodeId);
+//     };
+
+//     const handleDeleteNode = () => {
+//         // For the root node, we don't want to allow deletion
+//         if (depth > 0) {
+//             // This would require parent node info, so we'll handle it differently
+//             // The parent would call deleteDesign(parentId, nodeId)
+//         }
+//     };
+
+//     return (
+//         <div className="ml-[20px] mb-2">
+//             <div className="flex items-center gap-2 mb-1">
+//                 <input
+//                     type="text"
+//                     value={name}
+//                     onChange={handleChange}
+//                     className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                 />
+//                 <button
+//                     onClick={handleAddDesign}
+//                     className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm transition-colors"
+//                 >
+//                     Add Design
+//                 </button>
+//                 {node.designGuids.length > 0 && (
+//                     <div className="ml-2">
+//                         {node.designGuids.map(designGuid => (
+//                             <button
+//                                 key={designGuid}
+//                                 onClick={() => deleteDesign(nodeId, designGuid)}
+//                                 className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm transition-colors"
+//                             >
+//                                 Delete
+//                             </button>
+//                         ))}
+//                     </div>
+//                 )}
+//             </div>
+//             {node.designGuids.map(designGuid => (
+//                 <div key={designGuid} className="ml-[20px]">
+//                     <KitNode
+//                         nodeId={designGuid}
+//                         depth={depth + 1}
+//                     />
+//                 </div>
+//             ))}
+//         </div>
+//     );
+// };
+
+// interface KitListProps {
+//     rootId: string;
+// }
+
+// const KitList: React.FC<KitListProps> = ({ rootId }) => {
+//     const { undo, redo, canUndo, canRedo, hasInitialized, initializeKit } = useKit(rootId);
+//     const [initialName, setInitialName] = useState('Root');
+//     const studio = useStudio();
+//     const fullKitId = `tree-${rootId}`;
+
+//     useEffect(() => {
+//         console.log(`Undo/Redo state for ${rootId}: canUndo=${canUndo}, canRedo=${canRedo}`);
+
+//         // If initialized but undo/redo buttons aren't working, try to trigger undo capability
+//         if (hasInitialized && !canUndo) {
+//             // This will create temporary operations to activate the undo functionality
+//             studio.triggerUndoRedoCapability(fullKitId);
+//         }
+//     }, [canUndo, canRedo, rootId, hasInitialized, studio, fullKitId]);
+
+//     const handleInitializeKit = () => {
+//         const rootNode = initializeKit(initialName);
+
+//         // After initialization, explicitly trigger the undo capability
+//         setTimeout(() => {
+//             studio.triggerUndoRedoCapability(fullKitId);
+//         }, 100);
+
+//         return rootNode;
+//     };
+
+//     if (!hasInitialized) {
+//         return (
+//             <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm text-center">
+//                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
+//                     <input
+//                         type="text"
+//                         value={initialName}
+//                         onChange={(e) => setInitialName(e.target.value)}
+//                         placeholder="Root node name"
+//                         className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
+//                     />
+//                     <button
+//                         onClick={handleInitializeKit}
+//                         className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors w-full sm:w-auto"
+//                     >
+//                         Initialize Kit
+//                     </button>
+//                 </div>
+//             </div>
+//         );
+//     }
+
+//     return (
+//         <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+//             <div className="flex gap-2 mb-4">
+//                 <button
+//                     onClick={undo}
+//                     disabled={!canUndo}
+//                     className={`px-3 py-1 rounded transition-colors ${canUndo
+//                         ? "bg-blue-500 hover:bg-blue-600 text-white"
+//                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                         }`}
+//                 >
+//                     Undo
+//                 </button>
+//                 <button
+//                     onClick={redo}
+//                     disabled={!canRedo}
+//                     className={`px-3 py-1 rounded transition-colors ${canRedo
+//                         ? "bg-blue-500 hover:bg-blue-600 text-white"
+//                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                         }`}
+//                 >
+//                     Redo
+//                 </button>
+//             </div>
+//             <KitNode nodeId="root" depth={0} />
+//         </div>
+//     );
+// };
+
+// const StudioControls: React.FC = () => {
+//     const studio = useStudio();
+//     const [isLoading, setIsLoading] = useState(false);
+
+//     const handleRefresh = useCallback(() => {
+//         // Refresh the studio by forcing a re-render
+//         window.location.reload();
+//     }, []);
+
+//     const handleClean = useCallback(async () => {
+//         try {
+//             setIsLoading(true);
+//             // Use the clean API
+//             await studio.clean();
+//             // Reload the page to reflect the cleaned state
+//             window.location.reload();
+//         } catch (error) {
+//             console.error("Failed to clean studio:", error);
+//             setIsLoading(false);
+//         }
+//     }, [studio]);
+
+//     return (
+//         <div className="mb-4 flex gap-2">
+//             <button
+//                 onClick={handleRefresh}
+//                 className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded transition-colors"
+//             >
+//                 Refresh Studio
+//             </button>
+//             <button
+//                 onClick={handleClean}
+//                 disabled={isLoading}
+//                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors disabled:bg-red-300"
+//             >
+//                 {isLoading ? "Cleaning..." : "Clean Studio"}
+//             </button>
+//         </div>
+//     );
+// };
+
+// const Room: FC = () => {
+//     return (
+//         <StudioProvider>
+//             <div className="p-6 bg-gray-50 min-h-screen">
+//                 <h2 className="text-2xl font-bold mb-6 text-gray-800">Studio Room</h2>
+//                 <StudioControls />
+//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//                     <div className="bg-gray-100 p-4 rounded-lg shadow">
+//                         <h3 className="text-lg font-semibold mb-4 text-gray-700">Client 1</h3>
+//                         <KitList rootId="shared" />
+//                     </div>
+//                     <div className="bg-gray-100 p-4 rounded-lg shadow">
+//                         <h3 className="text-lg font-semibold mb-4 text-gray-700">Client 2</h3>
+//                         <KitList rootId="shared" />
+//                     </div>
+//                 </div>
+//             </div>
+//         </StudioProvider>
+//     );
+// };
+
+const Room: React.FC = () => {
+    return (
+        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+            <h2 className="text-2xl font-bold text-gray-800">Room Component</h2>
+        </div>
+    );
+}
+
+export default {
+    title: 'Studio/Room',
+    component: Room,
+};
+
+export const Example = () => <Room />;

@@ -1,4 +1,31 @@
 {
+  "editor.formatOnSave": true,
+  "python.defaultInterpreterPath": "${workspaceFolder}\\python\\engine\\.venv\\Scripts\\python.exe",
+  "pylint.args": [
+    "--variable-naming-style=camelCase",
+    "--function-naming-style=camelCase",
+    "--method-naming-style=camelCase",
+    "--attribute-naming-style=camelCase",
+    "--class-naming-style=PascalCase"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+  },
+  // "[json]": {
+  //     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  "python.analysis.typeCheckingMode": "off",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  // "python.testing.pytestArgs": [
+  //     "--cov",
+  //     "--cov-config=pyproject.toml",
+  //     "--cov-report html",
+  //     "--import-mode importlib"
+  // ],
   "sqltools.useNodeRuntime": true,
   "sqltools.connections": [
     {
@@ -14,33 +41,5 @@
       "previewLimit": 50
     }
   ],
-  "editor.formatOnSave": true,
-  "pylint.args": [
-    "--variable-naming-style=camelCase",
-    "--function-naming-style=camelCase",
-    "--method-naming-style=camelCase",
-    "--attribute-naming-style=camelCase",
-    "--class-naming-style=PascalCase" // Assuming you want classes in PascalCase
-  ],
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
-  },
-  // "[json]": {
-  //     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  // },
-  // "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
-  // "python.venvPath": ".venv",
-  "python.analysis.typeCheckingMode": "off",
-  "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": [
-    "."
-  ],
-  // "python.testing.pytestArgs": [
-  //     "--cov",
-  //     "--cov-config=pyproject.toml",
-  //     "--cov-report html",
-  //     "--import-mode importlib"
-  // ],
   "dotnet.defaultSolution": "dotnet/Semio.sln"
 }

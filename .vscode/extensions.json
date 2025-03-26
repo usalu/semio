@@ -7,7 +7,6 @@
     "mechatroner.rainbow-csv",
     "tamasfe.even-better-toml",
     "zainchen.json",
-    "bierner.markdown-preview-github-styles",
     "jebbs.plantuml",
     "ms-vscode.powershell",
     "mtxr.sqltools",
@@ -23,7 +22,6 @@
     "bradlc.vscode-tailwindcss",
     "unifiedjs.vscode-mdx",
     "astro-build.astro-vscode",
-    "gruntfuggly.todo-tree",
     "vitest.explorer",
     "stripe.markdoc-language-support",
     // dotnet
@@ -37,14 +35,8 @@
     "ms-python.black-formatter",
     "ms-python.isort",
     "ms-toolsai.jupyter",
-    "ms-toolsai.vscode-jupyter-cell-tags",
-    "ms-toolsai.jupyter-keymap",
-    "ms-toolsai.jupyter-renderers",
-    "ms-toolsai.vscode-jupyter-slideshow",
-    "ms-python.vscode-pylance",
     "ms-python.pylint",
     "ms-python.python",
-    "ms-python.debugpy",
   ],
   "unwantedRecommendations": []
 }

@@ -384,7 +384,6 @@ public static class Utility
             });
     }
 
-
     public static string GenerateRandomId(int seed)
     {
         var adjectives = Resources.adjectives.Deserialize<List<string>>();
@@ -1286,6 +1285,7 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The point must not be null.");
         }
+
         if (Direction != null)
         {
             var (isValidDirection, errorsDirection) = Direction.Validate();
@@ -1297,12 +1297,14 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The direction must not be null.");
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -1491,6 +1493,7 @@ public class Type : TypeProps
             isValid = isValid && isValidPort;
             errors.AddRange(errorsPort.Select(e => $"A port({port.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var representation in Representations)
         {
             var (isValidRepresentation, errorsRepresentation) = representation.Validate();
@@ -1498,20 +1501,22 @@ public class Type : TypeProps
             errors.AddRange(errorsRepresentation.Select(e =>
                 $"A representation({representation.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var author in Authors)
         {
             var (isValidAuthor, errorsAuthor) = author.Validate();
             isValid = isValid && isValidAuthor;
             errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
-        return (isValid, errors);
 
+        return (isValid, errors);
     }
 
     public static Dictionary<string, Dictionary<string, Type>> EnumerableToDict(IEnumerable<Type> types)
@@ -1522,6 +1527,7 @@ public class Type : TypeProps
             if (!typesDict.ContainsKey(type.Name)) typesDict[type.Name] = new Dictionary<string, Type>();
             typesDict[type.Name][type.Variant] = type;
         }
+
         return typesDict;
     }
 }
@@ -1647,18 +1653,21 @@ public class Piece : Model<Piece>
             isValid = isValid && isValidPlane;
             errors.AddRange(errorsPlane.Select(e => "The plane is invalid: " + e));
         }
+
         if (Center != null)
         {
             var (isValidCenter, errorsCenter) = Center.Validate();
             isValid = isValid && isValidCenter;
             errors.AddRange(errorsCenter.Select(e => "The center is invalid: " + e));
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -1858,17 +1867,20 @@ public class Connection : Model<Connection>
             isValid = false;
             errors.Add("The connected and connecting pieces must be different.");
         }
+
         if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance)
         {
             isValid = false;
             errors.Add("The offset (x,y) must not be the zero vector.");
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }
@@ -2368,6 +2380,7 @@ text {
             isValid = isValid && isValidPiece;
             errors.AddRange(errorsPiece.Select(e => $"A piece({piece.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var connection in Connections)
         {
             var (isValidConnection, errorsConnection) = connection.Validate();
@@ -2375,18 +2388,21 @@ text {
             errors.AddRange(errorsConnection.Select(e =>
                 $"A connection({connection.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var author in Authors)
         {
             var (isValidAuthor, errorsAuthor) = author.Validate();
             isValid = isValid && isValidAuthor;
             errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
         }
+
         var pieceIds = Pieces.Select(p => p.Id);
         var duplicatePieceIds = pieceIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
         if (duplicatePieceIds.Length != 0)
@@ -2395,6 +2411,7 @@ text {
             foreach (var duplicatePieceId in duplicatePieceIds)
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
+
         var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList()
             .Select(c => c.Connected.Piece.Id).ToArray();
         if (nonExistingConnectedPieces.Length != 0)
@@ -2404,6 +2421,7 @@ text {
                 errors.Add(
                     $"A connection is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
         }
+
         var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList()
             .Select(c => c.Connecting.Piece.Id).ToArray();
         if (nonExistingConnectingPieces.Length != 0)
@@ -2413,6 +2431,7 @@ text {
                 errors.Add(
                     $"A connection is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
         }
+
         return (isValid, errors);
     }
 }
@@ -2578,12 +2597,14 @@ public class Kit : KitProps
             isValid = isValid && isValidType;
             errors.AddRange(errorsType.Select(e => $"A type ({type.ToIdString()}) is invalid: " + e));
         }
+
         foreach (var design in Designs)
         {
             var (isValidDesign, errorsDesign) = design.Validate();
             isValid = isValid && isValidDesign;
             errors.AddRange(errorsDesign.Select(e => $"A design ({design.ToIdString()}) is invalid: " + e));
         }
+
         var typeIds = Types.Select(t => (t.Name, t.Variant));
         var duplicateTypeIds = typeIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
         if (duplicateTypeIds.Length != 0)
@@ -2616,12 +2637,14 @@ public class Kit : KitProps
                 errors.Add(message);
             }
         }
+
         foreach (var quality in Qualities)
         {
             var (isValidQuality, errorsQuality) = quality.Validate();
             isValid = isValid && isValidQuality;
             errors.AddRange(errorsQuality.Select(e => $"A quality ({quality.ToIdString()}) is invalid: " + e));
         }
+
         return (isValid, errors);
     }
 }

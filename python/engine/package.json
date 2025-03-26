@@ -17,6 +17,6 @@
     }
   },
   "devDependencies": {
-    "@semio/icons": "*"
+    "@semio/assets": "*"
   }
 }

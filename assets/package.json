@@ -1,0 +1,9 @@
+{
+  "name": "@semio/assets",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "assets",
+  "projectType": "library",
+  "devDependencies": {
+    "@semio/icons": "*"
+  }
+}

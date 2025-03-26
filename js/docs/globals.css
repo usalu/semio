@@ -1,0 +1,41 @@
+/* @import "tailwindcss";
+@plugin "@tailwindcss/typography"; */
+
+/* Custom import with disabled preflight css reset */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/* @import "tailwindcss/preflight.css" layer(base); */
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "@semio/js/theme.css";
+
+/* Dark mode colors. */
+:root {
+    --sl-color-accent-low: #001117;
+    --sl-color-accent: #34d1bf;
+    --sl-color-accent-high: #ff344f;
+    --sl-color-white: #f7f3e3;
+    --sl-color-gray-1: #e7e1d5;
+    --sl-color-gray-2: #cecbbd;
+    --sl-color-gray-3: #808b84;
+    --sl-color-gray-4: #69706a;
+    --sl-color-gray-5: #29383c;
+    --sl-color-gray-6: #142024;
+    --sl-color-black: #001117;
+}
+
+/* Light mode colors. */
+:root[data-theme='light'] {
+    --sl-color-accent-low: #c7d6ff;
+    --sl-color-accent: #ff344f;
+    --sl-color-accent-high: #182775;
+    --sl-color-white: #001117;
+    --sl-color-gray-1: #142024;
+    --sl-color-gray-2: #29383c;
+    --sl-color-gray-3: #69706a;
+    --sl-color-gray-4: #808b84;
+    --sl-color-gray-5: #cecbbd;
+    --sl-color-gray-6: #e7e1d5;
+    --sl-color-gray-7: #f7f3e3;
+    --sl-color-black: #f7f3e3;
+}

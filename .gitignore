@@ -23,7 +23,6 @@ dist
 dist-ssr
 out
 *.local
-!.vscode/extensions.json
 .idea
 *.suo
 *.ntvs*
@@ -35,6 +34,8 @@ out
 .turbo
 #--------------------------------------ASTRO--------------------------------------
 .astro
+#--------------------------------------STORYBOOK--------------------------------------
+storybook-static
 #--------------------------------------TEX--------------------------------------
 *.aux
 *.lof
@@ -272,11 +273,6 @@ dmypy.json
 cython_debug/
 #--------------------------------------VSCODE--------------------------------------
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-workspace
 # *.code-workspace
 #--------------------------------------VISUALSTUDIO--------------------------------------
 *.rsuser
@@ -367,7 +363,6 @@ _ReSharper*/
 _TeamCity*
 *.dotCover
 .axoCover/*
-!.axoCover/settings.json
 coverage*.json
 coverage*.xml
 coverage*.info
@@ -396,7 +391,6 @@ publish/
 PublishScripts/
 *.nupkg
 *.snupkg
-!**/[Pp]ackages/build/
 *.nuget.props
 *.nuget.targets
 csx/
@@ -487,5 +481,12 @@ FodyWeavers.xsd
 *.msp
 *.sln.iml
 #--------------------------------------EXCEPTIONS--------------------------------------
-!javascript/**/public
-!javascript/core/lib
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-workspace
+!js/**/public
+!js/core/lib
+!.axoCover/settings.json
+!**/[Pp]ackages/build/

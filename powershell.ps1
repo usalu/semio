@@ -15,19 +15,29 @@ function ResizeImage {
         $newImage.Dispose()
     }
 }
-
-function Rename {
+function RenameFilesByPattern {
     param (
-        [string]$prefix,
-        [string]$newPrefix
+        [string]$Pattern, # Regular expression pattern to match
+        [string]$Replacement    # Replacement string
     )
-    $files = Get-ChildItem -Path . -File -Filter "$prefix*" -Recurse
+    $files = Get-ChildItem -Path . -File -Recurse
     foreach ($file in $files) {
-        $newFileName = $file.FullName -replace $prefix, $newPrefix
-        Move-Item -Path $file.FullName -Destination $newFileName -Force
+        $newFileName = $file.FullName -replace $Pattern, $Replacement
+        if ($newFileName -ne $file.FullName) {
+            Move-Item -Path $file.FullName -Destination $newFileName -Force
+        }
     }
 }
-function Kill-ProcessOnPort {
+function DeleteFilesByPattern {
+    param (
+        [string]$pattern
+    )
+    $files = Get-ChildItem -Path . -File -Filter $pattern -Recurse
+    foreach ($file in $files) {
+        Remove-Item -Path $file.FullName -Force
+    }
+}
+function StopProcessOnPort {
     param (
         [int]$Port
     )
@@ -38,4 +48,22 @@ function Kill-ProcessOnPort {
     if ($processInfo) {
         Stop-Process -Id $processInfo -Force
     }
+}
+
+function Compress-HDR {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$InputFile,  # Path to the input .exr file
+        [Parameter(Mandatory = $true)]
+        [string]$OutputFile, # Path to the output .exr.compressed file
+        [string]$Resize = "512x512" # Resize dimensions (default: 512x512)
+    )
+    if (-Not (Test-Path $InputFile)) {
+        Write-Error "Input file '$InputFile' does not exist."
+        return
+    }
+    $command = "magick convert `"$InputFile`" -compress DWAB -resize $Resize `"$OutputFile`""
+    Write-Host "Running: $command"
+    Invoke-Expression $command
+    Write-Host "Compression and resizing completed: $OutputFile"
 }

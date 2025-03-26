@@ -7,6 +7,6 @@
     "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
   },
   "devDependencies": {
-    "@semio/icons": "*"
+    "@semio/assets": "*"
   }
 }

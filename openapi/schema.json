@@ -6,7 +6,7 @@
         "version": "4.3.0-beta"
     },
     "paths": {
-        "/kits/{encodedKitUri}": {
+        "/api/kits/{encodedKitUri}": {
             "get": {
                 "summary": "Kit",
                 "operationId": "kit_kits__encodedKitUri__get",
@@ -128,7 +128,7 @@
                 }
             }
         },
-        "/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
+        "/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
             "put": {
                 "summary": "Put Type",
                 "operationId": "put_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__put",
@@ -232,7 +232,7 @@
                 }
             }
         },
-        "/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
+        "/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
             "put": {
                 "summary": "Put Design",
                 "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__put",
@@ -336,7 +336,7 @@
                 }
             }
         },
-        "/assistant/predictDesign": {
+        "/api/assistant/predictDesign": {
             "get": {
                 "summary": "Predict Design",
                 "operationId": "predict_design_assistant_predictDesign_get",
@@ -357,6 +357,44 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/DesignPrediction"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/prepare/kit": {
+            "post": {
+                "summary": "Prepare Kit",
+                "operationId": "prepare_kit_prepare_kit_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/KitInput"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KitContext"
                                 }
                             }
                         }
@@ -431,7 +469,7 @@
                     },
                     "types": {
                         "items": {
-                            "$ref": "#/components/schemas/TypeContext"
+                            "$ref": "#/components/schemas/TypeContext-Input"
                         },
                         "type": "array",
                         "title": "Types"
@@ -439,7 +477,7 @@
                     "design": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/DesignContext"
+                                "$ref": "#/components/schemas/DesignContext-Input"
                             },
                             {
                                 "type": "null"
@@ -454,11 +492,91 @@
                 ],
                 "title": "Body_predict_design_assistant_predictDesign_get"
             },
-            "ConnectionContext": {
+            "ConnectionContext-Input": {
                 "properties": {
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the connection.",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+                        "default": 0
+                    },
+                    "raise_": {
+                        "type": "number",
+                        "title": "Raise",
+                        "description": "\ud83e\ude9c The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+                        "default": 0
+                    },
+                    "x": {
+                        "type": "number",
+                        "title": "X",
+                        "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y",
+                        "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideContext",
+                        "description": "\ud83e\uddf2 The connected side of the connection."
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideContext",
+                        "description": "\ud83e\uddf2 The connecting side of the connection."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionContext",
+                "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
+            },
+            "ConnectionContext-": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the connection.",
                         "default": ""
@@ -538,7 +656,7 @@
                 "properties": {
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the connection.",
                         "default": ""
@@ -618,7 +736,7 @@
                 "properties": {
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the connection.",
                         "default": ""
@@ -698,7 +816,7 @@
                 "properties": {
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the connection.",
                         "default": ""
@@ -774,7 +892,7 @@
                 "title": "ConnectionPrediction",
                 "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
             },
-            "DesignContext": {
+            "DesignContext-Input": {
                 "properties": {
                     "name": {
                         "type": "string",
@@ -784,7 +902,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
@@ -812,14 +930,79 @@
                     },
                     "pieces": {
                         "items": {
-                            "$ref": "#/components/schemas/PieceContext"
+                            "$ref": "#/components/schemas/PieceContext-Input"
                         },
                         "type": "array",
                         "title": "Pieces"
                     },
                     "connections": {
                         "items": {
-                            "$ref": "#/components/schemas/ConnectionContext"
+                            "$ref": "#/components/schemas/ConnectionContext-Input"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignContext",
+                "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
+            },
+            "DesignContext-": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the design."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2560,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the design.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "view": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "View",
+                        "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\ud83d\udccf The unit of the design.",
+                        "default": ""
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceContext-"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionContext-"
                         },
                         "type": "array",
                         "title": "Connections"
@@ -849,21 +1032,21 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
@@ -935,21 +1118,21 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
@@ -1027,7 +1210,7 @@
                 "properties": {
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the design.",
                         "default": ""
@@ -1127,6 +1310,53 @@
                 "type": "object",
                 "title": "HTTPValidationError"
             },
+            "KitContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the kit."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2560,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the kit.",
+                        "default": ""
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeContext-"
+                        },
+                        "type": "array",
+                        "title": "Types",
+                        "description": "\ud83e\udde9 The types of the kit."
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignContext-"
+                        },
+                        "type": "array",
+                        "title": "Designs",
+                        "description": "\ud83c\udfd9\ufe0f The designs of the kit."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the kit."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "KitContext",
+                "description": "\ud83d\uddc3\ufe0f A kit is a collection of types and designs."
+            },
             "KitInput": {
                 "properties": {
                     "name": {
@@ -1137,28 +1367,28 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the kit.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "preview": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Preview",
                         "description": "\ud83d\udd2e The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
                         "default": ""
@@ -1172,21 +1402,21 @@
                     },
                     "remote": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Remote",
                         "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Homepage",
                         "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "license": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "License",
                         "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
                         "default": ""
@@ -1227,7 +1457,7 @@
                 "properties": {
                     "uri": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2048,
                         "title": "Uri",
                         "description": "\ud83c\udd94 The uri of the kit."
                     },
@@ -1239,28 +1469,28 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the kit.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
                     },
                     "preview": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Preview",
                         "description": "\ud83d\udd2e The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
                         "default": ""
@@ -1274,21 +1504,21 @@
                     },
                     "remote": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Remote",
                         "description": "\u2601\ufe0f The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
                         "default": ""
                     },
                     "homepage": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Homepage",
                         "description": "\ud83c\udfe0 The optional url of the homepage of the kit.",
                         "default": ""
                     },
                     "license": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "License",
                         "description": "\u2696\ufe0f The optional license [ spdx id | url ] of the kit.",
                         "default": ""
@@ -1336,9 +1566,9 @@
                     "name"
                 ],
                 "title": "Kit",
-                "description": "\u2197\ufe0f The output of a kit."
+                "description": "\ud83d\uddc3\ufe0f A kit is a collection of types and designs."
             },
-            "PieceContext": {
+            "PieceContext-Input": {
                 "properties": {
                     "id_": {
                         "type": "string",
@@ -1349,7 +1579,65 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the piece.",
+                        "default": ""
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeId",
+                        "description": "\ud83e\udde9 The type of the piece."
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DiagramPointContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities",
+                        "description": "\ud83d\udccf The qualities of the piece."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type"
+                ],
+                "title": "PieceContext",
+                "description": "\u2b55 A piece is a 3d-instance of a type in a design."
+            },
+            "PieceContext-": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "description": "\ud83c\udd94 The id of the piece.",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
@@ -1421,7 +1709,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
@@ -1479,7 +1767,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
@@ -1537,7 +1825,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the piece.",
                         "default": ""
@@ -1718,7 +2006,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
@@ -1776,7 +2064,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
@@ -1838,7 +2126,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
@@ -1917,7 +2205,7 @@
                     "name"
                 ],
                 "title": "QualityContext",
-                "description": "\ud83d\udcd1 The context of a quality."
+                "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
             },
             "QualityInput": {
                 "properties": {
@@ -1943,7 +2231,7 @@
                     },
                     "definition": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Definition",
                         "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                         "default": ""
@@ -1954,7 +2242,7 @@
                     "name"
                 ],
                 "title": "QualityInput",
-                "description": "\u2198\ufe0f The input for a quality."
+                "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
             },
             "Quality": {
                 "properties": {
@@ -1980,7 +2268,7 @@
                     },
                     "definition": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Definition",
                         "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
                         "default": ""
@@ -1991,19 +2279,19 @@
                     "name"
                 ],
                 "title": "Quality",
-                "description": "\u2197\ufe0f The output of a quality."
+                "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
             },
             "RepresentationInput": {
                 "properties": {
                     "url": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Url",
                         "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the representation.",
                         "default": ""
@@ -2043,13 +2331,13 @@
                 "properties": {
                     "url": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Url",
                         "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the representation.",
                         "default": ""
@@ -2153,7 +2441,7 @@
                 "title": "SidePrediction",
                 "description": "\ud83e\uddf1 A side of a piece in a connection."
             },
-            "TypeContext": {
+            "TypeContext-Input": {
                 "properties": {
                     "name": {
                         "type": "string",
@@ -2163,7 +2451,58 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
+                        "title": "Description",
+                        "description": "\ud83d\udcac The optional human-readable description of the type.",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
+                        "default": ""
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortContext"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "qualities": {
+                        "items": {
+                            "$ref": "#/components/schemas/QualityContext"
+                        },
+                        "type": "array",
+                        "title": "Qualities"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeContext",
+                "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
+            },
+            "TypeContext-": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "description": "\ud83d\udcdb The name of the type."
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the type.",
                         "default": ""
@@ -2237,21 +2576,21 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the type.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""
@@ -2316,21 +2655,21 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 4096,
+                        "maxLength": 2560,
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the type.",
                         "default": ""
                     },
                     "icon": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Icon",
                         "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
                         "default": ""
                     },
                     "image": {
                         "type": "string",
-                        "maxLength": 2048,
+                        "maxLength": 1024,
                         "title": "Image",
                         "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
                         "default": ""

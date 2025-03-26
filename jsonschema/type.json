@@ -63,7 +63,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the port.",
-                    "maxLength": 4096,
+                    "maxLength": 2560,
                     "title": "Description",
                     "type": "string"
                 },
@@ -113,7 +113,7 @@
             "type": "object"
         },
         "Quality": {
-            "description": "\u2197\ufe0f The output of a quality.",
+            "description": "\ud83d\udccf A quality is a named value with a unit and a definition.",
             "properties": {
                 "name": {
                     "description": "\ud83d\udccf The name of the quality.",
@@ -138,7 +138,7 @@
                 "definition": {
                     "default": "",
                     "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
-                    "maxLength": 4096,
+                    "maxLength": 2560,
                     "title": "Definition",
                     "type": "string"
                 }
@@ -154,14 +154,14 @@
             "properties": {
                 "url": {
                     "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 2048,
+                    "maxLength": 1024,
                     "title": "Url",
                     "type": "string"
                 },
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the representation.",
-                    "maxLength": 4096,
+                    "maxLength": 2560,
                     "title": "Description",
                     "type": "string"
                 },
@@ -234,21 +234,21 @@
         "description": {
             "default": "",
             "description": "\ud83d\udcac The optional human-readable description of the type.",
-            "maxLength": 4096,
+            "maxLength": 2560,
             "title": "Description",
             "type": "string"
         },
         "icon": {
             "default": "",
             "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
-            "maxLength": 2048,
+            "maxLength": 1024,
             "title": "Icon",
             "type": "string"
         },
         "image": {
             "default": "",
             "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "maxLength": 2048,
+            "maxLength": 1024,
             "title": "Image",
             "type": "string"
         },

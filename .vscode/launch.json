@@ -3,9 +3,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "everything",
+            "name": "dev everything",
             "preLaunchTask": "dev",
-            "type": "debugpy",
+            "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
             "request": "attach",
             "connect": {
                 "host": "localhost",
@@ -19,22 +19,7 @@
             ],
         },
         {
-            "name": "javascript",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "run-many",
-                "-t",
-                "dev",
-                "--projects=@semio/core,@semio/docs,@semio/sketchpad"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "engine",
+            "name": "dev engine",
             "preLaunchTask": "dev engine",
             "type": "debugpy",
             "request": "attach",
@@ -50,20 +35,35 @@
             ],
         },
         {
-            "name": "core",
+            "name": "dev everything js",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "run-many",
+                "-t",
+                "dev",
+                "--projects=@semio/js,@semio/docs,@semio/sketchpad"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "dev js core",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "npx",
             "runtimeArgs": [
                 "nx",
                 "dev",
-                "@semio/core"
+                "@semio/js"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
-            "name": "docs",
+            "name": "dev docs",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "npx",
@@ -76,7 +76,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "sketchpad",
+            "name": "dev sketchpad",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "npx",
@@ -87,6 +87,101 @@
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "build assets",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/assets"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "build icons",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/assets/icons/build.ps1",
+            "cwd": "${workspaceFolder}/assets/icons/"
+        },
+        // TODO: Invoke build task over nx and attach debugger to it
+        // Problem: Need to get process id or find a different way
+        // {
+        //     "name": "build icons",
+        //     "type": "PowerShell",
+        //     "request": "attach",
+        //     "preLaunchTask": "build icons"
+        // },
+        {
+            "name": "build engine",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/engine"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "build everything js",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "run-many",
+                "-t",
+                "build",
+                "--projects=@semio/js,@semio/docs,@semio/sketchpad"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "build js core",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/js"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "build docs",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/docs"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "build sketchpad",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/sketchpad"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
     ]
 }

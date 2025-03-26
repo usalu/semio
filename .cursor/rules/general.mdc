@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project
+An ecosystem for designing kit-of-parts architecture together.
+
+# Principles
+- Toolfriendly over intuitive.
+- Almost everything is in a single file if possible.
+- Folders are avoided if possible.
+
+# @LLM
+- No need to ask in between. Be opionionated and just go for it. Try to do as much as you can.
+- Don't ask to execute commands in the cli. Assume all the tools are properly setup.
+- No need to delete files, you can tell me when once you are 100% done with everything and I will do it manually.
+- Be sparse on commenting. Most code is self-explainatory. Only very complex parts should be briefly explained in the beginning.
+- Don't add comments into the code which are related to the prompt. The new code should always remain clean in content and style.
+- Don't remove or change existing comments, console logs, etc unless it is related to prompt.

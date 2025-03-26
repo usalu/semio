@@ -20,7 +20,7 @@
 
 #region TODOs
 
-// TODO: Think of modelling components that are resilient to future schema changes.
+// TODO: Think of modeling components that are resilient to future schema changes.
 // TODO: Refactor EngineComponent with GetInput and GetPersitanceInput etc. Very confusing. Probably no abstracting is better.
 // TODO: GetProps and SetProps (includes children) is not consistent with the prop naming in python (does not include children).
 // TODO: Add toplevel scanning for kits wherever a directory is given
@@ -46,15 +46,16 @@ using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Net;
 using System.Net.Http;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Humanizer;
 using Rhino;
 using Rhino.Geometry;
+using System.Text.RegularExpressions;
 
 #endregion
 
@@ -236,7 +237,8 @@ public static class Utility
     }
 
     public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
-        Point childPoint, Vector childDirection, float gap, float shift, float raise, float rotation, float turn, float tilt)
+        Point childPoint, Vector childDirection, float gap, float shift, float raise, float rotation, float turn,
+        float tilt)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();
@@ -1454,6 +1456,154 @@ public class ConvertUnitComponent : Component
     }
 }
 
+public class ObjectsToTextComponent : Component
+{
+    public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt",
+        "Converts a list of objects to a human-readable text.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
+
+    protected override Bitmap Icon => Resources.objects_convert_text_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddGenericParameter("Objects", "Ob+", "Objects to humanize.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Humanized Text", "Tx", "Human-readable text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var objects = new List<object>();
+        DA.GetDataList(0, objects);
+        var humanizedText = objects.Humanize();
+        DA.SetData(0, humanizedText);
+    }
+}
+
+public class NormalizeTextComponent : Component
+{
+    public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
+
+    protected override Bitmap Icon => Resources.text_normalize_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Txt", "Text to normalize.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing and unifying casing.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Kebab", "Kb",
+            "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.",
+            GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string text = null;
+        DA.GetData(0, ref text);
+
+        var strict = Regex.Replace(text.Dehumanize().Underscore(), @"[^a-zA-Z0-9_]", "");
+        var title = text.Titleize();
+        var underscore = text.Underscore();
+        var kebab = text.Kebaberize();
+        var pascal = text.Pascalize();
+
+        DA.SetData(0, strict);
+        DA.SetData(1, title);
+        DA.SetData(2, underscore);
+        DA.SetData(3, kebab);
+        DA.SetData(4, pascal);
+    }
+}
+
+//public class NumberToTextComponent : Component
+//{
+//    public NumberToTextComponent() : base("Number To Text", "Num→Txt", "Converts a number to its textual representation.", "Util")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("891063B8-7935-409A-AF9F-435E4E752922");
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddNumberParameter("Number", "Num", "Number to convert.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Txt", "Textual representation of the number.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+
+//    }
+//}
+
+public class TruncateTextComponent : Component
+{
+    public TruncateTextComponent() : base("Truncate Text", "…Txt",
+        "Truncates text by length and an optional termination.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
+
+    protected override Bitmap Icon => Resources.text_truncate_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Txt", "Text to truncate.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.",
+            GH_ParamAccess.item, "…");
+        pManager[2].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Strict", "St", "Fixed length truncated text including the truncation text length.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Characters", "Crs",
+            "Fixed alphanumeric character length truncated text including the truncation text length",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Words", "Wds", "Fixed word length truncated text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string text = null;
+        var length = 0;
+        var termination = "…";
+        DA.GetData(0, ref text);
+        DA.GetData(1, ref length);
+        DA.GetData(2, ref termination);
+        var strict = text.Truncate(length, termination, Truncator.FixedLength);
+        var characters = text.Truncate(length, termination, Truncator.FixedNumberOfCharacters);
+        var words = text.Truncate(length, termination, Truncator.FixedNumberOfWords);
+        DA.SetData(0, strict);
+        DA.SetData(1, characters);
+        DA.SetData(2, words);
+    }
+}
+
 //public class UpdateComponents : Component
 //{
 //    public UpdateComponents()
@@ -1494,7 +1644,7 @@ public class ConvertUnitComponent : Component
 
 #endregion
 
-#region Modelling
+#region Modeling
 
 public abstract class ModelComponent<T, U, V> : Component
     where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
@@ -1536,7 +1686,7 @@ public abstract class ModelComponent<T, U, V> : Component
     }
 
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modelling")
+        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
     {
     }
 
@@ -1761,7 +1911,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddTextParameter("Id", "Id",
             "Id of the piece.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Description","Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the piece.",
+            GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "Na", "Name of the type of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Variant", "Vn?",
             "The optional variant of the type of the piece. No variant means the default variant.",
@@ -1788,7 +1939,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
-        if(DA.GetData(3, ref description))
+        if (DA.GetData(3, ref description))
             pieceGoo.Value.Description = description;
         if (DA.GetData(4, ref typeName))
             pieceGoo.Value.Type.Name = typeName;
@@ -1833,7 +1984,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
             "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.",
+            GH_ParamAccess.item);
         pManager.AddNumberParameter("Gap", "Gp?",
             "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
@@ -1858,7 +2010,8 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Y", "Y?",
             "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
             GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.", GH_ParamAccess.list);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.",
+            GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1869,7 +2022,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var connectingPortId = "";
         var description = "";
         var gap = 0.0;
-        var shift = 0.0; 
+        var shift = 0.0;
         var raise = 0.0;
         var rotation = 0.0;
         var turn = 0.0;
@@ -1972,7 +2125,7 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 public class RandomIdsComponent : Component
 {
     public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.", "Modelling")
+        : base("Random Ids", "%Ids", "Generate random ids.", "Modeling")
     {
     }
 

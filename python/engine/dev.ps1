@@ -1,6 +1,6 @@
 . ..\..\powershell.ps1
-Kill-ProcessOnPort -Port 2503 # engine
-Kill-ProcessOnPort -Port 5678 # debugger
+StopProcessOnPort -Port 2503 # engine
+StopProcessOnPort -Port 5678 # debugger
 $process = Start-Process -FilePath "poetry" -ArgumentList "run dev" -NoNewWindow -PassThru
 function Cleanup {
     if ($process -and !$process.HasExited) {

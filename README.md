@@ -1,7 +1,7 @@
-> 👀 Do you want to develop the next AI with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
+> 👀 Do you want to develop the next design AI with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
 
 <p align="center">
-    <a href="https://github.com/semio">
+    <a href="https://docs.semio-tech.com">
       <picture>
           <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal-dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
@@ -21,183 +21,164 @@
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-csharp.svg" alt="C#"></a>
     <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture.</i>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
 </p>
 <br/>
 
 You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
 
-# 🤖 What is semio?
+# 👋 Hello dev
 
-### Let me start by what semio is **not**:
+> [!NOTE]
+> Are you a user of semio? Then you probably want to visit our [docs](https://docs.semio-tech.com) 👀
 
-- Rhino, SketchUp, 3ds Max, Blender, ...
+Glad to see you!
 
-  A _3d_ tool 🐚
+Let me walk you throw 🚶
 
-  > In semio you **link** 3d-models 🎋
+# ⚖️ Principles
 
-- AutoCAD, DraftSight, LibreCAD, ...
+Let's start with the rule of thumbs that this codebase was built with 🫰
 
-  A _CAD_ tool 📐
+## 💾 If something can be written in a single file, then it probably should ✅
 
-  > In semio you **link** dynamic blocks 📦
+I know, the urge to **tidy** up or **separate** things is big 🗃️
 
-- Revit, ArchiCAD, Vectorworks, BricksCAD, BlenderBIM, …
+But try to withstand it 🫥
 
-  A _BIM_ tool 🧱
+Out of my experience, it makes development slower, not faster 🐌
 
-  > In semio you **link** instances of your own types 🗿
+A single file is easier for humans and computers to understand 💡
 
-- Grasshopper, Dynamo, GenerativeComponents, Sverchok, …
+You will be supprised
 
-  A _node_ tool 🦗
+- by the awesome fill-in-the-middle suggestions of your copilot 🤖
+- by the hassle-free context selection for your ai agent 🖱️
+- by the smooth refactor experience by just going top-to-bottom ⬇️
+- by the beautiful diff for your next code review 🔍
+- by the clean git-history when you try to find a certain change 🔁
 
-  > In semio you **link** the input with the output ⛓️‍💥
+## 📁 If a folder doesn't make your life dramatically easier, don't create it ❌
 
-- IFC, Speckle, BHoM, …
+We all know this `./src/**` folder that has made it into a lot of starters 🚀
 
-  A _data_ tool 📄
+Other than feeling cool about using hacky abbreviations, does it really help you to understand the project faster and work more efficient on it?
 
-  > In semio you **link** design knowledge 📚
+If your project contains hundreds of config file and other project folders at the root, maybe 🤔
 
-- Hypar, Viktor, Fusion, …
+But most likely not ❌
 
-  A _parametric_ tool 🎛️
+## 📑 If multiple people work longterm on the same part, then one file for each part should be created ⚙️
 
-  > In semio you **link** static designs 🩻
+Trust me, it will make collaboration much easier 🔀
 
-- Wasp, Assembler, Monoceros, ComputerGeneratedArchitecture …
+## 📦 If you don't need an interface because something is not likely to be extended in the future, don't create it ❌
 
-  A _solver_ tool 🎰
+The main question is the interface productive or not?
 
-  > In semio you **link** precise pieces 🪡
+The pay-off of abstraction happens in the future 🛣️
 
-- OpenSCAD, CadQuery, Fornjot, …
+Every extension profits from a clean interface 🚀
 
-  A _scripting_ tool 📜
+Most things are not extended 🪨
 
-  > In semio you **link** ports visually 🖱️
+If you change your architecture, just design proper interfaces for something concrete not something potential and reactor it ✍️
 
-- Illustrator, AffinityDesigner, InkScape, …
+## 🤏 Repeating code is ok if it probably doesn't happen more than twice and the repeated code is close in the source code ✅
 
-  A _vector_ tool ↗️
+We are past the time where we copy code for no reason 📃
 
-  > In semio you **link** drawings 🪙
+Actually repeated code can improve the quality of your copilots suggestion 🤯
 
-- EnergyPlus, TRYNSIS, Modellica, …
+The main question is how can your application grow?
 
-  A _simulation_ tool ☀️
+If a change requires exponentially more duplication then you'll probably have to fix it 🛠️
 
-  > In semio you **link** models and results 🔢
+If not, then you are probably good 👌
 
-- Autodesk Construction Cloud, Bimcloud, Bentley Infrastructure Cloud, Git, Nextcloud, …
+## 🤨 Wait, no high-level advice and only plain numbers, files, folders or close line of codes?
 
-  A _CDE_ tool ☁️
+In my understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-  > In semio you **link** urls 🔗
+Besides that I am sure you know about **KISS** (Keep-It-Simple-Stupid), **DRY** (Dont-Repeat-Yourself), **YAGNI** (You-Aren't-Gonna-Need-It), **SoC** (Seperation-of-Concerns), **Avoid Premature Optimization**, **Law of Demeter**, **LCHC** (Low-Coupling-High-Cohesion), **SOLID** (Single Responsibility (**SR**), Open/Closed (**OC**), Liskov’s Substitution (**LS**), Interface Segregation (**IS**), Dependency Inversion (**DI**)), …
 
-### So, what **is** semio?
+But as always, the devil is in the details 😈
 
-A tool that can bring all the other tools together for **modular** architecture 🤝
+Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
 
-In other words:
+## 🚩 Don't worry, you'll figure out the possiblites and make the right choice for the specific problems ✅
 
-- An _open-source_ ecosystem for designing kit-of-parts architecture 🧩
-- A _designer-affine_ pencil for a placeholder-based, non-linear and iterative design space exploration 🔀
-- A _collaboration-friendly_ platform to design effectively in large teams 🤝
-- A _local-first_ storage to link, reuse and develop design systems 🔗
-- A _decentralized_ technology of sharing online assets with metadata 🌐
-- An _ai-boosted_ design assistant, ready for LLM super powers 🤖
-- A _conversion-free_ interoperability standard that sits on top of existing software and is not trying to get in between 🪆
-- A _ready-to-use_ API for other developers 👩‍💻
+# 🦑 [Monorepo](https://github.com/usalu/semio.git)
 
-## 🤔 When should I design with semio?
+This git repo has **everything** that exists in the open semio ecosystem 🤯
 
-If you design unique atmospheres
-by hand drawn sketches, eager to find the right shape based on surfaces with one-of-each-kind morphology, then you should stick to your 3d tool ❌
+# 📦 Components
 
-If you design floor plans, sections and elevations
-by moving lines and hatches around, analyzing contours
-then you should stick to your CAD tool ❌
+> Do you wonder how the same looking ui or functionality is avalailable on multiple components? The secret is that they have shared cores in their [ecosystem](#-ecosystems) 🥜
 
-If you design storeys, walls, windows, slabs and roofs
-by moving them around, changing individual dimensions of those,
-then you should stick to your BIM tool ❌
+A component is a piece of software which runs independently 🏝️
 
-If you design high-resolution blobs
-by sophisticated rules, statistical noise, intersection-based entropy,
-then you should stick to your solver tool ❌
+## ✏️ [sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad)
 
-If you design modular systems
-by iteratively developing typology based on metrics,
-then you should use semio ✅
+An electron-based desktop app primarly working for with local kits 💾
 
-# 🚀 Getting started
+## 🦗 [Grasshopper](https://github.com/usalu/semio/tree/main/dotnet/Semio.Grasshopper)
 
-> The code of semio is compatible with Windows, Mac and Linux but currently compiled for Windows only ⚠️
+A full-blown [Grasshopper Plugin](https://developer.rhino3d.com/en/guides/grasshopper/) that has (almost) everything 💯
 
-semio has two user-interfaces:
+## ⚙️ [engine](https://github.com/usalu/semio/tree/main/python/engine)
 
-- Grasshopper 🦗
-- sketchpad ✏️
+A hidden fat-client which exposes shared functionality to other desktop uis 🤝
 
-## ⬇️ Installation
+It takes care of:
 
-> The binaries are not signed (yet) ✒️ Therefor Windows might give a warning ⚠️
+- CRUDs (Create-Read-Update-Delete) for local kits 💾
+- Client-Server communication ↔️
 
-### 🦗 Grasshopper (Rhino 8)
+It offers two APIs to other clients:
 
-> Are you interested in the latest version? Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
+- A simple REST OpenAPI 🥇
+- A complex GraphQL Relay API 🥈
 
-The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
-
-1. Open Rhino Package Manger ⌨️
-1. Search for semio 🔎
-1. Install the latest version ⬇️
-1. Restart Rhino 🔄
-
-![Rhino Package](https://raw.githubusercontent.com/usalu/semio/main-tag/dotnet/Semio.Grasshopper/docs/rhinopackage.gif)
-
-That's it!
-
-### ✏️ sketchpad
-
-> Still a prototype 🧑‍💻 It doesn't use the latest versions of the engine and Grasshopper ⚠️
-
-![sketchpad demo](https://raw.githubusercontent.com/usalu/semio/main-tag/javascript/sketchpad/docs/demo.gif)
-
-[sketchpad](https://github.com/usalu/semio/releases/download/r24.07-1/sketchpad.exe) is a portable program and needs no installation. To use sketchpad with Grasshopper you need to download semio Grasshopper `2.1.2`. If you want to use sketchpad standalone you need to download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.07-1/engine.zip). After this you can open the [examples](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip)🏎️
-
-## 🏘️ Examples
-
-### 🫀 Metabolism
-
-<!-- ![Metabolism getting started](https://raw.githubusercontent.com/usalu/metabolism/main-tag/docs/getting-started.gif) -->
-
-![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/main-tag/docs/design-variants.png)
-
-> Are you interested in the latest version? Then copy this [uri](https://github.com/usalu/metabolism/archive/refs/heads/main.zip), take a look at the [source](https://github.com/usalu/metabolism/archive/refs/heads/main.zip) or the [documentation](https://github.com/usalu/metabolism/tree/main) 👀
-
-You can fetch the kit directly from within Grasshopper if you copy this [uri](https://github.com/usalu/metabolism/archive/refs/tags/r24.12-1.zip), take a look at the [source](https://github.com/usalu/metabolism/archive/refs/tags/r24.12-1.zip) or the [documentation](https://github.com/usalu/metabolism/tree/r24.12-1) 👀
-
-# 🧑‍💻 Developers
-
-semio offers two APIs: a simple REST OpenAPI and a complex GraphQL Relay API.
-
-### {} REST OpenAPI
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/openapi/docs/swagger.png)
 
-### ⭕ GraphQL Relay
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/graphql/docs/graphiql.png)
+
+## 📚 [docs](https://github.com/usalu/semio/tree/main/js/docs)
+
+## 🛍️ [assets](https://github.com/usalu/semio/tree/main/assets)
+
+# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples)
+
+## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter)
+
+## 👋 [Hello semio](https://github.com/usalu/hello-semio)
+
+## 🌈 [Geometry](https://github.com/usalu/geometry)
+
+## 🫀 [Metabolism](https://github.com/usalu/metabolism)
+
+# 💿 Ecosystems
+
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad), [Grasshopper](#-grasshopper) and [engine](#️-engine) but they are in totaly different folders 📂
+
+The reason for this is that the monorepo is not disected according content but according technology stack ✂️
+
+This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
+
+## 🐍 [Python]()
+
+Currently only [engine](#️-engine) but in the future it might grow and then the `.venv` will be centralized, …
 
 ## 💻 Building from source
 
@@ -225,11 +206,70 @@ Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation..
 Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
-If you don't care just run
+If you don't care just run:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
+
+# 💯 Brand
+
+## ✍️ Concept
+
+### ✅ Do
+
+- Visual is better than text 👀
+- Compact ➡️ Less space ➡️ More information ➡️ Faster to understand 🚀
+
+### ❌ Dont
+
+- Rounded corners ⬜
+- Shadows 🌤️
+- Multiple unicode directly after each other 🥇🥈🥉
+
+## 🌈 Colors
+
+![Palette](/assets/lists/palette.png)
+
+### 🥇 Primary
+
+### 🥈 Secondary
+
+### 🥉 Tertiary
+
+### ⚫ Dark
+
+### ⚪ Light
+
+### 🩶 Grey
+
+Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
+
+![Grayscale](/assets/lists/grayscale.png)
+
+## 📄 Typography
+
+- One symbol after every sentance 💯
+- One symbol at a time 🥇
+- Pick emoji if possible otherwise unicode ⚖️
+- 📝 One symbol to summarize a title
+- 💡 One symbol to summatize a title description and one to think about in the end 🤔
+- `.` are forbidden ⛔
+- All components in `semio` (`sketchpad`,`studio`, …) start with a small letter 🔡
+- Did you know that `…` is just one character?
+
+### 🔡 [Fonts](/assets/fonts/README.md)
+
+- Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
+- Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️
+- Monospaced: [Shart Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) 🖥️
+- Emoji: [Noto Emoji](https://fonts.google.com/noto/specimen/Noto+Emoji) ⚫
+
+## 👀 Visual elements
+
+- Sharp corners 📐
+- Borders □
+- Basic geometric shapes ⚪
 
 # 📊 Stats
 
