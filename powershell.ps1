@@ -15,15 +15,17 @@ function ResizeImage {
         $newImage.Dispose()
     }
 }
-function RenameFilesByPrefix {
+function RenameFilesByPattern {
     param (
-        [string]$prefix,
-        [string]$newPrefix
+        [string]$Pattern, # Regular expression pattern to match
+        [string]$Replacement    # Replacement string
     )
-    $files = Get-ChildItem -Path . -File -Filter "$prefix*" -Recurse
+    $files = Get-ChildItem -Path . -File -Recurse
     foreach ($file in $files) {
-        $newFileName = $file.FullName -replace $prefix, $newPrefix
-        Move-Item -Path $file.FullName -Destination $newFileName -Force
+        $newFileName = $file.FullName -replace $Pattern, $Replacement
+        if ($newFileName -ne $file.FullName) {
+            Move-Item -Path $file.FullName -Destination $newFileName -Force
+        }
     }
 }
 function DeleteFilesByPattern {
