@@ -43,9 +43,16 @@ export default defineConfig({
             {
                 label: '🚀 Getting Started',
                 items: [
-                    { label: '', slug: 'intro' },
-                    { label: '', slug: 'installation' },
-                    { label: '', slug: 'starter' }
+                    {
+                        label: '🥇 Intro',
+                        items: [
+                            'intro',
+                            'design-information-modeling',
+                            'kit-of-parts-architecture',
+                        ],
+                    },
+                    'installation',
+                    'starter'
                 ],
                 translations: {
                     'de': 'Erste Schritte',
@@ -62,8 +69,8 @@ export default defineConfig({
 
             },
             {
-                label: '📖 Reference',
-                autogenerate: { directory: 'reference' }
+                label: '📖 Manuals',
+                autogenerate: { directory: 'manuals' }
 
             },
             {
