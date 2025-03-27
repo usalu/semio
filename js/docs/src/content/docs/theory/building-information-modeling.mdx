@@ -2,13 +2,129 @@
 title: 📄 Building Information Modeling
 description: An intro to Building-Information-Modeling (BIM) and how semio relates to it 🏢
 sidebar:
-  order: 2
+  order: 1
 ---
 
-## Semantics
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-## OpenBIM
+## 🧠 It's about Meaning
 
-### IFC
+Building-Information-Modeling (BIM) is an activity to explicitly model semantics instead of only representations 🔗
 
-## ~Building~ Design Information Modeling
+<details>
+  <summary>
+    It allows you to use smart objects early on, so you don't have to repeat the
+    information retrieval process later ⏮️
+  </summary>
+  Instead of making a line with a pen (or a CAD tool), you use a BIM tool to
+  draw a wall, and then you simultaneously model the wall's information
+  (material, volume, cost, …) 📝
+</details>
+
+The hope is that this extra work and limitation in the beginning pays off in the end 📉
+
+## 🩻 The Data Problem
+
+:::note[Did you know?]
+Computers love hierarchical tree structures 💾
+:::
+
+For computers to store and process the information, they need a data structure 🗄️
+
+{/* prettier-ignore */}
+{/* <Tabs>
+
+  <TabItem label="STEP">
+    
+  </TabItem>
+  <TabItem label="XML">
+    
+  </TabItem>
+  <TabItem label="JSON">
+
+  </TabItem>
+</Tabs> */}
+
+The main question is what are the **units of information**?
+
+{/* prettier-ignore */}
+{/* <details>
+
+  <summary>
+    The core 'problem' to make software for buildings is that building elements
+    are referential and not intrinsicly hierarchical 🪢
+  </summary>
+  A wall is shared by two rooms, a slab is shared by two storeys, …
+</details>
+
+This makes it hard to find a tree structure for all buildings 🌲 \*/}
+
+## 🧩 You have to Standardize the Elements!
+
+You might ask yourself:
+
+<details>
+  <summary>🗃️ What do most buildings have in common?</summary>
+  Building, Storey, Wall, Windows, Doors, Columns, Beams, Slabs, Roofs, Stairs,
+  Railings, …
+</details>
+
+<details>
+  <summary>🧩 How are they commonly put together?</summary>A building constists
+  of storeys, a wall starts and ends on a storey, a wall is 90 degrees vertical,
+  …
+</details>
+
+<details>
+  <summary>🤷‍♂️ What about the exceptions?</summary>
+  Split levels, incline walls, free-form roofs, …
+</details>
+
+{/* While companies are putting significant efforts into making their BIM tools as general as possible, they will never be as easy to use as a pencil or a 3D-only tool ✏️ */}
+
+Here some example buildings:
+
+{/* prettier-ignore */}
+<Tabs>
+  <TabItem label="1234 Walls, 567 Railings, 890 Windows">
+    [![Habitat 67](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Habitat_67%2C_southwest_view.jpg/2560px-Habitat_67%2C_southwest_view.jpg)](https://www.safdiearchitects.com/projects/habitat-67)
+  </TabItem>
+  <TabItem label="1234 Columns, 5678 Beams">
+    [![Birds Nest](https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Beijing_China_Beijing-National-Stadium-01.jpg/2880px-Beijing_China_Beijing-National-Stadium-01.jpg)](https://www.herzogdemeuron.com/projects/226-national-stadium/)
+  </TabItem>
+  <TabItem label="123 Stairs, 456 Slabs">
+    [![Nakgin Capsule Tower](https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Nakagin.jpg/1024px-Nakagin.jpg)](https://archeyes.com/nakagin-capsule-tower-kisho-kurokawa/)
+  </TabItem>
+</Tabs>
+
+Is that the way you think about your design?
+
+## 🤔 Or maybe not?
+
+When you design you'll probably think more like this:
+
+{/* prettier-ignore */}
+<Tabs syncKey="designs">
+  <TabItem label="15 Dwelling Modules, 4 Parameters">
+    [![Habitat 67](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Habitat_67%2C_southwest_view.jpg/2560px-Habitat_67%2C_southwest_view.jpg)](https://www.safdiearchitects.com/projects/habitat-67)
+  </TabItem>
+  <TabItem label="10 Structure Modules, 5 Parameters">
+    [![Birds Nest](https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Beijing_China_Beijing-National-Stadium-01.jpg/2880px-Beijing_China_Beijing-National-Stadium-01.jpg)](https://www.herzogdemeuron.com/projects/226-national-stadium/)
+  </TabItem>
+  <TabItem label="6 Capsule Modules, 3 Parameters">
+    [![Nakgin Capsule Tower](https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Nakagin.jpg/1024px-Nakagin.jpg)](https://archeyes.com/nakagin-capsule-tower-kisho-kurokawa/)
+:::tip[Curious?]
+The Nakagin Capsule Tower has been [digtially reconstructed in semio](../../showcases/metabolism) ⚒️
+:::
+  </TabItem>
+</Tabs>
+
+And this is the difference between semio and other BIM tools 💡
+
+In semio you model **design knowledge instead of building elements** first 🥇
+
+And then as second step you [turn your design into common formats](../../integrations) 🥈
+
+:::note[What do you think?]
+🤖 A design assistance AI works better for Building-Information-Modelling or Design-Information-Modelling?
+:::

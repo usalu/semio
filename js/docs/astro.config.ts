@@ -16,6 +16,7 @@ export default defineConfig({
             en: 'semio Docs',
             de: 'semio Dokumentation'
         },
+        // tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
         defaultLocale: 'root',
         locales: {
             root: {
