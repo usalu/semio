@@ -46,6 +46,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Net.Http;
 using GH_IO.Serialization;
 using Grasshopper;
 using Grasshopper.Kernel;
@@ -1463,7 +1464,7 @@ public class ObjectsToTextComponent : Component
 
     public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
 
-    //protected override Bitmap Icon => Resources.objects_convert_text_24x24;
+    protected override Bitmap Icon => Resources.objects_convert_text_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1492,7 +1493,7 @@ public class NormalizeTextComponent : Component
 
     public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
 
-    //protected override Bitmap Icon => Resources.text_normalize_24x24;
+    protected override Bitmap Icon => Resources.text_normalize_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -1501,19 +1502,15 @@ public class NormalizeTextComponent : Component
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Norm", "No", "Normalized text by dehumanizing it first and then kebaberizing it.",
+        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing, …", GH_ParamAccess.item);
-        pManager.AddTextParameter("Dash", "Da", "Dasherized text by replacing spaces with dashes.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by replacing spaces with underscores.",
+        pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing and unifying casing.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.",
             GH_ParamAccess.item);
         pManager.AddTextParameter("Kebab", "Kb",
             "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.",
             GH_ParamAccess.item);
-        pManager.AddTextParameter("Plural", "Pl", "Pluralized text.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Singular", "Si", "Singularized text.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -1521,23 +1518,17 @@ public class NormalizeTextComponent : Component
         string text = null;
         DA.GetData(0, ref text);
 
-        var norm = text.Dehumanize().Kebaberize();
+        var norm = text.Dehumanize().Underscore();
         var title = text.Titleize();
-        var dash = text.Dasherize();
         var underscore = text.Underscore();
         var kebab = text.Kebaberize();
         var pascal = text.Pascalize();
-        var plural = text.Pluralize();
-        var singular = text.Singularize();
 
         DA.SetData(0, norm);
         DA.SetData(1, title);
-        DA.SetData(2, dash);
-        DA.SetData(3, underscore);
-        DA.SetData(4, kebab);
-        DA.SetData(5, pascal);
-        DA.SetData(6, plural);
-        DA.SetData(7, singular);
+        DA.SetData(2, underscore);
+        DA.SetData(3, kebab);
+        DA.SetData(4, pascal);
     }
 }
 
@@ -1574,7 +1565,7 @@ public class TruncateTextComponent : Component
 
     public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
 
-    //protected override Bitmap Icon => Resources.text_truncate_24x24;
+    protected override Bitmap Icon => Resources.text_truncate_24x24;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
