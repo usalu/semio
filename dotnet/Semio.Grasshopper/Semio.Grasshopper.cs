@@ -55,6 +55,7 @@ using Grasshopper.Kernel.Types;
 using Humanizer;
 using Rhino;
 using Rhino.Geometry;
+using System.Text.RegularExpressions;
 
 #endregion
 
@@ -1518,13 +1519,13 @@ public class NormalizeTextComponent : Component
         string text = null;
         DA.GetData(0, ref text);
 
-        var norm = text.Dehumanize().Underscore();
+        var strict = Regex.Replace(text.Dehumanize().Underscore(), @"[^a-zA-Z0-9_]", "");
         var title = text.Titleize();
         var underscore = text.Underscore();
         var kebab = text.Kebaberize();
         var pascal = text.Pascalize();
 
-        DA.SetData(0, norm);
+        DA.SetData(0, strict);
         DA.SetData(1, title);
         DA.SetData(2, underscore);
         DA.SetData(3, kebab);

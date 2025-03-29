@@ -12,6 +12,9 @@ To run all projects at the same time
 npm install
 ```
 
+> ![NOTE]
+> If you receive warnings, You might have to restart your typescript server after that with `Ctrl+Shift+P` and then run the command `Typescript: Restart TS Server` ⌨️
+
 4. Paste into the terminal and hit `Enter` again
 
 ```

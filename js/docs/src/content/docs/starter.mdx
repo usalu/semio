@@ -10,6 +10,11 @@ description: 📝 Jump right into action with semio 🎛️
 {/* - Minimum amount of components: (Model Representation), Model Port, Model Type, (Model Piece), (Model Connection), (Model Design), Show Design */}
 
 import { Steps, FileTree, Aside } from "@astrojs/starlight/components";
+import { Model } from "@semio/js";
+
+<Model client:load src="/sphere.gltf" />
+
+{/* <Model client:load src="http://localhost:4321/sphere.glb" /> */}
 
 ## 🦗 Grasshoper
 
