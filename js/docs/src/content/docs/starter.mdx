@@ -11,7 +11,10 @@ description: 📝 Jump right into action with semio 🎛️
 import { Steps, FileTree, Aside } from "@astrojs/starlight/components";
 import { Model } from "@semio/js";
 
-<Model client:load src="/colorful-sphere.glb" />
+<div class="flex gap-4 justify-center">
+  <Model client:load src="/colorful-sphere.glb" height={200} />
+  <Model client:load src="/pattern-sphere.glb" height={200} />
+</div>
 
 {/* prettier-ignore */}
 {/* <Model client:load src="../../../../../examples/geometry/representations/colorful-sphere.glb"/> */}
