@@ -12,8 +12,16 @@ import { Steps, FileTree, Aside } from "@astrojs/starlight/components";
 import { Model } from "@semio/js";
 
 <div class="flex flex-col sm:flex-row gap-4 justify-center h-[400px] sm:h-[300px]">
-  <Model client:load src="/colorful-sphere.glb" height={200} />
-  <Model client:load src="/pattern-sphere.glb" height={200} />
+  <Model
+    client:load
+    src="/colorful-sphere.glb"
+    environment="/schlenker-shed.hdr"
+  />
+  <Model
+    client:load
+    src="/pattern-sphere.glb"
+    environment="/schlenker-shed.hdr"
+  />
 </div>
 
 {/* prettier-ignore */}

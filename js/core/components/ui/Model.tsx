@@ -1,6 +1,6 @@
 import React, { FC, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Center, OrbitControls, Sphere, Stage, useGLTF } from '@react-three/drei';
+import { Center, Environment, OrbitControls, Sphere, Stage, useGLTF } from '@react-three/drei';
 
 interface GltfProps {
     src: string;
@@ -12,18 +12,20 @@ const Gltf: FC<GltfProps> = ({ src }) => {
 
 interface ModelProps {
     src: string;
+    environment?: string;
 }
-const Model: FC<ModelProps> = ({ src }) => {
+const Model: FC<ModelProps> = ({ src, environment }) => {
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <Canvas>
-                <Stage>
+                <Stage environment={null}>
                     <Suspense fallback={null}>
                         <OrbitControls enablePan={false} />
                         <ambientLight intensity={1} />
                         <Gltf src={src} />
                     </Suspense>
                 </Stage>
+                <Environment files={environment || ''} />
             </Canvas>
         </div>
     );

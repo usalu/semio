@@ -49,3 +49,21 @@ function StopProcessOnPort {
         Stop-Process -Id $processInfo -Force
     }
 }
+
+function Compress-HDR {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$InputFile,  # Path to the input .exr file
+        [Parameter(Mandatory = $true)]
+        [string]$OutputFile, # Path to the output .exr.compressed file
+        [string]$Resize = "512x512" # Resize dimensions (default: 512x512)
+    )
+    if (-Not (Test-Path $InputFile)) {
+        Write-Error "Input file '$InputFile' does not exist."
+        return
+    }
+    $command = "magick convert `"$InputFile`" -compress DWAB -resize $Resize `"$OutputFile`""
+    Write-Host "Running: $command"
+    Invoke-Expression $command
+    Write-Host "Compression and resizing completed: $OutputFile"
+}
