@@ -13,58 +13,32 @@
       "componentType": 5126,
       "count": 8448,
       "type": "VEC3",
-      "max": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "min": [
-        -1.0,
-        -1.0,
-        -1.0
-      ]
+      "max": [1.0, 1.0, 1.0],
+      "min": [-1.0, -1.0, -1.0]
     },
     {
       "bufferView": 1,
       "componentType": 5125,
       "count": 48384,
       "type": "SCALAR",
-      "max": [
-        8447.0
-      ],
-      "min": [
-        0.0
-      ]
+      "max": [8447.0],
+      "min": [0.0]
     },
     {
       "bufferView": 2,
       "componentType": 5126,
       "count": 8448,
       "type": "VEC3",
-      "max": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "min": [
-        -1.0,
-        -1.0,
-        -1.0
-      ]
+      "max": [1.0, 1.0, 1.0],
+      "min": [-1.0, -1.0, -1.0]
     },
     {
       "bufferView": 3,
       "componentType": 5126,
       "count": 8448,
       "type": "VEC2",
-      "max": [
-        1.0,
-        1.0
-      ],
-      "min": [
-        0.0,
-        0.0
-      ]
+      "max": [1.0, 1.0],
+      "min": [0.0, 0.0]
     }
   ],
   "asset": {
@@ -135,11 +109,7 @@
         },
         "KHR_materials_specular": {
           "specularFactor": 0.5,
-          "specularColorFactor": [
-            1.0,
-            1.0,
-            1.0
-          ]
+          "specularColorFactor": [1.0, 1.0, 1.0]
         }
       },
       "pbrMetallicRoughness": {
@@ -147,14 +117,8 @@
           "index": 0,
           "extensions": {
             "KHR_texture_transform": {
-              "offset": [
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                -1.0
-              ]
+              "offset": [0.0, 1.0],
+              "scale": [1.0, -1.0]
             }
           }
         },
@@ -192,9 +156,7 @@
   "scene": 0,
   "scenes": [
     {
-      "nodes": [
-        0
-      ],
+      "nodes": [0],
       "extensions": {}
     }
   ],

@@ -1,0 +1,1 @@
+export { default as Model } from '@semio/docs/src/components/Model.astro';
