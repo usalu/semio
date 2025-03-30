@@ -20,7 +20,7 @@
 
 #region TODOs
 
-// TODO: Think of modelling components that are resilient to future schema changes.
+// TODO: Think of modeling components that are resilient to future schema changes.
 // TODO: Refactor EngineComponent with GetInput and GetPersitanceInput etc. Very confusing. Probably no abstracting is better.
 // TODO: GetProps and SetProps (includes children) is not consistent with the prop naming in python (does not include children).
 // TODO: Add toplevel scanning for kits wherever a directory is given
@@ -1644,7 +1644,7 @@ public class TruncateTextComponent : Component
 
 #endregion
 
-#region Modelling
+#region Modeling
 
 public abstract class ModelComponent<T, U, V> : Component
     where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
@@ -1686,7 +1686,7 @@ public abstract class ModelComponent<T, U, V> : Component
     }
 
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modelling")
+        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
     {
     }
 
@@ -2125,7 +2125,7 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 public class RandomIdsComponent : Component
 {
     public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.", "Modelling")
+        : base("Random Ids", "%Ids", "Generate random ids.", "Modeling")
     {
     }
 

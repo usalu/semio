@@ -227,8 +227,6 @@ export type Port = {
     direction: Vector;
     // 🆔 The id of the port.
     id_?: string;
-    // 🗺️ The locators of the port.
-    locators?: Locator[];
     // ✖️ The connection point of the port that is attracted to another connection point.
     point: Point;
     // 💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
