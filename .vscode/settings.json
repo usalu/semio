@@ -40,6 +40,7 @@
   "python.testing.pytestArgs": [
     "."
   ],
+  "python.defaultInterpreterPath": "python/engine/.venv/Scripts/python.exe",
   // "python.testing.pytestArgs": [
   //     "--cov",
   //     "--cov-config=pyproject.toml",

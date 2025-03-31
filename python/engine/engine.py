@@ -204,7 +204,7 @@ TYPES_MAX = 256
 PIECES_MAX = 512
 DESIGNS_MAX = 128
 KITS_MAX = 64
-DESCRIPTION_LENGTH_LIMIT = 256
+DESCRIPTION_LENGTH_LIMIT = 2560 # TODO: Change all types to be 256
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
@@ -584,6 +584,10 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         if isinstance(input, str):
             return cls.model_validate_json(input)
         return cls.model_validate(input)
+    
+    def dump(self) -> "Output":
+        """📦 Dump the entity to a dictionary."""
+        return self.model_dump()
 
 
 ## Fields ##
@@ -1173,6 +1177,15 @@ class Representation(
             pass
         return entity
 
+    def dump(self) -> "RepresentationOutput":
+        entity = {**RepresentationProps.model_validate(self).model_dump()}
+        #  TODO: Fix bug with tags not being dumped correctly.
+        # Probably some sqlmodel issue with transient objects that are never written to the database.
+        # 'str' object has no attribute 'order'
+        # entity["tags"] = self.tags
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return RepresentationOutput(**entity)
+
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the representation within its parent type."""
@@ -1649,6 +1662,12 @@ class Plane(Table, table=True):
         entity.yAxis = yAxis
 
         return entity
+    
+    def dump(self) -> PlaneOutput:
+        entity = {**PlaneOriginField.model_validate(self).model_dump()}
+        entity["xAxis"] = self.xAxis
+        entity["yAxis"] = self.yAxis
+        return PlaneOutput(**entity)
 
 
 # ### Rotations ### TODO
@@ -2215,6 +2234,16 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         except KeyError:
             pass
         return entity
+    
+    def dump(self) -> "PortOutput":
+        entity = {**PortProps.model_validate(self).model_dump()}
+        entity["point"] = self.point.dump()
+        entity["direction"] = self.direction.dump()
+        entity["compatibleFamilies"] = self.compatibleFamilies
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return PortOutput(**entity)
+        
+
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
@@ -2594,6 +2623,15 @@ class Type(
         except KeyError:
             pass
         return entity
+    
+    def dump(self) -> "TypeOutput":
+        entity = {**TypeProps.model_validate(self).model_dump()}
+        entity["representations"] = [r.dump() for r in self.representations]
+        entity["ports"] = [p.dump() for p in self.ports]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["authors"] = [a.dump() for a in self.authors]
+        return TypeOutput(**entity)
+
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
@@ -2906,6 +2944,13 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         except KeyError:
             pass
         return entity
+
+    def dump(self) -> "PieceOutput":
+        entity = {**PieceProps.model_validate(self).model_dump()}
+        entity["plane"] = self.plane.dump() if self.plane is not None else None
+        entity["center"] = self.center.dump() if self.center is not None else None
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return PieceOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Piece":
@@ -3424,6 +3469,13 @@ class Connection(
         except KeyError:
             pass
         return entity
+    
+    def dump(self) -> "ConnectionOutput":
+        entity = {**ConnectionProps.model_validate(self).model_dump()}
+        entity["connected"] = self.connected.dump()
+        entity["connecting"] = self.connecting.dump()
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return ConnectionOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Connection":
@@ -3739,6 +3791,14 @@ class Design(
         except KeyError:
             pass
         return entity
+    
+    def dump(self) -> "DesignOutput":
+        entity = {**DesignProps.model_validate(self).model_dump()}
+        entity["pieces"] = [p.dump() for p in self.pieces]
+        entity["connections"] = [c.dump() for c in self.connections]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["authors"] = [a.dump() for a in self.authors]
+        return DesignOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
@@ -4038,6 +4098,13 @@ class Kit(
         except KeyError:
             pass
         return entity
+    
+    def dump(self) -> "KitOutput":
+        entity = {**KitProps.model_validate(self).model_dump()}
+        entity["types"] = [t.dump() for t in self.types]
+        entity["designs"] = [d.dump() for d in self.designs]
+        entity["qualities"] = [q.dump() for q in self.qualities]
+        return KitOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
@@ -5897,13 +5964,24 @@ def run():
 
     sys.exit(ui.exec())
 
+def preDev():
+    testCaseDict = json.load(open("test-case.json", "r"))
+    testCaseDict["uri"]="test-case"
+    kit = Kit.parse(testCaseDict)
+    dumpedKit = kit.dump()
+    testDesign = DesignContext.model_construct(kit.designs[0].model_dump())
+    with open("test-case-cleaned.json", "w") as f:
+        json.dump(testDesign.model_dump(), f)
+
 def dev():
     logger.debug("Starting debugpy for semio engine")
     import debugpy
     debugpy.listen(("0.0.0.0", 5678))  # Start debug server
     logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
+    preDev()
     run()
+
 
 if __name__ == "__main__":
     run()
