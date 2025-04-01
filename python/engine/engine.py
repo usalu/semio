@@ -204,7 +204,7 @@ TYPES_MAX = 256
 PIECES_MAX = 512
 DESIGNS_MAX = 128
 KITS_MAX = 64
-DESCRIPTION_LENGTH_LIMIT = 2560 # TODO: Change all types to be 256
+DESCRIPTION_LENGTH_LIMIT = 2560  # TODO: Change all types to be 256
 ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
@@ -584,7 +584,7 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         if isinstance(input, str):
             return cls.model_validate_json(input)
         return cls.model_validate(input)
-    
+
     def dump(self) -> "Output":
         """📦 Dump the entity to a dictionary."""
         return self.model_dump()
@@ -751,17 +751,17 @@ class QualityProps(
     QualityNameField,
     Props,
 ):
-    """🎫 The props of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityInput(
     QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
 ):
-    """↘️ The input for a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
-    """📑 The context of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class QualityOutput(
@@ -771,7 +771,7 @@ class QualityOutput(
     QualityNameField,
     Output,
 ):
-    """↗️ The output of a quality."""
+    """📏 A quality is a named value with a unit and a definition."""
 
 
 class Quality(
@@ -1662,7 +1662,7 @@ class Plane(Table, table=True):
         entity.yAxis = yAxis
 
         return entity
-    
+
     def dump(self) -> PlaneOutput:
         entity = {**PlaneOriginField.model_validate(self).model_dump()}
         entity["xAxis"] = self.xAxis
@@ -2234,7 +2234,7 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         except KeyError:
             pass
         return entity
-    
+
     def dump(self) -> "PortOutput":
         entity = {**PortProps.model_validate(self).model_dump()}
         entity["point"] = self.point.dump()
@@ -2242,8 +2242,6 @@ class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table
         entity["compatibleFamilies"] = self.compatibleFamilies
         entity["qualities"] = [q.dump() for q in self.qualities]
         return PortOutput(**entity)
-        
-
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
@@ -2623,7 +2621,7 @@ class Type(
         except KeyError:
             pass
         return entity
-    
+
     def dump(self) -> "TypeOutput":
         entity = {**TypeProps.model_validate(self).model_dump()}
         entity["representations"] = [r.dump() for r in self.representations]
@@ -2631,7 +2629,6 @@ class Type(
         entity["qualities"] = [q.dump() for q in self.qualities]
         entity["authors"] = [a.dump() for a in self.authors]
         return TypeOutput(**entity)
-
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
@@ -2718,7 +2715,12 @@ class PieceId(PieceIdField, Id):
 
 
 class PieceProps(
-    PieceCenterField, PiecePlaneField, PieceTypeField, PieceDescriptionField, PieceIdField, Props
+    PieceCenterField,
+    PiecePlaneField,
+    PieceTypeField,
+    PieceDescriptionField,
+    PieceIdField,
+    Props,
 ):
     """🎫 The props of a piece."""
 
@@ -2836,7 +2838,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     """🔑 The optional foreign primary key of the plane of the piece in the database."""
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    center_x: typing.Optional[float] = sqlmodel.Field(
+    centerX: typing.Optional[float] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "center_x",
             sqlalchemy.Float(),
@@ -2844,7 +2846,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         exclude=True,
     )
     """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    center_y: typing.Optional[float] = sqlmodel.Field(
+    centerY: typing.Optional[float] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "center_y",
             sqlalchemy.Float(),
@@ -3469,7 +3471,7 @@ class Connection(
         except KeyError:
             pass
         return entity
-    
+
     def dump(self) -> "ConnectionOutput":
         entity = {**ConnectionProps.model_validate(self).model_dump()}
         entity["connected"] = self.connected.dump()
@@ -3791,7 +3793,7 @@ class Design(
         except KeyError:
             pass
         return entity
-    
+
     def dump(self) -> "DesignOutput":
         entity = {**DesignProps.model_validate(self).model_dump()}
         entity["pieces"] = [p.dump() for p in self.pieces]
@@ -4003,6 +4005,27 @@ class KitInput(
     """📏 The qualities of the kit."""
 
 
+class KitContext(
+    KitDescriptionField,
+    KitNameField,
+    Context,
+):
+    """🗃️ A kit is a collection of types and designs."""
+
+    types: list[TypeContext] = sqlmodel.Field(
+        default_factory=list, description="🧩 The types of the kit."
+    )
+    """🧩 The types of the kit."""
+    designs: list[DesignContext] = sqlmodel.Field(
+        default_factory=list, description="🏙️ The designs of the kit."
+    )
+    """🏙️ The designs of the kit."""
+    qualities: list[QualityContext] = sqlmodel.Field(
+        default_factory=list, description="📏 The qualities of the kit."
+    )
+    """📏 The qualities of the kit."""
+
+
 class KitOutput(
     KitUpdatedField,
     KitCreatedField,
@@ -4018,7 +4041,7 @@ class KitOutput(
     KitUriField,
     Output,
 ):
-    """↗️ The output of a kit."""
+    """🗃️ A kit is a collection of types and designs."""
 
     types: list[TypeOutput] = sqlmodel.Field(
         default_factory=list, description="🧩 The types of the kit."
@@ -4098,7 +4121,7 @@ class Kit(
         except KeyError:
             pass
         return entity
-    
+
     def dump(self) -> "KitOutput":
         entity = {**KitProps.model_validate(self).model_dump()}
         entity["types"] = [t.dump() for t in self.types]
@@ -5082,7 +5105,7 @@ designResponseFormat = json.loads(
 
 
 def predictDesign(
-    description: str, types: list[TypeContext], design: DesignContext | None = None
+    description: str, types: list[TypeContext], design: DesignInput | None = None
 ) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
     prompt = designGenerationPromptTemplate.render(
@@ -5759,6 +5782,21 @@ async def predict_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
+@rest.post("/prepare/kit")
+async def prepare_kit(
+    request: fastapi.Request, kit: KitInput = fastapi.Body(...)
+) -> KitContext:
+    try:
+        return kit
+    except ClientError as e:
+        statusCode = 400
+        error = e
+    except Exception as e:
+        statusCode = 500
+        error = e
+    return fastapi.Response(content=str(error), status_code=statusCode)
+
+
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -5795,6 +5833,12 @@ def custom_openapi():
         summary="This is the local rest API of the semio engine.",
         routes=rest.routes,
     )
+    # Prepend `/api` to all paths in the OpenAPI schema
+    updated_paths = {}
+    for path, path_item in openapi_schema["paths"].items():
+        updated_paths[f"/api{path}"] = path_item
+    openapi_schema["paths"] = updated_paths
+
     changeValues(openapi_schema, "$ref", lambda x: x.removesuffix("Output"))
     changeValues(openapi_schema, "title", lambda x: x.removesuffix("Output"))
     changeKeys(openapi_schema, lambda x: x.removesuffix("Output"))
@@ -5964,18 +6008,22 @@ def run():
 
     sys.exit(ui.exec())
 
+
 def preDev():
-    testCaseDict = json.load(open("test-case.json", "r"))
-    testCaseDict["uri"]="test-case"
+    """Runs before dev()"""
+    testCaseDict = json.load(open("temp/test-case.json", "r"))
+    testCaseDict["uri"] = "test-case"
     kit = Kit.parse(testCaseDict)
     dumpedKit = kit.dump()
-    testDesign = DesignContext.model_construct(kit.designs[0].model_dump())
-    with open("test-case-cleaned.json", "w") as f:
+    testDesign = DesignContext(**dumpedKit.designs[0].model_dump())
+    with open("temp/test-case-cleaned.json", "w") as f:
         json.dump(testDesign.model_dump(), f)
+
 
 def dev():
     logger.debug("Starting debugpy for semio engine")
     import debugpy
+
     debugpy.listen(("0.0.0.0", 5678))  # Start debug server
     logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
