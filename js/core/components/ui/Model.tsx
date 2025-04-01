@@ -18,10 +18,10 @@ const Model: FC<ModelProps> = ({ src, environment }) => {
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <Canvas>
-                <Stage environment={null}>
+                <Stage environment={null} shadows={false}>
+                    <OrbitControls enablePan={false} />
+                    <ambientLight intensity={1} />
                     <Suspense fallback={null}>
-                        <OrbitControls enablePan={false} />
-                        <ambientLight intensity={1} />
                         <Gltf src={src} />
                     </Suspense>
                 </Stage>
