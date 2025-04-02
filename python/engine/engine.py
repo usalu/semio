@@ -6011,13 +6011,13 @@ def run():
 
 def preDev():
     """Runs before dev()"""
-    testCaseDict = json.load(open("temp/test-case.json", "r"))
-    testCaseDict["uri"] = "test-case"
-    kit = Kit.parse(testCaseDict)
-    dumpedKit = kit.dump()
-    testDesign = DesignContext(**dumpedKit.designs[0].model_dump())
-    with open("temp/test-case-cleaned.json", "w") as f:
-        json.dump(testDesign.model_dump(), f)
+    # testCaseDict = json.load(open("temp/test-case.json", "r"))
+    # testCaseDict["uri"] = "test-case"
+    # kit = Kit.parse(testCaseDict)
+    # dumpedKit = kit.dump()
+    # testDesign = DesignContext(**dumpedKit.designs[0].model_dump())
+    # with open("temp/test-case-cleaned.json", "w") as f:
+    #     json.dump(testDesign.model_dump(), f)
 
 
 def dev():

@@ -6,12 +6,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Ava
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
 
-type PieceNode = Node<{ piece: Piece; selected: boolean }, 'piece'>;
+type PieceNodeProps = {
+    piece: Piece;
+    selected?: boolean;
+};
+
+type PieceNode = Node<PieceNodeProps, 'piece'>;
 type DiagramNode = PieceNode;
 
 type ConnectionEdge = Edge<{ connection: Connection }, 'connection'>;
 type DiagramEdge = ConnectionEdge;
-// type PortHandleProps = HandleProps & { port: Port };
+
 type PortHandleProps = { port: Port };
 
 const portPositionStyle = (port: Port): { x: number, y: number } => {
@@ -25,36 +30,51 @@ const portPositionStyle = (port: Port): { x: number, y: number } => {
     return {
         x: radius * Math.sin(angle),
         y: -(radius * Math.cos(angle) - radius),
-    }
-}
+    };
+};
 
 const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
-    // TODO: If port is default port then t is undefined and the whole piece should be clickable
     const { x, y } = portPositionStyle(port);
 
-    return <Handle
-        id={port.id_}
-        type="source"
-        // style={portPositionStyle(port)}
-        style={{ left: x + ICON_WIDTH / 2, top: y }
-        }
-        position={Position.Top}
-    />
+    return (
+        <Handle
+            id={port.id_}
+            type="source"
+            style={{ left: x + ICON_WIDTH / 2, top: y }}
+            position={Position.Top}
+        />
+    );
 };
 
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected }) => {
     const { piece: { id_ } } = data;
     return (
-        <div className={`h-[${ICON_WIDTH}] w-[${ICON_WIDTH}]`
-        }>
-            <Avatar className={`cursor-pointer ${selected ? 'bg-primary text-light' : 'bg-light text-darkGrey'}`}>
-                {/* <AvatarImage src="https://github.com/usalu.png" /> */}
-                <AvatarFallback>Pc</AvatarFallback>
-            </Avatar>
-            < PortHandle port={{ id_: 'top', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            < PortHandle port={{ id_: 'e', t: 0.25, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            < PortHandle port={{ id_: 'bottom', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            < PortHandle port={{ id_: 'sw', t: 0.66, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+        <div>
+            <svg
+                width={ICON_WIDTH}
+                height={ICON_WIDTH}
+                className="cursor-pointer"
+            >
+                <circle
+                    cx={ICON_WIDTH / 2}
+                    cy={ICON_WIDTH / 2}
+                    r={ICON_WIDTH / 2}
+                    className={selected ? 'fill-primary' : 'fill-light'}
+                />
+                <text
+                    x={ICON_WIDTH / 2}
+                    y={ICON_WIDTH / 2}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className={selected ? 'text-dark text-xs font-bold' : 'text-light text-xs font-bold'}
+                >
+                    {id_}
+                </text>
+            </svg>
+            <PortHandle port={{ id_: 'top', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            <PortHandle port={{ id_: 'e', t: 0.25, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            <PortHandle port={{ id_: 'bottom', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            <PortHandle port={{ id_: 'sw', t: 0.66, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
         </div>
     );
 };
@@ -123,16 +143,16 @@ function Cursor({ color, x = 0, y = 0 }: CursorProps) {
 
 const DiagramCore: FC = () => {
 
-    const initialNodes = [
-        { type: 'piece', id: 'base', position: { x: 0, y: 100 }, data: { piece: { id_: 'base' } } },
-        { type: 'piece', id: 'tambour', position: { x: 0, y: 0 }, data: { piece: { id_: 'tambour' } } },
+    const initialNodes: PieceNode[] = [
+        { type: 'piece', id: 'b', position: { x: 0, y: 100 }, data: { piece: { id_: 'b', type: { name: "base" } } } },
+        { type: 'piece', id: 't', position: { x: 0, y: 0 }, data: { piece: { id_: 't', type: { name: "tambour" } } } },
     ];
-    const initialEdges = [{ type: 'connection', id: 'base:top -- bottom:tambour', source: 'base', sourceHandle: 'top', target: 'tambour', targetHandle: 'bottom' }];
+    const initialEdges: ConnectionEdge[] = [{ type: 'connection', id: 'base:top -- bottom:tambour', source: 'base', sourceHandle: 'top', target: 'tambour', targetHandle: 'bottom' }];
 
     // const setPresence = usePresenceSetter()
     // const presenceMap = usePresence();
 
-    const viewport = useViewport();
+    // const viewport = useViewport();
 
     // const onUpdateCursor = (event) => {
     //     if (event === null || event === undefined) {
@@ -245,24 +265,21 @@ const Diagram: FC = () => {
     //     id: 'diagram',
     // });
 
-    // return (
-    //     <ReactFlowProvider >
-    //         <DiagramCore />
-    //     </ReactFlowProvider>
-    //     // <div ref={setNodeRef}>
-    //     // </div>
-    // );
-    const initialNodes = [
-        { id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
-        { id: '2', position: { x: 0, y: 100 }, data: { label: '2' } },
-    ];
-    const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
     return (
-        <div className="bg-pink-600" style={{ height: '100vh' }}>
-            <text className="p-6 text-9xl text-pink-600">Hello</text>
-            <ReactFlow nodes={initialNodes} edges={initialEdges} />
+        <div className="h-screen">
+            <ReactFlowProvider >
+                <DiagramCore />
+            </ReactFlowProvider>
+            {/* // <div ref={setNodeRef}>
+        // </div> */}
         </div>
     );
+
+    // return (
+    //     <div className="bg-pink-600" style={{ height: '100vh' }}>
+    //         <DiagramCore />
+    //     </div>
+    // );
 };
 
 export default Diagram;

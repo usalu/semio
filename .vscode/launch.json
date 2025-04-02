@@ -117,6 +117,19 @@
         //     "preLaunchTask": "build icons"
         // },
         {
+            "name": "build engine",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "nx",
+                "build",
+                "@semio/engine"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "build everything js",
             "type": "node",
             "request": "launch",

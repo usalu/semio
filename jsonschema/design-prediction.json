@@ -6,7 +6,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the connection.",
-                    "maxLength": 4096,
+                    "maxLength": 2560,
                     "title": "Description",
                     "type": "string"
                 },
@@ -107,7 +107,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the piece.",
-                    "maxLength": 4096,
+                    "maxLength": 2560,
                     "title": "Description",
                     "type": "string"
                 },
@@ -182,7 +182,7 @@
         "description": {
             "default": "",
             "description": "\ud83d\udcac The optional human-readable description of the design.",
-            "maxLength": 4096,
+            "maxLength": 2560,
             "title": "Description",
             "type": "string"
         },

@@ -21,12 +21,8 @@ pyinstaller `
     --copy-metadata sqlalchemy `
     --copy-metadata loguru `
     --hidden-import=loguru `
-    --add-data "../../icons/semio_16x16.png;icons/" `
-    --add-data "../../icons/semio_32x32.png;icons/" `
-    --add-data "../../icons/semio_48x48.png;icons/" `
-    --add-data "../../icons/semio_120x120.png;icons/" `
-    --add-data "../../icons/semio_256x256.png;icons/" `
-    --icon "..\..\icons\semio.ico" `
+    --add-data "../../assets/icons/semio_512x512.png;icons/" `
+    --icon "../../assets/icons/semio.ico" `
     engine.py
 
 if (-not $SkipPostBuild) {
