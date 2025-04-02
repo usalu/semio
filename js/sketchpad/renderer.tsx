@@ -4,11 +4,13 @@ import ReactDOM from 'react-dom/client'
 
 import './globals.css'
 
-// import Diagram from '@semio/js'
+import { Diagram } from '@semio/js'
 
 function App() {
     return (
-        <h1 className='text-pink-600 text-center'>semio </h1>
+        <div className="h-100 w-screen">
+            <Diagram></Diagram>
+        </div>
     );
 }
 

@@ -7,6 +7,8 @@
 /* @import "tailwindcss/preflight.css" layer(base); */
 @import "tailwindcss/utilities.css" layer(utilities);
 
+@import "@semio/js/theme.css";
+
 /* Dark mode colors. */
 :root {
     --sl-color-accent-low: #001117;

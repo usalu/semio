@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Ava
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
+// import "@semio/js/globals.css";
 
 type PieceNodeProps = {
     piece: Piece;
@@ -266,7 +267,7 @@ const Diagram: FC = () => {
     // });
 
     return (
-        <div className="h-screen">
+        <div className="h-100 w-200">
             <ReactFlowProvider >
                 <DiagramCore />
             </ReactFlowProvider>
