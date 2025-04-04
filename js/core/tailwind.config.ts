@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  // content: ["./**/*.{ts,tsx,mdx}"],
-  // content: ["./components/**/*.{ts,tsx}"],
+  content: ["./**/*.{ts,tsx,mdx}"],
   plugins: [],
 } satisfies Config;

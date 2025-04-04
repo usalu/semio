@@ -4,12 +4,12 @@ import ReactDOM from 'react-dom/client'
 
 import './globals.css'
 
-import { Diagram } from '@semio/js'
+import { Diagram, Sketchpad } from '@semio/js'
 
 function App() {
     return (
         <div className="h-100 w-screen">
-            <Diagram></Diagram>
+            <Sketchpad></Sketchpad>
         </div>
     );
 }

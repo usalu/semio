@@ -26,6 +26,7 @@
     "motion": "^12.4.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-resizable-panels": "^2.1.7",
     "three": "^0.174.0",
     "yjs": "^13.6.24"
   },
