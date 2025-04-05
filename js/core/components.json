@@ -11,11 +11,11 @@
         "prefix": ""
     },
     "aliases": {
-        "components": "@semio/js/components",
-        "ui": "@semio/js/components/ui",
-        "hooks": "@semio/js/hooks",
-        "lib": "@semio/js/lib",
-        "utils": "@semio/js/lib/utils"
+        "components": "components",
+        "ui": "components/ui",
+        "hooks": "hooks",
+        "lib": "lib",
+        "utils": "lib/utils"
     },
     "iconLibrary": "lucide"
 }

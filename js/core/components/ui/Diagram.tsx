@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Ava
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
-// import "@semio/js/globals.css";
+import "@semio/js/globals.css";
 
 type PieceNodeProps = {
     piece: Piece;
@@ -388,28 +388,13 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
                     ></Cursor>
                 );
             })} */}
-            <Controls />
+            {fullscreen && <Controls />}
             {fullscreen && < MiniMap nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
                 </div>
             </ViewportPortal>
-            {/* <Background
-                    id="2"
-                    gap={100}
-                    lineWidth={3}
-                    color={colors.lightGrey}
-                    variant={BackgroundVariant.Lines}
-                />
-                <Background
-                    id="1"
-                    color={colors.light}
-                    gap={50}
-                    lineWidth={1}
-                    variant={BackgroundVariant.Lines}
-                /> */}
-
         </ReactFlow>
     )
 }
@@ -425,7 +410,7 @@ const Diagram: FC<DiagramProps> = ({ fullscreen }) => {
     // });
 
     return (
-        <div className="h-full w-full">
+        <div className="h-full w-full bg-dark">
             <ReactFlowProvider >
                 <DiagramCore fullscreen={fullscreen} />
             </ReactFlowProvider>

@@ -1,27 +1,43 @@
-import React, { FC, Suspense } from 'react';
-import { Folder, FlaskConical } from 'lucide-react';
+import { FC, Suspense, ReactNode, useState } from 'react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight } from 'lucide-react';
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
-import { Diagram } from '@semio/js';
+import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
+import { Diagram, Viewer, Type } from '@semio/js';
+
+import { default as tambour } from '../../../../assets/semio/type_tambour.json';
+import { default as capsuleBackslash } from '../../../../assets/semio/type_capsule_backslash.json';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
 
 
-type TreeItem = {
-    children?: TreeItem[];
-}
+const types: Type[] = [tambour, capsuleBackslash]
 
 type TreeSection = {
     name: string;
-    items: TreeItem[];
+    children: ReactNode;
 }
 
 type Tree = {
     id: string;
     name: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     sections: TreeSection[];
+}
+
+interface TypeAvatarProps {
+    type: Type
+}
+const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
+    return (
+        <Avatar>
+            {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
+            <AvatarImage src="https://github.com/shadcn.png" />
+            {/* <AvatarFallback>{type.name}</AvatarFallback> */}
+        </Avatar>
+    );
 }
 
 const ExplorerTree: Tree = {
@@ -31,12 +47,23 @@ const ExplorerTree: Tree = {
     sections: [
         {
             name: 'Types',
-            items: [],
+            children: (
+                <div className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+                    style={{
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+                        gridAutoRows: '40px',
+                    }}
+                >
+                    {types.map((type) => (
+                        <TypeAvatar key={type.name + type.variant} type={type} />
+                    ))}
+                </div>
+            )
         },
-        {
-            name: 'Designs',
-            items: [],
-        }
+        // {
+        //     name: 'Designs',
+        //     children: ()
+        // }
     ],
 }
 
@@ -45,14 +72,16 @@ const TestTree: Tree = {
     name: 'Test',
     icon: <FlaskConical />,
     sections: [
-        {
-            name: 'Types',
-            items: [],
-        },
-        {
-            name: 'Designs',
-            items: [],
-        }
+        // {
+        //     name: 'Types',
+        //     items: [
+        //         <Avatar />,
+        //     ],
+        // },
+        // {
+        //     name: 'Designs',
+        //     items: [],
+        // }
     ],
 }
 
@@ -61,26 +90,32 @@ const trees = [
     TestTree,
 ]
 
+const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
+    const [open, setOpen] = useState(true);
+    return (
+        <Collapsible className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+            open={open}
+            onOpenChange={setOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between">
+                {open ? <ChevronDown /> : <ChevronRight />}
+                {section.name}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                {section.children}
+            </CollapsibleContent>
+        </Collapsible>
+    );
+};
+
 interface TreeProps {
     treeId: string;
 }
-const Tree: FC<TreeProps> = ({ treeId }) => {
+const TreeComponent: FC<TreeProps> = ({ treeId }) => {
     const tree = trees.find(tree => tree.id === treeId);
     return (
         <ResizablePanel defaultSize={300}>
             {tree.sections.map((section, index) => (
-                <div key={index} className="">
-                    <div className="">
-                        <span className="">{section.name}</span>
-                    </div>
-                    <div className="">
-                        {section.items.map((item, index) => (
-                            <div key={index} className="">
-                                {/* Render item here */}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <TreeSectionComponent key={index} section={section} />
             ))}
         </ResizablePanel>
     );
@@ -93,13 +128,13 @@ interface TreeBarProps {
 }
 const TreeBar: FC<TreeBarProps> = ({ activeTreeId, onTreeSelect }) => {
     return (
-        <div className="flex h-full w-12 flex-col items-center justify-top border-r">
+        <div className="flex h-full w-12 flex-col items-end justify-top border-r">
             {trees.map((tree) => (
                 <div
                     key={tree.id}
-                    className={`w-10 h-10 flex items-center justify-center cursor-pointer ${tree.id === activeTreeId ? 'bg-gray-300' : ''
+                    className={`w-12 h-12 flex items-center justify-center cursor-pointer ${tree.id === activeTreeId ? 'border-l-3 border-primary' : ''
                         }`}
-                    onClick={() => onTreeSelect?.(tree.id)} // Add onClick event
+                    onClick={() => onTreeSelect?.(tree.id)}
                 >
                     {tree.icon}
                 </div>
@@ -112,12 +147,12 @@ interface TreeSiderProps {
 }
 const TreeSider: FC<TreeSiderProps> = ({ }) => {
 
-    const [activeTreeId, setActiveTreeId] = React.useState('explorer');
+    const [activeTreeId, setActiveTreeId] = useState('explorer');
 
     return (
         <>
             <TreeBar activeTreeId={activeTreeId} onTreeSelect={setActiveTreeId} />
-            <Tree treeId={activeTreeId} />
+            <TreeComponent treeId={activeTreeId} />
         </>
     );
 };
@@ -142,9 +177,7 @@ const Sketchpad: FC<SketchpadProps> = ({ }) => {
                                 </ResizablePanel>
                                 <ResizableHandle />
                                 <ResizablePanel defaultSize={400}>
-                                    <div className="flex h-full items-center justify-center p-6">
-                                        <span className="font-semibold">Three</span>
-                                    </div>
+                                    <Viewer />
                                 </ResizablePanel>
                             </ResizablePanelGroup>
                         </ResizablePanel>

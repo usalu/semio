@@ -1,2 +1,12 @@
 @import "tailwindcss";
 @import "@semio/js/theme.css";
+
+/* https: //reactflow.dev/learn/customization/theming */
+
+.react-flow {
+    --xy-background-color-default: var(--color-light) !important;
+}
+
+.react-flow.dark {
+    --xy-background-color-default: var(--color-dark) !important;
+}
