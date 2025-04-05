@@ -1,5 +1,14 @@
 import { FC, Suspense, ReactNode, useState } from 'react';
+import { Provider as JotaiProvider } from 'jotai';
 import { Folder, FlaskConical, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    useDraggable,
+    useDroppable
+} from '@dnd-kit/core';
 import {
     ResizableHandle,
     ResizablePanel,
@@ -8,12 +17,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { Diagram, Viewer, Type } from '@semio/js';
 
-import { default as tambour } from '../../../../assets/semio/type_tambour.json';
-import { default as capsuleBackslash } from '../../../../assets/semio/type_capsule_backslash.json';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
-
-
-const types: Type[] = [tambour, capsuleBackslash]
+import { createPortal } from 'react-dom';
+import { useAtomValue } from 'jotai';
+import { kitStore, metabolismKitAtom, metabolismTypesAtom } from '@semio/js/store';
 
 type TreeSection = {
     name: string;
@@ -31,12 +38,35 @@ interface TypeAvatarProps {
     type: Type
 }
 const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+        id: 'type-' + type.name + type.variant,
+    });
     return (
-        <Avatar>
+        <Avatar
+            ref={setNodeRef}
+            // className="cursor-pointer"
+            {...listeners}
+            {...attributes}>
             {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
             <AvatarImage src="https://github.com/shadcn.png" />
             {/* <AvatarFallback>{type.name}</AvatarFallback> */}
         </Avatar>
+    );
+}
+
+const Types: FC = () => {
+    const types = useAtomValue(metabolismTypesAtom);
+    return (
+        <div className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
+            style={{
+                gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+                gridAutoRows: '40px',
+            }}
+        >
+            {types.map((type) => (
+                <TypeAvatar key={type.name + type.variant} type={type} />
+            ))}
+        </div>
     );
 }
 
@@ -47,18 +77,7 @@ const ExplorerTree: Tree = {
     sections: [
         {
             name: 'Types',
-            children: (
-                <div className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-                    style={{
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
-                        gridAutoRows: '40px',
-                    }}
-                >
-                    {types.map((type) => (
-                        <TypeAvatar key={type.name + type.variant} type={type} />
-                    ))}
-                </div>
-            )
+            children: <Types />,
         },
         // {
         //     name: 'Designs',
@@ -160,43 +179,67 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
 interface SketchpadProps {
 }
 const Sketchpad: FC<SketchpadProps> = ({ }) => {
+    const types = useAtomValue(metabolismTypesAtom);
+
+    const [draggedId, setDraggedId] = useState<string>('');
+    const onDragStart = (event: DragStartEvent) => {
+        setDraggedId(event.active.id)
+    }
+
+    const onDragEnd = (event: DragEndEvent) => {
+        if (event.over && event.over.id === 'diagram') {
+            // relative coordinates in the diagram editor
+
+        }
+        setDraggedId('')
+    }
     return (
-        <div className="h-[800px] w-[1300px]">
-            <ResizablePanelGroup
-                direction="horizontal"
-                className="bg-dark text-light"
-            >
-                <TreeSider />
-                <ResizableHandle />
-                <ResizablePanel defaultSize={800}>
-                    <ResizablePanelGroup direction="vertical" className="border-l border-r">
-                        <ResizablePanel defaultSize={650}>
-                            <ResizablePanelGroup direction="horizontal" className="border-b">
-                                <ResizablePanel defaultSize={400} className="border-r">
-                                    <Diagram fullscreen={false} />
+        <JotaiProvider store={kitStore}>
+            <div className="h-[800px] w-[1300px]">
+                <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+                    <ResizablePanelGroup
+                        direction="horizontal"
+                        className="bg-dark text-light"
+                    >
+                        <TreeSider />
+                        <ResizableHandle />
+                        <ResizablePanel defaultSize={800}>
+                            <ResizablePanelGroup direction="vertical" className="border-l border-r">
+                                <ResizablePanel defaultSize={650}>
+                                    <ResizablePanelGroup direction="horizontal" className="border-b">
+                                        <ResizablePanel defaultSize={400} className="border-r">
+                                            <Diagram fullscreen={false} />
+                                        </ResizablePanel>
+                                        <ResizableHandle />
+                                        <ResizablePanel defaultSize={400}>
+                                            <Viewer />
+                                        </ResizablePanel>
+                                    </ResizablePanelGroup>
                                 </ResizablePanel>
                                 <ResizableHandle />
-                                <ResizablePanel defaultSize={400}>
-                                    <Viewer />
+                                <ResizablePanel defaultSize={150}>
+                                    <div className="flex h-full items-center justify-center p-6">
+                                        Console
+                                    </div>
                                 </ResizablePanel>
                             </ResizablePanelGroup>
                         </ResizablePanel>
                         <ResizableHandle />
-                        <ResizablePanel defaultSize={150}>
+                        <ResizablePanel defaultSize={200}>
                             <div className="flex h-full items-center justify-center p-6">
-                                Console
+                                <span className="font-semibold">Details</span>
                             </div>
                         </ResizablePanel>
                     </ResizablePanelGroup>
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={200}>
-                    <div className="flex h-full items-center justify-center p-6">
-                        <span className="font-semibold">Details</span>
-                    </div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
-        </div>
+                    {createPortal(
+                        <DragOverlay>
+                            {draggedId && (<TypeAvatar type={types[0]} />)}
+                        </DragOverlay>,
+                        document.body
+                    )}
+                </DndContext>
+            </div>
+        </JotaiProvider>
     );
 };
 

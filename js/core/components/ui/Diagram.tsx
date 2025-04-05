@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Ava
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
 import "@semio/js/globals.css";
+import { useDroppable } from '@dnd-kit/core';
 
 type PieceNodeProps = {
     piece: Piece;
@@ -150,6 +151,11 @@ interface DiagramCoreProps {
 
 
 const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
+
+
+    const { setNodeRef } = useDroppable({
+        id: 'diagram',
+    });
 
     const types: Type[] = [
         { name: 'base', ports: [{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }] },
@@ -333,6 +339,7 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
 
     return (
         <ReactFlow
+            ref={setNodeRef}
             colorMode="dark"
             nodes={nodes}
             edges={edges}

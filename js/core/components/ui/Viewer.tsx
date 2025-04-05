@@ -12,7 +12,6 @@ const Viewer: FC<ViewerProps> = ({ }) => {
             <Canvas>
                 <OrbitControls enablePan={false} />
                 <ambientLight intensity={1} />
-                <directionalLight position={[5, 5, 5]} intensity={1} />
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
