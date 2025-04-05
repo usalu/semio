@@ -142,7 +142,12 @@ function Cursor({ color, x = 0, y = 0 }: CursorProps) {
     );
 }
 
-const DiagramCore: FC = () => {
+interface DiagramCoreProps {
+    fullscreen?: boolean;
+}
+
+
+const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
 
     const initialNodes: PieceNode[] = [
         { type: 'piece', id: 'b', position: { x: 0, y: 100 }, data: { piece: { id_: 'b', type: { name: "base" } } } },
@@ -235,7 +240,7 @@ const DiagramCore: FC = () => {
                 );
             })} */}
             <Controls />
-            < MiniMap nodeComponent={MiniMapNode} />
+            {fullscreen && < MiniMap nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
@@ -260,16 +265,20 @@ const DiagramCore: FC = () => {
     )
 }
 
-const Diagram: FC = () => {
+interface DiagramProps {
+    fullscreen?: boolean;
+}
+
+const Diagram: FC<DiagramProps> = ({ fullscreen }) => {
 
     // const { isOver, setNodeRef } = useDroppable({
     //     id: 'diagram',
     // });
 
     return (
-        <div className="h-100 w-200">
+        <div className="h-full w-full">
             <ReactFlowProvider >
-                <DiagramCore />
+                <DiagramCore fullscreen={fullscreen} />
             </ReactFlowProvider>
             {/* // <div ref={setNodeRef}>
         // </div> */}

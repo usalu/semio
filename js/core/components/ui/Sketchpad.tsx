@@ -5,34 +5,33 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
+import { Diagram } from '@semio/js';
 
 interface SketchpadProps {
 }
 const Sketchpad: FC<SketchpadProps> = ({ }) => {
     return (
-        <div className="h-full w-full">
+        <div className="h-[800px] w-[1300px]">
 
             <ResizablePanelGroup
                 direction="horizontal"
-                className="max-w-md rounded-lg border md:min-w-[450px]"
+                className="bg-dark text-light"
             >
-                <ResizablePanel defaultSize={75}>
+                <ResizablePanel defaultSize={300}>
                     <div className="flex h-full items-center justify-center p-6">
-                        <span className="font-semibold">Tool</span>
+                        Tool
                     </div>
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel defaultSize={75}>
-                    <ResizablePanelGroup direction="vertical">
-                        <ResizablePanel defaultSize={75}>
-                            <ResizablePanelGroup direction="horizontal">
-                                <ResizablePanel defaultSize={25}>
-                                    <div className="flex h-full items-center justify-center p-6">
-                                        <span className="font-semibold">Diagram</span>
-                                    </div>
+                <ResizablePanel defaultSize={800}>
+                    <ResizablePanelGroup direction="vertical" className="border-l border-r">
+                        <ResizablePanel defaultSize={400}>
+                            <ResizablePanelGroup direction="horizontal" className="border-b">
+                                <ResizablePanel defaultSize={400} className="border-r">
+                                    <Diagram fullscreen={false} />
                                 </ResizablePanel>
                                 <ResizableHandle />
-                                <ResizablePanel defaultSize={75}>
+                                <ResizablePanel defaultSize={400}>
                                     <div className="flex h-full items-center justify-center p-6">
                                         <span className="font-semibold">Three</span>
                                     </div>
@@ -40,15 +39,15 @@ const Sketchpad: FC<SketchpadProps> = ({ }) => {
                             </ResizablePanelGroup>
                         </ResizablePanel>
                         <ResizableHandle />
-                        <ResizablePanel defaultSize={75}>
+                        <ResizablePanel defaultSize={200}>
                             <div className="flex h-full items-center justify-center p-6">
-                                <span className="font-semibold">Console</span>
+                                Console
                             </div>
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel defaultSize={100}>
+                <ResizablePanel defaultSize={200}>
                     <div className="flex h-full items-center justify-center p-6">
                         <span className="font-semibold">Details</span>
                     </div>
