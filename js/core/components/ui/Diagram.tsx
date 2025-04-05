@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
+import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
 import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
 
@@ -72,9 +72,9 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                     {id_}
                 </text>
             </svg>
-            <PortHandle port={{ id_: 'top', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            <PortHandle port={{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
             <PortHandle port={{ id_: 'e', t: 0.25, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            <PortHandle port={{ id_: 'bottom', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            <PortHandle port={{ id_: 's', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
             <PortHandle port={{ id_: 'sw', t: 0.66, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
         </div>
     );
@@ -92,6 +92,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
     targetHandleId,
 }) => {
     const { getNode } = useReactFlow();
+
     // const sourceHandle = getNode(source)?.handles.find((handle) => handle.id === sourceHandleId);
     // const targetHandle = getNode(target)?.handles.find((handle) => handle.id === targetHandleId);
 
@@ -103,7 +104,8 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
     // const y = (centerY / length) * ICON_WIDTH;
 
     // const path = `M ${sourceX} ${sourceY} C ${sourceX + x} ${sourceY + y}, ${targetX - x} ${targetY - y}, ${targetX} ${targetY}`;
-    const path = `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+    const HANDLE_HEIGHT = 5;
+    const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + + HANDLE_HEIGHT / 2}`;
     return <BaseEdge path={path} />;
 };
 
@@ -149,11 +151,15 @@ interface DiagramCoreProps {
 
 const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
 
+    const types: Type[] = [
+        { name: 'base', ports: [{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }] },
+        { name: 'tambour', ports: [{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }] },
+    ];
     const initialNodes: PieceNode[] = [
         { type: 'piece', id: 'b', position: { x: 0, y: 100 }, data: { piece: { id_: 'b', type: { name: "base" } } } },
         { type: 'piece', id: 't', position: { x: 0, y: 0 }, data: { piece: { id_: 't', type: { name: "tambour" } } } },
     ];
-    const initialEdges: ConnectionEdge[] = [{ type: 'connection', id: 'base:top -- bottom:tambour', source: 'base', sourceHandle: 'top', target: 'tambour', targetHandle: 'bottom' }];
+    const initialEdges: ConnectionEdge[] = [{ type: 'connection', id: 'base:top -- bottom:tambour', source: 'b', sourceHandle: 't', target: 't', targetHandle: 'sw' }];
 
     // const setPresence = usePresenceSetter()
     // const presenceMap = usePresence();
@@ -177,13 +183,154 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
     const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
     const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
+    // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    // const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    // const onConnect = useCallback(
+    //     (params: any) => setEdges((eds) => addEdge(params, eds)),
+    //     [setEdges],
+    // );
+
+    const MIN_DISTANCE = 100;
+    const store = useStoreApi();
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const { getInternalNode } = useReactFlow();
 
     const onConnect = useCallback(
-        (params: any) => setEdges((eds) => addEdge(params, eds)),
+        (params) => setEdges((eds) => addEdge(params, eds)),
         [setEdges],
     );
+
+    const getClosestEdge = useCallback((node) => {
+        const { nodeLookup } = store.getState();
+        const internalNode = getInternalNode(node.id);
+
+        const closestNode = Array.from(nodeLookup.values()).reduce(
+            (res, n) => {
+                if (n.id !== internalNode.id) {
+                    const dx =
+                        n.internals.positionAbsolute.x -
+                        internalNode.internals.positionAbsolute.x;
+                    const dy =
+                        n.internals.positionAbsolute.y -
+                        internalNode.internals.positionAbsolute.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+
+                    if (d < res.distance && d < MIN_DISTANCE) {
+                        res.distance = d;
+                        res.node = n;
+                    }
+                }
+
+                return res;
+            },
+            {
+                distance: Number.MAX_VALUE,
+                node: null,
+            },
+        );
+
+        if (!closestNode.node) {
+            return null;
+        }
+
+        // '// Find the closest source and target handles
+        // let closestInternalHandle = null;
+        // let closestClosestHandle = null;
+        // let minHandleDistance = MIN_DISTANCE + ICON_WIDTH;
+
+        // console.log('closestNode', internalNode['type'], closestNode.node['type']);
+        // const internalHandles = nodeTypes[].handles || [];
+        // const closestHandles = nodeTypes[closestNode['type']].handles || [];
+
+        // internalHandles.forEach((sourceHandle) => {
+        //     closestHandles.forEach((targetHandle) => {
+        //         const dx =
+        //             targetHandle.positionAbsolute.x -
+        //             sourceHandle.positionAbsolute.x;
+        //         const dy =
+        //             targetHandle.positionAbsolute.y -
+        //             sourceHandle.positionAbsolute.y;
+        //         const handleDistance = Math.sqrt(dx * dx + dy * dy);
+        //         console.log('handleDistance', handleDistance, sourceHandle.id, targetHandle.id);
+
+        //         if (handleDistance < minHandleDistance) {
+        //             minHandleDistance = handleDistance;
+        //             closestInternalHandle = sourceHandle;
+        //             closestClosestHandle = targetHandle;
+        //         }
+        //     });
+        // });
+
+        // if (!closestInternalHandle || !closestClosestHandle) {
+        //     return null;
+        // }
+
+        const closeNodeIsSource =
+            closestNode.node.internals.positionAbsolute.x <
+            internalNode.internals.positionAbsolute.x;
+
+        return {
+            id: closeNodeIsSource
+                ? `${closestNode.node.id}-${node.id}`
+                : `${node.id}-${closestNode.node.id}`,
+            type: 'connection',
+            source: closeNodeIsSource ? closestNode.node.id : node.id,
+            // sourceHandle: closeNodeIsSource ? closestInternalHandle.id : closestClosestHandle.id,
+            target: closeNodeIsSource ? node.id : closestNode.node.id,
+            // targetHandle: closeNodeIsSource ? closestClosestHandle.id : closestInternalHandle.id,
+        };
+    }, []);
+
+    const onNodeDrag = useCallback(
+        (_, node) => {
+            const closeEdge = getClosestEdge(node);
+
+            setEdges((es) => {
+                const nextEdges = es.filter((e) => e.className !== 'temp');
+
+                if (
+                    closeEdge &&
+                    !nextEdges.find(
+                        (ne) =>
+                            ne.source === closeEdge.source && ne.target === closeEdge.target,
+                    )
+                ) {
+                    closeEdge.className = 'temp';
+                    nextEdges.push(closeEdge);
+                }
+
+                return nextEdges;
+            });
+        },
+        [getClosestEdge, setEdges],
+    );
+
+    const onNodeDragStop = useCallback(
+        (_, node) => {
+            const closeEdge = getClosestEdge(node);
+
+            setEdges((es) => {
+                const nextEdges = es.filter((e) => e.className !== 'temp');
+
+                if (
+                    closeEdge &&
+                    !nextEdges.find(
+                        (ne) =>
+                            ne.source === closeEdge.source && ne.target === closeEdge.target,
+                    )
+                ) {
+                    nextEdges.push(closeEdge);
+                }
+
+                return nextEdges;
+            });
+        },
+        [getClosestEdge],
+    );
+
+
     return (
         <ReactFlow
             colorMode="dark"
@@ -193,11 +340,13 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
             edgeTypes={edgeTypes}
             connectionMode={ConnectionMode.Loose}
             elementsSelectable
-            fitView
+            // fitView
             minZoom={0.1}
             maxZoom={5}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            onNodeDrag={onNodeDrag}
+            onNodeDragStop={onNodeDragStop}
             onConnect={onConnect}
             // onMoveEnd={onUpdateCursor}
             // onPointerLeave={() =>
