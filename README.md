@@ -1,4 +1,4 @@
-> 👀 Do you want to develop the next AI with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
+> 👀 Do you want to develop the next design AI with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
 
 <p align="center">
     <a href="https://docs.semio-tech.com">
@@ -27,37 +27,65 @@
 
 You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
 
-# 🚀 Getting started
+# 👋 Hello dev
 
-## 🏘️ Examples
+> [!NOTE]
+> Are you a user of semio? Then you probably want to visit our [docs](https://docs.semio-tech.com) 👀
 
-### 🫀 Metabolism
+Glad to see you!
 
-<!-- ![Metabolism getting started](https://raw.githubusercontent.com/usalu/metabolism/main-tag/docs/getting-started.gif) -->
+Let me walk you throw 🚶
 
-![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/main-tag/docs/design-variants.png)
+# 🦑 [Monorepo](https://github.com/usalu/semio.git)
 
-> Are you interested in the latest version? Then copy this [uri](https://github.com/usalu/metabolism/archive/refs/heads/main.zip), take a look at the [source](https://github.com/usalu/metabolism/archive/refs/heads/main.zip) or the [documentation](https://github.com/usalu/metabolism/tree/main) 👀
+This git repo has **everything** that exists in the open semio ecosystem 🤯
 
-You can fetch the kit directly from within Grasshopper if you copy this [uri](https://github.com/usalu/metabolism/archive/refs/tags/r24.12-1.zip), take a look at the [source](https://github.com/usalu/metabolism/archive/refs/tags/r24.12-1.zip) or the [documentation](https://github.com/usalu/metabolism/tree/r24.12-1) 👀
+# 📦 Components
 
-# 🧑‍💻 Developers
+## ✏️ [sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad)
 
-semio offers two APIs: a simple REST OpenAPI and a complex GraphQL Relay API.
+## 🦗 [Grasshopper](https://github.com/usalu/semio/tree/main/dotnet/Semio.Grasshopper)
 
-### {} REST OpenAPI
+## ⚙️ [engine](https://github.com/usalu/semio/tree/main/python/engine)
+
+A hidden fat-client which exposes shared functionality to other desktop uis 🤝
+
+It takes care of
+
+- CRUDs (Create-Read-Update-Delete) with local kits (and handeles all SQLite interaction, ...)
+-
+
+It offers two a simple REST OpenAPI and a complex GraphQL Relay API.
+
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/openapi/docs/swagger.png)
 
-### ⭕ GraphQL Relay
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/graphql/docs/graphiql.png)
+
+## 📚 [docs](https://github.com/usalu/semio/tree/main/js/docs)
+
+# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples)
+
+## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter)
+
+## 👋 [Hello semio](https://github.com/usalu/hello-semio)
+
+## 🌈 [Geometry](https://github.com/usalu/geometry)
+
+## 🫀 [Metabolism](https://github.com/usalu/metabolism)
+
+# 💿 Ecosystems
+
+## 🐍 [Python]
 
 ## 💻 Building from source
 
