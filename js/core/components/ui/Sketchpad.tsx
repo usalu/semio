@@ -20,7 +20,7 @@ import { Diagram, Viewer, Type } from '@semio/js';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
-import { cleanKit, fetchKit, getTypes, typesAtom, } from '@semio/js/store';
+import { cleanKit, fetchKit, useTypes } from '@semio/js/store';
 
 type TreeSection = {
     name: string;
@@ -55,7 +55,8 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 }
 
 const Types: FC = () => {
-    const types = useAtomValue(typesAtom);
+    const types = useTypes();
+    // const types = useAtomValue(typesAtom);
     // const types = getTypes();
 
     if (!types) {
@@ -186,7 +187,7 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
 interface SketchpadProps {
 }
 const Sketchpad: FC<SketchpadProps> = ({ }) => {
-    const types = useAtomValue(typesAtom);
+    // const types = useAtomValue(typesAtom);
     // const types = getTypes();
 
     const [draggedTypeId, setDraggedTypeId] = useState<[string, string] | null>(null);
