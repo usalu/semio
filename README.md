@@ -36,26 +36,114 @@ Glad to see you!
 
 Let me walk you throw 🚶
 
+# ⚖️ Principles
+
+Let's start with the rule of thumbs that this codebase was built with 🫰
+
+## 💾 If something can be written in a single file, then it probably should
+
+I know, the urge to **tidy** up or **separate** things is big 🗃️
+
+But try to withstand it 🫥
+
+Out of my experience, it makes development slower, not faster 🐌
+
+A single file is easier for humans and computers to understand 💡
+
+You will be supprised
+
+- by the awsome fill-in-the-middle suggestions of your copilot 🤖
+- by the smooth refactor experience by just going top-to-bottom ⬇️
+- by the beautiful diff for your next code review 🔍
+- by the clean git-history when you try to find a certain change 🔁
+
+## 📁 If a folder doesn't make your life dramatically easier, don't create it
+
+We all know this `./src/**` folder that has made it into a lot of starters 🚀
+
+Other than feeling cool about using hacky abbreviations, does it really help you to understand the project faster and work more efficient on it?
+
+If your project contains hundreds of config file and other project folders at the root, maybe 🤔
+
+But most likely not ❌
+
+## 📑 If multiple people work on longterm on the same part, then one file for each part should be created
+
+Trust me, it will make collaboration much easier 🔀
+
+## 📦 If you don't need an interface because something is not likely to be extended in the future, don't create it
+
+We all know **low coupling - high cohesion** and that is good 👍
+
+I am just saying it is probably ok, to couple more than you would 🤨
+
+Both coupling and cohesion needs interfaces ✂️
+
+The main question is are they productive or not?
+
+The pay-off of abstraction happens in the future 🛣️
+
+Every extension profits from a clean interface 🚀
+
+Most things are not extended 🪨
+
+If you change your architecture, just design proper interfaces for something concrete not something potential and reactor it ✍️
+
+## 🤏 Repeating code is ok if it probably doesn't happen more than twice and the repeated code is close in the source code
+
+What about **DRY (Dont-Repeat-Yourself)**?
+
+We are past the time where we copy code for no reason 📃
+
+Actually repeated code can improve the quality of your copilots suggestion 🤯
+
+The main question is how can your application grow?
+
+If a change requires exponentially more duplication then you'll probably have to fix it 🛠️
+
+If not, then you are probably good ✅
+
+## 🤨 Wait, no high-level advice and only plain numbers, files, folders or close line of codes?
+
+In my understanding, rule-of-thumbs are most useful when they are concrete 👓
+
+But as always, the devil is in the details 😈
+
+Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
+
+Don't worry, you'll figure out the right choice for the specific problems 🚩
+
 # 🦑 [Monorepo](https://github.com/usalu/semio.git)
 
 This git repo has **everything** that exists in the open semio ecosystem 🤯
 
 # 📦 Components
 
+> Do you wonder how the same looking ui or functionality is avalailable on multiple components? The secret is that they have shared cores in their [ecosystem](#-ecosystems) 🥜
+
+A component is a piece of software which runs independently 🏝️
+
 ## ✏️ [sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad)
 
+An electron-based desktop app primarly working for with local kits 💾
+
 ## 🦗 [Grasshopper](https://github.com/usalu/semio/tree/main/dotnet/Semio.Grasshopper)
+
+A full-blown [Grasshopper Plugin](https://developer.rhino3d.com/en/guides/grasshopper/) that has (almost) everything 💯
 
 ## ⚙️ [engine](https://github.com/usalu/semio/tree/main/python/engine)
 
 A hidden fat-client which exposes shared functionality to other desktop uis 🤝
 
-It takes care of
+It takes care of:
 
-- CRUDs (Create-Read-Update-Delete) with local kits (and handeles all SQLite interaction, ...)
--
+- CRUDs (Create-Read-Update-Delete) for local kits 💾
+- Client-Server communication ↔️
 
-It offers two a simple REST OpenAPI and a complex GraphQL Relay API.
+It offers two APIs to other clients:
+
+- A simple REST OpenAPI 🥇
+- A complex GraphQL Relay API 🥈
 
 ### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5529)
 
@@ -85,7 +173,15 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 # 💿 Ecosystems
 
-## 🐍 [Python]
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad), [Grasshopper](#-grasshopper) and [engine](#️-engine) but they are in totaly different folders 📂
+
+The reason for this is that the monorepo is not disected according but according technology stack ✂️
+
+This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
+
+## 🐍 [Python]()
+
+Currently only has [engine](#️-engine) but in the future it might grow and then it will
 
 ## 💻 Building from source
 
