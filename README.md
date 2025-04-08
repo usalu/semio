@@ -40,7 +40,7 @@ Let me walk you throw 🚶
 
 Let's start with the rule of thumbs that this codebase was built with 🫰
 
-## 💾 If something can be written in a single file, then it probably should
+## 💾 If something can be written in a single file, then it probably should ✅
 
 I know, the urge to **tidy** up or **separate** things is big 🗃️
 
@@ -57,7 +57,7 @@ You will be supprised
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
 
-## 📁 If a folder doesn't make your life dramatically easier, don't create it
+## 📁 If a folder doesn't make your life dramatically easier, don't create it ❌
 
 We all know this `./src/**` folder that has made it into a lot of starters 🚀
 
@@ -67,19 +67,13 @@ If your project contains hundreds of config file and other project folders at th
 
 But most likely not ❌
 
-## 📑 If multiple people work on longterm on the same part, then one file for each part should be created
+## 📑 If multiple people work longterm on the same part, then one file for each part should be created ⚙️
 
 Trust me, it will make collaboration much easier 🔀
 
-## 📦 If you don't need an interface because something is not likely to be extended in the future, don't create it
+## 📦 If you don't need an interface because something is not likely to be extended in the future, don't create it ❌
 
-We all know **low coupling - high cohesion** and that is good 👍
-
-I am just saying it is probably ok, to couple more than you would 🤨
-
-Both coupling and cohesion needs interfaces ✂️
-
-The main question is are they productive or not?
+The main question is the interface productive or not?
 
 The pay-off of abstraction happens in the future 🛣️
 
@@ -89,9 +83,7 @@ Most things are not extended 🪨
 
 If you change your architecture, just design proper interfaces for something concrete not something potential and reactor it ✍️
 
-## 🤏 Repeating code is ok if it probably doesn't happen more than twice and the repeated code is close in the source code
-
-What about **DRY (Dont-Repeat-Yourself)**?
+## 🤏 Repeating code is ok if it probably doesn't happen more than twice and the repeated code is close in the source code ✅
 
 We are past the time where we copy code for no reason 📃
 
@@ -101,17 +93,19 @@ The main question is how can your application grow?
 
 If a change requires exponentially more duplication then you'll probably have to fix it 🛠️
 
-If not, then you are probably good ✅
+If not, then you are probably good 👌
 
 ## 🤨 Wait, no high-level advice and only plain numbers, files, folders or close line of codes?
 
-In my understanding, rule-of-thumbs are most useful when they are concrete 👓
+In my understanding, rule-of-thumbs are most useful when they are concrete 🔨
+
+Besides that I am sure you know about **KISS** (Keep-It-Simple-Stupid), **DRY** (Dont-Repeat-Yourself), **YAGNI** (You-Aren't-Gonna-Need-It), **SoC** (Seperation-of-Concerns), **Avoid Premature Optimization**, **Law of Demeter**, **LCHC** (Low-Coupling-High-Cohesion), **SOLID** (Single Responsibility (**SR**), Open/Closed (**OC**), Liskov’s Substitution (**LS**), Interface Segregation (**IS**), Dependency Inversion (**DI**)), …
 
 But as always, the devil is in the details 😈
 
 Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
 
-Don't worry, you'll figure out the right choice for the specific problems 🚩
+## 🚩 Don't worry, you'll figure out the right choice for the specific problems ✅
 
 # 🦑 [Monorepo](https://github.com/usalu/semio.git)
 
