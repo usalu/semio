@@ -3,7 +3,7 @@ title: 🤔 Why semio?
 description: 📖 An introduction to semio 👀
 ---
 
-import { Tabs, TabItem, Card } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
 ## 🛠️ Features
 
@@ -11,13 +11,13 @@ import { Tabs, TabItem, Card } from "@astrojs/starlight/components";
 
 - **[Grasshopper](/manuals/grasshopper)**: Battery-included plugin for creating, editing and sharing semio kits 🦗
 - **[Wasp](/integrations/wasp)**: A Grasshopper-based integration between semio and Wasp 🐝
-- **[Speckle](/integrations/speckle)**: A Grasshopper-based integration between semio and Speckle 🟦
 - **[Remote](/integrations/cloud)**: Use any file-hosting platform as a shared Common-Data-Environment ☁️
 
 ### 🚀 In the making
 
-- **sketchpad:** A drag and drop interface to create semio designs ✏️
-- **Ladybug**: A Grasshopper-based converter from semio to Ladybug 🐞
+- **[sketchpad](/manuals/grasshopper):** A drag and drop interface to create semio designs ✏️
+- **[Ladybug](/integrations/speckle):** A Grasshopper-based converter from semio to Ladybug 🐞
+- **[Speckle](/integrations/speckle):** A Grasshopper-based integration between semio and Speckle 🟦
 
 ### 📅 Planned
 
@@ -158,44 +158,65 @@ We don't care about the underlying:
 - SDKs
 - …
 
-{/* prettier-ignore */}
-<Tabs>
-  <TabItem label="Operating System">
-    Most servers in the world run on [Linux](https://www.linux.org/) 🐧
-  </TabItem>
-  <TabItem label="Version Control">
-    [GitHub](https://github.com/), [GitLab](https://gitlab.com/) and [Bitbucket](https://bitbucket.org/) all rely on a linux tool [git](https://git-scm.com/) 🔨
-  </TabItem>
-  <TabItem label="User Interfaces">
-    {/* TODO: Doublecheck listing and add company-internal link for every company https://jaydevs.com/top-companies-using-react-js/ */}
-    [React](https://react.dev/) was originally only developed by [Facebook](https://github.com/facebook/react) but nowadays 
-    [Netflix](https://netflixtechblog.com/tagged/react), 
-    Airbnb, 
-    Paypal, 
-    Uber, 
-    Walmart,
-    Twitch,
-    BBC,
-    Tesla,
-    Dropbox, 
-    Salesforce,
-    … use it to power their systems ⚡
-  </TabItem>
-  <TabItem label="Databases">
-    [PostgreSQL](https://www.postgresql.org/), 
-    [MySQL](https://www.mysql.com/),
-    [MariaDB](https://mariadb.org/), 
-    [SQLite](https://www.sqlite.org/), 
-    [MongoDB](https://www.mongodb.com/), 
-    [Redis](https://redis.io/), 
-    [Cassandra](https://cassandra.apache.org/), 
-    [Neo4j](https://neo4j.com/), 
-    [InfluxDB](https://www.influxdata.com/), 
-    … have to be open for trust 👀
-  </TabItem>
-</Tabs>
-
 Software companies of the Architecture-Engineering-Construction (AEC) industry have made the mistake to compete on the core technology instead of the services around them ❌
+
+They have built a closed-source core technology with open-source extensions to lock you into their platform 🔒
+
+That's why semio is built the other way around 🔄️
+
+The core technology is open-source and the extensions are closed-source 🔓
+
+This way the industry can grow together by sharing the effort of building the core technology and companies that offer cloud solutions and special features can still be profitable 📈
+
+{/* prettier-ignore */}
+<Aside type="tip" title="Are you curious what the world runs on?">
+  <Tabs>
+    <TabItem label="Operating System">
+      Most servers in the world run on [Kubernetes](https://kubernetes.io) which runs containers with [Docker](https://www.docker.com) that uses mainly [Linux](https://www.linux.org) 🐧
+    </TabItem>
+    <TabItem label="Version Control">
+      [GitHub](https://github.com), [GitLab](https://gitlab.com) and [Bitbucket](https://bitbucket.org) all rely on a linux tool [git](https://git-scm.com) 🔨
+    </TabItem>
+    <TabItem label="User Interfaces">
+      {/* TODO: Doublecheck listing and add company-internal link for every company https://jaydevs.com/top-companies-using-react-js/ */}
+      [React](https://react.dev) was originally only developed by [Facebook](https://github.com/facebook/react) but nowadays 
+      [Netflix](https://netflixtechblog.com/tagged/react), 
+      Airbnb, 
+      Paypal, 
+      Uber, 
+      Walmart,
+      Twitch,
+      BBC,
+      Tesla,
+      Dropbox, 
+      Salesforce,
+      … use it to power their systems ⚡
+    </TabItem>
+    <TabItem label="Databases">
+      [PostgreSQL](https://www.postgresql.org), 
+      [MySQL](https://www.mysql.com),
+      [MariaDB](https://mariadb.org), 
+      [SQLite](https://www.sqlite.org), 
+      [MongoDB](https://www.mongodb.com), 
+      [Redis](https://redis.io), 
+      [Cassandra](https://cassandra.apache.org), 
+      [Neo4j](https://neo4j.com), 
+      [InfluxDB](https://www.influxdata.com), 
+      … have to be open for trust 👀
+    </TabItem>
+    <TabItem label="Programming Languages">
+      [Python](https://www.python.org), 
+      [Java](https://www.java.com), 
+      [JavaScript](https://www.javascript.com), 
+      [C++](https://isocpp.org), 
+      [C#](https://learn.microsoft.com/en-us/dotnet/csharp/), 
+      [Go](https://go.dev), 
+      [Rust](https://www.rust-lang.org), 
+      [PHP](https://www.php.net), 
+      … have all open specification and implementations 🐍
+    </TabItem>
+  </Tabs>
+</Aside>
 
 ### 🖱️ Manual over automated
 

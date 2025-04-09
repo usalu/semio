@@ -11,8 +11,7 @@ export default defineConfig({
     site: 'https://docs.semio-tech.com',
     integrations: [starlight({
         title: {
-            en: 'semio Docs',
-            de: 'semio Dokumentation'
+            en: 'semio docs',
         },
         // tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
         defaultLocale: 'root',
