@@ -1,16 +1,18 @@
 import * as Y from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
-import { WebrtcProvider } from 'y-webrtc';
+// import { WebrtcProvider } from 'y-webrtc';
 import { atom, useAtom } from 'jotai';
 import { Kit } from '@semio/js';
 
 console.log('Initializing Yjs and Jotai store...');
 
+export const useTypes = () => []
+
 // Store class to manage a single room's state
 class KitStore {
     private yDoc: Y.Doc;
     private yKit: Y.Map<Kit>;
-    private provider: WebrtcProvider;
+    // private provider: WebrtcProvider;
     public atom: ReturnType<typeof atom<Kit | null>>;
 
     constructor(roomId: string) {
@@ -22,10 +24,10 @@ class KitStore {
         new IndexeddbPersistence(`semio-studio-${roomId}`, this.yDoc);
 
         // Set up WebRTC provider
-        this.provider = new WebrtcProvider(roomId, this.yDoc, {
-            signaling: ['wss://signaling.yjs.dev'],
-            connect: true,
-        });
+        // this.provider = new WebrtcProvider(roomId, this.yDoc, {
+        //     signaling: ['wss://signaling.yjs.dev'],
+        //     connect: true,
+        // });
 
         // Subscribe to changes
         this.yKit.observe(() => {
@@ -51,7 +53,7 @@ class KitStore {
     }
 
     destroy() {
-        this.provider.destroy();
+        // this.provider.destroy();
         this.yDoc.destroy();
     }
 }

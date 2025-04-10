@@ -15,12 +15,14 @@ import {
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Diagram, Viewer, Type } from '@semio/js';
+import { Diagram } from "@semio/js/components/ui/Diagram";
+import { Model } from "@semio/js/components/ui/Model";
+import { Type } from '@semio/js';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
-import { cleanKit, fetchKit, useTypes } from '@semio/js/store';
+import { useTypes } from '@semio/js/store';
 
 type TreeSection = {
     name: string;
@@ -184,90 +186,75 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
     );
 };
 
-interface SketchpadProps {
+export enum SketchpadMode {
+    FULL = 'full',
+    DIAGRAM = 'diagram',
+    MODEL = 'model',
 }
-const Sketchpad: FC<SketchpadProps> = ({ }) => {
+
+interface SketchpadProps {
+    mode: SketchpadMode;
+}
+const Sketchpad: FC<SketchpadProps> = ({ mode }) => {
     // const types = useAtomValue(typesAtom);
     // const types = getTypes();
 
-    const [draggedTypeId, setDraggedTypeId] = useState<[string, string] | null>(null);
-    const [draggedDesignId, setDraggedDesignId] = useState<[string, string] | null>(null);
+    // const [draggedTypeId, setDraggedTypeId] = useState<[string, string] | null>(null);
+    // const [draggedDesignId, setDraggedDesignId] = useState<[string, string] | null>(null);
 
 
-    const onDragStart = (event: DragStartEvent) => {
-        // event.active.id is either type-name-variant or design-name-variant
-        const id = event.active.id.split('-');
-        if (id[0] === 'type') {
-            setDraggedTypeId([id[1], id[2]]);
-        }
-        else if (id[0] === 'design') {
-            setDraggedDesignId([id[1], id[2]]);
-        }
-        else {
-            console.error('Unknown drag type:', id[0]);
-        }
-    }
+    // const onDragStart = (event: DragStartEvent) => {
+    //     // event.active.id is either type-name-variant or design-name-variant
+    //     const id = event.active.id.split('-');
+    //     if (id[0] === 'type') {
+    //         setDraggedTypeId([id[1], id[2]]);
+    //     }
+    //     else if (id[0] === 'design') {
+    //         setDraggedDesignId([id[1], id[2]]);
+    //     }
+    //     else {
+    //         console.error('Unknown drag type:', id[0]);
+    //     }
+    // }
 
-    const onDragEnd = (event: DragEndEvent) => {
-        const id = event.active.id.split('-');
-        if (id[0] === 'type') {
-            setDraggedTypeId(null);
-        }
-        else if (id[0] === 'design') {
-            setDraggedDesignId(null);
-        }
-        else {
-            console.error('Unknown drag type:', id[0]);
-        }
-    }
+    // const onDragEnd = (event: DragEndEvent) => {
+    //     const id = event.active.id.split('-');
+    //     if (id[0] === 'type') {
+    //         setDraggedTypeId(null);
+    //     }
+    //     else if (id[0] === 'design') {
+    //         setDraggedDesignId(null);
+    //     }
+    //     else {
+    //         console.error('Unknown drag type:', id[0]);
+    //     }
+    // }
     console.log('Sketchpad refreshing...');
     return (
         // <JotaiProvider store={studioStore}>
-        <div className="h-[800px] w-[1300px]">
-            <button onClick={() => {
+        <div className="size-full">
+            {/* <button onClick={() => {
                 console.log('Fetching kit...');
                 fetchKit('kit_metabolism.json')
             }
             }>Fetch kit</button>
             <button onClick={() => {
                 cleanKit()
-            }}>Clean kit</button>
-            <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-                <ResizablePanelGroup
-                    direction="horizontal"
-                    className="bg-dark text-light"
-                >
-                    <TreeSider />
-                    <ResizableHandle />
-                    <ResizablePanel defaultSize={70}>
-                        <ResizablePanelGroup direction="vertical" className="border-l border-r">
-                            <ResizablePanel defaultSize={80}>
-                                <ResizablePanelGroup direction="horizontal" className="border-b">
-                                    <ResizablePanel defaultSize={50} className="border-r">
-                                        <Diagram fullscreen={false} />
-                                    </ResizablePanel>
-                                    <ResizableHandle />
-                                    <ResizablePanel defaultSize={50}>
-                                        <Viewer />
-                                    </ResizablePanel>
-                                </ResizablePanelGroup>
-                            </ResizablePanel>
-                            <ResizableHandle />
-                            <ResizablePanel defaultSize={20}>
-                                <div className="flex h-full items-center justify-center p-6">
-                                    Console
-                                </div>
-                            </ResizablePanel>
-                        </ResizablePanelGroup>
-                    </ResizablePanel>
-                    <ResizableHandle />
-                    <ResizablePanel defaultSize={15}>
-                        <div className="flex h-full items-center justify-center p-6">
-                            <span className="font-semibold">Details</span>
-                        </div>
-                    </ResizablePanel>
-                </ResizablePanelGroup>
-                {/* {createPortal(
+            }}>Clean kit</button> */}
+            {/* <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}> */}
+            <ResizablePanelGroup
+                direction="horizontal"
+                className="bg-dark text-light"
+            >
+                <ResizablePanel defaultSize={50}>
+                    Diagram
+                </ResizablePanel>
+                <ResizableHandle className="border-r" />
+                <ResizablePanel defaultSize={50}>
+                    Model
+                </ResizablePanel>
+            </ResizablePanelGroup>
+            {/* {createPortal(
                         <DragOverlay>
                             {draggedTypeId ? (
                                 <TypeAvatar type={types.get(draggedTypeId[0])?.get(draggedTypeId[1])!} />
@@ -275,7 +262,7 @@ const Sketchpad: FC<SketchpadProps> = ({ }) => {
                         </DragOverlay>,
                         document.body
                     )} */}
-            </DndContext>
+            {/* </DndContext> */}
         </div>
         // </JotaiProvider>
     );

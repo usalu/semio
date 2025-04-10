@@ -1,7 +1,5 @@
 export type { Kit, Design, Type, Port, Representation, Quality } from '@semio/js/semio';
-export { default as Model } from '@semio/js/components/ui/Model';
-export { default as Diagram } from '@semio/js/components/ui/Diagram';
-export { default as Viewer } from '@semio/js/components/ui/Viewer';
+export { default as File } from '@semio/js/components/ui/File';
 export { default as Sketchpad } from '@semio/js/components/ui/Sketchpad';
 export { default as eslintConfig } from '@semio/js/eslint.config';
 export { default as postcssConfig } from '@semio/js/postcss.config';
