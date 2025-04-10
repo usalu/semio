@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2 } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -231,35 +231,51 @@ const Console: FC<PanelProps> = ({ visible }) => {
 interface NavbarProps {
     visiblePanels: PanelToggles;
     onTogglePanel: (panel: keyof PanelToggles) => void;
+    onWindowEvents?: {
+        minimize: () => void;
+        maximize: () => void;
+        close: () => void;
+    }
 }
 
-const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel }) => {
+const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents }) => {
     return (
-        <div className="w-full h-12 bg-dark border-b border-lightGrey flex items-center justify-between px-4">
-            <Breadcrumb className="">
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Metabolism</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center gap-1">
-                            Artifacts
-                            <ChevronDownIcon />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                            <DropdownMenuItem>Designs</DropdownMenuItem>
-                            <DropdownMenuItem>Types</DropdownMenuItem>
-                            <DropdownMenuItem>Representations</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>Nakagin Capsule Tower</BreadcrumbPage>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
-            <div className="flex items-center gap-4">
+        <div
+            className={`w-full h-12 bg-dark border-b border-lightGrey flex items-center justify-between px-4`}
+            style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
+        >
+            <div
+                className="flex items-center"
+                style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
+            >
+                <Breadcrumb className="">
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Metabolism</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-1">
+                                Artifacts
+                                <ChevronDownIcon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem>Designs</DropdownMenuItem>
+                                <DropdownMenuItem>Types</DropdownMenuItem>
+                                <DropdownMenuItem>Representations</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>Nakagin Capsule Tower</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+            <div
+                className={`flex items-center gap-4`}
+                style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
+            >
                 <ToggleGroup
                     type="multiple"
                     variant="outline"
@@ -308,14 +324,44 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel }) => {
                 </Avatar>
                 <Button variant="outline" size="sm" className="gap-2">
                     <Tooltip>
-                        <TooltipTrigger>
-                            <Share2 size={16} />
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center">
+                                <Share2 size={16} />
+                            </div>
                         </TooltipTrigger>
                         <TooltipContent>
                             Share
                         </TooltipContent>
                     </Tooltip>
                 </Button>
+                {onWindowEvents && (
+                    <div className="flex items-center gap-2 ml-4">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:bg-lightGrey transition-colors p-2"
+                            onClick={onWindowEvents.minimize}
+                        >
+                            <Minus size={16} />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:bg-lightGrey transition-colors p-2"
+                            onClick={onWindowEvents.maximize}
+                        >
+                            <Square size={16} />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:bg-lightGrey hover:text-red-500 transition-colors p-2"
+                            onClick={onWindowEvents.close}
+                        >
+                            <X size={16} />
+                        </Button>
+                    </div>
+                )}
             </div>
         </div >
     );
@@ -428,10 +474,15 @@ interface PanelToggles {
 
 
 interface SketchpadProps {
-    mode: SketchpadMode;
+    mode?: SketchpadMode;
+    onWindowEvents?: {
+        minimize: () => void;
+        maximize: () => void;
+        close: () => void;
+    }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: true,
         console: false,
@@ -475,7 +526,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode }) => {
     return (
         <div className="h-full w-full text-light flex flex-col">
             <TooltipProvider>
-                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} />
+                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} />
                 <div className="canvas flex-1 relative">
                     <DesignEditor />
                     <Workbench visible={visiblePanels.workbench} />

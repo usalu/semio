@@ -11,7 +11,8 @@ import { Config } from 'postcss-load-config';
 
 const config: Config = {
   plugins: {
-    "@tailwindcss/postcss": {},
+    "postcss-import": {},
+    "postcss-nesting": {},
   },
 };
 

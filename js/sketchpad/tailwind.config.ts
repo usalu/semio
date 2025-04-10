@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 import { tailwindConfig } from "@semio/js";
 
 const config: Pick<Config, "content" | "presets"> = {
-  content: ["/**/*.{ts,tsx,mdx}", "../core/**/*.{ts,tsx,mdx}"],
+  content: ["./**/*.{ts,tsx,mdx}"],
   presets: [tailwindConfig],
 };
 
