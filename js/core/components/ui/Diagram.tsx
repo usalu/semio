@@ -145,12 +145,12 @@ function Cursor({ color, x = 0, y = 0 }: CursorProps) {
     );
 }
 
-interface DiagramCoreProps {
+interface DiagramProps {
     fullscreen?: boolean;
+    onPanelDoubleClick?: () => void;
 }
 
-
-const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
+const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
 
 
     const { setNodeRef } = useDroppable({
@@ -355,6 +355,11 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
             onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
             onConnect={onConnect}
+            zoomOnDoubleClick={false}
+            onDoubleClick={(event) => {
+                event.stopPropagation();
+                onPanelDoubleClick?.();
+            }}
             // onMoveEnd={onUpdateCursor}
             // onPointerLeave={() =>
             //     setPresence({
@@ -406,11 +411,7 @@ const DiagramCore: FC<DiagramCoreProps> = ({ fullscreen }) => {
     )
 }
 
-interface DiagramProps {
-    fullscreen?: boolean;
-}
-
-const Diagram: FC<DiagramProps> = ({ fullscreen }) => {
+const Diagram: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
 
     // const { isOver, setNodeRef } = useDroppable({
     //     id: 'diagram',
@@ -419,7 +420,7 @@ const Diagram: FC<DiagramProps> = ({ fullscreen }) => {
     return (
         <div className="h-full w-full bg-dark">
             <ReactFlowProvider >
-                <DiagramCore fullscreen={fullscreen} />
+                <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} />
             </ReactFlowProvider>
             {/* // <div ref={setNodeRef}>
         // </div> */}

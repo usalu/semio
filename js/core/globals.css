@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "@semio/js/theme.css";
 
+/* Remove border radius from all shadcn components */
+@layer base {
+  :root {
+    --radius: 0rem;
+    --radius-sm: 0rem;
+    --radius-md: 0rem;
+    --radius-lg: 0rem;
+    --radius-full: 0rem;
+  }
+}
+
 /* https: //reactflow.dev/learn/customization/theming */
 
 .react-flow {

@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2 } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -15,14 +15,19 @@ import {
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Diagram } from "@semio/js/components/ui/Diagram";
-import { Model } from "@semio/js/components/ui/Model";
-import { Type } from '@semio/js';
-
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './Collapsible';
+import { default as Diagram } from "@semio/js/components/ui/Diagram";
+import { default as Model } from "@semio/js/components/ui/Model";
+import { Design, Kit, Type } from '@semio/js';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
+import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@semio/js/components/ui/DropdownMenu"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
 import { useTypes } from '@semio/js/store';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
+import { Button } from "@semio/js/components/ui/Button";
+import { useHotkeys } from 'react-hotkeys-hook';
 
 type TreeSection = {
     name: string;
@@ -65,12 +70,7 @@ const Types: FC = () => {
         return null;
     }
     return (
-        <div className="h-auto overflow-auto grid grid-cols-[auto-fill] min-w-[40px] auto-rows-[40px] p-1"
-            style={{
-                gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
-                gridAutoRows: '40px',
-            }}
-        >
+        <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
             {Array.from(types.entries()).map(([name, variantMap]) => (
                 Array.from(variantMap.entries()).map(([variant, type]) => (
                     <TypeAvatar key={`${name}-${variant}`} type={type} />
@@ -83,7 +83,7 @@ const Types: FC = () => {
 const ExplorerTree: Tree = {
     id: 'explorer',
     name: 'Explorer',
-    icon: <Folder />,
+    icon: <Folder size={14} className="w-3.5 h-3.5" />,
     sections: [
         {
             name: 'Types',
@@ -99,7 +99,7 @@ const ExplorerTree: Tree = {
 const TestTree: Tree = {
     id: 'test',
     name: 'Test',
-    icon: <FlaskConical />,
+    icon: <FlaskConical size={14} className="w-3.5 h-3.5" />,
     sections: [
         // {
         //     name: 'Types',
@@ -126,7 +126,7 @@ const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
             open={open}
             onOpenChange={setOpen}>
             <CollapsibleTrigger className="flex items-center justify-between">
-                {open ? <ChevronDown /> : <ChevronRight />}
+                {open ? <ChevronDown size={14} className="w-3.5 h-3.5" /> : <ChevronRight size={14} className="w-3.5 h-3.5" />}
                 {section.name}
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -192,79 +192,298 @@ export enum SketchpadMode {
     MODEL = 'model',
 }
 
+interface PanelProps {
+    visible: boolean;
+}
+
+const Workbench: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Workbench</div>
+        </div>
+    );
+}
+
+const Details: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Details</div>
+        </div>
+    );
+}
+
+const Console: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute left-8 right-8 bottom-8 h-[200px] z-[150] bg-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Console</div>
+        </div>
+    );
+}
+
+interface NavbarProps {
+    visiblePanels: PanelToggles;
+    onTogglePanel: (panel: keyof PanelToggles) => void;
+}
+
+const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel }) => {
+    return (
+        <div className="w-full h-12 bg-dark border-b border-lightGrey flex items-center justify-between px-4">
+            <Breadcrumb className="">
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href="/">Metabolism</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger className="flex items-center gap-1">
+                            Artifacts
+                            <ChevronDownIcon />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                            <DropdownMenuItem>Designs</DropdownMenuItem>
+                            <DropdownMenuItem>Types</DropdownMenuItem>
+                            <DropdownMenuItem>Representations</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage>Nakagin Capsule Tower</BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
+            <div className="flex items-center gap-4">
+                <ToggleGroup
+                    type="multiple"
+                    variant="outline"
+                    size="sm"
+                    className="bg-dark"
+                    value={Object.entries(visiblePanels)
+                        .filter(([_, isVisible]) => isVisible)
+                        .map(([key]) => key)}
+                    onValueChange={(values) => {
+                        // For each panel, toggle it if its presence in values differs from its current state
+                        Object.keys(visiblePanels).forEach(key => {
+                            const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
+                            const shouldBeVisible = values.includes(key);
+
+                            if (isCurrentlyVisible !== shouldBeVisible) {
+                                onTogglePanel(key as keyof PanelToggles);
+                            }
+                        });
+                    }}
+                >
+                    <ToggleGroupItem
+                        value="workbench"
+                        aria-label="Toggle Workbench"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                    >
+                        <Wrench />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                        value="console"
+                        aria-label="Toggle Console"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                    >
+                        <Terminal />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                        value="details"
+                        aria-label="Toggle Details"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                    >
+                        <Info />
+                    </ToggleGroupItem>
+                </ToggleGroup>
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://github.com/usalu.png" />
+                    <AvatarFallback>US</AvatarFallback>
+                </Avatar>
+                <Button variant="outline" size="sm" className="gap-2">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <Share2 size={16} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            Share
+                        </TooltipContent>
+                    </Tooltip>
+                </Button>
+            </div>
+        </div >
+    );
+};
+
+interface DesignEditorProps {
+}
+const DesignEditor: FC<DesignEditorProps> = ({ }) => {
+    const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
+
+    useHotkeys('ctrl+a', (e) => {
+        e.preventDefault();
+        console.log('Select all pieces and connections');
+    });
+
+    useHotkeys('ctrl+i', (e) => {
+        e.preventDefault();
+        console.log('Invert selection (If only pieces are selected, deselect them and select all other pieces. If only connections are selected, deselect them and select all other connections. If both are selected, deselect pieces and select connections and select the other pieces and connections)');
+    });
+
+    useHotkeys('ctrl+d', (e) => {
+        e.preventDefault();
+        console.log('Select closest piece with same variant');
+    });
+
+    useHotkeys('ctrl+shift+d', (e) => {
+        e.preventDefault();
+        console.log('Select all pieces with same variant');
+    });
+
+    useHotkeys('ctrl+c', (e) => {
+        e.preventDefault();
+        console.log('Copy selected pieces and connections');
+    });
+
+    useHotkeys('ctrl+v', (e) => {
+        e.preventDefault();
+        console.log('Paste pieces and connections');
+    });
+
+    useHotkeys('ctrl+x', (e) => {
+        e.preventDefault();
+        console.log('Cut selected pieces and connections');
+    });
+
+    useHotkeys('delete', (e) => {
+        e.preventDefault();
+        console.log('Delete selected pieces and connections');
+    });
+
+    useHotkeys('ctrl+z', (e) => {
+        e.preventDefault();
+        console.log('Undo last action in design editor');
+    });
+
+    useHotkeys('ctrl+y', (e) => {
+        e.preventDefault();
+        console.log('Redo last action in design editor');
+    });
+
+    useHotkeys('ctrl+s', (e) => {
+        e.preventDefault();
+        console.log('Save design');
+    });
+
+    useHotkeys('ctrl+w', (e) => {
+        e.preventDefault();
+        console.log('Close design');
+    });
+
+    const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
+        setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
+    };
+
+
+    return (
+        <div id="sketchpad-edgeless" className="h-full">
+            <ResizablePanelGroup
+                direction="horizontal"
+                className="bg-dark text-light h-full"
+            >
+                <ResizablePanel
+                    defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+                    className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+                    onDoubleClick={() => handlePanelDoubleClick('diagram')}
+                >
+                    <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
+                </ResizablePanel>
+                <ResizableHandle
+                    className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`}
+                />
+                <ResizablePanel
+                    defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+                    className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+                    onDoubleClick={() => handlePanelDoubleClick('model')}
+                >
+                    <Model fullscreen={fullscreenPanel === 'model'} />
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    );
+};
+
+
+interface PanelToggles {
+    workbench: boolean;
+    details: boolean;
+    console: boolean;
+}
+
+
 interface SketchpadProps {
     mode: SketchpadMode;
 }
+
 const Sketchpad: FC<SketchpadProps> = ({ mode }) => {
-    // const types = useAtomValue(typesAtom);
-    // const types = getTypes();
+    const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
+        workbench: true,
+        console: false,
+        details: true,
+    });
 
-    // const [draggedTypeId, setDraggedTypeId] = useState<[string, string] | null>(null);
-    // const [draggedDesignId, setDraggedDesignId] = useState<[string, string] | null>(null);
+    const togglePanel = (panel: keyof PanelToggles) => {
+        setVisiblePanels(prev => ({
+            ...prev,
+            [panel]: !prev[panel]
+        }));
+    };
 
+    useHotkeys('ctrl+j', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setVisiblePanels(prev => ({
+            ...prev,
+            workbench: !prev.workbench
+        }));
+    });
 
-    // const onDragStart = (event: DragStartEvent) => {
-    //     // event.active.id is either type-name-variant or design-name-variant
-    //     const id = event.active.id.split('-');
-    //     if (id[0] === 'type') {
-    //         setDraggedTypeId([id[1], id[2]]);
-    //     }
-    //     else if (id[0] === 'design') {
-    //         setDraggedDesignId([id[1], id[2]]);
-    //     }
-    //     else {
-    //         console.error('Unknown drag type:', id[0]);
-    //     }
-    // }
+    useHotkeys('ctrl+k', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setVisiblePanels(prev => ({
+            ...prev,
+            console: !prev.console
+        }));
+    });
 
-    // const onDragEnd = (event: DragEndEvent) => {
-    //     const id = event.active.id.split('-');
-    //     if (id[0] === 'type') {
-    //         setDraggedTypeId(null);
-    //     }
-    //     else if (id[0] === 'design') {
-    //         setDraggedDesignId(null);
-    //     }
-    //     else {
-    //         console.error('Unknown drag type:', id[0]);
-    //     }
-    // }
-    console.log('Sketchpad refreshing...');
+    useHotkeys('ctrl+l', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setVisiblePanels(prev => ({
+            ...prev,
+            details: !prev.details
+        }));
+    });
+
     return (
-        // <JotaiProvider store={studioStore}>
-        <div className="size-full">
-            {/* <button onClick={() => {
-                console.log('Fetching kit...');
-                fetchKit('kit_metabolism.json')
-            }
-            }>Fetch kit</button>
-            <button onClick={() => {
-                cleanKit()
-            }}>Clean kit</button> */}
-            {/* <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}> */}
-            <ResizablePanelGroup
-                direction="horizontal"
-                className="bg-dark text-light"
-            >
-                <ResizablePanel defaultSize={50}>
-                    Diagram
-                </ResizablePanel>
-                <ResizableHandle className="border-r" />
-                <ResizablePanel defaultSize={50}>
-                    Model
-                </ResizablePanel>
-            </ResizablePanelGroup>
-            {/* {createPortal(
-                        <DragOverlay>
-                            {draggedTypeId ? (
-                                <TypeAvatar type={types.get(draggedTypeId[0])?.get(draggedTypeId[1])!} />
-                            ) : null}
-                        </DragOverlay>,
-                        document.body
-                    )} */}
-            {/* </DndContext> */}
+        <div className="h-full w-full text-light flex flex-col">
+            <TooltipProvider>
+                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} />
+                <div className="canvas flex-1 relative">
+                    <DesignEditor />
+                    <Workbench visible={visiblePanels.workbench} />
+                    <Details visible={visiblePanels.details} />
+                    <Console visible={visiblePanels.console} />
+                </div>
+            </TooltipProvider>
         </div>
-        // </JotaiProvider>
     );
 };
 

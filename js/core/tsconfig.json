@@ -22,7 +22,13 @@
     "types": [
       "react",
       "react-dom"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@semio/js/*": [
+        "./*"
+      ]
+    }
   },
   "exclude": [
     "node_modules"

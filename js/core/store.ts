@@ -8,118 +8,123 @@ console.log('Initializing Yjs and Jotai store...');
 
 export const useTypes = () => []
 
-// Store class to manage a single room's state
-class KitStore {
-    private yDoc: Y.Doc;
-    private yKit: Y.Map<Kit>;
-    // private provider: WebrtcProvider;
-    public atom: ReturnType<typeof atom<Kit | null>>;
+// const yDoc = new Y.Doc();
+// const yKits = yDoc.getMap<Kit>('kits');
+// new IndexeddbPersistence("semio", yDoc);
 
-    constructor(roomId: string) {
-        this.yDoc = new Y.Doc();
-        this.yKit = this.yDoc.getMap<Kit>('kit');
-        this.atom = atom<Kit | null>(null);
 
-        // Set up persistence
-        new IndexeddbPersistence(`semio-studio-${roomId}`, this.yDoc);
+// // Store class to manage a single room's state
+// class KitStore {
+//     private yDoc: Y.Doc;
+//     private yKit: Y.Map<Kit>;
+//     // private provider: WebrtcProvider;
+//     public atom: ReturnType<typeof atom<Kit | null>>;
 
-        // Set up WebRTC provider
-        // this.provider = new WebrtcProvider(roomId, this.yDoc, {
-        //     signaling: ['wss://signaling.yjs.dev'],
-        //     connect: true,
-        // });
+//     constructor(roomId: string) {
+//         this.yDoc = new Y.Doc();
+//         this.yKit = this.yDoc.getMap<Kit>('kit');
+//         this.atom = atom<Kit | null>(null);
 
-        // Subscribe to changes
-        this.yKit.observe(() => {
-            const kit = this.yKit.get('kit');
-            if (kit) {
-                this.atom.onMount = (setAtom) => {
-                    setAtom(kit);
-                };
-            }
-        });
-    }
+//         // Set up persistence
+//         new IndexeddbPersistence(`semio-studio-${roomId}`, this.yDoc);
 
-    updateKit(kit: Kit) {
-        this.yDoc.transact(() => {
-            this.yKit.set('kit', kit);
-        });
-    }
+//         // Set up WebRTC provider
+//         // this.provider = new WebrtcProvider(roomId, this.yDoc, {
+//         //     signaling: ['wss://signaling.yjs.dev'],
+//         //     connect: true,
+//         // });
 
-    clearKit() {
-        this.yDoc.transact(() => {
-            this.yKit.clear();
-        });
-    }
+//         // Subscribe to changes
+//         this.yKit.observe(() => {
+//             const kit = this.yKit.get('kit');
+//             if (kit) {
+//                 this.atom.onMount = (setAtom) => {
+//                     setAtom(kit);
+//                 };
+//             }
+//         });
+//     }
 
-    destroy() {
-        // this.provider.destroy();
-        this.yDoc.destroy();
-    }
-}
+//     updateKit(kit: Kit) {
+//         this.yDoc.transact(() => {
+//             this.yKit.set('kit', kit);
+//         });
+//     }
 
-// Store factory to manage multiple stores
-class StoreFactory {
-    private stores: Map<string, KitStore> = new Map();
+//     clearKit() {
+//         this.yDoc.transact(() => {
+//             this.yKit.clear();
+//         });
+//     }
 
-    getStore(roomId: string): KitStore {
-        if (!this.stores.has(roomId)) {
-            this.stores.set(roomId, new KitStore(roomId));
-        }
-        return this.stores.get(roomId)!;
-    }
+//     destroy() {
+//         // this.provider.destroy();
+//         this.yDoc.destroy();
+//     }
+// }
 
-    removeStore(roomId: string) {
-        const store = this.stores.get(roomId);
-        if (store) {
-            store.destroy();
-            this.stores.delete(roomId);
-        }
-    }
-}
+// // Store factory to manage multiple stores
+// class StoreFactory {
+//     private stores: Map<string, KitStore> = new Map();
 
-// Create a singleton instance of the store factory
-const storeFactory = new StoreFactory();
+//     getStore(roomId: string): KitStore {
+//         if (!this.stores.has(roomId)) {
+//             this.stores.set(roomId, new KitStore(roomId));
+//         }
+//         return this.stores.get(roomId)!;
+//     }
 
-// Hook to use a specific room's kit
-export function useKit(roomId: string) {
-    const store = storeFactory.getStore(roomId);
-    return useAtom(store.atom);
-}
+//     removeStore(roomId: string) {
+//         const store = this.stores.get(roomId);
+//         if (store) {
+//             store.destroy();
+//             this.stores.delete(roomId);
+//         }
+//     }
+// }
 
-// Function to update a specific room's kit
-export function updateKit(roomId: string, kit: Kit) {
-    const store = storeFactory.getStore(roomId);
-    store.updateKit(kit);
-}
+// // Create a singleton instance of the store factory
+// const storeFactory = new StoreFactory();
 
-// Function to clear a specific room's kit
-export function clearKit(roomId: string) {
-    const store = storeFactory.getStore(roomId);
-    store.clearKit();
-}
+// // Hook to use a specific room's kit
+// export function useKit(roomId: string) {
+//     const store = storeFactory.getStore(roomId);
+//     return useAtom(store.atom);
+// }
 
-// Function to remove a store when it's no longer needed
-export function removeStore(roomId: string) {
-    storeFactory.removeStore(roomId);
-}
+// // Function to update a specific room's kit
+// export function updateKit(roomId: string, kit: Kit) {
+//     const store = storeFactory.getStore(roomId);
+//     store.updateKit(kit);
+// }
 
-// Function to fetch and update a specific room's kit
-export async function fetchKit(roomId: string, url: string): Promise<void> {
-    console.log('Fetching Kit from URL:', url);
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
-        const kit = await response.json() as Kit;
+// // Function to clear a specific room's kit
+// export function clearKit(roomId: string) {
+//     const store = storeFactory.getStore(roomId);
+//     store.clearKit();
+// }
 
-        const store = storeFactory.getStore(roomId);
-        store.updateKit(kit);
-        console.log('Kit successfully fetched and updated from URL:', url);
-    } catch (error) {
-        console.error('Failed to fetch Kit from URL:', url, error);
-        throw error;
-    }
-}
+// // Function to remove a store when it's no longer needed
+// export function removeStore(roomId: string) {
+//     storeFactory.removeStore(roomId);
+// }
+
+// // Function to fetch and update a specific room's kit
+// export async function fetchKit(roomId: string, url: string): Promise<void> {
+//     console.log('Fetching Kit from URL:', url);
+//     try {
+//         const response = await fetch(url);
+//         if (!response.ok) {
+//             throw new Error(`Failed to fetch: ${response.statusText}`);
+//         }
+//         const kit = await response.json() as Kit;
+
+//         const store = storeFactory.getStore(roomId);
+//         store.updateKit(kit);
+//         console.log('Kit successfully fetched and updated from URL:', url);
+//     } catch (error) {
+//         console.error('Failed to fetch Kit from URL:', url, error);
+//         throw error;
+//     }
+// }
 
