@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -211,29 +211,28 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                 <Breadcrumb className="">
                     <BreadcrumbList>
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
+                            <BreadcrumbLink href="/"><Home size={16} /></BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator items={[
                             { label: "Starter", href: "/metabolism/starter" },
                             { label: "Geometry", href: "/metabolism/geometry" }
                         ]} onNavigate={(href) => console.log('Navigate to:', href)} />
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
+                            <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator items={[
                             { label: "Types", href: "/designs/types" },
                             { label: "Representations", href: "/designs/representations" }
                         ]} onNavigate={(href) => console.log('Navigate to:', href)} />
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
+                            <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator items={[
                             { label: "Capsule Dream", href: "/designs/nakagin/capsule-dream" }
                         ]} onNavigate={(href) => console.log('Navigate to:', href)} />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
+                        </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
@@ -467,7 +466,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute left-8 right-8 bottom-8 h-[200px] z-[150] bg-grey text-light border border-lightGrey shadow-lg"
+            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-dark-grey text-light border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Console</div>
         </div>

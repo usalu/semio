@@ -36,8 +36,11 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <Sphere args={[1, 100, 100]} scale={1.5} position={[0, 0, 0]}>
+                <Sphere args={[2, 100, 100]} position={[0, 0, 0]}>
                     <meshStandardMaterial color="gold" roughness={0} metalness={1} />
+                </Sphere>
+                <Sphere args={[1, 100, 100]} position={[0, 3, 0]}>
+                    <meshStandardMaterial color="gold" roughness={0} metalness={1} opacity={0.5} transparent={true} />
                 </Sphere>
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid infiniteGrid={true} sectionColor={'var(--color-light)'} />
