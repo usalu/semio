@@ -1,4 +1,7 @@
-export type { Kit, Design, Type, Port, Representation, Quality } from '@semio/js/semio';
+export type {
+    Kit, Design, Type, Piece, Connection, Port, Representation, Quality,
+    Author, Side, DiagramPoint, Plane, Point, Vector, PieceID, PortID, TypeID
+} from '@semio/js/semio';
 export { default as File } from '@semio/js/components/ui/File';
 export { default as Sketchpad } from '@semio/js/components/ui/Sketchpad';
 export { default as eslintConfig } from '@semio/js/eslint.config';

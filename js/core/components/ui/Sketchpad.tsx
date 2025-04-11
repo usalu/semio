@@ -483,6 +483,7 @@ const Chat: FC<PanelProps> = ({ visible }) => {
     );
 }
 
+
 interface PanelToggles {
     workbench: boolean;
     console: boolean;
