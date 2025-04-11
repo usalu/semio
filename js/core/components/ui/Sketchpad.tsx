@@ -517,53 +517,55 @@ interface SketchpadProps {
 
 const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, readonly = false, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
-        workbench: true,
+        workbench: false,
         console: false,
-        details: true,
+        details: false,
         chat: false,
     });
 
     const togglePanel = (panel: keyof PanelToggles) => {
-        setVisiblePanels(prev => ({
-            ...prev,
-            [panel]: !prev[panel]
-        }));
+        setVisiblePanels(prev => {
+            const newState = { ...prev };
+
+            // If turning on details, ensure chat is off
+            if (panel === 'details' && !prev.details) {
+                newState.chat = false;
+            }
+
+            // If turning on chat, ensure details is off
+            if (panel === 'chat' && !prev.chat) {
+                newState.details = false;
+            }
+
+            // Toggle the requested panel
+            newState[panel] = !prev[panel];
+
+            return newState;
+        });
     };
 
     useHotkeys('mod+j', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setVisiblePanels(prev => ({
-            ...prev,
-            workbench: !prev.workbench
-        }));
+        togglePanel('workbench');
     });
 
     useHotkeys('mod+k', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setVisiblePanels(prev => ({
-            ...prev,
-            console: !prev.console
-        }));
+        togglePanel('console');
     });
 
     useHotkeys('mod+l', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setVisiblePanels(prev => ({
-            ...prev,
-            details: !prev.details
-        }));
+        togglePanel('details');
     });
 
     useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setVisiblePanels(prev => ({
-            ...prev,
-            chat: !prev.chat
-        }));
+        togglePanel('chat');
     });
 
     return (
