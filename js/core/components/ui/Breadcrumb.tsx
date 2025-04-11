@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
-import { ChevronRight, MoreHorizontal } from "lucide-react"
+import { ChevronRight, ChevronDown, MoreHorizontal } from "lucide-react"
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 import { cn } from "@semio/js/lib/utils"
 
@@ -62,21 +63,67 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
+interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
+  items?: { label: string; href: string }[];
+  onNavigate?: (href: string) => void;
+}
+
 function BreadcrumbSeparator({
   children,
   className,
+  items,
+  onNavigate,
   ...props
-}: React.ComponentProps<"li">) {
+}: BreadcrumbSeparatorProps) {
+  const [open, setOpen] = React.useState(false)
+
+  const handleSelect = (href: string) => {
+    setOpen(false)
+    onNavigate?.(href)
+  }
+
+  if (!items?.length) {
+    return (
+      <li
+        data-slot="breadcrumb-separator"
+        role="presentation"
+        aria-hidden="true"
+        className={cn("[&>svg]:size-3", className)}
+        {...props}
+      >
+        {children ?? <ChevronRight />}
+      </li>
+    )
+  }
+
   return (
-    <li
-      data-slot="breadcrumb-separator"
-      role="presentation"
-      aria-hidden="true"
-      className={cn("[&>svg]:size-3", className)}
-      {...props}
-    >
-      {children ?? <ChevronRight />}
-    </li>
+    <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
+      <DropdownMenuPrimitive.Trigger asChild>
+        <li
+          data-slot="breadcrumb-separator"
+          className={cn("[&>svg]:size-3 cursor-pointer", className)}
+          {...props}
+        >
+          {open ? <ChevronDown /> : <ChevronRight />}
+        </li>
+      </DropdownMenuPrimitive.Trigger>
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          align="center"
+          className="bg-grey text-light min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md"
+        >
+          {items.map((item, index) => (
+            <DropdownMenuPrimitive.Item
+              key={index}
+              className="focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none"
+              onClick={() => handleSelect(item.href)}
+            >
+              {item.label}
+            </DropdownMenuPrimitive.Item>
+          ))}
+        </DropdownMenuPrimitive.Content>
+      </DropdownMenuPrimitive.Portal>
+    </DropdownMenuPrimitive.Root>
   )
 }
 

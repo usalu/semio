@@ -20,7 +20,6 @@ import { default as Model } from "@semio/js/components/ui/Model";
 import { Design, Kit, Type } from '@semio/js';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@semio/js/components/ui/DropdownMenu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
@@ -211,37 +210,30 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
             >
                 <Breadcrumb className="">
                     <BreadcrumbList>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-1">
-                                Metabolism
-                                <ChevronDownIcon />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuItem>Starter</DropdownMenuItem>
-                                <DropdownMenuItem>Geometry</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        </BreadcrumbItem>
                         <BreadcrumbSeparator />
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-1">
-                                Designs
-                                <ChevronDownIcon />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuItem>Types</DropdownMenuItem>
-                                <DropdownMenuItem>Representations</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <BreadcrumbSeparator />
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-1">
-                                Nakagin Capsule Tower
-                                <ChevronDownIcon />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuItem>Capsule Dream</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator items={[
+                            { label: "Starter", href: "/metabolism/starter" },
+                            { label: "Geometry", href: "/metabolism/geometry" }
+                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator items={[
+                            { label: "Types", href: "/designs/types" },
+                            { label: "Representations", href: "/designs/representations" }
+                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator items={[
+                            { label: "Capsule Dream", href: "/designs/nakagin/capsule-dream" }
+                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
