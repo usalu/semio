@@ -12,7 +12,8 @@ const createWindow = () => {
     width: 800,
     height: 600,
     autoHideMenuBar: true,
-    frame: false,
+    // TODO: Make webkit app region work for electron
+    // frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

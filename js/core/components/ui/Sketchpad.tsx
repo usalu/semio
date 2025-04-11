@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -186,51 +186,11 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
     );
 };
 
-export enum SketchpadMode {
-    FULL = 'full',
-    DIAGRAM = 'diagram',
-    MODEL = 'model',
-}
-
-interface PanelProps {
-    visible: boolean;
-}
-
-const Workbench: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
-        >
-            <div className="font-semibold p-4">Workbench</div>
-        </div>
-    );
-}
-
-const Details: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
-        >
-            <div className="font-semibold p-4">Details</div>
-        </div>
-    );
-}
-
-const Console: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute left-8 right-8 bottom-8 h-[200px] z-[150] bg-grey text-light border border-lightGrey shadow-lg"
-        >
-            <div className="font-semibold p-4">Console</div>
-        </div>
-    );
-}
 
 interface NavbarProps {
     visiblePanels: PanelToggles;
     onTogglePanel: (panel: keyof PanelToggles) => void;
+    readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -238,43 +198,56 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents }) => {
+const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly }) => {
     return (
         <div
             className={`w-full h-12 bg-dark border-b border-lightGrey flex items-center justify-between px-4`}
-            style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
+        // TODO: Make webkit app region work for electron
+        // style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
         >
             <div
                 className="flex items-center"
-                style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
+            // style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
             >
                 <Breadcrumb className="">
                     <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/">Metabolism</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
                         <DropdownMenu>
                             <DropdownMenuTrigger className="flex items-center gap-1">
-                                Artifacts
+                                Metabolism
                                 <ChevronDownIcon />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
-                                <DropdownMenuItem>Designs</DropdownMenuItem>
+                                <DropdownMenuItem>Starter</DropdownMenuItem>
+                                <DropdownMenuItem>Geometry</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <BreadcrumbSeparator />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-1">
+                                Designs
+                                <ChevronDownIcon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
                                 <DropdownMenuItem>Types</DropdownMenuItem>
                                 <DropdownMenuItem>Representations</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>Nakagin Capsule Tower</BreadcrumbPage>
-                        </BreadcrumbItem>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-1">
+                                Nakagin Capsule Tower
+                                <ChevronDownIcon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem>Capsule Dream</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
             <div
                 className={`flex items-center gap-4`}
-                style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
+            // style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
             >
                 <ToggleGroup
                     type="multiple"
@@ -316,6 +289,13 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents 
                         className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Info />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                        value="chat"
+                        aria-label="Toggle Chat"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                    >
+                        <MessageCircle />
                     </ToggleGroupItem>
                 </ToggleGroup>
                 <Avatar className="h-8 w-8">
@@ -366,6 +346,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents 
         </div >
     );
 };
+
 
 interface DesignEditorProps {
 }
@@ -424,7 +405,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 
     useHotkeys('ctrl+s', (e) => {
         e.preventDefault();
-        console.log('Save design');
+        console.log('Save stash changes of design');
     });
 
     useHotkeys('ctrl+w', (e) => {
@@ -465,16 +446,68 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     );
 };
 
+interface PanelProps {
+    visible: boolean;
+}
+
+const Workbench: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Workbench</div>
+        </div>
+    );
+}
+
+const Details: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Details</div>
+        </div>
+    );
+}
+
+const Console: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute left-8 right-8 bottom-8 h-[200px] z-[150] bg-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Console</div>
+        </div>
+    );
+}
+
+const Chat: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        >
+            <div className="font-semibold p-4">Chat</div>
+        </div>
+    );
+}
 
 interface PanelToggles {
     workbench: boolean;
-    details: boolean;
     console: boolean;
+    details: boolean;
+    chat: boolean;
 }
 
+export enum SketchpadMode {
+    FULL = 'full',
+    DIAGRAM = 'diagram',
+    MODEL = 'model',
+}
 
 interface SketchpadProps {
     mode?: SketchpadMode;
+    readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -482,11 +515,12 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, readonly = false, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: true,
         console: false,
         details: true,
+        chat: false,
     });
 
     const togglePanel = (panel: keyof PanelToggles) => {
@@ -496,7 +530,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEven
         }));
     };
 
-    useHotkeys('ctrl+j', (e) => {
+    useHotkeys('mod+j', (e) => {
         e.preventDefault();
         e.stopPropagation();
         setVisiblePanels(prev => ({
@@ -505,7 +539,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEven
         }));
     });
 
-    useHotkeys('ctrl+k', (e) => {
+    useHotkeys('mod+k', (e) => {
         e.preventDefault();
         e.stopPropagation();
         setVisiblePanels(prev => ({
@@ -514,7 +548,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEven
         }));
     });
 
-    useHotkeys('ctrl+l', (e) => {
+    useHotkeys('mod+l', (e) => {
         e.preventDefault();
         e.stopPropagation();
         setVisiblePanels(prev => ({
@@ -523,15 +557,25 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, onWindowEven
         }));
     });
 
+    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setVisiblePanels(prev => ({
+            ...prev,
+            chat: !prev.chat
+        }));
+    });
+
     return (
         <div className="h-full w-full text-light flex flex-col">
             <TooltipProvider>
-                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} />
+                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} readonly={readonly} />
                 <div className="canvas flex-1 relative">
                     <DesignEditor />
                     <Workbench visible={visiblePanels.workbench} />
                     <Details visible={visiblePanels.details} />
                     <Console visible={visiblePanels.console} />
+                    <Chat visible={visiblePanels.chat} />
                 </div>
             </TooltipProvider>
         </div>

@@ -6,6 +6,14 @@ import React from 'react';
 
 export const useTypes = () => []
 
+export const fetchKit = async (url: string) => {
+    // const response = await fetch(url);
+    // const buffer = await response.arrayBuffer();
+    // const blob = new Blob([buffer], { type: 'model/gltf-binary' })
+    // const url = URL.createObjectURL(blob)
+    // return url;
+}
+
 // console.log('Initializing Yjs and Jotai store...');
 // const ydoc = new Y.Doc();
 // const indexeddbProvider = new IndexeddbPersistence('semio', ydoc);
