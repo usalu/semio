@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project
+An ecosystem for designing kit-of-parts architecture together.
+
+# Principles:
+- Toolfriendly over intuitive.
+- Almost everything is in a single file if possible.
+- Folders are avoided if possible.
