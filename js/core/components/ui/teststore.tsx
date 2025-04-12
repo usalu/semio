@@ -65,12 +65,13 @@ class Studio {
 // Create a singleton instance of the Studio
 const studioSingleton = new Studio();
 
+// Create context with proper typing
 const StudioContext = createContext<Studio | null>(null);
 
 export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-        <StudioContext.Provider value= { studioSingleton } >
-        { children }
+        <StudioContext.Provider value={studioSingleton}>
+            {children}
         </StudioContext.Provider>
     );
 };
