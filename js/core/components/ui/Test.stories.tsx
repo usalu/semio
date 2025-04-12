@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import React, { FC, useState } from 'react';
 import * as Y from 'yjs';
-import { Tree } from './teststore';
+import { Tree, useTree } from './teststore';
 
 interface TreeNodeProps {
-    node: Y.Map<any>;
+    node: Y.Map<Tree>;
     depth: number;
-    onAddChild: (parent: Y.Map<any>) => void;
+    onAddChild: (parent: Y.Map<Tree>) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
@@ -19,7 +19,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
         node.set('value', newValue);
     };
 
-    const children = node.get('children') as Y.Array<Y.Map<any>>;
+    const children = node.get('children') as Y.Array<Y.Map<Tree>>;
 
     return (
         <div style={{ marginLeft: depth * 20 }}>
@@ -43,27 +43,38 @@ interface TreeListProps {
 }
 
 const TreeList: React.FC<TreeListProps> = ({ root }) => {
-    const handleAddChild = (parent: Y.Map<any>) => {
-        const children = parent.get('children') as Y.Array<Y.Map<any>>;
+    const { tree, undo, redo } = useTree(root);
+
+    const handleAddChild = (parent: Y.Map<Tree>) => {
+        const children = parent.get('children') as Y.Array<Y.Map<Tree>>;
         const newChild = new Y.Map();
         newChild.set('value', '');
         newChild.set('children', new Y.Array());
         children.push([newChild]);
     };
 
-    return <TreeNode node={root} depth={0} onAddChild={handleAddChild} />;
+    return (
+        <div>
+            <button onClick={undo}>Undo</button>
+            <button onClick={redo}>Redo</button>
+            <TreeNode node={tree} depth={0} onAddChild={handleAddChild} />
+        </div>
+    );
 };
 
 const Test: FC = () => {
+    const { tree: root1 } = useTree('client1');
+    const { tree: root2 } = useTree('client2');
+
     return (
         <div style={{ display: 'flex', gap: '20px' }}>
             <div>
                 <h3>Client 1</h3>
-                <TreeList root={root} />
+                <TreeList root={root1} />
             </div>
             <div>
                 <h3>Client 2</h3>
-                <TreeList root={root} />
+                <TreeList root={root2} />
             </div>
         </div>
     );
