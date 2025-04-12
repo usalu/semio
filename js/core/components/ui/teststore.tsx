@@ -11,14 +11,17 @@ export type Tree = {
 class Studio {
     private studioDoc: Y.Doc;
     private undoManagers: Map<string, UndoManager>;
+    private indexeddbProvider: IndexeddbPersistence;
+    private studioId: string;
 
     constructor(
         id: string = 'test-studio',
     ) {
+        this.studioId = id;
         this.studioDoc = new Y.Doc();
         this.undoManagers = new Map();
-        const indexeddbProvider = new IndexeddbPersistence(id, this.studioDoc);
-        indexeddbProvider.whenSynced.then(() => {
+        this.indexeddbProvider = new IndexeddbPersistence(id, this.studioDoc);
+        this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for ${id}`);
         });
     }
@@ -59,6 +62,31 @@ class Studio {
     redo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
         if (undoManager) undoManager.redo();
+    }
+
+    /**
+     * Cleans the studio by clearing IndexedDB storage and creating a fresh document
+     * @returns Promise that resolves when cleaning is complete
+     */
+    async clean(): Promise<void> {
+        try {
+            // Destroy the current document
+            this.studioDoc.destroy();
+
+            // Clear IndexedDB for this studio
+            await this.indexeddbProvider.clearData();
+
+            // Reinitialize with a fresh document
+            this.studioDoc = new Y.Doc();
+            this.undoManagers = new Map();
+            this.indexeddbProvider = new IndexeddbPersistence(this.studioId, this.studioDoc);
+
+            console.log(`Studio data for ${this.studioId} has been cleaned`);
+            return this.indexeddbProvider.whenSynced;
+        } catch (error) {
+            console.error('Error cleaning studio:', error);
+            throw error;
+        }
     }
 }
 
