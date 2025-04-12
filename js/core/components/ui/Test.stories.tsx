@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import React, { FC, useState, useCallback, useEffect } from 'react';
-import * as Y from 'yjs';
-import { Tree, useTree, StudioProvider, useStudio } from './teststore';
+import { TreeNode as TreeNodeType, useTree, StudioProvider, useStudio } from './teststore';
 
 interface TreeNodeProps {
     nodeId: string;
@@ -10,48 +9,14 @@ interface TreeNodeProps {
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
-    const { getNode, createNode } = useTree("shared");
+    const { getNode, updateNodeValue, addChild } = useTree("shared");
     const node = getNode(nodeId);
 
     const [value, setValue] = useState('');
-    const [childKeys, setChildKeys] = useState<string[]>([]);
 
     useEffect(() => {
         if (!node) return;
-
-        // Set initial value
-        setValue(node.get('value') || '');
-
-        // Observe value changes
-        const observeValue = () => {
-            setValue(node.get('value') || '');
-        };
-
-        // Observe children changes
-        const observeChildren = () => {
-            const children = node.get('children') as Y.Map<string>;
-            if (children) {
-                setChildKeys(Array.from(children.keys()));
-            }
-        };
-
-        // Initial children setup
-        observeChildren();
-
-        // Set up observers
-        node.observe(observeValue);
-        const children = node.get('children') as Y.Map<string>;
-        if (children) {
-            children.observe(observeChildren);
-        }
-
-        // Cleanup observers
-        return () => {
-            node.unobserve(observeValue);
-            if (children) {
-                children.unobserve(observeChildren);
-            }
-        };
+        setValue(node.value);
     }, [node]);
 
     if (!node) return null;
@@ -59,14 +24,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setValue(newValue);
-        node.set('value', newValue);
+        updateNodeValue(nodeId, newValue);
     };
 
     const handleAddChild = () => {
-        const children = node.get('children') as Y.Map<string>;
-        const childId = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const childNode = createNode(childId);
-        children.set(childId, childId);
+        addChild(nodeId);
     };
 
     return (
@@ -85,10 +47,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
                     Add Child
                 </button>
             </div>
-            {childKeys.map(key => (
+            {node.childIds.map(childId => (
                 <TreeNode
-                    key={key}
-                    nodeId={node.get('children').get(key)}
+                    key={childId}
+                    nodeId={childId}
                     depth={depth + 1}
                 />
             ))}
@@ -101,7 +63,7 @@ interface TreeListProps {
 }
 
 const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
-    const { tree, undo, redo, canUndo, canRedo } = useTree(rootId);
+    const { undo, redo, canUndo, canRedo } = useTree(rootId);
 
     return (
         <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
@@ -138,7 +100,7 @@ const StudioControls: React.FC = () => {
     const handleClean = useCallback(async () => {
         try {
             setIsLoading(true);
-            // Use the new clean API instead of directly modifying localStorage
+            // Use the clean API
             await studio.clean();
             // Reload the page to reflect the cleaned state
             window.location.reload();

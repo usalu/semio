@@ -3,9 +3,17 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
-export type Tree = {
+// Public interfaces - these don't expose Yjs types
+export interface TreeNode {
+    id: string;
     value: string;
-    children: Y.Map<string>; // Map of child IDs to child nodes
+    childIds: string[];
+}
+
+// Internal type definitions used by the store implementation
+type YjsTree = {
+    value: string;
+    children: Y.Map<string>;
 };
 
 class Studio {
@@ -26,7 +34,8 @@ class Studio {
         });
     }
 
-    getTree(treeId: string): Y.Map<Tree> {
+    // Internal method to get the Yjs tree
+    private getYjsTree(treeId: string): Y.Map<YjsTree> {
         const treesMap = this.studioDoc.getMap(treeId);
         if (!treesMap.has('root')) {
             const rootTree = new Y.Map<any>();
@@ -49,10 +58,17 @@ class Studio {
             console.log(`Created UndoManager for ${treeId}`);
         }
 
-        return treesMap.get('root') as Y.Map<Tree>;
+        return treesMap.get('root') as Y.Map<YjsTree>;
     }
 
-    createTreeNode(treeId: string, id: string): Y.Map<any> {
+    // Internal method to get a Yjs node
+    private getYjsNode(treeId: string, id: string): Y.Map<any> | undefined {
+        const treesMap = this.studioDoc.getMap(treeId);
+        return treesMap.get(id) as Y.Map<any>;
+    }
+
+    // Internal method to create a Yjs node
+    private createYjsNode(treeId: string, id: string): Y.Map<any> {
         const treesMap = this.studioDoc.getMap(treeId);
         if (!treesMap.has(id)) {
             const nodeTree = new Y.Map<any>();
@@ -63,37 +79,99 @@ class Studio {
         return treesMap.get(id) as Y.Map<any>;
     }
 
-    getTreeNode(treeId: string, id: string): Y.Map<any> | undefined {
-        const treesMap = this.studioDoc.getMap(treeId);
-        return treesMap.get(id) as Y.Map<any>;
+    // Public method that returns a TreeNode
+    getNode(treeId: string, id: string): TreeNode | null {
+        const yjsNode = this.getYjsNode(treeId, id);
+        if (!yjsNode) return null;
+
+        const children = yjsNode.get('children') as Y.Map<string>;
+        const childIds = children ? Array.from(children.keys()) : [];
+
+        return {
+            id,
+            value: yjsNode.get('value') || '',
+            childIds
+        };
     }
 
+    // Create a new node and return its public representation
+    createNode(treeId: string, id: string): TreeNode {
+        const yjsNode = this.createYjsNode(treeId, id);
+        return {
+            id,
+            value: yjsNode.get('value') || '',
+            childIds: []
+        };
+    }
+
+    // Update a node's value
+    updateNodeValue(treeId: string, id: string, value: string): void {
+        const yjsNode = this.getYjsNode(treeId, id);
+        if (yjsNode) {
+            yjsNode.set('value', value);
+        }
+    }
+
+    // Add a child to a node
+    addChild(treeId: string, parentId: string, childId: string): TreeNode | null {
+        const parentNode = this.getYjsNode(treeId, parentId);
+        if (!parentNode) return null;
+
+        const childNode = this.createYjsNode(treeId, childId);
+        const children = parentNode.get('children') as Y.Map<string>;
+        children.set(childId, childId);
+
+        return this.getNode(treeId, childId);
+    }
+
+    // Observe changes to the internal YDoc
+    observeTree(treeId: string, callback: () => void): () => void {
+        const treeMap = this.studioDoc.getMap(treeId);
+        treeMap.observeDeep(callback);
+        return () => treeMap.unobserveDeep(callback);
+    }
+
+    // Undo/redo operations
     undo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
-        if (undoManager) {
-            if (undoManager.canUndo()) {
-                console.log(`Undoing change in ${scope}`);
-                undoManager.undo();
-            } else {
-                console.log(`Cannot undo - no more history in ${scope}`);
-            }
-        } else {
-            console.warn(`No UndoManager found for ${scope}`);
+        if (undoManager && undoManager.canUndo()) {
+            console.log(`Undoing change in ${scope}`);
+            undoManager.undo();
         }
     }
 
     redo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
-        if (undoManager) {
-            if (undoManager.canRedo()) {
-                console.log(`Redoing change in ${scope}`);
-                undoManager.redo();
-            } else {
-                console.log(`Cannot redo - no more history in ${scope}`);
-            }
-        } else {
-            console.warn(`No UndoManager found for ${scope}`);
+        if (undoManager && undoManager.canRedo()) {
+            console.log(`Redoing change in ${scope}`);
+            undoManager.redo();
         }
+    }
+
+    canUndo(scope: string): boolean {
+        const undoManager = this.undoManagers.get(scope);
+        return undoManager ? undoManager.canUndo() : false;
+    }
+
+    canRedo(scope: string): boolean {
+        const undoManager = this.undoManagers.get(scope);
+        return undoManager ? undoManager.canRedo() : false;
+    }
+
+    subscribeToUndoChanges(
+        scope: string,
+        callback: () => void
+    ): () => void {
+        const undoManager = this.undoManagers.get(scope);
+        if (!undoManager) return () => { };
+
+        undoManager.on('stack-item-added', callback);
+        undoManager.on('stack-item-popped', callback);
+
+        return () => {
+            undoManager.off('stack-item-added', callback);
+            undoManager.off('stack-item-popped', callback);
+        };
     }
 
     /**
@@ -148,60 +226,63 @@ export function useStudio() {
 export function useTree(treeId: string) {
     const studio = useStudio();
     const fullTreeId = `tree-${treeId}`;
-    const [rootTree, setRootTree] = useState<Y.Map<Tree>>(studio.getTree(fullTreeId));
+    const [nodes, setNodes] = useState<Record<string, TreeNode>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
 
     useEffect(() => {
-        const treeMap = studio.studioDoc.getMap(fullTreeId);
+        // Function to load a node and its children recursively
+        const loadNode = (id: string): void => {
+            const node = studio.getNode(fullTreeId, id);
+            if (!node) return;
 
-        // Create a more responsive update handler
-        const updateHandler = () => {
-            setRootTree(treeMap.get('root') as Y.Map<Tree>);
+            setNodes(prev => ({
+                ...prev,
+                [id]: node
+            }));
+
+            // Load all children
+            node.childIds.forEach(childId => {
+                loadNode(childId);
+            });
         };
 
-        // Get the undo manager for this tree
-        const undoManager = studio['undoManagers'].get(fullTreeId);
+        // Load the root node to start
+        loadNode('root');
 
-        // Initial update
-        updateHandler();
+        // Update handler for tree changes
+        const updateHandler = () => {
+            loadNode('root');
+        };
 
-        if (undoManager) {
-            // Update undo/redo state
-            const updateUndoRedoState = () => {
-                setCanUndo(undoManager.canUndo());
-                setCanRedo(undoManager.canRedo());
-            };
+        // Update undo/redo state
+        const updateUndoRedoState = () => {
+            setCanUndo(studio.canUndo(fullTreeId));
+            setCanRedo(studio.canRedo(fullTreeId));
+        };
 
-            // Initial state
-            updateUndoRedoState();
+        // Initial undo/redo state
+        updateUndoRedoState();
 
-            // Subscribe to undo manager events
-            undoManager.on('stack-item-added', updateUndoRedoState);
-            undoManager.on('stack-item-popped', updateUndoRedoState);
-
-            // Debug logging
-            console.log(`Initialized undo manager for ${fullTreeId}`);
-        }
-
-        // Observe all changes to the tree map and its descendants
-        treeMap.observeDeep(updateHandler);
-
-        // No need for the interval - proper observation is better
+        // Set up observers
+        const unobserveTree = studio.observeTree(fullTreeId, updateHandler);
+        const unsubscribeUndoChanges = studio.subscribeToUndoChanges(fullTreeId, updateUndoRedoState);
 
         return () => {
-            treeMap.unobserveDeep(updateHandler);
-            if (undoManager) {
-                undoManager.off('stack-item-added', updateUndoRedoState);
-                undoManager.off('stack-item-popped', updateUndoRedoState);
-            }
+            unobserveTree();
+            unsubscribeUndoChanges();
         };
     }, [studio, fullTreeId]);
 
     return {
-        tree: rootTree,
-        getNode: (id: string) => studio.getTreeNode(fullTreeId, id),
-        createNode: (id: string) => studio.createTreeNode(fullTreeId, id),
+        nodes,
+        getNode: (id: string) => nodes[id] || null,
+        updateNodeValue: (id: string, value: string) =>
+            studio.updateNodeValue(fullTreeId, id, value),
+        addChild: (parentId: string) => {
+            const childId = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            return studio.addChild(fullTreeId, parentId, childId);
+        },
         undo: () => studio.undo(fullTreeId),
         redo: () => studio.redo(fullTreeId),
         canUndo,
