@@ -65,6 +65,29 @@ interface TreeListProps {
 const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
     const { undo, redo, canUndo, canRedo, hasInitialized, initializeTree } = useTree(rootId);
     const [initialValue, setInitialValue] = useState('Root');
+    const studio = useStudio();
+    const fullTreeId = `tree-${rootId}`;
+
+    useEffect(() => {
+        console.log(`Undo/Redo state for ${rootId}: canUndo=${canUndo}, canRedo=${canRedo}`);
+
+        // If initialized but undo/redo buttons aren't working, try to trigger undo capability
+        if (hasInitialized && !canUndo) {
+            // This will create temporary operations to activate the undo functionality
+            studio.triggerUndoRedoCapability(fullTreeId);
+        }
+    }, [canUndo, canRedo, rootId, hasInitialized, studio, fullTreeId]);
+
+    const handleInitializeTree = () => {
+        const rootNode = initializeTree(initialValue);
+
+        // After initialization, explicitly trigger the undo capability
+        setTimeout(() => {
+            studio.triggerUndoRedoCapability(fullTreeId);
+        }, 100);
+
+        return rootNode;
+    };
 
     if (!hasInitialized) {
         return (
@@ -78,7 +101,7 @@ const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
                         className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
                     />
                     <button
-                        onClick={() => initializeTree(initialValue)}
+                        onClick={handleInitializeTree}
                         className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors w-full sm:w-auto"
                     >
                         Initialize Tree
@@ -94,14 +117,20 @@ const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
                 <button
                     onClick={undo}
                     disabled={!canUndo}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`px-3 py-1 rounded transition-colors ${canUndo
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
                 >
                     Undo
                 </button>
                 <button
                     onClick={redo}
                     disabled={!canRedo}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`px-3 py-1 rounded transition-colors ${canRedo
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
                 >
                     Redo
                 </button>
