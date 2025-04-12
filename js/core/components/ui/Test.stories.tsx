@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
-import React, { FC, useState, useCallback } from 'react';
+import React, { FC, useState, useCallback, useEffect } from 'react';
 import * as Y from 'yjs';
 import { Tree, useTree, StudioProvider, useStudio } from './teststore';
 
@@ -13,9 +13,48 @@ const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
     const { getNode, createNode } = useTree("shared");
     const node = getNode(nodeId);
 
-    if (!node) return null;
+    const [value, setValue] = useState('');
+    const [childKeys, setChildKeys] = useState<string[]>([]);
 
-    const [value, setValue] = useState(node.get('value') || '');
+    useEffect(() => {
+        if (!node) return;
+
+        // Set initial value
+        setValue(node.get('value') || '');
+
+        // Observe value changes
+        const observeValue = () => {
+            setValue(node.get('value') || '');
+        };
+
+        // Observe children changes
+        const observeChildren = () => {
+            const children = node.get('children') as Y.Map<string>;
+            if (children) {
+                setChildKeys(Array.from(children.keys()));
+            }
+        };
+
+        // Initial children setup
+        observeChildren();
+
+        // Set up observers
+        node.observe(observeValue);
+        const children = node.get('children') as Y.Map<string>;
+        if (children) {
+            children.observe(observeChildren);
+        }
+
+        // Cleanup observers
+        return () => {
+            node.unobserve(observeValue);
+            if (children) {
+                children.unobserve(observeChildren);
+            }
+        };
+    }, [node]);
+
+    if (!node) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
@@ -29,8 +68,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
         const childNode = createNode(childId);
         children.set(childId, childId);
     };
-
-    const children = node.get('children') as Y.Map<string>;
 
     return (
         <div className="ml-[20px] mb-2">
@@ -48,14 +85,13 @@ const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
                     Add Child
                 </button>
             </div>
-            {children &&
-                Array.from(children.entries()).map(([key, childId]) => (
-                    <TreeNode
-                        key={key}
-                        nodeId={childId}
-                        depth={depth + 1}
-                    />
-                ))}
+            {childKeys.map(key => (
+                <TreeNode
+                    key={key}
+                    nodeId={node.get('children').get(key)}
+                    depth={depth + 1}
+                />
+            ))}
         </div>
     );
 };

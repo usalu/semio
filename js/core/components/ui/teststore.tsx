@@ -153,13 +153,18 @@ export function useTree(treeId: string) {
     const [canRedo, setCanRedo] = useState<boolean>(false);
 
     useEffect(() => {
-        const treeMap = studio.getTree(fullTreeId);
+        const treeMap = studio.studioDoc.getMap(fullTreeId);
+
+        // Create a more responsive update handler
         const updateHandler = () => {
-            setRootTree(treeMap);
+            setRootTree(treeMap.get('root') as Y.Map<Tree>);
         };
 
         // Get the undo manager for this tree
         const undoManager = studio['undoManagers'].get(fullTreeId);
+
+        // Initial update
+        updateHandler();
 
         if (undoManager) {
             // Update undo/redo state
@@ -175,24 +180,22 @@ export function useTree(treeId: string) {
             undoManager.on('stack-item-added', updateUndoRedoState);
             undoManager.on('stack-item-popped', updateUndoRedoState);
 
-            // Debug logging to check if events are firing
+            // Debug logging
             console.log(`Initialized undo manager for ${fullTreeId}`);
-
-            // Force an update every second to ensure UI updates
-            const intervalId = setInterval(() => {
-                updateUndoRedoState();
-            }, 1000);
-
-            treeMap.observeDeep(updateHandler);
-            return () => {
-                treeMap.unobserveDeep(updateHandler);
-                undoManager.off('stack-item-added', updateUndoRedoState);
-                undoManager.off('stack-item-popped', updateUndoRedoState);
-                clearInterval(intervalId);
-            };
         }
 
-        return () => { };
+        // Observe all changes to the tree map and its descendants
+        treeMap.observeDeep(updateHandler);
+
+        // No need for the interval - proper observation is better
+
+        return () => {
+            treeMap.unobserveDeep(updateHandler);
+            if (undoManager) {
+                undoManager.off('stack-item-added', updateUndoRedoState);
+                undoManager.off('stack-item-popped', updateUndoRedoState);
+            }
+        };
     }, [studio, fullTreeId]);
 
     return {
