@@ -5,7 +5,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 
 export type Tree = {
     value: string;
-    children: Y.Map<Tree>;
+    children: Y.Map<string>; // Map of child IDs to child nodes
 };
 
 class Studio {
@@ -24,12 +24,31 @@ class Studio {
     }
 
     getTree(treeId: string): Y.Map<Tree> {
-        if (!this.studioDoc.getMap(treeId)) {
-            const treeMap = new Y.Map<Tree>();
-            this.studioDoc.getMap(treeId).set('tree', treeMap);
-            this.undoManagers.set(treeId, new UndoManager(treeMap));
+        const treesMap = this.studioDoc.getMap(treeId);
+        if (!treesMap.has('root')) {
+            const rootTree = new Y.Map<any>();
+            rootTree.set('value', '');
+            rootTree.set('children', new Y.Map());
+            treesMap.set('root', rootTree);
+            this.undoManagers.set(treeId, new UndoManager(treesMap));
         }
-        return this.studioDoc.getMap(treeId);
+        return treesMap.get('root') as Y.Map<Tree>;
+    }
+
+    createTreeNode(treeId: string, id: string): Y.Map<any> {
+        const treesMap = this.studioDoc.getMap(treeId);
+        if (!treesMap.has(id)) {
+            const nodeTree = new Y.Map<any>();
+            nodeTree.set('value', '');
+            nodeTree.set('children', new Y.Map());
+            treesMap.set(id, nodeTree);
+        }
+        return treesMap.get(id) as Y.Map<any>;
+    }
+
+    getTreeNode(treeId: string, id: string): Y.Map<any> | undefined {
+        const treesMap = this.studioDoc.getMap(treeId);
+        return treesMap.get(id) as Y.Map<any>;
     }
 
     undo(scope: string) {
@@ -43,8 +62,18 @@ class Studio {
     }
 }
 
+// Create a singleton instance of the Studio
+const studioSingleton = new Studio();
 
 const StudioContext = createContext<Studio | null>(null);
+
+export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <StudioContext.Provider value= { studioSingleton } >
+        { children }
+        </StudioContext.Provider>
+    );
+};
 
 export function useStudio() {
     const studio = useContext(StudioContext);
@@ -54,21 +83,24 @@ export function useStudio() {
 
 export function useTree(treeId: string) {
     const studio = useStudio();
-    const [tree, setType] = useState<Y.Map<Tree>>(studio.getTree(`tree-${treeId}`));
+    const fullTreeId = `tree-${treeId}`;
+    const [rootTree, setRootTree] = useState<Y.Map<Tree>>(studio.getTree(fullTreeId));
 
     useEffect(() => {
-        const treeMap = studio.getTree(`tree-${treeId}`);
+        const treeMap = studio.getTree(fullTreeId);
         const updateHandler = () => {
-            setType(treeMap);
+            setRootTree(treeMap);
         };
 
         treeMap.observe(updateHandler);
         return () => treeMap.unobserve(updateHandler);
-    }, [studio, treeId]);
+    }, [studio, fullTreeId]);
 
     return {
-        tree,
-        undo: () => studio.undo(`tree-${treeId}`),
-        redo: () => studio.redo(`tree-${treeId}`),
+        tree: rootTree,
+        getNode: (id: string) => studio.getTreeNode(fullTreeId, id),
+        createNode: (id: string) => studio.createTreeNode(fullTreeId, id),
+        undo: () => studio.undo(fullTreeId),
+        redo: () => studio.redo(fullTreeId),
     };
 }

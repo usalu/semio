@@ -2,15 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import React, { FC, useState } from 'react';
 import * as Y from 'yjs';
-import { Tree, useTree } from './teststore';
+import { Tree, useTree, StudioProvider } from './teststore';
 
 interface TreeNodeProps {
-    node: Y.Map<Tree>;
+    nodeId: string;
     depth: number;
-    onAddChild: (parent: Y.Map<Tree>) => void;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
+const TreeNode: React.FC<TreeNodeProps> = ({ nodeId, depth }) => {
+    const { getNode, createNode } = useTree("shared");
+    const node = getNode(nodeId);
+
+    if (!node) return null;
+
     const [value, setValue] = useState(node.get('value') || '');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,19 +23,25 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
         node.set('value', newValue);
     };
 
-    const children = node.get('children') as Y.Array<Y.Map<Tree>>;
+    const handleAddChild = () => {
+        const children = node.get('children') as Y.Map<string>;
+        const childId = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const childNode = createNode(childId);
+        children.set(childId, childId);
+    };
+
+    const children = node.get('children') as Y.Map<string>;
 
     return (
         <div style={{ marginLeft: depth * 20 }}>
             <input type="text" value={value} onChange={handleChange} />
-            <button onClick={() => onAddChild(node)}>Add Child</button>
+            <button onClick={handleAddChild}>Add Child</button>
             {children &&
-                children.map((childNode, index) => (
+                Array.from(children.entries()).map(([key, childId]) => (
                     <TreeNode
-                        key={index}
-                        node={childNode}
+                        key={key}
+                        nodeId={childId}
                         depth={depth + 1}
-                        onAddChild={onAddChild}
                     />
                 ))}
         </div>
@@ -39,44 +49,35 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
 };
 
 interface TreeListProps {
-    root: Tree;
+    rootId: string;
 }
 
-const TreeList: React.FC<TreeListProps> = ({ root }) => {
-    const { tree, undo, redo } = useTree(root);
-
-    const handleAddChild = (parent: Y.Map<Tree>) => {
-        const children = parent.get('children') as Y.Array<Y.Map<Tree>>;
-        const newChild = new Y.Map();
-        newChild.set('value', '');
-        newChild.set('children', new Y.Array());
-        children.push([newChild]);
-    };
+const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
+    const { tree, undo, redo } = useTree(rootId);
 
     return (
         <div>
             <button onClick={undo}>Undo</button>
             <button onClick={redo}>Redo</button>
-            <TreeNode node={tree} depth={0} onAddChild={handleAddChild} />
+            <TreeNode nodeId="root" depth={0} />
         </div>
     );
 };
 
 const Test: FC = () => {
-    const { tree: root1 } = useTree('client1');
-    const { tree: root2 } = useTree('client2');
-
     return (
-        <div style={{ display: 'flex', gap: '20px' }}>
-            <div>
-                <h3>Client 1</h3>
-                <TreeList root={root1} />
+        <StudioProvider>
+            <div style={{ display: 'flex', gap: '20px' }}>
+                <div>
+                    <h3>Client 1</h3>
+                    <TreeList rootId="shared" />
+                </div>
+                <div>
+                    <h3>Client 2</h3>
+                    <TreeList rootId="shared" />
+                </div>
             </div>
-            <div>
-                <h3>Client 2</h3>
-                <TreeList root={root2} />
-            </div>
-        </div>
+        </StudioProvider>
     );
 };
 
