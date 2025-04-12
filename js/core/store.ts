@@ -1,38 +1,36 @@
 import * as Y from 'yjs';
 import { Kit, Design, Type, Piece, Connection, Representation, Port } from '@semio/js';
-import React from 'react';
-import { YSweetProvider, useMap, useArray, useYDoc } from '@y-sweet/react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
-import { createContext, useContext } from 'react';
 
 // Core documents
-const studioDoc = useYDoc('studio-{studioId}')
-const kitDoc = useYDoc('kit-{kitId}')
-const designDoc = useYDoc('design-{designId}')
-const typeDoc = useYDoc('type-{typeId}')
-const pieceDoc = useYDoc('piece-{pieceId}')
-const connectionDoc = useYDoc('connection-{connectionId}')
-const representationDoc = useYDoc('representation-{representationId}')
-const portDoc = useYDoc('port-{portId}')
+const studioDoc = new Y.Doc();
+const kitDoc = new Y.Doc();
+const designDoc = new Y.Doc();
+const typeDoc = new Y.Doc();
+const pieceDoc = new Y.Doc();
+const connectionDoc = new Y.Doc();
+const representationDoc = new Y.Doc();
+const portDoc = new Y.Doc();
 
 // Editor state documents (for local undo/redo and selections)
-const designEditorDoc = useYDoc('design-editor-{userId}-{editorId}')
+const designEditorDoc = new Y.Doc();
 
 interface DesignEditorState {
     selection: {
         pieces: string[];
         connections: string[];
-    }
+    };
     diagram: {
         zoom: number;
-        pan: { x: number, y: number };
-    }
+        pan: { x: number; y: number };
+    };
     model: {
         camera: {
-            position: { x: number, y: number, z: number };
-            rotation: { x: number, y: number, z: number };
-        }
-    }
+            position: { x: number; y: number; z: number };
+            rotation: { x: number; y: number; z: number };
+        };
+    };
 }
 
 class Studio {
@@ -47,8 +45,7 @@ class Studio {
     private designEditorDocs: Map<string, Y.Doc>;
     private undoManagers: Map<string, UndoManager>;
 
-    constructor(studioId: string) {
-        // Initialize main studio document
+    constructor() {
         this.studioDoc = new Y.Doc();
         this.kitsDocs = new Map();
         this.designsDocs = new Map();
@@ -61,9 +58,6 @@ class Studio {
         this.undoManagers = new Map();
     }
 
-    // G
-
-    // Get or create a type document
     getTypeDoc(typeId: string): Y.Doc {
         if (!this.typesDocs.has(typeId)) {
             const doc = new Y.Doc();
@@ -75,7 +69,6 @@ class Studio {
         return this.typesDocs.get(typeId)!;
     }
 
-    // Get or create a design document
     getDesignDoc(designId: string): Y.Doc {
         if (!this.designsDocs.has(designId)) {
             const doc = new Y.Doc();
@@ -87,7 +80,6 @@ class Studio {
         return this.designsDocs.get(designId)!;
     }
 
-    // Get or create an editor state document
     getDesignEditorDoc(designEditorId: string): Y.Doc {
         if (!this.designEditorDocs.has(designEditorId)) {
             const doc = new Y.Doc();
@@ -118,29 +110,42 @@ export function useStudio() {
     return store;
 }
 
-// Custom hooks for different editors
 export function useTypeEditor(typeId: string) {
     const store = useStudio();
-    const typeDoc = store.getTypeDoc(typeId);
-    const designEditorDoc = store.getDesignEditorDoc(`design-editor-${designEditorId}`);
+    const [type, setType] = useState<Y.Map<any>>(store.getTypeDoc(typeId).getMap('type'));
+
+    useEffect(() => {
+        const doc = store.getTypeDoc(typeId);
+        const typeMap = doc.getMap('type');
+        const updateHandler = () => setType(new Y.Map(typeMap.toJSON()));
+
+        typeMap.observe(updateHandler);
+        return () => typeMap.unobserve(updateHandler);
+    }, [store, typeId]);
 
     return {
-        type: useMap(typeDoc, 'type'),
-        editorState: useMap(designEditorDoc, 'state'),
+        type,
         undo: () => store.undo(`type-${typeId}`),
-        redo: () => store.redo(`type-${typeId}`)
+        redo: () => store.redo(`type-${typeId}`),
     };
 }
 
 export function useDesignEditor(designId: string) {
     const store = useStudio();
-    const designDoc = store.getDesignDoc(designId);
-    const designEditorDoc = store.getDesignEditorDoc(`design-editor-${designId}`);
+    const [design, setDesign] = useState<Y.Map<any>>(store.getDesignDoc(designId).getMap('design'));
+
+    useEffect(() => {
+        const doc = store.getDesignDoc(designId);
+        const designMap = doc.getMap('design');
+        const updateHandler = () => setDesign(new Y.Map(designMap.toJSON()));
+
+        designMap.observe(updateHandler);
+        return () => designMap.unobserve(updateHandler);
+    }, [store, designId]);
 
     return {
-        design: useMap(designDoc, 'design'),
-        editorState: useMap(designEditorDoc, 'state'),
+        design,
         undo: () => store.undo(`design-${designId}`),
-        redo: () => store.redo(`design-${designId}`)
+        redo: () => store.redo(`design-${designId}`),
     };
-} 
+}
