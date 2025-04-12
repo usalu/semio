@@ -31,8 +31,12 @@ const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
         addChild(nodeId);
     };
 
-    const handleDeleteChild = (childId: string) => {
-        deleteChild(nodeId, childId);
+    const handleDeleteNode = () => {
+        // For the root node, we don't want to allow deletion
+        if (depth > 0) {
+            // This would require parent node info, so we'll handle it differently
+            // The parent would call deleteChild(parentId, nodeId)
+        }
     };
 
     return (
@@ -50,21 +54,26 @@ const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
                 >
                     Add Child
                 </button>
+                {node.childIds.length > 0 && (
+                    <div className="ml-2">
+                        {node.childIds.map(childId => (
+                            <button
+                                key={childId}
+                                onClick={() => deleteChild(nodeId, childId)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm transition-colors"
+                            >
+                                Delete
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
             {node.childIds.map(childId => (
-                <div key={childId} className="flex items-start">
-                    <div className="flex-grow">
-                        <KitNode
-                            nodeId={childId}
-                            depth={depth + 1}
-                        />
-                    </div>
-                    <button
-                        onClick={() => handleDeleteChild(childId)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm transition-colors mt-1"
-                    >
-                        Delete
-                    </button>
+                <div key={childId} className="ml-[20px]">
+                    <KitNode
+                        nodeId={childId}
+                        depth={depth + 1}
+                    />
                 </div>
             ))}
         </div>
