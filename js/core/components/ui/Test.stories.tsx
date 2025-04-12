@@ -63,7 +63,30 @@ interface TreeListProps {
 }
 
 const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
-    const { undo, redo, canUndo, canRedo } = useTree(rootId);
+    const { undo, redo, canUndo, canRedo, hasInitialized, initializeTree } = useTree(rootId);
+    const [initialValue, setInitialValue] = useState('Root');
+
+    if (!hasInitialized) {
+        return (
+            <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm text-center">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
+                    <input
+                        type="text"
+                        value={initialValue}
+                        onChange={(e) => setInitialValue(e.target.value)}
+                        placeholder="Root node name"
+                        className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
+                    />
+                    <button
+                        onClick={() => initializeTree(initialValue)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors w-full sm:w-auto"
+                    >
+                        Initialize Tree
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">

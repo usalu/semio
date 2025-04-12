@@ -175,6 +175,37 @@ class Studio {
     }
 
     /**
+     * Explicitly initializes a tree with a root node and optional initial value
+     * @param treeId The ID of the tree to initialize
+     * @param initialValue Optional initial value for the root node
+     * @returns The created root node
+     */
+    initializeTree(treeId: string, initialValue: string = 'Root'): TreeNode {
+        const treesMap = this.studioDoc.getMap(treeId);
+
+        // Create a fresh root node
+        const rootTree = new Y.Map<any>();
+        rootTree.set('value', initialValue);
+        rootTree.set('children', new Y.Map());
+        treesMap.set('root', rootTree);
+
+        // Ensure undo manager is created
+        this.getYjsTree(treeId);
+
+        return this.getNode(treeId, 'root') as TreeNode;
+    }
+
+    /**
+     * Checks if a tree exists and has a root node
+     * @param treeId The ID of the tree to check
+     * @returns True if the tree exists and has a root node
+     */
+    hasTree(treeId: string): boolean {
+        const treesMap = this.studioDoc.getMap(treeId);
+        return treesMap.has('root');
+    }
+
+    /**
      * Cleans the studio by clearing IndexedDB storage and creating a fresh document
      * @returns Promise that resolves when cleaning is complete
      */
@@ -229,6 +260,7 @@ export function useTree(treeId: string) {
     const [nodes, setNodes] = useState<Record<string, TreeNode>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
+    const [hasInitialized, setHasInitialized] = useState<boolean>(studio.hasTree(fullTreeId));
 
     useEffect(() => {
         // Function to load a node and its children recursively
@@ -250,9 +282,13 @@ export function useTree(treeId: string) {
         // Load the root node to start
         loadNode('root');
 
+        // Update hasInitialized state
+        setHasInitialized(studio.hasTree(fullTreeId));
+
         // Update handler for tree changes
         const updateHandler = () => {
             loadNode('root');
+            setHasInitialized(studio.hasTree(fullTreeId));
         };
 
         // Update undo/redo state
@@ -283,6 +319,12 @@ export function useTree(treeId: string) {
             const childId = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             return studio.addChild(fullTreeId, parentId, childId);
         },
+        initializeTree: (initialValue: string = 'Root') => {
+            const rootNode = studio.initializeTree(fullTreeId, initialValue);
+            setHasInitialized(true);
+            return rootNode;
+        },
+        hasInitialized,
         undo: () => studio.undo(fullTreeId),
         redo: () => studio.redo(fullTreeId),
         canUndo,
