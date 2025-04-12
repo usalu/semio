@@ -4,159 +4,122 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
-interface DesignEditorState {
-    selection: {
-        pieces: string[];
-        connections: string[];
-    };
-    diagram: {
-        zoom: number;
-        pan: { x: number; y: number };
-    };
-    model: {
-        camera: {
-            position: { x: number; y: number; z: number };
-            rotation: { x: number; y: number; z: number };
-        };
-    };
-}
+export const useTypes = () => []
 
-class Studio {
-    private studioDoc: Y.Doc;
-    private kitsDocs: Map<string, Y.Doc>;
-    private designsDocs: Map<string, Y.Doc>;
-    private typesDocs: Map<string, Y.Doc>;
-    private piecesDocs: Map<string, Y.Doc>;
-    private connectionsDocs: Map<string, Y.Doc>;
-    private representationsDocs: Map<string, Y.Doc>;
-    private portsDocs: Map<string, Y.Doc>;
-    private designEditorDocs: Map<string, Y.Doc>;
-    private undoManagers: Map<string, UndoManager>;
-    private createYDoc: (id: string) => Y.Doc;
-    private registerProviders: (yDoc: Y.Doc, id: string) => void;
+// type YKit = {
+//     types: Y.Map<YType>;
+//     designs: Y.Map<YDesign>;
+// }
 
-    constructor(
-        createYDoc: (id: string) => Y.Doc = () => new Y.Doc(),
-        registerProviders: (yDoc: Y.Doc, id: string) => void = (yDoc, id) => {
-            const indexeddbProvider = new IndexeddbPersistence(id, yDoc);
-            indexeddbProvider.whenSynced.then(() => {
-                console.log(`Loaded data for ${id} from IndexedDB`);
-            });
-        }
-    ) {
-        this.studioDoc = createYDoc('studio');
-        this.kitsDocs = new Map();
-        this.designsDocs = new Map();
-        this.typesDocs = new Map();
-        this.piecesDocs = new Map();
-        this.connectionsDocs = new Map();
-        this.representationsDocs = new Map();
-        this.portsDocs = new Map();
-        this.designEditorDocs = new Map();
-        this.undoManagers = new Map();
-        this.createYDoc = createYDoc;
-        this.registerProviders = registerProviders;
+// type YStudio = Y.Doc & {
+//     kits: Y.Map<YKit>;
+// }
 
-        this.registerProviders(this.studioDoc, 'studio');
-    }
+// interface DesignEditorState {
+//     selection: {
+//         pieces: string[];
+//         connections: string[];
+//     };
+//     design: Y.Map<YDesign>;
+// }
 
-    getTypeDoc(typeId: string): Y.Doc {
-        if (!this.typesDocs.has(typeId)) {
-            const doc = this.createYDoc(typeId);
-            this.typesDocs.set(typeId, doc);
-            const type = doc.getMap('type');
-            const undoManager = new UndoManager(type);
-            this.undoManagers.set(`type-${typeId}`, undoManager);
+// interface DesignEditorPresenceState {
+//     diagram: {
+//         zoom: number;
+//         pan: { x: number; y: number };
+//     };
+//     model: {
+//         camera: {
+//             position: { x: number; y: number; z: number };
+//             rotation: { x: number; y: number; z: number };
+//         };
+//     };
+// }
 
-            // Register providers for the type document
-            this.registerProviders(doc, typeId);
-        }
-        return this.typesDocs.get(typeId)!;
-    }
+// class Studio {
+//     private studioDoc: Y.Doc;
+//     private undoManagers: Map<string, UndoManager>;
 
-    getDesignDoc(designId: string): Y.Doc {
-        if (!this.designsDocs.has(designId)) {
-            const doc = this.createYDoc(designId);
-            this.designsDocs.set(designId, doc);
-            const design = doc.getMap('design');
-            const undoManager = new UndoManager(design);
-            this.undoManagers.set(`design-${designId}`, undoManager);
+//     constructor(
+//         id: string = 'studio',
+//         createYDoc: (id: string) => Y.Doc = () => new Y.Doc(),
+//         registerAddtionalProviders: (yDoc: Y.Doc, id: string) => void = (yDoc, id) => { }
+//     ) {
+//         this.studioDoc = createYDoc(id);
+//         this.undoManagers = new Map();
+//         const indexeddbProvider = new IndexeddbPersistence(id, this.studioDoc);
+//         indexeddbProvider.whenSynced.then(() => {
+//             console.log(`Local changes are synchronized for ${id}`);
+//         });
+//         registerAddtionalProviders(this.studioDoc, id);
+//     }
 
-            // Register providers for the design document
-            this.registerProviders(doc, designId);
-        }
-        return this.designsDocs.get(designId)!;
-    }
+//     get kits(): Y.Map<any> {
+//         return this.studioDoc.getMap('kits');
+//     }
 
-    getDesignEditorDoc(designEditorId: string): Y.Doc {
-        if (!this.designEditorDocs.has(designEditorId)) {
-            const doc = this.createYDoc(designEditorId);
-            this.designEditorDocs.set(designEditorId, doc);
-            const state = doc.getMap('state');
-            const undoManager = new UndoManager(state);
-            this.undoManagers.set(`design-editor-${designEditorId}`, undoManager);
+//     getEditor(editorId: string): Y.Map<any> {
+//         if (!this.studioDoc.getMap(editorId)) {
+//             const editor = this.studioDoc.getMap(editorId);
+//             const undoManager = new UndoManager(editor);
+//             this.undoManagers.set(editorId, undoManager);
+//         }
+//         return this.studioDoc.getMap(editorId);
+//     }
 
-            // Register providers for the design editor document
-            this.registerProviders(doc, designEditorId);
-        }
-        return this.designEditorDocs.get(designEditorId)!;
-    }
+//     undo(scope: string) {
+//         const undoManager = this.undoManagers.get(scope);
+//         if (undoManager) undoManager.undo();
+//     }
 
-    undo(scope: string) {
-        const undoManager = this.undoManagers.get(scope);
-        if (undoManager) undoManager.undo();
-    }
+//     redo(scope: string) {
+//         const undoManager = this.undoManagers.get(scope);
+//         if (undoManager) undoManager.redo();
+//     }
+// }
 
-    redo(scope: string) {
-        const undoManager = this.undoManagers.get(scope);
-        if (undoManager) undoManager.redo();
-    }
-}
+// const StudioContext = createContext<Studio | null>(null);
 
-const StudioContext = createContext<Studio | null>(null);
+// export function useStudio() {
+//     const studio = useContext(StudioContext);
+//     if (!studio) throw new Error('Studio not found');
+//     return studio;
+// }
 
-export function useStudio() {
-    const store = useContext(StudioContext);
-    if (!store) throw new Error('Studio not found');
-    return store;
-}
+// export function useTypeEditor(typeId: string) {
+//     const studio = useStudio();
+//     const [type, setType] = useState<Y.Map<any>>(studio.getMap(`type-${typeId}`));
 
-export function useTypeEditor(typeId: string) {
-    const store = useStudio();
-    const [type, setType] = useState<Y.Map<any>>(store.getTypeDoc(typeId).getMap('type'));
+//     useEffect(() => {
+//         const typeMap = studio.getMap(`type-${typeId}`);
+//         const updateHandler = () => setType(new Y.Map(typeMap.toJSON()));
 
-    useEffect(() => {
-        const doc = store.getTypeDoc(typeId);
-        const typeMap = doc.getMap('type');
-        const updateHandler = () => setType(new Y.Map(typeMap.toJSON()));
+//         typeMap.observe(updateHandler);
+//         return () => typeMap.unobserve(updateHandler);
+//     }, [studio, typeId]);
 
-        typeMap.observe(updateHandler);
-        return () => typeMap.unobserve(updateHandler);
-    }, [store, typeId]);
+//     return {
+//         type,
+//         undo: () => studio.undo(`type-${typeId}`),
+//         redo: () => studio.redo(`type-${typeId}`),
+//     };
+// }
 
-    return {
-        type,
-        undo: () => store.undo(`type-${typeId}`),
-        redo: () => store.redo(`type-${typeId}`),
-    };
-}
+// export function useDesignEditor(designId: string) {
+//     const studio = useStudio();
+//     const [design, setDesign] = useState<Y.Map<any>>(studio.getMap(`design-${designId}`));
 
-export function useDesignEditor(designId: string) {
-    const store = useStudio();
-    const [design, setDesign] = useState<Y.Map<any>>(store.getDesignDoc(designId).getMap('design'));
+//     useEffect(() => {
+//         const designMap = studio.getMap(`design-${designId}`);
+//         const updateHandler = () => setDesign(new Y.Map(designMap.toJSON()));
 
-    useEffect(() => {
-        const doc = store.getDesignDoc(designId);
-        const designMap = doc.getMap('design');
-        const updateHandler = () => setDesign(new Y.Map(designMap.toJSON()));
+//         designMap.observe(updateHandler);
+//         return () => designMap.unobserve(updateHandler);
+//     }, [studio, designId]);
 
-        designMap.observe(updateHandler);
-        return () => designMap.unobserve(updateHandler);
-    }, [store, designId]);
-
-    return {
-        design,
-        undo: () => store.undo(`design-${designId}`),
-        redo: () => store.redo(`design-${designId}`),
-    };
-}
+//     return {
+//         design,
+//         undo: () => studio.undo(`design-${designId}`),
+//         redo: () => studio.redo(`design-${designId}`),
+//     };
+// }

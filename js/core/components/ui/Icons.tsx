@@ -1,6 +1,12 @@
+import { FC } from "react";
 
+interface CursorProps {
+    color: string;
+    x?: number;
+    y?: number;
+}
 
-function Cursor({ color, x = 0, y = 0 }: CursorProps) {
+const Cursor: FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
     return (
         <svg
             style={{
@@ -21,4 +27,6 @@ function Cursor({ color, x = 0, y = 0 }: CursorProps) {
             />
         </svg>
     );
-}
+};
+
+export default Cursor;

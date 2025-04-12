@@ -6,7 +6,10 @@ alwaysApply: true
 # Project
 An ecosystem for designing kit-of-parts architecture together.
 
-# Principles:
+# Principles
 - Toolfriendly over intuitive.
 - Almost everything is in a single file if possible.
 - Folders are avoided if possible.
+
+# @LLM
+- No need to ask in between. Be opionionated and just go for it. 
