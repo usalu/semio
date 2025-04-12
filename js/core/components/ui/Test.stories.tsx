@@ -65,20 +65,22 @@ interface TreeListProps {
 }
 
 const TreeList: React.FC<TreeListProps> = ({ rootId }) => {
-    const { tree, undo, redo } = useTree(rootId);
+    const { tree, undo, redo, canUndo, canRedo } = useTree(rootId);
 
     return (
         <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
             <div className="flex gap-2 mb-4">
                 <button
                     onClick={undo}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors"
+                    disabled={!canUndo}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Undo
                 </button>
                 <button
                     onClick={redo}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors"
+                    disabled={!canRedo}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Redo
                 </button>

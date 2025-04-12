@@ -33,8 +33,22 @@ class Studio {
             rootTree.set('value', '');
             rootTree.set('children', new Y.Map());
             treesMap.set('root', rootTree);
-            this.undoManagers.set(treeId, new UndoManager(treesMap));
         }
+
+        // Create or retrieve undo manager for this tree
+        if (!this.undoManagers.has(treeId)) {
+            // Create undo manager that tracks the entire YDoc
+            // This is crucial - we need to track all shared types across the document
+            const undoManager = new UndoManager([treesMap], {
+                // Keep track of more operations for complex trees
+                captureTimeout: 300,
+                // Set a document scope for the UndoManager
+                document: this.studioDoc
+            });
+            this.undoManagers.set(treeId, undoManager);
+            console.log(`Created UndoManager for ${treeId}`);
+        }
+
         return treesMap.get('root') as Y.Map<Tree>;
     }
 
@@ -56,12 +70,30 @@ class Studio {
 
     undo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
-        if (undoManager) undoManager.undo();
+        if (undoManager) {
+            if (undoManager.canUndo()) {
+                console.log(`Undoing change in ${scope}`);
+                undoManager.undo();
+            } else {
+                console.log(`Cannot undo - no more history in ${scope}`);
+            }
+        } else {
+            console.warn(`No UndoManager found for ${scope}`);
+        }
     }
 
     redo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
-        if (undoManager) undoManager.redo();
+        if (undoManager) {
+            if (undoManager.canRedo()) {
+                console.log(`Redoing change in ${scope}`);
+                undoManager.redo();
+            } else {
+                console.log(`Cannot redo - no more history in ${scope}`);
+            }
+        } else {
+            console.warn(`No UndoManager found for ${scope}`);
+        }
     }
 
     /**
@@ -70,6 +102,9 @@ class Studio {
      */
     async clean(): Promise<void> {
         try {
+            // Clean up undo managers
+            this.undoManagers.forEach(manager => manager.destroy());
+
             // Destroy the current document
             this.studioDoc.destroy();
 
@@ -114,6 +149,8 @@ export function useTree(treeId: string) {
     const studio = useStudio();
     const fullTreeId = `tree-${treeId}`;
     const [rootTree, setRootTree] = useState<Y.Map<Tree>>(studio.getTree(fullTreeId));
+    const [canUndo, setCanUndo] = useState<boolean>(false);
+    const [canRedo, setCanRedo] = useState<boolean>(false);
 
     useEffect(() => {
         const treeMap = studio.getTree(fullTreeId);
@@ -121,8 +158,41 @@ export function useTree(treeId: string) {
             setRootTree(treeMap);
         };
 
-        treeMap.observe(updateHandler);
-        return () => treeMap.unobserve(updateHandler);
+        // Get the undo manager for this tree
+        const undoManager = studio['undoManagers'].get(fullTreeId);
+
+        if (undoManager) {
+            // Update undo/redo state
+            const updateUndoRedoState = () => {
+                setCanUndo(undoManager.canUndo());
+                setCanRedo(undoManager.canRedo());
+            };
+
+            // Initial state
+            updateUndoRedoState();
+
+            // Subscribe to undo manager events
+            undoManager.on('stack-item-added', updateUndoRedoState);
+            undoManager.on('stack-item-popped', updateUndoRedoState);
+
+            // Debug logging to check if events are firing
+            console.log(`Initialized undo manager for ${fullTreeId}`);
+
+            // Force an update every second to ensure UI updates
+            const intervalId = setInterval(() => {
+                updateUndoRedoState();
+            }, 1000);
+
+            treeMap.observeDeep(updateHandler);
+            return () => {
+                treeMap.unobserveDeep(updateHandler);
+                undoManager.off('stack-item-added', updateUndoRedoState);
+                undoManager.off('stack-item-popped', updateUndoRedoState);
+                clearInterval(intervalId);
+            };
+        }
+
+        return () => { };
     }, [studio, fullTreeId]);
 
     return {
@@ -131,5 +201,7 @@ export function useTree(treeId: string) {
         createNode: (id: string) => studio.createTreeNode(fullTreeId, id),
         undo: () => studio.undo(fullTreeId),
         redo: () => studio.redo(fullTreeId),
+        canUndo,
+        canRedo,
     };
 }
