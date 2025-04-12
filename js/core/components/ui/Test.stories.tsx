@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import * as Y from 'yjs';
+import { Tree } from './teststore';
 
 interface TreeNodeProps {
     node: Y.Map<any>;
@@ -38,7 +39,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onAddChild }) => {
 };
 
 interface TreeListProps {
-    root: Y.Map<any>;
+    root: Tree;
 }
 
 const TreeList: React.FC<TreeListProps> = ({ root }) => {

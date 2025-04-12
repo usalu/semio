@@ -23,6 +23,15 @@ class Studio {
         });
     }
 
+    getTree(treeId: string): Y.Map<Tree> {
+        if (!this.studioDoc.getMap(treeId)) {
+            const treeMap = new Y.Map<Tree>();
+            this.studioDoc.getMap(treeId).set('tree', treeMap);
+            this.undoManagers.set(treeId, new UndoManager(treeMap));
+        }
+        return this.studioDoc.getMap(treeId);
+    }
+
     undo(scope: string) {
         const undoManager = this.undoManagers.get(scope);
         if (undoManager) undoManager.undo();
@@ -45,11 +54,13 @@ export function useStudio() {
 
 export function useTree(treeId: string) {
     const studio = useStudio();
-    const [tree, setType] = useState<Y.Map<any>>(studio.getMap(`tree-${treeId}`));
+    const [tree, setType] = useState<Y.Map<Tree>>(studio.getTree(`tree-${treeId}`));
 
     useEffect(() => {
-        const treeMap = studio.getMap(`tree-${treeId}`);
-        const updateHandler = () => setType(new Y.Map(treeMap.toJSON()));
+        const treeMap = studio.getTree(`tree-${treeId}`);
+        const updateHandler = () => {
+            setType(treeMap);
+        };
 
         treeMap.observe(updateHandler);
         return () => treeMap.unobserve(updateHandler);
