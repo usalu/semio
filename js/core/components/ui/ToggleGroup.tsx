@@ -4,6 +4,7 @@ import { type VariantProps } from "class-variance-authority"
 
 import { cn } from "@semio/js/lib/utils"
 import { toggleVariants } from "@semio/js/components/ui/Toggle"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
@@ -26,7 +27,7 @@ function ToggleGroup({
       data-variant={variant}
       data-size={size}
       className={cn(
-        "group/toggle-group flex w-fit items-center rounded-md data-[variant=outline]:shadow-xs",
+        "group/toggle-group flex w-fit items-center border overflow-hidden",
         className
       )}
       {...props}
@@ -47,10 +48,13 @@ function ToggleGroupItem({
   hotkey,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants>) {
+  VariantProps<typeof toggleVariants> & {
+    tooltip?: string;
+    hotkey?: string;
+  }) {
   const context = React.useContext(ToggleGroupContext)
 
-  return (
+  const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       data-variant={context.variant || variant}
@@ -60,14 +64,33 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        "border min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
         className
       )}
       {...props}
     >
       {children}
     </ToggleGroupPrimitive.Item>
-  )
+  );
+
+  if (tooltip) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {/* Wrapping in span to avoid styling issue with data-[state=on]: https://github.com/radix-ui/primitives/discussions/560 */}
+          <span>
+            {toggleGroupItemElement}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {tooltip}
+          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return toggleGroupItemElement;
 }
 
 export { ToggleGroup, ToggleGroupItem }

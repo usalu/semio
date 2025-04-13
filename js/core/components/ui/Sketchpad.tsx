@@ -236,6 +236,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
             </div>
             <div className="flex items-center gap-4">
                 <ToggleGroup
+                    type="multiple"
                     value={Object.entries(visiblePanels)
                         .filter(([_, isVisible]) => isVisible)
                         .map(([key]) => key)}
@@ -251,8 +252,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                 >
                     <ToggleGroupItem
                         value="workbench"
-                        variant="outline"
-                        aria-label="Toggle Workbench"
                         tooltip="Workbench"
                         hotkey="⌘J"
                     >
@@ -260,8 +259,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="console"
-                        variant="outline"
-                        aria-label="Toggle Console"
                         tooltip="Console"
                         hotkey="⌘K"
                     >
@@ -269,8 +266,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="details"
-                        variant="outline"
-                        aria-label="Toggle Details"
                         tooltip="Details"
                         hotkey="⌘L"
                     >
@@ -278,8 +273,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="chat"
-                        variant="outline"
-                        aria-label="Toggle Chat"
                         tooltip="Chat"
                         hotkey="⌘["
                     >
@@ -322,7 +315,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
 
                 {onWindowEvents && (
                     <div className="flex items-center gap-2 ml-4">
-                        <ToggleGroup>
+                        <ToggleGroup type="single">
                             <ToggleGroupItem
                                 value="minimize"
                                 variant="ghost"
