@@ -61,15 +61,10 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
             <Canvas>
                 <OrbitControls
                     mouseButtons={{
-                        LEFT: null, // Disable left click for orbit to allow selection
+                        LEFT: undefined, // Disable left click for orbit to allow selection
                         MIDDLE: THREE.MOUSE.DOLLY, // Middle button for zoom (wheel still works too)
                         RIGHT: THREE.MOUSE.ROTATE // Right button for orbit
                     }}
-                    enablePan={true}
-                    enableRotate={true}
-                    enableZoom={true}
-                    keyPanSpeed={20}
-                    modifierKey="ctrlKey"
                 />
                 <ambientLight intensity={1} />
                 {/* <Suspense fallback={null}>

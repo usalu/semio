@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useMemo, useState, useEffect } from 'react';
 import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
 import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
@@ -111,7 +111,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
 };
 
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
-    return <circle className={selected ? 'fill-primary' : 'fill-lightGrey'} cx={x} cy={y} r="10" />;
+    return <circle className={selected ? 'fill-primary' : 'fill-foreground'} cx={x} cy={y} r="10" />;
 }
 
 
@@ -359,14 +359,16 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
                 event.stopPropagation();
                 onPanelDoubleClick?.();
             }}
+            panOnDrag={[2]} // 2 corresponds to right mouse button
+            selectionOnDrag={true}
             // onMoveEnd={onUpdateCursor}
             // onPointerLeave={() =>
             //     setPresence({
             //         cursor: null,
             //     })
             // }
-            proOptions={{ hideAttribution: true }
-            }
+            proOptions={{ hideAttribution: true }}
+            multiSelectionKeyCode="Shift"
         >
             {/* <ViewportPortal>
                 {
@@ -399,8 +401,8 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
                     ></Cursor>
                 );
             })} */}
-            {fullscreen && <Controls />}
-            {fullscreen && < MiniMap nodeComponent={MiniMapNode} />}
+            {fullscreen && <Controls showZoom={false} showInteractive={false} />}
+            {fullscreen && < MiniMap maskColor='var(--background-level-2)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
