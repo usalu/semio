@@ -60,15 +60,15 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                 <circle
                     cx={ICON_WIDTH / 2}
                     cy={ICON_WIDTH / 2}
-                    r={ICON_WIDTH / 2}
-                    className={selected ? 'fill-primary' : 'fill-foreground'}
+                    r={ICON_WIDTH / 2 - 1}
+                    className={`stroke-foreground stroke-2 ${selected ? 'fill-primary ' : 'fill-transparent'} `}
                 />
                 <text
                     x={ICON_WIDTH / 2}
                     y={ICON_WIDTH / 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className={`text-xs font-bold ${selected ? 'text-foreground' : 'text-background'}`}
+                    className={`text-xs font-bold`}
                 >
                     {id_}
                 </text>
