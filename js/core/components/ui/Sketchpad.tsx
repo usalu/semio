@@ -27,6 +27,7 @@ import { useTypes } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
+import { Toggle } from '@semio/js/components/ui/Toggle';
 
 type TreeSection = {
     name: string;
@@ -235,9 +236,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
             </div>
             <div className="flex items-center gap-4">
                 <ToggleGroup
-                    type="multiple"
-                    variant="outline"
-                    size="sm"
                     value={Object.entries(visiblePanels)
                         .filter(([_, isVisible]) => isVisible)
                         .map(([key]) => key)}
@@ -289,16 +287,24 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     </ToggleGroupItem>
                 </ToggleGroup>
 
-                <ToggleGroup
-                    type="cycle"
-                    variant="outline"
-                    size="sm"
+                <ToggleCycle
                     value={currentTheme}
-                    onValueChange={handleThemeChange}
+                    onValueChange={(value) => {
+                        if (value) setCurrentTheme(value as Theme);
+                    }}
                     items={[
-                        { value: Theme.SYSTEM, label: <Monitor size={16} /> },
-                        { value: Theme.LIGHT, label: <Sun size={16} /> },
-                        { value: Theme.DARK, label: <Moon size={16} /> }
+                        {
+                            value: Theme.SYSTEM,
+                            label: <Monitor />
+                        },
+                        {
+                            value: Theme.LIGHT,
+                            label: <Sun />
+                        },
+                        {
+                            value: Theme.DARK,
+                            label: <Moon />
+                        }
                     ]}
                 />
 
@@ -307,20 +313,16 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     <AvatarFallback>US</AvatarFallback>
                 </Avatar>
 
-                <ToggleGroup type="single" variant="outline" size="sm">
-                    <ToggleGroupItem
-                        value="share"
-                        variant="outline"
-                        aria-label="Share"
-                        tooltip="Share"
-                    >
-                        <Share2 />
-                    </ToggleGroupItem>
-                </ToggleGroup>
+                <Toggle
+                    variant="outline"
+                    tooltip="Share"
+                >
+                    <Share2 />
+                </Toggle>
 
                 {onWindowEvents && (
                     <div className="flex items-center gap-2 ml-4">
-                        <ToggleGroup type="single" variant="ghost" size="sm">
+                        <ToggleGroup>
                             <ToggleGroupItem
                                 value="minimize"
                                 variant="ghost"
