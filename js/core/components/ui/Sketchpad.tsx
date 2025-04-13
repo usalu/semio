@@ -263,28 +263,24 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     <ToggleGroupItem
                         value="workbench"
                         aria-label="Toggle Workbench"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-dark hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Wrench />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="console"
                         aria-label="Toggle Console"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-dark hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Terminal />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="details"
                         aria-label="Toggle Details"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Info />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="chat"
                         aria-label="Toggle Chat"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <MessageCircle />
                     </ToggleGroupItem>
@@ -310,7 +306,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="hover:bg-lightGrey transition-colors p-2"
                             onClick={onWindowEvents.minimize}
                         >
                             <Minus size={16} />
