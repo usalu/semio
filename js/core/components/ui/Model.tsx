@@ -1,6 +1,7 @@
-import React, { FC, JSX, Suspense, useMemo, useEffect, useState } from 'react';
+import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Sphere, Stage, useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -58,7 +59,18 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
     return (
         <div className="w-full h-full">
             <Canvas>
-                <OrbitControls />
+                <OrbitControls
+                    mouseButtons={{
+                        LEFT: null, // Disable left click for orbit to allow selection
+                        MIDDLE: THREE.MOUSE.DOLLY, // Middle button for zoom (wheel still works too)
+                        RIGHT: THREE.MOUSE.ROTATE // Right button for orbit
+                    }}
+                    enablePan={true}
+                    enableRotate={true}
+                    enableZoom={true}
+                    keyPanSpeed={20}
+                    modifierKey="ctrlKey"
+                />
                 <ambientLight intensity={1} />
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
