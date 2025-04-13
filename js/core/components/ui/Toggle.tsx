@@ -32,7 +32,7 @@ const toggleVariants = cva(
 
 interface ToggleProps extends React.ComponentProps<typeof TogglePrimitive.Root>,
   VariantProps<typeof toggleVariants> {
-  tooltip?: React.ReactNode;
+  tooltip?: string;
   hotkey?: string;
 }
 
