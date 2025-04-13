@@ -1,71 +1,88 @@
+"use client"
+
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
-import { type VariantProps } from "class-variance-authority"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@semio/js/lib/utils"
 import { toggleVariants } from "@semio/js/components/ui/Toggle"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./Tooltip"
 
-const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleVariants>
->({
-  size: "default",
-  variant: "default",
+const toggleGroupVariants = cva(
+  "inline-flex",
+  {
+    variants: {
+      variant: {
+        default: "",
+        outline: "border bg-transparent",
+      },
+      size: {
+        default: "",
+        sm: "",
+        lg: "",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+interface ToggleGroupProps extends React.ComponentProps<typeof ToggleGroupPrimitive.Root>,
+  VariantProps<typeof toggleGroupVariants> {
+  className?: string;
+}
+
+const ToggleGroup = React.forwardRef<
+  React.ElementRef<typeof ToggleGroupPrimitive.Root>,
+  ToggleGroupProps
+>(({ className, variant, size, ...props }, ref) => (
+  <ToggleGroupPrimitive.Root
+    ref={ref}
+    data-slot="toggle-group"
+    className={cn(toggleGroupVariants({ variant, size, className }))}
+    {...props}
+  />
+))
+
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
+
+interface ToggleGroupItemProps extends React.ComponentProps<typeof ToggleGroupPrimitive.Item>,
+  VariantProps<typeof toggleVariants> {
+  tooltip?: React.ReactNode;
+}
+
+const ToggleGroupItem = React.forwardRef<
+  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
+  ToggleGroupItemProps
+>(({ className, variant, size, tooltip, ...props }, ref) => {
+  const toggleElement = (
+    <ToggleGroupPrimitive.Item
+      ref={ref}
+      data-slot="toggle"
+      className={cn(toggleVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
+
+  if (tooltip) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {toggleElement}
+        </TooltipTrigger>
+        <TooltipContent>
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return toggleElement;
 })
 
-function ToggleGroup({
-  className,
-  variant,
-  size,
-  children,
-  ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants>) {
-  return (
-    <ToggleGroupPrimitive.Root
-      data-slot="toggle-group"
-      data-variant={variant}
-      data-size={size}
-      className={cn(
-        "group/toggle-group flex w-fit items-center data-[variant=outline]:shadow-xs",
-        className
-      )}
-      {...props}
-    >
-      <ToggleGroupContext.Provider value={{ variant, size }}>
-        {children}
-      </ToggleGroupContext.Provider>
-    </ToggleGroupPrimitive.Root>
-  )
-}
+ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
 
-function ToggleGroupItem({
-  className,
-  children,
-  variant,
-  size,
-  ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants>) {
-  const context = React.useContext(ToggleGroupContext)
-
-  return (
-    <ToggleGroupPrimitive.Item
-      data-slot="toggle-group-item"
-      data-variant={context.variant || variant}
-      data-size={context.size || size}
-      className={cn(
-        toggleVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
-        }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </ToggleGroupPrimitive.Item>
-  )
-}
-
-export { ToggleGroup, ToggleGroupItem }
+export { ToggleGroup, ToggleGroupItem, toggleGroupVariants }
+export type { ToggleGroupProps, ToggleGroupItemProps }

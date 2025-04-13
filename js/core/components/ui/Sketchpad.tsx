@@ -265,6 +265,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         value="workbench"
                         variant="outline"
                         aria-label="Toggle Workbench"
+                        tooltip="Workbench"
                     >
                         <Wrench />
                     </ToggleGroupItem>
@@ -272,6 +273,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         value="console"
                         variant="outline"
                         aria-label="Toggle Console"
+                        tooltip="Console"
                     >
                         <Terminal />
                     </ToggleGroupItem>
@@ -279,6 +281,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         value="details"
                         variant="outline"
                         aria-label="Toggle Details"
+                        tooltip="Details"
                     >
                         <Info />
                     </ToggleGroupItem>
@@ -286,28 +289,32 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         value="chat"
                         variant="outline"
                         aria-label="Toggle Chat"
+                        tooltip="Chat"
                     >
                         <MessageCircle />
                     </ToggleGroupItem>
                 </ToggleGroup>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={onToggleTheme} className="p-2">
-                            {currentTheme === Theme.LIGHT ? (
-                                <Sun size={16} />
-                            ) : currentTheme === Theme.DARK ? (
-                                <Moon size={16} />
-                            ) : (
-                                <Monitor size={16} />
-                            )}
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        {currentTheme === Theme.LIGHT ? 'Light Mode' :
-                            currentTheme === Theme.DARK ? 'Dark Mode' : 'System Theme'}
-                        <span className="text-xs ml-1 opacity-60">(Click to change)</span>
-                    </TooltipContent>
-                </Tooltip>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onToggleTheme}
+                    className="p-2"
+                    tooltip={
+                        <>
+                            {currentTheme === Theme.LIGHT ? 'Light Mode' :
+                                currentTheme === Theme.DARK ? 'Dark Mode' : 'System Theme'}
+                            <span className="text-xs ml-1 opacity-60">(Click to change)</span>
+                        </>
+                    }
+                >
+                    {currentTheme === Theme.LIGHT ? (
+                        <Sun size={16} />
+                    ) : currentTheme === Theme.DARK ? (
+                        <Moon size={16} />
+                    ) : (
+                        <Monitor size={16} />
+                    )}
+                </Button>
                 <Avatar className="h-8 w-8">
                     <AvatarImage src="https://github.com/usalu.png" />
                     <AvatarFallback>US</AvatarFallback>
