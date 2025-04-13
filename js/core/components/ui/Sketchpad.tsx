@@ -20,6 +20,7 @@ import { default as Model } from "@semio/js/components/ui/Model";
 import { Design, Kit, Type } from '@semio/js';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
+import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
@@ -282,9 +283,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
 
                 <ToggleCycle
                     value={currentTheme}
-                    onValueChange={(value) => {
-                        if (value) setCurrentTheme(value as Theme);
-                    }}
+                    onValueChange={handleThemeChange}
                     items={[
                         {
                             value: Theme.SYSTEM,
