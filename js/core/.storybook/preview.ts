@@ -10,6 +10,11 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    darkMode: {
+      current: 'auto',
+      dark: { appBg: '-var(--color-dark)' },
+      light: { appBg: '-var(--color-dark)' }
+    }
   },
 };
 

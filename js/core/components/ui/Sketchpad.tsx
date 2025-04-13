@@ -442,7 +442,7 @@ interface PanelProps {
 const Workbench: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-light border border-lightGrey shadow-lg"
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Workbench</div>
         </div>
@@ -489,14 +489,21 @@ interface PanelToggles {
     chat: boolean;
 }
 
-export enum SketchpadMode {
+export enum Theme {
+    SYSTEM = 'system',
+    LIGHT = 'light',
+    DARK = 'dark',
+}
+
+export enum Mode {
     FULL = 'full',
     DIAGRAM = 'diagram',
     MODEL = 'model',
 }
 
 interface SketchpadProps {
-    mode?: SketchpadMode;
+    mode?: Mode;
+    theme?: Theme;
     readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
@@ -505,7 +512,7 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = SketchpadMode.FULL, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme = Theme.SYSTEM, readonly = false, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
