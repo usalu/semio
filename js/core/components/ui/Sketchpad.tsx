@@ -262,24 +262,28 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                 >
                     <ToggleGroupItem
                         value="workbench"
+                        variant="outline"
                         aria-label="Toggle Workbench"
                     >
                         <Wrench />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="console"
+                        variant="outline"
                         aria-label="Toggle Console"
                     >
                         <Terminal />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="details"
+                        variant="outline"
                         aria-label="Toggle Details"
                     >
                         <Info />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="chat"
+                        variant="outline"
                         aria-label="Toggle Chat"
                     >
                         <MessageCircle />
