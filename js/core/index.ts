@@ -3,7 +3,7 @@ export type {
     Author, Side, DiagramPoint, Plane, Point, Vector, PieceID, PortID, TypeID
 } from '@semio/js/semio';
 export { default as File } from '@semio/js/components/ui/File';
-export { default as Sketchpad } from '@semio/js/components/ui/Sketchpad';
+export { default as Sketchpad, Theme, Mode } from '@semio/js/components/ui/Sketchpad';
 export { default as eslintConfig } from '@semio/js/eslint.config';
 export { default as postcssConfig } from '@semio/js/postcss.config';
 export { default as tailwindConfig } from '@semio/js/tailwind.config';
