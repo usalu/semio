@@ -110,7 +110,7 @@ function BreadcrumbSeparator({
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align="center"
-          className="bg-grey text-light min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md"
+          className="bg-background-level-3 text-foreground min-w-[8rem] overflow-hidden rounded-md border-foreground p-1 shadow-md"
         >
           {items.map((item, index) => (
             <DropdownMenuPrimitive.Item

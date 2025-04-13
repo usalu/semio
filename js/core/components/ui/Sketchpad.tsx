@@ -431,7 +431,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         <div id="sketchpad-edgeless" className="h-full">
             <ResizablePanelGroup
                 direction="horizontal"
-                className="bg-dark text-light h-full"
+            // className="bg-dark text-light h-full"
             >
                 <ResizablePanel
                     defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}

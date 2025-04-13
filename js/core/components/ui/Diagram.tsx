@@ -61,14 +61,14 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                     cx={ICON_WIDTH / 2}
                     cy={ICON_WIDTH / 2}
                     r={ICON_WIDTH / 2}
-                    className={selected ? 'fill-primary' : 'fill-light'}
+                    className={selected ? 'fill-primary' : 'fill-foreground'}
                 />
                 <text
                     x={ICON_WIDTH / 2}
                     y={ICON_WIDTH / 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className={selected ? 'text-dark text-xs font-bold' : 'text-light text-xs font-bold'}
+                    className={"text-xs font-bold" + selected ? 'text-dark ' : 'text-light'}
                 >
                     {id_}
                 </text>
@@ -418,7 +418,7 @@ const Diagram: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
     // });
 
     return (
-        <div className="h-full w-full bg-dark">
+        <div className="h-full w-full">
             <ReactFlowProvider >
                 <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} />
             </ReactFlowProvider>
