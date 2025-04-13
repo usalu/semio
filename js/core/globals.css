@@ -1,15 +1,20 @@
 @import "tailwindcss";
 @import "@semio/js/theme.css";
 
-/* Set base all components (and override shadcn defaults https://ui.shadcn.com/docs/theming) */
+/* https://ui.shadcn.com/docs/theming */
+
+/* Set base all components */
 @layer base {
   :root {
+    /* Shadcn */
     --radius: 0rem;
     --radius-sm: 0rem;
     --radius-md: 0rem;
     --radius-lg: 0rem;
     --radius-full: 0rem;
     --background: var(--color-light);
+    --background-level-2: var(--color-light-grey); /* Custom */
+    --background-level-3: var(--color-grey); /* Custom */
     --foreground: var(--color-dark);
     /* --card: oklch(1 0 0); */
     /* --card-foreground: oklch(0.145 0 0); */
@@ -19,10 +24,10 @@
     /* --primary-foreground: oklch(0.985 0 0); */
     /* --secondary: oklch(0.97 0 0); */
     /* --secondary-foreground: oklch(0.205 0 0); */
-    /* --muted: oklch(0.97 0 0); */
-    /* --muted-foreground: oklch(0.556 0 0); */
+    --muted: var(--color-light-grey);
+    --muted-foreground: var(--color-grey);
     --accent: var(--color-grey);
-    /* --accent-foreground: oklch(0.205 0 0); */
+    --accent-foreground: var(--color-light);
     /* --destructive: oklch(0.577 0.245 27.325); */
     /* --border: oklch(0.922 0 0); */
     /* --input: oklch(0.922 0 0); */
@@ -44,6 +49,8 @@
 
   .dark {
     --background: var(--color-dark);
+    --background-level-2: var(--color-dark-grey); /* Custom */
+    --background-level-3: var(--color-grey); /* Custom */
     --foreground: var(--color-light);
     /* --card: oklch(0.205 0 0); */
     /* --card-foreground: oklch(0.985 0 0); */
@@ -53,10 +60,10 @@
     /* --primary-foreground: oklch(0.205 0 0); */
     /* --secondary: oklch(0.269 0 0); */
     /* --secondary-foreground: oklch(0.985 0 0); */
-    /* --muted: oklch(0.269 0 0); */
-    /* --muted-foreground: oklch(0.708 0 0); */
+    --muted: var(--color-dark-grey);
+    --muted: var(--color-grey);
     --accent: var(--color-grey);
-    /* --accent-foreground: oklch(0.985 0 0); */
+    --accent-foreground: var(--color-light);
     /* --destructive: oklch(0.704 0.191 22.216); */
     /* --border: oklch(1 0 0 / 10%); */
     /* --input: oklch(1 0 0 / 15%); */
@@ -85,4 +92,15 @@
 
 .react-flow.dark {
     --xy-background-color-default: var(--color-dark) !important;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-level-2: var(--background-level-2); /* Custom */
+  --color-background-level-3: var(--background-level-3); /* Custom */
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 }

@@ -244,7 +244,6 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     type="multiple"
                     variant="outline"
                     size="sm"
-                    className="bg-dark"
                     value={Object.entries(visiblePanels)
                         .filter(([_, isVisible]) => isVisible)
                         .map(([key]) => key)}
@@ -443,7 +442,7 @@ interface PanelProps {
 const Workbench: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-light border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Workbench</div>
         </div>
@@ -454,7 +453,7 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-light border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Details</div>
         </div>
