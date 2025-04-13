@@ -62,12 +62,8 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 
 const Types: FC = () => {
     const types = useTypes();
-    // const types = useAtomValue(typesAtom);
-    // const types = getTypes();
+    if (!types) return null;
 
-    if (!types) {
-        return null;
-    }
     return (
         <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
             {Array.from(types.entries()).map(([name, variantMap]) => (
@@ -140,6 +136,8 @@ interface TreeProps {
 }
 const TreeComponent: FC<TreeProps> = ({ treeId }) => {
     const tree = trees.find(tree => tree.id === treeId);
+    if (!tree) return null;
+
     return (
         <ResizablePanel defaultSize={15}>
             {tree.sections.map((section, index) => (
@@ -200,16 +198,13 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
+    const handleThemeChange = (value: string) => {
+        onToggleTheme();
+    };
+
     return (
-        <div
-            className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}
-        // TODO: Make webkit app region work for electron
-        // style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
-        >
-            <div
-                className="flex items-center"
-            // style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
-            >
+        <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
+            <div className="flex items-center">
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -238,10 +233,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
-            <div
-                className={`flex items-center gap-4`}
-            // style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
-            >
+            <div className="flex items-center gap-4">
                 <ToggleGroup
                     type="multiple"
                     variant="outline"
@@ -250,11 +242,9 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         .filter(([_, isVisible]) => isVisible)
                         .map(([key]) => key)}
                     onValueChange={(values) => {
-                        // For each panel, toggle it if its presence in values differs from its current state
                         Object.keys(visiblePanels).forEach(key => {
                             const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
                             const shouldBeVisible = values.includes(key);
-
                             if (isCurrentlyVisible !== shouldBeVisible) {
                                 onTogglePanel(key as keyof PanelToggles);
                             }
@@ -266,6 +256,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         variant="outline"
                         aria-label="Toggle Workbench"
                         tooltip="Workbench"
+                        hotkey="⌘J"
                     >
                         <Wrench />
                     </ToggleGroupItem>
@@ -274,6 +265,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         variant="outline"
                         aria-label="Toggle Console"
                         tooltip="Console"
+                        hotkey="⌘K"
                     >
                         <Terminal />
                     </ToggleGroupItem>
@@ -282,6 +274,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         variant="outline"
                         aria-label="Toggle Details"
                         tooltip="Details"
+                        hotkey="⌘L"
                     >
                         <Info />
                     </ToggleGroupItem>
@@ -290,76 +283,71 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         variant="outline"
                         aria-label="Toggle Chat"
                         tooltip="Chat"
+                        hotkey="⌘["
                     >
                         <MessageCircle />
                     </ToggleGroupItem>
                 </ToggleGroup>
-                <Button
+
+                <ToggleGroup
+                    type="cycle"
                     variant="outline"
                     size="sm"
-                    onClick={onToggleTheme}
-                    className="p-2"
-                    tooltip={
-                        <>
-                            {currentTheme === Theme.LIGHT ? 'Light Mode' :
-                                currentTheme === Theme.DARK ? 'Dark Mode' : 'System Theme'}
-                            <span className="text-xs ml-1 opacity-60">(Click to change)</span>
-                        </>
-                    }
-                >
-                    {currentTheme === Theme.LIGHT ? (
-                        <Sun size={16} />
-                    ) : currentTheme === Theme.DARK ? (
-                        <Moon size={16} />
-                    ) : (
-                        <Monitor size={16} />
-                    )}
-                </Button>
+                    value={currentTheme}
+                    onValueChange={handleThemeChange}
+                    items={[
+                        { value: Theme.SYSTEM, label: <Monitor size={16} /> },
+                        { value: Theme.LIGHT, label: <Sun size={16} /> },
+                        { value: Theme.DARK, label: <Moon size={16} /> }
+                    ]}
+                />
+
                 <Avatar className="h-8 w-8">
                     <AvatarImage src="https://github.com/usalu.png" />
                     <AvatarFallback>US</AvatarFallback>
                 </Avatar>
-                <Button variant="outline" size="sm">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center justify-center">
-                                <Share2 size={16} />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            Share
-                        </TooltipContent>
-                    </Tooltip>
-                </Button>
+
+                <ToggleGroup type="single" variant="outline" size="sm">
+                    <ToggleGroupItem
+                        value="share"
+                        variant="outline"
+                        aria-label="Share"
+                        tooltip="Share"
+                    >
+                        <Share2 />
+                    </ToggleGroupItem>
+                </ToggleGroup>
+
                 {onWindowEvents && (
                     <div className="flex items-center gap-2 ml-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onWindowEvents.minimize}
-                        >
-                            <Minus size={16} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="hover:bg-lightGrey transition-colors p-2"
-                            onClick={onWindowEvents.maximize}
-                        >
-                            <Square size={16} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="hover:bg-lightGrey hover:text-red-500 transition-colors p-2"
-                            onClick={onWindowEvents.close}
-                        >
-                            <X size={16} />
-                        </Button>
+                        <ToggleGroup type="single" variant="ghost" size="sm">
+                            <ToggleGroupItem
+                                value="minimize"
+                                variant="ghost"
+                                onClick={onWindowEvents.minimize}
+                            >
+                                <Minus size={16} />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                                value="maximize"
+                                variant="ghost"
+                                onClick={onWindowEvents.maximize}
+                            >
+                                <Square size={16} />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                                value="close"
+                                variant="ghost"
+                                onClick={onWindowEvents.close}
+                                className="hover:text-red-500"
+                            >
+                                <X size={16} />
+                            </ToggleGroupItem>
+                        </ToggleGroup>
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 };
 

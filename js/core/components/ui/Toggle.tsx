@@ -15,6 +15,7 @@ const toggleVariants = cva(
         default: "bg-transparent",
         outline:
           "border bg-transparent shadow-xs hover:bg-accent hover:text-accent-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-9 px-2 min-w-9",
@@ -32,6 +33,7 @@ const toggleVariants = cva(
 interface ToggleProps extends React.ComponentProps<typeof TogglePrimitive.Root>,
   VariantProps<typeof toggleVariants> {
   tooltip?: React.ReactNode;
+  hotkey?: string;
 }
 
 function Toggle({
@@ -39,6 +41,7 @@ function Toggle({
   variant,
   size,
   tooltip,
+  hotkey,
   ...props
 }: ToggleProps) {
   const toggleElement = (
@@ -57,6 +60,7 @@ function Toggle({
         </TooltipTrigger>
         <TooltipContent>
           {tooltip}
+          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
         </TooltipContent>
       </Tooltip>
     );
