@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@semio/js/lib/utils"
 import { toggleVariants } from "@semio/js/components/ui/Toggle"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./Tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 
 const toggleGroupVariants = cva(
   "inline-flex",
@@ -29,10 +29,28 @@ const toggleGroupVariants = cva(
   }
 )
 
-interface ToggleGroupProps extends React.ComponentProps<typeof ToggleGroupPrimitive.Root>,
-  VariantProps<typeof toggleGroupVariants> {
-  className?: string;
-}
+// Define separate types for single and multiple toggle groups to match Radix UI's typing
+type ToggleGroupSingleProps = {
+  type: "single";
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+};
+
+type ToggleGroupMultipleProps = {
+  type: "multiple";
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+};
+
+// Use a type union with the common props from Radix and our variants
+type ToggleGroupProps =
+  Omit<React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root>, "type" | "value" | "defaultValue" | "onValueChange"> &
+  VariantProps<typeof toggleGroupVariants> &
+  (ToggleGroupSingleProps | ToggleGroupMultipleProps) & {
+    className?: string;
+  };
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
@@ -42,6 +60,7 @@ const ToggleGroup = React.forwardRef<
     ref={ref}
     data-slot="toggle-group"
     className={cn(toggleGroupVariants({ variant, size, className }))}
+    // Type is now properly passed through
     {...props}
   />
 ))
@@ -85,4 +104,4 @@ const ToggleGroupItem = React.forwardRef<
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
 
 export { ToggleGroup, ToggleGroupItem, toggleGroupVariants }
-export type { ToggleGroupProps, ToggleGroupItemProps }
+export type { ToggleGroupProps, ToggleGroupItemProps, ToggleGroupSingleProps, ToggleGroupMultipleProps }
