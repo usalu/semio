@@ -3,51 +3,67 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
-import { } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
 
-// Public interfaces - these don't expose Yjs types
+
+export interface TypeNode {
+    guid: string;
+    name: string;
+}
+
+export interface DesignNode {
+    guid: string;
+    name: string;
+}
+
 export interface KitNode {
     guid: string;
     name: string;
     designGuids: string[];
+    typeGuids?: string[];
 }
 
-interface EditorPresenceState {
+export interface DesignEditorState {
     selection: {
-        highlight: string;
+        pieceGuids: string[];
+        connectionGuids: string[];
     };
 }
 
-// Internal type definitions used by the store implementation
-type YjsKit = {
+type YType = {
     name: string;
-    designs: Y.Map<string>;
+}
+
+type YDesign = {
+    name: string;
+}
+
+type YKit = {
+    name: string;
+    types: Y.Map<YType>;
+    designs: Y.Map<YDesign>;
 };
 
 class Studio {
-    private studioId: string;
     private userId: string;
     private studioDoc: Y.Doc;
     private undoManagers: Map<string, UndoManager>;
     private indexeddbProvider: IndexeddbPersistence;
 
     constructor(
-        id: string = 'semio',
         userId: string = Generator.randomId()
     ) {
-        this.studioId = id;
         this.userId = userId;
         this.studioDoc = new Y.Doc();
         this.undoManagers = new Map();
-        this.indexeddbProvider = new IndexeddbPersistence(id, this.studioDoc);
+        this.indexeddbProvider = new IndexeddbPersistence(userId, this.studioDoc);
         this.indexeddbProvider.whenSynced.then(() => {
-            console.log(`Local changes are synchronized for ${id} with user (${this.userId}) with client (${this.studioDoc.clientID})`);
+            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.studioDoc.clientID})`);
         });
     }
 
     // Internal method to get the Yjs kit
-    private getYjsKit(kitGuid: string): Y.Map<YjsKit> {
+    private getYjsKit(kitGuid: string): Y.Map<YKit> {
         const kitsMap = this.studioDoc.getMap(kitGuid);
         if (!kitsMap.has('root')) {
             const rootKit = new Y.Map<any>();
@@ -78,17 +94,17 @@ class Studio {
             });
         }
 
-        return kitsMap.get('root') as Y.Map<YjsKit>;
+        return kitsMap.get('root') as Y.Map<YKit>;
     }
 
     // Internal method to get a Yjs node
-    private getYjsNode(kitGuid: string, guid: string): Y.Map<any> | undefined {
+    private getYjsKit(kitGuid: string, guid: string): Y.Map<any> | undefined {
         const kitsMap = this.studioDoc.getMap(kitGuid);
         return kitsMap.get(guid) as Y.Map<any>;
     }
 
     // Internal method to create a Yjs node
-    private createYjsNode(kitGuid: string, guid: string): Y.Map<any> {
+    private createYjsKit(kitGuid: string, guid: string): Y.Map<any> {
         const kitsMap = this.studioDoc.getMap(kitGuid);
         if (!kitsMap.has(guid)) {
             const nodeKit = new Y.Map<any>();
@@ -100,34 +116,34 @@ class Studio {
     }
 
     // Public method that returns a KitNode
-    getNode(kitGuid: string, guid: string): KitNode | null {
-        const yjsNode = this.getYjsNode(kitGuid, guid);
-        if (!yjsNode) return null;
+    getKit(guid: string): KitNode | null {
+        const yjsKit = this.getYjsKit(guid);
+        if (!yjsKit) return null;
 
-        const designs = yjsNode.get('designs') as Y.Map<string>;
+        const designs = yjsKit.get('designs') as Y.Map<string>;
         const designGuids = designs ? Array.from(designs.keys()) : [];
 
         return {
             guid,
-            name: yjsNode.get('name') || '',
+            name: yjsKit.get('name') || '',
             designGuids
         };
     }
 
     // Create a new node and return its public representation
-    createNode(kitGuid: string, guid: string): KitNode {
-        const yjsNode = this.createYjsNode(kitGuid, guid);
+    createKit(kitGuid: string, guid: string): KitNode {
+        const yjsKit = this.createYjsKit(kitGuid, guid);
         return {
             guid,
-            name: yjsNode.get('name') || '',
+            name: yjsKit.get('name') || '',
             designGuids: []
         };
     }
 
     // Update a node's name
-    updateNodeName(kitGuid: string, guid: string, name: string): void {
-        const yjsNode = this.getYjsNode(kitGuid, guid);
-        if (yjsNode) {
+    updateKitName(kitGuid: string, guid: string, name: string): void {
+        const yjsKit = this.getYjsKit(kitGuid, guid);
+        if (yjsKit) {
             // Make sure we have an undo manager first
             if (!this.undoManagers.has(kitGuid)) {
                 this.getYjsKit(kitGuid);
@@ -137,7 +153,7 @@ class Studio {
 
             // Create a transaction to ensure this is tracked as one operation
             this.studioDoc.transact(() => {
-                yjsNode.set('name', name);
+                yjsKit.set('name', name);
             }, this.userId);
 
             console.log(`Updated node ${guid} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
@@ -146,8 +162,8 @@ class Studio {
 
     // Add a design to a node
     addDesign(kitGuid: string, parentId: string, designGuid: string): KitNode | null {
-        const parentNode = this.getYjsNode(kitGuid, parentId);
-        if (!parentNode) return null;
+        const parentKit = this.getYjsKit(kitGuid, parentId);
+        if (!parentKit) return null;
 
         // Make sure we have an undo manager first
         if (!this.undoManagers.has(kitGuid)) {
@@ -158,20 +174,20 @@ class Studio {
 
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
-            const designNode = this.createYjsNode(kitGuid, designGuid);
-            const designs = parentNode.get('designs') as Y.Map<string>;
+            const designKit = this.createYjsKit(kitGuid, designGuid);
+            const designs = parentKit.get('designs') as Y.Map<string>;
             designs.set(designGuid, designGuid);
         }, this.userId);
 
         console.log(`Added design ${designGuid} to ${parentId} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getNode(kitGuid, designGuid);
+        return this.getKit(kitGuid, designGuid);
     }
 
     // Delete a design node from its parent
     deleteDesign(kitGuid: string, parentId: string, designGuid: string): boolean {
-        const parentNode = this.getYjsNode(kitGuid, parentId);
-        if (!parentNode) return false;
+        const parentKit = this.getYjsKit(kitGuid, parentId);
+        if (!parentKit) return false;
 
         // Make sure we have an undo manager first
         if (!this.undoManagers.has(kitGuid)) {
@@ -184,7 +200,7 @@ class Studio {
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
             // Remove the design from the parent's designs map
-            const designs = parentNode.get('designs') as Y.Map<string>;
+            const designs = parentKit.get('designs') as Y.Map<string>;
             if (designs.has(designGuid)) {
                 designs.delete(designGuid);
                 success = true;
@@ -279,7 +295,7 @@ class Studio {
         // Log the status of the undo manager
         console.log(`Initialized kit ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getNode(kitGuid, 'root') as KitNode;
+        return this.getKit(kitGuid, 'root') as KitNode;
     }
 
     /**
@@ -310,9 +326,9 @@ class Studio {
             // Reinitialize with a fresh document
             this.studioDoc = new Y.Doc();
             this.undoManagers = new Map();
-            this.indexeddbProvider = new IndexeddbPersistence(this.studioId, this.studioDoc);
+            this.indexeddbProvider = new IndexeddbPersistence(this.userId, this.studioDoc);
 
-            console.log(`Studio data for ${this.studioId} has been cleaned`);
+            console.log(`Studio data for ${this.userId} has been cleaned`);
             return this.indexeddbProvider.whenSynced;
         } catch (error) {
             console.error('Error cleaning studio:', error);
@@ -355,7 +371,7 @@ const studioSingleton = new Studio();
 // Create context with proper typing
 const StudioContext = createContext<Studio | null>(null);
 
-export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const StudioProvider: React.FC<{ children: React.ReactKit }> = ({ children }) => {
     return (
         <StudioContext.Provider value={studioSingleton}>
             {children}
@@ -372,37 +388,37 @@ export function useStudio() {
 export function useKit(kitGuid: string) {
     const studio = useStudio();
     const fullKitId = `kit-${kitGuid}`;
-    const [nodes, setNodes] = useState<Record<string, KitNode>>({});
+    const [nodes, setKits] = useState<Record<string, KitNode>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
     const [hasInitialized, setHasInitialized] = useState<boolean>(studio.hasKit(fullKitId));
 
     useEffect(() => {
         // Function to load a node and its designs recursively
-        const loadNode = (id: string): void => {
-            const node = studio.getNode(fullKitId, id);
+        const loadKit = (id: string): void => {
+            const node = studio.getKit(fullKitId, id);
             if (!node) return;
 
-            setNodes(prev => ({
+            setKits(prev => ({
                 ...prev,
                 [id]: node
             }));
 
             // Load all designs
             node.designGuids.forEach(designGuid => {
-                loadNode(designGuid);
+                loadKit(designGuid);
             });
         };
 
         // Load the root node to start
-        loadNode('root');
+        loadKit('root');
 
         // Update hasInitialized state
         setHasInitialized(studio.hasKit(fullKitId));
 
         // Update handler for kit changes
         const updateHandler = () => {
-            loadNode('root');
+            loadKit('root');
             setHasInitialized(studio.hasKit(fullKitId));
             // Check undo/redo state on every kit change
             updateUndoRedoState();
@@ -445,9 +461,9 @@ export function useKit(kitGuid: string) {
 
     return {
         nodes,
-        getNode: (id: string) => nodes[id] || null,
-        updateNodeName: (id: string, name: string) =>
-            studio.updateNodeName(fullKitId, id, name),
+        getKit: (id: string) => nodes[id] || null,
+        updateKitName: (id: string, name: string) =>
+            studio.updateKitName(fullKitId, id, name),
         addDesign: (parentId: string) => {
             const designGuid = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             return studio.addDesign(fullKitId, parentId, designGuid);
@@ -456,9 +472,9 @@ export function useKit(kitGuid: string) {
             return studio.deleteDesign(fullKitId, parentId, designGuid);
         },
         initializeKit: (initialName: string = 'Root') => {
-            const rootNode = studio.initializeKit(fullKitId, initialName);
+            const rootKit = studio.initializeKit(fullKitId, initialName);
             setHasInitialized(true);
-            return rootNode;
+            return rootKit;
         },
         hasInitialized,
         undo: () => studio.undo(fullKitId),

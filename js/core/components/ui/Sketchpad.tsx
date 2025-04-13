@@ -263,14 +263,14 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     <ToggleGroupItem
                         value="workbench"
                         aria-label="Toggle Workbench"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-dark hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Wrench />
                     </ToggleGroupItem>
                     <ToggleGroupItem
                         value="console"
                         aria-label="Toggle Console"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-white hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-dark hover:bg-lightGrey transition-colors flex items-center gap-2 p-2"
                     >
                         <Terminal />
                     </ToggleGroupItem>
