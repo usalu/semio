@@ -22,7 +22,7 @@ const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
     if (!node) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newName = e.target.name;
+        const newName = e.target.value;
         setName(newName);
         updateNodeName(nodeId, newName);
     };
@@ -118,7 +118,7 @@ const KitList: React.FC<KitListProps> = ({ rootId }) => {
                     <input
                         type="text"
                         value={initialName}
-                        onChange={(e) => setInitialName(e.target.name)}
+                        onChange={(e) => setInitialName(e.target.value)}
                         placeholder="Root node name"
                         className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
                     />
