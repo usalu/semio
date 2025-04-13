@@ -3,24 +3,25 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
+import { } from '@semio/js';
+
 // Public interfaces - these don't expose Yjs types
 export interface KitNode {
-    id: string;
-    value: string;
-    childIds: string[];
+    guid: string;
+    name: string;
+    designGuids: string[];
 }
 
 interface EditorPresenceState {
     selection: {
         highlight: string;
     };
-    tree: KitNode;
 }
 
 // Internal type definitions used by the store implementation
 type YjsKit = {
-    value: string;
-    children: Y.Map<string>;
+    name: string;
+    designs: Y.Map<string>;
 };
 
 class Studio {
@@ -42,34 +43,34 @@ class Studio {
     }
 
     // Internal method to get the Yjs tree
-    private getYjsKit(treeId: string): Y.Map<YjsKit> {
-        const treesMap = this.studioDoc.getMap(treeId);
+    private getYjsKit(kitGuid: string): Y.Map<YjsKit> {
+        const treesMap = this.studioDoc.getMap(kitGuid);
         if (!treesMap.has('root')) {
             const rootKit = new Y.Map<any>();
-            rootKit.set('value', '');
-            rootKit.set('children', new Y.Map());
+            rootKit.set('name', '');
+            rootKit.set('designs', new Y.Map());
             treesMap.set('root', rootKit);
         }
 
         // Create or retrieve undo manager for this tree
-        if (!this.undoManagers.has(treeId)) {
+        if (!this.undoManagers.has(kitGuid)) {
             // Track the specific shared types we want to observe
             // This is critical: we need to track the treesMap itself
-            const undoManager = new UndoManager(this.studioDoc.getMap(treeId), {
-                captureTimeout: 500, // Increase capture timeout for better grouping
+            const undoManager = new UndoManager(this.studioDoc.getMap(kitGuid), {
+                captureTimeout: 0, // Increase capture timeout for better grouping
                 trackedOrigins: new Set([this.studioDoc.clientID]), // Only track changes from this client
             });
 
-            this.undoManagers.set(treeId, undoManager);
-            console.log(`Created UndoManager for ${treeId} with client ID ${this.studioDoc.clientID}`);
+            this.undoManagers.set(kitGuid, undoManager);
+            console.log(`Created UndoManager for ${kitGuid} with client ID ${this.studioDoc.clientID}`);
 
             // Manually trigger the undo stack to check if it's working
             undoManager.on('stack-item-added', () => {
-                console.log(`Stack item added to ${treeId}, canUndo: ${undoManager.canUndo()}`);
+                console.log(`Stack item added to ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
             });
 
             undoManager.on('stack-item-popped', () => {
-                console.log(`Stack item popped from ${treeId}, canUndo: ${undoManager.canUndo()}`);
+                console.log(`Stack item popped from ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
             });
         }
 
@@ -77,129 +78,129 @@ class Studio {
     }
 
     // Internal method to get a Yjs node
-    private getYjsNode(treeId: string, id: string): Y.Map<any> | undefined {
-        const treesMap = this.studioDoc.getMap(treeId);
-        return treesMap.get(id) as Y.Map<any>;
+    private getYjsNode(kitGuid: string, guid: string): Y.Map<any> | undefined {
+        const treesMap = this.studioDoc.getMap(kitGuid);
+        return treesMap.get(guid) as Y.Map<any>;
     }
 
     // Internal method to create a Yjs node
-    private createYjsNode(treeId: string, id: string): Y.Map<any> {
-        const treesMap = this.studioDoc.getMap(treeId);
-        if (!treesMap.has(id)) {
+    private createYjsNode(kitGuid: string, guid: string): Y.Map<any> {
+        const treesMap = this.studioDoc.getMap(kitGuid);
+        if (!treesMap.has(guid)) {
             const nodeKit = new Y.Map<any>();
-            nodeKit.set('value', '');
-            nodeKit.set('children', new Y.Map());
-            treesMap.set(id, nodeKit);
+            nodeKit.set('name', '');
+            nodeKit.set('designs', new Y.Map());
+            treesMap.set(guid, nodeKit);
         }
-        return treesMap.get(id) as Y.Map<any>;
+        return treesMap.get(guid) as Y.Map<any>;
     }
 
     // Public method that returns a KitNode
-    getNode(treeId: string, id: string): KitNode | null {
-        const yjsNode = this.getYjsNode(treeId, id);
+    getNode(kitGuid: string, guid: string): KitNode | null {
+        const yjsNode = this.getYjsNode(kitGuid, guid);
         if (!yjsNode) return null;
 
-        const children = yjsNode.get('children') as Y.Map<string>;
-        const childIds = children ? Array.from(children.keys()) : [];
+        const designs = yjsNode.get('designs') as Y.Map<string>;
+        const designGuids = designs ? Array.from(designs.keys()) : [];
 
         return {
-            id,
-            value: yjsNode.get('value') || '',
-            childIds
+            guid,
+            name: yjsNode.get('name') || '',
+            designGuids
         };
     }
 
     // Create a new node and return its public representation
-    createNode(treeId: string, id: string): KitNode {
-        const yjsNode = this.createYjsNode(treeId, id);
+    createNode(kitGuid: string, guid: string): KitNode {
+        const yjsNode = this.createYjsNode(kitGuid, guid);
         return {
-            id,
-            value: yjsNode.get('value') || '',
-            childIds: []
+            guid,
+            name: yjsNode.get('name') || '',
+            designGuids: []
         };
     }
 
-    // Update a node's value
-    updateNodeValue(treeId: string, id: string, value: string): void {
-        const yjsNode = this.getYjsNode(treeId, id);
+    // Update a node's name
+    updateNodeName(kitGuid: string, guid: string, name: string): void {
+        const yjsNode = this.getYjsNode(kitGuid, guid);
         if (yjsNode) {
             // Make sure we have an undo manager first
-            if (!this.undoManagers.has(treeId)) {
-                this.getYjsKit(treeId);
+            if (!this.undoManagers.has(kitGuid)) {
+                this.getYjsKit(kitGuid);
             }
 
-            const undoManager = this.undoManagers.get(treeId);
+            const undoManager = this.undoManagers.get(kitGuid);
 
             // Create a transaction to ensure this is tracked as one operation
             this.studioDoc.transact(() => {
-                yjsNode.set('value', value);
-            }, undoManager?.trackedOrigins);
+                yjsNode.set('name', name);
+            }, this.studioDoc.clientID);
 
-            console.log(`Updated node ${id} in ${treeId}, checking canUndo: ${undoManager?.canUndo()}`);
+            console.log(`Updated node ${guid} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
         }
     }
 
-    // Add a child to a node
-    addChild(treeId: string, parentId: string, childId: string): KitNode | null {
-        const parentNode = this.getYjsNode(treeId, parentId);
+    // Add a design to a node
+    addDesign(kitGuid: string, parentId: string, designGuid: string): KitNode | null {
+        const parentNode = this.getYjsNode(kitGuid, parentId);
         if (!parentNode) return null;
 
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(treeId)) {
-            this.getYjsKit(treeId);
+        if (!this.undoManagers.has(kitGuid)) {
+            this.getYjsKit(kitGuid);
         }
 
-        const undoManager = this.undoManagers.get(treeId);
+        const undoManager = this.undoManagers.get(kitGuid);
 
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
-            const childNode = this.createYjsNode(treeId, childId);
-            const children = parentNode.get('children') as Y.Map<string>;
-            children.set(childId, childId);
-        }, undoManager?.trackedOrigins);
+            const designNode = this.createYjsNode(kitGuid, designGuid);
+            const designs = parentNode.get('designs') as Y.Map<string>;
+            designs.set(designGuid, designGuid);
+        }, this.studioDoc.clientID);
 
-        console.log(`Added child ${childId} to ${parentId} in ${treeId}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Added design ${designGuid} to ${parentId} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getNode(treeId, childId);
+        return this.getNode(kitGuid, designGuid);
     }
 
-    // Delete a child node from its parent
-    deleteChild(treeId: string, parentId: string, childId: string): boolean {
-        const parentNode = this.getYjsNode(treeId, parentId);
+    // Delete a design node from its parent
+    deleteDesign(kitGuid: string, parentId: string, designGuid: string): boolean {
+        const parentNode = this.getYjsNode(kitGuid, parentId);
         if (!parentNode) return false;
 
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(treeId)) {
-            this.getYjsKit(treeId);
+        if (!this.undoManagers.has(kitGuid)) {
+            this.getYjsKit(kitGuid);
         }
 
-        const undoManager = this.undoManagers.get(treeId);
+        const undoManager = this.undoManagers.get(kitGuid);
         let success = false;
 
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
-            // Remove the child from the parent's children map
-            const children = parentNode.get('children') as Y.Map<string>;
-            if (children.has(childId)) {
-                children.delete(childId);
+            // Remove the design from the parent's designs map
+            const designs = parentNode.get('designs') as Y.Map<string>;
+            if (designs.has(designGuid)) {
+                designs.delete(designGuid);
                 success = true;
             }
 
-            // Delete the child node from the tree map
-            const treesMap = this.studioDoc.getMap(treeId);
-            if (treesMap.has(childId)) {
-                treesMap.delete(childId);
+            // Delete the design node from the tree map
+            const treesMap = this.studioDoc.getMap(kitGuid);
+            if (treesMap.has(designGuid)) {
+                treesMap.delete(designGuid);
             }
-        }, undoManager?.trackedOrigins);
+        }, this.studioDoc.clientID);
 
-        console.log(`Deleted child ${childId} from ${parentId} in ${treeId}, success: ${success}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Deleted design ${designGuid} from ${parentId} in ${kitGuid}, success: ${success}, checking canUndo: ${undoManager?.canUndo()}`);
 
         return success;
     }
 
     // Observe changes to the internal YDoc
-    observeKit(treeId: string, callback: () => void): () => void {
-        const treeMap = this.studioDoc.getMap(treeId);
+    observeKit(kitGuid: string, callback: () => void): () => void {
+        const treeMap = this.studioDoc.getMap(kitGuid);
         treeMap.observeDeep(callback);
         return () => treeMap.unobserveDeep(callback);
     }
@@ -248,42 +249,42 @@ class Studio {
     }
 
     /**
-     * Explicitly initializes a tree with a root node and optional initial value
-     * @param treeId The ID of the tree to initialize
-     * @param initialValue Optional initial value for the root node
+     * Explicitly initializes a tree with a root node and optional initial name
+     * @param kitGuid The ID of the tree to initialize
+     * @param initialName Optional initial name for the root node
      * @returns The created root node
      */
-    initializeKit(treeId: string, initialValue: string = 'Root'): KitNode {
+    initializeKit(kitGuid: string, initialName: string = 'Root'): KitNode {
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(treeId)) {
+        if (!this.undoManagers.has(kitGuid)) {
             // This will create the undo manager
-            this.getYjsKit(treeId);
+            this.getYjsKit(kitGuid);
         }
 
-        const undoManager = this.undoManagers.get(treeId);
-        const treesMap = this.studioDoc.getMap(treeId);
+        const undoManager = this.undoManagers.get(kitGuid);
+        const treesMap = this.studioDoc.getMap(kitGuid);
 
         // Create a fresh root node within a transaction to enable undo
         this.studioDoc.transact(() => {
             const rootKit = new Y.Map<any>();
-            rootKit.set('value', initialValue);
-            rootKit.set('children', new Y.Map());
+            rootKit.set('name', initialName);
+            rootKit.set('designs', new Y.Map());
             treesMap.set('root', rootKit);
-        }, undoManager?.trackedOrigins);
+        }, this.studioDoc.clientID);
 
         // Log the status of the undo manager
-        console.log(`Initialized tree ${treeId}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Initialized tree ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getNode(treeId, 'root') as KitNode;
+        return this.getNode(kitGuid, 'root') as KitNode;
     }
 
     /**
      * Checks if a tree exists and has a root node
-     * @param treeId The ID of the tree to check
+     * @param kitGuid The ID of the tree to check
      * @returns True if the tree exists and has a root node
      */
-    hasKit(treeId: string): boolean {
-        const treesMap = this.studioDoc.getMap(treeId);
+    hasKit(kitGuid: string): boolean {
+        const treesMap = this.studioDoc.getMap(kitGuid);
         return treesMap.has('root');
     }
 
@@ -316,30 +317,30 @@ class Studio {
     }
 
     // Focus method to ensure undo/redo capability is activated
-    triggerUndoRedoCapability(treeId: string): void {
+    triggerUndoRedoCapability(kitGuid: string): void {
         // Get or create the undo manager
-        if (!this.undoManagers.has(treeId)) {
-            this.getYjsKit(treeId);
+        if (!this.undoManagers.has(kitGuid)) {
+            this.getYjsKit(kitGuid);
         }
 
         // Force a change that can be undone to test the undo functionality
         // This will be immediately discarded, but ensures the UndoManager is working
-        const undoManager = this.undoManagers.get(treeId);
+        const undoManager = this.undoManagers.get(kitGuid);
         if (undoManager) {
             // Create a temporary marker in the document that we'll immediately remove
             // This creates an undoable action
-            const treesMap = this.studioDoc.getMap(treeId);
+            const treesMap = this.studioDoc.getMap(kitGuid);
             const tempKey = `_temp_${Date.now()}`;
 
             this.studioDoc.transact(() => {
                 treesMap.set(tempKey, "test");
-            }, undoManager.trackedOrigins);
+            }, this.studioDoc.clientID);
 
             this.studioDoc.transact(() => {
                 treesMap.delete(tempKey);
-            }, undoManager.trackedOrigins);
+            }, this.studioDoc.clientID);
 
-            console.log(`Triggered undo capability for ${treeId}, canUndo: ${undoManager.canUndo()}`);
+            console.log(`Triggered undo capability for ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
         }
     }
 }
@@ -364,16 +365,16 @@ export function useStudio() {
     return studio;
 }
 
-export function useKit(treeId: string) {
+export function useKit(kitGuid: string) {
     const studio = useStudio();
-    const fullKitId = `tree-${treeId}`;
+    const fullKitId = `tree-${kitGuid}`;
     const [nodes, setNodes] = useState<Record<string, KitNode>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
     const [hasInitialized, setHasInitialized] = useState<boolean>(studio.hasKit(fullKitId));
 
     useEffect(() => {
-        // Function to load a node and its children recursively
+        // Function to load a node and its designs recursively
         const loadNode = (id: string): void => {
             const node = studio.getNode(fullKitId, id);
             if (!node) return;
@@ -383,9 +384,9 @@ export function useKit(treeId: string) {
                 [id]: node
             }));
 
-            // Load all children
-            node.childIds.forEach(childId => {
-                loadNode(childId);
+            // Load all designs
+            node.designGuids.forEach(designGuid => {
+                loadNode(designGuid);
             });
         };
 
@@ -441,17 +442,17 @@ export function useKit(treeId: string) {
     return {
         nodes,
         getNode: (id: string) => nodes[id] || null,
-        updateNodeValue: (id: string, value: string) =>
-            studio.updateNodeValue(fullKitId, id, value),
-        addChild: (parentId: string) => {
-            const childId = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            return studio.addChild(fullKitId, parentId, childId);
+        updateNodeName: (id: string, name: string) =>
+            studio.updateNodeName(fullKitId, id, name),
+        addDesign: (parentId: string) => {
+            const designGuid = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            return studio.addDesign(fullKitId, parentId, designGuid);
         },
-        deleteChild: (parentId: string, childId: string) => {
-            return studio.deleteChild(fullKitId, parentId, childId);
+        deleteDesign: (parentId: string, designGuid: string) => {
+            return studio.deleteDesign(fullKitId, parentId, designGuid);
         },
-        initializeKit: (initialValue: string = 'Root') => {
-            const rootNode = studio.initializeKit(fullKitId, initialValue);
+        initializeKit: (initialName: string = 'Root') => {
+            const rootNode = studio.initializeKit(fullKitId, initialName);
             setHasInitialized(true);
             return rootNode;
         },

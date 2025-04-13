@@ -9,33 +9,33 @@ interface KitNodeProps {
 }
 
 const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
-    const { getNode, updateNodeValue, addChild, deleteChild } = useKit("shared");
+    const { getNode, updateNodeName, addDesign, deleteDesign } = useKit("shared");
     const node = getNode(nodeId);
 
-    const [value, setValue] = useState('');
+    const [name, setName] = useState('');
 
     useEffect(() => {
         if (!node) return;
-        setValue(node.value);
+        setName(node.name);
     }, [node]);
 
     if (!node) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        setValue(newValue);
-        updateNodeValue(nodeId, newValue);
+        const newName = e.target.name;
+        setName(newName);
+        updateNodeName(nodeId, newName);
     };
 
-    const handleAddChild = () => {
-        addChild(nodeId);
+    const handleAddDesign = () => {
+        addDesign(nodeId);
     };
 
     const handleDeleteNode = () => {
         // For the root node, we don't want to allow deletion
         if (depth > 0) {
             // This would require parent node info, so we'll handle it differently
-            // The parent would call deleteChild(parentId, nodeId)
+            // The parent would call deleteDesign(parentId, nodeId)
         }
     };
 
@@ -44,22 +44,22 @@ const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
             <div className="flex items-center gap-2 mb-1">
                 <input
                     type="text"
-                    value={value}
+                    value={name}
                     onChange={handleChange}
                     className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <button
-                    onClick={handleAddChild}
+                    onClick={handleAddDesign}
                     className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm transition-colors"
                 >
-                    Add Child
+                    Add Design
                 </button>
-                {node.childIds.length > 0 && (
+                {node.designGuids.length > 0 && (
                     <div className="ml-2">
-                        {node.childIds.map(childId => (
+                        {node.designGuids.map(designGuid => (
                             <button
-                                key={childId}
-                                onClick={() => deleteChild(nodeId, childId)}
+                                key={designGuid}
+                                onClick={() => deleteDesign(nodeId, designGuid)}
                                 className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm transition-colors"
                             >
                                 Delete
@@ -68,10 +68,10 @@ const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
                     </div>
                 )}
             </div>
-            {node.childIds.map(childId => (
-                <div key={childId} className="ml-[20px]">
+            {node.designGuids.map(designGuid => (
+                <div key={designGuid} className="ml-[20px]">
                     <KitNode
-                        nodeId={childId}
+                        nodeId={designGuid}
                         depth={depth + 1}
                     />
                 </div>
@@ -86,7 +86,7 @@ interface KitListProps {
 
 const KitList: React.FC<KitListProps> = ({ rootId }) => {
     const { undo, redo, canUndo, canRedo, hasInitialized, initializeKit } = useKit(rootId);
-    const [initialValue, setInitialValue] = useState('Root');
+    const [initialName, setInitialName] = useState('Root');
     const studio = useStudio();
     const fullKitId = `tree-${rootId}`;
 
@@ -101,7 +101,7 @@ const KitList: React.FC<KitListProps> = ({ rootId }) => {
     }, [canUndo, canRedo, rootId, hasInitialized, studio, fullKitId]);
 
     const handleInitializeKit = () => {
-        const rootNode = initializeKit(initialValue);
+        const rootNode = initializeKit(initialName);
 
         // After initialization, explicitly trigger the undo capability
         setTimeout(() => {
@@ -117,8 +117,8 @@ const KitList: React.FC<KitListProps> = ({ rootId }) => {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
                     <input
                         type="text"
-                        value={initialValue}
-                        onChange={(e) => setInitialValue(e.target.value)}
+                        value={initialName}
+                        onChange={(e) => setInitialName(e.target.name)}
                         placeholder="Root node name"
                         className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
                     />
