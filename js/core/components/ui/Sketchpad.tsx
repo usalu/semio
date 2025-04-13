@@ -1,6 +1,6 @@
-import { FC, Suspense, ReactNode, useState } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -190,6 +190,8 @@ interface NavbarProps {
     visiblePanels: PanelToggles;
     onTogglePanel: (panel: keyof PanelToggles) => void;
     readonly?: boolean;
+    currentTheme: Theme;
+    onToggleTheme: () => void;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -197,10 +199,10 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly }) => {
+const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
     return (
         <div
-            className={`w-full h-12 bg-dark border-b border-lightGrey flex items-center justify-between px-4`}
+            className={`w-full h-12 bg-background border-b border-lightGrey flex items-center justify-between px-4`}
         // TODO: Make webkit app region work for electron
         // style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
         >
@@ -288,6 +290,24 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         <MessageCircle />
                     </ToggleGroupItem>
                 </ToggleGroup>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={onToggleTheme} className="p-2">
+                            {currentTheme === Theme.LIGHT ? (
+                                <Sun size={16} />
+                            ) : currentTheme === Theme.DARK ? (
+                                <Moon size={16} />
+                            ) : (
+                                <Monitor size={16} />
+                            )}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {currentTheme === Theme.LIGHT ? 'Light Mode' :
+                            currentTheme === Theme.DARK ? 'Dark Mode' : 'System Theme'}
+                        <span className="text-xs ml-1 opacity-60">(Click to change)</span>
+                    </TooltipContent>
+                </Tooltip>
                 <Avatar className="h-8 w-8">
                     <AvatarImage src="https://github.com/usalu.png" />
                     <AvatarFallback>US</AvatarFallback>
@@ -453,7 +473,7 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-light border border-lightGrey shadow-lg"
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Details</div>
         </div>
@@ -464,7 +484,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-dark-grey text-light border border-lightGrey shadow-lg"
+            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Console</div>
         </div>
@@ -474,7 +494,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-dark-grey text-light border border-lightGrey shadow-lg"
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
         >
             <div className="font-semibold p-4">Chat</div>
         </div>
@@ -512,13 +532,61 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme = Theme.SYSTEM, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme: initialTheme = Theme.SYSTEM, readonly = false, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
         details: false,
         chat: false,
     });
+
+    const [currentTheme, setCurrentTheme] = useState<Theme>(initialTheme);
+
+    // Effect to apply theme to document
+    useEffect(() => {
+        const root = document.documentElement;
+
+        // Remove any existing theme classes
+        root.classList.remove('theme-light', 'theme-dark');
+
+        if (currentTheme === Theme.LIGHT) {
+            root.classList.add('theme-light');
+            root.setAttribute('data-theme', 'light');
+        } else if (currentTheme === Theme.DARK) {
+            root.classList.add('theme-dark');
+            root.setAttribute('data-theme', 'dark');
+        } else {
+            // System theme
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
+            root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+
+            // Add listener for system theme changes
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = (e: MediaQueryListEvent) => {
+                root.classList.remove('theme-light', 'theme-dark');
+                root.classList.add(e.matches ? 'theme-dark' : 'theme-light');
+                root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+            };
+
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
+    }, [currentTheme]);
+
+    const toggleTheme = () => {
+        setCurrentTheme(prev => {
+            switch (prev) {
+                case Theme.SYSTEM:
+                    return Theme.LIGHT;
+                case Theme.LIGHT:
+                    return Theme.DARK;
+                case Theme.DARK:
+                default:
+                    return Theme.SYSTEM;
+            }
+        });
+    };
 
     const togglePanel = (panel: keyof PanelToggles) => {
         setVisiblePanels(prev => {
@@ -568,7 +636,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme = Theme.SYSTEM,
     return (
         <div className="h-full w-full text-light flex flex-col">
             <TooltipProvider>
-                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} readonly={readonly} />
+                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} readonly={readonly} currentTheme={currentTheme} onToggleTheme={toggleTheme} />
                 <div className="canvas flex-1 relative">
                     <DesignEditor />
                     <Workbench visible={visiblePanels.workbench} />
