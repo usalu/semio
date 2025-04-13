@@ -340,7 +340,6 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
     return (
         <ReactFlow
             ref={setNodeRef}
-            colorMode="dark"
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}

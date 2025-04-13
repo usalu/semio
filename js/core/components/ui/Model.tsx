@@ -43,7 +43,7 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
                     <meshStandardMaterial color="gold" roughness={0} metalness={1} opacity={0.5} transparent={true} />
                 </Sphere>
                 <Environment files={'schlenker-shed.hdr'} />
-                <Grid infiniteGrid={true} sectionColor={'var(--color-foreground)'} />
+                <Grid infiniteGrid={true} sectionColor='var(--foreground)' cellColor='var(--accent-foreground)' />
                 {fullscreen && <Gizmo />}
             </Canvas>
         </div>

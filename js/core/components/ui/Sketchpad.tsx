@@ -121,7 +121,7 @@ const trees = [
 const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
     const [open, setOpen] = useState(true);
     return (
-        <Collapsible className="p-3 border-b-thin border-lightGrey font-thin uppercase"
+        <Collapsible className="p-3 border-b-thin font-thin uppercase"
             open={open}
             onOpenChange={setOpen}>
             <CollapsibleTrigger className="flex items-center justify-between">
@@ -202,7 +202,7 @@ interface NavbarProps {
 const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
     return (
         <div
-            className={`w-full h-12 bg-background border-b border-lightGrey flex items-center justify-between px-4`}
+            className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}
         // TODO: Make webkit app region work for electron
         // style={{ WebkitAppRegion: onWindowEvents ? 'drag' : 'none' } as React.CSSProperties}
         >
@@ -312,7 +312,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     <AvatarImage src="https://github.com/usalu.png" />
                     <AvatarFallback>US</AvatarFallback>
                 </Avatar>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <div className="flex items-center justify-center">
@@ -462,7 +462,7 @@ interface PanelProps {
 const Workbench: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
             <div className="font-semibold p-4">Workbench</div>
         </div>
@@ -473,7 +473,7 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
             <div className="font-semibold p-4">Details</div>
         </div>
@@ -484,7 +484,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
+            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
         >
             <div className="font-semibold p-4">Console</div>
         </div>
@@ -494,7 +494,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border border-lightGrey shadow-lg"
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
             <div className="font-semibold p-4">Chat</div>
         </div>
@@ -619,7 +619,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme: initialTheme =
     });
 
     return (
-        <div className="h-full w-full text-light flex flex-col">
+        <div className="h-full w-full flex flex-col bg-background text-foreground ">
             <TooltipProvider>
                 <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} readonly={readonly} currentTheme={currentTheme} onToggleTheme={toggleTheme} />
                 <div className="canvas flex-1 relative">
