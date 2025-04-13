@@ -1,4 +1,4 @@
-import React, { FC, JSX, Suspense, useMemo } from 'react';
+import React, { FC, JSX, Suspense, useMemo, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Sphere, Stage, useGLTF } from '@react-three/drei';
 
@@ -28,6 +28,33 @@ interface ModelProps {
     fullscreen: boolean;
 }
 const Model: FC<ModelProps> = ({ fullscreen }) => {
+    const [gridColors, setGridColors] = useState({
+        sectionColor: getComputedColor('--foreground'),
+        cellColor: getComputedColor('--accent-foreground')
+    });
+
+    // Update colors when theme changes
+    useEffect(() => {
+        const updateColors = () => {
+            setGridColors({
+                sectionColor: getComputedColor('--foreground'),
+                cellColor: getComputedColor('--accent-foreground')
+            });
+        };
+
+        // Update immediately and set up observer
+        updateColors();
+
+        // Watch for class changes on document.documentElement (light/dark theme toggle)
+        const observer = new MutationObserver(updateColors);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <div className="w-full h-full">
             <Canvas>
@@ -43,7 +70,11 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
                     <meshStandardMaterial color="gold" roughness={0} metalness={1} opacity={0.5} transparent={true} />
                 </Sphere>
                 <Environment files={'schlenker-shed.hdr'} />
-                <Grid infiniteGrid={true} sectionColor='var(--foreground)' cellColor='var(--accent-foreground)' />
+                <Grid
+                    infiniteGrid={true}
+                    sectionColor={gridColors.sectionColor}
+                    cellColor={gridColors.cellColor}
+                />
                 {fullscreen && <Gizmo />}
             </Canvas>
         </div>

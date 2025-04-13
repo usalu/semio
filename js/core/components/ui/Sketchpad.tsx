@@ -286,16 +286,16 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     onValueChange={handleThemeChange}
                     items={[
                         {
-                            value: Theme.SYSTEM,
-                            label: <Monitor />
-                        },
-                        {
                             value: Theme.LIGHT,
-                            label: <Sun />
+                            tooltip: "Turn Dark",
+                            hotkey: "Click",
+                            label: <Moon />
                         },
                         {
                             value: Theme.DARK,
-                            label: <Moon />
+                            tooltip: "Turn Light",
+                            hotkey: "Click",
+                            label: <Sun />
                         }
                     ]}
                 />
@@ -317,21 +317,18 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         <ToggleGroup type="single">
                             <ToggleGroupItem
                                 value="minimize"
-                                variant="ghost"
                                 onClick={onWindowEvents.minimize}
                             >
                                 <Minus size={16} />
                             </ToggleGroupItem>
                             <ToggleGroupItem
                                 value="maximize"
-                                variant="ghost"
                                 onClick={onWindowEvents.maximize}
                             >
                                 <Square size={16} />
                             </ToggleGroupItem>
                             <ToggleGroupItem
                                 value="close"
-                                variant="ghost"
                                 onClick={onWindowEvents.close}
                                 className="hover:text-red-500"
                             >
@@ -499,7 +496,6 @@ interface PanelToggles {
 }
 
 export enum Theme {
-    SYSTEM = 'system',
     LIGHT = 'light',
     DARK = 'dark',
 }
@@ -521,7 +517,7 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme: initialTheme = Theme.SYSTEM, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
@@ -529,37 +525,27 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme: initialTheme =
         chat: false,
     });
 
-    const [currentTheme, setCurrentTheme] = useState<Theme>(initialTheme);
+    // Initialize theme based on OS preference if no theme is provided
+    const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
+        if (theme) return theme;
+
+        // Check if we're in a browser environment
+        if (typeof window !== 'undefined') {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? Theme.DARK
+                : Theme.LIGHT;
+        }
+        return Theme.LIGHT; // Default fallback
+    });
 
     useEffect(() => {
-        const root = window.document.documentElement
-
-        root.classList.remove("light", "dark")
-
-        if (currentTheme === Theme.SYSTEM) {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-                .matches
-                ? "dark"
-                : "light"
-
-            root.classList.add(systemTheme)
-            return
-        }
-
+        const root = window.document.documentElement;
+        root.classList.remove("light", "dark");
+        root.classList.add(currentTheme);
     }, [currentTheme]);
 
     const toggleTheme = () => {
-        setCurrentTheme(prev => {
-            switch (prev) {
-                case Theme.SYSTEM:
-                    return Theme.LIGHT;
-                case Theme.LIGHT:
-                    return Theme.DARK;
-                case Theme.DARK:
-                default:
-                    return Theme.SYSTEM;
-            }
-        });
+        setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
 
     const togglePanel = (panel: keyof PanelToggles) => {
