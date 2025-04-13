@@ -210,7 +210,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                 className="flex items-center"
             // style={{ WebkitAppRegion: onWindowEvents ? 'no-drag' : 'none' } as React.CSSProperties}
             >
-                <Breadcrumb className="">
+                <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
                             <BreadcrumbLink href="/"><Home size={16} /></BreadcrumbLink>
@@ -542,36 +542,21 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme: initialTheme =
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(initialTheme);
 
-    // Effect to apply theme to document
     useEffect(() => {
-        const root = document.documentElement;
+        const root = window.document.documentElement
 
-        // Remove any existing theme classes
-        root.classList.remove('theme-light', 'theme-dark');
+        root.classList.remove("light", "dark")
 
-        if (currentTheme === Theme.LIGHT) {
-            root.classList.add('theme-light');
-            root.setAttribute('data-theme', 'light');
-        } else if (currentTheme === Theme.DARK) {
-            root.classList.add('theme-dark');
-            root.setAttribute('data-theme', 'dark');
-        } else {
-            // System theme
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            root.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
-            root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        if (currentTheme === Theme.SYSTEM) {
+            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+                .matches
+                ? "dark"
+                : "light"
 
-            // Add listener for system theme changes
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            const handleChange = (e: MediaQueryListEvent) => {
-                root.classList.remove('theme-light', 'theme-dark');
-                root.classList.add(e.matches ? 'theme-dark' : 'theme-light');
-                root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-            };
-
-            mediaQuery.addEventListener('change', handleChange);
-            return () => mediaQuery.removeEventListener('change', handleChange);
+            root.classList.add(systemTheme)
+            return
         }
+
     }, [currentTheme]);
 
     const toggleTheme = () => {

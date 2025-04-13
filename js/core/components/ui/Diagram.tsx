@@ -68,7 +68,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                     y={ICON_WIDTH / 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className={"text-xs font-bold" + selected ? 'text-dark ' : 'text-light'}
+                    className={`text-xs font-bold ${selected ? 'text-foreground' : 'text-background'}`}
                 >
                     {id_}
                 </text>

@@ -16,7 +16,7 @@ interface ModelProps {
 }
 const Model: FC<ModelProps> = ({ src, environment }) => {
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div className="w-full h-full">
             <Canvas>
                 <Stage environment={null} shadows={false}>
                     <OrbitControls enablePan={false} />

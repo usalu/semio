@@ -44,7 +44,7 @@ function BreadcrumbLink({
   return (
     <Comp
       data-slot="breadcrumb-link"
-      className={cn("hover:text-foreground transition-colors", className)}
+      className={cn("text-foreground hover:text-accent-foreground transition-colors", className)}
       {...props}
     />
   )
@@ -110,12 +110,12 @@ function BreadcrumbSeparator({
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align="center"
-          className="bg-background-level-3 text-foreground min-w-[8rem] overflow-hidden rounded-md border-foreground p-1 shadow-md"
+          className="bg-background-level-3 text-foreground min-w-[8rem] overflow-hidden border-foreground p-1"
         >
           {items.map((item, index) => (
             <DropdownMenuPrimitive.Item
               key={index}
-              className="focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none"
+              className="focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-2 py-1.5 text-sm outline-none"
               onClick={() => handleSelect(item.href)}
             >
               {item.label}
