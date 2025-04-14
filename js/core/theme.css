@@ -149,6 +149,7 @@
     font-style: normal;
     font-display: swap;
 }
+
 @theme {
     --color-primary: #ff344f;
     --color-secondary: #34d1bf;
