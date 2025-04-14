@@ -185,10 +185,19 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
     );
 };
 
+export enum Theme {
+    LIGHT = 'light',
+    DARK = 'dark',
+}
+
+export enum Mode {
+    FULL = 'full',
+    DIAGRAM = 'diagram',
+    MODEL = 'model',
+}
 
 interface NavbarProps {
-    visiblePanels: PanelToggles;
-    onTogglePanel: (panel: keyof PanelToggles) => void;
+    children?: ReactNode;
     readonly?: boolean;
     currentTheme: Theme;
     onToggleTheme: () => void;
@@ -199,7 +208,7 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
+const Navbar: FC<NavbarProps> = ({ children, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
     const handleThemeChange = (value: string) => {
         onToggleTheme();
     };
@@ -236,50 +245,7 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                 </Breadcrumb>
             </div>
             <div className="flex items-center gap-4">
-                <ToggleGroup
-                    type="multiple"
-                    value={Object.entries(visiblePanels)
-                        .filter(([_, isVisible]) => isVisible)
-                        .map(([key]) => key)}
-                    onValueChange={(values) => {
-                        Object.keys(visiblePanels).forEach(key => {
-                            const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-                            const shouldBeVisible = values.includes(key);
-                            if (isCurrentlyVisible !== shouldBeVisible) {
-                                onTogglePanel(key as keyof PanelToggles);
-                            }
-                        });
-                    }}
-                >
-                    <ToggleGroupItem
-                        value="workbench"
-                        tooltip="Workbench"
-                        hotkey="⌘J"
-                    >
-                        <Wrench />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                        value="console"
-                        tooltip="Console"
-                        hotkey="⌘K"
-                    >
-                        <Terminal />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                        value="details"
-                        tooltip="Details"
-                        hotkey="⌘L"
-                    >
-                        <Info />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                        value="chat"
-                        tooltip="Chat"
-                        hotkey="⌘["
-                    >
-                        <MessageCircle />
-                    </ToggleGroupItem>
-                </ToggleGroup>
+                {children}
 
                 <ToggleCycle
                     value={currentTheme}
@@ -298,41 +264,11 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                     ]}
                 />
 
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/usalu.png" />
-                    <AvatarFallback>US</AvatarFallback>
-                </Avatar>
-
-                <Toggle
-                    variant="outline"
-                    tooltip="Share"
-                >
-                    <Share2 />
-                </Toggle>
-
                 {onWindowEvents && (
                     <div className="flex items-center gap-2 ml-4">
-                        <ToggleGroup type="single">
-                            <ToggleGroupItem
-                                value="minimize"
-                                onClick={onWindowEvents.minimize}
-                            >
-                                <Minus size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="maximize"
-                                onClick={onWindowEvents.maximize}
-                            >
-                                <Square size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="close"
-                                onClick={onWindowEvents.close}
-                                className="hover:text-red-500"
-                            >
-                                <X size={16} />
-                            </ToggleGroupItem>
-                        </ToggleGroup>
+                        <button onClick={onWindowEvents.minimize}>-</button>
+                        <button onClick={onWindowEvents.maximize}>□</button>
+                        <button onClick={onWindowEvents.close}>×</button>
                     </div>
                 )}
             </div>
@@ -340,83 +276,77 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
     );
 };
 
+interface PanelProps {
+    visible: boolean;
+    children?: ReactNode;
+}
+
+const Panel: FC<PanelProps> = ({ visible, children }) => {
+    if (!visible) return null;
+    return children;
+};
+
+interface PanelToggles {
+    workbench: boolean;
+    console: boolean;
+    details: boolean;
+    chat: boolean;
+}
 
 interface DesignEditorProps {
+    mode?: Mode;
 }
-const DesignEditor: FC<DesignEditorProps> = ({ }) => {
+
+const DesignEditor: FC<DesignEditorProps> = ({ mode = Mode.FULL }) => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-
-    useHotkeys('ctrl+a', (e) => {
-        e.preventDefault();
-        console.log('Select all pieces and connections');
+    const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
+        workbench: false,
+        console: false,
+        details: false,
+        chat: false,
     });
 
-    useHotkeys('ctrl+i', (e) => {
+    const togglePanel = (panel: keyof PanelToggles) => {
+        setVisiblePanels(prev => {
+            const newState = { ...prev };
+            if (panel === 'details' && !prev.details) {
+                newState.chat = false;
+            }
+            if (panel === 'chat' && !prev.chat) {
+                newState.details = false;
+            }
+            newState[panel] = !prev[panel];
+            return newState;
+        });
+    };
+
+    useHotkeys('mod+j', (e) => {
         e.preventDefault();
-        console.log('Invert selection (If only pieces are selected, deselect them and select all other pieces. If only connections are selected, deselect them and select all other connections. If both are selected, deselect pieces and select connections and select the other pieces and connections)');
+        togglePanel('workbench');
     });
 
-    useHotkeys('ctrl+d', (e) => {
+    useHotkeys('mod+k', (e) => {
         e.preventDefault();
-        console.log('Select closest piece with same variant');
+        togglePanel('console');
     });
 
-    useHotkeys('ctrl+shift+d', (e) => {
+    useHotkeys('mod+l', (e) => {
         e.preventDefault();
-        console.log('Select all pieces with same variant');
+        togglePanel('details');
     });
 
-    useHotkeys('ctrl+c', (e) => {
+    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
         e.preventDefault();
-        console.log('Copy selected pieces and connections');
-    });
-
-    useHotkeys('ctrl+v', (e) => {
-        e.preventDefault();
-        console.log('Paste pieces and connections');
-    });
-
-    useHotkeys('ctrl+x', (e) => {
-        e.preventDefault();
-        console.log('Cut selected pieces and connections');
-    });
-
-    useHotkeys('delete', (e) => {
-        e.preventDefault();
-        console.log('Delete selected pieces and connections');
-    });
-
-    useHotkeys('ctrl+z', (e) => {
-        e.preventDefault();
-        console.log('Undo last action in design editor');
-    });
-
-    useHotkeys('ctrl+y', (e) => {
-        e.preventDefault();
-        console.log('Redo last action in design editor');
-    });
-
-    useHotkeys('ctrl+s', (e) => {
-        e.preventDefault();
-        console.log('Save stash changes of design');
-    });
-
-    useHotkeys('ctrl+w', (e) => {
-        e.preventDefault();
-        console.log('Close design');
+        togglePanel('chat');
     });
 
     const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
         setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
     };
 
-
     return (
-        <div id="sketchpad-edgeless" className="h-full">
-            <ResizablePanelGroup
-                direction="horizontal"
-            // className="bg-dark text-light h-full"
-            >
+        <div className="h-full">
+            <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
                     defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
                     className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
@@ -435,79 +365,39 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                     <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
                 </ResizablePanel>
             </ResizablePanelGroup>
+
+            <Panel visible={visiblePanels.workbench}>
+                <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
+                    <div className="font-semibold p-4">Workbench</div>
+                </div>
+            </Panel>
+
+            <Panel visible={visiblePanels.details}>
+                <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
+                    <div className="font-semibold p-4">Details</div>
+                </div>
+            </Panel>
+
+            <Panel visible={visiblePanels.console}>
+                <div className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border">
+                    <div className="font-semibold p-4">Console</div>
+                </div>
+            </Panel>
+
+            <Panel visible={visiblePanels.chat}>
+                <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
+                    <div className="font-semibold p-4">Chat</div>
+                </div>
+            </Panel>
         </div>
     );
 };
-
-interface PanelProps {
-    visible: boolean;
-}
-
-const Workbench: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Workbench</div>
-        </div>
-    );
-}
-
-const Details: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Details</div>
-        </div>
-    );
-}
-
-const Console: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Console</div>
-        </div>
-    );
-}
-
-const Chat: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Chat</div>
-        </div>
-    );
-}
-
-
-interface PanelToggles {
-    workbench: boolean;
-    console: boolean;
-    details: boolean;
-    chat: boolean;
-}
-
-export enum Theme {
-    LIGHT = 'light',
-    DARK = 'dark',
-}
-
-export enum Mode {
-    FULL = 'full',
-    DIAGRAM = 'diagram',
-    MODEL = 'model',
-}
 
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
     readonly?: boolean;
+    children?: ReactNode;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -515,25 +405,15 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
-    const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
-        workbench: false,
-        console: false,
-        details: false,
-        chat: false,
-    });
-
-    // Initialize theme based on OS preference if no theme is provided
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, children, onWindowEvents }) => {
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
-
-        // Check if we're in a browser environment
         if (typeof window !== 'undefined') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches
                 ? Theme.DARK
                 : Theme.LIGHT;
         }
-        return Theme.LIGHT; // Default fallback
+        return Theme.LIGHT;
     });
 
     useEffect(() => {
@@ -546,69 +426,19 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
         setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
 
-    const togglePanel = (panel: keyof PanelToggles) => {
-        setVisiblePanels(prev => {
-            const newState = { ...prev };
-
-            // If turning on details, ensure chat is off
-            if (panel === 'details' && !prev.details) {
-                newState.chat = false;
-            }
-
-            // If turning on chat, ensure details is off
-            if (panel === 'chat' && !prev.chat) {
-                newState.details = false;
-            }
-
-            // Toggle the requested panel
-            newState[panel] = !prev[panel];
-
-            return newState;
-        });
-    };
-
-    useHotkeys('mod+j', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        togglePanel('workbench');
-    });
-
-    useHotkeys('mod+k', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        togglePanel('console');
-    });
-
-    useHotkeys('mod+l', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        togglePanel('details');
-    });
-
-    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        togglePanel('chat');
-    });
-
     return (
-        <div className="h-full w-full flex flex-col bg-background text-foreground ">
-            <TooltipProvider>
-                <Navbar
-                    visiblePanels={visiblePanels}
-                    onTogglePanel={togglePanel}
-                    onWindowEvents={onWindowEvents}
-                    readonly={readonly}
-                    currentTheme={currentTheme}
-                    onToggleTheme={toggleTheme} />
-                <div className="canvas flex-1 relative">
-                    <DesignEditor />
-                    <Workbench visible={visiblePanels.workbench} />
-                    <Details visible={visiblePanels.details} />
-                    <Console visible={visiblePanels.console} />
-                    <Chat visible={visiblePanels.chat} />
-                </div>
-            </TooltipProvider>
+        <div className="h-full w-full flex flex-col bg-background text-foreground">
+            <Navbar
+                readonly={readonly}
+                currentTheme={currentTheme}
+                onToggleTheme={toggleTheme}
+                onWindowEvents={onWindowEvents}
+            >
+                {children}
+            </Navbar>
+            <div className="canvas flex-1 relative">
+                <DesignEditor mode={mode} />
+            </div>
         </div>
     );
 };
