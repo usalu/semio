@@ -15,7 +15,8 @@ const Piece: FC<PieceProps> = ({ position }) => {
         <Select
             multiple
             box
-            border="1px solid #fff"
+            border="1px solid var(--color-primary)"
+            backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
             onClick={(e) => {
                 console.log('select clicked', e)
             }}
