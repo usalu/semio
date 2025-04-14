@@ -434,7 +434,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                     className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
                     onDoubleClick={() => handlePanelDoubleClick('model')}
                 >
-                    <Model fullscreen={fullscreenPanel === 'model'} />
+                    <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

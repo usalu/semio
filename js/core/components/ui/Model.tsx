@@ -27,8 +27,9 @@ const Gizmo: FC = (): JSX.Element => {
 
 interface ModelProps {
     fullscreen: boolean;
+    onPanelDoubleClick?: () => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -58,12 +59,14 @@ const Model: FC<ModelProps> = ({ fullscreen }) => {
 
     return (
         <div className="w-full h-full">
-            <Canvas>
+            <Canvas onDoubleClick={() => {
+                if (onPanelDoubleClick) onPanelDoubleClick();
+            }}>
                 <OrbitControls
                     mouseButtons={{
-                        LEFT: undefined, // Disable left click for orbit to allow selection
-                        MIDDLE: THREE.MOUSE.DOLLY, // Middle button for zoom (wheel still works too)
-                        RIGHT: THREE.MOUSE.ROTATE // Right button for orbit
+                        LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
+                        MIDDLE: undefined,
+                        RIGHT: undefined // Right button disabled to allow selection
                     }}
                 />
                 <ambientLight intensity={1} />
