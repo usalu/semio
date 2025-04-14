@@ -367,100 +367,104 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         setVisiblePanels(prev => {
             const newState = { ...prev };
 
-            newState.chat = false;
-        }
-
+            // If turning on chat, turn off details
             if (panel === 'chat' && !prev.chat) {
-            newState.details = false;
-        }
+                newState.details = false;
+            }
 
-        newState[panel] = !prev[panel];
+            // If turning on details, turn off chat
+            if (panel === 'details' && !prev.details) {
+                newState.chat = false;
+            }
 
-        return newState;
-    });
-};
+            // Toggle the requested panel
+            newState[panel] = !prev[panel];
 
-useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
-useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
-useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
-useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
+            return newState;
+        });
+    };
 
-useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
-useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
-useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
-useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
-useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
+    useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
+    useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
+    useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
+    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
 
-useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
-useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
-useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
-useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
-useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
-useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
-useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
+    useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
+    useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
+    useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
+    useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
+    useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
 
-const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
-    setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
-};
+    useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
+    useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
+    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
+    useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
+    useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
+    useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
+    useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
-const designEditorToolbar = (
-    <ToggleGroup
-        type="multiple"
-        value={Object.entries(visiblePanels)
-            .filter(([_, isVisible]) => isVisible)
-            .map(([key]) => key)}
-        onValueChange={(values) => {
-            Object.keys(visiblePanels).forEach(key => {
-                const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-                const shouldBeVisible = values.includes(key);
-                if (isCurrentlyVisible !== shouldBeVisible) {
-                    togglePanel(key as keyof PanelToggles);
-                }
-            });
-        }}
-    >
-        <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
-        <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
-        <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
-        <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
-    </ToggleGroup>
-);
+    const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
+        setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
+    };
 
-useEffect(() => {
-    setNavbarToolbar(designEditorToolbar);
-    return () => setNavbarToolbar(null);
+    const designEditorToolbar = (
+        <ToggleGroup
+            type="multiple"
+            value={Object.entries(visiblePanels)
+                .filter(([_, isVisible]) => isVisible)
+                .map(([key]) => key)}
+            onValueChange={(values) => {
+                Object.keys(visiblePanels).forEach(key => {
+                    const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
+                    const shouldBeVisible = values.includes(key);
+                    if (isCurrentlyVisible !== shouldBeVisible) {
+                        togglePanel(key as keyof PanelToggles);
+                    }
+                });
+            }}
+        >
+            <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
+            <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
+            <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
+            <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
+        </ToggleGroup>
+    );
+
+    useEffect(() => {
+        setNavbarToolbar(designEditorToolbar);
+        return () => setNavbarToolbar(null);
         // Cleanup function to clear toolbar when component unmounts or view changes
         return () => setNavbarToolbar(null);
         // Rerun effect if visibility state changes, as ToggleGroup depends on it
     }, [setNavbarToolbar, visiblePanels]);
 
-return (
-    <div className="canvas flex-1 relative">
-        <div id="sketchpad-edgeless" className="h-full">
-            <ResizablePanelGroup direction="horizontal">
-                <ResizablePanel
-                    defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-                    className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-                    onDoubleClick={() => handlePanelDoubleClick('diagram')}
-                >
-                    <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
-                </ResizablePanel>
-                <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
-                <ResizablePanel
-                    defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-                    className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-                    onDoubleClick={() => handlePanelDoubleClick('model')}
-                >
-                    <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
-                </ResizablePanel>
-            </ResizablePanelGroup>
+    return (
+        <div className="canvas flex-1 relative">
+            <div id="sketchpad-edgeless" className="h-full">
+                <ResizablePanelGroup direction="horizontal">
+                    <ResizablePanel
+                        defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+                        className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+                        onDoubleClick={() => handlePanelDoubleClick('diagram')}
+                    >
+                        <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
+                    </ResizablePanel>
+                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                    <ResizablePanel
+                        defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+                        className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+                        onDoubleClick={() => handlePanelDoubleClick('model')}
+                    >
+                        <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
+            <Workbench visible={visiblePanels.workbench} />
+            <Details visible={visiblePanels.details} />
+            <Console visible={visiblePanels.console} />
+            <Chat visible={visiblePanels.chat} />
         </div>
-        <Workbench visible={visiblePanels.workbench} />
-        <Details visible={visiblePanels.details} />
-        <Console visible={visiblePanels.console} />
-        <Chat visible={visiblePanels.chat} />
-    </div>
-);
+    );
 };
 
 export enum Theme {
