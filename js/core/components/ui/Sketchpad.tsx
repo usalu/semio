@@ -288,13 +288,11 @@ const Navbar: FC<NavbarProps> = ({ visiblePanels, onTogglePanel, onWindowEvents,
                         {
                             value: Theme.LIGHT,
                             tooltip: "Turn Dark",
-                            hotkey: "Click",
                             label: <Moon />
                         },
                         {
                             value: Theme.DARK,
                             tooltip: "Turn Light",
-                            hotkey: "Click",
                             label: <Sun />
                         }
                     ]}

@@ -37,6 +37,7 @@
     "react-hotkeys-hook": "^5.0.1",
     "react-resizable-panels": "^2.1.7",
     "three": "^0.174.0",
+    "uuid": "^11.1.0",
     "y-indexeddb": "^9.0.12",
     "yjs": "^13.6.24",
     "zustand": "^5.0.3"

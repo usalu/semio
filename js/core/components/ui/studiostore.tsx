@@ -1,32 +1,34 @@
+import { v4 as uuidv4 } from 'uuid';
 import * as Y from 'yjs';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
+import { Kit } from '@semio/js/semio';
 
 
 export interface TypeNode {
-    guid: string;
+    uuid: string;
     name: string;
 }
 
 export interface DesignNode {
-    guid: string;
+    uuid: string;
     name: string;
 }
 
 export interface KitNode {
-    guid: string;
+    uuid: string;
     name: string;
-    designGuids: string[];
-    typeGuids?: string[];
+    designUuids: string[];
+    typeUuids?: string[];
 }
 
 export interface DesignEditorState {
     selection: {
-        pieceGuids: string[];
-        connectionGuids: string[];
+        pieceUuids: string[];
+        connectionUuids: string[];
     };
 }
 
@@ -44,10 +46,15 @@ type YKit = {
     designs: Y.Map<YDesign>;
 };
 
+type YStudio = {
+    kits: Y.Map<YKit>;
+    designEditorStates: Y.Map<DesignEditorState>;
+}
+
 class Studio {
     private userId: string;
     private studioDoc: Y.Doc;
-    private undoManagers: Map<string, UndoManager>;
+    private undoManagers: Map<string, Map<string, UndoManager>>;
     private indexeddbProvider: IndexeddbPersistence;
 
     constructor(
@@ -63,164 +70,138 @@ class Studio {
     }
 
     // Internal method to get the Yjs kit
-    private getYjsKit(kitGuid: string): Y.Map<YKit> {
-        const kitsMap = this.studioDoc.getMap(kitGuid);
-        if (!kitsMap.has('root')) {
-            const rootKit = new Y.Map<any>();
-            rootKit.set('name', '');
-            rootKit.set('designs', new Y.Map());
-            kitsMap.set('root', rootKit);
+    private getYKit(kitUuid: string): YKit | null {
+        const kitsMap = this.studioDoc.getMap('kits') as Y.Map<YKit>;
+        if (!kitsMap.has(kitUuid)) return null;
+
+        // TODO: Track each editor separately
+        if (!this.undoManagers.has(kitUuid)) {
+            const undoManager = new UndoManager(this.studioDoc.getMap(kitUuid), {
+                captureTimeout: 0,
+                trackedOrigins: new Set([this.userId]),
+            });
+            this.undoManagers.set(kitUuid, undoManager);
+            console.log(`Created UndoManager for ${kitUuid} with user ID ${this.studioDoc.clientID}`);
         }
 
-        // Create or retrieve undo manager for this kit
-        if (!this.undoManagers.has(kitGuid)) {
-            // Track the specific shared types we want to observe
-            // This is critical: we need to track the kitsMap itself
-            const undoManager = new UndoManager(this.studioDoc.getMap(kitGuid), {
-                captureTimeout: 0, // Increase capture timeout for better grouping
-                trackedOrigins: new Set([this.userId]), // Only track changes from this client
-            });
+        return kitsMap.get(kitUuid) as YKit;
+    }
 
-            this.undoManagers.set(kitGuid, undoManager);
-            console.log(`Created UndoManager for ${kitGuid} with user ID ${this.studioDoc.clientID}`);
 
-            // Manually trigger the undo stack to check if it's working
-            undoManager.on('stack-item-added', () => {
-                console.log(`Stack item added to ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
-            });
-
-            undoManager.on('stack-item-popped', () => {
-                console.log(`Stack item popped from ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
-            });
+    private createYKit(uuid: string): Y.Map<any> {
+        const kitsMap = this.studioDoc.getMap(uuid);
+        if (!kitsMap.has(uuid)) {
+            const kitNode = new Y.Map<any>();
+            kitNode.set('name', '');
+            kitNode.set('designs', new Y.Map());
+            kitNode.set('types', new Y.Map());
+            kitsMap.set(uuid, kitNode);
         }
-
-        return kitsMap.get('root') as Y.Map<YKit>;
+        return kitsMap.get(uuid) as Y.Map<any>;
     }
 
-    // Internal method to get a Yjs node
-    private getYjsKit(kitGuid: string, guid: string): Y.Map<any> | undefined {
-        const kitsMap = this.studioDoc.getMap(kitGuid);
-        return kitsMap.get(guid) as Y.Map<any>;
-    }
-
-    // Internal method to create a Yjs node
-    private createYjsKit(kitGuid: string, guid: string): Y.Map<any> {
-        const kitsMap = this.studioDoc.getMap(kitGuid);
-        if (!kitsMap.has(guid)) {
-            const nodeKit = new Y.Map<any>();
-            nodeKit.set('name', '');
-            nodeKit.set('designs', new Y.Map());
-            kitsMap.set(guid, nodeKit);
-        }
-        return kitsMap.get(guid) as Y.Map<any>;
-    }
-
-    // Public method that returns a KitNode
-    getKit(guid: string): KitNode | null {
-        const yjsKit = this.getYjsKit(guid);
-        if (!yjsKit) return null;
-
-        const designs = yjsKit.get('designs') as Y.Map<string>;
-        const designGuids = designs ? Array.from(designs.keys()) : [];
-
+    getKit(uuid: string): KitNode | null {
+        const yKit = this.getYKit(uuid);
+        if (!yKit) return null;
         return {
-            guid,
-            name: yjsKit.get('name') || '',
-            designGuids
+            uuid,
+            name: yKit.get('name') || '',
+            designUuids: Array.from(yKit.get('designs').keys()),
+            typeUuids: Array.from(yKit.get('types').keys())
         };
     }
 
-    // Create a new node and return its public representation
-    createKit(kitGuid: string, guid: string): KitNode {
-        const yjsKit = this.createYjsKit(kitGuid, guid);
+    createKit(kit: Kit): KitNode {
+        const uuid = uuidv4();
+
         return {
-            guid,
-            name: yjsKit.get('name') || '',
-            designGuids: []
+            uuid,
+            name: yKit.get('name') || '',
+            designUuids: []
         };
     }
 
     // Update a node's name
-    updateKitName(kitGuid: string, guid: string, name: string): void {
-        const yjsKit = this.getYjsKit(kitGuid, guid);
-        if (yjsKit) {
+    updateKitName(kitUuid: string, uuid: string, name: string): void {
+        const yKit = this.getYKit(kitUuid, uuid);
+        if (yKit) {
             // Make sure we have an undo manager first
-            if (!this.undoManagers.has(kitGuid)) {
-                this.getYjsKit(kitGuid);
+            if (!this.undoManagers.has(kitUuid)) {
+                this.getYKit(kitUuid);
             }
 
-            const undoManager = this.undoManagers.get(kitGuid);
+            const undoManager = this.undoManagers.get(kitUuid);
 
             // Create a transaction to ensure this is tracked as one operation
             this.studioDoc.transact(() => {
-                yjsKit.set('name', name);
+                yKit.set('name', name);
             }, this.userId);
 
-            console.log(`Updated node ${guid} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
+            console.log(`Updated node ${uuid} in ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
         }
     }
 
     // Add a design to a node
-    addDesign(kitGuid: string, parentId: string, designGuid: string): KitNode | null {
-        const parentKit = this.getYjsKit(kitGuid, parentId);
+    addDesign(kitUuid: string, parentId: string, designUuid: string): KitNode | null {
+        const parentKit = this.getYKit(kitUuid, parentId);
         if (!parentKit) return null;
 
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitGuid)) {
-            this.getYjsKit(kitGuid);
+        if (!this.undoManagers.has(kitUuid)) {
+            this.getYKit(kitUuid);
         }
 
-        const undoManager = this.undoManagers.get(kitGuid);
+        const undoManager = this.undoManagers.get(kitUuid);
 
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
-            const designKit = this.createYjsKit(kitGuid, designGuid);
+            const designKit = this.createYKit(kitUuid, designUuid);
             const designs = parentKit.get('designs') as Y.Map<string>;
-            designs.set(designGuid, designGuid);
+            designs.set(designUuid, designUuid);
         }, this.userId);
 
-        console.log(`Added design ${designGuid} to ${parentId} in ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Added design ${designUuid} to ${parentId} in ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getKit(kitGuid, designGuid);
+        return this.getKit(kitUuid, designUuid);
     }
 
     // Delete a design node from its parent
-    deleteDesign(kitGuid: string, parentId: string, designGuid: string): boolean {
-        const parentKit = this.getYjsKit(kitGuid, parentId);
+    deleteDesign(kitUuid: string, parentId: string, designUuid: string): boolean {
+        const parentKit = this.getYKit(kitUuid, parentId);
         if (!parentKit) return false;
 
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitGuid)) {
-            this.getYjsKit(kitGuid);
+        if (!this.undoManagers.has(kitUuid)) {
+            this.getYKit(kitUuid);
         }
 
-        const undoManager = this.undoManagers.get(kitGuid);
+        const undoManager = this.undoManagers.get(kitUuid);
         let success = false;
 
         // Create a transaction to ensure this is tracked as one operation
         this.studioDoc.transact(() => {
             // Remove the design from the parent's designs map
             const designs = parentKit.get('designs') as Y.Map<string>;
-            if (designs.has(designGuid)) {
-                designs.delete(designGuid);
+            if (designs.has(designUuid)) {
+                designs.delete(designUuid);
                 success = true;
             }
 
             // Delete the design node from the kit map
-            const kitsMap = this.studioDoc.getMap(kitGuid);
-            if (kitsMap.has(designGuid)) {
-                kitsMap.delete(designGuid);
+            const kitsMap = this.studioDoc.getMap(kitUuid);
+            if (kitsMap.has(designUuid)) {
+                kitsMap.delete(designUuid);
             }
         }, this.userId);
 
-        console.log(`Deleted design ${designGuid} from ${parentId} in ${kitGuid}, success: ${success}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Deleted design ${designUuid} from ${parentId} in ${kitUuid}, success: ${success}, checking canUndo: ${undoManager?.canUndo()}`);
 
         return success;
     }
 
     // Observe changes to the internal YDoc
-    observeKit(kitGuid: string, callback: () => void): () => void {
-        const kitMap = this.studioDoc.getMap(kitGuid);
+    observeKit(kitUuid: string, callback: () => void): () => void {
+        const kitMap = this.studioDoc.getMap(kitUuid);
         kitMap.observeDeep(callback);
         return () => kitMap.unobserveDeep(callback);
     }
@@ -270,19 +251,19 @@ class Studio {
 
     /**
      * Explicitly initializes a kit with a root node and optional initial name
-     * @param kitGuid The ID of the kit to initialize
+     * @param kitUuid The ID of the kit to initialize
      * @param initialName Optional initial name for the root node
      * @returns The created root node
      */
-    initializeKit(kitGuid: string, initialName: string = 'Root'): KitNode {
+    initializeKit(kitUuid: string, initialName: string = 'Root'): KitNode {
         // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitGuid)) {
+        if (!this.undoManagers.has(kitUuid)) {
             // This will create the undo manager
-            this.getYjsKit(kitGuid);
+            this.getYKit(kitUuid);
         }
 
-        const undoManager = this.undoManagers.get(kitGuid);
-        const kitsMap = this.studioDoc.getMap(kitGuid);
+        const undoManager = this.undoManagers.get(kitUuid);
+        const kitsMap = this.studioDoc.getMap(kitUuid);
 
         // Create a fresh root node within a transaction to enable undo
         this.studioDoc.transact(() => {
@@ -293,18 +274,18 @@ class Studio {
         }, this.userId);
 
         // Log the status of the undo manager
-        console.log(`Initialized kit ${kitGuid}, checking canUndo: ${undoManager?.canUndo()}`);
+        console.log(`Initialized kit ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
 
-        return this.getKit(kitGuid, 'root') as KitNode;
+        return this.getKit(kitUuid, 'root') as KitNode;
     }
 
     /**
      * Checks if a kit exists and has a root node
-     * @param kitGuid The ID of the kit to check
+     * @param kitUuid The ID of the kit to check
      * @returns True if the kit exists and has a root node
      */
-    hasKit(kitGuid: string): boolean {
-        const kitsMap = this.studioDoc.getMap(kitGuid);
+    hasKit(kitUuid: string): boolean {
+        const kitsMap = this.studioDoc.getMap(kitUuid);
         return kitsMap.has('root');
     }
 
@@ -337,19 +318,19 @@ class Studio {
     }
 
     // Focus method to ensure undo/redo capability is activated
-    triggerUndoRedoCapability(kitGuid: string): void {
+    triggerUndoRedoCapability(kitUuid: string): void {
         // Get or create the undo manager
-        if (!this.undoManagers.has(kitGuid)) {
-            this.getYjsKit(kitGuid);
+        if (!this.undoManagers.has(kitUuid)) {
+            this.getYKit(kitUuid);
         }
 
         // Force a change that can be undone to test the undo functionality
         // This will be immediately discarded, but ensures the UndoManager is working
-        const undoManager = this.undoManagers.get(kitGuid);
+        const undoManager = this.undoManagers.get(kitUuid);
         if (undoManager) {
             // Create a temporary marker in the document that we'll immediately remove
             // This creates an undoable action
-            const kitsMap = this.studioDoc.getMap(kitGuid);
+            const kitsMap = this.studioDoc.getMap(kitUuid);
             const tempKey = `_temp_${Date.now()}`;
 
             this.studioDoc.transact(() => {
@@ -360,7 +341,7 @@ class Studio {
                 kitsMap.delete(tempKey);
             }, this.userId);
 
-            console.log(`Triggered undo capability for ${kitGuid}, canUndo: ${undoManager.canUndo()}`);
+            console.log(`Triggered undo capability for ${kitUuid}, canUndo: ${undoManager.canUndo()}`);
         }
     }
 }
@@ -385,9 +366,9 @@ export function useStudio() {
     return studio;
 }
 
-export function useKit(kitGuid: string) {
+export function useKit(kitUuid: string) {
     const studio = useStudio();
-    const fullKitId = `kit-${kitGuid}`;
+    const fullKitId = `kit-${kitUuid}`;
     const [nodes, setKits] = useState<Record<string, KitNode>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
@@ -405,8 +386,8 @@ export function useKit(kitGuid: string) {
             }));
 
             // Load all designs
-            node.designGuids.forEach(designGuid => {
-                loadKit(designGuid);
+            node.designUuids.forEach(designUuid => {
+                loadKit(designUuid);
             });
         };
 
@@ -465,11 +446,11 @@ export function useKit(kitGuid: string) {
         updateKitName: (id: string, name: string) =>
             studio.updateKitName(fullKitId, id, name),
         addDesign: (parentId: string) => {
-            const designGuid = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            return studio.addDesign(fullKitId, parentId, designGuid);
+            const designUuid = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            return studio.addDesign(fullKitId, parentId, designUuid);
         },
-        deleteDesign: (parentId: string, designGuid: string) => {
-            return studio.deleteDesign(fullKitId, parentId, designGuid);
+        deleteDesign: (parentId: string, designUuid: string) => {
+            return studio.deleteDesign(fullKitId, parentId, designUuid);
         },
         initializeKit: (initialName: string = 'Root') => {
             const rootKit = studio.initializeKit(fullKitId, initialName);

@@ -15,6 +15,7 @@ const Piece: FC<PieceProps> = ({ position }) => {
         <Select
             multiple
             box
+            // TODO: If theme becomes customizable, same approach as in Gizmo is needed 🔄️
             border="1px solid var(--color-primary)"
             backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
             onClick={(e) => {
