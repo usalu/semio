@@ -594,7 +594,13 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
     return (
         <div className="h-full w-full flex flex-col bg-background text-foreground ">
             <TooltipProvider>
-                <Navbar visiblePanels={visiblePanels} onTogglePanel={togglePanel} onWindowEvents={onWindowEvents} readonly={readonly} currentTheme={currentTheme} onToggleTheme={toggleTheme} />
+                <Navbar
+                    visiblePanels={visiblePanels}
+                    onTogglePanel={togglePanel}
+                    onWindowEvents={onWindowEvents}
+                    readonly={readonly}
+                    currentTheme={currentTheme}
+                    onToggleTheme={toggleTheme} />
                 <div className="canvas flex-1 relative">
                     <DesignEditor />
                     <Workbench visible={visiblePanels.workbench} />
