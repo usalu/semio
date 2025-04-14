@@ -151,18 +151,50 @@
 }
 
 @theme {
+    /* Primary brand colors */
     --color-primary: #ff344f;
     --color-secondary: #34d1bf;
     --color-tertiary: #fa9500;
-    --color-dark: #001117;
-    --color-dark-grey: #001821;
-    --color-grey: #29383c;
-    --color-light-grey: #cecbbd;
-    --color-light: #f7f3e3;
+    /* Status/feedback colors */
     --color-danger: #a60009;
     --color-warning: #fccf05;
     --color-info: #dbbea1;
     --color-success: #7eb77f;
+    /* Grey scale - dark to light */
+    --color-dark: #001117;
+    --color-gray-100: #06171c;
+    --color-dark-8-9: #07181d;
+    --color-d-d-d-g: #091a1f;
+    --color-dark-6-7: #0c1c21;
+    --color-dark-dark-gray: #112025;
+    --color-gray-200: #18272a;
+    --color-dark-7-9: #1d2b2f;
+    --color-dark-gray: #243235;
+    --color-dark-5-7: #2e3c3d;
+    --color-gray-300: #334041;
+    --color-dark-dark-gray-2: #3e494a;
+    --color-d-g-g-g: #4c5756;
+    --color-gray-400: #555f5d;
+    --color-dark-4-7: #606966;
+    --color-dark-5-9: #666e6b;
+    --color-gray: #7b827d;
+    --color-light-5-9: #91968f;
+    --color-light-4-7: #979b94;
+    --color-gray-600: #a2a59d;
+    --color-l-g-g-g: #abada4;
+    --color-light-gray-gray: #b9bbb0;
+    --color-gray-700: #c4c4b9;
+    --color-light-5-7: #c9c8bd;
+    --color-light-gray: #d3d2c5;
+    --color-light-7-9: #dad9cb;
+    --color-gray-800: #dfddd0;
+    --color-light-light-gray: #e6e4d5;
+    --color-light-6-7: #ebe8d9;
+    --color-l-l-l-g: #eeeadb;
+    --color-light-8-9: #f0ecdd;
+    --color-gray-900: #f1edde;
+    --color-light: #f7f3e3;
+    /* Font families */
     --font-sans: Anta, "Anta Extended", "Anta Math", "Anta Symbols", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
     --font-serif: "Kelly Slab", "Kelly Slab Extended", "Kelly Slab Cyrillic", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
     --font-mono: "Shart Tech Mono", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";

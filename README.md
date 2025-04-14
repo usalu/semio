@@ -203,11 +203,70 @@ Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation..
 Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
-If you don't care just run
+If you don't care just run:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
+
+# 💯 Brand
+
+## ✍️ Concept
+
+### ✅ Do
+
+- Visual is better than text 👀
+- Compact ➡️ Less space ➡️ More information ➡️ Faster to understand 🚀
+
+### ❌ Dont
+
+- Rounded corners ⬜
+- Shadows 🌤️
+- Multiple unicode directly after each other 🥇🥈🥉
+
+## 🌈 Colors
+
+[!Palette](/assets/lists/palette.png)
+
+### 🥇 Primary
+
+### 🥈 Secondary
+
+### 🥉 Tertiary
+
+### ⚫ Dark
+
+### ⚪ Light
+
+### 🩶 Grey
+
+Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
+
+[!Grayscale](/assets/lists/grayscale.png)
+
+## 📄 Typography
+
+- One symbol after every sentance 💯
+- One symbol at a time 🥇
+- Pick emoji if possible otherwise unicode ⚖️
+- 📝 One symbol to summarize a title
+- 💡 One symbol to summatize a title description and one to think about in the end 🤔
+- `.` are forbidden ⛔
+- All components in `semio` (`sketchpad`,`studio`, …) start with a small letter 🔡
+- Did you know that `…` is just one character?
+
+### 🔡 [Fonts](/assets/fonts/README.md)
+
+- Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
+- Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️
+- Monospaced: [Shart Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) 🖥️
+- Emoji: [Noto Emoji](https://fonts.google.com/noto/specimen/Noto+Emoji) ⚫
+
+## 👀 Visual elements
+
+- Sharp corners 📐
+- Borders □
+- Basic geometric shapes ⚪
 
 # 📊 Stats
 

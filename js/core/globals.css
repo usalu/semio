@@ -13,9 +13,9 @@
     --radius-lg: 0rem;
     --radius-full: 0rem;
     --background: var(--color-light);
-    --background-level-2: var(--color-light-grey); /* Custom */
+    --background-level-2: var(--color-light-gray); /* Custom */
     /* TODO: Expand 5 color to 6 colors because it doesn't work for light scheme because too dark  */
-    --background-level-3: var(--color-grey); /* Custom */
+    --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-dark);
     /* --card: oklch(1 0 0); */
     /* --card-foreground: oklch(0.145 0 0); */
@@ -25,10 +25,10 @@
     /* --primary-foreground: oklch(0.985 0 0); */
     /* --secondary: oklch(0.97 0 0); */
     /* --secondary-foreground: oklch(0.205 0 0); */
-    --muted: var(--color-light-grey);
-    --muted-foreground: var(--color-grey);
-    --accent: var(--color-light-grey);
-    --accent-foreground: var(--color-dark-grey);
+    --muted: var(--color-light-gray);
+    --muted-foreground: var(--color-gray);
+    --accent: var(--color-light-gray);
+    --accent-foreground: var(--color-dark-gray);
     /* --destructive: oklch(0.577 0.245 27.325); */
     --border-color: var(--color-foreground);
     /* --input: oklch(0.922 0 0); */
@@ -51,8 +51,8 @@
 
   .dark {
     --background: var(--color-dark);
-    --background-level-2: var(--color-dark-grey); /* Custom */
-    --background-level-3: var(--color-grey); /* Custom */
+    --background-level-2: var(--color-dark-gray); /* Custom */
+    --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-light);
     /* --card: oklch(0.205 0 0); */
     /* --card-foreground: oklch(0.985 0 0); */
@@ -62,9 +62,9 @@
     /* --primary-foreground: oklch(0.205 0 0); */
     /* --secondary: oklch(0.269 0 0); */
     /* --secondary-foreground: oklch(0.985 0 0); */
-    --muted: var(--color-dark-grey);
-    --muted-foreground: var(--color-grey);
-    --accent: var(--color-grey);
+    --muted: var(--color-dark-gray);
+    --muted-foreground: var(--color-gray);
+    --accent: var(--color-gray);
     --accent-foreground: var(--color-light);
     /* --destructive: oklch(0.704 0.191 22.216); */
     --border-color: var(--color-foreground);
