@@ -21,7 +21,7 @@
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-csharp.svg" alt="C#"></a>
     <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture.</i>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
 </p>
 <br/>
 
@@ -52,7 +52,8 @@ A single file is easier for humans and computers to understand 💡
 
 You will be supprised
 
-- by the awsome fill-in-the-middle suggestions of your copilot 🤖
+- by the awesome fill-in-the-middle suggestions of your copilot 🤖
+- by the hassle-free context selection for your ai agent 🖱️
 - by the smooth refactor experience by just going top-to-bottom ⬇️
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
@@ -105,7 +106,7 @@ But as always, the devil is in the details 😈
 
 Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
 
-## 🚩 Don't worry, you'll figure out the right choice for the specific problems ✅
+## 🚩 Don't worry, you'll figure out the possiblites and make the right choice for the specific problems ✅
 
 # 🦑 [Monorepo](https://github.com/usalu/semio.git)
 
@@ -155,6 +156,8 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ## 📚 [docs](https://github.com/usalu/semio/tree/main/js/docs)
 
+## 🛍️ [assets](https://github.com/usalu/semio/tree/main/assets)
+
 # 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples)
 
 ## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter)
@@ -169,13 +172,13 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad), [Grasshopper](#-grasshopper) and [engine](#️-engine) but they are in totaly different folders 📂
 
-The reason for this is that the monorepo is not disected according but according technology stack ✂️
+The reason for this is that the monorepo is not disected according content but according technology stack ✂️
 
 This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
 
 ## 🐍 [Python]()
 
-Currently only has [engine](#️-engine) but in the future it might grow and then it will
+Currently only [engine](#️-engine) but in the future it might grow and then the `.venv` will be centralized, …
 
 ## 💻 Building from source
 
@@ -226,7 +229,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 ## 🌈 Colors
 
-[!Palette](/assets/lists/palette.png)
+![Palette](/assets/lists/palette.png)
 
 ### 🥇 Primary
 
@@ -242,7 +245,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
-[!Grayscale](/assets/lists/grayscale.png)
+![Grayscale](/assets/lists/grayscale.png)
 
 ## 📄 Typography
 
