@@ -355,8 +355,8 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
             onNodeDragStop={onNodeDragStop}
             onConnect={onConnect}
             zoomOnDoubleClick={false}
-            onDoubleClick={(event) => {
-                event.preventDefault();
+            onDoubleClickCapture={(e) => {
+                e.preventDefault();
                 onPanelDoubleClick?.();
             }}
             panOnDrag={[0]} //left mouse button
