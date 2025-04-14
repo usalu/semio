@@ -1,4 +1,4 @@
-import { FC, Suspense, ReactNode, useState, useEffect } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor } from 'lucide-react';
 import {
@@ -30,6 +30,22 @@ import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
 
+// --- Context for Navbar Toolbar ---
+interface SketchpadContextType {
+    setNavbarToolbar: (toolbar: ReactNode) => void;
+}
+
+const SketchpadContext = createContext<SketchpadContextType | null>(null);
+
+const useSketchpad = () => {
+    const context = useContext(SketchpadContext);
+    if (!context) {
+        throw new Error('useSketchpad must be used within a SketchpadProvider');
+    }
+    return context;
+};
+
+// --- Types Component (Linter fix included) ---
 type TreeSection = {
     name: string;
     children: ReactNode;
@@ -66,10 +82,11 @@ const Types: FC = () => {
     const types = useTypes();
     if (!types) return null;
 
+    // Explicitly type map parameters to fix linter error
     return (
         <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
             {Array.from(types.entries()).map(([name, variantMap]) => (
-                Array.from(variantMap.entries()).map(([variant, type]) => (
+                Array.from(variantMap.entries()).map(([variant, type]: [string, Type]) => (
                     <TypeAvatar key={`${name}-${variant}`} type={type} />
                 ))
             ))}
@@ -77,6 +94,7 @@ const Types: FC = () => {
     );
 }
 
+// --- Tree Components (Unchanged) ---
 const ExplorerTree: Tree = {
     id: 'explorer',
     name: 'Explorer',
@@ -86,10 +104,6 @@ const ExplorerTree: Tree = {
             name: 'Types',
             children: <Types />,
         },
-        // {
-        //     name: 'Designs',
-        //     children: ()
-        // }
     ],
 }
 
@@ -97,18 +111,7 @@ const TestTree: Tree = {
     id: 'test',
     name: 'Test',
     icon: <FlaskConical size={14} className="w-3.5 h-3.5" />,
-    sections: [
-        // {
-        //     name: 'Types',
-        //     items: [
-        //         <Avatar />,
-        //     ],
-        // },
-        // {
-        //     name: 'Designs',
-        //     items: [],
-        // }
-    ],
+    sections: [],
 }
 
 const trees = [
@@ -185,19 +188,10 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
     );
 };
 
-export enum Theme {
-    LIGHT = 'light',
-    DARK = 'dark',
-}
 
-export enum Mode {
-    FULL = 'full',
-    DIAGRAM = 'diagram',
-    MODEL = 'model',
-}
-
+// --- Refactored Navbar ---
 interface NavbarProps {
-    children?: ReactNode;
+    toolbarContent?: ReactNode; // Changed from visiblePanels/onTogglePanel
     readonly?: boolean;
     currentTheme: Theme;
     onToggleTheme: () => void;
@@ -208,13 +202,14 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ children, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
     const handleThemeChange = (value: string) => {
         onToggleTheme();
     };
 
     return (
         <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
+            {/* Left Section: Breadcrumb */}
             <div className="flex items-center">
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -244,9 +239,14 @@ const Navbar: FC<NavbarProps> = ({ children, onWindowEvents, readonly, currentTh
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
-            <div className="flex items-center gap-4">
-                {children}
 
+            {/* Middle Section: Toolbar Content from Active View */}
+            <div className="flex items-center gap-4">
+                {toolbarContent}
+            </div>
+
+            {/* Right Section: Theme, User, Share, Window Controls */}
+            <div className="flex items-center gap-4">
                 <ToggleCycle
                     value={currentTheme}
                     onValueChange={handleThemeChange}
@@ -264,11 +264,41 @@ const Navbar: FC<NavbarProps> = ({ children, onWindowEvents, readonly, currentTh
                     ]}
                 />
 
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://github.com/usalu.png" />
+                    <AvatarFallback>US</AvatarFallback>
+                </Avatar>
+
+                <Toggle
+                    variant="outline"
+                    tooltip="Share"
+                >
+                    <Share2 />
+                </Toggle>
+
                 {onWindowEvents && (
                     <div className="flex items-center gap-2 ml-4">
-                        <button onClick={onWindowEvents.minimize}>-</button>
-                        <button onClick={onWindowEvents.maximize}>□</button>
-                        <button onClick={onWindowEvents.close}>×</button>
+                        <ToggleGroup type="single">
+                            <ToggleGroupItem
+                                value="minimize"
+                                onClick={onWindowEvents.minimize}
+                            >
+                                <Minus size={16} />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                                value="maximize"
+                                onClick={onWindowEvents.maximize}
+                            >
+                                <Square size={16} />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                                value="close"
+                                onClick={onWindowEvents.close}
+                                className="hover:bg-danger"
+                            >
+                                <X size={16} />
+                            </ToggleGroupItem>
+                        </ToggleGroup>
                     </div>
                 )}
             </div>
@@ -276,15 +306,52 @@ const Navbar: FC<NavbarProps> = ({ children, onWindowEvents, readonly, currentTh
     );
 };
 
+// --- Panel Components (Now part of DesignEditor conceptually) ---
 interface PanelProps {
     visible: boolean;
-    children?: ReactNode;
 }
 
-const Panel: FC<PanelProps> = ({ visible, children }) => {
+const Workbench: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
-    return children;
-};
+    return (
+        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+        >
+            <div className="font-semibold p-4">Workbench</div>
+        </div>
+    );
+}
+
+const Details: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+        >
+            <div className="font-semibold p-4">Details</div>
+        </div>
+    );
+}
+
+const Console: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div
+            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
+        >
+            <div className="font-semibold p-4">Console</div>
+        </div>
+    );
+}
+
+const Chat: FC<PanelProps> = ({ visible }) => {
+    if (!visible) return null;
+    return (
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border" // Kept same position, but now managed by DesignEditor
+        >
+            <div className="font-semibold p-4">Chat</div>
+        </div>
+    );
+}
 
 interface PanelToggles {
     workbench: boolean;
@@ -293,12 +360,16 @@ interface PanelToggles {
     chat: boolean;
 }
 
-interface DesignEditorProps {
-    mode?: Mode;
-}
 
-const DesignEditor: FC<DesignEditorProps> = ({ mode = Mode.FULL }) => {
+// --- Refactored DesignEditor (Active View) ---
+interface DesignEditorProps {
+    // Inherits props needed from Sketchpad if necessary, e.g., readonly?
+}
+const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
+    const { setNavbarToolbar } = useSketchpad(); // Get context setter
+
+    // --- Panel State Management ---
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
@@ -309,95 +380,130 @@ const DesignEditor: FC<DesignEditorProps> = ({ mode = Mode.FULL }) => {
     const togglePanel = (panel: keyof PanelToggles) => {
         setVisiblePanels(prev => {
             const newState = { ...prev };
+
+            // If turning on details, ensure chat is off
             if (panel === 'details' && !prev.details) {
                 newState.chat = false;
             }
+
+            // If turning on chat, ensure details is off
             if (panel === 'chat' && !prev.chat) {
                 newState.details = false;
             }
+
+            // Toggle the requested panel
             newState[panel] = !prev[panel];
+
             return newState;
         });
     };
 
-    useHotkeys('mod+j', (e) => {
-        e.preventDefault();
-        togglePanel('workbench');
-    });
+    // --- Panel Hotkeys ---
+    useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
+    useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
+    useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
+    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
 
-    useHotkeys('mod+k', (e) => {
-        e.preventDefault();
-        togglePanel('console');
-    });
-
-    useHotkeys('mod+l', (e) => {
-        e.preventDefault();
-        togglePanel('details');
-    });
-
-    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
-        e.preventDefault();
-        togglePanel('chat');
-    });
+    // --- Editor Hotkeys (Unchanged) ---
+    useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
+    useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
+    useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
+    useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
+    useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
+    useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
+    useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
+    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
+    useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
+    useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
+    useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
+    useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
     const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
         setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
     };
 
+    // --- Define Toolbar Content for Navbar ---
+    const designEditorToolbar = (
+        <ToggleGroup
+            type="multiple"
+            value={Object.entries(visiblePanels)
+                .filter(([_, isVisible]) => isVisible)
+                .map(([key]) => key)}
+            onValueChange={(values) => {
+                Object.keys(visiblePanels).forEach(key => {
+                    const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
+                    const shouldBeVisible = values.includes(key);
+                    if (isCurrentlyVisible !== shouldBeVisible) {
+                        togglePanel(key as keyof PanelToggles);
+                    }
+                });
+            }}
+        >
+            <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
+            <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
+            <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
+            <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
+        </ToggleGroup>
+    );
+
+    // --- Set Toolbar Content via Context ---
+    useEffect(() => {
+        setNavbarToolbar(designEditorToolbar);
+        // Cleanup function to clear toolbar when component unmounts or view changes
+        return () => setNavbarToolbar(null);
+        // Rerun effect if visibility state changes, as ToggleGroup depends on it
+    }, [setNavbarToolbar, visiblePanels]);
+
+
+    // --- Render Design Editor UI ---
     return (
-        <div className="h-full">
-            <ResizablePanelGroup direction="horizontal">
-                <ResizablePanel
-                    defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-                    className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-                    onDoubleClick={() => handlePanelDoubleClick('diagram')}
-                >
-                    <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
-                </ResizablePanel>
-                <ResizableHandle
-                    className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`}
-                />
-                <ResizablePanel
-                    defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-                    className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-                    onDoubleClick={() => handlePanelDoubleClick('model')}
-                >
-                    <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
-                </ResizablePanel>
-            </ResizablePanelGroup>
-
-            <Panel visible={visiblePanels.workbench}>
-                <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
-                    <div className="font-semibold p-4">Workbench</div>
-                </div>
-            </Panel>
-
-            <Panel visible={visiblePanels.details}>
-                <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
-                    <div className="font-semibold p-4">Details</div>
-                </div>
-            </Panel>
-
-            <Panel visible={visiblePanels.console}>
-                <div className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border">
-                    <div className="font-semibold p-4">Console</div>
-                </div>
-            </Panel>
-
-            <Panel visible={visiblePanels.chat}>
-                <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border">
-                    <div className="font-semibold p-4">Chat</div>
-                </div>
-            </Panel>
+        <div className="canvas flex-1 relative"> {/* Added relative positioning context */}
+            <div id="sketchpad-edgeless" className="h-full">
+                <ResizablePanelGroup direction="horizontal">
+                    <ResizablePanel
+                        defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+                        className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+                        onDoubleClick={() => handlePanelDoubleClick('diagram')}
+                    >
+                        <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
+                    </ResizablePanel>
+                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                    <ResizablePanel
+                        defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+                        className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+                        onDoubleClick={() => handlePanelDoubleClick('model')}
+                    >
+                        <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
+            {/* Render Panels */}
+            <Workbench visible={visiblePanels.workbench} />
+            <Details visible={visiblePanels.details} />
+            <Console visible={visiblePanels.console} />
+            <Chat visible={visiblePanels.chat} />
         </div>
     );
 };
 
+
+// --- Enums (Unchanged) ---
+export enum Theme {
+    LIGHT = 'light',
+    DARK = 'dark',
+}
+
+export enum Mode {
+    FULL = 'full',
+    DIAGRAM = 'diagram',
+    MODEL = 'model',
+}
+
+// --- Refactored Sketchpad (Main Layout) ---
 interface SketchpadProps {
-    mode?: Mode;
+    mode?: Mode; // This might determine the active view in the future
     theme?: Theme;
     readonly?: boolean;
-    children?: ReactNode;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -405,13 +511,14 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, children, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
+    const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
+
+    // Theme management remains here
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
         if (typeof window !== 'undefined') {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? Theme.DARK
-                : Theme.LIGHT;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? Theme.DARK : Theme.LIGHT;
         }
         return Theme.LIGHT;
     });
@@ -426,20 +533,24 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
         setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
 
+    // --- Active View Selection (placeholder for future expansion) ---
+    const ActiveView = DesignEditor; // Currently hardcoded
+
     return (
-        <div className="h-full w-full flex flex-col bg-background text-foreground">
-            <Navbar
-                readonly={readonly}
-                currentTheme={currentTheme}
-                onToggleTheme={toggleTheme}
-                onWindowEvents={onWindowEvents}
-            >
-                {children}
-            </Navbar>
-            <div className="canvas flex-1 relative">
-                <DesignEditor mode={mode} />
+        <SketchpadContext.Provider value={{ setNavbarToolbar }}>
+            <div className="h-full w-full flex flex-col bg-background text-foreground ">
+                <TooltipProvider>
+                    <Navbar
+                        toolbarContent={navbarToolbar} // Pass state to Navbar
+                        onWindowEvents={onWindowEvents}
+                        readonly={readonly}
+                        currentTheme={currentTheme}
+                        onToggleTheme={toggleTheme} />
+                    {/* Render the currently active view */}
+                    <ActiveView />
+                </TooltipProvider>
             </div>
-        </div>
+        </SketchpadContext.Provider>
     );
 };
 
