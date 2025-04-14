@@ -30,7 +30,6 @@ import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
 
-// --- Context for Navbar Toolbar ---
 interface SketchpadContextType {
     setNavbarToolbar: (toolbar: ReactNode) => void;
 }
@@ -45,7 +44,6 @@ const useSketchpad = () => {
     return context;
 };
 
-// --- Types Component (Linter fix included) ---
 type TreeSection = {
     name: string;
     children: ReactNode;
@@ -82,7 +80,6 @@ const Types: FC = () => {
     const types = useTypes();
     if (!types) return null;
 
-    // Explicitly type map parameters to fix linter error
     return (
         <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
             {Array.from(types.entries()).map(([name, variantMap]) => (
@@ -94,7 +91,6 @@ const Types: FC = () => {
     );
 }
 
-// --- Tree Components (Unchanged) ---
 const ExplorerTree: Tree = {
     id: 'explorer',
     name: 'Explorer',
@@ -188,10 +184,8 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
     );
 };
 
-
-// --- Refactored Navbar ---
 interface NavbarProps {
-    toolbarContent?: ReactNode; // Changed from visiblePanels/onTogglePanel
+    toolbarContent?: ReactNode;
     readonly?: boolean;
     currentTheme: Theme;
     onToggleTheme: () => void;
@@ -209,7 +203,6 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
 
     return (
         <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
-            {/* Left Section: Breadcrumb */}
             <div className="flex items-center">
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -240,12 +233,10 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
                 </Breadcrumb>
             </div>
 
-            {/* Middle Section: Toolbar Content from Active View */}
             <div className="flex items-center gap-4">
                 {toolbarContent}
             </div>
 
-            {/* Right Section: Theme, User, Share, Window Controls */}
             <div className="flex items-center gap-4">
                 <ToggleCycle
                     value={currentTheme}
@@ -306,7 +297,6 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
     );
 };
 
-// --- Panel Components (Now part of DesignEditor conceptually) ---
 interface PanelProps {
     visible: boolean;
 }
@@ -346,7 +336,7 @@ const Console: FC<PanelProps> = ({ visible }) => {
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border" // Kept same position, but now managed by DesignEditor
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
             <div className="font-semibold p-4">Chat</div>
         </div>
@@ -360,16 +350,12 @@ interface PanelToggles {
     chat: boolean;
 }
 
-
-// --- Refactored DesignEditor (Active View) ---
 interface DesignEditorProps {
-    // Inherits props needed from Sketchpad if necessary, e.g., readonly?
 }
 const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-    const { setNavbarToolbar } = useSketchpad(); // Get context setter
+    const { setNavbarToolbar } = useSketchpad();
 
-    // --- Panel State Management ---
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
@@ -381,113 +367,102 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         setVisiblePanels(prev => {
             const newState = { ...prev };
 
-            // If turning on details, ensure chat is off
-            if (panel === 'details' && !prev.details) {
-                newState.chat = false;
-            }
+            newState.chat = false;
+        }
 
-            // If turning on chat, ensure details is off
             if (panel === 'chat' && !prev.chat) {
-                newState.details = false;
-            }
+            newState.details = false;
+        }
 
-            // Toggle the requested panel
-            newState[panel] = !prev[panel];
+        newState[panel] = !prev[panel];
 
-            return newState;
-        });
-    };
+        return newState;
+    });
+};
 
-    // --- Panel Hotkeys ---
-    useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
-    useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
-    useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
-    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
+useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
+useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
+useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
+useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
 
-    // --- Editor Hotkeys (Unchanged) ---
-    useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
-    useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
-    useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
-    useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
-    useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
-    useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
-    useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
-    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
-    useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
-    useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
-    useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
-    useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
+useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
+useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
+useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
+useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
+useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
 
-    const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
-        setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
-    };
+useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
+useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
+useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
+useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
+useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
+useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
+useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
-    // --- Define Toolbar Content for Navbar ---
-    const designEditorToolbar = (
-        <ToggleGroup
-            type="multiple"
-            value={Object.entries(visiblePanels)
-                .filter(([_, isVisible]) => isVisible)
-                .map(([key]) => key)}
-            onValueChange={(values) => {
-                Object.keys(visiblePanels).forEach(key => {
-                    const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-                    const shouldBeVisible = values.includes(key);
-                    if (isCurrentlyVisible !== shouldBeVisible) {
-                        togglePanel(key as keyof PanelToggles);
-                    }
-                });
-            }}
-        >
-            <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
-            <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
-            <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
-            <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
-        </ToggleGroup>
-    );
+const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
+    setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
+};
 
-    // --- Set Toolbar Content via Context ---
-    useEffect(() => {
-        setNavbarToolbar(designEditorToolbar);
+const designEditorToolbar = (
+    <ToggleGroup
+        type="multiple"
+        value={Object.entries(visiblePanels)
+            .filter(([_, isVisible]) => isVisible)
+            .map(([key]) => key)}
+        onValueChange={(values) => {
+            Object.keys(visiblePanels).forEach(key => {
+                const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
+                const shouldBeVisible = values.includes(key);
+                if (isCurrentlyVisible !== shouldBeVisible) {
+                    togglePanel(key as keyof PanelToggles);
+                }
+            });
+        }}
+    >
+        <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
+        <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
+        <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
+        <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
+    </ToggleGroup>
+);
+
+useEffect(() => {
+    setNavbarToolbar(designEditorToolbar);
+    return () => setNavbarToolbar(null);
         // Cleanup function to clear toolbar when component unmounts or view changes
         return () => setNavbarToolbar(null);
         // Rerun effect if visibility state changes, as ToggleGroup depends on it
     }, [setNavbarToolbar, visiblePanels]);
 
-
-    // --- Render Design Editor UI ---
-    return (
-        <div className="canvas flex-1 relative"> {/* Added relative positioning context */}
-            <div id="sketchpad-edgeless" className="h-full">
-                <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-                        className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('diagram')}
-                    >
-                        <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
-                    </ResizablePanel>
-                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-                        className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('model')}
-                    >
-                        <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
-                    </ResizablePanel>
-                </ResizablePanelGroup>
-            </div>
-            {/* Render Panels */}
-            <Workbench visible={visiblePanels.workbench} />
-            <Details visible={visiblePanels.details} />
-            <Console visible={visiblePanels.console} />
-            <Chat visible={visiblePanels.chat} />
+return (
+    <div className="canvas flex-1 relative">
+        <div id="sketchpad-edgeless" className="h-full">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel
+                    defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+                    className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+                    onDoubleClick={() => handlePanelDoubleClick('diagram')}
+                >
+                    <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
+                </ResizablePanel>
+                <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                <ResizablePanel
+                    defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+                    className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+                    onDoubleClick={() => handlePanelDoubleClick('model')}
+                >
+                    <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
+                </ResizablePanel>
+            </ResizablePanelGroup>
         </div>
-    );
+        <Workbench visible={visiblePanels.workbench} />
+        <Details visible={visiblePanels.details} />
+        <Console visible={visiblePanels.console} />
+        <Chat visible={visiblePanels.chat} />
+    </div>
+);
 };
 
-
-// --- Enums (Unchanged) ---
 export enum Theme {
     LIGHT = 'light',
     DARK = 'dark',
@@ -499,9 +474,8 @@ export enum Mode {
     MODEL = 'model',
 }
 
-// --- Refactored Sketchpad (Main Layout) ---
 interface SketchpadProps {
-    mode?: Mode; // This might determine the active view in the future
+    mode?: Mode;
     theme?: Theme;
     readonly?: boolean;
     onWindowEvents?: {
@@ -514,7 +488,6 @@ interface SketchpadProps {
 const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
-    // Theme management remains here
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
         if (typeof window !== 'undefined') {
@@ -533,20 +506,18 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
         setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
 
-    // --- Active View Selection (placeholder for future expansion) ---
-    const ActiveView = DesignEditor; // Currently hardcoded
+    const ActiveView = DesignEditor;
 
     return (
         <SketchpadContext.Provider value={{ setNavbarToolbar }}>
             <div className="h-full w-full flex flex-col bg-background text-foreground ">
                 <TooltipProvider>
                     <Navbar
-                        toolbarContent={navbarToolbar} // Pass state to Navbar
+                        toolbarContent={navbarToolbar}
                         onWindowEvents={onWindowEvents}
                         readonly={readonly}
                         currentTheme={currentTheme}
                         onToggleTheme={toggleTheme} />
-                    {/* Render the currently active view */}
                     <ActiveView />
                 </TooltipProvider>
             </div>
