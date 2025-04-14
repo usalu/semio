@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import React, { FC, useState, useCallback, useEffect } from 'react';
-import { KitNode as KitNodeType, useKit, StudioProvider, useStudio } from './studiostore';
+import { useKit, StudioProvider, useStudio } from './studiostore';
 
 interface KitNodeProps {
     nodeId: string;
@@ -9,8 +9,8 @@ interface KitNodeProps {
 }
 
 const KitNode: React.FC<KitNodeProps> = ({ nodeId, depth }) => {
-    const { getNode, updateNodeName, addDesign, deleteDesign } = useKit("shared");
-    const node = getNode(nodeId);
+    const { getKit, updateNodeName, addDesign, deleteDesign } = useKit("shared");
+    const node = getKit(nodeId);
 
     const [name, setName] = useState('');
 

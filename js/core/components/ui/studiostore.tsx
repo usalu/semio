@@ -8,28 +8,16 @@ import { Generator } from '@semio/js/lib/utils';
 import { Kit } from '@semio/js/semio';
 
 
-export interface TypeNode {
-    uuid: string;
-    name: string;
-}
-
-export interface DesignNode {
-    uuid: string;
-    name: string;
-}
-
-export interface KitNode {
-    uuid: string;
-    name: string;
-    designUuids: string[];
-    typeUuids?: string[];
-}
-
 export interface DesignEditorState {
     selection: {
         pieceUuids: string[];
         connectionUuids: string[];
     };
+}
+
+type YQuality = {
+    name: string;
+
 }
 
 type YType = {
@@ -42,12 +30,13 @@ type YDesign = {
 
 type YKit = {
     name: string;
-    types: Y.Map<YType>;
-    designs: Y.Map<YDesign>;
+    types: Y.Array<YType>;
+    designs: Y.Array<YDesign>;
+    qualities: Y.Array<YQuality>;
 };
 
 type YStudio = {
-    kits: Y.Map<YKit>;
+    kits: Y.Array<YKit>;
     designEditorStates: Y.Map<DesignEditorState>;
 }
 
@@ -69,50 +58,83 @@ class Studio {
         });
     }
 
-    // Internal method to get the Yjs kit
-    private getYKit(kitUuid: string): YKit | null {
-        const kitsMap = this.studioDoc.getMap('kits') as Y.Map<YKit>;
-        if (!kitsMap.has(kitUuid)) return null;
-
-        // TODO: Track each editor separately
-        if (!this.undoManagers.has(kitUuid)) {
-            const undoManager = new UndoManager(this.studioDoc.getMap(kitUuid), {
-                captureTimeout: 0,
-                trackedOrigins: new Set([this.userId]),
-            });
-            this.undoManagers.set(kitUuid, undoManager);
-            console.log(`Created UndoManager for ${kitUuid} with user ID ${this.studioDoc.clientID}`);
-        }
-
-        return kitsMap.get(kitUuid) as YKit;
+    private createYKit(kit: Kit): Y.Map<any> {
+        const yKit = new Y.Map<any>();
+        yKit.set('uri', kit.uri);
+        yKit.set('name', kit.name);
+        yKit.set('description', kit.description || '');
+        yKit.set('icon', kit.icon || '');
+        yKit.set('image', kit.image || '');
+        yKit.set('preview', kit.preview || '');
+        yKit.set('version', kit.version || '');
+        yKit.set('remote', kit.remote || '');
+        yKit.set('homepage', kit.homepage || '');
+        yKit.set('license', kit.license || []);
+        yKit.set('designs', new Y.Map());
+        yKit.set('types', new Y.Map());
+        yKit.set('qualities', new Y.Map());
+        this.studioDoc.getMap('kits').set(kit.uri, yKit);
+        return yKit
     }
 
-
-    private createYKit(uuid: string): Y.Map<any> {
-        const kitsMap = this.studioDoc.getMap(uuid);
-        if (!kitsMap.has(uuid)) {
-            const kitNode = new Y.Map<any>();
-            kitNode.set('name', '');
-            kitNode.set('designs', new Y.Map());
-            kitNode.set('types', new Y.Map());
-            kitsMap.set(uuid, kitNode);
-        }
-        return kitsMap.get(uuid) as Y.Map<any>;
+    private updateYKit(kit: Kit): Y.Map<any> | null {
+        const yKit = this.getYKit(kit.uri);
+        if (!yKit) return null;
+        if (kit.name !== "") yKit.set('name', kit.name);
+        if (kit.description !== undefined && kit.description !== "") yKit.set('description', kit.description);
+        if (kit.icon !== undefined && kit.icon !== "") yKit.set('icon', kit.icon);
+        if (kit.image !== undefined && kit.image !== "") yKit.set('image', kit.image);
+        if (kit.preview !== undefined && kit.preview !== "") yKit.set('preview', kit.preview);
+        if (kit.version !== undefined && kit.version !== "") yKit.set('version', kit.version);
+        if (kit.remote !== undefined && kit.remote !== "") yKit.set('remote', kit.remote);
+        if (kit.homepage !== undefined && kit.homepage !== "") yKit.set('homepage', kit.homepage);
+        if (kit.license !== undefined && kit.license !== "") yKit.set('license', kit.license);
+        // TODO: Update designs and types
+        // if (kit.designs !== undefined && kit.designs.length > 0) {
+        //     const designs = yKit.get('designs') as Y.Map<any>;
+        //     kit.designs.forEach(design => {
+        //         if (designs.has(design.name)) {
+        //             const sameDesigns = designs.get(design.name) as Y.Map<any>;
+        //             if (sameDesigns.has(design.variant || '')) {
+        //                 updateYDesign(design);
+        //             }
+        //             else {
+        //                 createYDesign(design);
+        //             }
+        //         }
+        //         else {
+        //             createYDesign(d)
+        //         }
+        //     });
+        // }
+        if (kit.qualities)
     }
 
-    getKit(uuid: string): KitNode | null {
-        const yKit = this.getYKit(uuid);
+    getKit(uri: string): Kit | null {
+        const yKit = this.getYKit(uri);
         if (!yKit) return null;
         return {
-            uuid,
-            name: yKit.get('name') || '',
-            designUuids: Array.from(yKit.get('designs').keys()),
-            typeUuids: Array.from(yKit.get('types').keys())
+            name: yKit.get('name'),
+            description: yKit.get('description'),
+            icon: yKit.get('icon'),
+            image: yKit.get('image'),
+            preview: yKit.get('preview'),
+            version: yKit.get('version'),
+            remote: yKit.get('remote'),
+            homepage: yKit.get('homepage'),
+            license: yKit.get('license'),
+            uri: uri,
+            designs: Array.from(yKit.get('designs').keys()),
+            types: Array.from(yKit.get('types').keys())
         };
     }
 
+    private getYKit(uri: string): Y.Map<any> | undefined {
+        return this.studioDoc.getMap('kits').get(uri) as Y.Map<any> | undefined;
+    }
+
     createKit(kit: Kit): KitNode {
-        const uuid = uuidv4();
+
 
         return {
             uuid,
@@ -121,27 +143,7 @@ class Studio {
         };
     }
 
-    // Update a node's name
-    updateKitName(kitUuid: string, uuid: string, name: string): void {
-        const yKit = this.getYKit(kitUuid, uuid);
-        if (yKit) {
-            // Make sure we have an undo manager first
-            if (!this.undoManagers.has(kitUuid)) {
-                this.getYKit(kitUuid);
-            }
-
-            const undoManager = this.undoManagers.get(kitUuid);
-
-            // Create a transaction to ensure this is tracked as one operation
-            this.studioDoc.transact(() => {
-                yKit.set('name', name);
-            }, this.userId);
-
-            console.log(`Updated node ${uuid} in ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
-        }
-    }
-
-    // Add a design to a node
+    // Add a design to a kit
     addDesign(kitUuid: string, parentId: string, designUuid: string): KitNode | null {
         const parentKit = this.getYKit(kitUuid, parentId);
         if (!parentKit) return null;
@@ -165,7 +167,7 @@ class Studio {
         return this.getKit(kitUuid, designUuid);
     }
 
-    // Delete a design node from its parent
+    // Delete a design kit from its parent
     deleteDesign(kitUuid: string, parentId: string, designUuid: string): boolean {
         const parentKit = this.getYKit(kitUuid, parentId);
         if (!parentKit) return false;
@@ -187,7 +189,7 @@ class Studio {
                 success = true;
             }
 
-            // Delete the design node from the kit map
+            // Delete the design kit from the kit map
             const kitsMap = this.studioDoc.getMap(kitUuid);
             if (kitsMap.has(designUuid)) {
                 kitsMap.delete(designUuid);
@@ -250,10 +252,10 @@ class Studio {
     }
 
     /**
-     * Explicitly initializes a kit with a root node and optional initial name
+     * Explicitly initializes a kit with a root kit and optional initial name
      * @param kitUuid The ID of the kit to initialize
-     * @param initialName Optional initial name for the root node
-     * @returns The created root node
+     * @param initialName Optional initial name for the root kit
+     * @returns The created root kit
      */
     initializeKit(kitUuid: string, initialName: string = 'Root'): KitNode {
         // Make sure we have an undo manager first
@@ -265,7 +267,7 @@ class Studio {
         const undoManager = this.undoManagers.get(kitUuid);
         const kitsMap = this.studioDoc.getMap(kitUuid);
 
-        // Create a fresh root node within a transaction to enable undo
+        // Create a fresh root kit within a transaction to enable undo
         this.studioDoc.transact(() => {
             const rootKit = new Y.Map<any>();
             rootKit.set('name', initialName);
@@ -280,9 +282,9 @@ class Studio {
     }
 
     /**
-     * Checks if a kit exists and has a root node
+     * Checks if a kit exists and has a root kit
      * @param kitUuid The ID of the kit to check
-     * @returns True if the kit exists and has a root node
+     * @returns True if the kit exists and has a root kit
      */
     hasKit(kitUuid: string): boolean {
         const kitsMap = this.studioDoc.getMap(kitUuid);
@@ -366,32 +368,26 @@ export function useStudio() {
     return studio;
 }
 
-export function useKit(kitUuid: string) {
+export function useKit(uri: string) {
     const studio = useStudio();
-    const fullKitId = `kit-${kitUuid}`;
-    const [nodes, setKits] = useState<Record<string, KitNode>>({});
+    const [kits, setKits] = useState<Record<string, Kit>>({});
     const [canUndo, setCanUndo] = useState<boolean>(false);
     const [canRedo, setCanRedo] = useState<boolean>(false);
-    const [hasInitialized, setHasInitialized] = useState<boolean>(studio.hasKit(fullKitId));
+    const [hasInitialized, setHasInitialized] = useState<boolean>(studio.hasKit(uri));
 
     useEffect(() => {
-        // Function to load a node and its designs recursively
-        const loadKit = (id: string): void => {
-            const node = studio.getKit(fullKitId, id);
-            if (!node) return;
+        const loadKit = (uri: string): void => {
+            const kit = studio.getKit(uri);
+            if (!kit) return;
 
             setKits(prev => ({
                 ...prev,
-                [id]: node
+                [uri]: kit
             }));
 
-            // Load all designs
-            node.designUuids.forEach(designUuid => {
-                loadKit(designUuid);
-            });
         };
 
-        // Load the root node to start
+        // Load the root kit to start
         loadKit('root');
 
         // Update hasInitialized state
@@ -441,12 +437,12 @@ export function useKit(kitUuid: string) {
     }, [studio, fullKitId, canUndo, canRedo]);
 
     return {
-        nodes,
-        getKit: (id: string) => nodes[id] || null,
+        kits,
+        getKit: (id: string) => kits[id] || null,
         updateKitName: (id: string, name: string) =>
             studio.updateKitName(fullKitId, id, name),
         addDesign: (parentId: string) => {
-            const designUuid = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const designUuid = `kit-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             return studio.addDesign(fullKitId, parentId, designUuid);
         },
         deleteDesign: (parentId: string, designUuid: string) => {
