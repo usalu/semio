@@ -110,12 +110,12 @@ function BreadcrumbSeparator({
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align="center"
-          className="bg-background-level-3 text-foreground min-w-[8rem] overflow-hidden border p-1"
+          className="bg-background-level-3 min-w-[8rem] overflow-hidden border p-1"
         >
           {items.map((item, index) => (
             <DropdownMenuPrimitive.Item
               key={index}
-              className="focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-2 py-1.5 text-sm outline-none"
+              className="text-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-2 py-1.5 text-sm outline-none"
               onClick={() => handleSelect(item.href)}
             >
               {item.label}

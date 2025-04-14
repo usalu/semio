@@ -14,6 +14,7 @@
     --radius-full: 0rem;
     --background: var(--color-light);
     --background-level-2: var(--color-light-grey); /* Custom */
+    /* TODO: Expand 5 color to 6 colors because it doesn't work for light scheme because too dark  */
     --background-level-3: var(--color-grey); /* Custom */
     --foreground: var(--color-dark);
     /* --card: oklch(1 0 0); */
@@ -62,7 +63,7 @@
     /* --secondary: oklch(0.269 0 0); */
     /* --secondary-foreground: oklch(0.985 0 0); */
     --muted: var(--color-dark-grey);
-    --muted: var(--color-grey);
+    --muted-foreground: var(--color-grey);
     --accent: var(--color-grey);
     --accent-foreground: var(--color-light);
     /* --destructive: oklch(0.704 0.191 22.216); */
