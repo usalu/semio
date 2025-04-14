@@ -41,6 +41,7 @@ const Gizmo: FC = (): JSX.Element => {
             <GizmoViewport
                 labels={['X', 'Z', '-Y']}
                 axisColors={colors}
+
             // font='Anta'
             />
         </GizmoHelper>

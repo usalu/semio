@@ -386,34 +386,29 @@ export function useKit(uri: string) {
             }));
 
         };
-
-        // Load the root kit to start
-        loadKit('root');
-
-        // Update hasInitialized state
-        setHasInitialized(studio.hasKit(fullKitId));
+        setHasInitialized(studio.hasKit(uri));
 
         // Update handler for kit changes
         const updateHandler = () => {
             loadKit('root');
-            setHasInitialized(studio.hasKit(fullKitId));
+            setHasInitialized(studio.hasKit(uri));
             // Check undo/redo state on every kit change
             updateUndoRedoState();
         };
 
         // Update undo/redo state
         const updateUndoRedoState = () => {
-            const canUndoNow = studio.canUndo(fullKitId);
-            const canRedoNow = studio.canRedo(fullKitId);
+            const canUndoNow = studio.canUndo(uri);
+            const canRedoNow = studio.canRedo(uri);
 
             if (canUndoNow !== canUndo) {
                 setCanUndo(canUndoNow);
-                console.log(`Updated canUndo to ${canUndoNow} for ${fullKitId}`);
+                console.log(`Updated canUndo to ${canUndoNow} for ${uri}`);
             }
 
             if (canRedoNow !== canRedo) {
                 setCanRedo(canRedoNow);
-                console.log(`Updated canRedo to ${canRedoNow} for ${fullKitId}`);
+                console.log(`Updated canRedo to ${canRedoNow} for ${uri}`);
             }
         };
 
@@ -421,20 +416,20 @@ export function useKit(uri: string) {
         updateUndoRedoState();
 
         // Set up observers
-        const unobserveKit = studio.observeKit(fullKitId, updateHandler);
+        const unobserveKit = studio.observeKit(uri, updateHandler);
 
         // Create a more aggressive update interval for undo/redo state
         // This ensures UI stays in sync with the actual undo manager state
         const intervalId = setInterval(updateUndoRedoState, 500);
 
-        const unsubscribeUndoChanges = studio.subscribeToUndoChanges(fullKitId, updateUndoRedoState);
+        const unsubscribeUndoChanges = studio.subscribeToUndoChanges(uri, updateUndoRedoState);
 
         return () => {
             unobserveKit();
             unsubscribeUndoChanges();
             clearInterval(intervalId);
         };
-    }, [studio, fullKitId, canUndo, canRedo]);
+    }, [studio, uri, canUndo, canRedo]);
 
     return {
         kits,

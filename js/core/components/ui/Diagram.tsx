@@ -400,8 +400,8 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
                     ></Cursor>
                 );
             })} */}
-            {fullscreen && <Controls showZoom={false} showInteractive={false} />}
-            {fullscreen && < MiniMap maskColor='var(--background-level-2)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
+            {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
+            {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
