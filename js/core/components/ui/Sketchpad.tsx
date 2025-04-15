@@ -401,12 +401,13 @@ interface ConsoleProps {
     leftPanelVisible: boolean;
     rightPanelVisible: boolean;
     leftPanelWidth?: number;
+    height: number;
+    setHeight: (height: number) => void;
 }
 
-const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisible, leftPanelWidth = 230 }) => {
+const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisible, leftPanelWidth = 230, height, setHeight }) => {
     if (!visible) return null;
 
-    const [height, setHeight] = useState(200);
     const [isResizeHovered, setIsResizeHovered] = useState(false);
 
     const detailsChatWidth = 230;
@@ -437,9 +438,9 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: leftPanelVisible ? `calc(${leftPanelWidth}px + var(--spacing-4))` : `var(--spacing-4)`,
-                right: rightPanelVisible ? `calc(${detailsChatWidth}px + var(--spacing-4))` : `var(--spacing-4)`,
-                bottom: `var(--spacing-4)`,
+                left: leftPanelVisible ? `calc(${leftPanelWidth}px + 32px)` : `16px`,
+                right: rightPanelVisible ? `calc(${detailsChatWidth}px + 32px)` : `16px`,
+                bottom: `16px`,
                 height: `${height}px`,
             }}
         >
@@ -484,6 +485,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         chat: false,
     });
     const [workbenchWidth, setWorkbenchWidth] = useState(230);
+    const [consoleHeight, setConsoleHeight] = useState(200);
 
     const togglePanel = (panel: keyof PanelToggles) => {
         setVisiblePanels(prev => {
@@ -587,6 +589,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                 leftPanelVisible={visiblePanels.workbench}
                 rightPanelVisible={rightPanelVisible}
                 leftPanelWidth={workbenchWidth}
+                height={consoleHeight}
+                setHeight={setConsoleHeight}
             />
             <Chat visible={visiblePanels.chat} />
         </div>
