@@ -2,15 +2,17 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { Design, Piece } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
-interface PieceProps {
-    position?: [number, number, number];
+interface ModelPieceProps {
+    piece: Piece;
 }
-const Piece: FC<PieceProps> = ({ position }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
+    // const { selection, setSelection } = useDesignEditor();
     return (
         <Select
             multiple
@@ -20,14 +22,39 @@ const Piece: FC<PieceProps> = ({ position }) => {
             backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
             onClick={(e) => {
                 console.log('select clicked', e)
+                // setSelection({
+                //     ...selection,
+                //     // TODO: Update selection to set
+                //     pieceIds: selection.pieceIds.includes(piece.id_) ? selection.pieceIds.filter((id) => id !== piece.id_) : [...selection.pieceIds, piece.id_]
+                // });
             }}
         >
-            <Sphere args={[1, 100, 100]} position={position}>
+            <Sphere args={[1, 100, 100]} position={[piece.plane.origin.x, piece.plane.origin.z, -piece.plane.origin.y]}>
                 <meshStandardMaterial color="gold" roughness={0} metalness={1} />
             </Sphere>
         </Select>
     )
 }
+
+// ModelDesign component to visualize a design and its pieces
+interface ModelDesignProps {
+    design: Design;
+}
+
+const ModelDesign: FC<ModelDesignProps> = ({ design }) => {
+    // Return early if there are no pieces
+    if (!design?.pieces || design.pieces.length === 0) {
+        return null;
+    }
+
+    return (
+        <group>
+            {design.pieces.map((piece, index) => (
+                <ModelPiece key={`piece-${piece.id_ || index}`} piece={piece} />
+            ))}
+        </group>
+    );
+};
 
 const Gizmo: FC = (): JSX.Element => {
     const colors = useMemo(() => [
@@ -51,8 +78,9 @@ const Gizmo: FC = (): JSX.Element => {
 interface ModelProps {
     fullscreen: boolean;
     onPanelDoubleClick?: () => void;
+    design: Design;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -97,8 +125,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <Piece position={[0, 0, 0]} />
-                <Piece position={[0, 2, 0]} />
+                <ModelDesign design={design} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

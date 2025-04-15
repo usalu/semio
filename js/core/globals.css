@@ -1,20 +1,67 @@
 @import "tailwindcss";
 @import "@semio/js/theme.css";
 
+/* https://tailwindcss.com/docs/theme */
 /* https://ui.shadcn.com/docs/theming */
 
 /* Set base all components */
 @layer base {
   :root {
-    /* Shadcn */
     --radius: 0rem;
+    --radius-xs: 0rem;
     --radius-sm: 0rem;
     --radius-md: 0rem;
     --radius-lg: 0rem;
+    --radius-xl: 0rem;
+    --radius-2xl: 0rem;
+    --radius-3xl: 0rem;
+    --radius-4xl: 0rem;
     --radius-full: 0rem;
+    --shadow-2xs: 0 0 rgb(0 0 0 / 0);
+    --shadow-xs: 0 0 rgb(0 0 0 / 0);
+    --shadow-sm: 0 0 rgb(0 0 0 / 0);
+    --shadow-md: 0 0 rgb(0 0 0 / 0);
+    --shadow-lg: 0 0 rgb(0 0 0 / 0);
+    --shadow-xl: 0 0 rgb(0 0 0 / 0);
+    --shadow-2xl: 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
+    --spacing: var(--spacing-compact);
+    --text-xs: 0.7rem;
+    --text-xs--line-height: calc(1 / 0.7);
+    --text-sm: 0.8rem;
+    --text-sm--line-height: calc(1.2 / 0.8);
+    --text-base: 0.9rem;
+    --text-base--line-height: calc(1.4 / 0.9);
+    --text-lg: 1rem;
+    --text-lg--line-height: calc(1.6 / 1);
+    --text-xl: 1.125rem;
+    --text-xl--line-height: calc(1.6 / 1.125);
+    --text-2xl: 1.35rem;
+    --text-2xl--line-height: calc(1.9 / 1.35);
+    --text-3xl: 1.7rem;
+    --text-3xl--line-height: calc(2.1 / 1.7);
+    --text-4xl: 2rem;
+    --text-4xl--line-height: calc(2.3 / 2);
+    --text-5xl: 2.7rem;
+    --text-5xl--line-height: 1;
+    --text-6xl: 3.4rem;
+    --text-6xl--line-height: 1;
+    --text-7xl: 4rem;
+    --text-7xl--line-height: 1;
+    --text-8xl: 5.4rem;
+    --text-8xl--line-height: 1;
+    --text-9xl: 7.2rem;
+    --text-9xl--line-height: 1;
     --background: var(--color-light);
     --background-level-2: var(--color-light-gray); /* Custom */
-    /* TODO: Expand 5 color to 6 colors because it doesn't work for light scheme because too dark  */
     --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-dark);
     /* --card: oklch(1 0 0); */
@@ -54,36 +101,40 @@
     --background-level-2: var(--color-dark-gray); /* Custom */
     --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-light);
-    /* --card: oklch(0.205 0 0); */
-    /* --card-foreground: oklch(0.985 0 0); */
-    /* --popover: oklch(0.269 0 0); */
-    /* --popover-foreground: oklch(0.985 0 0); */
-    /* --primary: oklch(0.922 0 0); */
-    /* --primary-foreground: oklch(0.205 0 0); */
-    /* --secondary: oklch(0.269 0 0); */
-    /* --secondary-foreground: oklch(0.985 0 0); */
     --muted: var(--color-dark-gray);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-gray);
     --accent-foreground: var(--color-light);
-    /* --destructive: oklch(0.704 0.191 22.216); */
-    --border-color: var(--color-foreground);
-      /* --input: oklch(1 0 0 / 15%); */
-    /* --ring: oklch(0.556 0 0); */
-    /* --chart-1: oklch(0.488 0.243 264.376); */
-    /* --chart-2: oklch(0.696 0.17 162.48); */
-    /* --chart-3: oklch(0.769 0.188 70.08); */
-    /* --chart-4: oklch(0.627 0.265 303.9); */
-    /* --chart-5: oklch(0.645 0.246 16.439); */
-    /* --sidebar: oklch(0.205 0 0); */
-    /* --sidebar-foreground: oklch(0.985 0 0); */
-    /* --sidebar-primary: oklch(0.488 0.243 264.376); */
-    /* --sidebar-primary-foreground: oklch(0.985 0 0); */
-    /* --sidebar-accent: oklch(0.269 0 0); */
-    /* --sidebar-accent-foreground: oklch(0.985 0 0); */
-    /* --sidebar-border: oklch(1 0 0 / 10%); */
-    /* --sidebar-ring: oklch(0.439 0 0); */
-    /* --xy-background-color-default: var(--color-dark) !important; */
+  }
+
+  .touch {
+    --spacing: var(--spacing-touch);
+    --text-xs: 0.75rem;
+    --text-xs--line-height: calc(1 / 0.75);
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --text-base: 1rem;
+    --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
+    --text-xl: 1.25rem;
+    --text-xl--line-height: calc(1.75 / 1.25);
+    --text-2xl: 1.5rem;
+    --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
+    --text-4xl: 2.25rem;
+    --text-4xl--line-height: calc(2.5 / 2.25);
+    --text-5xl: 3rem;
+    --text-5xl--line-height: 1;
+    --text-6xl: 3.75rem;
+    --text-6xl--line-height: 1;
+    --text-7xl: 4.5rem;
+    --text-7xl--line-height: 1;
+    --text-8xl: 6rem;
+    --text-8xl--line-height: 1;
+    --text-9xl: 8rem;
+    --text-9xl--line-height: 1;
   }
 }
 
@@ -106,4 +157,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--background-level-3);
+  --color-popover-foreground: var(--foreground);
+  --color-border: var(--accent);
 }

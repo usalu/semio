@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import path from "path"
 
 export default defineConfig(async () => {
     // normal import fails due to esm stuff
@@ -8,6 +9,6 @@ export default defineConfig(async () => {
         plugins: [
             tailwind.default(),
             react()
-        ],
+        ]
     }
 })

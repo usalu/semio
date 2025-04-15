@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
 import React from 'react';
 
-import { Sketchpad, Mode, Theme } from '@semio/js';
+import { Sketchpad, Mode } from '@semio/js';
 
-// More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
     title: 'Studio/Sketchpad',
     component: Sketchpad,
@@ -23,6 +21,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Example: Story = {
+export const User: Story = {
+    args: {
+        userId: "user-test",
+    },
+};
+
+export const Guest: Story = {
+    args: {
+        userId: "guest-test",
+        mode: Mode.GUEST,
+    },
 };

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { default as animals } from "../../../assets/lists/animals.json"
-import { default as adjectives } from "../../../assets/lists/adjectives.json"
+import { default as animals } from "@semio/assets/lists/animals.json"
+import { default as adjectives } from "@semio/assets/lists/adjectives.json"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))

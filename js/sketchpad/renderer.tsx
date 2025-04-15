@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
 import './globals.css'
@@ -11,6 +11,9 @@ declare global {
             minimize(): Promise<any>;
             maximize(): Promise<any>;
             close(): Promise<any>;
+        }
+        os: {
+            getUserId(): Promise<string>;
         }
     }
 }
@@ -29,10 +32,36 @@ const windowEvents = {
     close: () => invokeWindowControl('close')
 };
 
+const os = {
+    getUserId: async () => await window.os.getUserId()
+};
+
 function App() {
+    const [userId, setUserId] = useState<string>('');
+
+    useEffect(() => {
+        async function fetchUserId() {
+            try {
+                const id = await os.getUserId();
+                setUserId(id);
+            } catch (error) {
+                console.error('Failed to get user ID:', error);
+                setUserId('anonymous-user');
+            }
+        }
+
+        fetchUserId();
+    }, []);
+
     return (
         <div className="h-screen w-screen">
-            <Sketchpad onWindowEvents={windowEvents} />
+            {userId ? (
+                <Sketchpad onWindowEvents={windowEvents} userId={userId} />
+            ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                    Loading user data...
+                </div>
+            )}
         </div>
     );
 }

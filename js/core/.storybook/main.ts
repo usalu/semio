@@ -21,8 +21,6 @@ const config: StorybookConfig = {
     getAbsolutePath('@storybook/addon-onboarding'),
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath("@storybook/experimental-addon-test"),
-    getAbsolutePath("@storybook/addon-mdx-gfm"),
-    "@chromatic-com/storybook"
   ],
 
   framework: {
@@ -30,9 +28,7 @@ const config: StorybookConfig = {
     options: {}
   },
 
-  docs: {
-    autodocs: true
-  },
+  docs: {},
 
   typescript: {
     reactDocgen: "react-docgen-typescript"

@@ -5,6 +5,7 @@
         {
             "name": "dev everything",
             "preLaunchTask": "dev",
+            "postDebugTask": "Kill Development Tasks",
             "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
             "request": "attach",
             "connect": {
@@ -21,6 +22,7 @@
         {
             "name": "dev engine",
             "preLaunchTask": "dev engine",
+            "postDebugTask": "Kill Development Tasks",
             "type": "debugpy",
             "request": "attach",
             "connect": {
@@ -46,34 +48,27 @@
                 "dev",
                 "--projects=@semio/js,@semio/docs,@semio/sketchpad"
             ],
+            "postDebugTask": "Kill Development Tasks",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
             "name": "dev js core",
-            "type": "node",
+            "preLaunchTask": "dev js core",
+            "postDebugTask": "Kill Development Tasks",
+            "type": "chrome",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "dev",
-                "@semio/js"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "url": "http://localhost:6006",
+            "webRoot": "${workspaceRoot}/js/core",
         },
         {
             "name": "dev docs",
-            "type": "node",
+            "preLaunchTask": "dev docs",
+            "postDebugTask": "Kill Development Tasks",
+            "type": "chrome",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "dev",
-                "@semio/docs"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "url": "http://localhost:4321",
+            "webRoot": "${workspaceRoot}/js/docs",
         },
         {
             "name": "dev sketchpad",
@@ -85,6 +80,7 @@
                 "dev",
                 "@semio/sketchpad"
             ],
+            "postDebugTask": "Kill Development Tasks",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },

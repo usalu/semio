@@ -6,6 +6,11 @@
             "type": "shell",
             "command": "npx nx run-many -t dev",
             "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "close": true
+            },
             "problemMatcher": {
                 "owner": "custom",
                 "pattern": [
@@ -21,6 +26,10 @@
                     "beginsPattern": "Starting debugpy for semio engine", // When server starts
                     "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
                 }
+            },
+            "group": "none",
+            "options": {
+                "killOnPort": 5678
             }
         },
         {
@@ -28,6 +37,11 @@
             "type": "shell",
             "command": "npx nx dev @semio/engine",
             "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "close": true
+            },
             "problemMatcher": {
                 "owner": "custom",
                 "pattern": [
@@ -43,12 +57,98 @@
                     "beginsPattern": "Starting debugpy for semio engine", // When server starts
                     "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
                 }
+            },
+            "group": "none",
+            "options": {
+                "killOnPort": 5678
+            }
+        },
+        {
+            "label": "dev js core",
+            "type": "shell",
+            "isBackground": true,
+            "command": "npx nx dev @semio/js",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "close": true
+            },
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "@storybook/core", // When storybook starts
+                    "endsPattern": "http://localhost:6006/" // When sotrybook is ready
+                }
+            },
+            "group": "none",
+            "options": {
+                "killOnPort": 6006
+            }
+        },
+        {
+            "label": "dev docs",
+            "type": "shell",
+            "isBackground": true,
+            "command": "npx nx dev @semio/docs",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "close": true
+            },
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "astro", // When astro starts
+                    "endsPattern": "http://localhost:4321/" // When astro is ready
+                }
+            },
+            "group": "none",
+            "options": {
+                "killOnPort": 4321
             }
         },
         {
             "label": "build icons",
             "type": "shell",
-            "command": "npx nx build @semio/icons",
+            "command": "npx nx build @semio/icons"
+        },
+        {
+            "label": "Kill Development Tasks",
+            "type": "shell",
+            "command": "echo Terminating development tasks",
+            "windows": {
+                "command": "$processList = @('*node*'); foreach ($process in $processList) { Get-Process -Name $process -ErrorAction SilentlyContinue | Where-Object {$_.CommandLine -like '*npx nx*dev*' -or $_.CommandLine -like '*astro*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*nx dev*' -or $_.CommandLine -like '*storybook*'} | ForEach-Object { Write-Host \"Killing process: $($_.Id)\"; Stop-Process -Id $_.Id -Force } }; Get-NetTCPConnection -LocalPort 4321,5678,6006 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }",
+                "options": {
+                    "shell": {
+                        "executable": "powershell.exe",
+                        "args": ["-Command"]
+                    }
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "new",
+                "close": true
+            },
+            "problemMatcher": []
         }
     ]
 }

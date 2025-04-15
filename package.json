@@ -22,6 +22,7 @@
     "update": "npx nx run-many -t update"
   },
   "devDependencies": {
+    "@nx/eslint": "^20.8.0",
     "@nxlv/python": "^20.10.0",
     "nx": "20.6.2"
   }

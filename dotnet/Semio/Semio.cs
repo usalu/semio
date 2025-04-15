@@ -82,7 +82,7 @@ public static class Constants
     public const int PiecesMax = 512;
     public const int DesignsMax = 128;
     public const int KitsMax = 64;
-    public const int DescriptionLengthLimit = 256;
+    public const int DescriptionLengthLimit = 512;
     public const float Tolerance = 1e-5f;
 }
 

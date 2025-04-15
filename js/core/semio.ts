@@ -2,7 +2,7 @@
 // Update to latest schema and unify docstrings
 
 // Initially created from json-schema-to-typescript: https://app.quicktype.io/
-// Manually edited.
+// Manually edited to align with GraphQL schema.
 
 // To parse this data:
 //
@@ -15,237 +15,261 @@
 
 export const ICON_WIDTH = 50;
 
-// ↗️ The output of a kit.
+// ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
-    // 🕒 The creation date of the kit.
-    created?: Date;
-    // 💬 The optional human-readable description of the kit.
-    description?: string;
-    // 🏙️ The designs of the kit.
-    designs?: Design[];
-    // 🏠 The optional url of the homepage of the kit.
-    homepage?: string;
-    // 🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.
-    icon?: string;
-    // 🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-    image?: string;
-    // 🕒 The last update date of the kit.
-    updated?: Date;
-    // ⚖️ The optional license [ spdx id | url ] of the kit.
-    license?: string;
-    // 📛 The name of the kit.
-    name: string;
-    // 🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
-    preview?: string;
-    // ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
-    remote?: string;
-    // 🧩 The types of the kit.
-    types?: Type[];
-    // 🆔 The uri of the kit.
+    // 🆔 The URI of the kit
     uri: string;
-    // 🔀 The optional version of the kit. No version means the latest version.
-    version?: string;
-}
-
-// 🏙️ A design is a collection of pieces that are connected.
-export type Design = {
-    authors?: Author[];
-    connections?: Connection[];
-    // 🕒 The creation date of the design.
-    created?: Date;
-    // 💬 The optional human-readable description of the design.
-    description?: string;
-    // 🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.
-    icon?: string;
-    // 🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-    image?: string;
-    // 🕒 The last update date of the design.
-    updated?: Date;
-    // 📛 The name of the design.
+    // 📛 The name of the kit
     name: string;
-    pieces?: Piece[];
+    // 💬 The human-readable description of the kit
+    description: string;
+    // 🪙 The icon [ emoji | logogram | url ] of the kit
+    icon: string;
+    // 🖼️ The URL to the image of the kit
+    image: string;
+    // 🔮 The URL of the preview image of the kit
+    preview: string;
+    // 🔀 The version of the kit
+    version: string;
+    // ☁️ The Unique Resource Locator (URL) where to fetch the kit remotely
+    remote: string;
+    // 🏠 The URL of the homepage of the kit
+    homepage: string;
+    // ⚖️ The license [ spdx id | url ] of the kit
+    license: string;
+    // 🕒 The creation date of the kit
+    created: Date;
+    // 🕒 The last update date of the kit
+    updated: Date;
+    // 🧩 The types defined within the kit
+    types?: Type[];
+    // 🏙️ The designs defined within the kit
+    designs?: Design[];
+    // 📏 The qualities associated with the kit
     qualities?: Quality[];
-    // 📏 The unit of the design.
-    unit?: string;
-    // 🔀 The optional variant of the design. No variant means the default variant.
-    variant?: string;
-    // 🥽 The optional view of the design. No view means the default view.
-    view?: string;
 }
 
-// 📑 The output of an author.
-export type Author = {
-    // 📧 The email of the author.
-    email: string;
-    // 📛 The name of the author.
+// 🏙️ A design is a collection of connected pieces.
+export type Design = {
+    // 📛 The name of the design
     name: string;
+    // 💬 The human-readable description of the design
+    description: string;
+    // 🪙 The icon [ emoji | logogram | url ] of the design
+    icon: string;
+    // 🖼️ The URL to the image of the design
+    image: string;
+    // 🔀 The variant of the design
+    variant: string;
+    // 🥽 The view of the design
+    view: string;
+    // 📏 The unit of the design
+    unit: string;
+    // 🕒 The creation date of the design
+    created: Date;
+    // 🕒 The last update date of the design
+    updated: Date;
+    // 🧩 The pieces included in the design
+    pieces?: Piece[];
+    // 🖇️ The connections between pieces in the design
+    connections?: Connection[];
+    // 📑 The authors of the design
+    authors: Author[];
+    // 📏 The qualities associated with the design
+    qualities?: Quality[];
+}
+
+// 📑 Represents an author.
+export type Author = {
+    // 📛 The name of the author
+    name: string;
+    // 📧 The email of the author
+    email: string;
+    // #️⃣ The rank of the author
+    rank: number;
 }
 
 // 🖇️ A bidirectional connection between two pieces of a design.
 export type Connection = {
-    // 🧲 The connected side of the connection.
+    // 🧲 The connected side of the connection
     connected: Side;
-    // 🧲 The connecting side of the connection.
+    // 🧲 The connecting side of the connection
     connecting: Side;
-    // 💬 The optional human-readable description of the connection.
-    description?: string;
-    // ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
-    gap?: number;
-    // 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
-    rotation?: number;
-    // ↔️ The optional lateral shift (applied after rotation and tilt in the plane) between the connected and the connecting piece..
-    shift?: number;
-    // ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation) between the connected and the connecting piece in degrees.
-    tilt?: number;
-    // ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-    x?: number;
-    // ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-    y?: number;
-}
-
-// 🧱 A side of a piece in a connection.
-export type Side = {
-    piece: PieceID;
-    port: PortID;
-}
-
-// 🪪 The props to identify the piece within the parent design.
-export type PieceID = {
-    // 🆔 The id of the piece.
-    id_?: string;
-}
-
-// 🪪 The props to identify the port within the parent type.
-export type PortID = {
-    // 🆔 The id of the port.
-    id_?: string;
-}
-
-// ⭕ A piece is a 3d-instance of a type in a design.
-export type Piece = {
-    // 📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
-    center?: null | DiagramPoint;
-    // 🆔 The id of the piece.
-    id_?: string;
-    // 💬 The optional human-readable description of the piece.
-    description?: string;
-    // ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
-    plane?: null | Plane;
-    // 🧩 The type of the piece.
-    type: TypeID;
-}
-
-// 📺 A 2d-point (xy) of integers in screen coordinate system.
-export type DiagramPoint = {
-    // 🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+    // 💬 The human-readable description of the connection
+    description: string;
+    // ↕️ The longitudinal gap between connected pieces
+    gap: number;
+    // ↔️ The lateral shift between connected pieces
+    shift: number;
+    // 🪜 The vertical raise between connected pieces
+    raise_: number;
+    // 🔄 The horizontal rotation between connected pieces in degrees
+    rotation: number;
+    // 🛞 The turn between connected pieces in degrees
+    turn: number;
+    // ↗️ The horizontal tilt between connected pieces in degrees
+    tilt: number;
+    // ➡️ The offset in x direction in the diagram
     x: number;
-    // 🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+    // ⬆️ The offset in y direction in the diagram
+    y: number;
+    // 📏 The qualities associated with the connection
+    qualities?: Quality[];
+}
+
+// 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
+export type Side = {
+    // ⭕ The piece involved in this side of the connection
+    piece: PieceID; // Represents Piece identifier
+    // 🔌 The port involved in this side of the connection
+    port: PortID;   // Represents Port identifier
+}
+
+// 🪪 Identifier for a piece within a design.
+export type PieceID = {
+    // 🆔 The id of the piece
+    id_?: string;
+}
+
+// 🪪 Identifier for a port within a type.
+export type PortID = {
+    // 🆔 The id of the port
+    id_?: string;
+}
+
+// ⭕ A piece is a 3D instance of a type within a design.
+export type Piece = {
+    // 🆔 The id of the piece
+    id_?: string;
+    // 💬 The human-readable description of the piece
+    description: string;
+    // 🧩 The type defining this piece
+    type: TypeID; // Represents Type identifier
+    // ◳ The optional plane (position and orientation) of the piece
+    plane?: Plane;
+    // 📺 The optional center of the piece in the diagram
+    center?: DiagramPoint;
+    // 📏 The qualities associated with the piece
+    qualities?: Quality[];
+}
+
+// 📺 A 2D point (xy) in the diagram coordinate system.
+export type DiagramPoint = {
+    // 🏁 The x-coordinate in the diagram
+    x: number;
+    // 🏁 The y-coordinate in the diagram
     y: number;
 }
 
-// ◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+// ◳ A plane defined by an origin point and two axes vectors.
 export type Plane = {
-    // ⌱ The origin of the plane.
+    // ⌱ The origin point of the plane
     origin: Point;
-    // ➡️ The x-axis of the plane.
+    // ➡️ The x-axis vector of the plane
     xAxis: Vector;
-    // ➡️ The y-axis of the plane.
+    // ➡️ The y-axis vector of the plane
     yAxis: Vector;
 }
 
-// ✖️ A 3d-point (xyz) of floating point numbers.
+// ✖️ A 3D point (xyz) with floating-point coordinates.
 export type Point = {
-    // 🎚️ The x-coordinate of the point.
+    // 🎚️ The x-coordinate of the point
     x: number;
-    // 🎚️ The y-coordinate of the point.
+    // 🎚️ The y-coordinate of the point
     y: number;
-    // 🎚️ The z-coordinate of the point.
+    // 🎚️ The z-coordinate of the point
     z: number;
 }
 
-// ➡️ A 3d-vector (xyz) of floating point numbers.
+// ➡️ A 3D vector (xyz) with floating-point coordinates.
 export type Vector = {
-    // 🎚️ The x-coordinate of the vector.
+    // 🎚️ The x-coordinate of the vector
     x: number;
-    // 🎚️ The y-coordinate of the vector.
+    // 🎚️ The y-coordinate of the vector
     y: number;
-    // 🎚️ The z-coordinate of the vector.
+    // 🎚️ The z-coordinate of the vector
     z: number;
 }
 
-// 🧩 The type of the piece.
-//
-// 🪪 The props to identify the type.
+// 🪪 Identifier for a type, potentially including a variant.
 export type TypeID = {
-    // 📛 The name of the type.
+    // 📛 The name of the type
     name: string;
-    // 🔀 The optional variant of the type. No variant means the default variant.
+    // 🔀 The optional variant of the type
     variant?: string;
 }
 
-// ↗️ The output of a quality.
+// 📏 Represents a quality, a named property with an optional value, unit, and definition.
 export type Quality = {
-    // 📏 The optional definition [ text | url ] of the quality.
-    definition?: string;
-    // 📏 The name of the quality.
+    // 📛 The name of the quality
     name: string;
-    // 📏 The optional unit of the value of the quality.
-    unit?: string;
-    // 📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
-    value?: string;
+    // ❓ The value of the quality
+    value: string;
+    // 📐 The unit of the quality's value
+    unit: string;
+    // 📖 The definition [ text | url ] of the quality
+    definition: string;
 }
 
-// 🧩 A type is a reusable element that can be connected with other types over ports.
+// 🧩 A type is a reusable element blueprint with ports for connection.
 export type Type = {
-    authors?: Author[];
-    // 🕒 The creation date of the type.
-    created?: Date;
-    // 💬 The optional human-readable description of the type.
-    description?: string;
-    // 🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-    icon?: string;
-    // 🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-    image?: string;
-    // 🕒 The last update date of the type.
-    updated?: Date;
-    // 📛 The name of the type.
+    // 📛 The name of the type
     name: string;
-    ports?: Port[];
-    qualities?: Quality[];
+    // 💬 The human-readable description of the type
+    description: string;
+    // 🪙 The icon [ emoji | logogram | url ] of the type
+    icon: string;
+    // 🖼️ The URL to the image of the type
+    image: string;
+    // 🔀 The variant of the type
+    variant: string;
+    // Ⓜ️ The length unit used by the type's geometry
+    unit: string;
+    // 🕒 The creation date of the type
+    created: Date;
+    // 🕒 The last update date of the type
+    updated: Date;
+    // 💾 Representations (e.g., CAD files) of the type
     representations?: Representation[];
-    // Ⓜ️ The length unit of the point and the direction of the ports of the type.
-    unit?: string;
-    // 🔀 The optional variant of the type. No variant means the default variant.
-    variant?: string;
-}
-
-// 🔌 A port is a connection point (with a direction) of a type.
-export type Port = {
-    // 💬 The optional human-readable description of the port.
-    description?: string;
-    // ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
-    direction: Vector;
-    // 🆔 The id of the port.
-    id_?: string;
-    // ✖️ The connection point of the port that is attracted to another connection point.
-    point: Point;
-    // 💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
-    t?: number;
-    // 📏 The optional qualities of the port.
+    // 🔌 Connection points (ports) of the type
+    ports?: Port[];
+    // 📑 Authors of the type
+    authors: Author[];
+    // 📏 Qualities associated with the type
     qualities?: Quality[];
 }
 
-// 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
+// 🔌 A port is a connection point on a type, defined by a point and direction.
+export type Port = {
+    // 🆔 The id of the port
+    id_?: string;
+    // 💬 The human-readable description of the port
+    description: string;
+    // 👨‍👩‍👧‍👦 The family of the port for compatibility checks
+    family: string;
+    // 💍 The parameter t [0,1[ for diagram visualization
+    t: number;
+    // ✅ Other compatible port families
+    compatibleFamilies: string[];
+    // ✖️ The connection point geometry
+    point: Point;
+    // ➡️ The connection direction vector
+    direction: Vector;
+    // 📏 Qualities associated with the port
+    qualities?: Quality[];
+}
+
+// 💾 A representation links to a resource (e.g., file) describing a type.
 export type Representation = {
-    // 🔗 The Unique Resource Locator (URL) to the resource of the representation.
+    // 🔗 The URL to the resource
     url: string;
-    // 💬 The optional human-readable description of the representation.
-    description?: string;
-    // ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+    // 💬 The human-readable description of the representation
+    description: string;
+    // ✉️ The MIME type of the resource
     mime: string;
-    // 🏷️ The optional tags to group representations. No tags means default.
-    tags?: string[];
-    // 📏 The optional qualities of the representation.
+    // 🏷️ Tags to group or filter representations
+    tags: string[];
+    // 📏 Qualities associated with the representation
     qualities?: Quality[];
 }
 
@@ -259,6 +283,8 @@ export class Convert {
     public static kitToJson(value: Kit): string {
         return JSON.stringify(uncast(value, r("Kit")), null, 2);
     }
+
+    // Add similar methods for other top-level types if needed
 }
 
 function invalidValue(typ: any, val: any, key: any, parent: any = ''): never {
@@ -303,6 +329,8 @@ function jsToJSONProps(typ: any): any {
 function transform(val: any, typ: any, getProps: any, key: any = '', parent: any = ''): any {
     function transformPrimitive(typ: string, val: any): any {
         if (typeof typ === typeof val) return val;
+        // Allow numbers to be parsed as strings explicitly for flexibility if needed downstream
+        // if (typ === "string" && typeof val === "number") return String(val);
         return invalidValue(typ, val, key, parent);
     }
 
@@ -333,11 +361,22 @@ function transform(val: any, typ: any, getProps: any, key: any = '', parent: any
         if (val === null) {
             return null;
         }
-        const d = new Date(val);
-        if (isNaN(d.valueOf())) {
-            return invalidValue(l("Date"), val, key, parent);
+        // Allow strings matching ISO 8601 format
+        if (typeof val === "string") {
+            const d = new Date(val);
+            if (!isNaN(d.valueOf())) return d;
         }
-        return d;
+        // Allow numbers representing milliseconds since epoch
+        if (typeof val === "number") {
+            const d = new Date(val);
+            if (!isNaN(d.valueOf())) return d;
+        }
+        // Disallow direct Date objects unless converting back (jsToJSON)
+        if (val instanceof Date && getProps === jsToJSONProps) {
+            return val.toISOString(); // Convert Date back to ISO string for JSON
+        }
+
+        return invalidValue(l("Date"), val, key, parent);
     }
 
     function transformObject(props: { [k: string]: any }, additional: any, val: any): any {
@@ -352,7 +391,16 @@ function transform(val: any, typ: any, getProps: any, key: any = '', parent: any
         });
         Object.getOwnPropertyNames(val).forEach(key => {
             if (!Object.prototype.hasOwnProperty.call(props, key)) {
-                result[key] = transform(val[key], additional, getProps, key, ref);
+                // Handle additional properties if necessary, based on `additional` definition
+                // Default behavior here might discard unknown properties or pass them through if `additional` allows
+                if (additional && additional !== false) {
+                    result[key] = transform(val[key], additional, getProps, key, ref);
+                } else if (!additional) {
+                    // If additional properties are not allowed, either ignore or throw error
+                    // console.warn(`Ignoring additional property "${key}" during transform for ${ref || 'object'}`);
+                } else { // additional === false
+                    invalidValue("no additional properties", key, key, ref)
+                }
             }
         });
         return result;
@@ -364,22 +412,24 @@ function transform(val: any, typ: any, getProps: any, key: any = '', parent: any
         return invalidValue(typ, val, key, parent);
     }
     if (typ === false) return invalidValue(typ, val, key, parent);
-    let ref: any = undefined;
+    let ref: string | undefined = undefined;
     while (typeof typ === "object" && typ.ref !== undefined) {
         ref = typ.ref;
         typ = typeMap[typ.ref];
     }
-    if (Array.isArray(typ)) return transformEnum(typ, val);
+    if (Array.isArray(typ)) return transformEnum(typ, val); // Check for enums if defined as arrays of literals
     if (typeof typ === "object") {
         return typ.hasOwnProperty("unionMembers") ? transformUnion(typ.unionMembers, val)
             : typ.hasOwnProperty("arrayItems") ? transformArray(typ.arrayItems, val)
                 : typ.hasOwnProperty("props") ? transformObject(getProps(typ), typ.additional, val)
                     : invalidValue(typ, val, key, parent);
     }
-    // Numbers can be parsed by Date but shouldn't be.
-    if (typ === Date && typeof val !== "number") return transformDate(val);
+    // Handle Date transformation
+    if (typ === Date) return transformDate(val); // Use updated transformDate
+    // Handle primitive types
     return transformPrimitive(typ, val);
 }
+
 
 function cast<T>(val: any, typ: any): T {
     return transform(val, typ, jsonToJSProps);
@@ -401,63 +451,75 @@ function u(...typs: any[]) {
     return { unionMembers: typs };
 }
 
+// `o` defines an object structure.
+// `props` is an array of property definitions: { json: string, js: string, typ: any }
+// `additional` defines how to handle extra properties found in JSON (can be a type, `false`, or `undefined`/`true`)
 function o(props: any[], additional: any) {
     return { props, additional };
 }
 
-function m(additional: any) {
-    return { props: [], additional };
-}
+// `m` is currently unused but was likely intended for map-like structures.
+// function m(additional: any) {
+//     return { props: [], additional };
+// }
 
 function r(name: string) {
     return { ref: name };
 }
 
+// Type definitions for the Convert class based on GraphQL schema
+// Note: `any` is used for `additional` properties to simplify, assuming flexibility. Adjust if strictness is needed.
 const typeMap: any = {
     "Kit": o([
-        { json: "created", js: "created", typ: u(undefined, Date) },
-        { json: "description", js: "description", typ: u(undefined, "") },
-        { json: "designs", js: "designs", typ: u(undefined, a(r("Design"))) },
-        { json: "homepage", js: "homepage", typ: u(undefined, "") },
-        { json: "icon", js: "icon", typ: u(undefined, "") },
-        { json: "image", js: "image", typ: u(undefined, "") },
-        { json: "updated", js: "updated", typ: u(undefined, Date) },
-        { json: "license", js: "license", typ: u(undefined, "") },
-        { json: "name", js: "name", typ: "" },
-        { json: "preview", js: "preview", typ: u(undefined, "") },
-        { json: "remote", js: "remote", typ: u(undefined, "") },
-        { json: "types", js: "types", typ: u(undefined, a(r("Type"))) },
         { json: "uri", js: "uri", typ: "" },
-        { json: "version", js: "version", typ: u(undefined, "") },
-    ], "any"),
-    "Design": o([
-        { json: "authors", js: "authors", typ: u(undefined, a(r("Author"))) },
-        { json: "connections", js: "connections", typ: u(undefined, a(r("Connection"))) },
-        { json: "created", js: "created", typ: u(undefined, Date) },
-        { json: "description", js: "description", typ: u(undefined, "") },
-        { json: "icon", js: "icon", typ: u(undefined, "") },
-        { json: "image", js: "image", typ: u(undefined, "") },
-        { json: "updated", js: "updated", typ: u(undefined, Date) },
         { json: "name", js: "name", typ: "" },
-        { json: "pieces", js: "pieces", typ: u(undefined, a(r("Piece"))) },
+        { json: "description", js: "description", typ: "" },
+        { json: "icon", js: "icon", typ: "" },
+        { json: "image", js: "image", typ: "" },
+        { json: "preview", js: "preview", typ: "" },
+        { json: "version", js: "version", typ: "" },
+        { json: "remote", js: "remote", typ: "" },
+        { json: "homepage", js: "homepage", typ: "" },
+        { json: "license", js: "license", typ: "" },
+        { json: "created", js: "created", typ: Date },
+        { json: "updated", js: "updated", typ: Date },
+        { json: "types", js: "types", typ: u(undefined, a(r("Type"))) },
+        { json: "designs", js: "designs", typ: u(undefined, a(r("Design"))) },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
-        { json: "unit", js: "unit", typ: u(undefined, "") },
-        { json: "variant", js: "variant", typ: u(undefined, "") },
-        { json: "view", js: "view", typ: u(undefined, "") },
+    ], "any"), // Allow additional properties for flexibility
+    "Design": o([
+        { json: "name", js: "name", typ: "" },
+        { json: "description", js: "description", typ: "" },
+        { json: "icon", js: "icon", typ: "" },
+        { json: "image", js: "image", typ: "" },
+        { json: "variant", js: "variant", typ: "" },
+        { json: "view", js: "view", typ: "" },
+        { json: "unit", js: "unit", typ: "" },
+        { json: "created", js: "created", typ: Date },
+        { json: "updated", js: "updated", typ: Date },
+        { json: "pieces", js: "pieces", typ: u(undefined, a(r("Piece"))) },
+        { json: "connections", js: "connections", typ: u(undefined, a(r("Connection"))) },
+        { json: "authors", js: "authors", typ: a(r("Author")) },
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
     "Author": o([
-        { json: "email", js: "email", typ: "" },
         { json: "name", js: "name", typ: "" },
+        { json: "email", js: "email", typ: "" },
+        { json: "rank", js: "rank", typ: 0 }, // Use 0 for number type
     ], "any"),
     "Connection": o([
+        { json: "description", js: "description", typ: "" },
+        { json: "gap", js: "gap", typ: 0 },
+        { json: "shift", js: "shift", typ: 0 },
+        { json: "raise_", js: "raise_", typ: 0 },
+        { json: "rotation", js: "rotation", typ: 0 },
+        { json: "turn", js: "turn", typ: 0 },
+        { json: "tilt", js: "tilt", typ: 0 },
+        { json: "x", js: "x", typ: 0 },
+        { json: "y", js: "y", typ: 0 },
         { json: "connected", js: "connected", typ: r("Side") },
         { json: "connecting", js: "connecting", typ: r("Side") },
-        { json: "gap", js: "gap", typ: u(undefined, 3.14) },
-        { json: "rotation", js: "rotation", typ: u(undefined, 3.14) },
-        { json: "shift", js: "shift", typ: u(undefined, 3.14) },
-        { json: "tilt", js: "tilt", typ: u(undefined, 3.14) },
-        { json: "x", js: "x", typ: u(undefined, 3.14) },
-        { json: "y", js: "y", typ: u(undefined, 3.14) },
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
     "Side": o([
         { json: "piece", js: "piece", typ: r("PieceID") },
@@ -470,15 +532,17 @@ const typeMap: any = {
         { json: "id_", js: "id_", typ: u(undefined, "") },
     ], "any"),
     "Piece": o([
-        { json: "center", js: "center", typ: u(undefined, u(null, r("DiagramPoint"))) },
-        { json: "description", js: "description", typ: u(undefined, "") },
         { json: "id_", js: "id_", typ: u(undefined, "") },
-        { json: "plane", js: "plane", typ: u(undefined, u(null, r("Plane"))) },
+        { json: "description", js: "description", typ: "" },
         { json: "type", js: "type", typ: r("TypeID") },
+        { json: "plane", js: "plane", typ: u(undefined, r("Plane")) }, // Now optional object
+        { json: "center", js: "center", typ: r("DiagramPoint") }, // Now required object
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+        { json: "connections", js: "connections", typ: a(r("Connection")) }, // Now required array
     ], "any"),
     "DiagramPoint": o([
-        { json: "x", js: "x", typ: 3.14 },
-        { json: "y", js: "y", typ: 3.14 },
+        { json: "x", js: "x", typ: 0 },
+        { json: "y", js: "y", typ: 0 },
     ], "any"),
     "Plane": o([
         { json: "origin", js: "origin", typ: r("Point") },
@@ -486,52 +550,56 @@ const typeMap: any = {
         { json: "yAxis", js: "yAxis", typ: r("Vector") },
     ], "any"),
     "Point": o([
-        { json: "x", js: "x", typ: 3.14 },
-        { json: "y", js: "y", typ: 3.14 },
-        { json: "z", js: "z", typ: 3.14 },
+        { json: "x", js: "x", typ: 0 },
+        { json: "y", js: "y", typ: 0 },
+        { json: "z", js: "z", typ: 0 },
     ], "any"),
     "Vector": o([
-        { json: "x", js: "x", typ: 3.14 },
-        { json: "y", js: "y", typ: 3.14 },
-        { json: "z", js: "z", typ: 3.14 },
+        { json: "x", js: "x", typ: 0 },
+        { json: "y", js: "y", typ: 0 },
+        { json: "z", js: "z", typ: 0 },
     ], "any"),
     "TypeID": o([
         { json: "name", js: "name", typ: "" },
         { json: "variant", js: "variant", typ: u(undefined, "") },
     ], "any"),
     "Quality": o([
-        { json: "definition", js: "definition", typ: u(undefined, "") },
         { json: "name", js: "name", typ: "" },
-        { json: "unit", js: "unit", typ: u(undefined, "") },
-        { json: "value", js: "value", typ: u(undefined, "") },
+        { json: "value", js: "value", typ: "" },
+        { json: "unit", js: "unit", typ: "" },
+        { json: "definition", js: "definition", typ: "" },
     ], "any"),
     "Type": o([
-        { json: "authors", js: "authors", typ: u(undefined, a(r("Author"))) },
-        { json: "created", js: "created", typ: u(undefined, Date) },
-        { json: "description", js: "description", typ: u(undefined, "") },
-        { json: "icon", js: "icon", typ: u(undefined, "") },
-        { json: "image", js: "image", typ: u(undefined, "") },
-        { json: "updated", js: "updated", typ: u(undefined, Date) },
         { json: "name", js: "name", typ: "" },
-        { json: "ports", js: "ports", typ: u(undefined, a(r("Port"))) },
-        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+        { json: "description", js: "description", typ: "" },
+        { json: "icon", js: "icon", typ: "" },
+        { json: "image", js: "image", typ: "" },
+        { json: "variant", js: "variant", typ: "" },
+        { json: "unit", js: "unit", typ: "" },
+        { json: "created", js: "created", typ: Date },
+        { json: "updated", js: "updated", typ: Date },
         { json: "representations", js: "representations", typ: u(undefined, a(r("Representation"))) },
-        { json: "unit", js: "unit", typ: u(undefined, "") },
-        { json: "variant", js: "variant", typ: u(undefined, "") },
+        { json: "ports", js: "ports", typ: u(undefined, a(r("Port"))) },
+        { json: "authors", js: "authors", typ: a(r("Author")) },
+        { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+        { json: "pieces", js: "pieces", typ: u(undefined, a(r("Piece"))) },
     ], "any"),
     "Port": o([
-        { json: "description", js: "description", typ: u(undefined, "") },
-        { json: "direction", js: "direction", typ: r("Vector") },
         { json: "id_", js: "id_", typ: u(undefined, "") },
+        { json: "description", js: "description", typ: "" },
+        { json: "family", js: "family", typ: "" },
+        { json: "t", js: "t", typ: 0 },
+        { json: "compatibleFamilies", js: "compatibleFamilies", typ: a("") }, // Required array of strings
         { json: "point", js: "point", typ: r("Point") },
-        { json: "t", js: "t", typ: u(undefined, 3.14) },
+        { json: "direction", js: "direction", typ: r("Vector") },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+        { json: "connections", js: "connections", typ: a(r("Connection")) }, // Required array
     ], "any"),
     "Representation": o([
         { json: "url", js: "url", typ: "" },
-        { json: "description", js: "description", typ: u(undefined, "") },
+        { json: "description", js: "description", typ: "" },
         { json: "mime", js: "mime", typ: "" },
-        { json: "tags", js: "tags", typ: u(undefined, a("")) },
+        { json: "tags", js: "tags", typ: a("") }, // Required array of strings
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
 };

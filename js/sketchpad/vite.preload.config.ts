@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { builtinModules } from 'module';
+import path from 'path';
 
 export default defineConfig({
     build: {

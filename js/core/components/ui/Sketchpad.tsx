@@ -1,11 +1,11 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
-import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor } from 'lucide-react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo } from 'react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
     DragOverlay,
     DragStartEvent,
+    UniqueIdentifier,
     useDraggable,
     useDroppable
 } from '@dnd-kit/core';
@@ -15,28 +15,51 @@ import {
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { default as Diagram } from "@semio/js/components/ui/Diagram";
-import { default as Model } from "@semio/js/components/ui/Model";
 import { Design, Kit, Type } from '@semio/js';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useAtomValue } from 'jotai';
-import { useTypes } from '@semio/js/store';
+import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
+import { Fingerprint } from 'lucide-react';
+import { Generator } from '@semio/js/lib/utils';
+import { Piece } from '@semio/js';
+import DesignEditor from './DesignEditor';
+
+export enum Mode {
+    USER = 'user',
+    GUEST = 'guest',
+}
+
+export enum Theme {
+    SYSTEM = 'system',
+    LIGHT = 'light',
+    DARK = 'dark',
+}
+
+export enum Layout {
+    NORMAL = 'normal',
+    TOUCH = 'touch',
+}
 
 interface SketchpadContextType {
+    mode: Mode;
+    layout: Layout;
+    setLayout: (layout: Layout) => void;
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
     setNavbarToolbar: (toolbar: ReactNode) => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
 
-const useSketchpad = () => {
+
+export const useSketchpad = () => {
     const context = useContext(SketchpadContext);
     if (!context) {
         throw new Error('useSketchpad must be used within a SketchpadProvider');
@@ -44,151 +67,8 @@ const useSketchpad = () => {
     return context;
 };
 
-type TreeSection = {
-    name: string;
-    children: ReactNode;
-}
-
-type Tree = {
-    id: string;
-    name: string;
-    icon: ReactNode;
-    sections: TreeSection[];
-}
-
-interface TypeAvatarProps {
-    type: Type
-}
-const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: 'type-' + type.name + type.variant,
-    });
-    return (
-        <Avatar
-            ref={setNodeRef}
-            // className="cursor-pointer"
-            {...listeners}
-            {...attributes}>
-            {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
-            <AvatarImage src="https://github.com/shadcn.png" />
-            {/* <AvatarFallback>{type.name}</AvatarFallback> */}
-        </Avatar>
-    );
-}
-
-const Types: FC = () => {
-    const types = useTypes();
-    if (!types) return null;
-
-    return (
-        <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
-            {Array.from(types.entries()).map(([name, variantMap]) => (
-                Array.from(variantMap.entries()).map(([variant, type]: [string, Type]) => (
-                    <TypeAvatar key={`${name}-${variant}`} type={type} />
-                ))
-            ))}
-        </div>
-    );
-}
-
-const ExplorerTree: Tree = {
-    id: 'explorer',
-    name: 'Explorer',
-    icon: <Folder size={14} className="w-3.5 h-3.5" />,
-    sections: [
-        {
-            name: 'Types',
-            children: <Types />,
-        },
-    ],
-}
-
-const TestTree: Tree = {
-    id: 'test',
-    name: 'Test',
-    icon: <FlaskConical size={14} className="w-3.5 h-3.5" />,
-    sections: [],
-}
-
-const trees = [
-    ExplorerTree,
-    TestTree,
-]
-
-const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
-    const [open, setOpen] = useState(true);
-    return (
-        <Collapsible className="p-3 border-b-thin font-thin uppercase"
-            open={open}
-            onOpenChange={setOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between">
-                {open ? <ChevronDown size={14} className="w-3.5 h-3.5" /> : <ChevronRight size={14} className="w-3.5 h-3.5" />}
-                {section.name}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                {section.children}
-            </CollapsibleContent>
-        </Collapsible>
-    );
-};
-
-interface TreeProps {
-    treeId: string;
-}
-const TreeComponent: FC<TreeProps> = ({ treeId }) => {
-    const tree = trees.find(tree => tree.id === treeId);
-    if (!tree) return null;
-
-    return (
-        <ResizablePanel defaultSize={15}>
-            {tree.sections.map((section, index) => (
-                <TreeSectionComponent key={index} section={section} />
-            ))}
-        </ResizablePanel>
-    );
-};
-
-
-interface TreeBarProps {
-    activeTreeId?: string;
-    onTreeSelect?: (treeId: string) => void;
-}
-const TreeBar: FC<TreeBarProps> = ({ activeTreeId, onTreeSelect }) => {
-    return (
-        <div className="flex h-full w-12 flex-col items-end justify-top border-r">
-            {trees.map((tree) => (
-                <div
-                    key={tree.id}
-                    className={`w-12 h-12 flex items-center justify-center cursor-pointer ${tree.id === activeTreeId ? 'border-l-3 border-primary' : ''
-                        }`}
-                    onClick={() => onTreeSelect?.(tree.id)}
-                >
-                    {tree.icon}
-                </div>
-            ))}
-        </div>
-    );
-};
-
-interface TreeSiderProps {
-}
-const TreeSider: FC<TreeSiderProps> = ({ }) => {
-
-    const [activeTreeId, setActiveTreeId] = useState('explorer');
-
-    return (
-        <>
-            <TreeBar activeTreeId={activeTreeId} onTreeSelect={setActiveTreeId} />
-            <TreeComponent treeId={activeTreeId} />
-        </>
-    );
-};
-
 interface NavbarProps {
     toolbarContent?: ReactNode;
-    readonly?: boolean;
-    currentTheme: Theme;
-    onToggleTheme: () => void;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -196,10 +76,8 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
-    const handleThemeChange = (value: string) => {
-        onToggleTheme();
-    };
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
+    const { mode, layout, setLayout, theme, setTheme } = useSketchpad();
 
     return (
         <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
@@ -232,25 +110,37 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
-
             <div className="flex items-center gap-4">
                 {toolbarContent}
-            </div>
-
-            <div className="flex items-center gap-4">
                 <ToggleCycle
-                    value={currentTheme}
-                    onValueChange={handleThemeChange}
+                    value={theme}
+                    onValueChange={setTheme}
                     items={[
                         {
                             value: Theme.LIGHT,
-                            tooltip: "Turn Dark",
+                            tooltip: "Turn theme dark",
                             label: <Moon />
                         },
                         {
                             value: Theme.DARK,
-                            tooltip: "Turn Light",
+                            tooltip: "Turn theme light",
                             label: <Sun />
+                        }
+                    ]}
+                />
+                <ToggleCycle
+                    value={layout}
+                    onValueChange={setLayout}
+                    items={[
+                        {
+                            value: Layout.NORMAL,
+                            tooltip: "Turn touch layout on",
+                            label: <Fingerprint />
+                        },
+                        {
+                            value: Layout.TOUCH,
+                            tooltip: "Return to normal layout",
+                            label: <AppWindow />
                         }
                     ]}
                 />
@@ -297,201 +187,48 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
     );
 };
 
-interface PanelProps {
-    visible: boolean;
+interface ViewProps {
 }
 
-const Workbench: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div className="absolute top-4 left-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Workbench</div>
-        </div>
-    );
-}
-
-const Details: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Details</div>
-        </div>
-    );
-}
-
-const Console: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div
-            className="absolute left-[254px] right-[254px] bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Console</div>
-        </div>
-    );
-}
-
-const Chat: FC<PanelProps> = ({ visible }) => {
-    if (!visible) return null;
-    return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
-        >
-            <div className="font-semibold p-4">Chat</div>
-        </div>
-    );
-}
-
-interface PanelToggles {
-    workbench: boolean;
-    console: boolean;
-    details: boolean;
-    chat: boolean;
-}
-
-interface DesignEditorProps {
-}
-const DesignEditor: FC<DesignEditorProps> = ({ }) => {
-    const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-    const { setNavbarToolbar } = useSketchpad();
-
-    const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
-        workbench: false,
-        console: false,
-        details: false,
-        chat: false,
-    });
-
-    const togglePanel = (panel: keyof PanelToggles) => {
-        setVisiblePanels(prev => {
-            const newState = { ...prev };
-
-            // If turning on chat, turn off details
-            if (panel === 'chat' && !prev.chat) {
-                newState.details = false;
-            }
-
-            // If turning on details, turn off chat
-            if (panel === 'details' && !prev.details) {
-                newState.chat = false;
-            }
-
-            // Toggle the requested panel
-            newState[panel] = !prev[panel];
-
-            return newState;
-        });
-    };
-
-    useHotkeys('mod+j', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('workbench'); });
-    useHotkeys('mod+k', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('console'); });
-    useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
-    useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
-
-    useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
-    useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
-    useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
-    useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
-    useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
-
-    useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
-    useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
-    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
-    useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
-    useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
-    useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
-    useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
-
-    const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
-        setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
-    };
-
-    const designEditorToolbar = (
-        <ToggleGroup
-            type="multiple"
-            value={Object.entries(visiblePanels)
-                .filter(([_, isVisible]) => isVisible)
-                .map(([key]) => key)}
-            onValueChange={(values) => {
-                Object.keys(visiblePanels).forEach(key => {
-                    const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-                    const shouldBeVisible = values.includes(key);
-                    if (isCurrentlyVisible !== shouldBeVisible) {
-                        togglePanel(key as keyof PanelToggles);
-                    }
-                });
-            }}
-        >
-            <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J"><Wrench /></ToggleGroupItem>
-            <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K"><Terminal /></ToggleGroupItem>
-            <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L"><Info /></ToggleGroupItem>
-            <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘["><MessageCircle /></ToggleGroupItem>
-        </ToggleGroup>
-    );
+const View: FC<ViewProps> = ({ }) => {
+    const studioStore = useStudioStore();
+    const [designEditorId, setDesignEditorId] = useState<string>('');
 
     useEffect(() => {
-        setNavbarToolbar(designEditorToolbar);
-        return () => setNavbarToolbar(null);
-        // Cleanup function to clear toolbar when component unmounts or view changes
-        return () => setNavbarToolbar(null);
-        // Rerun effect if visibility state changes, as ToggleGroup depends on it
-    }, [setNavbarToolbar, visiblePanels]);
+        studioStore.transact(() => {
+            studioStore.importKit("metabolism.json");
+        });
+        const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
+        setDesignEditorId(editorId);
+    }, [studioStore]);
+
+    if (!designEditorId) {
+        return <div>Loading editor...</div>;
+    }
 
     return (
-        <div className="canvas flex-1 relative">
-            <div id="sketchpad-edgeless" className="h-full">
-                <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-                        className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('diagram')}
-                    >
-                        <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
-                    </ResizablePanel>
-                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-                        className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('model')}
-                    >
-                        <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
-                    </ResizablePanel>
-                </ResizablePanelGroup>
-            </div>
-            <Workbench visible={visiblePanels.workbench} />
-            <Details visible={visiblePanels.details} />
-            <Console visible={visiblePanels.console} />
-            <Chat visible={visiblePanels.chat} />
-        </div>
+        <DesignEditorStoreProvider designEditorId={designEditorId}>
+            <DesignEditor />
+        </DesignEditorStoreProvider>
     );
-};
-
-export enum Theme {
-    LIGHT = 'light',
-    DARK = 'dark',
-}
-
-export enum Mode {
-    FULL = 'full',
-    DIAGRAM = 'diagram',
-    MODEL = 'model',
 }
 
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
+    layout?: Layout;
     readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
         close: () => void;
     }
+    userId: string;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
-
+    const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
         if (typeof window !== 'undefined') {
@@ -502,30 +239,43 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
-        root.classList.add(currentTheme);
+        root.classList.remove(Theme.DARK);
+        if (currentTheme === Theme.DARK) {
+            root.classList.add(Theme.DARK);
+        }
     }, [currentTheme]);
-
-    const toggleTheme = () => {
-        setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
-    };
-
-    const ActiveView = DesignEditor;
+    useEffect(() => {
+        const root = window.document.documentElement;
+        root.classList.remove(Layout.TOUCH);
+        if (currentLayout === Layout.TOUCH) {
+            root.classList.add(Layout.TOUCH);
+        }
+    }, [currentLayout]);
 
     return (
-        <SketchpadContext.Provider value={{ setNavbarToolbar }}>
-            <div className="h-full w-full flex flex-col bg-background text-foreground ">
-                <TooltipProvider>
-                    <Navbar
-                        toolbarContent={navbarToolbar}
-                        onWindowEvents={onWindowEvents}
-                        readonly={readonly}
-                        currentTheme={currentTheme}
-                        onToggleTheme={toggleTheme} />
-                    <ActiveView />
-                </TooltipProvider>
-            </div>
-        </SketchpadContext.Provider>
+        <TooltipProvider>
+            <StudioStoreProvider userId={userId}>
+                <SketchpadContext.Provider value={{
+                    mode: mode,
+                    layout: currentLayout,
+                    setLayout: setCurrentLayout,
+                    theme: currentTheme,
+                    setTheme: setCurrentTheme,
+                    setNavbarToolbar: setNavbarToolbar,
+                }}>
+                    <div
+                        key={`layout-${currentLayout}`}
+                        className="h-full w-full flex flex-col bg-background text-foreground"
+                    >
+                        <Navbar
+                            toolbarContent={navbarToolbar}
+                            onWindowEvents={onWindowEvents}
+                        />
+                        <View />
+                    </div>
+                </SketchpadContext.Provider>
+            </StudioStoreProvider>
+        </TooltipProvider>
     );
 };
 
