@@ -30,13 +30,13 @@ type YDesign = {
 
 type YKit = {
     name: string;
-    types: Y.Array<YType>;
-    designs: Y.Array<YDesign>;
-    qualities: Y.Array<YQuality>;
+    types: Y.Map<Y.Map<YType>>;
+    designs: Y.Map<Y.Map<Y.Map<YDesign>>>;
+    qualities: Y.Map<YQuality>;
 };
 
 type YStudio = {
-    kits: Y.Array<YKit>;
+    kits: Y.Map<string, YKit>;
     designEditorStates: Y.Map<DesignEditorState>;
 }
 
@@ -888,45 +888,23 @@ export function useKit(uri: string) {
             }
         };
 
-        // Initial undo/redo state
         updateUndoRedoState();
-
-        // Set up observers
         const unobserveKit = studio.observeKit(uri, updateHandler);
-
-        // Create a more aggressive update interval for undo/redo state
-        // This ensures UI stays in sync with the actual undo manager state
-        const intervalId = setInterval(updateUndoRedoState, 500);
 
         const unsubscribeUndoChanges = studio.subscribeToUndoChanges(uri, updateUndoRedoState);
 
         return () => {
             unobserveKit();
             unsubscribeUndoChanges();
-            clearInterval(intervalId);
         };
     }, [studio, uri, canUndo, canRedo]);
 
     return {
         kits,
-        getKit: (id: string) => kits[id] || null,
-        updateKitName: (id: string, name: string) =>
-            studio.updateKitName(fullKitId, id, name),
-        addDesign: (parentId: string) => {
-            const designUuid = `kit-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            return studio.addDesign(fullKitId, parentId, designUuid);
-        },
-        deleteDesign: (parentId: string, designUuid: string) => {
-            return studio.deleteDesign(fullKitId, parentId, designUuid);
-        },
-        initializeKit: (initialName: string = 'Root') => {
-            const rootKit = studio.initializeKit(fullKitId, initialName);
-            setHasInitialized(true);
-            return rootKit;
-        },
+        getKit: (uri: string) => kits[uri] || null,
         hasInitialized,
-        undo: () => studio.undo(fullKitId),
-        redo: () => studio.redo(fullKitId),
+        undo: () => studio.undo(uri),
+        redo: () => studio.redo(uri),
         canUndo,
         canRedo,
     };
