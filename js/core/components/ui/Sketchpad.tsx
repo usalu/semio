@@ -438,9 +438,9 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: leftPanelVisible ? `calc(${leftPanelWidth}px + 32px)` : `16px`,
-                right: rightPanelVisible ? `calc(${detailsChatWidth}px + 32px)` : `16px`,
-                bottom: `16px`,
+                left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
+                right: rightPanelVisible ? `calc(${detailsChatWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
+                bottom: `calc(var(--spacing) * 4)`,
                 height: `${height}px`,
             }}
         >
