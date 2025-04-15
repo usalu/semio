@@ -301,13 +301,24 @@ interface PanelProps {
     visible: boolean;
 }
 
-const Workbench: FC<PanelProps> = ({ visible }) => {
+interface WorkbenchProps extends PanelProps {
+    onWidthChange?: (width: number) => void;
+}
+
+const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange }) => {
     if (!visible) return null;
 
     // Add state for workbench width
     const [width, setWidth] = useState(230);
     // Add hover state for the resize handle
     const [isResizeHovered, setIsResizeHovered] = useState(false);
+
+    // Update parent component when width changes
+    useEffect(() => {
+        if (onWidthChange) {
+            onWidthChange(width);
+        }
+    }, [width, onWidthChange]);
 
     // Handle mouse drag for resizing
     const handleMouseDown = (e: React.MouseEvent) => {
