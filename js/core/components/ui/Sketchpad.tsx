@@ -574,7 +574,16 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                         className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
                         onDoubleClick={() => handlePanelDoubleClick('model')}
                     >
-                        <Model fullscreen={fullscreenPanel === 'model'} onPanelDoubleClick={() => handlePanelDoubleClick('model')} />
+                        <Model
+                            fullscreen={fullscreenPanel === 'model'}
+                            onPanelDoubleClick={() => handlePanelDoubleClick('model')}
+                            design={{
+                                pieces: [
+                                    { id_: '1', plane: { origin: { x: 0, y: 0, z: 0 } } },
+                                    { id_: '2', plane: { origin: { x: 0, y: 0, z: 2 } } },
+                                ]
+                            }}
+                        />
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </div>

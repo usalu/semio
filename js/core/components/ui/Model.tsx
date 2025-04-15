@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Piece } from '@semio/js';
+import { Design, Piece } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -12,6 +12,7 @@ interface ModelPieceProps {
     piece: Piece;
 }
 const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
+    const { selection, setSelection } = useStudio();
     return (
         <Select
             multiple
@@ -21,6 +22,11 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
             backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
             onClick={(e) => {
                 console.log('select clicked', e)
+                setSelection({
+                    ...selection,
+                    // TODO: Update selection to set
+                    pieceIds: selection.pieceIds.includes(piece.id_) ? selection.pieceIds.filter((id) => id !== piece.id_) : [...selection.pieceIds, piece.id_]
+                });
             }}
         >
             <Sphere args={[1, 100, 100]} position={[piece.plane.origin.x, piece.plane.origin.z, -piece.plane.origin.y]}>
@@ -52,8 +58,9 @@ const Gizmo: FC = (): JSX.Element => {
 interface ModelProps {
     fullscreen: boolean;
     onPanelDoubleClick?: () => void;
+    design: Design;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -98,8 +105,9 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelPiece piece={{ plane: { origin: { x: 0, y: 0, z: 0 } } }} />
-                <ModelPiece piece={{ plane: { origin: { x: 0, y: 0, z: 2 } } }} />
+                {design.pieces.map((piece) => (
+                    <ModelPiece key={piece.id_} piece={piece} />
+                ))}
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}
