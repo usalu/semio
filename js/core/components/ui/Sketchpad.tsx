@@ -303,24 +303,12 @@ interface PanelProps {
 
 interface WorkbenchProps extends PanelProps {
     onWidthChange?: (width: number) => void;
+    width: number;
 }
 
-const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange }) => {
+const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
-
-    // Add state for workbench width
-    const [width, setWidth] = useState(230);
-    // Add hover state for the resize handle
     const [isResizeHovered, setIsResizeHovered] = useState(false);
-
-    // Update parent component when width changes
-    useEffect(() => {
-        if (onWidthChange) {
-            onWidthChange(width);
-        }
-    }, [width, onWidthChange]);
-
-    // Handle mouse drag for resizing
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
 
@@ -329,9 +317,8 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange }) => {
 
         const handleMouseMove = (e: MouseEvent) => {
             const newWidth = startWidth + (e.clientX - startX);
-            // Limit minimum and maximum width
             if (newWidth >= 150 && newWidth <= 500) {
-                setWidth(newWidth);
+                onWidthChange?.(newWidth);
             }
         };
 
@@ -376,22 +363,27 @@ interface ConsoleProps {
     visible: boolean;
     workbenchVisible: boolean;
     detailsOrChatVisible: boolean;
-    workbenchWidth?: number; // Add prop to receive workbench width
+    workbenchWidth?: number;
 }
 
 const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVisible, workbenchWidth = 230 }) => {
     if (!visible) return null;
 
-    // Calculate left position based on workbench presence and width
-    const leftPosition = workbenchVisible ? `${workbenchWidth + 24}px` : '4px';
+    // Adjust left position based on workbench visibility
+    const leftPosition = workbenchVisible ? `${workbenchWidth + 24}px` : '24px';
+
+    // Calculate right position based on details/chat visibility
+    // When details or chat is visible, maintain a 24px gap from them (254px = 230px panel + 24px gap)
+    // When they're not visible, keep a consistent 24px from the right edge
+    const rightPosition = detailsOrChatVisible ? '254px' : '24px';
 
     return (
         <div
-            className={`
-                absolute bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border
-                ${detailsOrChatVisible ? 'right-[254px]' : 'right-4'}
-            `}
-            style={{ left: leftPosition }}
+            className="absolute bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
+            style={{
+                left: leftPosition,
+                right: rightPosition
+            }}
         >
             <div className="font-semibold p-4">Console</div>
         </div>
@@ -427,27 +419,18 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         details: false,
         chat: false,
     });
-
-    // Add state for workbench width
     const [workbenchWidth, setWorkbenchWidth] = useState(230);
 
     const togglePanel = (panel: keyof PanelToggles) => {
         setVisiblePanels(prev => {
             const newState = { ...prev };
-
-            // If turning on chat, turn off details
             if (panel === 'chat' && !prev.chat) {
                 newState.details = false;
             }
-
-            // If turning on details, turn off chat
             if (panel === 'details' && !prev.details) {
                 newState.chat = false;
             }
-
-            // Toggle the requested panel
             newState[panel] = !prev[panel];
-
             return newState;
         });
     };
@@ -531,7 +514,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
             </div>
             <Workbench
                 visible={visiblePanels.workbench}
-                onWidthChange={setWorkbenchWidth} // Add prop to receive width changes
+                onWidthChange={setWorkbenchWidth}
+                width={workbenchWidth} // Pass current width to workbench
             />
             <Details visible={visiblePanels.details} />
             <Console
