@@ -12,7 +12,7 @@ interface ModelPieceProps {
     piece: Piece;
 }
 const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
-    const { selection, setSelection } = useStudio();
+    const { selection, setSelection } = useDesignEditor();
     return (
         <Select
             multiple
@@ -105,9 +105,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                {design.pieces.map((piece) => (
-                    <ModelPiece key={piece.id_} piece={piece} />
-                ))}
+                <ModelDesign design={design} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

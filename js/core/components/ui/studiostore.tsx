@@ -346,6 +346,78 @@ class Studio {
             console.log(`Triggered undo capability for ${kitUuid}, canUndo: ${undoManager.canUndo()}`);
         }
     }
+
+    private createYType(type: Type): Y.Map<any> {
+        const yType = new Y.Map<any>();
+        yType.set('name', type.name);
+        yType.set('description', type.description || '');
+        yType.set('icon', type.icon || '');
+        yType.set('image', type.image || '');
+        yType.set('variant', type.variant || '');
+        yType.set('unit', type.unit || '');
+        yType.set('ports', new Y.Map());
+        yType.set('qualities', new Y.Map());
+        yType.set('representations', new Y.Map());
+        return yType;
+    }
+
+    createType(kitUri: string, type: Type): Type {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+
+        const types = yKit.get('types') as Y.Map<any>;
+        const yType = this.createYType(type);
+        types.set(type.name, yType);
+
+        return this.getType(kitUri, type.name);
+    }
+
+    getType(kitUri: string, typeName: string): Type | null {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) return null;
+
+        const types = yKit.get('types') as Y.Map<any>;
+        const yType = types.get(typeName) as Y.Map<any> | undefined;
+        if (!yType) return null;
+
+        return {
+            name: yType.get('name'),
+            description: yType.get('description'),
+            icon: yType.get('icon'),
+            image: yType.get('image'),
+            variant: yType.get('variant'),
+            unit: yType.get('unit'),
+            ports: Array.from(yType.get('ports').keys()),
+            qualities: Array.from(yType.get('qualities').keys()),
+            representations: Array.from(yType.get('representations').keys())
+        };
+    }
+
+    updateType(kitUri: string, type: Type): Type | null {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) return null;
+
+        const types = yKit.get('types') as Y.Map<any>;
+        const yType = types.get(type.name) as Y.Map<any> | undefined;
+        if (!yType) return null;
+
+        if (type.description !== undefined) yType.set('description', type.description);
+        if (type.icon !== undefined) yType.set('icon', type.icon);
+        if (type.image !== undefined) yType.set('image', type.image);
+        if (type.variant !== undefined) yType.set('variant', type.variant);
+        if (type.unit !== undefined) yType.set('unit', type.unit);
+        // TODO: Update ports, qualities, representations
+
+        return this.getType(kitUri, type.name);
+    }
+
+    deleteType(kitUri: string, typeName: string): boolean {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) return false;
+
+        const types = yKit.get('types') as Y.Map<any>;
+        return types.delete(typeName);
+    }
 }
 
 // Create a singleton instance of the Studio
