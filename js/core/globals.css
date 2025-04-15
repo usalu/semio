@@ -60,6 +60,7 @@
     --text-8xl--line-height: 1;
     --text-9xl: 8rem;
     --text-9xl--line-height: 1;
+
     --background: var(--color-light);
     --background-level-2: var(--color-light-gray); /* Custom */
     --background-level-3: var(--color-gray); /* Custom */
@@ -101,46 +102,71 @@
     --background-level-2: var(--color-dark-gray); /* Custom */
     --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-light);
-    /* --card: oklch(0.205 0 0); */
-    /* --card-foreground: oklch(0.985 0 0); */
-    /* --popover: oklch(0.269 0 0); */
-    /* --popover-foreground: oklch(0.985 0 0); */
-    /* --primary: oklch(0.922 0 0); */
-    /* --primary-foreground: oklch(0.205 0 0); */
-    /* --secondary: oklch(0.269 0 0); */
-    /* --secondary-foreground: oklch(0.985 0 0); */
     --muted: var(--color-dark-gray);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-gray);
     --accent-foreground: var(--color-light);
-    /* --destructive: oklch(0.704 0.191 22.216); */
     --border-color: var(--color-foreground);
-      /* --input: oklch(1 0 0 / 15%); */
-    /* --ring: oklch(0.556 0 0); */
-    /* --chart-1: oklch(0.488 0.243 264.376); */
-    /* --chart-2: oklch(0.696 0.17 162.48); */
-    /* --chart-3: oklch(0.769 0.188 70.08); */
-    /* --chart-4: oklch(0.627 0.265 303.9); */
-    /* --chart-5: oklch(0.645 0.246 16.439); */
-    /* --sidebar: oklch(0.205 0 0); */
-    /* --sidebar-foreground: oklch(0.985 0 0); */
-    /* --sidebar-primary: oklch(0.488 0.243 264.376); */
-    /* --sidebar-primary-foreground: oklch(0.985 0 0); */
-    /* --sidebar-accent: oklch(0.269 0 0); */
-    /* --sidebar-accent-foreground: oklch(0.985 0 0); */
-    /* --sidebar-border: oklch(1 0 0 / 10%); */
-    /* --sidebar-ring: oklch(0.439 0 0); */
-    /* --xy-background-color-default: var(--color-dark) !important; */
   }
 
   .compact {
     --spacing: var(--spacing-compact);
-    --text-xs: var(--text-xs-compact);
+    --text-xs: 0.7rem;
+    --text-xs--line-height: calc(1 / 0.7);
+    --text-sm: 0.8rem;
+    --text-sm--line-height: calc(1.2 / 0.8);
+    --text-base: 0.9rem;
+    --text-base--line-height: calc(1.4 / 0.9);
+    --text-lg: 1rem;
+    --text-lg--line-height: calc(1.6 / 1);
+    --text-xl: 1.125rem;
+    --text-xl--line-height: calc(1.6 / 1.125);
+    --text-2xl: 1.35rem;
+    --text-2xl--line-height: calc(1.9 / 1.35);
+    --text-3xl: 1.7rem;
+    --text-3xl--line-height: calc(2.1 / 1.7);
+    --text-4xl: 2rem;
+    --text-4xl--line-height: calc(2.3 / 2);
+    --text-5xl: 2.7rem;
+    --text-5xl--line-height: 1;
+    --text-6xl: 3.4rem;
+    --text-6xl--line-height: 1;
+    --text-7xl: 4rem;
+    --text-7xl--line-height: 1;
+    --text-8xl: 5.4rem;
+    --text-8xl--line-height: 1;
+    --text-9xl: 7.2rem;
+    --text-9xl--line-height: 1;
   }
 
   .comfortable {
     --spacing: var(--spacing-comfortable);
-    --text-xs: var(--text-xs-comfortable);
+    --text-xs: 0.8rem;
+    --text-xs--line-height: calc(1.05 / 0.8);
+    --text-sm: 0.95rem;
+    --text-sm--line-height: calc(1.3 / 0.95);
+    --text-base: 1.1rem;
+    --text-base--line-height: calc(1.6 / 1.1);
+    --text-lg: 1.25rem;
+    --text-lg--line-height: calc(1.85 / 1.25);
+    --text-xl: 1.35rem;
+    --text-xl--line-height: calc(1.85 / 1.35);
+    --text-2xl: 1.65rem;
+    --text-2xl--line-height: calc(2.1 / 1.65);
+    --text-3xl: 2rem;
+    --text-3xl--line-height: calc(2.35 / 2);
+    --text-4xl: 2.4rem;
+    --text-4xl--line-height: calc(2.6 / 2.4);
+    --text-5xl: 3.2rem;
+    --text-5xl--line-height: 1.05;
+    --text-6xl: 4rem;
+    --text-6xl--line-height: 1.05;
+    --text-7xl: 4.8rem;
+    --text-7xl--line-height: 1.05;
+    --text-8xl: 6.4rem;
+    --text-8xl--line-height: 1.05;
+    --text-9xl: 8.5rem;
+    --text-9xl--line-height: 1.05;
   }
 }
 
