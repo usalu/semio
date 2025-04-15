@@ -37,6 +37,7 @@ export enum Mode {
 }
 
 export enum Theme {
+    SYSTEM = 'system',
     LIGHT = 'light',
     DARK = 'dark',
 }
@@ -219,8 +220,6 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
     const { mode, layout, setLayout, theme, setTheme } = useSketchpad();
-
-
 
     return (
         <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
@@ -580,14 +579,14 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
             <Workbench
                 visible={visiblePanels.workbench}
                 onWidthChange={setWorkbenchWidth}
-                width={workbenchWidth} // Pass current width to workbench
+                width={workbenchWidth}
             />
             <Details visible={visiblePanels.details} />
             <Console
                 visible={visiblePanels.console}
                 leftPanelVisible={visiblePanels.workbench}
                 rightPanelVisible={rightPanelVisible}
-                workbenchWidth={workbenchWidth} // Pass current workbench width
+                leftPanelWidth={workbenchWidth}
             />
             <Chat visible={visiblePanels.chat} />
         </div>
@@ -606,7 +605,7 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.COMPACT, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.COMPACT, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
     const [currentMode, setCurrentMode] = useState<Mode>(mode);
@@ -621,23 +620,23 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
-        root.classList.add(currentTheme);
+        root.classList.remove(Theme.DARK);
+        if (currentTheme === Theme.DARK) {
+            root.classList.add(Theme.DARK);
+        }
     }, [currentTheme]);
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove("compact", "normal", "comfortable");
-        root.classList.add(currentLayout);
+        root.classList.remove(Layout.COMFORTABLE, Layout.COMPACT);
+        if (currentLayout === Layout.COMPACT) {
+            root.classList.add(Layout.COMPACT);
+        }
+        if (currentLayout === Layout.COMFORTABLE) {
+            root.classList.add(Layout.COMFORTABLE);
+        }
     }, [currentLayout]);
 
-    const toggleTheme = () => {
-        setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
-    };
-
-    const handleLayoutChange = (layout: Layout) => {
-        setCurrentLayout(layout);
-    };
 
     const ActiveView = DesignEditor;
 
