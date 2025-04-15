@@ -654,6 +654,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
             mode: currentMode,
         }}>
             <div
+                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive
                 className="h-full w-full flex flex-col bg-background text-foreground"
             >
                 <TooltipProvider>
