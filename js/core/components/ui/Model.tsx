@@ -2,15 +2,16 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { Piece } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
-interface PieceProps {
-    position?: [number, number, number];
+interface ModelPieceProps {
+    piece: Piece;
 }
-const Piece: FC<PieceProps> = ({ position }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
     return (
         <Select
             multiple
@@ -22,7 +23,7 @@ const Piece: FC<PieceProps> = ({ position }) => {
                 console.log('select clicked', e)
             }}
         >
-            <Sphere args={[1, 100, 100]} position={position}>
+            <Sphere args={[1, 100, 100]} position={[piece.plane.origin.x, piece.plane.origin.z, -piece.plane.origin.y]}>
                 <meshStandardMaterial color="gold" roughness={0} metalness={1} />
             </Sphere>
         </Select>
@@ -97,8 +98,8 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <Piece position={[0, 0, 0]} />
-                <Piece position={[0, 2, 0]} />
+                <ModelPiece piece={{ plane: { origin: { x: 0, y: 0, z: 0 } } }} />
+                <ModelPiece piece={{ plane: { origin: { x: 0, y: 0, z: 2 } } }} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}
