@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -48,7 +48,6 @@ export enum Layout {
 
 interface SketchpadContextType {
     mode: Mode;
-    setMode: (mode: Mode) => void;
     layout: Layout;
     setLayout: (layout: Layout) => void;
     theme: Theme;
@@ -210,9 +209,6 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
 
 interface NavbarProps {
     toolbarContent?: ReactNode;
-    readonly?: boolean;
-    layout: Layout;
-    onLayoutChange: (layout: Layout) => void;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -220,16 +216,10 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, layout, onLayoutChange }) => {
-    const { theme, setTheme } = useSketchpad();
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
+    const { mode, layout, setLayout, theme, setTheme } = useSketchpad();
 
-    const handleThemeChange = (value: string) => {
-        setTheme(value === Theme.LIGHT ? Theme.LIGHT : Theme.DARK);
-    };
 
-    const handleLayoutChange = (layout: Layout) => {
-        onLayoutChange(layout);
-    };
 
     return (
         <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
@@ -262,41 +252,37 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, lay
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
-
             <div className="flex items-center gap-4">
                 {toolbarContent}
-            </div>
-
-            <div className="flex items-center gap-4">
                 <ToggleCycle
                     value={theme}
-                    onValueChange={handleThemeChange}
+                    onValueChange={setTheme}
                     items={[
                         {
                             value: Theme.LIGHT,
-                            tooltip: "Turn Dark",
+                            tooltip: "Turn Theme Dark",
                             label: <Moon />
                         },
                         {
                             value: Theme.DARK,
-                            tooltip: "Turn Light",
+                            tooltip: "Turn Theme Light",
                             label: <Sun />
                         }
                     ]}
                 />
                 <ToggleCycle
                     value={layout}
-                    onValueChange={handleLayoutChange}
+                    onValueChange={setLayout}
                     items={[
                         {
                             value: Layout.COMPACT,
-                            tooltip: "Compact Layout",
-                            label: "Compact"
+                            tooltip: "Turn Layout Compact",
+                            label: < Glasses />
                         },
                         {
                             value: Layout.COMFORTABLE,
-                            tooltip: "Comfortable Layout",
-                            label: "Comfortable"
+                            tooltip: "Turn Layout Comfortable",
+                            label: <Sofa />
                         }
                     ]}
                 />
@@ -379,11 +365,11 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-[var(--spacing-comfortable)] left-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-[var(--spacing-unit)] left-[var(--spacing-unit)] bottom-[var(--spacing-unit)] z-100 bg-background-level-2 text-foreground border
                 ${isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-[var(--spacing-compact)] cursor-default">Workbench</div>
+            <div className="font-semibold p-[var(--spacing-unit)]">Workbench</div>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -398,9 +384,9 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-[var(--spacing-comfortable)] right-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] w-[230px] z-100 bg-background-level-2 text-foreground border"
+            className="absolute top-[var(--spacing-unit)] right-[var(--spacing-unit)] bottom-[var(--spacing-unit)] w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-[var(--spacing-compact)]">Details</div>
+            <div className="font-semibold p-[var(--spacing-unit)]">Details</div>
         </div>
     );
 }
@@ -418,10 +404,7 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
     const [height, setHeight] = useState(200);
     const [isResizeHovered, setIsResizeHovered] = useState(false);
 
-    // Consistent spacing (16px / Tailwind spacing-4)
-    const spacing = 16;
-    // Additional spacing specifically for horizontal gaps
-    const horizontalGap = spacing * 2; // Double the spacing (32px) for horizontal gaps
+    // Consistent spacing using the CSS variable
     const detailsChatWidth = 230; // Width of Details/Chat panels
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -450,9 +433,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: workbenchVisible ? `calc(${workbenchWidth}px + var(--spacing-comfortable))` : `var(--spacing-comfortable)`,
-                right: detailsOrChatVisible ? `calc(${detailsChatWidth}px + var(--spacing-comfortable))` : `var(--spacing-comfortable)`,
-                bottom: `var(--spacing-comfortable)`,
+                left: workbenchVisible ? `calc(${workbenchWidth}px + var(--spacing-unit))` : `var(--spacing-unit)`,
+                right: detailsOrChatVisible ? `calc(${detailsChatWidth}px + var(--spacing-unit))` : `var(--spacing-unit)`,
+                bottom: `var(--spacing-unit)`,
                 height: `${height}px`,
             }}
         >
@@ -462,7 +445,7 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
                 onMouseEnter={() => setIsResizeHovered(true)}
                 onMouseLeave={() => setIsResizeHovered(false)}
             />
-            <div className="font-semibold p-[var(--spacing-compact)]">Console</div>
+            <div className="font-semibold p-[var(--spacing-unit)]">Console</div>
         </div>
     );
 }
@@ -470,9 +453,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-[var(--spacing-comfortable)] right-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] w-[230px] z-100 bg-background-level-2 text-foreground border"
+        <div className="absolute top-[var(--spacing-unit)] right-[var(--spacing-unit)] bottom-[var(--spacing-unit)] w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-[var(--spacing-compact)]">Chat</div>
+            <div className="font-semibold p-[var(--spacing-unit)]">Chat</div>
         </div>
     );
 }
@@ -622,6 +605,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
     const [currentMode, setCurrentMode] = useState<Mode>(mode);
+    const [scale, setScale] = useState(1); // Add the scale state variable back
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
@@ -637,16 +621,10 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         root.classList.add(currentTheme);
     }, [currentTheme]);
 
-    // Set spacing CSS variables based on layout
     useEffect(() => {
         const root = window.document.documentElement;
-        if (currentLayout === Layout.COMPACT) {
-            root.style.setProperty('--spacing-compact', '8px');
-            root.style.setProperty('--spacing-comfortable', '12px');
-        } else {
-            root.style.setProperty('--spacing-compact', '12px');
-            root.style.setProperty('--spacing-comfortable', '16px');
-        }
+        root.classList.remove("compact", "comfortable");
+        root.classList.add(currentLayout);
     }, [currentLayout]);
 
     const toggleTheme = () => {
@@ -683,9 +661,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     <Navbar
                         toolbarContent={navbarToolbar}
                         onWindowEvents={onWindowEvents}
-                        readonly={readonly}
-                        layout={currentLayout}
-                        onLayoutChange={handleLayoutChange}
                     />
                     <ActiveView />
                 </TooltipProvider>
