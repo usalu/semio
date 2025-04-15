@@ -374,11 +374,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
 
     // Consistent spacing (16px / Tailwind spacing-4)
     const spacing = 16;
+    // Additional spacing specifically for horizontal gaps
+    const horizontalGap = spacing * 2; // Double the spacing (32px) for horizontal gaps
     const detailsChatWidth = 230; // Width of Details/Chat panels
-
-    const leftPosition = workbenchVisible ? `${workbenchWidth + spacing}px` : `${spacing}px`;
-    const rightPosition = detailsOrChatVisible ? `${detailsChatWidth + spacing}px` : `${spacing}px`;
-    const bottomPosition = `${spacing}px`;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -406,9 +404,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: leftPosition,
-                right: rightPosition,
-                bottom: bottomPosition,
+                left: workbenchVisible ? `${workbenchWidth + horizontalGap}px` : `${spacing}px`,
+                right: detailsOrChatVisible ? `${detailsChatWidth + horizontalGap}px` : `${spacing}px`,
+                bottom: `${spacing}px`,
                 height: `${height}px`,
             }}
         >
