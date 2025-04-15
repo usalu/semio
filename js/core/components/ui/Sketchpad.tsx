@@ -369,13 +369,9 @@ interface ConsoleProps {
 const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVisible, workbenchWidth = 230 }) => {
     if (!visible) return null;
 
-    // Adjust left position based on workbench visibility
-    const leftPosition = workbenchVisible ? `${workbenchWidth + 24}px` : '24px';
-
-    // Calculate right position based on details/chat visibility
-    // When details or chat is visible, maintain a 24px gap from them (254px = 230px panel + 24px gap)
-    // When they're not visible, keep a consistent 24px from the right edge
-    const rightPosition = detailsOrChatVisible ? '254px' : '24px';
+    // Use consistent spacing of 16px (equivalent of spacing-4) on all sides
+    const leftPosition = workbenchVisible ? `${workbenchWidth + 16}px` : '16px';
+    const rightPosition = detailsOrChatVisible ? '246px' : '16px'; // 230px + 16px
 
     return (
         <div
