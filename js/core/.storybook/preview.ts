@@ -16,6 +16,8 @@ const preview: Preview = {
       light: { appBg: '-var(--color-dark)' }
     }
   },
+
+  tags: ['autodocs']
 };
 
 export default preview;
