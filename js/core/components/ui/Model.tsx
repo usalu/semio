@@ -81,7 +81,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick }) => {
     }, []);
 
     return (
-        <div className="w-full h-full">
+        <div className="w-full h-full p-[var(--spacing-comfortable)]">
             <Canvas onDoubleClickCapture={(e) => {
                 e.stopPropagation();
                 if (onPanelDoubleClick) onPanelDoubleClick();

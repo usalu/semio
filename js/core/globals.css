@@ -105,4 +105,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+
+  --spacing-compact: var(--spacing-compact);
+  --spacing-comfortable: var(--spacing-comfortable);
 }

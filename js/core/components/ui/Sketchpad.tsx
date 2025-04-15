@@ -189,6 +189,8 @@ interface NavbarProps {
     readonly?: boolean;
     currentTheme: Theme;
     onToggleTheme: () => void;
+    layout: Layout;
+    onLayoutChange: (layout: Layout) => void;
     onWindowEvents?: {
         minimize: () => void;
         maximize: () => void;
@@ -196,9 +198,13 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, currentTheme, onToggleTheme }) => {
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, currentTheme, onToggleTheme, layout, onLayoutChange }) => {
     const handleThemeChange = (value: string) => {
         onToggleTheme();
+    };
+
+    const handleLayoutChange = (layout: Layout) => {
+        onLayoutChange(layout);
     };
 
     return (
@@ -251,6 +257,22 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
                             value: Theme.DARK,
                             tooltip: "Turn Light",
                             label: <Sun />
+                        }
+                    ]}
+                />
+                <ToggleCycle
+                    value={layout}
+                    onValueChange={handleLayoutChange}
+                    items={[
+                        {
+                            value: Layout.COMPACT,
+                            tooltip: "Compact Layout",
+                            label: "Compact"
+                        },
+                        {
+                            value: Layout.COMFORTABLE,
+                            tooltip: "Comfortable Layout",
+                            label: "Comfortable"
                         }
                     ]}
                 />
@@ -333,11 +355,11 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-[var(--spacing-comfortable)] left-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] z-100 bg-background-level-2 text-foreground border
                 ${isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-4 cursor-default">Workbench</div>
+            <div className="font-semibold p-[var(--spacing-compact)] cursor-default">Workbench</div>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -352,9 +374,9 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+            className="absolute top-[var(--spacing-comfortable)] right-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-4">Details</div>
+            <div className="font-semibold p-[var(--spacing-compact)]">Details</div>
         </div>
     );
 }
@@ -404,9 +426,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: workbenchVisible ? `${workbenchWidth + horizontalGap}px` : `${spacing}px`,
-                right: detailsOrChatVisible ? `${detailsChatWidth + horizontalGap}px` : `${spacing}px`,
-                bottom: `${spacing}px`,
+                left: workbenchVisible ? `calc(${workbenchWidth}px + var(--spacing-comfortable))` : `var(--spacing-comfortable)`,
+                right: detailsOrChatVisible ? `calc(${detailsChatWidth}px + var(--spacing-comfortable))` : `var(--spacing-comfortable)`,
+                bottom: `var(--spacing-comfortable)`,
                 height: `${height}px`,
             }}
         >
@@ -416,7 +438,7 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
                 onMouseEnter={() => setIsResizeHovered(true)}
                 onMouseLeave={() => setIsResizeHovered(false)}
             />
-            <div className="font-semibold p-4">Console</div>
+            <div className="font-semibold p-[var(--spacing-compact)]">Console</div>
         </div>
     );
 }
@@ -424,9 +446,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+        <div className="absolute top-[var(--spacing-comfortable)] right-[var(--spacing-comfortable)] bottom-[var(--spacing-comfortable)] w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-4">Chat</div>
+            <div className="font-semibold p-[var(--spacing-compact)]">Chat</div>
         </div>
     );
 }
@@ -571,9 +593,15 @@ export enum Mode {
     MODEL = 'model',
 }
 
+export enum Layout {
+    COMPACT = 'compact',
+    COMFORTABLE = 'comfortable',
+}
+
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
+    layout?: Layout;
     readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
@@ -582,8 +610,9 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layout.COMPACT, readonly = false, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
+    const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
@@ -603,6 +632,10 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
         setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
 
+    const handleLayoutChange = (layout: Layout) => {
+        setCurrentLayout(layout);
+    };
+
     const ActiveView = DesignEditor;
 
     return (
@@ -614,7 +647,10 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, readonly = fal
                         onWindowEvents={onWindowEvents}
                         readonly={readonly}
                         currentTheme={currentTheme}
-                        onToggleTheme={toggleTheme} />
+                        onToggleTheme={toggleTheme}
+                        layout={currentLayout}
+                        onLayoutChange={handleLayoutChange}
+                    />
                     <ActiveView />
                 </TooltipProvider>
             </div>

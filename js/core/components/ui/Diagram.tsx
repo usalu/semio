@@ -360,48 +360,14 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
                 onPanelDoubleClick?.();
             }}
             panOnDrag={[0]} //left mouse button
-            // onMoveEnd={onUpdateCursor}
-            // onPointerLeave={() =>
-            //     setPresence({
-            //         cursor: null,
-            //     })
-            // }
             proOptions={{ hideAttribution: true }}
             multiSelectionKeyCode="Shift"
+            style={{
+                padding: 'var(--spacing-comfortable)',
+            }}
         >
-            {/* <ViewportPortal>
-                {
-                    Array.from(presenceMap.entries()).map(([user, presence]) => {
-                        if (presence.cursor === null || presence.cursor === undefined) {
-                            return null;
-                        }
-                        const { x, y } = presence.cursor;
-                        return (
-                            <div
-                                key={user}
-                                style={{ transform: `translate(${x}px, ${y}px)`, position: 'absolute' }
-                                }
-                            >
-                                <Cursor color={colors.light} />
-                            </div>
-                        );
-                    })}
-            </ViewportPortal> */}
-            {/* {others.map((user) => {
-                if (user.presence.cursor === null || user.presence.cursor === undefined) {
-                    return null;
-                }
-                return (
-                    <Cursor
-                        key={user.connectionId}
-                        color={colors.light}
-                        x={user.presence.cursor.x}
-                        y={user.presence.cursor.y}
-                    ></Cursor>
-                );
-            })} */}
-            {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
-            {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
+            {fullscreen && <Controls className="border m-[var(--spacing-comfortable)]" showZoom={false} showInteractive={false} />}
+            {fullscreen && < MiniMap className="border m-[var(--spacing-comfortable)]" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
