@@ -7,6 +7,7 @@
 @layer base {
   :root {
     /* Shadcn */
+    --spacing: var(--spacing-compact);
     --radius: 0rem;
     --radius-sm: 0rem;
     --radius-md: 0rem;
@@ -87,7 +88,7 @@
   }
 
   .comfortable {
-    --spacing-unit: var(--spacing-comfortable);
+    --spacing: var(--spacing-comfortable);
   }
 }
 

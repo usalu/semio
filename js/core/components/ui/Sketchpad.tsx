@@ -365,11 +365,11 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-[var(--spacing-unit)] left-[var(--spacing-unit)] bottom-[var(--spacing-unit)] z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border
                 ${isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-[var(--spacing-unit)]">Workbench</div>
+            <div className="font-semibold p-4">Workbench</div>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -384,28 +384,27 @@ const Details: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
         <div
-            className="absolute top-[var(--spacing-unit)] right-[var(--spacing-unit)] bottom-[var(--spacing-unit)] w-[230px] z-100 bg-background-level-2 text-foreground border"
+            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-[var(--spacing-unit)]">Details</div>
+            <div className="font-semibold p-4">Details</div>
         </div>
     );
 }
 
 interface ConsoleProps {
     visible: boolean;
-    workbenchVisible: boolean;
-    detailsOrChatVisible: boolean;
-    workbenchWidth?: number;
+    leftPanelVisible: boolean;
+    rightPanelVisible: boolean;
+    leftPanelWidth?: number;
 }
 
-const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVisible, workbenchWidth = 230 }) => {
+const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisible, leftPanelWidth = 230 }) => {
     if (!visible) return null;
 
     const [height, setHeight] = useState(200);
     const [isResizeHovered, setIsResizeHovered] = useState(false);
 
-    // Consistent spacing using the CSS variable
-    const detailsChatWidth = 230; // Width of Details/Chat panels
+    const detailsChatWidth = 230;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -433,9 +432,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
         <div
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
-                left: workbenchVisible ? `calc(${workbenchWidth}px + var(--spacing-unit))` : `var(--spacing-unit)`,
-                right: detailsOrChatVisible ? `calc(${detailsChatWidth}px + var(--spacing-unit))` : `var(--spacing-unit)`,
-                bottom: `var(--spacing-unit)`,
+                left: leftPanelVisible ? `calc(${leftPanelWidth}px + var(--spacing-4))` : `var(--spacing-4)`,
+                right: rightPanelVisible ? `calc(${detailsChatWidth}px + var(--spacing-4))` : `var(--spacing-4)`,
+                bottom: `var(--spacing-4)`,
                 height: `${height}px`,
             }}
         >
@@ -445,7 +444,7 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
                 onMouseEnter={() => setIsResizeHovered(true)}
                 onMouseLeave={() => setIsResizeHovered(false)}
             />
-            <div className="font-semibold p-[var(--spacing-unit)]">Console</div>
+            <div className="font-semibold p-4">Console</div>
         </div>
     );
 }
@@ -453,9 +452,9 @@ const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVis
 const Chat: FC<PanelProps> = ({ visible }) => {
     if (!visible) return null;
     return (
-        <div className="absolute top-[var(--spacing-unit)] right-[var(--spacing-unit)] bottom-[var(--spacing-unit)] w-[230px] z-100 bg-background-level-2 text-foreground border"
+        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
         >
-            <div className="font-semibold p-[var(--spacing-unit)]">Chat</div>
+            <div className="font-semibold p-4">Chat</div>
         </div>
     );
 }
@@ -518,7 +517,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
     };
 
-    const detailsOrChatVisible = visiblePanels.details || visiblePanels.chat;
+    const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
     const designEditorToolbar = (
         <ToggleGroup
@@ -580,8 +579,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
             <Details visible={visiblePanels.details} />
             <Console
                 visible={visiblePanels.console}
-                workbenchVisible={visiblePanels.workbench}
-                detailsOrChatVisible={detailsOrChatVisible}
+                leftPanelVisible={visiblePanels.workbench}
+                rightPanelVisible={rightPanelVisible}
                 workbenchWidth={workbenchWidth} // Pass current workbench width
             />
             <Chat visible={visiblePanels.chat} />
