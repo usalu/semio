@@ -30,32 +30,42 @@ import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
 
+
+export enum Mode {
+    USER = 'user',
+    GUEST = 'guest',
+}
+
+export enum Theme {
+    LIGHT = 'light',
+    DARK = 'dark',
+}
+
+export enum Layout {
+    COMPACT = 'compact',
+    COMFORTABLE = 'comfortable',
+}
+
 interface SketchpadContextType {
+    mode: Mode;
+    setMode: (mode: Mode) => void;
+    layout: Layout;
+    setLayout: (layout: Layout) => void;
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
+    scale: number;
+    setScale: (scale: number) => void;
+    zoomIn: () => void;
+    zoomOut: () => void;
     setNavbarToolbar: (toolbar: ReactNode) => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
 
-const useSketchpad = () => {
+export const useSketchpad = () => {
     const context = useContext(SketchpadContext);
     if (!context) {
         throw new Error('useSketchpad must be used within a SketchpadProvider');
-    }
-    return context;
-};
-
-// Layout Context
-interface LayoutContextType {
-    layout: Layout;
-    setLayout: (layout: Layout) => void;
-}
-
-const LayoutContext = createContext<LayoutContextType | null>(null);
-
-export const useLayout = () => {
-    const context = useContext(LayoutContext);
-    if (!context) {
-        throw new Error('useLayout must be used within a LayoutProvider');
     }
     return context;
 };
@@ -98,11 +108,13 @@ const Types: FC = () => {
 
     return (
         <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
-            {Array.from(types.entries()).map(([name, variantMap]) => (
-                Array.from(variantMap.entries()).map(([variant, type]: [string, Type]) => (
+            {Array.from(types.entries()).map(([name, variantMap]) => {
+                // Cast variantMap to Map<string, Type> to ensure TypeScript recognizes entries() method
+                const typedVariantMap = variantMap as Map<string, Type>;
+                return Array.from(typedVariantMap.entries()).map(([variant, type]) => (
                     <TypeAvatar key={`${name}-${variant}`} type={type} />
-                ))
-            ))}
+                ));
+            })}
         </div>
     );
 }
@@ -203,8 +215,6 @@ const TreeSider: FC<TreeSiderProps> = ({ }) => {
 interface NavbarProps {
     toolbarContent?: ReactNode;
     readonly?: boolean;
-    currentTheme: Theme;
-    onToggleTheme: () => void;
     layout: Layout;
     onLayoutChange: (layout: Layout) => void;
     onWindowEvents?: {
@@ -214,9 +224,11 @@ interface NavbarProps {
     }
 }
 
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, currentTheme, onToggleTheme, layout, onLayoutChange }) => {
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, layout, onLayoutChange }) => {
+    const { theme, setTheme } = useSketchpad();
+
     const handleThemeChange = (value: string) => {
-        onToggleTheme();
+        setTheme(value === Theme.LIGHT ? Theme.LIGHT : Theme.DARK);
     };
 
     const handleLayoutChange = (layout: Layout) => {
@@ -261,7 +273,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents, readonly, cur
 
             <div className="flex items-center gap-4">
                 <ToggleCycle
-                    value={currentTheme}
+                    value={theme}
                     onValueChange={handleThemeChange}
                     items={[
                         {
@@ -598,22 +610,6 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     );
 };
 
-export enum Theme {
-    LIGHT = 'light',
-    DARK = 'dark',
-}
-
-export enum Mode {
-    FULL = 'full',
-    DIAGRAM = 'diagram',
-    MODEL = 'model',
-}
-
-export enum Layout {
-    COMPACT = 'compact',
-    COMFORTABLE = 'comfortable',
-}
-
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
@@ -626,9 +622,10 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layout.COMPACT, readonly = false, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.COMPACT, readonly = false, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
+    const [currentMode, setCurrentMode] = useState<Mode>(mode);
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
@@ -637,6 +634,16 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layou
         }
         return Theme.LIGHT;
     });
+
+    const [scale, setScale] = useState(1);
+
+    const zoomIn = () => {
+        setScale(prevScale => Math.min(prevScale + 0.1, 2));
+    };
+
+    const zoomOut = () => {
+        setScale(prevScale => Math.max(prevScale - 0.1, 0.5));
+    };
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -664,26 +671,47 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layou
         setCurrentLayout(layout);
     };
 
+    useHotkeys('mod+=', (e) => { e.preventDefault(); e.stopPropagation(); zoomIn(); }, [zoomIn]);  // mod + = (plus without shift)
+    useHotkeys('mod+shift+=', (e) => { e.preventDefault(); e.stopPropagation(); zoomIn(); }, [zoomIn]);  // mod + shift + = (plus with shift)
+    useHotkeys('mod+-', (e) => { e.preventDefault(); e.stopPropagation(); zoomOut(); }, [zoomOut]);  // mod + - (minus)
+
     const ActiveView = DesignEditor;
 
     return (
-        <SketchpadContext.Provider value={{ setNavbarToolbar }}>
-            <LayoutContext.Provider value={{ layout: currentLayout, setLayout: setCurrentLayout }}>
-                <div className="h-full w-full flex flex-col bg-background text-foreground">
-                    <TooltipProvider>
-                        <Navbar
-                            toolbarContent={navbarToolbar}
-                            onWindowEvents={onWindowEvents}
-                            readonly={readonly}
-                            currentTheme={currentTheme}
-                            onToggleTheme={toggleTheme}
-                            layout={currentLayout}
-                            onLayoutChange={handleLayoutChange}
-                        />
-                        <ActiveView />
-                    </TooltipProvider>
-                </div>
-            </LayoutContext.Provider>
+        <SketchpadContext.Provider value={{
+            setNavbarToolbar,
+            layout: currentLayout,
+            setLayout: setCurrentLayout,
+            theme: currentTheme,
+            setTheme: setCurrentTheme,
+            mode: currentMode,
+            setMode: setCurrentMode,
+            scale,
+            setScale,
+            zoomIn,
+            zoomOut
+        }}>
+            <div
+                className="h-full w-full flex flex-col bg-background text-foreground"
+                style={{
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.1s ease-in-out',
+                    height: `${100 / scale}%`,  // Adjust container size inversely to maintain visible area
+                    width: `${100 / scale}%`
+                }}
+            >
+                <TooltipProvider>
+                    <Navbar
+                        toolbarContent={navbarToolbar}
+                        onWindowEvents={onWindowEvents}
+                        readonly={readonly}
+                        layout={currentLayout}
+                        onLayoutChange={handleLayoutChange}
+                    />
+                    <ActiveView />
+                </TooltipProvider>
+            </div>
         </SketchpadContext.Provider>
     );
 };
