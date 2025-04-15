@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import path from "path"
 
 export default defineConfig(async () => {
     // normal import fails due to esm stuff
@@ -9,5 +10,11 @@ export default defineConfig(async () => {
             tailwind.default(),
             react()
         ],
+        resolve: {
+            alias: {
+                "@semio/js": path.resolve(__dirname, "../core"),
+                "@semio/assets": path.resolve(__dirname, "../../assets")
+            }
+        }
     }
 })

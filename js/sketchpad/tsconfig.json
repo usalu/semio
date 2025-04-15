@@ -1,4 +1,13 @@
 {
   "extends": "@semio/js/tsconfig.json",
-  "compilerOptions": {}
+  "compilerOptions": {
+    "paths": {
+      "@semio/js/*": [
+        "../core/*"
+      ],
+      "@semio/assets/*": [
+        "../../assets/*"
+      ]
+    }
+  }
 }
