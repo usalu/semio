@@ -1,6 +1,6 @@
 ---
 description: 
-globs: js/**
+globs: js/**/*.*
 alwaysApply: false
 ---
 # Project

@@ -369,16 +369,21 @@ interface ConsoleProps {
 const Console: FC<ConsoleProps> = ({ visible, workbenchVisible, detailsOrChatVisible, workbenchWidth = 230 }) => {
     if (!visible) return null;
 
-    // Use consistent spacing of 16px (equivalent of spacing-4) on all sides
-    const leftPosition = workbenchVisible ? `${workbenchWidth + 16}px` : '16px';
-    const rightPosition = detailsOrChatVisible ? '246px' : '16px'; // 230px + 16px
+    // Consistent spacing (16px / Tailwind spacing-4)
+    const spacing = 16;
+    const detailsChatWidth = 230; // Width of Details/Chat panels
+
+    const leftPosition = workbenchVisible ? `${workbenchWidth + spacing}px` : `${spacing}px`;
+    const rightPosition = detailsOrChatVisible ? `${detailsChatWidth + spacing}px` : `${spacing}px`;
+    const bottomPosition = `${spacing}px`;
 
     return (
         <div
-            className="absolute bottom-4 h-[200px] z-[150] bg-background-level-2 text-foreground border"
+            className="absolute h-[200px] z-[150] bg-background-level-2 text-foreground border"
             style={{
                 left: leftPosition,
-                right: rightPosition
+                right: rightPosition,
+                bottom: bottomPosition,
             }}
         >
             <div className="font-semibold p-4">Console</div>
