@@ -306,6 +306,8 @@ const Workbench: FC<PanelProps> = ({ visible }) => {
 
     // Add state for workbench width
     const [width, setWidth] = useState(230);
+    // Add hover state for the resize handle
+    const [isResizeHovered, setIsResizeHovered] = useState(false);
 
     // Handle mouse drag for resizing
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -333,11 +335,17 @@ const Workbench: FC<PanelProps> = ({ visible }) => {
 
     return (
         <div
-            className="absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border border-r-foreground/0 hover:border-r-primary transition-colors cursor-ew-resize"
+            className={`absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+                ${isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
-            onMouseDown={handleMouseDown}
         >
             <div className="font-semibold p-4 cursor-default">Workbench</div>
+            <div
+                className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsResizeHovered(true)}
+                onMouseLeave={() => setIsResizeHovered(false)}
+            />
         </div>
     );
 }
