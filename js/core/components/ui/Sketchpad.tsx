@@ -1,6 +1,6 @@
 import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses } from 'lucide-react';
+import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -43,6 +43,7 @@ export enum Theme {
 
 export enum Layout {
     COMPACT = 'compact',
+    NORMAL = 'normal',
     COMFORTABLE = 'comfortable',
 }
 
@@ -276,13 +277,18 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                     items={[
                         {
                             value: Layout.COMPACT,
-                            tooltip: "Turn Layout Compact",
-                            label: < Glasses />
+                            tooltip: "Turn Layout Normal",
+                            label: <AppWindow />
+                        },
+                        {
+                            value: Layout.NORMAL,
+                            tooltip: "Turn Layout Comfortable",
+                            label: <Sofa />
                         },
                         {
                             value: Layout.COMFORTABLE,
-                            tooltip: "Turn Layout Comfortable",
-                            label: <Sofa />
+                            tooltip: "Turn Layout Compact",
+                            label: <Glasses />
                         }
                     ]}
                 />
@@ -604,7 +610,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
     const [currentMode, setCurrentMode] = useState<Mode>(mode);
-    const [scale, setScale] = useState(1); // Add the scale state variable back
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
@@ -622,7 +627,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove("compact", "comfortable");
+        root.classList.remove("compact", "normal", "comfortable");
         root.classList.add(currentLayout);
     }, [currentLayout]);
 
@@ -644,17 +649,9 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
             theme: currentTheme,
             setTheme: setCurrentTheme,
             mode: currentMode,
-            setMode: setCurrentMode,
         }}>
             <div
                 className="h-full w-full flex flex-col bg-background text-foreground"
-                style={{
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'center center',
-                    transition: 'transform 0.1s ease-in-out',
-                    height: `${100 / scale}%`,  // Adjust container size inversely to maintain visible area
-                    width: `${100 / scale}%`
-                }}
             >
                 <TooltipProvider>
                     <Navbar

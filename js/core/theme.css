@@ -200,5 +200,6 @@
     --font-mono: "Shart Tech Mono", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
     /* Layout spacing */
     --spacing-compact: 0.2rem;
+    --spacing-normal: 0.25rem;
     --spacing-comfortable: 0.4rem;
 }

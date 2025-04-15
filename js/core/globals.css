@@ -1,18 +1,65 @@
 @import "tailwindcss";
 @import "@semio/js/theme.css";
 
+/* https://tailwindcss.com/docs/theme */
 /* https://ui.shadcn.com/docs/theming */
 
 /* Set base all components */
 @layer base {
   :root {
-    /* Shadcn */
-    --spacing: var(--spacing-compact);
+    --spacing: var(--spacing-normal);
     --radius: 0rem;
+    --radius-xs: 0rem;
     --radius-sm: 0rem;
     --radius-md: 0rem;
     --radius-lg: 0rem;
+    --radius-xl: 0rem;
+    --radius-2xl: 0rem;
+    --radius-3xl: 0rem;
+    --radius-4xl: 0rem;
     --radius-full: 0rem;
+    --shadow-2xs: 0 0 rgb(0 0 0 / 0);
+    --shadow-xs: 0 0 rgb(0 0 0 / 0);
+    --shadow-sm: 0 0 rgb(0 0 0 / 0);
+    --shadow-md: 0 0 rgb(0 0 0 / 0);
+    --shadow-lg: 0 0 rgb(0 0 0 / 0);
+    --shadow-xl: 0 0 rgb(0 0 0 / 0);
+    --shadow-2xl: 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
+    --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
+    --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
+    --text-xs: 0.75rem;
+    --text-xs--line-height: calc(1 / 0.75);
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --text-base: 1rem;
+    --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
+    --text-xl: 1.25rem;
+    --text-xl--line-height: calc(1.75 / 1.25);
+    --text-2xl: 1.5rem;
+    --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
+    --text-4xl: 2.25rem;
+    --text-4xl--line-height: calc(2.5 / 2.25);
+    --text-5xl: 3rem;
+    --text-5xl--line-height: 1;
+    --text-6xl: 3.75rem;
+    --text-6xl--line-height: 1;
+    --text-7xl: 4.5rem;
+    --text-7xl--line-height: 1;
+    --text-8xl: 6rem;
+    --text-8xl--line-height: 1;
+    --text-9xl: 8rem;
+    --text-9xl--line-height: 1;
     --background: var(--color-light);
     --background-level-2: var(--color-light-gray); /* Custom */
     --background-level-3: var(--color-gray); /* Custom */
@@ -47,7 +94,6 @@
     /* --sidebar-border: oklch(0.922 0 0); */
     /* --sidebar-ring: oklch(0.708 0 0); */
     /* --xy-background-color-default: var(--color-light) !important; */
-    --spacing-unit: var(--spacing-compact);
   }
 
   .dark {
@@ -87,8 +133,14 @@
     /* --xy-background-color-default: var(--color-dark) !important; */
   }
 
+  .compact {
+    --spacing: var(--spacing-compact);
+    --text-xs: var(--text-xs-compact);
+  }
+
   .comfortable {
     --spacing: var(--spacing-comfortable);
+    --text-xs: var(--text-xs-comfortable);
   }
 }
 
@@ -111,5 +163,4 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --spacing-unit: var(--spacing-unit);
 }
