@@ -346,8 +346,11 @@ interface WorkbenchProps extends PanelProps {
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
+        setIsDragging(true);
 
         const startX = e.clientX;
         const startWidth = width;
@@ -360,6 +363,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         };
 
         const handleMouseUp = () => {
+            setIsDragging(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -371,7 +375,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border
-                ${isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
+                ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
             <div className="font-semibold p-4">Workbench</div>
@@ -379,7 +383,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => setIsResizeHovered(false)}
+                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
             />
         </div>
     );
@@ -409,11 +413,13 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
     if (!visible) return null;
 
     const [isResizeHovered, setIsResizeHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
 
     const detailsChatWidth = 230;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
+        setIsDragging(true);
 
         const startY = e.clientY;
         const startHeight = height;
@@ -426,6 +432,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
         };
 
         const handleMouseUp = () => {
+            setIsDragging(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -436,7 +443,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
 
     return (
         <div
-            className={`absolute z-[150] bg-background-level-2 text-foreground border ${isResizeHovered ? 'border-t-primary' : ''}`}
+            className={`absolute z-[150] bg-background-level-2 text-foreground border ${isDragging || isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
                 left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
                 right: rightPanelVisible ? `calc(${detailsChatWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
@@ -448,7 +455,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
                 className={`absolute top-0 left-0 right-0 h-1 cursor-ns-resize`}
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => setIsResizeHovered(false)}
+                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
             />
             <div className="font-semibold p-4">Console</div>
         </div>
@@ -568,7 +575,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                     >
                         <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
                     </ResizablePanel>
-                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                    <ResizableHandleWrapper className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
                     <ResizablePanel
                         defaultSize={fullscreenPanel === 'model' ? 100 : 50}
                         className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
@@ -603,6 +610,32 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
             />
             <Chat visible={visiblePanels.chat} />
         </div>
+    );
+};
+
+// Custom wrapper for ResizableHandle that maintains hover state during drag
+const ResizableHandleWrapper: FC<{ className?: string }> = ({ className }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    
+    const handleMouseDown = () => {
+        setIsDragging(true);
+        
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            document.removeEventListener('mouseup', handleMouseUp, true);
+        };
+        
+        document.addEventListener('mouseup', handleMouseUp, true);
+    };
+    
+    return (
+        <ResizableHandle 
+            className={`${className} ${isDragging || isHovered ? 'bg-primary' : ''}`}
+            onMouseDown={handleMouseDown}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => !isDragging && setIsHovered(false)} 
+        />
     );
 };
 
