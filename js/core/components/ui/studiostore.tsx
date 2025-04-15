@@ -5,7 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection } from '@semio/js/semio';
 
 
 export interface DesignEditorState {
@@ -15,30 +15,51 @@ export interface DesignEditorState {
     };
 }
 
-type YQuality = {
-    name: string;
+// type YType = {
+//     name: string;
+//     variant: string;
+//     description: string;
+//     icon: string;
+//     image: string;
+//     unit: string;
+//     ports: Y.Map<Port>;
+//     qualities: Y.Map<YQuality>;
+//     representations: Y.Map<YRepresentation>;
+// }
 
-}
+// type YDesign = {
+//     name: string;
+//     variant: string;
+//     view: string;
+//     description: string;
+//     icon: string;
+//     image: string;
+//     unit: string;
+//     pieces: Y.Map<YPiece>;
+//     connections: Y.Map<YConnection>;
+//     qualities: Y.Map<YQuality>;
+// }
 
-type YType = {
-    name: string;
-}
+// type YKit = {
+//     uri: string;
+//     name: string;
+//     description: string;
+//     icon: string;
+//     image: string;
+//     preview: string;
+//     version: string;
+//     remote: string;
+//     homepage: string;
+//     license: string[];
+//     types: Y.Map<Y.Map<YType>>;
+//     designs: Y.Map<Y.Map<Y.Map<YDesign>>>;
+//     qualities: Y.Map<YQuality>;
+// };
 
-type YDesign = {
-    name: string;
-}
-
-type YKit = {
-    name: string;
-    types: Y.Map<Y.Map<YType>>;
-    designs: Y.Map<Y.Map<Y.Map<YDesign>>>;
-    qualities: Y.Map<YQuality>;
-};
-
-type YStudio = {
-    kits: Y.Map<string, YKit>;
-    designEditorStates: Y.Map<DesignEditorState>;
-}
+// type YStudio = {
+//     kits: Y.Map<YKit>;
+//     designEditorStates: Y.Map<DesignEditorState>;
+// }
 
 class Studio {
     private userId: string;
@@ -77,6 +98,33 @@ class Studio {
         return yKit
     }
 
+    createKit(kit: Kit): void {
+        const yKit = this.createYKit(kit);
+    }
+
+    getKit(uri: string): Kit | null {
+        const yKit = this.getYKit(uri);
+        if (!yKit) return null;
+        return {
+            uri: yKit.get('uri'),
+            name: yKit.get('name'),
+            description: yKit.get('description'),
+            icon: yKit.get('icon'),
+            image: yKit.get('image'),
+            preview: yKit.get('preview'),
+            version: yKit.get('version'),
+            remote: yKit.get('remote'),
+            homepage: yKit.get('homepage'),
+            license: yKit.get('license'),
+            designs: Array.from(yKit.get('designs').values()).map((design: any) => (this.getDesign(uri, design.get('name').get('variant').get('view')))),
+            types: Array.from(yKit.get('types').values()).map((type: any) => (this.getType(uri, type.get('name').get('variant'))))
+        };
+    }
+
+    private getYKit(uri: string): Y.Map<any> | undefined {
+        return this.studioDoc.getMap('kits').get(uri) as Y.Map<any> | undefined;
+    }
+
     private updateYKit(kit: Kit): Y.Map<any> | null {
         const yKit = this.getYKit(kit.uri);
         if (!yKit) return null;
@@ -89,263 +137,9 @@ class Studio {
         if (kit.remote !== undefined && kit.remote !== "") yKit.set('remote', kit.remote);
         if (kit.homepage !== undefined && kit.homepage !== "") yKit.set('homepage', kit.homepage);
         if (kit.license !== undefined && kit.license !== "") yKit.set('license', kit.license);
-        // TODO: Update designs and types
-        // if (kit.designs !== undefined && kit.designs.length > 0) {
-        //     const designs = yKit.get('designs') as Y.Map<any>;
-        //     kit.designs.forEach(design => {
-        //         if (designs.has(design.name)) {
-        //             const sameDesigns = designs.get(design.name) as Y.Map<any>;
-        //             if (sameDesigns.has(design.variant || '')) {
-        //                 updateYDesign(design);
-        //             }
-        //             else {
-        //                 createYDesign(design);
-        //             }
-        //         }
-        //         else {
-        //             createYDesign(d)
-        //         }
-        //     });
-        // }
-        if (kit.qualities)
+        return yKit;
     }
 
-    getKit(uri: string): Kit | null {
-        const yKit = this.getYKit(uri);
-        if (!yKit) return null;
-        return {
-            name: yKit.get('name'),
-            description: yKit.get('description'),
-            icon: yKit.get('icon'),
-            image: yKit.get('image'),
-            preview: yKit.get('preview'),
-            version: yKit.get('version'),
-            remote: yKit.get('remote'),
-            homepage: yKit.get('homepage'),
-            license: yKit.get('license'),
-            uri: uri,
-            designs: Array.from(yKit.get('designs').keys()),
-            types: Array.from(yKit.get('types').keys())
-        };
-    }
-
-    private getYKit(uri: string): Y.Map<any> | undefined {
-        return this.studioDoc.getMap('kits').get(uri) as Y.Map<any> | undefined;
-    }
-
-    createKit(kit: Kit): KitNode {
-
-
-        return {
-            uuid,
-            name: yKit.get('name') || '',
-            designUuids: []
-        };
-    }
-
-    // Add a design to a kit
-    addDesign(kitUuid: string, parentId: string, designUuid: string): KitNode | null {
-        const parentKit = this.getYKit(kitUuid, parentId);
-        if (!parentKit) return null;
-
-        // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitUuid)) {
-            this.getYKit(kitUuid);
-        }
-
-        const undoManager = this.undoManagers.get(kitUuid);
-
-        // Create a transaction to ensure this is tracked as one operation
-        this.studioDoc.transact(() => {
-            const designKit = this.createYKit(kitUuid, designUuid);
-            const designs = parentKit.get('designs') as Y.Map<string>;
-            designs.set(designUuid, designUuid);
-        }, this.userId);
-
-        console.log(`Added design ${designUuid} to ${parentId} in ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
-
-        return this.getKit(kitUuid, designUuid);
-    }
-
-    // Delete a design kit from its parent
-    deleteDesign(kitUuid: string, parentId: string, designUuid: string): boolean {
-        const parentKit = this.getYKit(kitUuid, parentId);
-        if (!parentKit) return false;
-
-        // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitUuid)) {
-            this.getYKit(kitUuid);
-        }
-
-        const undoManager = this.undoManagers.get(kitUuid);
-        let success = false;
-
-        // Create a transaction to ensure this is tracked as one operation
-        this.studioDoc.transact(() => {
-            // Remove the design from the parent's designs map
-            const designs = parentKit.get('designs') as Y.Map<string>;
-            if (designs.has(designUuid)) {
-                designs.delete(designUuid);
-                success = true;
-            }
-
-            // Delete the design kit from the kit map
-            const kitsMap = this.studioDoc.getMap(kitUuid);
-            if (kitsMap.has(designUuid)) {
-                kitsMap.delete(designUuid);
-            }
-        }, this.userId);
-
-        console.log(`Deleted design ${designUuid} from ${parentId} in ${kitUuid}, success: ${success}, checking canUndo: ${undoManager?.canUndo()}`);
-
-        return success;
-    }
-
-    // Observe changes to the internal YDoc
-    observeKit(kitUuid: string, callback: () => void): () => void {
-        const kitMap = this.studioDoc.getMap(kitUuid);
-        kitMap.observeDeep(callback);
-        return () => kitMap.unobserveDeep(callback);
-    }
-
-    // Undo/redo operations
-    undo(scope: string) {
-        const undoManager = this.undoManagers.get(scope);
-        if (undoManager && undoManager.canUndo()) {
-            console.log(`Undoing change in ${scope}`);
-            undoManager.undo();
-        }
-    }
-
-    redo(scope: string) {
-        const undoManager = this.undoManagers.get(scope);
-        if (undoManager && undoManager.canRedo()) {
-            console.log(`Redoing change in ${scope}`);
-            undoManager.redo();
-        }
-    }
-
-    canUndo(scope: string): boolean {
-        const undoManager = this.undoManagers.get(scope);
-        return undoManager ? undoManager.canUndo() : false;
-    }
-
-    canRedo(scope: string): boolean {
-        const undoManager = this.undoManagers.get(scope);
-        return undoManager ? undoManager.canRedo() : false;
-    }
-
-    subscribeToUndoChanges(
-        scope: string,
-        callback: () => void
-    ): () => void {
-        const undoManager = this.undoManagers.get(scope);
-        if (!undoManager) return () => { };
-
-        undoManager.on('stack-item-added', callback);
-        undoManager.on('stack-item-popped', callback);
-
-        return () => {
-            undoManager.off('stack-item-added', callback);
-            undoManager.off('stack-item-popped', callback);
-        };
-    }
-
-    /**
-     * Explicitly initializes a kit with a root kit and optional initial name
-     * @param kitUuid The ID of the kit to initialize
-     * @param initialName Optional initial name for the root kit
-     * @returns The created root kit
-     */
-    initializeKit(kitUuid: string, initialName: string = 'Root'): KitNode {
-        // Make sure we have an undo manager first
-        if (!this.undoManagers.has(kitUuid)) {
-            // This will create the undo manager
-            this.getYKit(kitUuid);
-        }
-
-        const undoManager = this.undoManagers.get(kitUuid);
-        const kitsMap = this.studioDoc.getMap(kitUuid);
-
-        // Create a fresh root kit within a transaction to enable undo
-        this.studioDoc.transact(() => {
-            const rootKit = new Y.Map<any>();
-            rootKit.set('name', initialName);
-            rootKit.set('designs', new Y.Map());
-            kitsMap.set('root', rootKit);
-        }, this.userId);
-
-        // Log the status of the undo manager
-        console.log(`Initialized kit ${kitUuid}, checking canUndo: ${undoManager?.canUndo()}`);
-
-        return this.getKit(kitUuid, 'root') as KitNode;
-    }
-
-    /**
-     * Checks if a kit exists and has a root kit
-     * @param kitUuid The ID of the kit to check
-     * @returns True if the kit exists and has a root kit
-     */
-    hasKit(kitUuid: string): boolean {
-        const kitsMap = this.studioDoc.getMap(kitUuid);
-        return kitsMap.has('root');
-    }
-
-    /**
-     * Cleans the studio by clearing IndexedDB storage and creating a fresh document
-     * @returns Promise that resolves when cleaning is complete
-     */
-    async clean(): Promise<void> {
-        try {
-            // Clean up undo managers
-            this.undoManagers.forEach(manager => manager.destroy());
-
-            // Destroy the current document
-            this.studioDoc.destroy();
-
-            // Clear IndexedDB for this studio
-            await this.indexeddbProvider.clearData();
-
-            // Reinitialize with a fresh document
-            this.studioDoc = new Y.Doc();
-            this.undoManagers = new Map();
-            this.indexeddbProvider = new IndexeddbPersistence(this.userId, this.studioDoc);
-
-            console.log(`Studio data for ${this.userId} has been cleaned`);
-            return this.indexeddbProvider.whenSynced;
-        } catch (error) {
-            console.error('Error cleaning studio:', error);
-            throw error;
-        }
-    }
-
-    // Focus method to ensure undo/redo capability is activated
-    triggerUndoRedoCapability(kitUuid: string): void {
-        // Get or create the undo manager
-        if (!this.undoManagers.has(kitUuid)) {
-            this.getYKit(kitUuid);
-        }
-
-        // Force a change that can be undone to test the undo functionality
-        // This will be immediately discarded, but ensures the UndoManager is working
-        const undoManager = this.undoManagers.get(kitUuid);
-        if (undoManager) {
-            // Create a temporary marker in the document that we'll immediately remove
-            // This creates an undoable action
-            const kitsMap = this.studioDoc.getMap(kitUuid);
-            const tempKey = `_temp_${Date.now()}`;
-
-            this.studioDoc.transact(() => {
-                kitsMap.set(tempKey, "test");
-            }, this.userId);
-
-            this.studioDoc.transact(() => {
-                kitsMap.delete(tempKey);
-            }, this.userId);
-
-            console.log(`Triggered undo capability for ${kitUuid}, canUndo: ${undoManager.canUndo()}`);
-        }
-    }
 
     private createYType(type: Type): Y.Map<any> {
         const yType = new Y.Map<any>();
@@ -397,18 +191,29 @@ class Studio {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
-        const types = yKit.get('types') as Y.Map<any>;
-        const yType = types.get(type.name) as Y.Map<any> | undefined;
+        const types = yKit.get('types');
+        const yType = types.get(type.name)?.get(type.variant || '');
         if (!yType) return null;
 
         if (type.description !== undefined) yType.set('description', type.description);
         if (type.icon !== undefined) yType.set('icon', type.icon);
         if (type.image !== undefined) yType.set('image', type.image);
-        if (type.variant !== undefined) yType.set('variant', type.variant);
         if (type.unit !== undefined) yType.set('unit', type.unit);
-        // TODO: Update ports, qualities, representations
 
-        return this.getType(kitUri, type.name);
+        if (type.ports !== undefined) {
+            const ports = new Y.Map(type.ports.map(p => [p.id_, this.createYPort(p)]));
+            yType.set('ports', ports);
+        }
+        if (type.qualities !== undefined) {
+            const qualities = new Y.Map(type.qualities.map(q => [q.name, q]));
+            yType.set('qualities', qualities);
+        }
+        if (type.representations !== undefined) {
+            const representations = new Y.Map(type.representations.map(r => [r.url, this.createYRepresentation(r)]));
+            yType.set('representations', representations);
+        }
+
+        return this.getType(kitUri, type.name, type.variant);
     }
 
     deleteType(kitUri: string, typeName: string): boolean {
@@ -471,17 +276,27 @@ class Studio {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(design.name) as Y.Map<any> | undefined;
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(design.name)?.get(design.variant || '')?.get(design.view || '');
         if (!yDesign) return null;
 
         if (design.description !== undefined) yDesign.set('description', design.description);
         if (design.icon !== undefined) yDesign.set('icon', design.icon);
         if (design.image !== undefined) yDesign.set('image', design.image);
-        if (design.variant !== undefined) yDesign.set('variant', design.variant);
-        if (design.view !== undefined) yDesign.set('view', design.view);
         if (design.unit !== undefined) yDesign.set('unit', design.unit);
-        // TODO: Update pieces, connections, qualities
+
+        if (design.pieces !== undefined) {
+            const pieces = new Y.Map(design.pieces.map(p => [p.id_, this.createYPiece(p)]));
+            yDesign.set('pieces', pieces);
+        }
+        if (design.connections !== undefined) {
+            const connections = new Y.Map(design.connections.map(c => [this.getConnectionId(c), this.createYConnection(c)]));
+            yDesign.set('connections', connections);
+        }
+        if (design.qualities !== undefined) {
+            const qualities = new Y.Map(design.qualities.map(q => [q.name, q]));
+            yDesign.set('qualities', qualities);
+        }
 
         return this.getDesign(kitUri, design.name);
     }
@@ -494,173 +309,157 @@ class Studio {
         return designs.delete(designName);
     }
 
-    private createYPiece(piece: Piece): Y.Map<any> {
-        const yPiece = new Y.Map<any>();
-        yPiece.set('id_', piece.id_ || '');
-        yPiece.set('description', piece.description || '');
-        yPiece.set('type', piece.type);
-        yPiece.set('center', piece.center ? new Y.Map(piece.center) : null);
-        yPiece.set('plane', piece.plane ? new Y.Map(piece.plane) : null);
+    private createYPiece(piece: Piece): Piece {
+        return {
+            id_: piece.id_ || uuidv4(),
+            description: piece.description || '',
+            type: piece.type,
+            center: piece.center || null,
+            plane: piece.plane || null
+        };
+    }
+
+    createPiece(kitUri: string, designName: string, variant: string, view: string, piece: Piece): Piece {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
+
+        const pieces = yDesign.get('pieces');
+        const yPiece = this.createYPiece(piece);
+        pieces.set(yPiece.id_, yPiece);
+
+        return this.getPiece(kitUri, designName, variant, view, yPiece.id_);
+    }
+
+    getPiece(kitUri: string, designName: string, variant: string, view: string, pieceId: string): Piece | null {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) return null;
+
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
+        if (!yDesign) return null;
+
+        const pieces = yDesign.get('pieces');
+        const yPiece = pieces.get(pieceId);
+        if (!yPiece) return null;
+
         return yPiece;
     }
 
-    createPiece(kitUri: string, designName: string, piece: Piece): Piece {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
-
-        const pieces = yDesign.get('pieces') as Y.Map<any>;
-        const yPiece = this.createYPiece(piece);
-        pieces.set(piece.id_ || uuidv4(), yPiece);
-
-        return this.getPiece(kitUri, designName, piece.id_!);
-    }
-
-    getPiece(kitUri: string, designName: string, pieceId: string): Piece | null {
+    updatePiece(kitUri: string, designName: string, variant: string, view: string, piece: Piece): Piece | null {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
         if (!yDesign) return null;
 
-        const pieces = yDesign.get('pieces') as Y.Map<any>;
-        const yPiece = pieces.get(pieceId) as Y.Map<any> | undefined;
+        const pieces = yDesign.get('pieces');
+        const yPiece = pieces.get(piece.id_);
         if (!yPiece) return null;
 
-        return {
-            id_: yPiece.get('id_'),
-            description: yPiece.get('description'),
-            type: yPiece.get('type'),
-            center: yPiece.get('center') ? yPiece.get('center').toJSON() : null,
-            plane: yPiece.get('plane') ? yPiece.get('plane').toJSON() : null
-        };
+        if (piece.description !== undefined) yPiece.description = piece.description;
+        if (piece.type !== undefined) yPiece.type = piece.type;
+        if (piece.center !== undefined) yPiece.center = piece.center;
+        if (piece.plane !== undefined) yPiece.plane = piece.plane;
+
+        return this.getPiece(kitUri, designName, variant, view, piece.id_);
     }
 
-    updatePiece(kitUri: string, designName: string, piece: Piece): Piece | null {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) return null;
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
-        if (!yDesign) return null;
-
-        const pieces = yDesign.get('pieces') as Y.Map<any>;
-        const yPiece = pieces.get(piece.id_!) as Y.Map<any> | undefined;
-        if (!yPiece) return null;
-
-        if (piece.description !== undefined) yPiece.set('description', piece.description);
-        if (piece.type !== undefined) yPiece.set('type', piece.type);
-        if (piece.center !== undefined) yPiece.set('center', piece.center ? new Y.Map(piece.center) : null);
-        if (piece.plane !== undefined) yPiece.set('plane', piece.plane ? new Y.Map(piece.plane) : null);
-
-        return this.getPiece(kitUri, designName, piece.id_!);
-    }
-
-    deletePiece(kitUri: string, designName: string, pieceId: string): boolean {
+    deletePiece(kitUri: string, designName: string, variant: string, view: string, pieceId: string): boolean {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
         if (!yDesign) return false;
 
-        const pieces = yDesign.get('pieces') as Y.Map<any>;
+        const pieces = yDesign.get('pieces');
         return pieces.delete(pieceId);
     }
 
-    private createYConnection(connection: Connection): Y.Map<any> {
-        const yConnection = new Y.Map<any>();
-        yConnection.set('description', connection.description || '');
-        yConnection.set('connected', new Y.Map(connection.connected));
-        yConnection.set('connecting', new Y.Map(connection.connecting));
-        yConnection.set('gap', connection.gap || 0);
-        yConnection.set('rotation', connection.rotation || 0);
-        yConnection.set('shift', connection.shift || 0);
-        yConnection.set('tilt', connection.tilt || 0);
-        yConnection.set('x', connection.x || 0);
-        yConnection.set('y', connection.y || 0);
-        return yConnection;
-    }
-
-    createConnection(kitUri: string, designName: string, connection: Connection): Connection {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
-
-        const connections = yDesign.get('connections') as Y.Map<any>;
-        const yConnection = this.createYConnection(connection);
-        const connectionId = uuidv4();
-        connections.set(connectionId, yConnection);
-
-        return this.getConnection(kitUri, designName, connectionId);
-    }
-
-    getConnection(kitUri: string, designName: string, connectionId: string): Connection | null {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) return null;
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
-        if (!yDesign) return null;
-
-        const connections = yDesign.get('connections') as Y.Map<any>;
-        const yConnection = connections.get(connectionId) as Y.Map<any> | undefined;
-        if (!yConnection) return null;
-
+    private createYConnection(connection: Connection): Connection {
         return {
-            description: yConnection.get('description'),
-            connected: yConnection.get('connected').toJSON(),
-            connecting: yConnection.get('connecting').toJSON(),
-            gap: yConnection.get('gap'),
-            rotation: yConnection.get('rotation'),
-            shift: yConnection.get('shift'),
-            tilt: yConnection.get('tilt'),
-            x: yConnection.get('x'),
-            y: yConnection.get('y')
+            description: connection.description || '',
+            connected: connection.connected,
+            connecting: connection.connecting,
+            gap: connection.gap || 0,
+            rotation: connection.rotation || 0,
+            shift: connection.shift || 0,
+            tilt: connection.tilt || 0,
+            x: connection.x || 0,
+            y: connection.y || 0
         };
     }
 
-    updateConnection(kitUri: string, designName: string, connectionId: string, connection: Partial<Connection>): Connection | null {
+    createConnection(kitUri: string, designName: string, variant: string, view: string, connection: Connection): Connection {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
+
+        const connections = yDesign.get('connections');
+        const yConnection = this.createYConnection(connection);
+        const connectionId = this.getConnectionId(connection);
+        connections.set(connectionId, yConnection);
+
+        return this.getConnection(kitUri, designName, variant, view, connectionId);
+    }
+
+    getConnection(kitUri: string, designName: string, variant: string, view: string, connectionId: string): Connection | null {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
         if (!yDesign) return null;
 
-        const connections = yDesign.get('connections') as Y.Map<any>;
-        const yConnection = connections.get(connectionId) as Y.Map<any> | undefined;
+        const connections = yDesign.get('connections');
+        const yConnection = connections.get(connectionId);
         if (!yConnection) return null;
 
-        if (connection.description !== undefined) yConnection.set('description', connection.description);
-        if (connection.connected !== undefined) yConnection.set('connected', new Y.Map(connection.connected));
-        if (connection.connecting !== undefined) yConnection.set('connecting', new Y.Map(connection.connecting));
-        if (connection.gap !== undefined) yConnection.set('gap', connection.gap);
-        if (connection.rotation !== undefined) yConnection.set('rotation', connection.rotation);
-        if (connection.shift !== undefined) yConnection.set('shift', connection.shift);
-        if (connection.tilt !== undefined) yConnection.set('tilt', connection.tilt);
-        if (connection.x !== undefined) yConnection.set('x', connection.x);
-        if (connection.y !== undefined) yConnection.set('y', connection.y);
-
-        return this.getConnection(kitUri, designName, connectionId);
+        return yConnection;
     }
 
-    deleteConnection(kitUri: string, designName: string, connectionId: string): boolean {
+    updateConnection(kitUri: string, designName: string, variant: string, view: string, connectionId: string, connection: Partial<Connection>): Connection | null {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) return null;
+
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
+        if (!yDesign) return null;
+
+        const connections = yDesign.get('connections');
+        const yConnection = connections.get(connectionId);
+        if (!yConnection) return null;
+
+        if (connection.description !== undefined) yConnection.description = connection.description;
+        if (connection.connected !== undefined) yConnection.connected = connection.connected;
+        if (connection.connecting !== undefined) yConnection.connecting = connection.connecting;
+        if (connection.gap !== undefined) yConnection.gap = connection.gap;
+        if (connection.rotation !== undefined) yConnection.rotation = connection.rotation;
+        if (connection.shift !== undefined) yConnection.shift = connection.shift;
+        if (connection.tilt !== undefined) yConnection.tilt = connection.tilt;
+        if (connection.x !== undefined) yConnection.x = connection.x;
+        if (connection.y !== undefined) yConnection.y = connection.y;
+
+        return this.getConnection(kitUri, designName, variant, view, connectionId);
+    }
+
+    deleteConnection(kitUri: string, designName: string, variant: string, view: string, connectionId: string): boolean {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(designName) as Y.Map<any> | undefined;
+        const designs = yKit.get('designs');
+        const yDesign = designs.get(designName)?.get(variant)?.get(view);
         if (!yDesign) return false;
 
-        const connections = yDesign.get('connections') as Y.Map<any>;
+        const connections = yDesign.get('connections');
         return connections.delete(connectionId);
     }
 
@@ -908,4 +707,83 @@ export function useKit(uri: string) {
         canUndo,
         canRedo,
     };
+}
+
+const KitContext = createContext<Kit | null>(null);
+
+export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({ kit, children }) => {
+    return (
+        <KitContext.Provider value={kit}>
+            {children}
+        </KitContext.Provider>
+    );
+};
+
+const DesignContext = createContext<Design | null>(null);
+
+export const DesignProvider: React.FC<{ design: Design, children: React.ReactNode }> = ({ design, children }) => {
+    return (
+        <DesignContext.Provider value={design}>
+            {children}
+        </DesignContext.Provider>
+    );
+};
+
+const PieceContext = createContext<Piece | null>(null);
+
+export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }> = ({ piece, children }) => {
+    return (
+        <PieceContext.Provider value={piece}>
+            {children}
+        </PieceContext.Provider>
+    );
+};
+
+export function useDesign(name: string, variant: string = "", view: string = "") {
+    const kit = useContext(KitContext);
+    if (!kit) throw new Error('useDesign must be used within a KitProvider');
+
+    const [design, setDesign] = useState<Design | null>(null);
+
+    useEffect(() => {
+        const yDesign = kit.designs.get(name)?.get(variant)?.get(view);
+        if (yDesign) {
+            setDesign({
+                name: yDesign.get('name'),
+                variant: yDesign.get('variant'),
+                view: yDesign.get('view'),
+                description: yDesign.get('description'),
+                icon: yDesign.get('icon'),
+                image: yDesign.get('image'),
+                unit: yDesign.get('unit'),
+                pieces: Array.from(yDesign.get('pieces').keys()),
+                connections: Array.from(yDesign.get('connections').keys()),
+                qualities: Array.from(yDesign.get('qualities').keys())
+            });
+        }
+    }, [kit, name, variant, view]);
+
+    return design;
+}
+
+export function usePiece(id: string) {
+    const design = useContext(DesignContext);
+    if (!design) throw new Error('usePiece must be used within a DesignProvider');
+
+    const [piece, setPiece] = useState<Piece | null>(null);
+
+    useEffect(() => {
+        const yPiece = design.pieces.get(id);
+        if (yPiece) {
+            setPiece({
+                id_: yPiece.get('id_'),
+                description: yPiece.get('description'),
+                type: yPiece.get('type'),
+                center: yPiece.get('center')?.toJSON() || null,
+                plane: yPiece.get('plane')?.toJSON() || null
+            });
+        }
+    }, [design, id]);
+
+    return piece;
 }
