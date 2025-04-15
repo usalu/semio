@@ -362,12 +362,9 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick }) => {
             panOnDrag={[0]} //left mouse button
             proOptions={{ hideAttribution: true }}
             multiSelectionKeyCode="Shift"
-            style={{
-                padding: 'var(--spacing-comfortable)',
-            }}
         >
-            {fullscreen && <Controls className="border m-[var(--spacing-comfortable)]" showZoom={false} showInteractive={false} />}
-            {fullscreen && < MiniMap className="border m-[var(--spacing-comfortable)]" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
+            {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
+            {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
             <ViewportPortal>
                 <div>
                     x
