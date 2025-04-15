@@ -53,10 +53,6 @@ interface SketchpadContextType {
     setLayout: (layout: Layout) => void;
     theme: Theme;
     setTheme: (theme: Theme) => void;
-    scale: number;
-    setScale: (scale: number) => void;
-    zoomIn: () => void;
-    zoomOut: () => void;
     setNavbarToolbar: (toolbar: ReactNode) => void;
 }
 
@@ -635,16 +631,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         return Theme.LIGHT;
     });
 
-    const [scale, setScale] = useState(1);
-
-    const zoomIn = () => {
-        setScale(prevScale => Math.min(prevScale + 0.1, 2));
-    };
-
-    const zoomOut = () => {
-        setScale(prevScale => Math.max(prevScale - 0.1, 0.5));
-    };
-
     useEffect(() => {
         const root = window.document.documentElement;
         root.classList.remove("light", "dark");
@@ -671,10 +657,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         setCurrentLayout(layout);
     };
 
-    useHotkeys('mod+=', (e) => { e.preventDefault(); e.stopPropagation(); zoomIn(); }, [zoomIn]);  // mod + = (plus without shift)
-    useHotkeys('mod+shift+=', (e) => { e.preventDefault(); e.stopPropagation(); zoomIn(); }, [zoomIn]);  // mod + shift + = (plus with shift)
-    useHotkeys('mod+-', (e) => { e.preventDefault(); e.stopPropagation(); zoomOut(); }, [zoomOut]);  // mod + - (minus)
-
     const ActiveView = DesignEditor;
 
     return (
@@ -686,10 +668,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
             setTheme: setCurrentTheme,
             mode: currentMode,
             setMode: setCurrentMode,
-            scale,
-            setScale,
-            zoomIn,
-            zoomOut
         }}>
             <div
                 className="h-full w-full flex flex-col bg-background text-foreground"

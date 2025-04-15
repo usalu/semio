@@ -46,6 +46,7 @@
     /* --sidebar-border: oklch(0.922 0 0); */
     /* --sidebar-ring: oklch(0.708 0 0); */
     /* --xy-background-color-default: var(--color-light) !important; */
+    --spacing-unit: var(--spacing-compact);
   }
 
   .dark {
@@ -84,6 +85,10 @@
     /* --sidebar-ring: oklch(0.439 0 0); */
     /* --xy-background-color-default: var(--color-dark) !important; */
   }
+
+  .comfortable {
+    --spacing-unit: var(--spacing-comfortable);
+  }
 }
 
 /* https://reactflow.dev/learn/customization/theming */
@@ -105,7 +110,5 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-
-  --spacing-compact: var(--spacing-compact);
-  --spacing-comfortable: var(--spacing-comfortable);
+  --spacing-unit: var(--spacing-unit);
 }
