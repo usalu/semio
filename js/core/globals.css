@@ -14,7 +14,6 @@
     --radius-full: 0rem;
     --background: var(--color-light);
     --background-level-2: var(--color-light-gray); /* Custom */
-    /* TODO: Expand 5 color to 6 colors because it doesn't work for light scheme because too dark  */
     --background-level-3: var(--color-gray); /* Custom */
     --foreground: var(--color-dark);
     /* --card: oklch(1 0 0); */

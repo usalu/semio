@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project
+An ecosystem for designing kit-of-parts architecture together.
+
+# Guidelines
+- Toolfriendly over intuitive.
+- Almost everything is in a single file if possible.
+- Folders are avoided if possible.
+- No need to ask in between. Be opionionated and just go for it. Try to do as much as you can.
+- Don't ask to execute commands in the cli. Assume all the tools are properly setup.
+- No need to delete files, you can tell me when once you are 100% done with everything and I will do it manually.

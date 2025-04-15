@@ -1,0 +1,10 @@
+---
+description: 
+globs: js/core/**
+alwaysApply: false
+---
+# Project
+Easy to use components with internal state managment (store internally uses yjs) for different modes (full, readonly) and light/dark theme.
+
+# Guidelines
+- Internal components use `import {default as NAME} from "@semio/js/components/ui/NAME.tsx"` as import and external components use `import {NAME} from "@semio/js"`.
