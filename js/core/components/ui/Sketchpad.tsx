@@ -44,6 +44,22 @@ const useSketchpad = () => {
     return context;
 };
 
+// Layout Context
+interface LayoutContextType {
+    layout: Layout;
+    setLayout: (layout: Layout) => void;
+}
+
+const LayoutContext = createContext<LayoutContextType | null>(null);
+
+export const useLayout = () => {
+    const context = useContext(LayoutContext);
+    if (!context) {
+        throw new Error('useLayout must be used within a LayoutProvider');
+    }
+    return context;
+};
+
 type TreeSection = {
     name: string;
     children: ReactNode;
@@ -628,6 +644,18 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layou
         root.classList.add(currentTheme);
     }, [currentTheme]);
 
+    // Set spacing CSS variables based on layout
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (currentLayout === Layout.COMPACT) {
+            root.style.setProperty('--spacing-compact', '8px');
+            root.style.setProperty('--spacing-comfortable', '12px');
+        } else {
+            root.style.setProperty('--spacing-compact', '12px');
+            root.style.setProperty('--spacing-comfortable', '16px');
+        }
+    }, [currentLayout]);
+
     const toggleTheme = () => {
         setCurrentTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
     };
@@ -640,20 +668,22 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.FULL, theme, layout = Layou
 
     return (
         <SketchpadContext.Provider value={{ setNavbarToolbar }}>
-            <div className="h-full w-full flex flex-col bg-background text-foreground ">
-                <TooltipProvider>
-                    <Navbar
-                        toolbarContent={navbarToolbar}
-                        onWindowEvents={onWindowEvents}
-                        readonly={readonly}
-                        currentTheme={currentTheme}
-                        onToggleTheme={toggleTheme}
-                        layout={currentLayout}
-                        onLayoutChange={handleLayoutChange}
-                    />
-                    <ActiveView />
-                </TooltipProvider>
-            </div>
+            <LayoutContext.Provider value={{ layout: currentLayout, setLayout: setCurrentLayout }}>
+                <div className="h-full w-full flex flex-col bg-background text-foreground">
+                    <TooltipProvider>
+                        <Navbar
+                            toolbarContent={navbarToolbar}
+                            onWindowEvents={onWindowEvents}
+                            readonly={readonly}
+                            currentTheme={currentTheme}
+                            onToggleTheme={toggleTheme}
+                            layout={currentLayout}
+                            onLayoutChange={handleLayoutChange}
+                        />
+                        <ActiveView />
+                    </TooltipProvider>
+                </div>
+            </LayoutContext.Provider>
         </SketchpadContext.Provider>
     );
 };
