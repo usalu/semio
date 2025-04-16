@@ -229,12 +229,11 @@ class Studio {
         return this.getType(kitUri, type.name, type.variant);
     }
 
-    deleteType(kitUri: string, typeName: string): boolean {
+    deleteType(kitUri: string, typeName: string): void {
         const yKit = this.getYKit(kitUri);
-        if (!yKit) return false;
-
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types') as Y.Map<any>;
-        return types.delete(typeName);
+        types.delete(typeName);
     }
 
     createDesign(kitUri: string, design: Design): void {
@@ -325,9 +324,16 @@ class Studio {
         designs.delete(name);
     }
 
-    private createYPiece(piece: Piece): Y.Map<any> {
+    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): void {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+        const yDesigns = yKit.get('designs');
+        const yDesign = yDesigns.get(name)?.get(variant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yPieces = yDesign.get('pieces');
+
         const yPiece = new Y.Map<any>();
-        yPiece.set('id_', piece.id_ || uuidv4());
+        yPiece.set('id_', piece.id_ || Generator.randomId());
         yPiece.set('description', piece.description || '');
         const yType = new Y.Map<any>();
         yType.set('name', piece.type.name);
@@ -359,20 +365,6 @@ class Studio {
             yCenter.set('z', piece.center.z);
             yPiece.set('center', yCenter);
         }
-
-        return yPiece;
-    }
-
-    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): void {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
-        const yDesigns = yKit.get('designs');
-        const yDesign = yDesigns.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
-
-        const yPieces = yDesign.get('pieces');
-        const yPiece = this.createYPiece(piece);
         yPieces.set(yPiece.get('id_'), yPiece);
     }
 
@@ -431,20 +423,36 @@ class Studio {
 
     updatePiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece | null {
         const yKit = this.getYKit(kitUri);
-        if (!yKit) return null;
-
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const designs = yKit.get('designs');
         const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) return null;
-
+        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
         const pieces = yDesign.get('pieces');
         const yPiece = pieces.get(piece.id_);
-        if (!yPiece) return null;
+        if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${name} in kit ${kitUri}`);
 
         if (piece.description !== undefined) yPiece.description = piece.description;
         if (piece.type !== undefined) yPiece.type = piece.type;
         if (piece.center !== undefined) yPiece.center = piece.center ? new Y.Map<any>(Object.entries(piece.center)) : null;
-        if (piece.plane !== undefined) yPiece.plane = piece.plane ? this.createYPlane(piece.plane) : null;
+        if (piece.plane !== undefined) {
+            const yPlane = new Y.Map<any>();
+            const yOrigin = new Y.Map<any>();
+            yOrigin.set('x', piece.plane.origin.x);
+            yOrigin.set('y', piece.plane.origin.y);
+            yOrigin.set('z', piece.plane.origin.z);
+            yPlane.set('origin', yOrigin);
+            const yXAxis = new Y.Map<any>();
+            yXAxis.set('x', piece.plane.xAxis.x);
+            yXAxis.set('y', piece.plane.xAxis.y);
+            yXAxis.set('z', piece.plane.xAxis.z);
+            yPlane.set('xAxis', yXAxis);
+            const yYAxis = new Y.Map<any>();
+            yYAxis.set('x', piece.plane.yAxis.x);
+            yYAxis.set('y', piece.plane.yAxis.y);
+            yYAxis.set('z', piece.plane.yAxis.z);
+            yPlane.set('yAxis', yYAxis);
+            yPiece.set('plane', yPlane);
+        }
 
         return this.getPiece(kitUri, name, variant, view, piece.id_);
     }
