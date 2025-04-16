@@ -15,6 +15,7 @@ export interface DesignEditorState {
     };
 }
 
+
 // type YType = {
 //     name: string;
 //     variant: string;
@@ -156,19 +157,19 @@ class Studio {
         return yType;
     }
 
-    createType(uri: string, type: Type): Type {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createType(kitUri: string, type: Type): Type {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
         const yType = this.createYType(type);
         types.set(type.name, new Y.Map([[type.variant || '', yType]]));
 
-        return this.getType(uri, type.name, type.variant);
+        return this.getType(kitUri, type.name, type.variant);
     }
 
-    getType(uri: string, typeName: string, variant: string = ''): Type | null {
-        const yKit = this.getYKit(uri);
+    getType(kitUri: string, typeName: string, variant: string = ''): Type | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -188,8 +189,8 @@ class Studio {
         };
     }
 
-    updateType(uri: string, type: Type): Type | null {
-        const yKit = this.getYKit(uri);
+    updateType(kitUri: string, type: Type): Type | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -214,11 +215,11 @@ class Studio {
             yType.set('representations', representations);
         }
 
-        return this.getType(uri, type.name, type.variant);
+        return this.getType(kitUri, type.name, type.variant);
     }
 
-    deleteType(uri: string, typeName: string): boolean {
-        const yKit = this.getYKit(uri);
+    deleteType(kitUri: string, typeName: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -240,19 +241,19 @@ class Studio {
         return yDesign;
     }
 
-    createDesign(uri: string, design: Design): Design {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createDesign(kitUri: string, design: Design): Design {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
         const yDesign = this.createYDesign(design);
         designs.set(design.name, new Y.Map([[design.variant || '', new Y.Map([[design.view || '', yDesign]])]]));
 
-        return this.getDesign(uri, design.name, design.variant, design.view);
+        return this.getDesign(kitUri, design.name, design.variant, design.view);
     }
 
-    getDesign(uri: string, name: string, variant: string = '', view: string = ''): Design | null {
-        const yKit = this.getYKit(uri);
+    getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -273,8 +274,8 @@ class Studio {
         };
     }
 
-    updateDesign(uri: string, design: Design): Design | null {
-        const yKit = this.getYKit(uri);
+    updateDesign(kitUri: string, design: Design): Design | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -299,11 +300,11 @@ class Studio {
             yDesign.set('qualities', qualities);
         }
 
-        return this.getDesign(uri, design.name, design.variant, design.view);
+        return this.getDesign(kitUri, design.name, design.variant, design.view);
     }
 
-    deleteDesign(uri: string, name: string): boolean {
-        const yKit = this.getYKit(uri);
+    deleteDesign(kitUri: string, name: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -320,23 +321,23 @@ class Studio {
         };
     }
 
-    createPiece(uri: string, name: string, variant: string, view: string, piece: Piece): Piece {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
         const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${uri}`);
+        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
 
         const pieces = yDesign.get('pieces');
         const yPiece = this.createYPiece(piece);
         pieces.set(yPiece.id_, yPiece);
 
-        return this.getPiece(uri, name, variant, view, yPiece.id_);
+        return this.getPiece(kitUri, name, variant, view, yPiece.id_);
     }
 
-    getPiece(uri: string, name: string, variant: string, view: string, pieceId: string): Piece | null {
-        const yKit = this.getYKit(uri);
+    getPiece(kitUri: string, name: string, variant: string, view: string, pieceId: string): Piece | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -350,8 +351,8 @@ class Studio {
         return yPiece;
     }
 
-    updatePiece(uri: string, name: string, variant: string, view: string, piece: Piece): Piece | null {
-        const yKit = this.getYKit(uri);
+    updatePiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -367,11 +368,11 @@ class Studio {
         if (piece.center !== undefined) yPiece.center = piece.center;
         if (piece.plane !== undefined) yPiece.plane = piece.plane;
 
-        return this.getPiece(uri, name, variant, view, piece.id_);
+        return this.getPiece(kitUri, name, variant, view, piece.id_);
     }
 
-    deletePiece(uri: string, name: string, variant: string, view: string, pieceId: string): boolean {
-        const yKit = this.getYKit(uri);
+    deletePiece(kitUri: string, name: string, variant: string, view: string, pieceId: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const designs = yKit.get('designs');
@@ -396,24 +397,24 @@ class Studio {
         };
     }
 
-    createConnection(uri: string, name: string, variant: string, view: string, connection: Connection): Connection {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createConnection(kitUri: string, name: string, variant: string, view: string, connection: Connection): Connection {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
         const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${uri}`);
+        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
 
         const connections = yDesign.get('connections');
         const yConnection = this.createYConnection(connection);
         const connectionId = this.getConnectionId(connection);
         connections.set(connectionId, yConnection);
 
-        return this.getConnection(uri, name, variant, view, connectionId);
+        return this.getConnection(kitUri, name, variant, view, connectionId);
     }
 
-    getConnection(uri: string, name: string, variant: string, view: string, connectionId: string): Connection | null {
-        const yKit = this.getYKit(uri);
+    getConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string): Connection | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -427,8 +428,8 @@ class Studio {
         return yConnection;
     }
 
-    updateConnection(uri: string, name: string, variant: string, view: string, connectionId: string, connection: Partial<Connection>): Connection | null {
-        const yKit = this.getYKit(uri);
+    updateConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string, connection: Partial<Connection>): Connection | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -449,11 +450,11 @@ class Studio {
         if (connection.x !== undefined) yConnection.x = connection.x;
         if (connection.y !== undefined) yConnection.y = connection.y;
 
-        return this.getConnection(uri, name, variant, view, connectionId);
+        return this.getConnection(kitUri, name, variant, view, connectionId);
     }
 
-    deleteConnection(uri: string, name: string, variant: string, view: string, connectionId: string): boolean {
-        const yKit = this.getYKit(uri);
+    deleteConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const designs = yKit.get('designs');
@@ -474,23 +475,23 @@ class Studio {
         return yRepresentation;
     }
 
-    createRepresentation(uri: string, typeName: string, representation: Representation): Representation {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createRepresentation(kitUri: string, typeName: string, representation: Representation): Representation {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
         const yType = types.get(typeName) as Y.Map<any> | undefined;
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${uri}`);
+        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
 
         const representations = yType.get('representations') as Y.Map<any>;
         const yRepresentation = this.createYRepresentation(representation);
         representations.set(representation.url, yRepresentation);
 
-        return this.getRepresentation(uri, typeName, representation.url);
+        return this.getRepresentation(kitUri, typeName, representation.url);
     }
 
-    getRepresentation(uri: string, typeName: string, representationUrl: string): Representation | null {
-        const yKit = this.getYKit(uri);
+    getRepresentation(kitUri: string, typeName: string, representationUrl: string): Representation | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -510,8 +511,8 @@ class Studio {
         };
     }
 
-    updateRepresentation(uri: string, typeName: string, representationUrl: string, representation: Partial<Representation>): Representation | null {
-        const yKit = this.getYKit(uri);
+    updateRepresentation(kitUri: string, typeName: string, representationUrl: string, representation: Partial<Representation>): Representation | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -527,11 +528,11 @@ class Studio {
         if (representation.tags !== undefined) yRepresentation.set('tags', new Y.Array(representation.tags));
         if (representation.qualities !== undefined) yRepresentation.set('qualities', new Y.Array(representation.qualities.map(q => q.name)));
 
-        return this.getRepresentation(uri, typeName, representationUrl);
+        return this.getRepresentation(kitUri, typeName, representationUrl);
     }
 
-    deleteRepresentation(uri: string, typeName: string, representationUrl: string): boolean {
-        const yKit = this.getYKit(uri);
+    deleteRepresentation(kitUri: string, typeName: string, representationUrl: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -553,23 +554,23 @@ class Studio {
         return yPort;
     }
 
-    createPort(uri: string, typeName: string, port: Port): Port {
-        const yKit = this.getYKit(uri);
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    createPort(kitUri: string, typeName: string, port: Port): Port {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
         const yType = types.get(typeName) as Y.Map<any> | undefined;
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${uri}`);
+        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
 
         const ports = yType.get('ports') as Y.Map<any>;
         const yPort = this.createYPort(port);
         ports.set(yPort.get('id_'), yPort);
 
-        return this.getPort(uri, typeName, yPort.get('id_'));
+        return this.getPort(kitUri, typeName, yPort.get('id_'));
     }
 
-    getPort(uri: string, typeName: string, portId: string): Port | null {
-        const yKit = this.getYKit(uri);
+    getPort(kitUri: string, typeName: string, portId: string): Port | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -590,8 +591,8 @@ class Studio {
         };
     }
 
-    updatePort(uri: string, typeName: string, portId: string, port: Partial<Port>): Port | null {
-        const yKit = this.getYKit(uri);
+    updatePort(kitUri: string, typeName: string, portId: string, port: Partial<Port>): Port | null {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -608,11 +609,11 @@ class Studio {
         if (port.t !== undefined) yPort.set('t', port.t);
         if (port.qualities !== undefined) yPort.set('qualities', new Y.Array(port.qualities.map(q => q.name)));
 
-        return this.getPort(uri, typeName, portId);
+        return this.getPort(kitUri, typeName, portId);
     }
 
-    deletePort(uri: string, typeName: string, portId: string): boolean {
-        const yKit = this.getYKit(uri);
+    deletePort(kitUri: string, typeName: string, portId: string): boolean {
+        const yKit = this.getYKit(kitUri);
         if (!yKit) return false;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -649,7 +650,7 @@ export function useStudio() {
     return studio;
 }
 
-export function useKit(uri: string) {
+export function useKit(kitUri: string) {
     const studio = useStudio();
 }
 
