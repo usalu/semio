@@ -323,45 +323,63 @@ class Studio {
         return this.getDesign(kitUri, design.name, design.variant, design.view);
     }
 
-    deleteDesign(kitUri: string, name: string): boolean {
-        const yKit = this.getYKit(kitUri);
-        if (!yKit) return false;
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        return designs.delete(name);
-    }
-
-    private createYPiece(piece: Piece): Piece {
-        return {
-            id_: piece.id_ || uuidv4(),
-            description: piece.description || '',
-            type: piece.type,
-            center: piece.center || null,
-            plane: piece.plane ? this.createYPlane(piece.plane) : null
-        };
-    }
-
-    private createYPlane(plane: Plane): Y.Map<any> {
-        const yPlane = new Y.Map<any>();
-        yPlane.set('origin', new Y.Map<any>(Object.entries(plane.origin)));
-        yPlane.set('xAxis', new Y.Map<any>(Object.entries(plane.xAxis)));
-        yPlane.set('yAxis', new Y.Map<any>(Object.entries(plane.yAxis)));
-        return yPlane;
-    }
-
-    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece {
+    deleteDesign(kitUri: string, name: string): void {
         const yKit = this.getYKit(kitUri);
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
+        const designs = yKit.get('designs') as Y.Map<any>;
+        designs.delete(name);
+    }
+
+    private createYPiece(piece: Piece): Y.Map<any> {
+        const yPiece = new Y.Map<any>();
+        yPiece.set('id_', piece.id_ || uuidv4());
+        yPiece.set('description', piece.description || '');
+        const yType = new Y.Map<any>();
+        yType.set('name', piece.type.name);
+        yType.set('variant', piece.type.variant);
+        yPiece.set('type', yType);
+        if (piece.plane) {
+            const yPlane = new Y.Map<any>();
+            const yOrigin = new Y.Map<any>();
+            yOrigin.set('x', piece.plane.origin.x);
+            yOrigin.set('y', piece.plane.origin.y);
+            yOrigin.set('z', piece.plane.origin.z);
+            yPlane.set('origin', yOrigin);
+            const yXAxis = new Y.Map<any>();
+            yXAxis.set('x', piece.plane.xAxis.x);
+            yXAxis.set('y', piece.plane.xAxis.y);
+            yXAxis.set('z', piece.plane.xAxis.z);
+            yPlane.set('xAxis', yXAxis);
+            const yYAxis = new Y.Map<any>();
+            yYAxis.set('x', piece.plane.yAxis.x);
+            yYAxis.set('y', piece.plane.yAxis.y);
+            yYAxis.set('z', piece.plane.yAxis.z);
+            yPlane.set('yAxis', yYAxis);
+            yPiece.set('plane', yPlane);
+        }
+        if (piece.center) {
+            const yCenter = new Y.Map<any>();
+            yCenter.set('x', piece.center.x);
+            yCenter.set('y', piece.center.y);
+            yCenter.set('z', piece.center.z);
+            yPiece.set('center', yCenter);
+        }
+
+        return yPiece;
+    }
+
+    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): void {
+        const yKit = this.getYKit(kitUri);
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+
+        const yDesigns = yKit.get('designs');
+        const yDesign = yDesigns.get(name)?.get(variant)?.get(view);
         if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
 
-        const pieces = yDesign.get('pieces');
+        const yPieces = yDesign.get('pieces');
         const yPiece = this.createYPiece(piece);
-        pieces.set(yPiece.id_, yPiece);
-
-        return this.getPiece(kitUri, name, variant, view, yPiece.id_);
+        yPieces.set(yPiece.get('id_'), yPiece);
     }
 
     getPiece(kitUri: string, name: string, variant: string, view: string, pieceId: string): Piece | null {
@@ -376,6 +394,31 @@ class Studio {
         const yPiece = pieces.get(pieceId);
         if (!yPiece) return null;
 
+        const yPlane = yPiece.get('plane')
+        const yOrigin = yPlane?.get('origin')
+        const yXAxis = yPlane?.get('xAxis')
+        const yYAxis = yPlane?.get('yAxis')
+        const origin: Point | null = yOrigin ? {
+            x: yOrigin.get('x'),
+            y: yOrigin.get('y'),
+            z: yOrigin.get('z')
+        } : null;
+        const xAxis: Point | null = yXAxis ? {
+            x: yXAxis.get('x'),
+            y: yXAxis.get('y'),
+            z: yXAxis.get('z')
+        } : null;
+        const yAxis: Point | null = yYAxis ? {
+            x: yYAxis.get('x'),
+            y: yYAxis.get('y'),
+            z: yYAxis.get('z')
+        } : null;
+        const plane: Plane | null = origin && xAxis && yAxis ? {
+            origin,
+            xAxis,
+            yAxis
+        } : null;
+
         const yCenter = yPiece.get('center')
         const center: Point | null = yCenter ? {
             x: yCenter.get('x'),
@@ -383,23 +426,12 @@ class Studio {
             z: yCenter.get('z')
         } : null;
 
-        const yPlane = yPiece.get('plane')
-        const plane: Plane | null = yPlane ? 
-
         return {
             id_: yPiece.get('id_'),
             description: yPiece.get('description'),
             type: yPiece.get('type'),
-            center: yPiece.get('center') ? Object.fromEntries(yPiece.get('center')) : null,
-            plane: yPiece.get('plane') ? this.getYPlane(yPiece.get('plane')) : null
-        };
-    }
-
-    private getYPlane(yPlane: Y.Map<any>): Plane {
-        return {
-            origin: Object.fromEntries(yPlane.get('origin')),
-            xAxis: Object.fromEntries(yPlane.get('xAxis')),
-            yAxis: Object.fromEntries(yPlane.get('yAxis'))
+            plane,
+            center
         };
     }
 
