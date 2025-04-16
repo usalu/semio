@@ -41,7 +41,7 @@ function ResizableHandle({
 
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     setIsDragging(true);
-    externalOnMouseDown?.(e as any); // Keep `as any` for flexibility
+    externalOnMouseDown?.(e as any);
 
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -53,15 +53,14 @@ function ResizableHandle({
 
   const handleMouseEnter: React.MouseEventHandler<HTMLDivElement> = (e) => {
     setIsHovered(true);
-    externalOnMouseEnter?.(e as any); // Keep `as any` for flexibility
+    externalOnMouseEnter?.(e as any);
   };
 
   const handleMouseLeave: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    // Don't reset hover state if dragging
     if (!isDragging) {
       setIsHovered(false);
     }
-    externalOnMouseLeave?.(e as any); // Keep `as any` for flexibility
+    externalOnMouseLeave?.(e as any);
   };
 
   return (

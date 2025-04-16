@@ -336,10 +336,12 @@ interface PanelProps {
     visible: boolean;
 }
 
-interface WorkbenchProps extends PanelProps {
+interface ResizablePanelProps extends PanelProps {
     onWidthChange?: (width: number) => void;
     width: number;
 }
+
+interface WorkbenchProps extends ResizablePanelProps { }
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
@@ -387,13 +389,50 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-const Details: FC<PanelProps> = ({ visible }) => {
+interface DetailsProps extends ResizablePanelProps { }
+
+const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
+    const [isResizeHovered, setIsResizeHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+
+        const startX = e.clientX;
+        const startWidth = width;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const newWidth = startWidth - (e.clientX - startX);
+            if (newWidth >= 150 && newWidth <= 500) {
+                onWidthChange?.(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
     return (
         <div
-            className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+            className={`absolute top-4 right-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
+            style={{ width: `${width}px` }}
         >
             <div className="font-semibold p-4">Details</div>
+            <div
+                className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsResizeHovered(true)}
+                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+            />
         </div>
     );
 }
@@ -403,17 +442,16 @@ interface ConsoleProps {
     leftPanelVisible: boolean;
     rightPanelVisible: boolean;
     leftPanelWidth?: number;
+    rightPanelWidth?: number;
     height: number;
     setHeight: (height: number) => void;
 }
 
-const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisible, leftPanelWidth = 230, height, setHeight }) => {
+const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisible, leftPanelWidth = 230, rightPanelWidth = 230, height, setHeight }) => {
     if (!visible) return null;
 
     const [isResizeHovered, setIsResizeHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-
-    const detailsChatWidth = 230;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -444,7 +482,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
             className={`absolute z-[150] bg-background-level-2 text-foreground border ${isDragging || isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
                 left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
-                right: rightPanelVisible ? `calc(${detailsChatWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
+                right: rightPanelVisible ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
                 bottom: `calc(var(--spacing) * 4)`,
                 height: `${height}px`,
             }}
@@ -460,12 +498,50 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
     );
 }
 
-const Chat: FC<PanelProps> = ({ visible }) => {
+interface ChatProps extends ResizablePanelProps { }
+
+const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
+    const [isResizeHovered, setIsResizeHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+
+        const startX = e.clientX;
+        const startWidth = width;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const newWidth = startWidth - (e.clientX - startX);
+            if (newWidth >= 150 && newWidth <= 500) {
+                onWidthChange?.(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[230px] z-100 bg-background-level-2 text-foreground border"
+        <div
+            className={`absolute top-4 right-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
+            style={{ width: `${width}px` }}
         >
             <div className="font-semibold p-4">Chat</div>
+            <div
+                className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsResizeHovered(true)}
+                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+            />
         </div>
     );
 }
@@ -490,7 +566,9 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         chat: false,
     });
     const [workbenchWidth, setWorkbenchWidth] = useState(230);
+    const [detailsWidth, setDetailsWidth] = useState(230);
     const [consoleHeight, setConsoleHeight] = useState(200);
+    const [chatWidth, setChatWidth] = useState(230);
 
     const togglePanel = (panel: keyof PanelToggles) => {
         setVisiblePanels(prev => {
@@ -598,16 +676,25 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                 onWidthChange={setWorkbenchWidth}
                 width={workbenchWidth}
             />
-            <Details visible={visiblePanels.details} />
+            <Details
+                visible={visiblePanels.details}
+                onWidthChange={setDetailsWidth}
+                width={detailsWidth}
+            />
             <Console
                 visible={visiblePanels.console}
                 leftPanelVisible={visiblePanels.workbench}
                 rightPanelVisible={rightPanelVisible}
                 leftPanelWidth={workbenchWidth}
+                rightPanelWidth={detailsWidth}
                 height={consoleHeight}
                 setHeight={setConsoleHeight}
             />
-            <Chat visible={visiblePanels.chat} />
+            <Chat
+                visible={visiblePanels.chat}
+                onWidthChange={setChatWidth}
+                width={chatWidth}
+            />
         </div>
     );
 };
