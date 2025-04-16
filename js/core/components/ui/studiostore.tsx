@@ -776,11 +776,9 @@ class Studio {
     deletePort(kitUri: string, typeName: string, portId: string): void {
         const yKit = this.getYKit(kitUri);
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
         const types = yKit.get('types');
         const yType = types.get(typeName);
         if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
-
         const ports = yType.get('ports');
         ports.delete(portId);
     }
@@ -791,13 +789,9 @@ class Studio {
     }
 }
 
-// Create a singleton instance of the Studio
 const studioSingleton = new Studio();
-
-// Create context with proper typing
 const StudioContext = createContext<Studio | null>(null);
-
-export const StudioProvider: React.FC<{ children: React.ReactKit }> = ({ children }) => {
+export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <StudioContext.Provider value={studioSingleton}>
             {children}
@@ -811,12 +805,7 @@ export function useStudio() {
     return studio;
 }
 
-export function useKit(kitUri: string) {
-    const studio = useStudio();
-}
-
 const KitContext = createContext<Kit | null>(null);
-
 export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({ kit, children }) => {
     return (
         <KitContext.Provider value={kit}>
@@ -824,9 +813,19 @@ export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({
         </KitContext.Provider>
     );
 };
+export function useKit(kitUri: string) {
+    const studio = useStudio();
+    const [kit, setKit] = useState<Kit | null>(null);
+
+    useEffect(() => {
+        const updatedKit = studio.getKit(kitUri);
+        setKit(updatedKit);
+    }, [studio, kitUri]);
+
+    return kit;
+}
 
 const DesignContext = createContext<Design | null>(null);
-
 export const DesignProvider: React.FC<{ design: Design, children: React.ReactNode }> = ({ design, children }) => {
     return (
         <DesignContext.Provider value={design}>
@@ -836,7 +835,6 @@ export const DesignProvider: React.FC<{ design: Design, children: React.ReactNod
 };
 
 const PieceContext = createContext<Piece | null>(null);
-
 export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }> = ({ piece, children }) => {
     return (
         <PieceContext.Provider value={piece}>
@@ -845,51 +843,26 @@ export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }
     );
 };
 
-export function useDesign(name: string, variant: string = '', view: string = '') {
-    const kit = useContext(KitContext);
-    if (!kit) throw new Error('useDesign must be used within a KitProvider');
-
+export function useDesign(kitUri: string, name: string, variant: string = '', view: string = '') {
+    const studio = useStudio();
     const [design, setDesign] = useState<Design | null>(null);
 
     useEffect(() => {
-        const yDesign = kit.designs.get(name)?.get(variant)?.get(view);
-        if (yDesign) {
-            setDesign({
-                name: yDesign.get('name'),
-                variant: yDesign.get('variant'),
-                view: yDesign.get('view'),
-                description: yDesign.get('description'),
-                icon: yDesign.get('icon'),
-                image: yDesign.get('image'),
-                unit: yDesign.get('unit'),
-                pieces: Array.from(yDesign.get('pieces').entries()).map(([id, piece]) => ({ ...piece, id_: id })),
-                connections: Array.from(yDesign.get('connections').values()),
-                qualities: Array.from(yDesign.get('qualities').values())
-            });
-        }
-    }, [kit, name, variant, view]);
+        const updatedDesign = studio.getDesign(kitUri, name, variant, view);
+        setDesign(updatedDesign);
+    }, [studio, kitUri, name, variant, view]);
 
     return design;
 }
 
-export function usePiece(id: string) {
-    const design = useContext(DesignContext);
-    if (!design) throw new Error('usePiece must be used within a DesignProvider');
-
+export function usePiece(kitUri: string, designName: string, variant: string, view: string, pieceId: string) {
+    const studio = useStudio();
     const [piece, setPiece] = useState<Piece | null>(null);
 
     useEffect(() => {
-        const yPiece = design.pieces.get(id);
-        if (yPiece) {
-            setPiece({
-                id_: yPiece.get('id_'),
-                description: yPiece.get('description'),
-                type: yPiece.get('type'),
-                center: yPiece.get('center') ? Object.fromEntries(yPiece.get('center')) : null,
-                plane: yPiece.get('plane') ? this.getYPlane(yPiece.get('plane')) : null
-            });
-        }
-    }, [design, id]);
+        const updatedPiece = studio.getPiece(kitUri, designName, variant, view, pieceId);
+        setPiece(updatedPiece);
+    }, [studio, kitUri, designName, variant, view, pieceId]);
 
     return piece;
 }
