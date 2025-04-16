@@ -431,10 +431,16 @@ class Studio {
         const yPiece = pieces.get(piece.id_);
         if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${name} in kit ${kitUri}`);
 
-        if (piece.description !== undefined) yPiece.description = piece.description;
-        if (piece.type !== undefined) yPiece.type = piece.type;
-        if (piece.center !== undefined) yPiece.center = piece.center ? new Y.Map<any>(Object.entries(piece.center)) : null;
-        if (piece.plane !== undefined) {
+        if (piece.description !== undefined) yPiece.set('description', piece.description);
+        if (piece.type !== undefined) yPiece.set('type', piece.type);
+        if (piece.center !== undefined && piece.center !== null) {
+            const yCenter = new Y.Map<any>();
+            yCenter.set('x', piece.center.x);
+            yCenter.set('y', piece.center.y);
+            yCenter.set('z', piece.center.z);
+            yPiece.set('center', yCenter);
+        }
+        if (piece.plane !== undefined && piece.plane !== null) {
             const yPlane = new Y.Map<any>();
             const yOrigin = new Y.Map<any>();
             yOrigin.set('x', piece.plane.origin.x);
@@ -565,16 +571,6 @@ class Studio {
 
         const connections = yDesign.get('connections');
         connections.delete(connectionId);
-    }
-
-    private createYRepresentation(representation: Representation): Y.Map<any> {
-        const yRepresentation = new Y.Map<any>();
-        yRepresentation.set('url', representation.url);
-        yRepresentation.set('description', representation.description || '');
-        yRepresentation.set('mime', representation.mime);
-        yRepresentation.set('tags', representation.tags ? new Y.Array(representation.tags) : new Y.Array());
-        yRepresentation.set('qualities', representation.qualities ? new Y.Array(representation.qualities.map(q => q.name)) : new Y.Array());
-        return yRepresentation;
     }
 
     createRepresentation(kitUri: string, typeName: string, representation: Representation): void {
@@ -801,7 +797,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
 export function useStudio() {
     const studio = useContext(StudioContext);
-    if (!studio) throw new Error('Test studio not found');
+    if (!studio) throw new Error('Studio not found');
     return studio;
 }
 
@@ -813,14 +809,20 @@ export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({
         </KitContext.Provider>
     );
 };
-export function useKit(kitUri: string) {
+
+export function useKit(kitUri?: string) {
     const studio = useStudio();
-    const [kit, setKit] = useState<Kit | null>(null);
+    const kitFromContext = useContext(KitContext);
+    const [kit, setKit] = useState<Kit | null>(kitFromContext);
 
     useEffect(() => {
-        const updatedKit = studio.getKit(kitUri);
-        setKit(updatedKit);
-    }, [studio, kitUri]);
+        if (kitFromContext) {
+            setKit(kitFromContext);
+        } else if (kitUri) {
+            const updatedKit = studio.getKit(kitUri);
+            setKit(updatedKit);
+        }
+    }, [studio, kitFromContext, kitUri]);
 
     return kit;
 }
@@ -834,6 +836,24 @@ export const DesignProvider: React.FC<{ design: Design, children: React.ReactNod
     );
 };
 
+export function useDesign(name?: string, variant?: string, view?: string) {
+    const studio = useStudio();
+    const kit = useKit();
+    const designFromContext = useContext(DesignContext);
+    const [design, setDesign] = useState<Design | null>(designFromContext);
+
+    useEffect(() => {
+        if (designFromContext) {
+            setDesign(designFromContext);
+        } else if (kit?.uri && name) {
+            const updatedDesign = studio.getDesign(kit.uri, name, variant || '', view || '');
+            setDesign(updatedDesign);
+        }
+    }, [studio, kit, designFromContext, name, variant, view]);
+
+    return design;
+}
+
 const PieceContext = createContext<Piece | null>(null);
 export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }> = ({ piece, children }) => {
     return (
@@ -843,26 +863,27 @@ export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }
     );
 };
 
-export function useDesign(kitUri: string, name: string, variant: string = '', view: string = '') {
+export function usePiece(pieceId?: string) {
     const studio = useStudio();
-    const [design, setDesign] = useState<Design | null>(null);
+    const kit = useKit();
+    const design = useDesign();
+    const pieceFromContext = useContext(PieceContext);
+    const [piece, setPiece] = useState<Piece | null>(pieceFromContext);
 
     useEffect(() => {
-        const updatedDesign = studio.getDesign(kitUri, name, variant, view);
-        setDesign(updatedDesign);
-    }, [studio, kitUri, name, variant, view]);
-
-    return design;
-}
-
-export function usePiece(kitUri: string, designName: string, variant: string, view: string, pieceId: string) {
-    const studio = useStudio();
-    const [piece, setPiece] = useState<Piece | null>(null);
-
-    useEffect(() => {
-        const updatedPiece = studio.getPiece(kitUri, designName, variant, view, pieceId);
-        setPiece(updatedPiece);
-    }, [studio, kitUri, designName, variant, view, pieceId]);
+        if (pieceFromContext) {
+            setPiece(pieceFromContext);
+        } else if (kit?.uri && design?.name && pieceId) {
+            const updatedPiece = studio.getPiece(
+                kit.uri,
+                design.name,
+                design.variant || '',
+                design.view || '',
+                pieceId
+            );
+            setPiece(updatedPiece);
+        }
+    }, [studio, kit, design, pieceFromContext, pieceId]);
 
     return piece;
 }
