@@ -579,7 +579,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                             design={design}
                         />
                     </ResizablePanel>
-                    <ResizableHandleWrapper className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
                     <ResizablePanel
                         defaultSize={fullscreenPanel === 'model' ? 100 : 50}
                         className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
@@ -609,32 +609,6 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
             />
             <Chat visible={visiblePanels.chat} />
         </div>
-    );
-};
-
-// Custom wrapper for ResizableHandle that maintains hover state during drag
-const ResizableHandleWrapper: FC<{ className?: string }> = ({ className }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleMouseDown = () => {
-        setIsDragging(true);
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-            document.removeEventListener('mouseup', handleMouseUp, true);
-        };
-
-        document.addEventListener('mouseup', handleMouseUp, true);
-    };
-
-    return (
-        <ResizableHandle
-            className={`${className} ${isDragging || isHovered ? 'bg-primary' : ''}`}
-            onMouseDown={handleMouseDown}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => !isDragging && setIsHovered(false)}
-        />
     );
 };
 
