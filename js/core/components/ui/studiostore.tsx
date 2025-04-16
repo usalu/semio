@@ -5,15 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Point, Plane } from '@semio/js/semio';
-
-
-export interface DesignEditorState {
-    selection: {
-        pieceUuids: string[];
-        connectionUuids: string[];
-    };
-}
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint } from '@semio/js/semio';
 
 
 // type YType = {
@@ -80,9 +72,9 @@ class Studio {
         });
     }
 
-    private createYKit(kit: Kit): Y.Map<any> {
-        const types = kit.types?.map(t => this.createYType(t));
-        const designs = kit.designs?.map(d => this.createYDesign(d));
+    createKit(kit: Kit): void {
+        const types = kit.types?.map(t => this.createType(kit.uri, t));
+        const designs = kit.designs?.map(d => this.createDesign(kit.uri, d));
         const yKit = new Y.Map<any>();
         yKit.set('uri', kit.uri);
         yKit.set('name', kit.name);
@@ -97,16 +89,55 @@ class Studio {
         yKit.set('types', types);
         yKit.set('designs', designs);
         this.studioDoc.getMap('kits').set(kit.uri, yKit);
-        return yKit
     }
 
-    createKit(kit: Kit): void {
-        this.createYKit(kit);
-    }
+    getKit(uri: string): Kit | undefined {
+        const yKit = this.studioDoc.getMap('kits').get(uri) as Y.Map<any>;
+        if (!yKit) return undefined;
 
-    getKit(uri: string): Kit | null {
-        const yKit = this.getYKit(uri);
-        if (!yKit) return null;
+        const types = Array.from((yKit.get('types') as Y.Map<any>).entries()).map(([_id, variantMap]) => {
+            return Array.from((variantMap as Y.Map<any>).entries()).map(([_variantId, type]) => {
+                const typeMap = type as Y.Map<any>;
+                const ports = Array.from((typeMap.get('ports') as Y.Map<any>)?.entries() || []).map(([_portId, port]) => port);
+                const qualities = Array.from((typeMap.get('qualities') as Y.Map<any>)?.entries() || []).map(([_qualityId, quality]) => quality);
+                const representations = Array.from((typeMap.get('representations') as Y.Map<any>)?.entries() || []).map(([_repId, rep]) => rep);
+                return {
+                    name: typeMap.get('name') || '',
+                    variant: typeMap.get('variant') || '',
+                    description: typeMap.get('description') || '',
+                    icon: typeMap.get('icon') || '',
+                    image: typeMap.get('image') || '',
+                    unit: typeMap.get('unit') || '',
+                    ports,
+                    qualities,
+                    representations
+                };
+            });
+        }).flat();
+
+        const designs = Array.from((yKit.get('designs') as Y.Map<any>).entries()).map(([_id, variantMap]) => {
+            return Array.from((variantMap as Y.Map<any>).entries()).map(([_variantId, viewMap]) => {
+                return Array.from((viewMap as Y.Map<any>).entries()).map(([_viewId, design]) => {
+                    const designMap = design as Y.Map<any>;
+                    const pieces = Array.from((designMap.get('pieces') as Y.Map<any>)?.entries() || []).map(([_pieceId, piece]) => piece);
+                    const connections = Array.from((designMap.get('connections') as Y.Map<any>)?.entries() || []).map(([_connId, conn]) => conn);
+                    const qualities = Array.from((designMap.get('qualities') as Y.Map<any>)?.entries() || []).map(([_qualityId, quality]) => quality);
+                    return {
+                        name: designMap.get('name') || '',
+                        variant: designMap.get('variant') || '',
+                        view: designMap.get('view') || '',
+                        description: designMap.get('description') || '',
+                        icon: designMap.get('icon') || '',
+                        image: designMap.get('image') || '',
+                        unit: designMap.get('unit') || '',
+                        pieces,
+                        connections,
+                        qualities
+                    };
+                });
+            });
+        }).flat(2);
+
         return {
             uri: yKit.get('uri'),
             name: yKit.get('name'),
@@ -118,18 +149,14 @@ class Studio {
             remote: yKit.get('remote'),
             homepage: yKit.get('homepage'),
             license: yKit.get('license'),
-            designs: Array.from(yKit.get('designs').values()).map((design: Y.Map<any>) => (this.getDesign(uri, design.get('name'), design.get('variant'), design.get('view')))),
-            types: Array.from(yKit.get('types').values()).map((type: Y.Map<any>) => (this.getType(uri, type.get('name'), type.get('variant'))))
+            designs,
+            types
         };
     }
 
-    private getYKit(uri: string): Y.Map<any> | undefined {
-        return this.studioDoc.getMap('kits').get(uri) as Y.Map<any> | undefined;
-    }
-
-    private updateYKit(kit: Kit): Y.Map<any> | null {
-        const yKit = this.getYKit(kit.uri);
-        if (!yKit) return null;
+    updateKit(kit: Kit): Kit {
+        const yKit = this.studioDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
+        if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
         if (kit.name !== "") yKit.set('name', kit.name);
         if (kit.description !== undefined && kit.description !== "") yKit.set('description', kit.description);
         if (kit.icon !== undefined && kit.icon !== "") yKit.set('icon', kit.icon);
@@ -139,26 +166,11 @@ class Studio {
         if (kit.remote !== undefined && kit.remote !== "") yKit.set('remote', kit.remote);
         if (kit.homepage !== undefined && kit.homepage !== "") yKit.set('homepage', kit.homepage);
         if (kit.license !== undefined && kit.license !== "") yKit.set('license', kit.license);
-        return yKit;
+        return this.getKit(kit.uri);
     }
 
-
-    private createYType(type: Type): Y.Map<any> {
-        const yType = new Y.Map<any>();
-        yType.set('name', type.name);
-        yType.set('variant', type.variant || '');
-        yType.set('description', type.description || '');
-        yType.set('icon', type.icon || '');
-        yType.set('image', type.image || '');
-        yType.set('unit', type.unit || '');
-        yType.set('ports', new Y.Map(type.ports?.map(p => [p.id_ || uuidv4(), this.createYPort(p)])));
-        yType.set('qualities', new Y.Map(type.qualities?.map(q => [q.name, q])));
-        yType.set('representations', new Y.Map(type.representations?.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createYRepresentation(r)])));
-        return yType;
-    }
-
-    createType(kitUri: string, type: Type): Type {
-        const yKit = this.getYKit(kitUri);
+    createType(kitUri: string, type: Type): void {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -167,13 +179,21 @@ class Studio {
             variantMap = new Y.Map<any>();
             types.set(type.name, variantMap);
         }
-        variantMap.set(type.variant || '', this.createYType(type));
-
-        return this.getType(kitUri, type.name, type.variant);
+        const yType = new Y.Map<any>();
+        yType.set('name', type.name);
+        yType.set('variant', type.variant || '');
+        yType.set('description', type.description || '');
+        yType.set('icon', type.icon || '');
+        yType.set('image', type.image || '');
+        yType.set('unit', type.unit || '');
+        yType.set('ports', new Y.Map(type.ports?.map(p => [p.id_ || uuidv4(), this.createPort(kitUri, type.name, p)])));
+        yType.set('qualities', new Y.Map(type.qualities?.map(q => [q.name, q])));
+        yType.set('representations', new Y.Map(type.representations?.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, r)])));
+        variantMap.set(type.variant || '', yType);
     }
 
     getType(kitUri: string, typeName: string, variant: string = ''): Type | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -201,7 +221,7 @@ class Studio {
     }
 
     updateType(kitUri: string, type: Type): Type | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -214,7 +234,7 @@ class Studio {
         if (type.unit !== undefined) yType.set('unit', type.unit);
 
         if (type.ports !== undefined) {
-            const ports = new Y.Map(type.ports.map(p => [p.id_, this.createYPort(p)]));
+            const ports = new Y.Map(type.ports.map(p => [p.id_, this.createPort(kitUri, type.name, p)]));
             yType.set('ports', ports);
         }
         if (type.qualities !== undefined) {
@@ -222,7 +242,7 @@ class Studio {
             yType.set('qualities', qualities);
         }
         if (type.representations !== undefined) {
-            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createYRepresentation(r)]));
+            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, r)]));
             yType.set('representations', representations);
         }
 
@@ -230,14 +250,14 @@ class Studio {
     }
 
     deleteType(kitUri: string, typeName: string): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types') as Y.Map<any>;
         types.delete(typeName);
     }
 
     createDesign(kitUri: string, design: Design): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -259,14 +279,14 @@ class Studio {
         yDesign.set('variant', design.variant || '');
         yDesign.set('view', design.view || '');
         yDesign.set('unit', design.unit || '');
-        yDesign.set('pieces', new Y.Map(design.pieces?.map(p => [p.id_ || uuidv4(), this.createYPiece(p)])));
-        yDesign.set('connections', new Y.Map(design.connections?.map(c => [this.getConnectionId(c), this.createYConnection(c)])));
+        yDesign.set('pieces', new Y.Map(design.pieces?.map(p => [p.id_ || uuidv4(), this.createPiece(kitUri, p)])));
+        yDesign.set('connections', new Y.Map(design.connections?.map(c => [this.getConnectionId(c), this.createConnection(kitUri, c)])));
         yDesign.set('qualities', new Y.Map(design.qualities?.map(q => [q.name, q])));
         viewMap.set(design.view || '', yDesign);
     }
 
     getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -288,7 +308,7 @@ class Studio {
     }
 
     updateDesign(kitUri: string, design: Design): Design | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -301,11 +321,11 @@ class Studio {
         if (design.unit !== undefined) yDesign.set('unit', design.unit);
 
         if (design.pieces !== undefined) {
-            const pieces = new Y.Map(design.pieces.map(p => [p.id_, this.createYPiece(p)]));
+            const pieces = new Y.Map(design.pieces.map(p => [p.id_, this.createPiece(kitUri, design.name, design.variant, design.view, p)]));
             yDesign.set('pieces', pieces);
         }
         if (design.connections !== undefined) {
-            const connections = new Y.Map(design.connections.map(c => [this.getConnectionId(c), this.createYConnection(c)]));
+            const connections = new Y.Map(design.connections.map(c => [this.getConnectionId(c), this.createConnection(kitUri, design.name, design.variant, design.view, c)]));
             yDesign.set('connections', connections);
         }
         if (design.qualities !== undefined) {
@@ -317,27 +337,27 @@ class Studio {
     }
 
     deleteDesign(kitUri: string, name: string): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
         designs.delete(name);
     }
 
-    createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): void {
-        const yKit = this.getYKit(kitUri);
+    createPiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): void {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const yDesigns = yKit.get('designs');
-        const yDesign = yDesigns.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yDesign = yDesigns.get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
         const yPieces = yDesign.get('pieces');
 
         const yPiece = new Y.Map<any>();
         yPiece.set('id_', piece.id_ || Generator.randomId());
         yPiece.set('description', piece.description || '');
         const yType = new Y.Map<any>();
-        yType.set('name', piece.type.name);
-        yType.set('variant', piece.type.variant);
+        yType.set('designName', piece.type.designName);
+        yType.set('designVariant', piece.type.designVariant);
         yPiece.set('type', yType);
         if (piece.plane) {
             const yPlane = new Y.Map<any>();
@@ -368,12 +388,12 @@ class Studio {
         yPieces.set(yPiece.get('id_'), yPiece);
     }
 
-    getPiece(kitUri: string, name: string, variant: string, view: string, pieceId: string): Piece | null {
-        const yKit = this.getYKit(kitUri);
+    getPiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): Piece | null {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) return null;
 
         const pieces = yDesign.get('pieces');
@@ -384,17 +404,17 @@ class Studio {
         const yOrigin = yPlane?.get('origin')
         const yXAxis = yPlane?.get('xAxis')
         const yYAxis = yPlane?.get('yAxis')
-        const origin: Point | null = yOrigin ? {
+        const origin: DiagramPoint | null = yOrigin ? {
             x: yOrigin.get('x'),
             y: yOrigin.get('y'),
             z: yOrigin.get('z')
         } : null;
-        const xAxis: Point | null = yXAxis ? {
+        const xAxis: DiagramPoint | null = yXAxis ? {
             x: yXAxis.get('x'),
             y: yXAxis.get('y'),
             z: yXAxis.get('z')
         } : null;
-        const yAxis: Point | null = yYAxis ? {
+        const yAxis: DiagramPoint | null = yYAxis ? {
             x: yYAxis.get('x'),
             y: yYAxis.get('y'),
             z: yYAxis.get('z')
@@ -406,7 +426,7 @@ class Studio {
         } : null;
 
         const yCenter = yPiece.get('center')
-        const center: Point | null = yCenter ? {
+        const center: DiagramPoint | null = yCenter ? {
             x: yCenter.get('x'),
             y: yCenter.get('y'),
             z: yCenter.get('z')
@@ -421,15 +441,15 @@ class Studio {
         };
     }
 
-    updatePiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece | null {
-        const yKit = this.getYKit(kitUri);
+    updatePiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): Piece | null {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
         const pieces = yDesign.get('pieces');
         const yPiece = pieces.get(piece.id_);
-        if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${name} in kit ${kitUri}`);
+        if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${designName} in kit ${kitUri}`);
 
         if (piece.description !== undefined) yPiece.set('description', piece.description);
         if (piece.type !== undefined) yPiece.set('type', piece.type);
@@ -460,15 +480,15 @@ class Studio {
             yPiece.set('plane', yPlane);
         }
 
-        return this.getPiece(kitUri, name, variant, view, piece.id_);
+        return this.getPiece(kitUri, designName, designVariant, view, piece.id_);
     }
 
-    deletePiece(kitUri: string, name: string, variant: string, view: string, pieceId: string): boolean {
-        const yKit = this.getYKit(kitUri);
+    deletePiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): boolean {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return false;
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) return false;
 
         const pieces = yDesign.get('pieces');
@@ -489,13 +509,13 @@ class Studio {
         };
     }
 
-    createConnection(kitUri: string, name: string, variant: string, view: string, connection: Connection): void {
-        const yKit = this.getYKit(kitUri);
+    createConnection(kitUri: string, designName: string, designVariant: string, view: string, connection: Connection): void {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
 
         const connections = yDesign.get('connections');
         const yConnection = new Y.Map<any>();
@@ -513,12 +533,12 @@ class Studio {
         connections.set(connectionId, yConnection);
     }
 
-    getConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string): Connection | null {
-        const yKit = this.getYKit(kitUri);
+    getConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): Connection | null {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) return null;
 
         const connections = yDesign.get('connections');
@@ -538,17 +558,17 @@ class Studio {
         };
     }
 
-    updateConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string, connection: Partial<Connection>): void {
-        const yKit = this.getYKit(kitUri);
+    updateConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string, connection: Partial<Connection>): void {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
 
         const connections = yDesign.get('connections');
         const yConnection = connections.get(connectionId);
-        if (!yConnection) throw new Error(`Connection ${connectionId} not found in design ${name}`);
+        if (!yConnection) throw new Error(`Connection ${connectionId} not found in design ${designName}`);
 
         if (connection.description !== undefined) yConnection.set('description', connection.description);
         if (connection.connected !== undefined) yConnection.set('connected', connection.connected);
@@ -561,20 +581,20 @@ class Studio {
         if (connection.y !== undefined) yConnection.set('y', connection.y);
     }
 
-    deleteConnection(kitUri: string, name: string, variant: string, view: string, connectionId: string): void {
-        const yKit = this.getYKit(kitUri);
+    deleteConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): void {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
-        const yDesign = designs.get(name)?.get(variant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
 
         const connections = yDesign.get('connections');
         connections.delete(connectionId);
     }
 
     createRepresentation(kitUri: string, typeName: string, representation: Representation): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -598,7 +618,7 @@ class Studio {
     }
 
     getRepresentation(kitUri: string, typeName: string, key: string): Representation | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -621,7 +641,7 @@ class Studio {
     }
 
     updateRepresentation(kitUri: string, typeName: string, key: string, representation: Partial<Representation>): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -643,7 +663,7 @@ class Studio {
     }
 
     deleteRepresentation(kitUri: string, typeName: string, key: string): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -654,19 +674,8 @@ class Studio {
         representations.delete(key);
     }
 
-    private createYPort(port: Port): Y.Map<any> {
-        const yPort = new Y.Map<any>();
-        yPort.set('id_', port.id_ || uuidv4());
-        yPort.set('description', port.description || '');
-        yPort.set('direction', new Y.Map<any>(Object.entries(port.direction)));
-        yPort.set('point', new Y.Map<any>(Object.entries(port.point)));
-        yPort.set('t', port.t || 0);
-        yPort.set('qualities', port.qualities ? new Y.Array(port.qualities.map(q => q.name)) : new Y.Array());
-        return yPort;
-    }
-
     createPort(kitUri: string, typeName: string, port: Port): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -693,7 +702,14 @@ class Studio {
         yPort.set('t', port.t || 0);
         if (port.qualities) {
             const yQualities = new Y.Map<any>();
-            port.qualities.forEach(q => yQualities.set(q.name, q));
+            port.qualities.forEach(q => {
+                const yQuality = new Y.Map<any>();
+                yQuality.set('name', q.name);
+                if (q.value) yQuality.set('value', q.value);
+                if (q.unit) yQuality.set('unit', q.unit);
+                if (q.definition) yQuality.set('definition', q.definition);
+                yQualities.set(q.name, yQuality);
+            });
             yPort.set('qualities', yQualities);
         }
 
@@ -701,7 +717,7 @@ class Studio {
     }
 
     getPort(kitUri: string, typeName: string, portId: string): Port | null {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -735,7 +751,7 @@ class Studio {
     }
 
     updatePort(kitUri: string, typeName: string, portId: string, port: Partial<Port>): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -770,7 +786,7 @@ class Studio {
     }
 
     deletePort(kitUri: string, typeName: string, portId: string): void {
-        const yKit = this.getYKit(kitUri);
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types');
         const yType = types.get(typeName);
@@ -778,18 +794,13 @@ class Studio {
         const ports = yType.get('ports');
         ports.delete(portId);
     }
-
-    private getConnectionId(connection: Connection): string {
-        const { connecting, connected } = connection;
-        return `${connecting.piece.id_}:${connecting.port.id_}-${connected.piece.id_}:${connected.port.id_}`;
-    }
 }
 
-const studioSingleton = new Studio();
+const studio = new Studio();
 const StudioContext = createContext<Studio | null>(null);
 export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-        <StudioContext.Provider value={studioSingleton}>
+        <StudioContext.Provider value={studio}>
             {children}
         </StudioContext.Provider>
     );
@@ -810,7 +821,7 @@ export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({
     );
 };
 
-export function useKit(kitUri?: string) {
+export function useKit(uri?: string) {
     const studio = useStudio();
     const kitFromContext = useContext(KitContext);
     const [kit, setKit] = useState<Kit | null>(kitFromContext);
@@ -818,11 +829,11 @@ export function useKit(kitUri?: string) {
     useEffect(() => {
         if (kitFromContext) {
             setKit(kitFromContext);
-        } else if (kitUri) {
-            const updatedKit = studio.getKit(kitUri);
+        } else if (uri) {
+            const updatedKit = studio.getKit(uri);
             setKit(updatedKit);
         }
-    }, [studio, kitFromContext, kitUri]);
+    }, [studio, kitFromContext, uri]);
 
     return kit;
 }
@@ -863,7 +874,7 @@ export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }
     );
 };
 
-export function usePiece(pieceId?: string) {
+export function usePiece(id?: string) {
     const studio = useStudio();
     const kit = useKit();
     const design = useDesign();
@@ -873,17 +884,17 @@ export function usePiece(pieceId?: string) {
     useEffect(() => {
         if (pieceFromContext) {
             setPiece(pieceFromContext);
-        } else if (kit?.uri && design?.name && pieceId) {
+        } else if (kit?.uri && design?.name && id) {
             const updatedPiece = studio.getPiece(
                 kit.uri,
                 design.name,
                 design.variant || '',
                 design.view || '',
-                pieceId
+                id
             );
             setPiece(updatedPiece);
         }
-    }, [studio, kit, design, pieceFromContext, pieceId]);
+    }, [studio, kit, design, pieceFromContext, id]);
 
     return piece;
 }

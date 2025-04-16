@@ -12,7 +12,7 @@ interface ModelPieceProps {
     piece: Piece;
 }
 const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
-    const { selection, setSelection } = useDesignEditor();
+    // const { selection, setSelection } = useDesignEditor();
     return (
         <Select
             multiple
@@ -22,11 +22,11 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
             backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
             onClick={(e) => {
                 console.log('select clicked', e)
-                setSelection({
-                    ...selection,
-                    // TODO: Update selection to set
-                    pieceIds: selection.pieceIds.includes(piece.id_) ? selection.pieceIds.filter((id) => id !== piece.id_) : [...selection.pieceIds, piece.id_]
-                });
+                // setSelection({
+                //     ...selection,
+                //     // TODO: Update selection to set
+                //     pieceIds: selection.pieceIds.includes(piece.id_) ? selection.pieceIds.filter((id) => id !== piece.id_) : [...selection.pieceIds, piece.id_]
+                // });
             }}
         >
             <Sphere args={[1, 100, 100]} position={[piece.plane.origin.x, piece.plane.origin.z, -piece.plane.origin.y]}>
@@ -35,9 +35,6 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
         </Select>
     )
 }
-
-// Import the useDesignEditor context
-import { useDesignEditor } from '../../context/DesignEditorProvider';
 
 // ModelDesign component to visualize a design and its pieces
 interface ModelDesignProps {
