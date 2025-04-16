@@ -899,3 +899,153 @@ export function usePiece(id?: string) {
     return piece;
 }
 
+export function useKitActions() {
+    const studio = useStudio();
+
+    function createKit(kit: Kit) {
+        studio.createKit(kit);
+    }
+
+    function getKit(uri: string) {
+        return studio.getKit(uri);
+    }
+
+    function updateKit(kit: Kit) {
+        return studio.updateKit(kit);
+    }
+
+    return { createKit, getKit, updateKit };
+}
+
+export function useTypeActions(kitUri: string) {
+    const studio = useStudio();
+
+    function createType(type: Type) {
+        studio.createType(kitUri, type);
+    }
+
+    function getType(typeName: string, variant: string = '') {
+        return studio.getType(kitUri, typeName, variant);
+    }
+
+    function updateType(type: Type) {
+        return studio.updateType(kitUri, type);
+    }
+
+    function deleteType(typeName: string) {
+        studio.deleteType(kitUri, typeName);
+    }
+
+    return { createType, getType, updateType, deleteType };
+}
+
+export function useDesignActions(kitUri: string) {
+    const studio = useStudio();
+
+    function createDesign(design: Design) {
+        studio.createDesign(kitUri, design);
+    }
+
+    function getDesign(name: string, variant: string = '', view: string = '') {
+        return studio.getDesign(kitUri, name, variant, view);
+    }
+
+    function updateDesign(design: Design) {
+        return studio.updateDesign(kitUri, design);
+    }
+
+    function deleteDesign(name: string) {
+        studio.deleteDesign(kitUri, name);
+    }
+
+    return { createDesign, getDesign, updateDesign, deleteDesign };
+}
+
+export function usePieceActions(kitUri: string, designName: string, designVariant: string, view: string) {
+    const studio = useStudio();
+
+    function createPiece(piece: Piece) {
+        studio.createPiece(kitUri, designName, designVariant, view, piece);
+    }
+
+    function getPiece(pieceId: string) {
+        return studio.getPiece(kitUri, designName, designVariant, view, pieceId);
+    }
+
+    function updatePiece(piece: Piece) {
+        return studio.updatePiece(kitUri, designName, designVariant, view, piece);
+    }
+
+    function deletePiece(pieceId: string) {
+        return studio.deletePiece(kitUri, designName, designVariant, view, pieceId);
+    }
+
+    return { createPiece, getPiece, updatePiece, deletePiece };
+}
+
+export function useConnectionActions(kitUri: string, designName: string, designVariant: string, view: string) {
+    const studio = useStudio();
+
+    function createConnection(connection: Connection) {
+        studio.createConnection(kitUri, designName, designVariant, view, connection);
+    }
+
+    function getConnection(connectionId: string) {
+        return studio.getConnection(kitUri, designName, designVariant, view, connectionId);
+    }
+
+    function updateConnection(connectionId: string, connection: Partial<Connection>) {
+        studio.updateConnection(kitUri, designName, designVariant, view, connectionId, connection);
+    }
+
+    function deleteConnection(connectionId: string) {
+        studio.deleteConnection(kitUri, designName, designVariant, view, connectionId);
+    }
+
+    return { createConnection, getConnection, updateConnection, deleteConnection };
+}
+
+export function useRepresentationActions(kitUri: string, typeName: string) {
+    const studio = useStudio();
+
+    function createRepresentation(representation: Representation) {
+        studio.createRepresentation(kitUri, typeName, representation);
+    }
+
+    function getRepresentation(key: string) {
+        return studio.getRepresentation(kitUri, typeName, key);
+    }
+
+    function updateRepresentation(key: string, representation: Partial<Representation>) {
+        studio.updateRepresentation(kitUri, typeName, key, representation);
+    }
+
+    function deleteRepresentation(key: string) {
+        studio.deleteRepresentation(kitUri, typeName, key);
+    }
+
+    return { createRepresentation, getRepresentation, updateRepresentation, deleteRepresentation };
+}
+
+export function usePortActions(kitUri: string, typeName: string) {
+    const studio = useStudio();
+
+    function createPort(port: Port) {
+        studio.createPort(kitUri, typeName, port);
+    }
+
+    function getPort(portId: string) {
+        return studio.getPort(kitUri, typeName, portId);
+    }
+
+    function updatePort(portId: string, port: Partial<Port>) {
+        studio.updatePort(kitUri, typeName, portId, port);
+    }
+
+    function deletePort(portId: string) {
+        studio.deletePort(kitUri, typeName, portId);
+    }
+
+    return { createPort, getPort, updatePort, deletePort };
+}
+

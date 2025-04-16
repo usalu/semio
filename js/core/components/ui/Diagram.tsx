@@ -215,7 +215,6 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design 
     // );
 
     const MIN_DISTANCE = 100;
-    const store = useStoreApi();
     // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     // const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     // const { getInternalNode } = useReactFlow();
