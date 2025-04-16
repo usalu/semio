@@ -1,5 +1,4 @@
 import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
-import { Provider as JotaiProvider } from 'jotai';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
@@ -29,6 +28,8 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
+import { DesignProvider, KitProvider, StudioProvider } from './studiostore';
+import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
 
 export enum Mode {
@@ -58,6 +59,7 @@ interface SketchpadContextType {
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
+
 
 export const useSketchpad = () => {
     const context = useContext(SketchpadContext);
@@ -654,7 +656,6 @@ interface SketchpadProps {
 const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.COMPACT, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
-    const [currentMode, setCurrentMode] = useState<Mode>(mode);
 
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
@@ -683,31 +684,37 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         }
     }, [currentLayout]);
 
-
     const ActiveView = DesignEditor;
 
+
     return (
-        <SketchpadContext.Provider value={{
-            setNavbarToolbar,
-            layout: currentLayout,
-            setLayout: setCurrentLayout,
-            theme: currentTheme,
-            setTheme: setCurrentTheme,
-            mode: currentMode,
-        }}>
-            <div
-                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive
-                className="h-full w-full flex flex-col bg-background text-foreground"
-            >
-                <TooltipProvider>
-                    <Navbar
-                        toolbarContent={navbarToolbar}
-                        onWindowEvents={onWindowEvents}
-                    />
-                    <ActiveView />
-                </TooltipProvider>
-            </div>
-        </SketchpadContext.Provider>
+        <TooltipProvider>
+            <StudioProvider>
+                <SketchpadContext.Provider value={{
+                    mode: mode,
+                    layout: currentLayout,
+                    setLayout: setCurrentLayout,
+                    theme: currentTheme,
+                    setTheme: setCurrentTheme,
+                    setNavbarToolbar: setNavbarToolbar,
+                }}>
+                    <KitProvider kit={metabolism}>
+                        <DesignProvider design={metabolism.designs[0]}>
+                            <div
+                                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive
+                                className="h-full w-full flex flex-col bg-background text-foreground"
+                            >
+                                <Navbar
+                                    toolbarContent={navbarToolbar}
+                                    onWindowEvents={onWindowEvents}
+                                />
+                                <ActiveView />
+                            </div>
+                        </DesignProvider>
+                    </KitProvider>
+                </SketchpadContext.Provider>
+            </StudioProvider>
+        </TooltipProvider>
     );
 };
 
