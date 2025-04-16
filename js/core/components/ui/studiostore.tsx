@@ -5,7 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Point, Plane } from '@semio/js/semio';
 
 
 export interface DesignEditorState {
@@ -118,8 +118,8 @@ class Studio {
             remote: yKit.get('remote'),
             homepage: yKit.get('homepage'),
             license: yKit.get('license'),
-            designs: Array.from(yKit.get('designs').values()).map((design: any) => (this.getDesign(uri, design.get('name'), design.get('variant'), design.get('view')))),
-            types: Array.from(yKit.get('types').values()).map((type: any) => (this.getType(uri, type.get('name'), type.get('variant'))))
+            designs: Array.from(yKit.get('designs').values()).map((design: Y.Map<any>) => (this.getDesign(uri, design.get('name'), design.get('variant'), design.get('view')))),
+            types: Array.from(yKit.get('types').values()).map((type: Y.Map<any>) => (this.getType(uri, type.get('name'), type.get('variant'))))
         };
     }
 
@@ -343,9 +343,9 @@ class Studio {
 
     private createYPlane(plane: Plane): Y.Map<any> {
         const yPlane = new Y.Map<any>();
-        yPlane.set('origin', new Y.Map(plane.origin));
-        yPlane.set('xAxis', new Y.Map(plane.xAxis));
-        yPlane.set('yAxis', new Y.Map(plane.yAxis));
+        yPlane.set('origin', new Y.Map<any>(Object.entries(plane.origin)));
+        yPlane.set('xAxis', new Y.Map<any>(Object.entries(plane.xAxis)));
+        yPlane.set('yAxis', new Y.Map<any>(Object.entries(plane.yAxis)));
         return yPlane;
     }
 
@@ -376,7 +376,31 @@ class Studio {
         const yPiece = pieces.get(pieceId);
         if (!yPiece) return null;
 
-        return yPiece;
+        const yCenter = yPiece.get('center')
+        const center: Point | null = yCenter ? {
+            x: yCenter.get('x'),
+            y: yCenter.get('y'),
+            z: yCenter.get('z')
+        } : null;
+
+        const yPlane = yPiece.get('plane')
+        const plane: Plane | null = yPlane ? 
+
+        return {
+            id_: yPiece.get('id_'),
+            description: yPiece.get('description'),
+            type: yPiece.get('type'),
+            center: yPiece.get('center') ? Object.fromEntries(yPiece.get('center')) : null,
+            plane: yPiece.get('plane') ? this.getYPlane(yPiece.get('plane')) : null
+        };
+    }
+
+    private getYPlane(yPlane: Y.Map<any>): Plane {
+        return {
+            origin: Object.fromEntries(yPlane.get('origin')),
+            xAxis: Object.fromEntries(yPlane.get('xAxis')),
+            yAxis: Object.fromEntries(yPlane.get('yAxis'))
+        };
     }
 
     updatePiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece | null {
@@ -393,8 +417,8 @@ class Studio {
 
         if (piece.description !== undefined) yPiece.description = piece.description;
         if (piece.type !== undefined) yPiece.type = piece.type;
-        if (piece.center !== undefined) yPiece.center = piece.center;
-        if (piece.plane !== undefined) yPiece.plane = piece.plane;
+        if (piece.center !== undefined) yPiece.center = piece.center ? new Y.Map<any>(Object.entries(piece.center)) : null;
+        if (piece.plane !== undefined) yPiece.plane = piece.plane ? this.createYPlane(piece.plane) : null;
 
         return this.getPiece(kitUri, name, variant, view, piece.id_);
     }
@@ -575,8 +599,8 @@ class Studio {
         const yPort = new Y.Map<any>();
         yPort.set('id_', port.id_ || uuidv4());
         yPort.set('description', port.description || '');
-        yPort.set('direction', new Y.Map(port.direction));
-        yPort.set('point', new Y.Map(port.point));
+        yPort.set('direction', new Y.Map<any>(Object.entries(port.direction)));
+        yPort.set('point', new Y.Map<any>(Object.entries(port.point)));
         yPort.set('t', port.t || 0);
         yPort.set('qualities', port.qualities ? new Y.Array(port.qualities.map(q => q.name)) : new Y.Array());
         return yPort;
@@ -612,8 +636,8 @@ class Studio {
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),
-            direction: yPort.get('direction').toJSON(),
-            point: yPort.get('point').toJSON(),
+            direction: Object.fromEntries(yPort.get('direction')),
+            point: Object.fromEntries(yPort.get('point')),
             t: yPort.get('t'),
             qualities: yPort.get('qualities').map((name: string) => ({ name }))
         };
@@ -632,8 +656,8 @@ class Studio {
         if (!yPort) return null;
 
         if (port.description !== undefined) yPort.set('description', port.description);
-        if (port.direction !== undefined) yPort.set('direction', new Y.Map(port.direction));
-        if (port.point !== undefined) yPort.set('point', new Y.Map(port.point));
+        if (port.direction !== undefined) yPort.set('direction', new Y.Map<any>(Object.entries(port.direction)));
+        if (port.point !== undefined) yPort.set('point', new Y.Map<any>(Object.entries(port.point)));
         if (port.t !== undefined) yPort.set('t', port.t);
         if (port.qualities !== undefined) yPort.set('qualities', new Y.Array(port.qualities.map(q => q.name)));
 
@@ -752,8 +776,8 @@ export function usePiece(id: string) {
                 id_: yPiece.get('id_'),
                 description: yPiece.get('description'),
                 type: yPiece.get('type'),
-                center: yPiece.get('center')?.toJSON() || null,
-                plane: yPiece.get('plane')?.toJSON() || null
+                center: yPiece.get('center') ? Object.fromEntries(yPiece.get('center')) : null,
+                plane: yPiece.get('plane') ? this.getYPlane(yPiece.get('plane')) : null
             });
         }
     }, [design, id]);

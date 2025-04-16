@@ -347,7 +347,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    
+
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -617,24 +617,24 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 const ResizableHandleWrapper: FC<{ className?: string }> = ({ className }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    
+
     const handleMouseDown = () => {
         setIsDragging(true);
-        
+
         const handleMouseUp = () => {
             setIsDragging(false);
             document.removeEventListener('mouseup', handleMouseUp, true);
         };
-        
+
         document.addEventListener('mouseup', handleMouseUp, true);
     };
-    
+
     return (
-        <ResizableHandle 
+        <ResizableHandle
             className={`${className} ${isDragging || isHovered ? 'bg-primary' : ''}`}
             onMouseDown={handleMouseDown}
             onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => !isDragging && setIsHovered(false)} 
+            onMouseLeave={() => !isDragging && setIsHovered(false)}
         />
     );
 };

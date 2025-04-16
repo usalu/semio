@@ -36,6 +36,29 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
     )
 }
 
+// Import the useDesignEditor context
+import { useDesignEditor } from '../../context/DesignEditorProvider';
+
+// ModelDesign component to visualize a design and its pieces
+interface ModelDesignProps {
+    design: Design;
+}
+
+const ModelDesign: FC<ModelDesignProps> = ({ design }) => {
+    // Return early if there are no pieces
+    if (!design?.pieces || design.pieces.length === 0) {
+        return null;
+    }
+
+    return (
+        <group>
+            {design.pieces.map((piece, index) => (
+                <ModelPiece key={`piece-${piece.id_ || index}`} piece={piece} />
+            ))}
+        </group>
+    );
+};
+
 const Gizmo: FC = (): JSX.Element => {
     const colors = useMemo(() => [
         getComputedColor('--color-primary'),
