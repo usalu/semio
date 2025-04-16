@@ -237,22 +237,7 @@ class Studio {
         return types.delete(typeName);
     }
 
-    private createYDesign(design: Design): Y.Map<any> {
-        const yDesign = new Y.Map<any>();
-        yDesign.set('name', design.name);
-        yDesign.set('description', design.description || '');
-        yDesign.set('icon', design.icon || '');
-        yDesign.set('image', design.image || '');
-        yDesign.set('variant', design.variant || '');
-        yDesign.set('view', design.view || '');
-        yDesign.set('unit', design.unit || '');
-        yDesign.set('pieces', new Y.Map(design.pieces?.map(p => [p.id_ || uuidv4(), this.createYPiece(p)])));
-        yDesign.set('connections', new Y.Map(design.connections?.map(c => [this.getConnectionId(c), this.createYConnection(c)])));
-        yDesign.set('qualities', new Y.Map(design.qualities?.map(q => [q.name, q])));
-        return yDesign;
-    }
-
-    createDesign(kitUri: string, design: Design): Design {
+    createDesign(kitUri: string, design: Design): void {
         const yKit = this.getYKit(kitUri);
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
@@ -267,9 +252,18 @@ class Studio {
             viewMap = new Y.Map<any>();
             variantMap.set(design.variant || '', viewMap);
         }
-        viewMap.set(design.view || '', this.createYDesign(design));
-
-        return this.getDesign(kitUri, design.name, design.variant, design.view);
+        const yDesign = new Y.Map<any>();
+        yDesign.set('name', design.name);
+        yDesign.set('description', design.description || '');
+        yDesign.set('icon', design.icon || '');
+        yDesign.set('image', design.image || '');
+        yDesign.set('variant', design.variant || '');
+        yDesign.set('view', design.view || '');
+        yDesign.set('unit', design.unit || '');
+        yDesign.set('pieces', new Y.Map(design.pieces?.map(p => [p.id_ || uuidv4(), this.createYPiece(p)])));
+        yDesign.set('connections', new Y.Map(design.connections?.map(c => [this.getConnectionId(c), this.createYConnection(c)])));
+        yDesign.set('qualities', new Y.Map(design.qualities?.map(q => [q.name, q])));
+        viewMap.set(design.view || '', yDesign);
     }
 
     getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design | null {
@@ -595,7 +589,7 @@ class Studio {
         };
     }
 
-    updateRepresentation(kitUri: string, typeName: string, representationUrl: string, representation: Partial<Representation>): Representation | null {
+    updateRepresentation(kitUri: string, typeName: string, representation: Partial<Representation>): Representation | null {
         const yKit = this.getYKit(kitUri);
         if (!yKit) return null;
 
@@ -604,12 +598,12 @@ class Studio {
         if (!yType) return null;
 
         const representations = yType.get('representations') as Y.Map<any>;
-        const yRepresentation = representations.get(representationUrl) as Y.Map<any> | undefined;
+        const yRepresentation = representations.get(representation.mime).get(representation.tags?.join(',')) as Y.Map<any> | undefined;
         if (!yRepresentation) return null;
 
         if (representation.description !== undefined) yRepresentation.set('description', representation.description);
         if (representation.mime !== undefined) yRepresentation.set('mime', representation.mime);
-        if (representation.tags !== undefined) yRepresentation.set('tags', new Y.Array(representation.tags));
+        if (representation.tags !== undefined) yRepresentation.set('tags', new Y.Array<string>())
         if (representation.qualities !== undefined) yRepresentation.set('qualities', new Y.Array(representation.qualities.map(q => q.name)));
 
         return this.getRepresentation(kitUri, typeName, representationUrl);
