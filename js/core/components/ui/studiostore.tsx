@@ -146,14 +146,14 @@ class Studio {
     private createYType(type: Type): Y.Map<any> {
         const yType = new Y.Map<any>();
         yType.set('name', type.name);
+        yType.set('variant', type.variant || '');
         yType.set('description', type.description || '');
         yType.set('icon', type.icon || '');
         yType.set('image', type.image || '');
-        yType.set('variant', type.variant || '');
         yType.set('unit', type.unit || '');
         yType.set('ports', new Y.Map(type.ports?.map(p => [p.id_ || uuidv4(), this.createYPort(p)])));
         yType.set('qualities', new Y.Map(type.qualities?.map(q => [q.name, q])));
-        yType.set('representations', new Y.Map(type.representations?.map(r => [r.url, this.createYRepresentation(r)])));
+        yType.set('representations', new Y.Map(type.representations?.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createYRepresentation(r)])));
         return yType;
     }
 
@@ -162,8 +162,12 @@ class Studio {
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
-        const yType = this.createYType(type);
-        types.set(type.name, new Y.Map([[type.variant || '', yType]]));
+        let variantMap = types.get(type.name) as Y.Map<any> | undefined;
+        if (!variantMap) {
+            variantMap = new Y.Map<any>();
+            types.set(type.name, variantMap);
+        }
+        variantMap.set(type.variant || '', this.createYType(type));
 
         return this.getType(kitUri, type.name, type.variant);
     }
@@ -185,7 +189,14 @@ class Studio {
             unit: yType.get('unit'),
             ports: Array.from(yType.get('ports').entries()).map(([id, port]) => ({ ...port, id_: id })),
             qualities: Array.from(yType.get('qualities').values()),
-            representations: Array.from(yType.get('representations').values())
+            representations: Array.from(yType.get('representations').entries()).map(([key, value]: [string, any]): Representation => {
+                const [mime, tags] = key.split(':');
+                return {
+                    ...value,
+                    mime,
+                    tags: tags ? tags.split(',') : []
+                };
+            })
         };
     }
 
@@ -211,7 +222,7 @@ class Studio {
             yType.set('qualities', qualities);
         }
         if (type.representations !== undefined) {
-            const representations = new Y.Map(type.representations.map(r => [r.url, this.createYRepresentation(r)]));
+            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createYRepresentation(r)]));
             yType.set('representations', representations);
         }
 
@@ -246,8 +257,17 @@ class Studio {
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = this.createYDesign(design);
-        designs.set(design.name, new Y.Map([[design.variant || '', new Y.Map([[design.view || '', yDesign]])]]));
+        let variantMap = designs.get(design.name) as Y.Map<any> | undefined;
+        if (!variantMap) {
+            variantMap = new Y.Map<any>();
+            designs.set(design.name, variantMap);
+        }
+        let viewMap = variantMap.get(design.variant || '') as Y.Map<any> | undefined;
+        if (!viewMap) {
+            viewMap = new Y.Map<any>();
+            variantMap.set(design.variant || '', viewMap);
+        }
+        viewMap.set(design.view || '', this.createYDesign(design));
 
         return this.getDesign(kitUri, design.name, design.variant, design.view);
     }
@@ -317,8 +337,16 @@ class Studio {
             description: piece.description || '',
             type: piece.type,
             center: piece.center || null,
-            plane: piece.plane || null
+            plane: piece.plane ? this.createYPlane(piece.plane) : null
         };
+    }
+
+    private createYPlane(plane: Plane): Y.Map<any> {
+        const yPlane = new Y.Map<any>();
+        yPlane.set('origin', new Y.Map(plane.origin));
+        yPlane.set('xAxis', new Y.Map(plane.xAxis));
+        yPlane.set('yAxis', new Y.Map(plane.yAxis));
+        return yPlane;
     }
 
     createPiece(kitUri: string, name: string, variant: string, view: string, piece: Piece): Piece {
