@@ -23,13 +23,13 @@ import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
-import { useTypes } from '@semio/js/store';
+import { useKit, useDesign, DesignProvider, KitProvider, StudioProvider } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
-import { DesignProvider, KitProvider, StudioProvider } from './studiostore';
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
+import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
 
 
 export enum Mode {
@@ -102,18 +102,14 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 }
 
 const Types: FC = () => {
-    const types = useTypes();
-    if (!types) return null;
+    const kit = useKit();
+    if (!kit) return null;
 
     return (
         <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
-            {Array.from(types.entries()).map(([name, variantMap]) => {
-                // Cast variantMap to Map<string, Type> to ensure TypeScript recognizes entries() method
-                const typedVariantMap = variantMap as Map<string, Type>;
-                return Array.from(typedVariantMap.entries()).map(([variant, type]) => (
-                    <TypeAvatar key={`${name}-${variant}`} type={type} />
-                ));
-            })}
+            {kit.types?.map((type) => (
+                <TypeAvatar key={type.name} type={type} />
+            ))}
         </div>
     );
 }
@@ -535,6 +531,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 
     const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
+    const design = useDesign();
+
     const designEditorToolbar = (
         <ToggleGroup
             type="multiple"
@@ -575,7 +573,11 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                         className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
                         onDoubleClick={() => handlePanelDoubleClick('diagram')}
                     >
-                        <Diagram fullscreen={fullscreenPanel === 'diagram'} onPanelDoubleClick={() => handlePanelDoubleClick('diagram')} />
+                        <Diagram
+                            fullscreen={fullscreenPanel === 'diagram'}
+                            onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
+                            design={design}
+                        />
                     </ResizablePanel>
                     <ResizableHandleWrapper className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
                     <ResizablePanel
@@ -586,12 +588,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                         <Model
                             fullscreen={fullscreenPanel === 'model'}
                             onPanelDoubleClick={() => handlePanelDoubleClick('model')}
-                            design={{
-                                pieces: [
-                                    { id_: '1', plane: { origin: { x: 0, y: 0, z: 0 } } },
-                                    { id_: '2', plane: { origin: { x: 0, y: 0, z: 2 } } },
-                                ]
-                            }}
+                            design={design}
                         />
                     </ResizablePanel>
                 </ResizablePanelGroup>
@@ -699,7 +696,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     setNavbarToolbar: setNavbarToolbar,
                 }}>
                     <KitProvider kit={metabolism}>
-                        <DesignProvider design={metabolism.designs[0]}>
+                        <DesignProvider design={nakaginCapsuleTower}>
                             <div
                                 key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive
                                 className="h-full w-full flex flex-col bg-background text-foreground"
