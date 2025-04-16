@@ -30,7 +30,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
-
+import { Fingerprint } from 'lucide-react';
 
 export enum Mode {
     USER = 'user',
@@ -44,9 +44,8 @@ export enum Theme {
 }
 
 export enum Layout {
-    COMPACT = 'compact',
     NORMAL = 'normal',
-    COMFORTABLE = 'comfortable',
+    TOUCH = 'touch',
 }
 
 interface SketchpadContextType {
@@ -69,18 +68,6 @@ export const useSketchpad = () => {
     return context;
 };
 
-type TreeSection = {
-    name: string;
-    children: ReactNode;
-}
-
-type Tree = {
-    id: string;
-    name: string;
-    icon: ReactNode;
-    sections: TreeSection[];
-}
-
 interface TypeAvatarProps {
     type: Type
 }
@@ -89,15 +76,22 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
         id: 'type-' + type.name + type.variant,
     });
     return (
-        <Avatar
-            ref={setNodeRef}
-            // className="cursor-pointer"
-            {...listeners}
-            {...attributes}>
-            {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
-            <AvatarImage src="https://github.com/shadcn.png" />
-            {/* <AvatarFallback>{type.name}</AvatarFallback> */}
-        </Avatar>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Avatar
+                    ref={setNodeRef}
+                    // className="cursor-pointer"
+                    {...listeners}
+                    {...attributes}>
+                    {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
+                    <AvatarImage src="https://github.com/semio-tech.png" />
+                    {/* <AvatarFallback>{type.name}</AvatarFallback> */}
+                </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+                {type.description}
+            </TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -114,31 +108,13 @@ const Types: FC = () => {
     );
 }
 
-const ExplorerTree: Tree = {
-    id: 'explorer',
-    name: 'Explorer',
-    icon: <Folder size={14} className="w-3.5 h-3.5" />,
-    sections: [
-        {
-            name: 'Types',
-            children: <Types />,
-        },
-    ],
+interface TreeSectionProps {
+    name: string;
+    children: ReactNode;
 }
 
-const TestTree: Tree = {
-    id: 'test',
-    name: 'Test',
-    icon: <FlaskConical size={14} className="w-3.5 h-3.5" />,
-    sections: [],
-}
 
-const trees = [
-    ExplorerTree,
-    TestTree,
-]
-
-const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
+const TreeSection: FC<TreeSectionProps> = ({ name, children }) => {
     const [open, setOpen] = useState(true);
     return (
         <Collapsible className="p-3 border-b-thin font-thin uppercase"
@@ -146,66 +122,14 @@ const TreeSectionComponent: FC<{ section: TreeSection }> = ({ section }) => {
             onOpenChange={setOpen}>
             <CollapsibleTrigger className="flex items-center justify-between">
                 {open ? <ChevronDown size={14} className="w-3.5 h-3.5" /> : <ChevronRight size={14} className="w-3.5 h-3.5" />}
-                {section.name}
+                {name}
             </CollapsibleTrigger>
             <CollapsibleContent>
-                {section.children}
+                {children}
             </CollapsibleContent>
         </Collapsible>
     );
-};
-
-interface TreeProps {
-    treeId: string;
 }
-const TreeComponent: FC<TreeProps> = ({ treeId }) => {
-    const tree = trees.find(tree => tree.id === treeId);
-    if (!tree) return null;
-
-    return (
-        <ResizablePanel defaultSize={15}>
-            {tree.sections.map((section, index) => (
-                <TreeSectionComponent key={index} section={section} />
-            ))}
-        </ResizablePanel>
-    );
-};
-
-
-interface TreeBarProps {
-    activeTreeId?: string;
-    onTreeSelect?: (treeId: string) => void;
-}
-const TreeBar: FC<TreeBarProps> = ({ activeTreeId, onTreeSelect }) => {
-    return (
-        <div className="flex h-full w-12 flex-col items-end justify-top border-r">
-            {trees.map((tree) => (
-                <div
-                    key={tree.id}
-                    className={`w-12 h-12 flex items-center justify-center cursor-pointer ${tree.id === activeTreeId ? 'border-l-3 border-primary' : ''
-                        }`}
-                    onClick={() => onTreeSelect?.(tree.id)}
-                >
-                    {tree.icon}
-                </div>
-            ))}
-        </div>
-    );
-};
-
-interface TreeSiderProps {
-}
-const TreeSider: FC<TreeSiderProps> = ({ }) => {
-
-    const [activeTreeId, setActiveTreeId] = useState('explorer');
-
-    return (
-        <>
-            <TreeBar activeTreeId={activeTreeId} onTreeSelect={setActiveTreeId} />
-            <TreeComponent treeId={activeTreeId} />
-        </>
-    );
-};
 
 interface NavbarProps {
     toolbarContent?: ReactNode;
@@ -273,19 +197,14 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                     onValueChange={setLayout}
                     items={[
                         {
-                            value: Layout.COMPACT,
-                            tooltip: "Turn Layout Normal",
-                            label: <AppWindow />
-                        },
-                        {
                             value: Layout.NORMAL,
-                            tooltip: "Turn Layout Comfortable",
-                            label: <Sofa />
+                            tooltip: "Turn to Touch Layout",
+                            label: <Fingerprint />
                         },
                         {
-                            value: Layout.COMFORTABLE,
-                            tooltip: "Turn Layout Compact",
-                            label: <Glasses />
+                            value: Layout.TOUCH,
+                            tooltip: "Turn to Normal Layout",
+                            label: <AppWindow />
                         }
                     ]}
                 />
@@ -378,7 +297,9 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-4">Workbench</div>
+            <TreeSection name="Types">
+                <Types />
+            </TreeSection>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -637,9 +558,6 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     useEffect(() => {
         setNavbarToolbar(designEditorToolbar);
         return () => setNavbarToolbar(null);
-        // Cleanup function to clear toolbar when component unmounts or view changes
-        return () => setNavbarToolbar(null);
-        // Rerun effect if visibility state changes, as ToggleGroup depends on it
     }, [setNavbarToolbar, visiblePanels]);
 
     return (
@@ -733,12 +651,9 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove(Layout.COMFORTABLE, Layout.COMPACT);
-        if (currentLayout === Layout.COMPACT) {
-            root.classList.add(Layout.COMPACT);
-        }
-        if (currentLayout === Layout.COMFORTABLE) {
-            root.classList.add(Layout.COMFORTABLE);
+        root.classList.remove(Layout.TOUCH);
+        if (currentLayout === Layout.TOUCH) {
+            root.classList.add(Layout.TOUCH);
         }
     }, [currentLayout]);
 
