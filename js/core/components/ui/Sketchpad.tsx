@@ -108,6 +108,47 @@ const Types: FC = () => {
     );
 }
 
+interface DesignAvatarProps {
+    design: Design
+}
+const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+        id: 'design-' + design.name,
+    });
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Avatar
+                    ref={setNodeRef}
+                    // className="cursor-pointer"
+                    {...listeners}
+                    {...attributes}>
+                    {/* <AvatarImage src={"../../../../examples/metabolism/" + type.icon} /> */}
+                    <AvatarImage src="https://github.com/semio-tech.png" />
+                    {/* <AvatarFallback>{type.name}</AvatarFallback> */}
+                </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+                {design.description}
+            </TooltipContent>
+        </Tooltip>
+    );
+}
+
+const Designs: FC = () => {
+    const kit = useKit();
+    if (!kit) return null;
+
+    return (
+        <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
+            {kit.designs?.map((design) => (
+                <DesignAvatar key={design.name} design={design} />
+            ))}
+        </div>
+    );
+}
+
+
 interface TreeSectionProps {
     name: string;
     children: ReactNode;
@@ -299,6 +340,9 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         >
             <TreeSection name="Types">
                 <Types />
+            </TreeSection>
+            <TreeSection name="Designs">
+                <Designs />
             </TreeSection>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
