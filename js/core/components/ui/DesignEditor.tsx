@@ -241,7 +241,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-4 left-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
@@ -295,7 +295,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-4 right-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
                 ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
             style={{ width: `${width}px` }}
         >
@@ -355,7 +355,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
 
     return (
         <div
-            className={`absolute z-[150] bg-background-level-2 text-foreground border ${isDragging || isResizeHovered ? 'border-t-primary' : ''}`}
+            className={`absolute z-30 bg-background-level-2 text-foreground border ${isDragging || isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
                 left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
                 right: rightPanelVisible ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
@@ -410,7 +410,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-4 right-4 bottom-4 z-100 bg-background-level-2 text-foreground border
+            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
                 ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
             style={{ width: `${width}px` }}
         >
