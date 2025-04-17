@@ -308,7 +308,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
+                ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
@@ -362,7 +362,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
+                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
@@ -477,7 +477,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
+                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
