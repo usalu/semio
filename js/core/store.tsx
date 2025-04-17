@@ -931,7 +931,11 @@ export function useType(name?: string, variant?: string) {
     function updatePort(portId: string, port: Partial<Port>) { return studio.updatePort(kit.uri, name, portId, port); }
     function deletePort(portId: string) { return studio.deletePort(kit.uri, name, portId); }
 
-    return { type, createPort, updatePort, deletePort };
+    return {
+        type,
+        createRepresentation, updateRepresentation, deleteRepresentation,
+        createPort, updatePort, deletePort
+    };
 }
 
 const PieceContext = createContext<Piece | null>(null);

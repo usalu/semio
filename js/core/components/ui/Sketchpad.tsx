@@ -113,7 +113,7 @@ interface DesignAvatarProps {
 }
 const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: 'design-' + design.name,
+        id: 'design-' + design.name + design.variant + design.view
     });
     return (
         <Tooltip>
@@ -608,11 +608,46 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
 
     const onDragStart = (event: DragStartEvent) => {
-        console.log('onDragStart', event);
+        const { active } = event;
+        const { id } = active;
+        if (id.startsWith('type-')) {
+            const [_, name, variant] = id.split('-');
+            const type = kit?.types?.find(t => t.name === name && t.variant === variant);
+            setActiveDraggedType(type || null);
+        } else if (id.startsWith('design-')) {
+            const [_, name, variant, view] = id.split('-');
+            const design = kit?.designs?.find(d => d.name === name && d.variant === variant && d.view === view);
+            setActiveDraggedDesign(design || null);
+        }
     };
 
     const onDragEnd = (event: DragEndEvent) => {
-        console.log('onDragEnd', event);
+        const { over } = event;
+        if (over?.id === 'sketchpad-edgeless') {
+            if (activeDraggedType) {
+                const piece: Piece = {
+                    id_: Generator.randomId(),
+                    description: activeDraggedType.description || '',
+                    type: {
+                        name: activeDraggedType.name,
+                        variant: activeDraggedType.variant
+                    }
+                };
+                createPiece(piece);
+            } else if (activeDraggedDesign) {
+                const piece: Piece = {
+                    id_: Generator.randomId(),
+                    description: activeDraggedDesign.description || '',
+                    type: {
+                        name: activeDraggedDesign.name,
+                        variant: activeDraggedDesign.variant
+                    }
+                };
+                createPiece(piece);
+            }
+        }
+        setActiveDraggedType(null);
+        setActiveDraggedDesign(null);
     };
 
     return (
@@ -671,8 +706,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                 />
                 {createPortal(
                     <DragOverlay>
-                        {activeDraggedType && (<TypeAvatar type={activeDraggedType} />
-                        {activeDraggedDesign && (<DesignAvatar design={activeDraggedDesign} />)}
+                        {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+                        {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
                     </DragOverlay>,
                     document.body
                 )}
@@ -738,7 +773,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     <KitProvider kit={metabolism}>
                         <DesignProvider design={nakaginCapsuleTower}>
                             <div
-                                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive
+                                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive to spacing changes
                                 className="h-full w-full flex flex-col bg-background text-foreground"
                             >
                                 <Navbar
