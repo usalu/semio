@@ -5,6 +5,7 @@ import {
     DragEndEvent,
     DragOverlay,
     DragStartEvent,
+    UniqueIdentifier,
     useDraggable,
     useDroppable
 } from '@dnd-kit/core';
@@ -23,7 +24,7 @@ import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
 import { useAtomValue } from 'jotai';
-import { useKit, useDesign, DesignProvider, KitProvider, StudioProvider } from '@semio/js/store';
+import { useKit, useDesign, DesignProvider, KitProvider, StudioProvider, useStudio } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -31,6 +32,8 @@ import { Toggle } from '@semio/js/components/ui/Toggle';
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
 import { Fingerprint } from 'lucide-react';
+import { Generator } from '@semio/js/lib/utils';
+import { Piece } from '@semio/js';
 
 export enum Mode {
     USER = 'user',
@@ -73,7 +76,7 @@ interface TypeAvatarProps {
 }
 const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: 'type-' + type.name + type.variant,
+        id: `type-${type.name}-${type.variant || ''}`,
     });
     return (
         <Tooltip>
@@ -97,14 +100,27 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 
 const Types: FC = () => {
     const { kit } = useKit();
-    if (!kit) return null;
+    if (!kit?.types) return null;
+
+    const typesByName = kit.types.reduce((acc, type) => {
+        acc[type.name] = acc[type.name] || [];
+        acc[type.name].push(type);
+        return acc;
+    }, {} as Record<string, Type[]>);
 
     return (
-        <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
-            {kit.types?.map((type) => (
-                <TypeAvatar key={type.name} type={type} />
+        <TreeNode label="Types" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
+            {Object.entries(typesByName).map(([name, variants]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
+                    {variants.map((type) => (
+                        <div key={`${type.name}-${type.variant}`} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${2 * 1.25}rem` }}>
+                            <TypeAvatar type={type} />
+                            <span className="text-sm font-normal truncate">{type.variant || 'Default'}</span>
+                        </div>
+                    ))}
+                </TreeNode>
             ))}
-        </div>
+        </TreeNode>
     );
 }
 
@@ -113,7 +129,7 @@ interface DesignAvatarProps {
 }
 const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: 'design-' + design.name + design.variant + design.view
+        id: `design-${design.name}-${design.variant || ''}-${design.view || ''}`,
     });
     return (
         <Tooltip>
@@ -137,40 +153,89 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
 
 const Designs: FC = () => {
     const { kit } = useKit();
-    if (!kit) return null;
+    if (!kit?.designs) return null;
+
+    const designsByNameVariant = kit.designs.reduce((acc, design) => {
+        const nameKey = design.name;
+        const variantKey = design.variant || 'Default';
+        acc[nameKey] = acc[nameKey] || {};
+        acc[nameKey][variantKey] = acc[nameKey][variantKey] || [];
+        acc[nameKey][variantKey].push(design);
+        return acc;
+    }, {} as Record<string, Record<string, Design[]>>);
 
     return (
-        <div className="h-auto overflow-auto grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] p-1">
-            {kit.designs?.map((design) => (
-                <DesignAvatar key={design.name} design={design} />
+        <TreeNode label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
+            {Object.entries(designsByNameVariant).map(([name, variants]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
+                    {Object.entries(variants).map(([variant, views]) => (
+                        <TreeNode key={`${name}-${variant}`} label={variant} collapsible={true} level={2} defaultOpen={false} icon={<Folder size={14} />}>
+                            {views.map((design) => (
+                                <div key={`${design.name}-${design.variant}-${design.view}`} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${3 * 1.25}rem` }}>
+                                    <DesignAvatar design={design} />
+                                    <span className="text-sm font-normal truncate">{design.view || 'Default'}</span>
+                                </div>
+                            ))}
+                        </TreeNode>
+                    ))}
+                </TreeNode>
             ))}
-        </div>
+        </TreeNode>
     );
 }
-
 
 interface TreeSectionProps {
     name: string;
     children: ReactNode;
 }
 
-
-const TreeSection: FC<TreeSectionProps> = ({ name, children }) => {
-    const [open, setOpen] = useState(true);
-    return (
-        <Collapsible className="p-3 border-b-thin font-thin uppercase"
-            open={open}
-            onOpenChange={setOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between">
-                {open ? <ChevronDown size={14} className="w-3.5 h-3.5" /> : <ChevronRight size={14} className="w-3.5 h-3.5" />}
-                {name}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                {children}
-            </CollapsibleContent>
-        </Collapsible>
-    );
+interface TreeNodeProps {
+    label: ReactNode;
+    icon?: ReactNode;
+    children?: ReactNode;
+    level?: number;
+    collapsible?: boolean;
+    defaultOpen?: boolean;
+    isLeaf?: boolean;
 }
+
+const TreeNode: FC<TreeNodeProps> = ({ label, icon, children, level = 0, collapsible = false, defaultOpen = true, isLeaf = false }) => {
+    const [open, setOpen] = useState(defaultOpen);
+    const indentStyle = { paddingLeft: `${level * 1.25}rem` };
+
+    const Trigger = collapsible ? CollapsibleTrigger : 'div';
+    const Content = collapsible ? CollapsibleContent : 'div';
+
+    const triggerContent = (
+        <div className="flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none" style={indentStyle}>
+            {collapsible && !isLeaf && (open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />)}
+            {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
+            <span className="flex-1 text-sm font-normal truncate">{label}</span>
+        </div>
+    );
+
+    if (collapsible) {
+        return (
+            <Collapsible open={open} onOpenChange={setOpen}>
+                <Trigger asChild>
+                    {triggerContent}
+                </Trigger>
+                <Content>
+                    {children}
+                </Content>
+            </Collapsible>
+        );
+    } else if (isLeaf) {
+        return triggerContent;
+    } else {
+        return (
+            <>
+                {triggerContent}
+                {children}
+            </>
+        );
+    }
+};
 
 interface NavbarProps {
     toolbarContent?: ReactNode;
@@ -338,12 +403,10 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <TreeSection name="Types">
+            <div className="p-1">
                 <Types />
-            </TreeSection>
-            <TreeSection name="Designs">
                 <Designs />
-            </TreeSection>
+            </div>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -523,6 +586,8 @@ interface DesignEditorProps {
 const DesignEditor: FC<DesignEditorProps> = ({ }) => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
+    const { kit } = useKit();
+    const { design, createPiece } = useDesign();
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
@@ -574,8 +639,6 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 
     const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
-    const { design } = useDesign();
-
     const designEditorToolbar = (
         <ToggleGroup
             type="multiple"
@@ -609,15 +672,15 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 
     const onDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        const { id } = active;
-        if (id.startsWith('type-')) {
-            const [_, name, variant] = id.split('-');
-            const type = kit?.types?.find(t => t.name === name && t.variant === variant);
+        const idStr = active.id.toString();
+        if (idStr.startsWith('type-')) {
+            const [_, name, variant] = idStr.split('-');
+            const type = kit?.types?.find((t: Type) => t.name === name && t.variant === (variant || undefined));
             setActiveDraggedType(type || null);
-        } else if (id.startsWith('design-')) {
-            const [_, name, variant, view] = id.split('-');
-            const design = kit?.designs?.find(d => d.name === name && d.variant === variant && d.view === view);
-            setActiveDraggedDesign(design || null);
+        } else if (idStr.startsWith('design-')) {
+            const [_, name, variant, view] = idStr.split('-');
+            const draggedDesign = kit?.designs?.find(d => d.name === name && d.variant === (variant || undefined) && d.view === (view || undefined));
+            setActiveDraggedDesign(draggedDesign || null);
         }
     };
 
@@ -635,15 +698,20 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                 };
                 createPiece(piece);
             } else if (activeDraggedDesign) {
-                const piece: Piece = {
-                    id_: Generator.randomId(),
-                    description: activeDraggedDesign.description || '',
-                    type: {
-                        name: activeDraggedDesign.name,
-                        variant: activeDraggedDesign.variant
-                    }
-                };
-                createPiece(piece);
+                const correspondingType = kit?.types?.find(t => t.name === activeDraggedDesign.name && t.variant === activeDraggedDesign.variant);
+                if (correspondingType) {
+                    const piece: Piece = {
+                        id_: Generator.randomId(),
+                        description: activeDraggedDesign.description || '',
+                        type: {
+                            name: correspondingType.name,
+                            variant: correspondingType.variant
+                        }
+                    };
+                    createPiece(piece);
+                } else {
+                    console.warn(`Could not find corresponding Type for dragged Design: ${activeDraggedDesign.name} / ${activeDraggedDesign.variant}`);
+                }
             }
         }
         setActiveDraggedType(null);
@@ -660,11 +728,15 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                             className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
                             onDoubleClick={() => handlePanelDoubleClick('diagram')}
                         >
-                            <Diagram
-                                fullscreen={fullscreenPanel === 'diagram'}
-                                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
-                                design={design}
-                            />
+                            {design ? (
+                                <Diagram
+                                    fullscreen={fullscreenPanel === 'diagram'}
+                                    onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
+                                    design={design}
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
+                            )}
                         </ResizablePanel>
                         <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
                         <ResizablePanel
@@ -672,11 +744,15 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
                             className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
                             onDoubleClick={() => handlePanelDoubleClick('model')}
                         >
-                            <Model
-                                fullscreen={fullscreenPanel === 'model'}
-                                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
-                                design={design}
-                            />
+                            {design ? (
+                                <Model
+                                    fullscreen={fullscreenPanel === 'model'}
+                                    onPanelDoubleClick={() => handlePanelDoubleClick('model')}
+                                    design={design}
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
+                            )}
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </div>
@@ -773,7 +849,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     <KitProvider kit={metabolism}>
                         <DesignProvider design={nakaginCapsuleTower}>
                             <div
-                                key={`layout-${currentLayout}`} // Force unmount/remount on layout change because some components are not responsive to spacing changes
+                                key={`layout-${currentLayout}`}
                                 className="h-full w-full flex flex-col bg-background text-foreground"
                             >
                                 <Navbar
