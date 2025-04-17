@@ -604,60 +604,80 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
         return () => setNavbarToolbar(null);
     }, [setNavbarToolbar, visiblePanels]);
 
+    const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
+    const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
+
+    const onDragStart = (event: DragStartEvent) => {
+        console.log('onDragStart', event);
+    };
+
+    const onDragEnd = (event: DragEndEvent) => {
+        console.log('onDragEnd', event);
+    };
+
     return (
-        <div className="canvas flex-1 relative">
-            <div id="sketchpad-edgeless" className="h-full">
-                <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-                        className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('diagram')}
-                    >
-                        <Diagram
-                            fullscreen={fullscreenPanel === 'diagram'}
-                            onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
-                            design={design}
-                        />
-                    </ResizablePanel>
-                    <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
-                    <ResizablePanel
-                        defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-                        className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-                        onDoubleClick={() => handlePanelDoubleClick('model')}
-                    >
-                        <Model
-                            fullscreen={fullscreenPanel === 'model'}
-                            onPanelDoubleClick={() => handlePanelDoubleClick('model')}
-                            design={design}
-                        />
-                    </ResizablePanel>
-                </ResizablePanelGroup>
+        <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+            <div className="canvas flex-1 relative">
+                <div id="sketchpad-edgeless" className="h-full">
+                    <ResizablePanelGroup direction="horizontal">
+                        <ResizablePanel
+                            defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+                            className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+                            onDoubleClick={() => handlePanelDoubleClick('diagram')}
+                        >
+                            <Diagram
+                                fullscreen={fullscreenPanel === 'diagram'}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
+                                design={design}
+                            />
+                        </ResizablePanel>
+                        <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+                        <ResizablePanel
+                            defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+                            className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+                            onDoubleClick={() => handlePanelDoubleClick('model')}
+                        >
+                            <Model
+                                fullscreen={fullscreenPanel === 'model'}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
+                                design={design}
+                            />
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
+                </div>
+                <Workbench
+                    visible={visiblePanels.workbench}
+                    onWidthChange={setWorkbenchWidth}
+                    width={workbenchWidth}
+                />
+                <Details
+                    visible={visiblePanels.details}
+                    onWidthChange={setDetailsWidth}
+                    width={detailsWidth}
+                />
+                <Console
+                    visible={visiblePanels.console}
+                    leftPanelVisible={visiblePanels.workbench}
+                    rightPanelVisible={rightPanelVisible}
+                    leftPanelWidth={workbenchWidth}
+                    rightPanelWidth={detailsWidth}
+                    height={consoleHeight}
+                    setHeight={setConsoleHeight}
+                />
+                <Chat
+                    visible={visiblePanels.chat}
+                    onWidthChange={setChatWidth}
+                    width={chatWidth}
+                />
+                {createPortal(
+                    <DragOverlay>
+                        {activeDraggedType && (<TypeAvatar type={activeDraggedType} />
+                        {activeDraggedDesign && (<DesignAvatar design={activeDraggedDesign} />)}
+                    </DragOverlay>,
+                    document.body
+                )}
             </div>
-            <Workbench
-                visible={visiblePanels.workbench}
-                onWidthChange={setWorkbenchWidth}
-                width={workbenchWidth}
-            />
-            <Details
-                visible={visiblePanels.details}
-                onWidthChange={setDetailsWidth}
-                width={detailsWidth}
-            />
-            <Console
-                visible={visiblePanels.console}
-                leftPanelVisible={visiblePanels.workbench}
-                rightPanelVisible={rightPanelVisible}
-                leftPanelWidth={workbenchWidth}
-                rightPanelWidth={detailsWidth}
-                height={consoleHeight}
-                setHeight={setConsoleHeight}
-            />
-            <Chat
-                visible={visiblePanels.chat}
-                onWidthChange={setChatWidth}
-                width={chatWidth}
-            />
-        </div>
+        </DndContext>
     );
 };
 
@@ -673,7 +693,7 @@ interface SketchpadProps {
     }
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.COMPACT, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
 
