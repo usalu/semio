@@ -143,7 +143,7 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
                     {...attributes}
                     className="cursor-grab"
                 >
-                    <AvatarImage src="https://github.com/semio-tech.png" />
+                    {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
                     <AvatarFallback>{type.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </HoverCardTrigger>
@@ -164,61 +164,6 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
                 </div>
             </HoverCardContent>
         </HoverCard>
-    );
-}
-
-// Designs component for displaying designs in the workbench
-const Designs: FC = () => {
-    const { kit } = useKit();
-    if (!kit?.designs) return null;
-
-    // Group designs by name
-    const designsByName = kit.designs.reduce((acc, design) => {
-        const nameKey = design.name;
-        acc[nameKey] = acc[nameKey] || [];
-        acc[nameKey].push(design);
-        return acc;
-    }, {} as Record<string, Design[]>);
-
-    return (
-        <TreeSection label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
-            {Object.entries(designsByName).map(([name, designs]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
-                    <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                        style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                        {designs.map((design) => (
-                            <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                        ))}
-                    </div>
-                </TreeNode>
-            ))}
-        </TreeSection>
-    );
-}
-
-// Types component for displaying types in the workbench
-const Types: FC = () => {
-    const { kit } = useKit();
-    if (!kit?.types) return null;
-
-    const typesByName = kit.types.reduce((acc, type) => {
-        acc[type.name] = acc[type.name] || [];
-        acc[type.name].push(type);
-        return acc;
-    }, {} as Record<string, Type[]>);
-
-    return (
-        <TreeSection label="Types" collapsible={true} level={0} defaultOpen={true} >
-            {Object.entries(typesByName).map(([name, variants]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                    <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                        {variants.map((type) => (
-                            <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
-                        ))}
-                    </div>
-                </TreeNode>
-            ))}
-        </TreeSection>
     );
 }
 
@@ -244,7 +189,7 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
                     {...attributes}
                     className="cursor-grab"
                 >
-                    <AvatarImage src="https://github.com/semio-tech.png" />
+                    {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
                     <AvatarFallback>{design.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </HoverCardTrigger>
@@ -297,6 +242,22 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         document.addEventListener('mouseup', handleMouseUp);
     };
 
+    const { kit } = useKit();
+    if (!kit?.types) return null;
+
+    const typesByName = kit.types.reduce((acc, type) => {
+        acc[type.name] = acc[type.name] || [];
+        acc[type.name].push(type);
+        return acc;
+    }, {} as Record<string, Type[]>);
+
+    const designsByName = kit.designs.reduce((acc, design) => {
+        const nameKey = design.name;
+        acc[nameKey] = acc[nameKey] || [];
+        acc[nameKey].push(design);
+        return acc;
+    }, {} as Record<string, Design[]>);
+
     return (
         <div
             className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
@@ -305,8 +266,29 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         >
             <ScrollArea className="h-full">
                 <div className="p-1">
-                    <Types />
-                    <Designs />
+                    <TreeSection label="Types" defaultOpen={true} >
+                        {Object.entries(typesByName).map(([name, variants]) => (
+                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                    {variants.map((type) => (
+                                        <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
+                                    ))}
+                                </div>
+                            </TreeNode>
+                        ))}
+                    </TreeSection>
+                    <TreeSection label="Designs" defaultOpen={true}>
+                        {Object.entries(designsByName).map(([name, designs]) => (
+                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                    {designs.map((design) => (
+                                        <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                                    ))}
+                                </div>
+                            </TreeNode>
+                        ))}
+                    </TreeSection>
                 </div>
             </ScrollArea>
             <div
