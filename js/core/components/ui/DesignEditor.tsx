@@ -121,13 +121,54 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">{type.name}{type.variant ? ` (${type.variant})` : ''}</h4>
-                    <p className="text-sm">
-                        {type.description || 'No description available.'}
-                    </p>
+                    {type.variant ? (
+                        <>
+                            <h4 className="text-sm font-semibold">{type.variant}</h4>
+                            <p className="text-sm">
+                                {type.description || 'No description available.'}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm">
+                            {type.description || 'No description available.'}
+                        </p>
+                    )}
                 </div>
             </HoverCardContent>
         </HoverCard>
+    );
+}
+
+// Designs component for displaying designs in the workbench
+const Designs: FC = () => {
+    const { kit } = useKit();
+    if (!kit?.designs) return null;
+
+    const designsByNameVariant = kit.designs.reduce((acc, design) => {
+        const nameKey = design.name;
+        const variantKey = design.variant || 'Default';
+        acc[nameKey] = acc[nameKey] || {};
+        acc[nameKey][variantKey] = acc[nameKey][variantKey] || [];
+        acc[nameKey][variantKey].push(design);
+        return acc;
+    }, {} as Record<string, Record<string, Design[]>>);
+
+    return (
+        <TreeNode label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
+            {Object.entries(designsByNameVariant).map(([name, variants]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
+                    {Object.entries(variants).map(([variant, views]) => (
+                        <TreeNode key={`${name}-${variant}`} label={variant} collapsible={true} level={2} defaultOpen={false} icon={<Folder size={14} />}>
+                            <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(2 + 1) * 1.25}rem` }}>
+                                {views.map((design) => (
+                                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                                ))}
+                            </div>
+                        </TreeNode>
+                    ))}
+                </TreeNode>
+            ))}
+        </TreeNode>
     );
 }
 
@@ -181,46 +222,21 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">{design.name}{design.view ? ` (${design.view})` : ''}</h4>
-                    <p className="text-sm">
-                        {design.description || 'No description available.'}
-                    </p>
+                    {design.view ? (
+                        <>
+                            <h4 className="text-sm font-semibold">{design.view}</h4>
+                            <p className="text-sm">
+                                {design.description || 'No description available.'}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm">
+                            {design.description || 'No description available.'}
+                        </p>
+                    )}
                 </div>
             </HoverCardContent>
         </HoverCard>
-    );
-}
-
-// Designs component for displaying designs in the workbench
-const Designs: FC = () => {
-    const { kit } = useKit();
-    if (!kit?.designs) return null;
-
-    const designsByNameVariant = kit.designs.reduce((acc, design) => {
-        const nameKey = design.name;
-        const variantKey = design.variant || 'Default';
-        acc[nameKey] = acc[nameKey] || {};
-        acc[nameKey][variantKey] = acc[nameKey][variantKey] || [];
-        acc[nameKey][variantKey].push(design);
-        return acc;
-    }, {} as Record<string, Record<string, Design[]>>);
-
-    return (
-        <TreeNode label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
-            {Object.entries(designsByNameVariant).map(([name, variants]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
-                    {Object.entries(variants).map(([variant, views]) => (
-                        <TreeNode key={`${name}-${variant}`} label={variant} collapsible={true} level={2} defaultOpen={false} icon={<Folder size={14} />}>
-                            <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(2 + 1) * 1.25}rem` }}>
-                                {views.map((design) => (
-                                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                                ))}
-                            </div>
-                        </TreeNode>
-                    ))}
-                </TreeNode>
-            ))}
-        </TreeNode>
     );
 }
 
