@@ -8,7 +8,7 @@ import {
 } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folder, Circle } from 'lucide-react';
 
 import {
     ResizableHandle,
@@ -144,7 +144,7 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
                     className="cursor-grab"
                 >
                     {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                    <AvatarFallback>{type.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{type.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
@@ -190,7 +190,7 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
                     className="cursor-grab"
                 >
                     {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                    <AvatarFallback>{design.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{design.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
@@ -264,33 +264,42 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
             style={{ width: `${width}px` }}
         >
-            <ScrollArea className="h-full">
-                <div className="p-1">
-                    <TreeSection label="Types" defaultOpen={true} >
-                        {Object.entries(typesByName).map(([name, variants]) => (
-                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                                    {variants.map((type) => (
-                                        <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
-                                    ))}
-                                </div>
-                            </TreeNode>
-                        ))}
-                    </TreeSection>
-                    <TreeSection label="Designs" defaultOpen={true}>
-                        {Object.entries(designsByName).map(([name, designs]) => (
-                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                                    {designs.map((design) => (
-                                        <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                                    ))}
-                                </div>
-                            </TreeNode>
-                        ))}
-                    </TreeSection>
-                </div>
-            </ScrollArea>
+            <Tabs defaultValue="library" className="w-full h-full">
+                <TabsList>
+                    <TabsTrigger value="library"><Circle></TabsTrigger>
+                </TabsList>
+                <TabsContent value="library">
+                    <ScrollArea className="h-full">
+                        <div className="p-1">
+                            <TreeSection label="Types" defaultOpen={true} >
+                                {Object.entries(typesByName).map(([name, variants]) => (
+                                    <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                        <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                                            style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                            {variants.map((type) => (
+                                                <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
+                                            ))}
+                                        </div>
+                                    </TreeNode>
+                                ))}
+                            </TreeSection>
+                            <TreeSection label="Designs" defaultOpen={true}>
+                                {Object.entries(designsByName).map(([name, designs]) => (
+                                    <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                        <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                                            style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                            {designs.map((design) => (
+                                                <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                                            ))}
+                                        </div>
+                                    </TreeNode>
+                                ))}
+                            </TreeSection>
+                        </div>
+                    </ScrollArea>
+                </TabsContent>
+                <TabsContent value="password">Change your password here.</TabsContent>
+            </Tabs>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
