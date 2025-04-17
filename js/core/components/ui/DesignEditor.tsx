@@ -203,6 +203,10 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
     const { attributes, listeners, setNodeRef } = useDraggable({
         id: `design-${design.name}-${design.variant || ''}-${design.view || ''}`,
     });
+
+    // Determine if this is the default variant and view
+    const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
+
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
@@ -218,10 +222,12 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">
-                        {design.variant || design.name}
-                        {design.view && design.view !== "Default" && ` (${design.view})`}
-                    </h4>
+                    {!isDefault && (
+                        <h4 className="text-sm font-semibold">
+                            {design.variant || design.name}
+                            {design.view && design.view !== "Default" && ` (${design.view})`}
+                        </h4>
+                    )}
                     <p className="text-sm">
                         {design.description || 'No description available.'}
                     </p>
