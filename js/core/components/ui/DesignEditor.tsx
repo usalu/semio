@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
@@ -106,19 +107,27 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
         id: `type-${type.name}-${type.variant || ''}`,
     });
     return (
-        <Tooltip>
-            <TooltipTrigger asChild>
+        <HoverCard>
+            <HoverCardTrigger asChild>
                 <Avatar
                     ref={setNodeRef}
                     {...listeners}
-                    {...attributes}>
+                    {...attributes}
+                    className="cursor-grab"
+                >
                     <AvatarImage src="https://github.com/semio-tech.png" />
+                    <AvatarFallback>{type.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-            </TooltipTrigger>
-            <TooltipContent>
-                {type.description}
-            </TooltipContent>
-        </Tooltip>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+                <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">{type.name}{type.variant ? ` (${type.variant})` : ''}</h4>
+                    <p className="text-sm">
+                        {type.description || 'No description available.'}
+                    </p>
+                </div>
+            </HoverCardContent>
+        </HoverCard>
     );
 }
 
@@ -158,19 +167,27 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
         id: `design-${design.name}-${design.variant || ''}-${design.view || ''}`,
     });
     return (
-        <Tooltip>
-            <TooltipTrigger asChild>
+        <HoverCard>
+            <HoverCardTrigger asChild>
                 <Avatar
                     ref={setNodeRef}
                     {...listeners}
-                    {...attributes}>
+                    {...attributes}
+                    className="cursor-grab"
+                >
                     <AvatarImage src="https://github.com/semio-tech.png" />
+                    <AvatarFallback>{design.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-            </TooltipTrigger>
-            <TooltipContent>
-                {design.description}
-            </TooltipContent>
-        </Tooltip>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+                <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">{design.name}{design.view ? ` (${design.view})` : ''}</h4>
+                    <p className="text-sm">
+                        {design.description || 'No description available.'}
+                    </p>
+                </div>
+            </HoverCardContent>
+        </HoverCard>
     );
 }
 
@@ -629,8 +646,18 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                 />
                 {createPortal(
                     <DragOverlay>
-                        {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
-                        {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+                        {activeDraggedType && (
+                            <Avatar>
+                                <AvatarImage src="https://github.com/semio-tech.png" />
+                                <AvatarFallback>{activeDraggedType.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        )}
+                        {activeDraggedDesign && (
+                            <Avatar>
+                                <AvatarImage src="https://github.com/semio-tech.png" />
+                                <AvatarFallback>{activeDraggedDesign.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        )}
                     </DragOverlay>,
                     document.body
                 )}
