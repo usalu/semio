@@ -144,63 +144,26 @@ const Designs: FC = () => {
     const { kit } = useKit();
     if (!kit?.designs) return null;
 
-    // Group designs by name and variant
-    const designsByNameVariant = kit.designs.reduce((acc, design) => {
+    // Group designs by name
+    const designsByName = kit.designs.reduce((acc, design) => {
         const nameKey = design.name;
-        const variantKey = design.variant || 'Default';
-        acc[nameKey] = acc[nameKey] || {};
-        acc[nameKey][variantKey] = acc[nameKey][variantKey] || [];
-        acc[nameKey][variantKey].push(design);
+        acc[nameKey] = acc[nameKey] || [];
+        acc[nameKey].push(design);
         return acc;
-    }, {} as Record<string, Record<string, Design[]>>);
+    }, {} as Record<string, Design[]>);
 
     return (
         <TreeNode label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
-            {Object.entries(designsByNameVariant).map(([name, variants]) => {
-                // Find default designs (those with no specific view or "Default" view)
-                const defaultDesigns: Design[] = [];
-                Object.entries(variants).forEach(([variant, designs]) => {
-                    designs.forEach(design => {
-                        if (!design.view || design.view === "Default") {
-                            defaultDesigns.push(design);
-                        }
-                    });
-                });
-
-                return (
-                    <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
-                        {/* Display default designs at the top level */}
-                        {defaultDesigns.length > 0 && (
-                            <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                                style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                                {defaultDesigns.map((design) => (
-                                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Display all other variants with their views */}
-                        {Object.entries(variants).map(([variant, designs]) => {
-                            // Filter out default views as they've already been displayed above
-                            const nonDefaultDesigns = designs.filter(d => d.view && d.view !== "Default");
-
-                            // Only render this variant section if it has non-default designs
-                            if (nonDefaultDesigns.length === 0) return null;
-
-                            return (
-                                <TreeNode key={`${name}-${variant}`} label={variant} collapsible={true} level={2} defaultOpen={false} icon={<Folder size={14} />}>
-                                    <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                                        style={{ paddingLeft: `${(2 + 1) * 1.25}rem` }}>
-                                        {nonDefaultDesigns.map((design) => (
-                                            <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                                        ))}
-                                    </div>
-                                </TreeNode>
-                            );
-                        })}
-                    </TreeNode>
-                );
-            })}
+            {Object.entries(designsByName).map(([name, designs]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
+                    <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                        style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                        {designs.map((design) => (
+                            <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                        ))}
+                    </div>
+                </TreeNode>
+            ))}
         </TreeNode>
     );
 }
