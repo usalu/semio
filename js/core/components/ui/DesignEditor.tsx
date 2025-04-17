@@ -21,6 +21,7 @@ import { default as Model } from "@semio/js/components/ui/Model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
+import { ScrollArea } from '@semio/js/components/ui/ScrollArea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
@@ -244,10 +245,12 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="p-1">
-                <Types />
-                <Designs />
-            </div>
+            <ScrollArea className="h-full">
+                <div className="p-1">
+                    <Types />
+                    <Designs />
+                </div>
+            </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -296,7 +299,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-4">Details</div>
+            <ScrollArea className="h-full">
+                <div className="font-semibold p-4">Details</div>
+            </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -364,7 +369,9 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
                 onMouseEnter={() => setIsResizeHovered(true)}
                 onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
             />
-            <div className="font-semibold p-4">Console</div>
+            <ScrollArea className="h-full">
+                <div className="font-semibold p-4">Console</div>
+            </ScrollArea>
         </div>
     );
 }
@@ -407,7 +414,9 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l-border'}`}
             style={{ width: `${width}px` }}
         >
-            <div className="font-semibold p-4">Chat</div>
+            <ScrollArea className="h-full">
+                <div className="font-semibold p-4">Chat</div>
+            </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}

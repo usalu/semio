@@ -370,25 +370,13 @@ interface DiagramProps {
 
 const Diagram: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
 
-    // const { isOver, setNodeRef } = useDroppable({
-    //     id: 'diagram',
-    // });
-
     return (
-        <div className="h-full w-full">
+        <div id="diagram" className="h-full w-full">
             <ReactFlowProvider >
                 <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} design={design} />
             </ReactFlowProvider>
-            {/* // <div ref={setNodeRef}>
-        // </div> */}
         </div>
     );
-
-    // return (
-    //     <div className="bg-pink-600" style={{ height: '100vh' }}>
-    //         <DiagramCore />
-    //     </div>
-    // );
 };
 
 export default Diagram;
