@@ -68,7 +68,7 @@ function ResizableHandle({
       data-slot="resizable-handle"
       className={cn(
         "relative flex w-px items-center justify-center",
-        "border-r border-border", // Base border
+        "border-r", // Base border
         // Conditional hover/drag styling from the wrapper
         isDragging || isHovered ? "bg-primary border-primary" : "hover:border-primary",
         "before:absolute before:inset-y-0 before:-left-2 before:w-4 before:cursor-ew-resize", // Wider hit area
@@ -92,7 +92,7 @@ function ResizableHandle({
       {withHandle && (
         <div className={cn(
           "z-10 flex h-4 w-3 items-center justify-center border bg-background",
-          isDragging || isHovered ? "border-primary bg-primary" : "border-border hover:border-primary" // Apply hover/drag to handle itself
+          isDragging || isHovered ? "border-primary bg-primary" : "hover:border-primary" // Apply hover/drag to handle itself
         )}>
           <GripVerticalIcon className="size-2.5" />
         </div>

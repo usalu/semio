@@ -105,7 +105,6 @@
     --muted-foreground: var(--color-gray);
     --accent: var(--color-gray);
     --accent-foreground: var(--color-light);
-    --border-color: var(--color-foreground);
   }
 
   .touch {
@@ -160,4 +159,5 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-popover: var(--background-level-3);
   --color-popover-foreground: var(--foreground);
+  --color-border: var(--accent);
 }
