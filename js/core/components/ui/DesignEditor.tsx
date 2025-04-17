@@ -130,25 +130,35 @@ const TreeNode: FC<TreeNodeProps> = ({ label, icon, children, level = 0, collaps
 
 // Type Avatar component
 interface TypeAvatarProps {
-    type: Type
+    type: Type;
+    showHoverCard?: boolean;
 }
 
-const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
+const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
     const { attributes, listeners, setNodeRef } = useDraggable({
         id: `type-${type.name}-${type.variant || ''}`,
     });
+
+    const avatar = (
+        <Avatar
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className="cursor-grab"
+        >
+            {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
+            <AvatarFallback>{type.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+    );
+
+    if (!showHoverCard) {
+        return avatar;
+    }
+
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
-                <Avatar
-                    ref={setNodeRef}
-                    {...listeners}
-                    {...attributes}
-                    className="cursor-grab"
-                >
-                    {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                    <AvatarFallback>{type.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
+                {avatar}
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
@@ -172,10 +182,11 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 
 // Design Avatar component
 interface DesignAvatarProps {
-    design: Design
+    design: Design;
+    showHoverCard?: boolean;
 }
 
-const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
+const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) => {
     const { attributes, listeners, setNodeRef } = useDraggable({
         id: `design-${design.name}-${design.variant || ''}-${design.view || ''}`,
     });
@@ -183,18 +194,26 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
     // Determine if this is the default variant and view
     const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
+    const avatar = (
+        <Avatar
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className="cursor-grab"
+        >
+            {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
+            <AvatarFallback>{design.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+    );
+
+    if (!showHoverCard) {
+        return avatar;
+    }
+
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
-                <Avatar
-                    ref={setNodeRef}
-                    {...listeners}
-                    {...attributes}
-                    className="cursor-grab"
-                >
-                    {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                    <AvatarFallback>{design.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
+                {avatar}
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
@@ -267,11 +286,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
             style={{ width: `${width}px` }}
         >
-            {/* <Tabs defaultValue="library" className="w-full h-full">
-                <TabsList>
-                    <TabsTrigger value="library"><Circle /></TabsTrigger>
-                </TabsList>
-                <TabsContent value="library"> */}
             <ScrollArea className="h-full">
                 <div className="p-1">
                     <TreeSection label="Types" defaultOpen={true} >
@@ -280,7 +294,11 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                                 <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                                     style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
                                     {variants.map((type) => (
-                                        <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
+                                        <TypeAvatar
+                                            key={`${type.name}-${type.variant}`}
+                                            type={type}
+                                            showHoverCard={true}
+                                        />
                                     ))}
                                 </div>
                             </TreeNode>
@@ -292,7 +310,11 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                                 <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                                     style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
                                     {designs.map((design) => (
-                                        <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                                        <DesignAvatar
+                                            key={`${design.name}-${design.variant}-${design.view}`}
+                                            design={design}
+                                            showHoverCard={true}
+                                        />
                                     ))}
                                 </div>
                             </TreeNode>
@@ -300,9 +322,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                     </TreeSection>
                 </div>
             </ScrollArea>
-            {/* </TabsContent>
-                <TabsContent value="password">Change your password here.</TabsContent>
-            </Tabs> */}
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -480,7 +499,9 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
         >
             <ScrollArea className="h-full">
                 <div className="font-semibold p-4">Chat</div>
-                <Textarea />
+                <div className="p-4 space-y-4">
+                    <Textarea />
+                </div>
             </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
@@ -694,18 +715,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                 />
                 {createPortal(
                     <DragOverlay>
-                        {activeDraggedType && (
-                            <Avatar>
-                                {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                                <AvatarFallback>{activeDraggedType.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                        )}
-                        {activeDraggedDesign && (
-                            <Avatar>
-                                {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-                                <AvatarFallback>{activeDraggedDesign.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                        )}
+                        {activeDraggedType && (<TypeAvatar type={activeDraggedType} />)}
+                        {activeDraggedDesign && (<DesignAvatar design={activeDraggedDesign} />)}
                     </DragOverlay>,
                     document.body
                 )}
