@@ -67,7 +67,7 @@ const TreeNode: FC<TreeNodeProps> = ({ label, icon, children, level = 0, collaps
     const Content = collapsible ? CollapsibleContent : 'div';
 
     const triggerContent = (
-        <div className="flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none" style={indentStyle}>
+        <div className="flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden" style={indentStyle}>
             {collapsible && !isLeaf && (open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />)}
             {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
             <span className="flex-1 text-sm font-normal truncate">{label}</span>
@@ -255,18 +255,13 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <div className="space-y-1">
-                    {design.view ? (
-                        <>
-                            <h4 className="text-sm font-semibold">{design.view}</h4>
-                            <p className="text-sm">
-                                {design.description || 'No description available.'}
-                            </p>
-                        </>
-                    ) : (
-                        <p className="text-sm">
-                            {design.description || 'No description available.'}
-                        </p>
-                    )}
+                    <h4 className="text-sm font-semibold">
+                        {design.variant || design.name}
+                        {design.view && design.view !== "Default" && ` (${design.view})`}
+                    </h4>
+                    <p className="text-sm">
+                        {design.description || 'No description available.'}
+                    </p>
                 </div>
             </HoverCardContent>
         </HoverCard>
