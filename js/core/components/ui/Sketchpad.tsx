@@ -96,7 +96,7 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type }) => {
 }
 
 const Types: FC = () => {
-    const kit = useKit();
+    const { kit } = useKit();
     if (!kit) return null;
 
     return (
@@ -136,7 +136,7 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design }) => {
 }
 
 const Designs: FC = () => {
-    const kit = useKit();
+    const { kit } = useKit();
     if (!kit) return null;
 
     return (
@@ -574,7 +574,7 @@ const DesignEditor: FC<DesignEditorProps> = ({ }) => {
 
     const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
-    const design = useDesign();
+    const { design } = useDesign();
 
     const designEditorToolbar = (
         <ToggleGroup
