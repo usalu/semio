@@ -31,6 +31,7 @@ import { Generator } from '@semio/js/lib/utils';
 import { useKit, useDesign } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
+import { Slider } from '@semio/js/components/ui/Slider';
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -350,7 +351,20 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
-                <div id="type-properties" />
+                <div id="type-properties" className="p-4 space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm">Name</label>
+                        <Input placeholder="Name" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm">Rotation</label>
+                        <Slider defaultValue={[33]} max={100} min={0} step={1} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm">Description</label>
+                        <Textarea />
+                    </div>
+                </div>
             </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
