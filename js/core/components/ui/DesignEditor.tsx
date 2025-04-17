@@ -20,15 +20,17 @@ import { default as Diagram } from "@semio/js/components/ui/Diagram";
 import { default as Model } from "@semio/js/components/ui/Model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@semio/js/components/ui/Tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
+import { Textarea } from '@semio/js/components/ui/Textarea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
 import { useKit, useDesign } from '@semio/js/store';
-import { useSketchpad } from './Sketchpad';
-import { Textarea } from './textarea';
+import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
+import { Input } from '@semio/js/components/ui/Input';
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -264,42 +266,42 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
             style={{ width: `${width}px` }}
         >
-            <Tabs defaultValue="library" className="w-full h-full">
+            {/* <Tabs defaultValue="library" className="w-full h-full">
                 <TabsList>
-                    <TabsTrigger value="library"><Circle></TabsTrigger>
+                    <TabsTrigger value="library"><Circle /></TabsTrigger>
                 </TabsList>
-                <TabsContent value="library">
-                    <ScrollArea className="h-full">
-                        <div className="p-1">
-                            <TreeSection label="Types" defaultOpen={true} >
-                                {Object.entries(typesByName).map(([name, variants]) => (
-                                    <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                                        <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                                            style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                                            {variants.map((type) => (
-                                                <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
-                                            ))}
-                                        </div>
-                                    </TreeNode>
-                                ))}
-                            </TreeSection>
-                            <TreeSection label="Designs" defaultOpen={true}>
-                                {Object.entries(designsByName).map(([name, designs]) => (
-                                    <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                                        <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                                            style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
-                                            {designs.map((design) => (
-                                                <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
-                                            ))}
-                                        </div>
-                                    </TreeNode>
-                                ))}
-                            </TreeSection>
-                        </div>
-                    </ScrollArea>
-                </TabsContent>
+                <TabsContent value="library"> */}
+            <ScrollArea className="h-full">
+                <div className="p-1">
+                    <TreeSection label="Types" defaultOpen={true} >
+                        {Object.entries(typesByName).map(([name, variants]) => (
+                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                    {variants.map((type) => (
+                                        <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
+                                    ))}
+                                </div>
+                            </TreeNode>
+                        ))}
+                    </TreeSection>
+                    <TreeSection label="Designs" defaultOpen={true}>
+                        {Object.entries(designsByName).map(([name, designs]) => (
+                            <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                                    {designs.map((design) => (
+                                        <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
+                                    ))}
+                                </div>
+                            </TreeNode>
+                        ))}
+                    </TreeSection>
+                </div>
+            </ScrollArea>
+            {/* </TabsContent>
                 <TabsContent value="password">Change your password here.</TabsContent>
-            </Tabs>
+            </Tabs> */}
             <div
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
@@ -310,7 +312,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-// Details panel component
 interface DetailsProps extends ResizablePanelProps { }
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
@@ -349,7 +350,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
-                <div className="font-semibold p-4">Details</div>
+                <div id="type-properties" />
             </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
