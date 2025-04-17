@@ -169,6 +169,10 @@ class Studio {
         return this.getKit(kit.uri);
     }
 
+    deleteKit(uri: string): void {
+        this.studioDoc.getMap('kits').delete(uri);
+    }
+
     createType(kitUri: string, type: Type): void {
         const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
@@ -809,7 +813,12 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 export function useStudio() {
     const studio = useContext(StudioContext);
     if (!studio) throw new Error('Studio not found');
-    return studio;
+
+    function createKit(kit: Kit) { return studio.createKit(kit); }
+    function updateKit(kit: Kit) { return studio.updateKit(kit); }
+    function deleteKit(uri: string) { return studio.deleteKit(uri); }
+
+    return { studio, createKit, updateKit, deleteKit };
 }
 
 const KitContext = createContext<Kit | null>(null);
@@ -835,7 +844,19 @@ export function useKit(uri?: string) {
         }
     }, [studio, kitFromContext, uri]);
 
-    return kit;
+    function createType(type: Type) { return studio.createType(uri, type); }
+    function updateType(type: Type) { return studio.updateType(uri, type); }
+    function deleteType(typeName: string) { return studio.deleteType(uri, typeName); }
+
+    function createDesign(design: Design) { return studio.createDesign(uri, design); }
+    function updateDesign(design: Design) { return studio.updateDesign(uri, design); }
+    function deleteDesign(name: string) { return studio.deleteDesign(uri, name); }
+
+    return {
+        kit,
+        createDesign, updateDesign, deleteDesign,
+        createType, updateType, deleteType
+    };
 }
 
 const DesignContext = createContext<Design | null>(null);
@@ -862,7 +883,55 @@ export function useDesign(name?: string, variant?: string, view?: string) {
         }
     }, [studio, kit, designFromContext, name, variant, view]);
 
-    return design;
+    function createPiece(piece: Piece) { return studio.createPiece(uri, designName, designVariant, view, piece); }
+    function updatePiece(piece: Piece) { return studio.updatePiece(uri, designName, designVariant, view, piece); }
+    function deletePiece(pieceId: string) { return studio.deletePiece(uri, designName, designVariant, view, pieceId); }
+
+    function createConnection(connection: Connection) { return studio.createConnection(uri, designName, designVariant, view, connection); }
+    function updateConnection(connectionId: string, connection: Partial<Connection>) { return studio.updateConnection(uri, designName, designVariant, view, connectionId, connection); }
+    function deleteConnection(connectionId: string) { return studio.deleteConnection(uri, designName, designVariant, view, connectionId); }
+
+    return {
+        design,
+        createPiece, updatePiece, deletePiece,
+        createConnection, updateConnection, deleteConnection
+    }
+}
+
+const TypeContext = createContext<Type | null>(null);
+export const TypeProvider: React.FC<{ type: Type, children: React.ReactNode }> = ({ type, children }) => {
+    return (
+        <TypeContext.Provider value={type}>
+            {children}
+        </TypeContext.Provider>
+    );
+};
+
+export function useType(name?: string, variant?: string) {
+    const studio = useStudio();
+    const kit = useKit();
+    const typeFromContext = useContext(TypeContext);
+    const [type, setType] = useState<Type | null>(typeFromContext);
+
+    useEffect(() => {
+        if (typeFromContext) {
+            setType(typeFromContext);
+        } else if (kit?.uri && name) {
+            const updatedType = studio.getType(kit.uri, name, variant || '');
+            setType(updatedType);
+        }
+    }, [studio, kit, typeFromContext, name, variant]);
+
+
+    function createRepresentation(representation: Representation) { return studio.createRepresentation(kit.uri, name, representation); }
+    function updateRepresentation(key: string, representation: Partial<Representation>) { return studio.updateRepresentation(kit.uri, name, key, representation); }
+    function deleteRepresentation(key: string) { return studio.deleteRepresentation(kit.uri, name, key); }
+
+    function createPort(port: Port) { return studio.createPort(kit.uri, name, port); }
+    function updatePort(portId: string, port: Partial<Port>) { return studio.updatePort(kit.uri, name, portId, port); }
+    function deletePort(portId: string) { return studio.deletePort(kit.uri, name, portId); }
+
+    return { type, createPort, updatePort, deletePort };
 }
 
 const PieceContext = createContext<Piece | null>(null);
@@ -897,291 +966,5 @@ export function usePiece(id?: string) {
     }, [studio, kit, design, pieceFromContext, id]);
 
     return piece;
-}
-
-export function useKitActions(kitUri?: string) {
-    const studio = useStudio();
-    const currentKit = useKit(kitUri);
-
-    // Kit actions
-    function createKit(kit: Kit) {
-        studio.createKit(kit);
-        return kit;
-    }
-
-    function getKit(uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getKit(uri);
-    }
-
-    function updateKit(kit: Kit) {
-        return studio.updateKit(kit);
-    }
-
-    // Type actions
-    function createType(type: Type, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createType(uri, type);
-        return type;
-    }
-
-    function getType(typeName: string, variant: string = '', uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getType(uri, typeName, variant);
-    }
-
-    function updateType(type: Type, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.updateType(uri, type);
-    }
-
-    function deleteType(typeName: string, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.deleteType(uri, typeName);
-    }
-
-    // Design actions
-    function createDesign(design: Design, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createDesign(uri, design);
-        return design;
-    }
-
-    function getDesign(name: string, variant: string = '', view: string = '', uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getDesign(uri, name, variant, view);
-    }
-
-    function updateDesign(design: Design, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.updateDesign(uri, design);
-    }
-
-    function deleteDesign(name: string, uri: string = kitUri) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.deleteDesign(uri, name);
-    }
-
-    // Piece actions
-    function createPiece(
-        piece: Piece,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createPiece(uri, designName, designVariant, view, piece);
-        return piece;
-    }
-
-    function getPiece(
-        pieceId: string,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getPiece(uri, designName, designVariant, view, pieceId);
-    }
-
-    function updatePiece(
-        piece: Piece,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.updatePiece(uri, designName, designVariant, view, piece);
-    }
-
-    function deletePiece(
-        pieceId: string,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.deletePiece(uri, designName, designVariant, view, pieceId);
-    }
-
-    // Connection actions
-    function createConnection(
-        connection: Connection,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createConnection(uri, designName, designVariant, view, connection);
-        return connection;
-    }
-
-    function getConnection(
-        connectionId: string,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getConnection(uri, designName, designVariant, view, connectionId);
-    }
-
-    function updateConnection(
-        connectionId: string,
-        connection: Partial<Connection>,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.updateConnection(uri, designName, designVariant, view, connectionId, connection);
-    }
-
-    function deleteConnection(
-        connectionId: string,
-        designName: string,
-        designVariant: string = '',
-        view: string = '',
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.deleteConnection(uri, designName, designVariant, view, connectionId);
-    }
-
-    // Representation actions
-    function createRepresentation(
-        representation: Representation,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createRepresentation(uri, typeName, representation);
-        return representation;
-    }
-
-    function getRepresentation(
-        key: string,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getRepresentation(uri, typeName, key);
-    }
-
-    function updateRepresentation(
-        key: string,
-        representation: Partial<Representation>,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.updateRepresentation(uri, typeName, key, representation);
-    }
-
-    function deleteRepresentation(
-        key: string,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.deleteRepresentation(uri, typeName, key);
-    }
-
-    // Port actions
-    function createPort(
-        port: Port,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.createPort(uri, typeName, port);
-        return port;
-    }
-
-    function getPort(
-        portId: string,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        return studio.getPort(uri, typeName, portId);
-    }
-
-    function updatePort(
-        portId: string,
-        port: Partial<Port>,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.updatePort(uri, typeName, portId, port);
-    }
-
-    function deletePort(
-        portId: string,
-        typeName: string,
-        uri: string = kitUri
-    ) {
-        if (!uri) throw new Error('Kit URI is required');
-        studio.deletePort(uri, typeName, portId);
-    }
-
-    // Convenience method to get active kit URI
-    function getActiveKitUri() {
-        return currentKit?.uri || kitUri;
-    }
-
-    return {
-        // Kit actions
-        createKit,
-        getKit,
-        updateKit,
-
-        // Type actions
-        createType,
-        getType,
-        updateType,
-        deleteType,
-
-        // Design actions
-        createDesign,
-        getDesign,
-        updateDesign,
-        deleteDesign,
-
-        // Piece actions
-        createPiece,
-        getPiece,
-        updatePiece,
-        deletePiece,
-
-        // Connection actions
-        createConnection,
-        getConnection,
-        updateConnection,
-        deleteConnection,
-
-        // Representation actions
-        createRepresentation,
-        getRepresentation,
-        updateRepresentation,
-        deleteRepresentation,
-
-        // Port actions
-        createPort,
-        getPort,
-        updatePort,
-        deletePort,
-
-        // Utility
-        getActiveKitUri
-    };
 }
 
