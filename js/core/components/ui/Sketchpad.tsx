@@ -120,12 +120,12 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                     items={[
                         {
                             value: Theme.LIGHT,
-                            tooltip: "Turn Theme Dark",
+                            tooltip: "Turn theme dark",
                             label: <Moon />
                         },
                         {
                             value: Theme.DARK,
-                            tooltip: "Turn Theme Light",
+                            tooltip: "Turn theme light",
                             label: <Sun />
                         }
                     ]}
@@ -136,12 +136,12 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                     items={[
                         {
                             value: Layout.NORMAL,
-                            tooltip: "Turn to Touch Layout",
+                            tooltip: "Turn touch layout on",
                             label: <Fingerprint />
                         },
                         {
                             value: Layout.TOUCH,
-                            tooltip: "Turn to Normal Layout",
+                            tooltip: "Return to normal layout",
                             label: <AppWindow />
                         }
                     ]}

@@ -136,7 +136,7 @@ const Types: FC = () => {
         <TreeNode label="Types" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
             {Object.entries(typesByName).map(([name, variants]) => (
                 <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
-                    <div className="grid grid-cols-[repeat(auto-fill,40px)] auto-rows-[40px] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
+                    <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
                         {variants.map((type) => (
                             <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
                         ))}
@@ -193,7 +193,7 @@ const Designs: FC = () => {
                 <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
                     {Object.entries(variants).map(([variant, views]) => (
                         <TreeNode key={`${name}-${variant}`} label={variant} collapsible={true} level={2} defaultOpen={false} icon={<Folder size={14} />}>
-                            <div className="grid grid-cols-[repeat(auto-fill,40px)] auto-rows-[40px] justify-start gap-1 p-1" style={{ paddingLeft: `${(2 + 1) * 1.25}rem` }}>
+                            <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(2 + 1) * 1.25}rem` }}>
                                 {views.map((design) => (
                                     <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} />
                                 ))}
