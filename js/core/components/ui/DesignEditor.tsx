@@ -28,6 +28,7 @@ import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
 import { useKit, useDesign } from '@semio/js/store';
 import { useSketchpad } from './Sketchpad';
+import { Textarea } from './textarea';
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -58,6 +59,33 @@ interface TreeNodeProps {
     defaultOpen?: boolean;
     isLeaf?: boolean;
 }
+
+// TreeSection component for top-level sections
+interface TreeSectionProps {
+    label: string;
+    icon?: ReactNode;
+    children?: ReactNode;
+    defaultOpen?: boolean;
+}
+
+const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true }) => {
+    const [open, setOpen] = useState(defaultOpen);
+
+    return (
+        <Collapsible open={open} onOpenChange={setOpen}>
+            <CollapsibleTrigger asChild>
+                <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden">
+                    {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}
+                    {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
+                    <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                {children}
+            </CollapsibleContent>
+        </Collapsible>
+    );
+};
 
 const TreeNode: FC<TreeNodeProps> = ({ label, icon, children, level = 0, collapsible = false, defaultOpen = true, isLeaf = false }) => {
     const [open, setOpen] = useState(defaultOpen);
@@ -153,7 +181,7 @@ const Designs: FC = () => {
     }, {} as Record<string, Design[]>);
 
     return (
-        <TreeNode label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
+        <TreeSection label="Designs" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
             {Object.entries(designsByName).map(([name, designs]) => (
                 <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
                     <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
@@ -164,7 +192,7 @@ const Designs: FC = () => {
                     </div>
                 </TreeNode>
             ))}
-        </TreeNode>
+        </TreeSection>
     );
 }
 
@@ -180,9 +208,9 @@ const Types: FC = () => {
     }, {} as Record<string, Type[]>);
 
     return (
-        <TreeNode label="Types" collapsible={true} level={0} defaultOpen={true} icon={<Folder size={14} />}>
+        <TreeSection label="Types" collapsible={true} level={0} defaultOpen={true} >
             {Object.entries(typesByName).map(([name, variants]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false} icon={<Folder size={14} />}>
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
                     <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1" style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}>
                         {variants.map((type) => (
                             <TypeAvatar key={`${type.name}-${type.variant}`} type={type} />
@@ -190,7 +218,7 @@ const Types: FC = () => {
                     </div>
                 </TreeNode>
             ))}
-        </TreeNode>
+        </TreeSection>
     );
 }
 
@@ -446,6 +474,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
         >
             <ScrollArea className="h-full">
                 <div className="font-semibold p-4">Chat</div>
+                <Textarea />
             </ScrollArea>
             <div
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
@@ -661,13 +690,13 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                     <DragOverlay>
                         {activeDraggedType && (
                             <Avatar>
-                                <AvatarImage src="https://github.com/semio-tech.png" />
+                                {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
                                 <AvatarFallback>{activeDraggedType.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                         )}
                         {activeDraggedDesign && (
                             <Avatar>
-                                <AvatarImage src="https://github.com/semio-tech.png" />
+                                {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
                                 <AvatarFallback>{activeDraggedDesign.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                         )}
