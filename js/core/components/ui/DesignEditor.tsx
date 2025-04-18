@@ -238,11 +238,11 @@ interface WorkbenchProps extends ResizablePanelProps { }
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        setIsDragging(true);
+        setIsResizing(true);
 
         const startX = e.clientX;
         const startWidth = width;
@@ -255,7 +255,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
+            setIsResizing(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -283,7 +283,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
+                ${isResizing || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
@@ -326,7 +326,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
             />
         </div>
     );
@@ -337,11 +337,11 @@ interface DetailsProps extends ResizablePanelProps { }
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        setIsDragging(true);
+        setIsResizing(true);
 
         const startX = e.clientX;
         const startWidth = width;
@@ -354,7 +354,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
+            setIsResizing(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -366,7 +366,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
+                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
@@ -389,7 +389,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
             />
         </div>
     );
@@ -410,11 +410,11 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
     if (!visible) return null;
 
     const [isResizeHovered, setIsResizeHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        setIsDragging(true);
+        setIsResizing(true);
 
         const startY = e.clientY;
         const startHeight = height;
@@ -427,7 +427,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
+            setIsResizing(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -438,7 +438,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
 
     return (
         <div
-            className={`absolute z-30 bg-background-level-2 text-foreground border ${isDragging || isResizeHovered ? 'border-t-primary' : ''}`}
+            className={`absolute z-30 bg-background-level-2 text-foreground border ${isResizing || isResizeHovered ? 'border-t-primary' : ''}`}
             style={{
                 left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
                 right: rightPanelVisible ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
@@ -450,7 +450,7 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
                 className={`absolute top-0 left-0 right-0 h-1 cursor-ns-resize`}
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
             />
             <ScrollArea className="h-full">
                 <div className="font-semibold p-4">Console</div>
@@ -465,11 +465,11 @@ interface ChatProps extends ResizablePanelProps { }
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        setIsDragging(true);
+        setIsResizing(true);
 
         const startX = e.clientX;
         const startWidth = width;
@@ -482,7 +482,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
+            setIsResizing(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -494,7 +494,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     return (
         <div
             className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isDragging || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
+                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
@@ -507,7 +507,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
                 className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
                 onMouseDown={handleMouseDown}
                 onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => !isDragging && setIsResizeHovered(false)}
+                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
             />
         </div>
     );
