@@ -57,17 +57,32 @@ import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, Diag
 interface DesignEditorState {
     selection: {
         selectedPieceIds: string[];
-        selectedConnection: {
+        selectedConnections: {
             connectingPieceId: string;
             connectedPieceId: string;
-        }
+        }[];
     };
+}
+
+class DesignEditor {
+    private state: DesignEditorState;
+    private undoManager: UndoManager;
+
+    constructor(undoManager: UndoManager) {
+        this.undoManager = undoManager;
+        this.state = {
+            selection: {
+                selectedPieceIds: [],
+                selectedConnections: []
+            }
+        };
+    }
 }
 
 class Studio {
     private userId: string;
     private studioDoc: Y.Doc;
-    private undoManagers: Map<string, Map<string, UndoManager>>;
+    private designEditors: Map<string, DesignEditor>;
     private indexeddbProvider: IndexeddbPersistence;
 
     constructor(
@@ -75,7 +90,7 @@ class Studio {
     ) {
         this.userId = userId;
         this.studioDoc = new Y.Doc();
-        this.undoManagers = new Map();
+        this.designEditors = new Map();
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.studioDoc);
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.studioDoc.clientID})`);
@@ -795,33 +810,32 @@ class Studio {
         ports.delete(portId);
     }
 
-    createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): void {
-        const yDesignEditor = new Y.Map<any>();
-        yDesignEditor.set('kitUri', kitUri);
-        yDesignEditor.set('designName', designName);
-        yDesignEditor.set('designVariant', designVariant);
-        yDesignEditor.set('view', view);
-        const ySelection = new Y.Map<any>();
-        const ySelectedPieces = new Y.Map<any>();
-        ySelection.set('selectedPieces', ySelectedPieces);
-        const ySelectedConnections = new Y.Map<any>();
-        ySelection.set('selectedConnections', ySelectedConnections);
-        yDesignEditor.set('selection', ySelection);
+    createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): string {
+        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+        const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
+        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
+        const id = uuidv4();
+        const undoManager = new UndoManager(yDesign, { trackedOrigins: new Set([id]) });
+        const designEditor = new DesignEditor(undoManager);
+        this.designEditors.set(id, designEditor);
+        return id;
     }
 
-    getDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): DesignEditorState | null {
-        const yDesignEditor = this.studioDoc.getMap('designEditors').get(designName);
-        if (!yDesignEditor) return null;
-        const ySelection = yDesignEditor.get('selection');
-        return {
-            selection: {
-                selectedPieceIds: Array.from(ySelectedPieces.keys()),
-                selectedConnection: {
-                    connectingPieceId: ySelectedConnections.get('connectingPieceId'),
-                    connectedPieceId: ySelectedConnections.get('connectedPieceId')
-                }
-            }
-        }
+    getDesignEditorState(id: string): DesignEditorState | null {
+        const designEditor = this.designEditors.get(id);
+        if (!designEditor) return null;
+        return designEditor.state;
+    }
+
+    updateDesignEditorState(id: string, state: DesignEditorState): void {
+        const designEditor = this.designEditors.get(id);
+        if (!designEditor) throw new Error(`Design editor ${id} not found`);
+        designEditor.state = state;
+    }
+
+    deleteDesignEditor(id: string): void {
+        this.designEditors.delete(id);
     }
 }
 
