@@ -499,20 +499,6 @@ class Studio {
         return pieces.delete(pieceId);
     }
 
-    private createYConnection(connection: Connection): Connection {
-        return {
-            description: connection.description || '',
-            connected: connection.connected,
-            connecting: connection.connecting,
-            gap: connection.gap || 0,
-            rotation: connection.rotation || 0,
-            shift: connection.shift || 0,
-            tilt: connection.tilt || 0,
-            x: connection.x || 0,
-            y: connection.y || 0
-        };
-    }
-
     createConnection(kitUri: string, designName: string, designVariant: string, view: string, connection: Connection): void {
         const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
@@ -798,6 +784,15 @@ class Studio {
         const ports = yType.get('ports');
         ports.delete(portId);
     }
+
+    createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): void {
+        const yDesignEditor = new Y.Map<any>();
+        yDesignEditor.set('kitUri', kitUri);
+        yDesignEditor.set('designName', designName);
+        yDesignEditor.set('designVariant', designVariant);
+        yDesignEditor.set('view', view);
+    }
+
 }
 
 const studio = new Studio();
