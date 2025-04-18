@@ -86,9 +86,7 @@ class Studio {
     private designEditors: Map<string, DesignEditor>;
     private indexeddbProvider: IndexeddbPersistence;
 
-    constructor(
-        userId: string = Generator.randomId()
-    ) {
+    constructor(userId: string) {
         this.userId = userId;
         this.studioDoc = new Y.Doc();
         this.undoManager = new UndoManager(this.studioDoc, { trackedOrigins: new Set([this.userId]) });
@@ -830,10 +828,11 @@ class Studio {
         return designEditor.state;
     }
 
-    updateDesignEditorState(id: string, state: DesignEditorState): void {
+    updateDesignEditorState(id: string, state: DesignEditorState): DesignEditorState {
         const designEditor = this.designEditors.get(id);
         if (!designEditor) throw new Error(`Design editor ${id} not found`);
         designEditor.state = state;
+        return state;
     }
 
     deleteDesignEditor(id: string): void {
@@ -841,9 +840,9 @@ class Studio {
     }
 }
 
-const studio = new Studio();
 const StudioContext = createContext<Studio | null>(null);
-export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const StudioProvider: React.FC<{ userId: string, children: React.ReactNode }> = ({ userId, children }) => {
+    const studio = new Studio(userId);
     return (
         <StudioContext.Provider value={studio}>
             {children}
@@ -859,7 +858,7 @@ export function useStudio() {
     function updateKit(kit: Kit) { return studio.updateKit(kit); }
     function deleteKit(uri: string) { return studio.deleteKit(uri); }
 
-    return { studio, createKit, updateKit, deleteKit };
+    return { createKit, updateKit, deleteKit };
 }
 
 const KitContext = createContext<Kit | null>(null);
@@ -893,10 +892,21 @@ export function useKit(uri?: string) {
     function updateDesign(design: Design) { return studio.updateDesign(uri, design); }
     function deleteDesign(name: string) { return studio.deleteDesign(uri, name); }
 
+    function createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string) {
+        return studio.createDesignEditor(kitUri, designName, designVariant, view);
+    }
+    function getDesignEditorState(id: string) { return studio.getDesignEditorState(id); }
+
+    function updateDesignEditorState(id: string, state: DesignEditorState): DesignEditorState { return studio.updateDesignEditorState(id, state); }
+
+    function deleteDesignEditor(id: string) { return studio.deleteDesignEditor(id); }
+
+
     return {
         kit,
+        createType, updateType, deleteType,
         createDesign, updateDesign, deleteDesign,
-        createType, updateType, deleteType
+        createDesignEditor, getDesignEditorState, updateDesignEditorState, deleteDesignEditor
     };
 }
 
@@ -982,75 +992,3 @@ export function useDesign(name?: string, variant?: string, view?: string) {
         transaction
     };
 }
-
-const TypeContext = createContext<Type | null>(null);
-export const TypeProvider: React.FC<{ type: Type, children: React.ReactNode }> = ({ type, children }) => {
-    return (
-        <TypeContext.Provider value={type}>
-            {children}
-        </TypeContext.Provider>
-    );
-};
-
-export function useType(name?: string, variant?: string) {
-    const studio = useStudio();
-    const kit = useKit();
-    const typeFromContext = useContext(TypeContext);
-    const [type, setType] = useState<Type | null>(typeFromContext);
-
-    useEffect(() => {
-        if (typeFromContext) {
-            setType(typeFromContext);
-        } else if (kit?.uri && name) {
-            const updatedType = studio.getType(kit.uri, name, variant || '');
-            setType(updatedType);
-        }
-    }, [studio, kit, typeFromContext, name, variant]);
-
-
-    function createRepresentation(representation: Representation) { return studio.createRepresentation(kit.uri, name, representation); }
-    function updateRepresentation(key: string, representation: Partial<Representation>) { return studio.updateRepresentation(kit.uri, name, key, representation); }
-    function deleteRepresentation(key: string) { return studio.deleteRepresentation(kit.uri, name, key); }
-
-    function createPort(port: Port) { return studio.createPort(kit.uri, name, port); }
-    function updatePort(portId: string, port: Partial<Port>) { return studio.updatePort(kit.uri, name, portId, port); }
-    function deletePort(portId: string) { return studio.deletePort(kit.uri, name, portId); }
-
-    return {
-        type,
-        createRepresentation, updateRepresentation, deleteRepresentation,
-        createPort, updatePort, deletePort
-    };
-}
-
-const PieceContext = createContext<Piece | null>(null);
-export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }> = ({ piece, children }) => {
-    return (
-        <PieceContext.Provider value={piece}>
-            {children}
-        </PieceContext.Provider>
-    );
-};
-
-export function usePiece(id?: string) {
-    const { createPiece } = useDesign();
-    const pieceFromContext = useContext(PieceContext);
-
-    useEffect(() => {
-        if (pieceFromContext) {
-            setPiece(pieceFromContext);
-        } else if (kit?.uri && design?.name && id) {
-            const updatedPiece = studio.getPiece(
-                kit.uri,
-                design.name,
-                design.variant || '',
-                design.view || '',
-                id
-            );
-            setPiece(updatedPiece);
-        }
-    }, [studio, kit, design, pieceFromContext, id]);
-
-    return piece;
-}
-

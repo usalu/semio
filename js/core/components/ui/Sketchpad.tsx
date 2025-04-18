@@ -231,7 +231,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     return (
         <TooltipProvider>
-            <StudioProvider>
+            <StudioProvider userId={"user-test"}>
                 <SketchpadContext.Provider value={{
                     mode: mode,
                     layout: currentLayout,
