@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
 import './globals.css'
@@ -32,23 +32,36 @@ const windowEvents = {
     close: () => invokeWindowControl('close')
 };
 
-const invokeOs = (action: 'get-user-id') => {
-    if (window.os) {
-        return window.os[action]();
-    }
-    console.warn(`OS not available for action: ${action}`);
-    return Promise.resolve();
-};
-
 const os = {
-    getUserId: () => invokeOs('get-user-id')
+    getUserId: async () => await window.os.getUserId()
 };
 
 function App() {
-    console.log(os.getUserId());
+    const [userId, setUserId] = useState<string>('');
+
+    useEffect(() => {
+        async function fetchUserId() {
+            try {
+                const id = await os.getUserId();
+                setUserId(id);
+            } catch (error) {
+                console.error('Failed to get user ID:', error);
+                setUserId('anonymous-user');
+            }
+        }
+
+        fetchUserId();
+    }, []);
+
     return (
         <div className="h-screen w-screen">
-            <Sketchpad onWindowEvents={windowEvents} userId={os.getUserId()} />
+            {userId ? (
+                <Sketchpad onWindowEvents={windowEvents} userId={userId} />
+            ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                    Loading user data...
+                </div>
+            )}
         </div>
     );
 }
