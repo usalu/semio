@@ -189,6 +189,10 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
     );
 };
 
+interface CanvasProps {
+    id: string;
+}
+
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
@@ -205,7 +209,6 @@ interface SketchpadProps {
 const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
-
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (theme) return theme;
         if (typeof window !== 'undefined') {
@@ -241,20 +244,18 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     setTheme: setCurrentTheme,
                     setNavbarToolbar: setNavbarToolbar,
                 }}>
-                    <KitProvider kit={metabolism}>
-                        <DesignProvider design={nakaginCapsuleTower}>
-                            <div
-                                key={`layout-${currentLayout}`}
-                                className="h-full w-full flex flex-col bg-background text-foreground"
-                            >
-                                <Navbar
-                                    toolbarContent={navbarToolbar}
-                                    onWindowEvents={onWindowEvents}
-                                />
-                                <DesignEditor />
-                            </div>
-                        </DesignProvider>
-                    </KitProvider>
+                    <DesignEditorProvider id={designEditorId}>
+                        <div
+                            key={`layout-${currentLayout}`}
+                            className="h-full w-full flex flex-col bg-background text-foreground"
+                        >
+                            <Navbar
+                                toolbarContent={navbarToolbar}
+                                onWindowEvents={onWindowEvents}
+                            />
+                            <DesignEditor />
+                        </div>
+                    </DesignEditorProvider>
                 </SketchpadContext.Provider>
             </StudioProvider>
         </TooltipProvider>

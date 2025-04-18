@@ -54,21 +54,25 @@ import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, Diag
 //     designEditorStates: Y.Map<DesignEditorState>;
 // }
 
+interface DesignEditorSelection {
+    selectedPieceIds: string[];
+    selectedConnections: {
+        connectingPieceId: string;
+        connectedPieceId: string;
+    }[];
+}
+
 interface DesignEditorState {
-    selection: {
-        selectedPieceIds: string[];
-        selectedConnections: {
-            connectingPieceId: string;
-            connectedPieceId: string;
-        }[];
-    };
+    selection: DesignEditorSelection;
 }
 
 class DesignEditor {
-    private state: DesignEditorState;
+    private yDesign: Y.Map<any>;
     private undoManager: UndoManager;
+    private state: DesignEditorState;
 
-    constructor(undoManager: UndoManager) {
+    constructor(yDesign: Y.Map<any>, undoManager: UndoManager) {
+        this.yDesign = yDesign;
         this.undoManager = undoManager;
         this.state = {
             selection: {
@@ -76,6 +80,18 @@ class DesignEditor {
                 selectedConnections: []
             }
         };
+    }
+
+    getState(): DesignEditorState {
+        return this.state;
+    }
+
+    setState(state: DesignEditorState): void {
+        this.state = state;
+    }
+
+    getDesignId(): [string, string, string] {
+        return [this.yDesign.get('name'), this.yDesign.get('variant'), this.yDesign.get('view')];
     }
 }
 
@@ -817,22 +833,22 @@ class Studio {
         if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
         const id = uuidv4();
         const undoManager = new UndoManager(yDesign, { trackedOrigins: new Set([id]) });
-        const designEditor = new DesignEditor(undoManager);
+        const designEditor = new DesignEditor(yDesign, undoManager);
         this.designEditors.set(id, designEditor);
         return id;
     }
 
-    getDesignEditorState(id: string): DesignEditorState | null {
+    getDesignEditor(id: string): DesignEditor | null {
         const designEditor = this.designEditors.get(id);
         if (!designEditor) return null;
-        return designEditor.state;
+        return designEditor;
     }
 
-    updateDesignEditorState(id: string, state: DesignEditorState): DesignEditorState {
+    updateDesignEditorSelection(id: string, selection: DesignEditorSelection): DesignEditorSelection {
         const designEditor = this.designEditors.get(id);
         if (!designEditor) throw new Error(`Design editor ${id} not found`);
-        designEditor.state = state;
-        return state;
+        designEditor.setState({ ...designEditor.getState(), selection });
+        return selection;
     }
 
     deleteDesignEditor(id: string): void {
@@ -870,27 +886,23 @@ export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({
     );
 };
 
-export function useKit(uri?: string) {
+export function useKit() {
     const studio = useStudio();
     const kitFromContext = useContext(KitContext);
     const [kit, setKit] = useState<Kit | null>(kitFromContext);
 
     useEffect(() => {
-        if (kitFromContext) {
-            setKit(kitFromContext);
-        } else if (uri) {
-            const updatedKit = studio.getKit(uri);
-            setKit(updatedKit);
-        }
-    }, [studio, kitFromContext, uri]);
+        setKit(kitFromContext);
+    }, [studio, kitFromContext]);
 
-    function createType(type: Type) { return studio.createType(uri, type); }
-    function updateType(type: Type) { return studio.updateType(uri, type); }
-    function deleteType(typeName: string) { return studio.deleteType(uri, typeName); }
 
-    function createDesign(design: Design) { return studio.createDesign(uri, design); }
-    function updateDesign(design: Design) { return studio.updateDesign(uri, design); }
-    function deleteDesign(name: string) { return studio.deleteDesign(uri, name); }
+    function createType(type: Type) { return studio.createType(kit.uri, type); }
+    function updateType(type: Type) { return studio.updateType(kit.uri, type); }
+    function deleteType(typeName: string) { return studio.deleteType(kit.uri, typeName); }
+
+    function createDesign(design: Design) { return studio.createDesign(kit.uri, design); }
+    function updateDesign(design: Design) { return studio.updateDesign(kit.uri, design); }
+    function deleteDesign(name: string) { return studio.deleteDesign(kit.uri, name); }
 
     function createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string) {
         return studio.createDesignEditor(kitUri, designName, designVariant, view);
@@ -910,29 +922,23 @@ export function useKit(uri?: string) {
     };
 }
 
-const DesignContext = createContext<Design | null>(null);
-export const DesignProvider: React.FC<{ design: Design, children: React.ReactNode }> = ({ design, children }) => {
+const DesignEditorContext = createContext<DesignEditor | null>(null);
+export const DesignEditorProvider: React.FC<{ id: string, children: React.ReactNode }> = ({ id, children }) => {
+    const studio = useStudio();
+    const kit = useKit();
+    const designEditor = studio.getDesignEditor(id);
     return (
-        <DesignContext.Provider value={design}>
+        <DesignEditorContext.Provider value={designEditor}>
             {children}
-        </DesignContext.Provider>
+        </DesignEditorContext.Provider>
     );
 };
 
-export function useDesign(name?: string, variant?: string, view?: string) {
+export function useDesignEditor() {
     const studio = useStudio();
     const kit = useKit();
-    const designFromContext = useContext(DesignContext);
-    const [design, setDesign] = useState<Design | null>(designFromContext);
-
-    useEffect(() => {
-        if (designFromContext) {
-            setDesign(designFromContext);
-        } else if (kit?.uri && name) {
-            const updatedDesign = studio.getDesign(kit.uri, name, variant || '', view || '');
-            setDesign(updatedDesign);
-        }
-    }, [studio, kit, designFromContext, name, variant, view]);
+    const designEditorFromContext = useContext(DesignEditorContext);
+    const [designEditor, setDesignEditor] = useState<DesignEditor | null>(designEditorFromContext);
 
     const transaction = {
         /**
@@ -955,7 +961,7 @@ export function useDesign(name?: string, variant?: string, view?: string) {
 
             studio.studioDoc.transact(() => {
                 operations();
-            });
+            }, { trackedOrigins: new Set([id]) });
 
             const updatedDesign = studio.getDesign(kit.uri, targetDesignName, designVariant, designView);
             setDesign(updatedDesign);

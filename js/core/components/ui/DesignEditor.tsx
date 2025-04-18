@@ -520,7 +520,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
     const { kit } = useKit();
-    const { design, createPiece } = useDesign();
+    const { design, createPiece, designEditor } = useDesign();
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
