@@ -82,6 +82,7 @@ class DesignEditor {
 class Studio {
     private userId: string;
     private studioDoc: Y.Doc;
+    private undoManager: UndoManager;
     private designEditors: Map<string, DesignEditor>;
     private indexeddbProvider: IndexeddbPersistence;
 
@@ -90,6 +91,7 @@ class Studio {
     ) {
         this.userId = userId;
         this.studioDoc = new Y.Doc();
+        this.undoManager = new UndoManager(this.studioDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditors = new Map();
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.studioDoc);
         this.indexeddbProvider.whenSynced.then(() => {
@@ -922,7 +924,6 @@ export function useDesign(name?: string, variant?: string, view?: string) {
         }
     }, [studio, kit, designFromContext, name, variant, view]);
 
-    // Transaction handling - UI can use this to compose operations
     const transaction = {
         /**
          * Execute a set of operations atomically in a single transaction
@@ -933,7 +934,6 @@ export function useDesign(name?: string, variant?: string, view?: string) {
             const targetDesignName = name || design?.name;
             if (!targetDesignName) throw new Error("Design name is required");
 
-            // Get the target design YJS document
             const yKit = studio.studioDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
             if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
 
@@ -943,52 +943,42 @@ export function useDesign(name?: string, variant?: string, view?: string) {
             const yDesign = designs.get(targetDesignName)?.get(designVariant)?.get(designView);
             if (!yDesign) throw new Error(`Design ${targetDesignName} not found in kit ${kit.uri}`);
 
-            // Execute the operations within a transaction
             studio.studioDoc.transact(() => {
                 operations();
             });
 
-            // Fetch the updated design after transaction
             const updatedDesign = studio.getDesign(kit.uri, targetDesignName, designVariant, designView);
             setDesign(updatedDesign);
         }
     };
 
-    // Base CRUD operations - building blocks the UI can compose
     function createPiece(piece: Piece) {
         return studio.createPiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
     }
-
     function updatePiece(piece: Piece) {
         return studio.updatePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
     }
-
     function deletePiece(pieceId: string) {
         return studio.deletePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', pieceId);
     }
-
     function createConnection(connection: Connection) {
         return studio.createConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connection);
     }
-
     function updateConnection(connectionId: string, connection: Partial<Connection>) {
         return studio.updateConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId, connection);
     }
-
     function deleteConnection(connectionId: string) {
         return studio.deleteConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId);
     }
 
     return {
         design,
-        // Basic CRUD operations
         createPiece,
         updatePiece,
         deletePiece,
         createConnection,
         updateConnection,
         deleteConnection,
-        // Transaction API for composing operations
         transaction
     };
 }
@@ -1043,11 +1033,8 @@ export const PieceProvider: React.FC<{ piece: Piece, children: React.ReactNode }
 };
 
 export function usePiece(id?: string) {
-    const studio = useStudio();
-    const kit = useKit();
-    const design = useDesign();
+    const { createPiece } = useDesign();
     const pieceFromContext = useContext(PieceContext);
-    const [piece, setPiece] = useState<Piece | null>(pieceFromContext);
 
     useEffect(() => {
         if (pieceFromContext) {
