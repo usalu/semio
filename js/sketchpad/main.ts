@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
+import os from 'os';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -55,7 +56,6 @@ app.whenReady().then(() => {
     const window = BrowserWindow.getFocusedWindow()
     if (window) window.minimize()
   })
-
   ipcMain.handle('maximize-window', (event) => {
     const window = BrowserWindow.getFocusedWindow()
     if (window) {
@@ -66,9 +66,12 @@ app.whenReady().then(() => {
       }
     }
   })
-
   ipcMain.handle('close-window', (event) => {
     const window = BrowserWindow.getFocusedWindow()
     if (window) window.close()
+  })
+
+  ipcMain.handle('get-user-id', (event) => {
+    return os.userInfo().username;
   })
 })

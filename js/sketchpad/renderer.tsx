@@ -12,6 +12,9 @@ declare global {
             maximize(): Promise<any>;
             close(): Promise<any>;
         }
+        os: {
+            getUserId(): Promise<string>;
+        }
     }
 }
 
@@ -29,10 +32,23 @@ const windowEvents = {
     close: () => invokeWindowControl('close')
 };
 
+const invokeOs = (action: 'get-user-id') => {
+    if (window.os) {
+        return window.os[action]();
+    }
+    console.warn(`OS not available for action: ${action}`);
+    return Promise.resolve();
+};
+
+const os = {
+    getUserId: () => invokeOs('get-user-id')
+};
+
 function App() {
+    console.log(os.getUserId());
     return (
         <div className="h-screen w-screen">
-            <Sketchpad onWindowEvents={windowEvents} />
+            <Sketchpad onWindowEvents={windowEvents} userId={os.getUserId()} />
         </div>
     );
 }

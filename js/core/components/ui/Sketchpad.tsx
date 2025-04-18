@@ -199,9 +199,10 @@ interface SketchpadProps {
         maximize: () => void;
         close: () => void;
     }
+    userId: string;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
     const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
 
@@ -231,7 +232,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     return (
         <TooltipProvider>
-            <StudioProvider userId={"user-test"}>
+            <StudioProvider userId={userId}>
                 <SketchpadContext.Provider value={{
                     mode: mode,
                     layout: currentLayout,
