@@ -54,6 +54,16 @@ import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, Diag
 //     designEditorStates: Y.Map<DesignEditorState>;
 // }
 
+interface DesignEditorState {
+    selection: {
+        selectedPieceIds: string[];
+        selectedConnection: {
+            connectingPieceId: string;
+            connectedPieceId: string;
+        }
+    };
+}
+
 class Studio {
     private userId: string;
     private studioDoc: Y.Doc;
@@ -791,8 +801,28 @@ class Studio {
         yDesignEditor.set('designName', designName);
         yDesignEditor.set('designVariant', designVariant);
         yDesignEditor.set('view', view);
+        const ySelection = new Y.Map<any>();
+        const ySelectedPieces = new Y.Map<any>();
+        ySelection.set('selectedPieces', ySelectedPieces);
+        const ySelectedConnections = new Y.Map<any>();
+        ySelection.set('selectedConnections', ySelectedConnections);
+        yDesignEditor.set('selection', ySelection);
     }
 
+    getDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): DesignEditorState | null {
+        const yDesignEditor = this.studioDoc.getMap('designEditors').get(designName);
+        if (!yDesignEditor) return null;
+        const ySelection = yDesignEditor.get('selection');
+        return {
+            selection: {
+                selectedPieceIds: Array.from(ySelectedPieces.keys()),
+                selectedConnection: {
+                    connectingPieceId: ySelectedConnections.get('connectingPieceId'),
+                    connectedPieceId: ySelectedConnections.get('connectedPieceId')
+                }
+            }
+        }
+    }
 }
 
 const studio = new Studio();
