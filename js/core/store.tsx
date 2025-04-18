@@ -922,19 +922,75 @@ export function useDesign(name?: string, variant?: string, view?: string) {
         }
     }, [studio, kit, designFromContext, name, variant, view]);
 
-    function createPiece(piece: Piece) { return studio.createPiece(uri, designName, designVariant, view, piece); }
-    function updatePiece(piece: Piece) { return studio.updatePiece(uri, designName, designVariant, view, piece); }
-    function deletePiece(pieceId: string) { return studio.deletePiece(uri, designName, designVariant, view, pieceId); }
+    // Transaction handling - UI can use this to compose operations
+    const transaction = {
+        /**
+         * Execute a set of operations atomically in a single transaction
+         * @param operations Function containing operations to execute in transaction
+         */
+        execute: (operations: () => void) => {
+            if (!kit?.uri) throw new Error("Kit URI is required");
+            const targetDesignName = name || design?.name;
+            if (!targetDesignName) throw new Error("Design name is required");
 
-    function createConnection(connection: Connection) { return studio.createConnection(uri, designName, designVariant, view, connection); }
-    function updateConnection(connectionId: string, connection: Partial<Connection>) { return studio.updateConnection(uri, designName, designVariant, view, connectionId, connection); }
-    function deleteConnection(connectionId: string) { return studio.deleteConnection(uri, designName, designVariant, view, connectionId); }
+            // Get the target design YJS document
+            const yKit = studio.studioDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
+            if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
+
+            const designs = yKit.get('designs');
+            const designVariant = variant || design?.variant || '';
+            const designView = view || design?.view || '';
+            const yDesign = designs.get(targetDesignName)?.get(designVariant)?.get(designView);
+            if (!yDesign) throw new Error(`Design ${targetDesignName} not found in kit ${kit.uri}`);
+
+            // Execute the operations within a transaction
+            studio.studioDoc.transact(() => {
+                operations();
+            });
+
+            // Fetch the updated design after transaction
+            const updatedDesign = studio.getDesign(kit.uri, targetDesignName, designVariant, designView);
+            setDesign(updatedDesign);
+        }
+    };
+
+    // Base CRUD operations - building blocks the UI can compose
+    function createPiece(piece: Piece) {
+        return studio.createPiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
+    }
+
+    function updatePiece(piece: Piece) {
+        return studio.updatePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
+    }
+
+    function deletePiece(pieceId: string) {
+        return studio.deletePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', pieceId);
+    }
+
+    function createConnection(connection: Connection) {
+        return studio.createConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connection);
+    }
+
+    function updateConnection(connectionId: string, connection: Partial<Connection>) {
+        return studio.updateConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId, connection);
+    }
+
+    function deleteConnection(connectionId: string) {
+        return studio.deleteConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId);
+    }
 
     return {
         design,
-        createPiece, updatePiece, deletePiece,
-        createConnection, updateConnection, deleteConnection
-    }
+        // Basic CRUD operations
+        createPiece,
+        updatePiece,
+        deletePiece,
+        createConnection,
+        updateConnection,
+        deleteConnection,
+        // Transaction API for composing operations
+        transaction
+    };
 }
 
 const TypeContext = createContext<Type | null>(null);
