@@ -28,7 +28,7 @@ import { Textarea } from '@semio/js/components/ui/Textarea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
-import { useKit, useDesign, useDesignEditor } from '@semio/js/store';
+import { useKit, useDesignEditorStore } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
@@ -517,7 +517,7 @@ interface DesignEditorProps { }
 const DesignEditor: FC<DesignEditorProps> = () => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
-    const { design, createPiece, designEditor } = useDesignEditor();
+    const { design, createPiece, updatePiece, deletePiece, createConnection, updateConnection, deleteConnection, transact } = useDesignEditorStore();
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,

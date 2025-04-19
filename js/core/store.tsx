@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as Y from 'yjs';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, FC } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
@@ -104,7 +104,7 @@ class DesignEditor {
     }
 }
 
-class Studio {
+class StudioStore {
     private userId: string;
     private yDoc: Y.Doc;
     private undoManager: UndoManager;
@@ -886,129 +886,42 @@ class Studio {
     }
 }
 
-const StudioContext = createContext<Studio | null>(null);
-export const StudioProvider: React.FC<{ userId: string, children: React.ReactNode }> = ({ userId, children }) => {
-    const studio = new Studio(userId);
+
+const StudioStoreContext = createContext<StudioStore | null>(null);
+
+export const useStudioStore = () => {
+    const studioStore = useContext(StudioStoreContext);
+    if (!studioStore) {
+        throw new Error('useStudioStore must be used within a StudioStoreProvider');
+    }
+    return studioStore;
+};
+
+export const StudioStoreProvider: FC<{ userId: string }> = ({ userId, children }) => {
+    const studioStore = useMemo(() => new StudioStore(userId), [userId]);
     return (
-        <StudioContext.Provider value={studio}>
+        <StudioStoreContext.Provider value={studioStore}>
             {children}
-        </StudioContext.Provider>
+        </StudioStoreContext.Provider>
     );
 };
 
-export function useStudio() {
-    const studio = useContext(StudioContext);
-    if (!studio) throw new Error('Studio not found');
+const DesignEditorStoreContext = createContext<DesignEditorStore | null>(null);
 
-    function createKit(kit: Kit) { return studio.createKit(kit); }
-    function updateKit(kit: Kit) { return studio.updateKit(kit); }
-    function deleteKit(uri: string) { return studio.deleteKit(uri); }
-
-    return { createKit, updateKit, deleteKit };
-}
-
-export function useKit(uri: string) {
-    const studio = useStudio();
-
-    function createType(type: Type) { return studio.createType(uri, type); }
-    function updateType(type: Type) { return studio.updateType(uri, type); }
-    function deleteType(typeName: string) { return studio.deleteType(uri, typeName); }
-
-    function createDesign(design: Design) { return studio.createDesign(uri, design); }
-    function updateDesign(design: Design) { return studio.updateDesign(uri, design); }
-    function deleteDesign(name: string) { return studio.deleteDesign(uri, name); }
-
-    function createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string) {
-        return studio.createDesignEditor(kitUri, designName, designVariant, view);
+export const useDesignEditorStore = () => {
+    const designEditorStore = useContext(DesignEditorStoreContext);
+    if (!designEditorStore) {
+        throw new Error('useDesignEditorStore must be used within a DesignEditorStoreProvider');
     }
-    function getDesignEditorState(id: string) { return studio.getDesignEditorState(id); }
-
-    function updateDesignEditorState(id: string, state: DesignEditorState): DesignEditorState { return studio.updateDesignEditorState(id, state); }
-
-    function deleteDesignEditor(id: string) { return studio.deleteDesignEditor(id); }
-
-
-    return {
-        kit,
-        createType, updateType, deleteType,
-        createDesign, updateDesign, deleteDesign,
-        createDesignEditor, getDesignEditorState, updateDesignEditorState, deleteDesignEditor
-    };
-}
-
-const DesignEditorContext = createContext<DesignEditor | null>(null);
-export const DesignEditorProvider: React.FC<{ id: string, children: React.ReactNode }> = ({ id, children }) => {
-    const studio = useStudio();
-    const kit = useKit();
-    const designEditor = studio.getDesignEditor(id);
-    return (
-        <DesignEditorContext.Provider value={designEditor}>
-            {children}
-        </DesignEditorContext.Provider>
-    );
+    return designEditorStore;
 };
 
-export function useDesignEditor() {
-    const studio = useStudio();
-    const kit = useKit();
-    const designEditorFromContext = useContext(DesignEditorContext);
-    const [designEditor, setDesignEditor] = useState<DesignEditor | null>(designEditorFromContext);
-
-    const transaction = {
-        /**
-         * Execute a set of operations atomically in a single transaction
-         * @param operations Function containing operations to execute in transaction
-         */
-        execute: (operations: () => void) => {
-            if (!kit?.uri) throw new Error("Kit URI is required");
-            const targetDesignName = name || design?.name;
-            if (!targetDesignName) throw new Error("Design name is required");
-
-            const yKit = studio.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
-            if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
-
-            const designs = yKit.get('designs');
-            const designVariant = variant || design?.variant || '';
-            const designView = view || design?.view || '';
-            const yDesign = designs.get(targetDesignName)?.get(designVariant)?.get(designView);
-            if (!yDesign) throw new Error(`Design ${targetDesignName} not found in kit ${kit.uri}`);
-
-            studio.yDoc.transact(() => {
-                operations();
-            }, { trackedOrigins: new Set([id]) });
-
-            const updatedDesign = studio.getDesign(kit.uri, targetDesignName, designVariant, designView);
-            setDesign(updatedDesign);
-        }
-    };
-
-    function createPiece(piece: Piece) {
-        return studio.createPiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
-    }
-    function updatePiece(piece: Piece) {
-        return studio.updatePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', piece);
-    }
-    function deletePiece(pieceId: string) {
-        return studio.deletePiece(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', pieceId);
-    }
-    function createConnection(connection: Connection) {
-        return studio.createConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connection);
-    }
-    function updateConnection(connectionId: string, connection: Partial<Connection>) {
-        return studio.updateConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId, connection);
-    }
-    function deleteConnection(connectionId: string) {
-        return studio.deleteConnection(kit.uri, design?.name || name, design?.variant || variant || '', design?.view || view || '', connectionId);
-    }
-
-    return {
-        design,
-        createPiece,
-        updatePiece,
-        deletePiece,
-        createConnection,
-        updateConnection,
-        deleteConnection,
-        transaction
-    };
-}
+export const DesignEditorStoreProvider: FC<{ designEditorId: string }> = ({ designEditorId, children }) => {
+    const studioStore = useStudioStore();
+    const designEditorStore = useMemo(() => studioStore.getDesignEditor(designEditorId), [studioStore, designEditorId]);
+    return (
+        <DesignEditorStoreContext.Provider value={designEditorStore}>
+            {children}
+        </DesignEditorStoreContext.Provider>
+    );
+};

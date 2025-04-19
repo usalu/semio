@@ -21,7 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGrou
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useKit, KitProvider, StudioProvider, useStudio, DesignEditorProvider } from '@semio/js/store';
+import { useStudioStore, StudioProvider, DesignEditorProvider } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
