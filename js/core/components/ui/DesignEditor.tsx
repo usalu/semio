@@ -28,7 +28,7 @@ import { Textarea } from '@semio/js/components/ui/Textarea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
-import { useKit, useDesign } from '@semio/js/store';
+import { useKit, useDesign, useDesignEditor } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
@@ -332,70 +332,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-interface DetailsProps extends ResizablePanelProps { }
-
-const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
-    if (!visible) return null;
-    const [isResizeHovered, setIsResizeHovered] = useState(false);
-    const [isResizing, setIsResizing] = useState(false);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsResizing(true);
-
-        const startX = e.clientX;
-        const startWidth = width;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const newWidth = startWidth - (e.clientX - startX);
-            if (newWidth >= 150 && newWidth <= 500) {
-                onWidthChange?.(newWidth);
-            }
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    };
-
-    return (
-        <div
-            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
-            style={{ width: `${width}px` }}
-        >
-            <ScrollArea className="h-full">
-                <div id="type-properties" className="p-4 space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-sm">Name</label>
-                        <Input placeholder="Name" />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm">Rotation</label>
-                        <Slider defaultValue={[33]} max={100} min={0} step={1} />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm">Description</label>
-                        <Textarea />
-                    </div>
-                </div>
-            </ScrollArea>
-            <div
-                className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
-                onMouseDown={handleMouseDown}
-                onMouseEnter={() => setIsResizeHovered(true)}
-                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
-            />
-        </div>
-    );
-}
-
-// Console panel component
 interface ConsoleProps {
     visible: boolean;
     leftPanelVisible: boolean;
@@ -459,7 +395,69 @@ const Console: FC<ConsoleProps> = ({ visible, leftPanelVisible, rightPanelVisibl
     );
 }
 
-// Chat panel component
+interface DetailsProps extends ResizablePanelProps { }
+
+const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
+    if (!visible) return null;
+    const [isResizeHovered, setIsResizeHovered] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsResizing(true);
+
+        const startX = e.clientX;
+        const startWidth = width;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const newWidth = startWidth - (e.clientX - startX);
+            if (newWidth >= 150 && newWidth <= 500) {
+                onWidthChange?.(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    return (
+        <div
+            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
+                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
+            style={{ width: `${width}px` }}
+        >
+            <ScrollArea className="h-full">
+                <div id="type-properties" className="p-4 space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm">Name</label>
+                        <Input placeholder="Name" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm">Rotation</label>
+                        <Slider defaultValue={[33]} max={100} min={0} step={1} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm">Description</label>
+                        <Textarea />
+                    </div>
+                </div>
+            </ScrollArea>
+            <div
+                className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsResizeHovered(true)}
+                onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
+            />
+        </div>
+    );
+}
+
 interface ChatProps extends ResizablePanelProps { }
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
@@ -519,8 +517,7 @@ interface DesignEditorProps { }
 const DesignEditor: FC<DesignEditorProps> = () => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
-    const { kit } = useKit();
-    const { design, createPiece, designEditor } = useDesign();
+    const { design, createPiece, designEditor } = useDesignEditor();
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,

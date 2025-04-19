@@ -21,13 +21,11 @@ import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGrou
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useKit, useDesign, DesignProvider, KitProvider, StudioProvider, useStudio } from '@semio/js/store';
+import { useKit, KitProvider, StudioProvider, useStudio, DesignEditorProvider } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
-import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
-import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
 import { Fingerprint } from 'lucide-react';
 import { Generator } from '@semio/js/lib/utils';
 import { Piece } from '@semio/js';
@@ -189,10 +187,6 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
     );
 };
 
-interface CanvasProps {
-    id: string;
-}
-
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
@@ -216,6 +210,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         }
         return Theme.LIGHT;
     });
+    const designEditorId = 'design-editor-1';
 
     useEffect(() => {
         const root = window.document.documentElement;
