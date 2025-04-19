@@ -5,7 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality } from '@semio/js/semio';
 
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
@@ -138,9 +138,16 @@ class StudioStore {
         });
     }
 
+    private createQuality(quality: Quality): Y.Map<any> {
+        const yQuality = new Y.Map<any>();
+        yQuality.set('name', quality.name);
+        yQuality.set('value', quality.value || '');
+        yQuality.set('unit', quality.unit || '');
+        yQuality.set('definition', quality.definition || '');
+        return yQuality;
+    }
+
     createKit(kit: Kit): void {
-        const types = kit.types?.map(t => this.createType(kit.uri, t));
-        const designs = kit.designs?.map(d => this.createDesign(kit.uri, d));
         const yKit = new Y.Map<any>();
         yKit.set('uri', kit.uri);
         yKit.set('name', kit.name);
@@ -152,9 +159,13 @@ class StudioStore {
         yKit.set('remote', kit.remote || '');
         yKit.set('homepage', kit.homepage || '');
         yKit.set('license', kit.license || []);
-        yKit.set('types', types);
-        yKit.set('designs', designs);
+        yKit.set('types', new Y.Map<any>());
+        yKit.set('designs', new Y.Map<any>());
+        yKit.set('qualities', kit.qualities?.map(q => this.createQuality(q)));
         this.yDoc.getMap('kits').set(kit.uri, yKit);
+        kit.types?.map(t => this.createType(kit.uri, t));
+        kit.designs?.map(d => this.createDesign(kit.uri, d));
+
     }
 
     getKit(uri: string): Kit | undefined {
@@ -256,10 +267,12 @@ class StudioStore {
         yType.set('icon', type.icon || '');
         yType.set('image', type.image || '');
         yType.set('unit', type.unit || '');
-        yType.set('ports', new Y.Map(type.ports?.map(p => [p.id_ || uuidv4(), this.createPort(kitUri, type.name, p)])));
-        yType.set('qualities', new Y.Map(type.qualities?.map(q => [q.name, q])));
-        yType.set('representations', new Y.Map(type.representations?.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, r)])));
+        yType.set('ports', new Y.Map());
+        yType.set('qualities', new Y.Map());
+        yType.set('representations', new Y.Map());
         variantMap.set(type.variant || '', yType);
+        type.ports?.map(p => { this.createPort(kitUri, type.name, type.variant || '', p) });
+        type.representations?.map(r => { this.createRepresentation(kitUri, type.name, r) });
     }
 
     getType(kitUri: string, typeName: string, variant: string = ''): Type | null {
@@ -751,17 +764,17 @@ class StudioStore {
         representations.delete(key);
     }
 
-    createPort(kitUri: string, typeName: string, port: Port): void {
+    createPort(kitUri: string, typeName: string, typeVariant: string, port: Port): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
 
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
 
         const ports = yType.get('ports');
         const yPort = new Y.Map<any>();
-        yPort.set('id_', port.id_ || uuidv4());
+        yPort.set('id_', port.id_ || "");
         yPort.set('description', port.description || '');
 
         const yDirection = new Y.Map<any>();

@@ -24,6 +24,7 @@
     "astro-build.astro-vscode",
     "vitest.explorer",
     "stripe.markdoc-language-support",
+    "firefox-devtools.vscode-firefox-debug",
     // dotnet
     "ms-dotnettools.vscode-dotnet-pack",
     "ms-dotnettools.vscode-dotnet-runtime",
