@@ -28,7 +28,7 @@ import { Textarea } from '@semio/js/components/ui/Textarea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
-import { useKit, useDesignEditorStore } from '@semio/js/store';
+import { useKit, useDesignEditorStore, useStudioStore } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
@@ -264,7 +264,8 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
         document.addEventListener('mouseup', handleMouseUp);
     };
 
-    const { kit } = useKit();
+    // const { kit } = useKit();
+    const kit = useStudioStore().getKit("Metabolism");
     if (!kit?.types) return null;
 
     const typesByName = kit.types.reduce((acc, type) => {

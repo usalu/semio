@@ -904,6 +904,18 @@ class StudioStore {
     importKit(url: string): void {
         this.createKit(metabolism);
     }
+
+    undo(): void {
+        this.undoManager.undo();
+    }
+
+    redo(): void {
+        this.undoManager.redo();
+    }
+
+    transact(commands: () => void): void {
+        this.yDoc.transact(commands, new Set([this.userId]));
+    }
 }
 
 
