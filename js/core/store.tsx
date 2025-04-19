@@ -132,10 +132,10 @@ class StudioStore {
         this.yDoc = new Y.Doc();
         this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditorStores = new Map();
-        this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
-        this.indexeddbProvider.whenSynced.then(() => {
-            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
-        });
+        // this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
+        // this.indexeddbProvider.whenSynced.then(() => {
+        //     console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
+        // });
     }
 
     private createQuality(quality: Quality): Y.Map<any> {
@@ -250,7 +250,7 @@ class StudioStore {
         yType.set('representations', new Y.Map());
         variantMap.set(type.variant || '', yType);
         type.ports?.map(p => { this.createPort(kitUri, type.name, type.variant || '', p) });
-        type.representations?.map(r => { this.createRepresentation(kitUri, type.name, r) });
+        type.representations?.map(r => { this.createRepresentation(kitUri, type.name, type.variant || '', r) });
     }
 
     getType(kitUri: string, typeName: string, variant: string = ''): Type | null {
@@ -268,16 +268,9 @@ class StudioStore {
             image: yType.get('image'),
             variant: yType.get('variant'),
             unit: yType.get('unit'),
-            ports: Array.from(yType.get('ports').entries()).map(([id, port]) => ({ ...port, id_: id })),
-            qualities: Array.from(yType.get('qualities').values()),
-            representations: Array.from(yType.get('representations').entries()).map(([key, value]: [string, any]): Representation => {
-                const [mime, tags] = key.split(':');
-                return {
-                    ...value,
-                    mime,
-                    tags: tags ? tags.split(',') : []
-                };
-            })
+            ports:
+                qualities:
+            representations: 
         };
     }
 
@@ -369,9 +362,9 @@ class StudioStore {
             variant: yDesign.get('variant'),
             view: yDesign.get('view'),
             unit: yDesign.get('unit'),
-            pieces: Array.from(yDesign.get('pieces').entries()).map(([id, piece]) => ({ ...piece, id_: id })),
-            connections: Array.from(yDesign.get('connections').values()),
-            qualities: Array.from(yDesign.get('qualities').values())
+            pieces:
+                connections:
+            qualities: 
         };
     }
 
@@ -518,7 +511,8 @@ class StudioStore {
             description: yPiece.get('description'),
             type: { name: typeName, variant: typeVariant },
             plane,
-            center
+            center,
+            qualities: 
         };
     }
 
@@ -631,7 +625,7 @@ class StudioStore {
             tilt: yConnection.get('tilt'),
             x: yConnection.get('x'),
             y: yConnection.get('y'),
-            qualities: yConnection.get('qualities')
+            qualities: 
         };
     }
 
@@ -670,13 +664,13 @@ class StudioStore {
         connections.delete(connectionId);
     }
 
-    createRepresentation(kitUri: string, typeName: string, representation: Representation): void {
+    createRepresentation(kitUri: string, typeName: string, typeVariant: string, representation: Representation): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
 
         const representations = yType.get('representations');
         const yRepresentation = new Y.Map<any>();
@@ -684,17 +678,13 @@ class StudioStore {
         yRepresentation.set('description', representation.description || '');
         yRepresentation.set('mime', representation.mime);
         yRepresentation.set('tags', representation.tags || []);
-        if (representation.qualities) {
-            const yQualities = new Y.Map<any>();
-            representation.qualities.forEach(q => yQualities.set(q.name, q));
-            yRepresentation.set('qualities', yQualities);
-        }
+        yRepresentation.set('qualities', representation.qualities?.map(q => this.createQuality(q)));
 
         const key = `${representation.mime}:${representation.tags?.join(',') || ''}`;
         representations.set(key, yRepresentation);
     }
 
-    getRepresentation(kitUri: string, typeName: string, key: string): Representation | null {
+    getRepresentation(kitUri: string, typeName: string, typeVariant: string, mime: string, tags: string[]): Representation | null {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
@@ -703,17 +693,15 @@ class StudioStore {
         if (!yType) return null;
 
         const representations = yType.get('representations');
-        const yRepresentation = representations.get(key);
+        const yRepresentation = representations.get(`${mime}:${tags?.join(',') || ''}`);
         if (!yRepresentation) return null;
-
-        const yQualities = yRepresentation.get('qualities');
 
         return {
             url: yRepresentation.get('url'),
             description: yRepresentation.get('description'),
             mime: yRepresentation.get('mime'),
-            tags: yRepresentation.get('tags'),
-            qualities: yQualities ? Array.from(yQualities.entries()).map(([name, q]) => ({ ...q })) : undefined
+            tags:
+                qualities:
         };
     }
 
@@ -777,18 +765,7 @@ class StudioStore {
         yPort.set('point', yPoint);
 
         yPort.set('t', port.t || 0);
-        if (port.qualities) {
-            const yQualities = new Y.Map<any>();
-            port.qualities.forEach(q => {
-                const yQuality = new Y.Map<any>();
-                yQuality.set('name', q.name);
-                if (q.value) yQuality.set('value', q.value);
-                if (q.unit) yQuality.set('unit', q.unit);
-                if (q.definition) yQuality.set('definition', q.definition);
-                yQualities.set(q.name, yQuality);
-            });
-            yPort.set('qualities', yQualities);
-        }
+        yPort.set('qualities', port.qualities?.map(q => this.createQuality(q)));
 
         ports.set(yPort.get('id_'), yPort);
     }
@@ -807,7 +784,6 @@ class StudioStore {
 
         const yDirection = yPort.get('direction');
         const yPoint = yPort.get('point');
-        const yQualities = yPort.get('qualities');
 
         return {
             id_: yPort.get('id_'),
@@ -823,7 +799,7 @@ class StudioStore {
                 z: yPoint.get('z')
             },
             t: yPort.get('t'),
-            qualities: yQualities ? Array.from(yQualities.entries()).map(([name, q]) => ({ ...q })) : undefined
+            qualities: 
         };
     }
 
@@ -871,6 +847,7 @@ class StudioStore {
         const ports = yType.get('ports');
         ports.delete(portId);
     }
+
 
     createDesignEditorStore(kitUri: string, designName: string, designVariant: string, view: string): string {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
