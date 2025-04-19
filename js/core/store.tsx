@@ -69,13 +69,17 @@ interface DesignEditorState {
     selection: DesignEditorSelection;
 }
 
-class DesignEditor {
+class DesignEditorStore {
+    private id: string;
+    private yDoc: Y.Doc;
     private yKit: Y.Map<any>;
     private yDesign: Y.Map<any>;
     private undoManager: UndoManager;
     private state: DesignEditorState;
 
-    constructor(yKit: Y.Map<any>, yDesign: Y.Map<any>, undoManager: UndoManager) {
+    constructor(id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>, undoManager: UndoManager) {
+        this.id = id;
+        this.yDoc = yDoc;
         this.yKit = yKit;
         this.yDesign = yDesign;
         this.undoManager = undoManager;
@@ -102,20 +106,32 @@ class DesignEditor {
     getKitId(): string {
         return this.yKit.get('uri');
     }
+
+    undo(): void {
+        this.undoManager.undo();
+    }
+
+    redo(): void {
+        this.undoManager.redo();
+    }
+
+    transact(operations: () => void): void {
+        this.yDoc.transact(operations, { trackedOrigins: new Set([this.id]) });
+    }
 }
 
 class StudioStore {
     private userId: string;
     private yDoc: Y.Doc;
     private undoManager: UndoManager;
-    private designEditors: Map<string, DesignEditor>;
+    private designEditorStores: Map<string, DesignEditorStore>;
     private indexeddbProvider: IndexeddbPersistence;
 
     constructor(userId: string) {
         this.userId = userId;
         this.yDoc = new Y.Doc();
         this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
-        this.designEditors = new Map();
+        this.designEditorStores = new Map();
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
@@ -856,33 +872,37 @@ class StudioStore {
         ports.delete(portId);
     }
 
-    createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): string {
+    createDesignEditorStore(kitUri: string, designName: string, designVariant: string, view: string): string {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
         const id = uuidv4();
         const undoManager = new UndoManager(yDesign, { trackedOrigins: new Set([id]) });
-        const designEditor = new DesignEditor(yDesign, undoManager);
-        this.designEditors.set(id, designEditor);
+        const designEditorStore = new DesignEditorStore(id, this.yDoc, yKit, yDesign, undoManager);
+        this.designEditorStores.set(id, designEditorStore);
         return id;
     }
 
-    getDesignEditor(id: string): DesignEditor | null {
-        const designEditor = this.designEditors.get(id);
-        if (!designEditor) return null;
-        return designEditor;
+    getDesignEditorStore(id: string): DesignEditorStore | null {
+        const designEditorStore = this.designEditorStores.get(id);
+        if (!designEditorStore) return null;
+        return designEditorStore;
     }
 
     updateDesignEditorSelection(id: string, selection: DesignEditorSelection): DesignEditorSelection {
-        const designEditor = this.designEditors.get(id);
-        if (!designEditor) throw new Error(`Design editor ${id} not found`);
-        designEditor.setState({ ...designEditor.getState(), selection });
+        const designEditorStore = this.designEditorStores.get(id);
+        if (!designEditorStore) throw new Error(`Design editor store ${id} not found`);
+        designEditorStore.setState({ ...designEditorStore.getState(), selection });
         return selection;
     }
 
-    deleteDesignEditor(id: string): void {
-        this.designEditors.delete(id);
+    deleteDesignEditorStore(id: string): void {
+        this.designEditorStores.delete(id);
+    }
+
+    importKit(url: string): void {
+        this.createKit(metabolism);
     }
 }
 
@@ -897,7 +917,7 @@ export const useStudioStore = () => {
     return studioStore;
 };
 
-export const StudioStoreProvider: FC<{ userId: string }> = ({ userId, children }) => {
+export const StudioStoreProvider: FC<{ userId: string, children: React.ReactNode }> = ({ userId, children }) => {
     const studioStore = useMemo(() => new StudioStore(userId), [userId]);
     return (
         <StudioStoreContext.Provider value={studioStore}>
@@ -916,9 +936,9 @@ export const useDesignEditorStore = () => {
     return designEditorStore;
 };
 
-export const DesignEditorStoreProvider: FC<{ designEditorId: string }> = ({ designEditorId, children }) => {
+export const DesignEditorStoreProvider: FC<{ designEditorId: string, children: React.ReactNode }> = ({ designEditorId, children }) => {
     const studioStore = useStudioStore();
-    const designEditorStore = useMemo(() => studioStore.getDesignEditor(designEditorId), [studioStore, designEditorId]);
+    const designEditorStore = useMemo(() => studioStore.getDesignEditorStore(designEditorId), [studioStore, designEditorId]);
     return (
         <DesignEditorStoreContext.Provider value={designEditorStore}>
             {children}

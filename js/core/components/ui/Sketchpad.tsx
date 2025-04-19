@@ -1,4 +1,4 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo } from 'react';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
@@ -21,7 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGrou
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useStudioStore, StudioProvider, DesignEditorProvider } from '@semio/js/store';
+import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -187,6 +187,27 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
     );
 };
 
+interface ViewProps {
+}
+
+const View: FC<ViewProps> = ({ }) => {
+    const studioStore = useStudioStore();
+    const [designEditorId, setDesignEditorId] = useState<string>('');
+    useEffect(() => {
+        const designEditorId = useStudioStore().createDesignEditorStore("Metabolism", "Nakagin Capsule Tower", "", "");
+        setDesignEditorId(designEditorId);
+    }, []);
+    useMemo(() => {
+        console.log(studioStore);
+        studioStore.importKit("metabolism.json");
+    }, []);
+    return (
+        <DesignEditorStoreProvider designEditorId={designEditorId}>
+            <DesignEditor />
+        </DesignEditorStoreProvider>
+    );
+}
+
 interface SketchpadProps {
     mode?: Mode;
     theme?: Theme;
@@ -210,7 +231,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         }
         return Theme.LIGHT;
     });
-    const designEditorId = 'design-editor-1';
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -219,7 +239,6 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
             root.classList.add(Theme.DARK);
         }
     }, [currentTheme]);
-
     useEffect(() => {
         const root = window.document.documentElement;
         root.classList.remove(Layout.TOUCH);
@@ -230,7 +249,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     return (
         <TooltipProvider>
-            <StudioProvider userId={userId}>
+            <StudioStoreProvider userId={userId}>
                 <SketchpadContext.Provider value={{
                     mode: mode,
                     layout: currentLayout,
@@ -239,20 +258,18 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
                     setTheme: setCurrentTheme,
                     setNavbarToolbar: setNavbarToolbar,
                 }}>
-                    <DesignEditorProvider id={designEditorId}>
-                        <div
-                            key={`layout-${currentLayout}`}
-                            className="h-full w-full flex flex-col bg-background text-foreground"
-                        >
-                            <Navbar
-                                toolbarContent={navbarToolbar}
-                                onWindowEvents={onWindowEvents}
-                            />
-                            <DesignEditor />
-                        </div>
-                    </DesignEditorProvider>
+                    <div
+                        key={`layout-${currentLayout}`}
+                        className="h-full w-full flex flex-col bg-background text-foreground"
+                    >
+                        <Navbar
+                            toolbarContent={navbarToolbar}
+                            onWindowEvents={onWindowEvents}
+                        />
+                        <View />
+                    </div>
                 </SketchpadContext.Provider>
-            </StudioProvider>
+            </StudioStoreProvider>
         </TooltipProvider>
     );
 };
