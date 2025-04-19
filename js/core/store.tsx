@@ -5,7 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
 
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
@@ -181,16 +181,26 @@ class StudioStore {
         this.yDoc.getMap('kits').set(kit.uri, yKit);
         kit.types?.map(t => this.createType(kit.uri, t));
         kit.designs?.map(d => this.createDesign(kit.uri, d));
-
     }
 
     getKit(uri: string): Kit | undefined {
         const yKit = this.yDoc.getMap('kits').get(uri) as Y.Map<any>;
         if (!yKit) return undefined;
 
-        const types = Array.from((yKit.get('types') as Y.Map<any>).values()).map(v => v.map(t => this.getType(uri, t.get('name'), t.get('variant'))));
-        const designs = Array.from((yKit.get('designs') as Y.Map<any>).values()).map(v => v.map(d => this.getDesign(uri, d.get('name'), d.get('variant'), d.get('view'))));
-        const qualities = Array.from((yKit.get('qualities') as Y.Map<any>).values()).map(q => this.getQuality(q));
+        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>;
+        const types = yTypesMap ? Array.from(yTypesMap.values()).flatMap(variantMap =>
+            Array.from(variantMap.values()).map((t: Y.Map<any>) => this.getType(uri, t.get('name'), t.get('variant')))
+        ).filter((t): t is Type => t !== null) : [];
+
+        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>;
+        const designs = yDesignsMap ? Array.from(yDesignsMap.values()).flatMap(variantMap =>
+            Array.from(variantMap.values()).flatMap(viewMap =>
+                Array.from(viewMap.values()).map((d: Y.Map<any>) => this.getDesign(uri, d.get('name'), d.get('variant'), d.get('view')))
+            )
+        ).filter((d): d is Design => d !== null) : [];
+
+        const yQualitiesArray = yKit.get('qualities') as Y.Array<Y.Map<any>>;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
 
         return {
             uri: yKit.get('uri'),
@@ -203,16 +213,19 @@ class StudioStore {
             remote: yKit.get('remote'),
             homepage: yKit.get('homepage'),
             license: yKit.get('license'),
+            created: new Date(),
+            updated: new Date(),
             designs,
             types,
             qualities
         };
     }
 
-    updateKit(kit: Partial<Kit>): Kit {
+    updateKit(kit: Partial<Kit>): Kit | undefined {
+        if (!kit.uri) throw new Error("Kit URI is required for update.");
         const yKit = this.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
-        if (kit.name !== "") yKit.set('name', kit.name);
+        if (kit.name !== undefined && kit.name !== "") yKit.set('name', kit.name);
         if (kit.description !== undefined && kit.description !== "") yKit.set('description', kit.description);
         if (kit.icon !== undefined && kit.icon !== "") yKit.set('icon', kit.icon);
         if (kit.image !== undefined && kit.image !== "") yKit.set('image', kit.image);
@@ -220,7 +233,7 @@ class StudioStore {
         if (kit.version !== undefined && kit.version !== "") yKit.set('version', kit.version);
         if (kit.remote !== undefined && kit.remote !== "") yKit.set('remote', kit.remote);
         if (kit.homepage !== undefined && kit.homepage !== "") yKit.set('homepage', kit.homepage);
-        if (kit.license !== undefined && kit.license !== "") yKit.set('license', kit.license);
+        if (kit.license !== undefined) yKit.set('license', kit.license);
         return this.getKit(kit.uri);
     }
 
@@ -261,6 +274,15 @@ class StudioStore {
         const yType = types.get(typeName)?.get(variant) as Y.Map<any> | undefined;
         if (!yType) return null;
 
+        const yPortsMap = yType.get('ports') as Y.Map<Y.Map<any>>;
+        const ports = yPortsMap ? Array.from(yPortsMap.values()).map(pMap => this.getPort(kitUri, typeName, variant, pMap.get('id_'))).filter((p): p is Port => p !== null) : [];
+
+        const yQualitiesArray = yType.get('qualities') as Y.Array<Y.Map<any>>;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
+
+        const yRepresentationsMap = yType.get('representations') as Y.Map<Y.Map<any>>;
+        const representations = yRepresentationsMap ? Array.from(yRepresentationsMap.values()).map(rMap => this.getRepresentation(kitUri, typeName, variant, rMap.get('mime'), rMap.get('tags'))).filter((r): r is Representation => r !== null) : [];
+
         return {
             name: yType.get('name'),
             description: yType.get('description'),
@@ -268,9 +290,12 @@ class StudioStore {
             image: yType.get('image'),
             variant: yType.get('variant'),
             unit: yType.get('unit'),
-            ports:
-                qualities:
-            representations: 
+            ports,
+            qualities,
+            representations,
+            updated: new Date(),
+            created: new Date(),
+            authors: [],
         };
     }
 
@@ -288,15 +313,16 @@ class StudioStore {
         if (type.unit !== undefined) yType.set('unit', type.unit);
 
         if (type.ports !== undefined) {
-            const ports = new Y.Map(type.ports.map(p => [p.id_, this.createPort(kitUri, type.name, p)]));
-            yType.set('ports', ports);
+            const validPorts = type.ports.filter(p => p.id_ !== undefined);
+            const portsMap = new Y.Map(validPorts.map(p => [p.id_!, this.createPort(kitUri, type.name, type.variant || '', p)]));
+            yType.set('ports', portsMap);
         }
         if (type.qualities !== undefined) {
             const qualities = new Y.Map(type.qualities.map(q => [q.name, q]));
             yType.set('qualities', qualities);
         }
         if (type.representations !== undefined) {
-            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, r)]));
+            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, type.variant || '', r)]));
             yType.set('representations', representations);
         }
 
@@ -354,6 +380,10 @@ class StudioStore {
         const yDesign = designs.get(name)?.get(variant)?.get(view) as Y.Map<any> | undefined;
         if (!yDesign) return null;
 
+        const pieces = yDesign.get('pieces');
+        const connections = yDesign.get('connections');
+        const qualities = yDesign.get('qualities');
+
         return {
             name: yDesign.get('name'),
             description: yDesign.get('description'),
@@ -362,9 +392,12 @@ class StudioStore {
             variant: yDesign.get('variant'),
             view: yDesign.get('view'),
             unit: yDesign.get('unit'),
-            pieces:
-                connections:
-            qualities: 
+            created: new Date(),
+            updated: new Date(),
+            authors: [],
+            pieces,
+            connections,
+            qualities
         };
     }
 
@@ -382,12 +415,17 @@ class StudioStore {
         if (design.unit !== undefined) yDesign.set('unit', design.unit);
 
         if (design.pieces !== undefined) {
-            const pieces = new Y.Map(design.pieces.map(p => [p.id_, this.createPiece(kitUri, design.name, design.variant, design.view, p)]));
-            yDesign.set('pieces', pieces);
+            const validPieces = design.pieces.filter(p => p.id_ !== undefined);
+            const piecesMap = new Y.Map(validPieces.map(p => [p.id_!, this.createPiece(kitUri, design.name, design.variant || '', design.view || '', p)]));
+            yDesign.set('pieces', piecesMap);
         }
         if (design.connections !== undefined) {
-            const connections = new Y.Map(design.connections.map(c => [this.getConnectionId(c), this.createConnection(kitUri, design.name, design.variant, design.view, c)]));
-            yDesign.set('connections', connections);
+            const validConnections = design.connections.filter(c =>
+                c.connected?.piece?.id_ && c.connecting?.piece?.id_ && c.connected?.port?.id_ && c.connecting?.port?.id_
+            );
+            const getConnectionId = (c: Connection) => `${c.connected.piece.id_}--${c.connecting.piece.id_}`;
+            const connectionsMap = new Y.Map(validConnections.map(c => [getConnectionId(c), this.createConnection(kitUri, design.name, design.variant || '', design.view || '', c)]));
+            yDesign.set('connections', connectionsMap);
         }
         if (design.qualities !== undefined) {
             const qualities = new Y.Map(design.qualities.map(q => [q.name, q]));
@@ -475,10 +513,10 @@ class StudioStore {
         const typeName = type.get('name');
         const typeVariant = type.get('variant');
 
-        const yPlane = yPiece.get('plane')
-        const yOrigin = yPlane?.get('origin')
-        const yXAxis = yPlane?.get('xAxis')
-        const yYAxis = yPlane?.get('yAxis')
+        const yPlane = yPiece.get('plane') as Y.Map<any> | undefined;
+        const yOrigin = yPlane?.get('origin');
+        const yXAxis = yPlane?.get('xAxis');
+        const yYAxis = yPlane?.get('yAxis');
         const origin: Point | null = yOrigin ? {
             x: yOrigin.get('x'),
             y: yOrigin.get('y'),
@@ -500,23 +538,33 @@ class StudioStore {
             yAxis
         } : null;
 
-        const yCenter = yPiece.get('center')
+        const yCenter = yPiece.get('center') as Y.Map<any> | undefined;
         const center: DiagramPoint | null = yCenter ? {
             x: yCenter.get('x'),
             y: yCenter.get('y'),
         } : null;
 
+        const yQualitiesArray = yPiece.get('qualities') as Y.Array<Y.Map<any>> | undefined;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
+
+        if (!center) {
+            console.warn(`Piece ${pieceId} in design ${designName} is missing center data.`);
+            return null;
+        }
+
         return {
             id_: yPiece.get('id_'),
             description: yPiece.get('description'),
             type: { name: typeName, variant: typeVariant },
-            plane,
-            center,
-            qualities: 
+            plane: plane ?? undefined,
+            center: center,
+            qualities,
+            connections: [],
         };
     }
 
     updatePiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): Piece | null {
+        if (!piece.id_) throw new Error("Piece ID is required for update.");
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const designs = yKit.get('designs');
@@ -613,10 +661,35 @@ class StudioStore {
         const yConnection = connections.get(`${connectedPieceId}--${connectingPieceId}`);
         if (!yConnection) return null;
 
+        const yConnected = yConnection.get('connected') as Y.Map<any>;
+        const yConnecting = yConnection.get('connecting') as Y.Map<any>;
+
+        const connectedPieceIdActual = yConnected?.get('piece')?.get('id_');
+        const connectedPortId = yConnected?.get('port')?.get('id_');
+        const connectingPieceIdActual = yConnecting?.get('piece')?.get('id_');
+        const connectingPortId = yConnecting?.get('port')?.get('id_');
+
+        if (!connectedPieceId || !connectedPortId || !connectingPieceIdActual || !connectingPortId) {
+            console.warn(`Connection ${connectedPieceId}--${connectingPieceIdActual} has incomplete side data.`);
+            return null; // Invalid connection data
+        }
+
+        const connectedSide: Side = {
+            piece: { id_: connectedPieceId },
+            port: { id_: connectedPortId }
+        }
+        const connectingSide: Side = {
+            piece: { id_: connectingPieceIdActual },
+            port: { id_: connectingPortId }
+        }
+
+        const yQualitiesArray = yConnection.get('qualities') as Y.Array<Y.Map<any>> | undefined;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
+
         return {
             description: yConnection.get('description'),
-            connected: yConnection.get('connected'),
-            connecting: yConnection.get('connecting'),
+            connected: connectedSide,
+            connecting: connectingSide,
             gap: yConnection.get('gap'),
             shift: yConnection.get('shift'),
             raise_: yConnection.get('raise_'),
@@ -625,7 +698,7 @@ class StudioStore {
             tilt: yConnection.get('tilt'),
             x: yConnection.get('x'),
             y: yConnection.get('y'),
-            qualities: 
+            qualities
         };
     }
 
@@ -650,6 +723,13 @@ class StudioStore {
         if (connection.tilt !== undefined) yConnection.set('tilt', connection.tilt);
         if (connection.x !== undefined) yConnection.set('x', connection.x);
         if (connection.y !== undefined) yConnection.set('y', connection.y);
+
+        const yQualities = yConnection.get('qualities') || new Y.Array<Y.Map<any>>();
+        if (connection.qualities) {
+            yQualities.delete(0, yQualities.length);
+            connection.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
+        }
+        yConnection.set('qualities', yQualities);
     }
 
     deleteConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): void {
@@ -696,12 +776,15 @@ class StudioStore {
         const yRepresentation = representations.get(`${mime}:${tags?.join(',') || ''}`);
         if (!yRepresentation) return null;
 
+        const yQualitiesArray = yRepresentation.get('qualities') as Y.Array<Y.Map<any>> | undefined;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
+
         return {
             url: yRepresentation.get('url'),
             description: yRepresentation.get('description'),
             mime: yRepresentation.get('mime'),
-            tags:
-                qualities:
+            tags: yRepresentation.get('tags'),
+            qualities
         };
     }
 
@@ -721,8 +804,9 @@ class StudioStore {
         if (representation.mime !== undefined) yRepresentation.set('mime', representation.mime);
         if (representation.tags !== undefined) yRepresentation.set('tags', representation.tags);
         if (representation.qualities !== undefined) {
-            const yQualities = new Y.Map<any>();
-            representation.qualities.forEach(q => yQualities.set(q.name, q));
+            const yQualities = yRepresentation.get('qualities') || new Y.Array<Y.Map<any>>();
+            yQualities.delete(0, yQualities.length);
+            representation.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
             yRepresentation.set('qualities', yQualities);
         }
     }
@@ -770,12 +854,15 @@ class StudioStore {
         ports.set(yPort.get('id_'), yPort);
     }
 
-    getPort(kitUri: string, typeName: string, portId: string): Port | null {
+    getPort(kitUri: string, typeName: string, typeVariantOrPortId: string, portIdOrUndefined?: string): Port | null {
+        const typeVariant = portIdOrUndefined ? typeVariantOrPortId : '';
+        const portId = portIdOrUndefined ? portIdOrUndefined : typeVariantOrPortId;
+
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
-        const types = yKit.get('types');
-        const yType = types.get(typeName);
+        const types = yKit.get('types') as Y.Map<any>;
+        const yType = types.get(typeName)?.get(typeVariant) as Y.Map<any>;
         if (!yType) return null;
 
         const ports = yType.get('ports');
@@ -785,9 +872,15 @@ class StudioStore {
         const yDirection = yPort.get('direction');
         const yPoint = yPort.get('point');
 
+        const yQualitiesArray = yPort.get('qualities') as Y.Array<Y.Map<any>> | undefined;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
+
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),
+            family: '',
+            compatibleFamilies: [],
+            connections: [],
             direction: {
                 x: yDirection.get('x'),
                 y: yDirection.get('y'),
@@ -799,7 +892,7 @@ class StudioStore {
                 z: yPoint.get('z')
             },
             t: yPort.get('t'),
-            qualities: 
+            qualities
         };
     }
 
@@ -832,8 +925,9 @@ class StudioStore {
         }
         if (port.t !== undefined) yPort.set('t', port.t);
         if (port.qualities !== undefined) {
-            const yQualities = new Y.Map<any>();
-            port.qualities.forEach(q => yQualities.set(q.name, q));
+            const yQualities = yPort.get('qualities') || new Y.Array<Y.Map<any>>();
+            yQualities.delete(0, yQualities.length);
+            port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
             yPort.set('qualities', yQualities);
         }
     }
@@ -847,7 +941,6 @@ class StudioStore {
         const ports = yType.get('ports');
         ports.delete(portId);
     }
-
 
     createDesignEditorStore(kitUri: string, designName: string, designVariant: string, view: string): string {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
@@ -879,7 +972,13 @@ class StudioStore {
     }
 
     importKit(url: string): void {
-        this.createKit(metabolism);
+        const importedKitData = metabolism as unknown as Omit<Kit, 'created' | 'updated'>;
+        const kitToCreate: Kit = {
+            ...importedKitData,
+            created: new Date(),
+            updated: new Date(),
+        };
+        this.createKit(kitToCreate);
     }
 
     undo(): void {
