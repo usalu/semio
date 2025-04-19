@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "storybook dev -p 6006 --no-open",
+    "dev": "storybook dev -p 6006 --no-open --debug",
     "build": "storybook build"
   },
   "dependencies": {
@@ -53,7 +53,6 @@
     "@mdx-js/rollup": "^3.1.0",
     "@semio/assets": "*",
     "@storybook/addon-essentials": "^8.6.12",
-    "@storybook/addon-mdx-gfm": "^8.6.12",
     "@storybook/addon-onboarding": "^8.6.12",
     "@storybook/blocks": "^8.6.12",
     "@storybook/experimental-addon-test": "^8.6.12",

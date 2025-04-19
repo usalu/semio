@@ -51,16 +51,11 @@
         },
         {
             "name": "dev js core",
-            "type": "node",
+            "preLaunchTask": "dev js core",
+            "type": "firefox",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "dev",
-                "@semio/js"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "url": "http://localhost:6006",
+            "webRoot": "${workspaceRoot}/js/core",
         },
         {
             "name": "dev docs",

@@ -46,6 +46,11 @@
             }
         },
         {
+            "label": "dev js core",
+            "type": "shell",
+            "command": "npx nx dev @semio/js",
+        },
+        {
             "label": "build icons",
             "type": "shell",
             "command": "npx nx build @semio/icons",
