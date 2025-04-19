@@ -28,7 +28,7 @@ import { Textarea } from '@semio/js/components/ui/Textarea';
 
 import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
-import { useKit, useDesignEditorStore, useStudioStore } from '@semio/js/store';
+import { useDesignEditorStore, useStudioStore } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
@@ -512,7 +512,6 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-// Main DesignEditor component
 interface DesignEditorProps { }
 
 const DesignEditor: FC<DesignEditorProps> = () => {

@@ -91,6 +91,10 @@ export type Author = {
 
 // 🖇️ A bidirectional connection between two pieces of a design.
 export type Connection = {
+    // 🧲 The connected side of the connection
+    connected: Side;
+    // 🧲 The connecting side of the connection
+    connecting: Side;
     // 💬 The human-readable description of the connection
     description: string;
     // ↕️ The longitudinal gap between connected pieces
@@ -109,10 +113,6 @@ export type Connection = {
     x: number;
     // ⬆️ The offset in y direction in the diagram
     y: number;
-    // 🧲 The connected side of the connection
-    connected: Side;
-    // 🧲 The connecting side of the connection
-    connecting: Side;
     // 📏 The qualities associated with the connection
     qualities?: Quality[];
 }
@@ -151,8 +151,6 @@ export type Piece = {
     center: DiagramPoint;
     // 📏 The qualities associated with the piece
     qualities?: Quality[];
-    // 🖇️ Connections involving this piece
-    connections: Connection[];
 }
 
 // 📺 A 2D point (xy) in the diagram coordinate system.
@@ -239,8 +237,6 @@ export type Type = {
     authors: Author[];
     // 📏 Qualities associated with the type
     qualities?: Quality[];
-    // ⭕ Pieces instances of this type
-    pieces?: Piece[];
 }
 
 // 🔌 A port is a connection point on a type, defined by a point and direction.
@@ -261,8 +257,6 @@ export type Port = {
     direction: Vector;
     // 📏 Qualities associated with the port
     qualities?: Quality[];
-    // 🖇️ Connections involving this port
-    connections: Connection[];
 }
 
 // 💾 A representation links to a resource (e.g., file) describing a type.

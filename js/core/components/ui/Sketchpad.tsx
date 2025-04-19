@@ -193,14 +193,17 @@ interface ViewProps {
 const View: FC<ViewProps> = ({ }) => {
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
+
     useEffect(() => {
-        const designEditorId = useStudioStore().createDesignEditorStore("Metabolism", "Nakagin Capsule Tower", "", "");
-        setDesignEditorId(designEditorId);
-    }, []);
-    useMemo(() => {
-        console.log(studioStore);
         studioStore.importKit("metabolism.json");
-    }, []);
+        const editorId = studioStore.createDesignEditorStore("Metabolism", "Nakagin Capsule Tower", "", "");
+        setDesignEditorId(editorId);
+    }, [studioStore]);
+
+    if (!designEditorId) {
+        return <div>Loading editor...</div>;
+    }
+
     return (
         <DesignEditorStoreProvider designEditorId={designEditorId}>
             <DesignEditor />

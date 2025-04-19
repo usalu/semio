@@ -559,7 +559,6 @@ class StudioStore {
             plane: plane ?? undefined,
             center: center,
             qualities,
-            connections: [],
         };
     }
 
@@ -801,21 +800,23 @@ class StudioStore {
         };
     }
 
-    updateRepresentation(kitUri: string, typeName: string, key: string, representation: Partial<Representation>): void {
+    updateRepresentation(kitUri: string, typeName: string, typeVariant: string, representation: Partial<Representation>): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
-
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
         const representations = yType.get('representations');
-        const yRepresentation = representations.get(key);
-        if (!yRepresentation) throw new Error(`Representation ${key} not found in type ${typeName}`);
+        const id = `${representation.mime}:${representation.tags?.join(',') || ''}`;
+        const yRepresentation = representations.get(id);
+        if (!yRepresentation) throw new Error(`Representation (${id}) not found in type (${typeName}, ${typeVariant}) in kit (${kitUri})`);
 
         if (representation.description !== undefined) yRepresentation.set('description', representation.description);
         if (representation.mime !== undefined) yRepresentation.set('mime', representation.mime);
-        if (representation.tags !== undefined) yRepresentation.set('tags', representation.tags);
+        if (representation.tags !== undefined) {
+            const yTags = Y.Array.from(representation.tags || []);
+            yRepresentation.set('tags', yTags);
+        }
         if (representation.qualities !== undefined) {
             const yQualities = yRepresentation.get('qualities') || new Y.Array<Y.Map<any>>();
             yQualities.delete(0, yQualities.length);
@@ -824,16 +825,15 @@ class StudioStore {
         }
     }
 
-    deleteRepresentation(kitUri: string, typeName: string, key: string): void {
+    deleteRepresentation(kitUri: string, typeName: string, typeVariant: string, mime: string, tags: string[]): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
-
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
 
         const representations = yType.get('representations');
-        representations.delete(key);
+        representations.delete(`${mime}:${tags?.join(',') || ''}`);
     }
 
     createPort(kitUri: string, typeName: string, typeVariant: string, port: Port): void {
@@ -848,6 +848,10 @@ class StudioStore {
         const yPort = new Y.Map<any>();
         yPort.set('id_', port.id_ || "");
         yPort.set('description', port.description || '');
+        yPort.set('family', port.family || '');
+
+        const yCompatibleFamilies = Y.Array.from(port.compatibleFamilies || []);
+        yPort.set('compatibleFamilies', yCompatibleFamilies);
 
         const yDirection = new Y.Map<any>();
         yDirection.set('x', port.direction.x);
@@ -867,21 +871,18 @@ class StudioStore {
         ports.set(yPort.get('id_'), yPort);
     }
 
-    getPort(kitUri: string, typeName: string, typeVariantOrPortId: string, portIdOrUndefined?: string): Port | null {
-        const typeVariant = portIdOrUndefined ? typeVariantOrPortId : '';
-        const portId = portIdOrUndefined ? portIdOrUndefined : typeVariantOrPortId;
+    getPort(kitUri: string, typeName: string, typeVariant: string, id?: string): Port {
 
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) return null;
-
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const types = yKit.get('types') as Y.Map<any>;
         const yType = types.get(typeName)?.get(typeVariant) as Y.Map<any>;
-        if (!yType) return null;
-
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
         const ports = yType.get('ports');
-        const yPort = ports.get(portId);
-        if (!yPort) return null;
+        const yPort = ports.get(id);
+        if (!yPort) throw new Error(`Port (${id}) not found in type (${typeName}, ${typeVariant})`);
 
+        const yCompatibleFamilies = yType.get('compatibleFamilies');
         const yDirection = yPort.get('direction');
         const yPoint = yPort.get('point');
 
@@ -891,9 +892,8 @@ class StudioStore {
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),
-            family: '',
-            compatibleFamilies: [],
-            connections: [],
+            family: yPort.get('family'),
+            compatibleFamilies: yCompatibleFamilies.toArray(),
             direction: {
                 x: yDirection.get('x'),
                 y: yDirection.get('y'),
@@ -909,17 +909,17 @@ class StudioStore {
         };
     }
 
-    updatePort(kitUri: string, typeName: string, portId: string, port: Partial<Port>): void {
+    updatePort(kitUri: string, typeName: string, typeVariant: string, portId: string, port: Partial<Port>): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
 
         const ports = yType.get('ports');
         const yPort = ports.get(portId);
-        if (!yPort) throw new Error(`Port ${portId} not found in type ${typeName}`);
+        if (!yPort) throw new Error(`Port (${portId}) not found in type (${typeName}, ${typeVariant})`);
 
         if (port.description !== undefined) yPort.set('description', port.description);
         if (port.direction !== undefined) {
@@ -945,21 +945,21 @@ class StudioStore {
         }
     }
 
-    deletePort(kitUri: string, typeName: string, portId: string): void {
+    deletePort(kitUri: string, typeName: string, typeVariant: string, portId: string): void {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const types = yKit.get('types');
-        const yType = types.get(typeName);
-        if (!yType) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        const yType = types.get(typeName)?.get(typeVariant);
+        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitUri})`);
         const ports = yType.get('ports');
         ports.delete(portId);
     }
 
     createDesignEditorStore(kitUri: string, designName: string, designVariant: string, view: string): string {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitUri} not found`);
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
+        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitUri})`);
         const id = uuidv4();
         const undoManager = new UndoManager(yDesign, { trackedOrigins: new Set([id]) });
         const designEditorStore = new DesignEditorStore(id, this.yDoc, yKit, yDesign, undoManager);
