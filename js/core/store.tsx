@@ -125,7 +125,7 @@ class StudioStore {
     private yDoc: Y.Doc;
     private undoManager: UndoManager;
     private designEditorStores: Map<string, DesignEditorStore>;
-    private indexeddbProvider: IndexeddbPersistence;
+    // private indexeddbProvider: IndexeddbPersistence;
 
     constructor(userId: string) {
         this.userId = userId;
@@ -493,8 +493,8 @@ class StudioStore {
             yCenter.set('y', piece.center.y);
             yPiece.set('center', yCenter);
         }
+        yPiece.set('qualities', piece.qualities?.map(q => yPiece.set('qualities', this.createQuality(q))));
         yPieces.set(yPiece.get('id_'), yPiece);
-        piece.qualities?.map(q => yPiece.set('qualities', this.createQuality(q)));
     }
 
     getPiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): Piece | null {
@@ -628,13 +628,25 @@ class StudioStore {
 
         const designs = yKit.get('designs');
         const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
+        if (!yDesign) throw new Error(`Design(${designName}, ${designVariant}, ${view}) not found in kit(${kitUri})`);
 
         const connections = yDesign.get('connections');
         const yConnection = new Y.Map<any>();
+        const yConnectedSide = new Y.Map<any>();
+        const yConnectedSidePiece = new Y.Map<any>();
+        yConnectedSidePiece.set('id_', connection.connected.piece.id_);
+        const yConnectedSidePort = new Y.Map<any>();
+        yConnectedSidePort.set('id_', connection.connected.port.id_);
+        yConnectedSide.set('piece', yConnectedSidePiece);
+        yConnectedSide.set('port', yConnectedSidePort);
+        const yConnectingSide = new Y.Map<any>();
+        const yConnectingSidePiece = new Y.Map<any>();
+        yConnectingSidePiece.set('id_', connection.connecting.piece.id_);
+        const yConnectingSidePort = new Y.Map<any>();
+        yConnectingSidePort.set('id_', connection.connecting.port.id_);
+        yConnection.set('connected', yConnectedSide);
+        yConnection.set('connecting', yConnectingSide);
         yConnection.set('description', connection.description || '');
-        yConnection.set('connected', connection.connected);
-        yConnection.set('connecting', connection.connecting);
         yConnection.set('gap', connection.gap || 0);
         yConnection.set('shift', connection.shift || 0);
         yConnection.set('raise_', connection.raise_ || 0);
@@ -757,11 +769,12 @@ class StudioStore {
         yRepresentation.set('url', representation.url);
         yRepresentation.set('description', representation.description || '');
         yRepresentation.set('mime', representation.mime);
-        yRepresentation.set('tags', representation.tags || []);
+        const yTags = Y.Array.from(representation.tags || []);
+        yRepresentation.set('tags', yTags);
         yRepresentation.set('qualities', representation.qualities?.map(q => this.createQuality(q)));
 
-        const key = `${representation.mime}:${representation.tags?.join(',') || ''}`;
-        representations.set(key, yRepresentation);
+        const id = `${representation.mime}:${representation.tags?.join(',') || ''}`;
+        representations.set(id, yRepresentation);
     }
 
     getRepresentation(kitUri: string, typeName: string, typeVariant: string, mime: string, tags: string[]): Representation | null {

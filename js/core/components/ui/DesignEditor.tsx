@@ -518,7 +518,12 @@ interface DesignEditorProps { }
 const DesignEditor: FC<DesignEditorProps> = () => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
-    const { design, createPiece, updatePiece, deletePiece, createConnection, updateConnection, deleteConnection, transact } = useDesignEditorStore();
+    const studioStore = useStudioStore();
+    const designEditorStore = useDesignEditorStore();
+    const kitUri = designEditorStore.getKitId();
+    const kit = studioStore.getKit(kitUri);
+    const [designName, designVariant, designView] = designEditorStore.getDesignId();
+    const design = studioStore.getDesign(kitUri, designName, designVariant, designView);
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,

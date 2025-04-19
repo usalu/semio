@@ -15,3 +15,4 @@ An ecosystem for designing kit-of-parts architecture together.
 - No need to delete files, you can tell me when once you are 100% done with everything and I will do it manually.
 - You are allowed to change everything (names, apis, creating/modifying/deleting fields, props, …) and don't have to worry about breaking compatiblity. Choose the most elegant approach even if it requires changing more than necessary.
 - Don't create additional example files and implement it directly in the dependent parts.
+- Don't remove code that is commented out.
