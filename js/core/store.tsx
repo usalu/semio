@@ -5,7 +5,10 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector } from '@semio/js/semio';
+
+import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
+import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
 
 
 // type YType = {
@@ -294,11 +297,16 @@ class Studio {
         return this.getType(kitUri, type.name, type.variant);
     }
 
-    deleteType(kitUri: string, typeName: string): void {
+    deleteType(kitUri: string, typeName: string, variant: string = ''): void {
         const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types') as Y.Map<any>;
-        types.delete(typeName);
+        const variantMap = types.get(typeName) as Y.Map<any> | undefined;
+        if (!variantMap) throw new Error(`Type ${typeName} not found in kit ${kitUri}`);
+        variantMap.delete(variant);
+        if (variantMap.size === 0) {
+            types.delete(typeName);
+        }
     }
 
     createDesign(kitUri: string, design: Design): void {
@@ -381,12 +389,22 @@ class Studio {
         return this.getDesign(kitUri, design.name, design.variant, design.view);
     }
 
-    deleteDesign(kitUri: string, name: string): void {
+    deleteDesign(kitUri: string, name: string, variant: string = '', view: string = ''): void {
         const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
-        designs.delete(name);
+        const variantMap = designs.get(name) as Y.Map<any> | undefined;
+        if (!variantMap) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        const viewMap = variantMap.get(variant) as Y.Map<any> | undefined;
+        if (!viewMap) throw new Error(`Design ${name} not found in kit ${kitUri}`);
+        viewMap.delete(view);
+        if (viewMap.size === 0) {
+            variantMap.delete(variant);
+        }
+        if (variantMap.size === 0) {
+            designs.delete(name);
+        }
     }
 
     createPiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): void {
@@ -401,8 +419,8 @@ class Studio {
         yPiece.set('id_', piece.id_ || Generator.randomId());
         yPiece.set('description', piece.description || '');
         const yType = new Y.Map<any>();
-        yType.set('designName', piece.type.designName);
-        yType.set('designVariant', piece.type.designVariant);
+        yType.set('name', piece.type.name);
+        yType.set('variant', piece.type.variant);
         yPiece.set('type', yType);
         if (piece.plane) {
             const yPlane = new Y.Map<any>();
@@ -427,7 +445,6 @@ class Studio {
             const yCenter = new Y.Map<any>();
             yCenter.set('x', piece.center.x);
             yCenter.set('y', piece.center.y);
-            yCenter.set('z', piece.center.z);
             yPiece.set('center', yCenter);
         }
         yPieces.set(yPiece.get('id_'), yPiece);
@@ -445,21 +462,25 @@ class Studio {
         const yPiece = pieces.get(pieceId);
         if (!yPiece) return null;
 
+        const type = yPiece.get('type');
+        const typeName = type.get('name');
+        const typeVariant = type.get('variant');
+
         const yPlane = yPiece.get('plane')
         const yOrigin = yPlane?.get('origin')
         const yXAxis = yPlane?.get('xAxis')
         const yYAxis = yPlane?.get('yAxis')
-        const origin: DiagramPoint | null = yOrigin ? {
+        const origin: Point | null = yOrigin ? {
             x: yOrigin.get('x'),
             y: yOrigin.get('y'),
             z: yOrigin.get('z')
         } : null;
-        const xAxis: DiagramPoint | null = yXAxis ? {
+        const xAxis: Vector | null = yXAxis ? {
             x: yXAxis.get('x'),
             y: yXAxis.get('y'),
             z: yXAxis.get('z')
         } : null;
-        const yAxis: DiagramPoint | null = yYAxis ? {
+        const yAxis: Vector | null = yYAxis ? {
             x: yYAxis.get('x'),
             y: yYAxis.get('y'),
             z: yYAxis.get('z')
@@ -474,13 +495,12 @@ class Studio {
         const center: DiagramPoint | null = yCenter ? {
             x: yCenter.get('x'),
             y: yCenter.get('y'),
-            z: yCenter.get('z')
         } : null;
 
         return {
             id_: yPiece.get('id_'),
             description: yPiece.get('description'),
-            type: yPiece.get('type'),
+            type: { name: typeName, variant: typeVariant },
             plane,
             center
         };
@@ -497,12 +517,16 @@ class Studio {
         if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${designName} in kit ${kitUri}`);
 
         if (piece.description !== undefined) yPiece.set('description', piece.description);
-        if (piece.type !== undefined) yPiece.set('type', piece.type);
+        if (piece.type !== undefined) {
+            const yType = new Y.Map<any>();
+            yType.set('name', piece.type.name);
+            yType.set('variant', piece.type.variant);
+            yPiece.set('type', yType);
+        }
         if (piece.center !== undefined && piece.center !== null) {
             const yCenter = new Y.Map<any>();
             yCenter.set('x', piece.center.x);
             yCenter.set('y', piece.center.y);
-            yCenter.set('z', piece.center.z);
             yPiece.set('center', yCenter);
         }
         if (piece.plane !== undefined && piece.plane !== null) {
@@ -877,32 +901,16 @@ export function useStudio() {
     return { createKit, updateKit, deleteKit };
 }
 
-const KitContext = createContext<Kit | null>(null);
-export const KitProvider: React.FC<{ kit: Kit, children: React.ReactNode }> = ({ kit, children }) => {
-    return (
-        <KitContext.Provider value={kit}>
-            {children}
-        </KitContext.Provider>
-    );
-};
-
-export function useKit() {
+export function useKit(uri: string) {
     const studio = useStudio();
-    const kitFromContext = useContext(KitContext);
-    const [kit, setKit] = useState<Kit | null>(kitFromContext);
 
-    useEffect(() => {
-        setKit(kitFromContext);
-    }, [studio, kitFromContext]);
+    function createType(type: Type) { return studio.createType(uri, type); }
+    function updateType(type: Type) { return studio.updateType(uri, type); }
+    function deleteType(typeName: string) { return studio.deleteType(uri, typeName); }
 
-
-    function createType(type: Type) { return studio.createType(kit.uri, type); }
-    function updateType(type: Type) { return studio.updateType(kit.uri, type); }
-    function deleteType(typeName: string) { return studio.deleteType(kit.uri, typeName); }
-
-    function createDesign(design: Design) { return studio.createDesign(kit.uri, design); }
-    function updateDesign(design: Design) { return studio.updateDesign(kit.uri, design); }
-    function deleteDesign(name: string) { return studio.deleteDesign(kit.uri, name); }
+    function createDesign(design: Design) { return studio.createDesign(uri, design); }
+    function updateDesign(design: Design) { return studio.updateDesign(uri, design); }
+    function deleteDesign(name: string) { return studio.deleteDesign(uri, name); }
 
     function createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string) {
         return studio.createDesignEditor(kitUri, designName, designVariant, view);
