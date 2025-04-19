@@ -5,7 +5,7 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author } from '@semio/js/semio';
 
 import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
@@ -147,6 +147,22 @@ class StudioStore {
         return yQuality;
     }
 
+    private getQuality(yMap: Y.Map<any>): Quality | null {
+        const name = yMap.get('name');
+        const value = yMap.get('value');
+        const unit = yMap.get('unit');
+        const definition = yMap.get('definition');
+        return { name, value, unit, definition };
+    }
+
+    private createAuthor(author: Author): Y.Map<any> {
+        const yAuthor = new Y.Map<any>();
+        yAuthor.set('name', author.name);
+        yAuthor.set('email', author.email);
+        yAuthor.set('rank', author.rank);
+        return yAuthor;
+    }
+
     createKit(kit: Kit): void {
         const yKit = new Y.Map<any>();
         yKit.set('uri', kit.uri);
@@ -172,48 +188,9 @@ class StudioStore {
         const yKit = this.yDoc.getMap('kits').get(uri) as Y.Map<any>;
         if (!yKit) return undefined;
 
-        const types = Array.from((yKit.get('types') as Y.Map<any>).entries()).map(([_id, variantMap]) => {
-            return Array.from((variantMap as Y.Map<any>).entries()).map(([_variantId, type]) => {
-                const typeMap = type as Y.Map<any>;
-                const ports = Array.from((typeMap.get('ports') as Y.Map<any>)?.entries() || []).map(([_portId, port]) => port);
-                const qualities = Array.from((typeMap.get('qualities') as Y.Map<any>)?.entries() || []).map(([_qualityId, quality]) => quality);
-                const representations = Array.from((typeMap.get('representations') as Y.Map<any>)?.entries() || []).map(([_repId, rep]) => rep);
-                return {
-                    name: typeMap.get('name') || '',
-                    variant: typeMap.get('variant') || '',
-                    description: typeMap.get('description') || '',
-                    icon: typeMap.get('icon') || '',
-                    image: typeMap.get('image') || '',
-                    unit: typeMap.get('unit') || '',
-                    ports,
-                    qualities,
-                    representations
-                };
-            });
-        }).flat();
-
-        const designs = Array.from((yKit.get('designs') as Y.Map<any>).entries()).map(([_id, variantMap]) => {
-            return Array.from((variantMap as Y.Map<any>).entries()).map(([_variantId, viewMap]) => {
-                return Array.from((viewMap as Y.Map<any>).entries()).map(([_viewId, design]) => {
-                    const designMap = design as Y.Map<any>;
-                    const pieces = Array.from((designMap.get('pieces') as Y.Map<any>)?.entries() || []).map(([_pieceId, piece]) => piece);
-                    const connections = Array.from((designMap.get('connections') as Y.Map<any>)?.entries() || []).map(([_connId, conn]) => conn);
-                    const qualities = Array.from((designMap.get('qualities') as Y.Map<any>)?.entries() || []).map(([_qualityId, quality]) => quality);
-                    return {
-                        name: designMap.get('name') || '',
-                        variant: designMap.get('variant') || '',
-                        view: designMap.get('view') || '',
-                        description: designMap.get('description') || '',
-                        icon: designMap.get('icon') || '',
-                        image: designMap.get('image') || '',
-                        unit: designMap.get('unit') || '',
-                        pieces,
-                        connections,
-                        qualities
-                    };
-                });
-            });
-        }).flat(2);
+        const types = Array.from((yKit.get('types') as Y.Map<any>).values()).map(v => v.map(t => this.getType(uri, t.get('name'), t.get('variant'))));
+        const designs = Array.from((yKit.get('designs') as Y.Map<any>).values()).map(v => v.map(d => this.getDesign(uri, d.get('name'), d.get('variant'), d.get('view'))));
+        const qualities = Array.from((yKit.get('qualities') as Y.Map<any>).values()).map(q => this.getQuality(q));
 
         return {
             uri: yKit.get('uri'),
@@ -227,11 +204,12 @@ class StudioStore {
             homepage: yKit.get('homepage'),
             license: yKit.get('license'),
             designs,
-            types
+            types,
+            qualities
         };
     }
 
-    updateKit(kit: Kit): Kit {
+    updateKit(kit: Partial<Kit>): Kit {
         const yKit = this.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
         if (kit.name !== "") yKit.set('name', kit.name);
@@ -268,7 +246,7 @@ class StudioStore {
         yType.set('image', type.image || '');
         yType.set('unit', type.unit || '');
         yType.set('ports', new Y.Map());
-        yType.set('qualities', new Y.Map());
+        yType.set('qualities', type.qualities?.map(q => this.createQuality(q)));
         yType.set('representations', new Y.Map());
         variantMap.set(type.variant || '', yType);
         type.ports?.map(p => { this.createPort(kitUri, type.name, type.variant || '', p) });
@@ -367,10 +345,12 @@ class StudioStore {
         yDesign.set('variant', design.variant || '');
         yDesign.set('view', design.view || '');
         yDesign.set('unit', design.unit || '');
-        yDesign.set('pieces', new Y.Map(design.pieces?.map(p => [p.id_ || uuidv4(), this.createPiece(kitUri, p)])));
-        yDesign.set('connections', new Y.Map(design.connections?.map(c => [this.getConnectionId(c), this.createConnection(kitUri, c)])));
-        yDesign.set('qualities', new Y.Map(design.qualities?.map(q => [q.name, q])));
+        yDesign.set('pieces', new Y.Map());
+        yDesign.set('connections', new Y.Map());
+        yDesign.set('qualities', design.qualities?.map(q => this.createQuality(q)));
         viewMap.set(design.view || '', yDesign);
+        design.pieces?.map(p => this.createPiece(kitUri, design.name, design.variant, design.view, p));
+        design.connections?.map(c => this.createConnection(kitUri, design.name, design.variant, design.view, c));
     }
 
     getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design | null {
@@ -483,6 +463,7 @@ class StudioStore {
             yPiece.set('center', yCenter);
         }
         yPieces.set(yPiece.get('id_'), yPiece);
+        piece.qualities?.map(q => yPiece.set('qualities', this.createQuality(q)));
     }
 
     getPiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): Piece | null {
@@ -613,17 +594,20 @@ class StudioStore {
         yConnection.set('connected', connection.connected);
         yConnection.set('connecting', connection.connecting);
         yConnection.set('gap', connection.gap || 0);
-        yConnection.set('rotation', connection.rotation || 0);
         yConnection.set('shift', connection.shift || 0);
+        yConnection.set('raise_', connection.raise_ || 0);
+        yConnection.set('rotation', connection.rotation || 0);
+        yConnection.set('turn', connection.turn || 0);
         yConnection.set('tilt', connection.tilt || 0);
         yConnection.set('x', connection.x || 0);
         yConnection.set('y', connection.y || 0);
+        yConnection.set('qualities', connection.qualities?.map(q => this.createQuality(q)));
 
-        const connectionId = `${connection.connecting.piece.id_}:${connection.connecting.port.id_}-${connection.connected.piece.id_}:${connection.connected.port.id_}`;
+        const connectionId = `${connection.connected.piece.id_}--${connection.connecting.piece.id_}`;
         connections.set(connectionId, yConnection);
     }
 
-    getConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): Connection | null {
+    getConnection(kitUri: string, designName: string, designVariant: string, view: string, connectingPieceId: string, connectedPieceId: string): Connection | null {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
@@ -632,7 +616,7 @@ class StudioStore {
         if (!yDesign) return null;
 
         const connections = yDesign.get('connections');
-        const yConnection = connections.get(connectionId);
+        const yConnection = connections.get(`${connectedPieceId}--${connectingPieceId}`);
         if (!yConnection) return null;
 
         return {
@@ -640,11 +624,14 @@ class StudioStore {
             connected: yConnection.get('connected'),
             connecting: yConnection.get('connecting'),
             gap: yConnection.get('gap'),
-            rotation: yConnection.get('rotation'),
             shift: yConnection.get('shift'),
+            raise_: yConnection.get('raise_'),
+            rotation: yConnection.get('rotation'),
+            turn: yConnection.get('turn'),
             tilt: yConnection.get('tilt'),
             x: yConnection.get('x'),
-            y: yConnection.get('y')
+            y: yConnection.get('y'),
+            qualities: yConnection.get('qualities')
         };
     }
 
