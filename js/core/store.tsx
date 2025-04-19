@@ -70,11 +70,13 @@ interface DesignEditorState {
 }
 
 class DesignEditor {
+    private yKit: Y.Map<any>;
     private yDesign: Y.Map<any>;
     private undoManager: UndoManager;
     private state: DesignEditorState;
 
-    constructor(yDesign: Y.Map<any>, undoManager: UndoManager) {
+    constructor(yKit: Y.Map<any>, yDesign: Y.Map<any>, undoManager: UndoManager) {
+        this.yKit = yKit;
         this.yDesign = yDesign;
         this.undoManager = undoManager;
         this.state = {
@@ -96,23 +98,27 @@ class DesignEditor {
     getDesignId(): [string, string, string] {
         return [this.yDesign.get('name'), this.yDesign.get('variant'), this.yDesign.get('view')];
     }
+
+    getKitId(): string {
+        return this.yKit.get('uri');
+    }
 }
 
 class Studio {
     private userId: string;
-    private studioDoc: Y.Doc;
+    private yDoc: Y.Doc;
     private undoManager: UndoManager;
     private designEditors: Map<string, DesignEditor>;
     private indexeddbProvider: IndexeddbPersistence;
 
     constructor(userId: string) {
         this.userId = userId;
-        this.studioDoc = new Y.Doc();
-        this.undoManager = new UndoManager(this.studioDoc, { trackedOrigins: new Set([this.userId]) });
+        this.yDoc = new Y.Doc();
+        this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditors = new Map();
-        this.indexeddbProvider = new IndexeddbPersistence(userId, this.studioDoc);
+        this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         this.indexeddbProvider.whenSynced.then(() => {
-            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.studioDoc.clientID})`);
+            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
         });
     }
 
@@ -132,11 +138,11 @@ class Studio {
         yKit.set('license', kit.license || []);
         yKit.set('types', types);
         yKit.set('designs', designs);
-        this.studioDoc.getMap('kits').set(kit.uri, yKit);
+        this.yDoc.getMap('kits').set(kit.uri, yKit);
     }
 
     getKit(uri: string): Kit | undefined {
-        const yKit = this.studioDoc.getMap('kits').get(uri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(uri) as Y.Map<any>;
         if (!yKit) return undefined;
 
         const types = Array.from((yKit.get('types') as Y.Map<any>).entries()).map(([_id, variantMap]) => {
@@ -199,7 +205,7 @@ class Studio {
     }
 
     updateKit(kit: Kit): Kit {
-        const yKit = this.studioDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
         if (kit.name !== "") yKit.set('name', kit.name);
         if (kit.description !== undefined && kit.description !== "") yKit.set('description', kit.description);
@@ -214,11 +220,11 @@ class Studio {
     }
 
     deleteKit(uri: string): void {
-        this.studioDoc.getMap('kits').delete(uri);
+        this.yDoc.getMap('kits').delete(uri);
     }
 
     createType(kitUri: string, type: Type): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -241,7 +247,7 @@ class Studio {
     }
 
     getType(kitUri: string, typeName: string, variant: string = ''): Type | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types') as Y.Map<any>;
@@ -269,7 +275,7 @@ class Studio {
     }
 
     updateType(kitUri: string, type: Type): Type | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -298,7 +304,7 @@ class Studio {
     }
 
     deleteType(kitUri: string, typeName: string, variant: string = ''): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types') as Y.Map<any>;
         const variantMap = types.get(typeName) as Y.Map<any> | undefined;
@@ -310,7 +316,7 @@ class Studio {
     }
 
     createDesign(kitUri: string, design: Design): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -339,7 +345,7 @@ class Studio {
     }
 
     getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -361,7 +367,7 @@ class Studio {
     }
 
     updateDesign(kitUri: string, design: Design): Design | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -390,7 +396,7 @@ class Studio {
     }
 
     deleteDesign(kitUri: string, name: string, variant: string = '', view: string = ''): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs') as Y.Map<any>;
@@ -408,7 +414,7 @@ class Studio {
     }
 
     createPiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const yDesigns = yKit.get('designs');
         const yDesign = yDesigns.get(designName)?.get(designVariant)?.get(view);
@@ -451,7 +457,7 @@ class Studio {
     }
 
     getPiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): Piece | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -507,7 +513,7 @@ class Studio {
     }
 
     updatePiece(kitUri: string, designName: string, designVariant: string, view: string, piece: Piece): Piece | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const designs = yKit.get('designs');
         const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
@@ -553,7 +559,7 @@ class Studio {
     }
 
     deletePiece(kitUri: string, designName: string, designVariant: string, view: string, pieceId: string): boolean {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return false;
 
         const designs = yKit.get('designs');
@@ -565,7 +571,7 @@ class Studio {
     }
 
     createConnection(kitUri: string, designName: string, designVariant: string, view: string, connection: Connection): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
@@ -589,7 +595,7 @@ class Studio {
     }
 
     getConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): Connection | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const designs = yKit.get('designs');
@@ -614,7 +620,7 @@ class Studio {
     }
 
     updateConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string, connection: Partial<Connection>): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
@@ -637,7 +643,7 @@ class Studio {
     }
 
     deleteConnection(kitUri: string, designName: string, designVariant: string, view: string, connectionId: string): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const designs = yKit.get('designs');
@@ -649,7 +655,7 @@ class Studio {
     }
 
     createRepresentation(kitUri: string, typeName: string, representation: Representation): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -673,7 +679,7 @@ class Studio {
     }
 
     getRepresentation(kitUri: string, typeName: string, key: string): Representation | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -696,7 +702,7 @@ class Studio {
     }
 
     updateRepresentation(kitUri: string, typeName: string, key: string, representation: Partial<Representation>): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -718,7 +724,7 @@ class Studio {
     }
 
     deleteRepresentation(kitUri: string, typeName: string, key: string): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -730,7 +736,7 @@ class Studio {
     }
 
     createPort(kitUri: string, typeName: string, port: Port): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -772,7 +778,7 @@ class Studio {
     }
 
     getPort(kitUri: string, typeName: string, portId: string): Port | null {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) return null;
 
         const types = yKit.get('types');
@@ -806,7 +812,7 @@ class Studio {
     }
 
     updatePort(kitUri: string, typeName: string, portId: string, port: Partial<Port>): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
 
         const types = yKit.get('types');
@@ -841,7 +847,7 @@ class Studio {
     }
 
     deletePort(kitUri: string, typeName: string, portId: string): void {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const types = yKit.get('types');
         const yType = types.get(typeName);
@@ -851,7 +857,7 @@ class Studio {
     }
 
     createDesignEditor(kitUri: string, designName: string, designVariant: string, view: string): string {
-        const yKit = this.studioDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit ${kitUri} not found`);
         const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitUri}`);
@@ -958,7 +964,7 @@ export function useDesignEditor() {
             const targetDesignName = name || design?.name;
             if (!targetDesignName) throw new Error("Design name is required");
 
-            const yKit = studio.studioDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
+            const yKit = studio.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
             if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
 
             const designs = yKit.get('designs');
@@ -967,7 +973,7 @@ export function useDesignEditor() {
             const yDesign = designs.get(targetDesignName)?.get(designVariant)?.get(designView);
             if (!yDesign) throw new Error(`Design ${targetDesignName} not found in kit ${kit.uri}`);
 
-            studio.studioDoc.transact(() => {
+            studio.yDoc.transact(() => {
                 operations();
             }, { trackedOrigins: new Set([id]) });
 
