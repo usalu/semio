@@ -17,265 +17,265 @@ export const ICON_WIDTH = 50;
 
 // ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
-    // 🆔 The URI of the kit (GraphQL: uri: String!)
+    // 🆔 The URI of the kit
     uri: string;
-    // 📛 The name of the kit (GraphQL: name: String!)
+    // 📛 The name of the kit
     name: string;
-    // 💬 The human-readable description of the kit (GraphQL: description: String!)
+    // 💬 The human-readable description of the kit
     description: string;
-    // 🪙 The icon [ emoji | logogram | url ] of the kit (GraphQL: icon: String!)
+    // 🪙 The icon [ emoji | logogram | url ] of the kit
     icon: string;
-    // 🖼️ The URL to the image of the kit (GraphQL: image: String!)
+    // 🖼️ The URL to the image of the kit
     image: string;
-    // 🔮 The URL of the preview image of the kit (GraphQL: preview: String!)
+    // 🔮 The URL of the preview image of the kit
     preview: string;
-    // 🔀 The version of the kit (GraphQL: version: String!)
+    // 🔀 The version of the kit
     version: string;
-    // ☁️ The Unique Resource Locator (URL) where to fetch the kit remotely (GraphQL: remote: String!)
+    // ☁️ The Unique Resource Locator (URL) where to fetch the kit remotely
     remote: string;
-    // 🏠 The URL of the homepage of the kit (GraphQL: homepage: String!)
+    // 🏠 The URL of the homepage of the kit
     homepage: string;
-    // ⚖️ The license [ spdx id | url ] of the kit (GraphQL: license: String!)
+    // ⚖️ The license [ spdx id | url ] of the kit
     license: string;
-    // 🕒 The creation date of the kit (GraphQL: created: DateTime!)
+    // 🕒 The creation date of the kit
     created: Date;
-    // 🕒 The last update date of the kit (GraphQL: updated: DateTime!)
+    // 🕒 The last update date of the kit
     updated: Date;
-    // 🧩 The types defined within the kit (GraphQL: types: TypeNodeConnection)
+    // 🧩 The types defined within the kit
     types?: Type[];
-    // 🏙️ The designs defined within the kit (GraphQL: designs: DesignNodeConnection)
+    // 🏙️ The designs defined within the kit
     designs?: Design[];
-    // 📏 The qualities associated with the kit (GraphQL: qualities: QualityNodeConnection)
+    // 📏 The qualities associated with the kit
     qualities?: Quality[];
 }
 
 // 🏙️ A design is a collection of connected pieces.
 export type Design = {
-    // 📛 The name of the design (GraphQL: name: String!)
+    // 📛 The name of the design
     name: string;
-    // 💬 The human-readable description of the design (GraphQL: description: String!)
+    // 💬 The human-readable description of the design
     description: string;
-    // 🪙 The icon [ emoji | logogram | url ] of the design (GraphQL: icon: String!)
+    // 🪙 The icon [ emoji | logogram | url ] of the design
     icon: string;
-    // 🖼️ The URL to the image of the design (GraphQL: image: String!)
+    // 🖼️ The URL to the image of the design
     image: string;
-    // 🔀 The variant of the design (GraphQL: variant: String!)
+    // 🔀 The variant of the design
     variant: string;
-    // 🥽 The view of the design (GraphQL: view: String!)
+    // 🥽 The view of the design
     view: string;
-    // 📏 The unit of the design (GraphQL: unit: String!)
+    // 📏 The unit of the design
     unit: string;
-    // 🕒 The creation date of the design (GraphQL: created: DateTime!)
+    // 🕒 The creation date of the design
     created: Date;
-    // 🕒 The last update date of the design (GraphQL: updated: DateTime!)
+    // 🕒 The last update date of the design
     updated: Date;
-    // 🧩 The pieces included in the design (GraphQL: pieces: PieceNodeConnection)
+    // 🧩 The pieces included in the design
     pieces?: Piece[];
-    // 🖇️ The connections between pieces in the design (GraphQL: connections: ConnectionNodeConnection)
+    // 🖇️ The connections between pieces in the design
     connections?: Connection[];
-    // 📑 The authors of the design (GraphQL: authors: [Author!]!)
+    // 📑 The authors of the design
     authors: Author[];
-    // 📏 The qualities associated with the design (GraphQL: qualities: QualityNodeConnection)
+    // 📏 The qualities associated with the design
     qualities?: Quality[];
 }
 
 // 📑 Represents an author.
 export type Author = {
-    // 📛 The name of the author (GraphQL: name: String!)
+    // 📛 The name of the author
     name: string;
-    // 📧 The email of the author (GraphQL: email: String!)
+    // 📧 The email of the author
     email: string;
-    // #️⃣ The rank of the author (GraphQL: rank: Int!) - Added field
+    // #️⃣ The rank of the author
     rank: number;
 }
 
 // 🖇️ A bidirectional connection between two pieces of a design.
 export type Connection = {
-    // 💬 The human-readable description of the connection (GraphQL: description: String!)
+    // 💬 The human-readable description of the connection
     description: string;
-    // ↕️ The longitudinal gap between connected pieces (GraphQL: gap: Float!)
+    // ↕️ The longitudinal gap between connected pieces
     gap: number;
-    // ↔️ The lateral shift between connected pieces (GraphQL: shift: Float!)
+    // ↔️ The lateral shift between connected pieces
     shift: number;
-    // 🪜 The vertical raise between connected pieces (GraphQL: raise_: Float!) - Added field
+    // 🪜 The vertical raise between connected pieces
     raise_: number;
-    // 🔄 The horizontal rotation between connected pieces in degrees (GraphQL: rotation: Float!)
+    // 🔄 The horizontal rotation between connected pieces in degrees
     rotation: number;
-    // 🛞 The turn between connected pieces in degrees (GraphQL: turn: Float!) - Added field
+    // 🛞 The turn between connected pieces in degrees
     turn: number;
-    // ↗️ The horizontal tilt between connected pieces in degrees (GraphQL: tilt: Float!)
+    // ↗️ The horizontal tilt between connected pieces in degrees
     tilt: number;
-    // ➡️ The offset in x direction in the diagram (GraphQL: x: Float!)
+    // ➡️ The offset in x direction in the diagram
     x: number;
-    // ⬆️ The offset in y direction in the diagram (GraphQL: y: Float!)
+    // ⬆️ The offset in y direction in the diagram
     y: number;
-    // 🧲 The connected side of the connection (GraphQL: connected: Side!)
+    // 🧲 The connected side of the connection
     connected: Side;
-    // 🧲 The connecting side of the connection (GraphQL: connecting: Side!)
+    // 🧲 The connecting side of the connection
     connecting: Side;
-    // 📏 The qualities associated with the connection (GraphQL: qualities: QualityNodeConnection) - Added field
+    // 📏 The qualities associated with the connection
     qualities?: Quality[];
 }
 
 // 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
 export type Side = {
-    // ⭕ The piece involved in this side of the connection (GraphQL: piece: Piece!)
+    // ⭕ The piece involved in this side of the connection
     piece: PieceID; // Represents Piece identifier
-    // 🔌 The port involved in this side of the connection (GraphQL: port: Port!)
+    // 🔌 The port involved in this side of the connection
     port: PortID;   // Represents Port identifier
 }
 
 // 🪪 Identifier for a piece within a design.
 export type PieceID = {
-    // 🆔 The id of the piece (GraphQL: id_: String)
+    // 🆔 The id of the piece
     id_?: string;
 }
 
 // 🪪 Identifier for a port within a type.
 export type PortID = {
-    // 🆔 The id of the port (GraphQL: id_: String)
+    // 🆔 The id of the port
     id_?: string;
 }
 
 // ⭕ A piece is a 3D instance of a type within a design.
 export type Piece = {
-    // 🆔 The id of the piece (GraphQL: id_: String)
+    // 🆔 The id of the piece
     id_?: string;
-    // 💬 The human-readable description of the piece (GraphQL: description: String!)
+    // 💬 The human-readable description of the piece
     description: string;
-    // 🧩 The type defining this piece (GraphQL: type: Type)
+    // 🧩 The type defining this piece
     type: TypeID; // Represents Type identifier
-    // ◳ The optional plane (position and orientation) of the piece (GraphQL: plane: Plane)
+    // ◳ The optional plane (position and orientation) of the piece
     plane?: Plane;
-    // 📺 The center of the piece in the diagram (GraphQL: center: DiagramPoint!)
+    // 📺 The center of the piece in the diagram
     center: DiagramPoint;
-    // 📏 The qualities associated with the piece (GraphQL: qualities: QualityNodeConnection) - Added field
+    // 📏 The qualities associated with the piece
     qualities?: Quality[];
-    // 🖇️ Connections involving this piece (GraphQL: connections: [Connection!]!) - Added field
+    // 🖇️ Connections involving this piece
     connections: Connection[];
 }
 
 // 📺 A 2D point (xy) in the diagram coordinate system.
 export type DiagramPoint = {
-    // 🏁 The x-coordinate in the diagram (GraphQL: x: Float!)
+    // 🏁 The x-coordinate in the diagram
     x: number;
-    // 🏁 The y-coordinate in the diagram (GraphQL: y: Float!)
+    // 🏁 The y-coordinate in the diagram
     y: number;
 }
 
 // ◳ A plane defined by an origin point and two axes vectors.
 export type Plane = {
-    // ⌱ The origin point of the plane (GraphQL: origin: Point!)
+    // ⌱ The origin point of the plane
     origin: Point;
-    // ➡️ The x-axis vector of the plane (GraphQL: xAxis: Vector!)
+    // ➡️ The x-axis vector of the plane
     xAxis: Vector;
-    // ➡️ The y-axis vector of the plane (GraphQL: yAxis: Vector!)
+    // ➡️ The y-axis vector of the plane
     yAxis: Vector;
 }
 
 // ✖️ A 3D point (xyz) with floating-point coordinates.
 export type Point = {
-    // 🎚️ The x-coordinate of the point (GraphQL: x: Float!)
+    // 🎚️ The x-coordinate of the point
     x: number;
-    // 🎚️ The y-coordinate of the point (GraphQL: y: Float!)
+    // 🎚️ The y-coordinate of the point
     y: number;
-    // 🎚️ The z-coordinate of the point (GraphQL: z: Float!)
+    // 🎚️ The z-coordinate of the point
     z: number;
 }
 
 // ➡️ A 3D vector (xyz) with floating-point coordinates.
 export type Vector = {
-    // 🎚️ The x-coordinate of the vector (GraphQL: x: Float!)
+    // 🎚️ The x-coordinate of the vector
     x: number;
-    // 🎚️ The y-coordinate of the vector (GraphQL: y: Float!)
+    // 🎚️ The y-coordinate of the vector
     y: number;
-    // 🎚️ The z-coordinate of the vector (GraphQL: z: Float!)
+    // 🎚️ The z-coordinate of the vector
     z: number;
 }
 
 // 🪪 Identifier for a type, potentially including a variant.
 export type TypeID = {
-    // 📛 The name of the type (GraphQL: name: String!)
+    // 📛 The name of the type
     name: string;
-    // 🔀 The optional variant of the type (GraphQL: variant: String)
+    // 🔀 The optional variant of the type
     variant?: string;
 }
 
 // 📏 Represents a quality, a named property with an optional value, unit, and definition.
 export type Quality = {
-    // 📛 The name of the quality (GraphQL: name: String!)
+    // 📛 The name of the quality
     name: string;
-    // ❓ The value of the quality (GraphQL: value: String!)
+    // ❓ The value of the quality
     value: string;
-    // 📐 The unit of the quality's value (GraphQL: unit: String!)
+    // 📐 The unit of the quality's value
     unit: string;
-    // 📖 The definition [ text | url ] of the quality (GraphQL: definition: String!)
+    // 📖 The definition [ text | url ] of the quality
     definition: string;
 }
 
 // 🧩 A type is a reusable element blueprint with ports for connection.
 export type Type = {
-    // 📛 The name of the type (GraphQL: name: String!)
+    // 📛 The name of the type
     name: string;
-    // 💬 The human-readable description of the type (GraphQL: description: String!)
+    // 💬 The human-readable description of the type
     description: string;
-    // 🪙 The icon [ emoji | logogram | url ] of the type (GraphQL: icon: String!)
+    // 🪙 The icon [ emoji | logogram | url ] of the type
     icon: string;
-    // 🖼️ The URL to the image of the type (GraphQL: image: String!)
+    // 🖼️ The URL to the image of the type
     image: string;
-    // 🔀 The variant of the type (GraphQL: variant: String!)
+    // 🔀 The variant of the type
     variant: string;
-    // Ⓜ️ The length unit used by the type's geometry (GraphQL: unit: String!)
+    // Ⓜ️ The length unit used by the type's geometry
     unit: string;
-    // 🕒 The creation date of the type (GraphQL: created: DateTime!)
+    // 🕒 The creation date of the type
     created: Date;
-    // 🕒 The last update date of the type (GraphQL: updated: DateTime!)
+    // 🕒 The last update date of the type
     updated: Date;
-    // 💾 Representations (e.g., CAD files) of the type (GraphQL: representations: RepresentationNodeConnection)
+    // 💾 Representations (e.g., CAD files) of the type
     representations?: Representation[];
-    // 🔌 Connection points (ports) of the type (GraphQL: ports: PortNodeConnection)
+    // 🔌 Connection points (ports) of the type
     ports?: Port[];
-    // 📑 Authors of the type (GraphQL: authors: [Author!]!)
+    // 📑 Authors of the type
     authors: Author[];
-    // 📏 Qualities associated with the type (GraphQL: qualities: QualityNodeConnection)
+    // 📏 Qualities associated with the type
     qualities?: Quality[];
-    // ⭕ Pieces instances of this type (GraphQL: pieces: PieceNodeConnection) - Added field
+    // ⭕ Pieces instances of this type
     pieces?: Piece[];
 }
 
 // 🔌 A port is a connection point on a type, defined by a point and direction.
 export type Port = {
-    // 🆔 The id of the port (GraphQL: id_: String)
+    // 🆔 The id of the port
     id_?: string;
-    // 💬 The human-readable description of the port (GraphQL: description: String!)
+    // 💬 The human-readable description of the port
     description: string;
-    // 👨‍👩‍👧‍👦 The family of the port for compatibility checks (GraphQL: family: String!) - Added field
+    // 👨‍👩‍👧‍👦 The family of the port for compatibility checks
     family: string;
-    // 💍 The parameter t [0,1[ for diagram visualization (GraphQL: t: Float!)
+    // 💍 The parameter t [0,1[ for diagram visualization
     t: number;
-    // ✅ Other compatible port families (GraphQL: compatibleFamilies: [String!]!) - Added field
+    // ✅ Other compatible port families
     compatibleFamilies: string[];
-    // ✖️ The connection point geometry (GraphQL: point: Point!)
+    // ✖️ The connection point geometry
     point: Point;
-    // ➡️ The connection direction vector (GraphQL: direction: Vector!)
+    // ➡️ The connection direction vector
     direction: Vector;
-    // 📏 Qualities associated with the port (GraphQL: qualities: QualityNodeConnection)
+    // 📏 Qualities associated with the port
     qualities?: Quality[];
-    // 🖇️ Connections involving this port (GraphQL: connections: [Connection!]!) - Added field
+    // 🖇️ Connections involving this port
     connections: Connection[];
 }
 
 // 💾 A representation links to a resource (e.g., file) describing a type.
 export type Representation = {
-    // 🔗 The URL to the resource (GraphQL: url: String!)
+    // 🔗 The URL to the resource
     url: string;
-    // 💬 The human-readable description of the representation (GraphQL: description: String!)
+    // 💬 The human-readable description of the representation
     description: string;
-    // ✉️ The MIME type of the resource (GraphQL: mime: String!)
+    // ✉️ The MIME type of the resource
     mime: string;
-    // 🏷️ Tags to group or filter representations (GraphQL: tags: [String!]!)
+    // 🏷️ Tags to group or filter representations
     tags: string[];
-    // 📏 Qualities associated with the representation (GraphQL: qualities: QualityNodeConnection)
+    // 📏 Qualities associated with the representation
     qualities?: Quality[];
 }
 
