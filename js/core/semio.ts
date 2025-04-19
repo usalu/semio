@@ -147,8 +147,8 @@ export type Piece = {
     type: TypeID; // Represents Type identifier
     // ◳ The optional plane (position and orientation) of the piece
     plane?: Plane;
-    // 📺 The center of the piece in the diagram
-    center: DiagramPoint;
+    // 📺 The optional center of the piece in the diagram
+    center?: DiagramPoint;
     // 📏 The qualities associated with the piece
     qualities?: Quality[];
 }

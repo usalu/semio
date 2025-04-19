@@ -195,8 +195,10 @@ const View: FC<ViewProps> = ({ }) => {
     const [designEditorId, setDesignEditorId] = useState<string>('');
 
     useEffect(() => {
-        studioStore.importKit("metabolism.json");
-        const editorId = studioStore.createDesignEditorStore("Metabolism", "Nakagin Capsule Tower", "", "");
+        studioStore.transact(() => {
+            studioStore.importKit("metabolism.json");
+        });
+        const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
         setDesignEditorId(editorId);
     }, [studioStore]);
 
