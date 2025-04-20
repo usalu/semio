@@ -44,7 +44,7 @@ export default defineConfig({
                         label: '🥇 Intro',
                         items: [
                             'intro',
-                            'design-information-modeling',
+                            'why-semio',
                             'kit-of-parts-architecture',
                             'core-concepts',
                         ],

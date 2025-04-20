@@ -4,61 +4,135 @@ description: 📝 Learn more about semio and create the logo 🖼️
 ---
 import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
-## 🧩 Understanding Semio: The Anatomy of a Modular Design System
 
-Let’s say you’ve just bought a big Lego box...
+## 📃 Principles
 
-### 📦 1. Kit = The LEGO Box
+semio is built on top of the following premises:
 
-A Kit is the entire Lego set you own...
+- **[🔓 Open over closed](#open-over-closed):** Futureproof technology needs to be developed together 🤝
+- **[🖱️ Manual over automated](#manual-over-automated):** Design supported and not derived by technology 🪛
+- **[👥 Team over individual](#team-over-individual):** To collaborate efficiently we need interfaces 🧩
+- **[♻️ Composable over disposable](#composable-over-disposable):** Even the most complex systems can be thought of parts 🧠
+- **[🧪 Implementation over specification](#implementation-over-specification):** Hands-on instead of head-first ✍️
+- **[🔀 Integration over generality](#integration-over-generality):** We don't want to replace existing tools but extend them 🚀
+- **[🔨 Simple over complex](#simple-over-complex):** Complexity arises on it's own 🌱
+- **[📖 Example over theory](#example-over-theory):** To avoid building an ivory tower 🗼
+- **[🏛️ Architecture over modeling](#architecture-over-modeling):** We need more architecture-focused toolchains ✏️
+- **[🏗️ Prefab over custom](#prefab-over-custom):** For economic and ecologic solutions 📉
 
-:::note[Semio Role]
-The top-level folder that contains all Designs, Types, Pieces, data, and connection logic.  
-Can include: Multiple Designs, reusable components, metadata, and logic rules.
+### 🔓 Open over closed
+
+:::note[Did you know?]
+semio stands on the shoulder of giants 🏙️ It is built with cutting-edge open-source technology 🌍
+| Tool | Users | Followers | Contributors |
+|------|-------|-----------|--------------|
+| [User Interface](https://github.com/facebook/react) | 27,800,000 | 234,000 | 1,698 |
+| [3D Engine](https://github.com/mrdoob/three.js/) | 465,000 | 105,000 | 1,977 |
 :::
 
-### 🧾 2. Design = The Model You Build
+The reason why computer science is so successful is because all of its core is open-source 🤝
 
-A Design is one specific thing you choose to build...
+Big IT-companies have realized that an open core is the best way for an industry to grow 📈
 
-:::note[Semio Role]
-A defined arrangement of components that exists within a Kit.  
-Example: One Kit might include spaceship, base, and launchpad Designs.
-:::
+The monetization shouldn't happen on the core technology but on the services around them 💰
 
-### 🧱 3. Type = The Unique Brick Mold
+As customers we pay for:
 
-A Type is like a specific kind of Lego brick...
+- Shared collaboration environments
+- Productivity enhancing features
+- Private working spaces
+- Integration with company-specific infrastructure
+- …
 
-:::note[Semio Role]
-The reusable template for creating components.  
-Example: “2x4 brick” is a Type.
-:::
+We don't care about the underlying:
 
-### 🔁 4. Piece = A Brick You Actually Use
+- Libraries
+- Engines
+- APIs
+- CLIs
+- SDKs
+- …
 
-...
+Software companies of the Architecture-Engineering-Construction (AEC) industry have made the mistake to compete on the core technology instead of the services around them ❌
 
-:::note[Semio Role]
-A direct instance of a Type that exists in a Design.  
-Note: Every component in a Design is a Piece.
-:::
+They have built closed-source core technology with open-source extensions to lock you into their platform 🔒
 
-### ⚓ 5. Port = The Connection Point on a Brick
+That's why semio is built the other way around 🔄️
 
-...
+The core technology is open-source and the extensions are closed-source 🔓
 
-:::note[Semio Role]
-A defined interface on a Type that allows logical attachment.  
-Note: Ports enable modular systems to connect.
-:::
+This way the industry can grow together by sharing the effort of building the core technology and companies that offer cloud solutions, ai features, … can still be profitable 📈
 
-### 🔗 6. Connection = The Snapping Together
+{/* prettier-ignore */}
+<Aside type="tip" title="Are you curious what the world runs on?">
+  <Tabs>
+    <TabItem label="Operating System">
+      Most servers in the world run on [Kubernetes](https://kubernetes.io) which runs containers with [Docker](https://www.docker.com) that uses mainly [Linux](https://www.linux.org) 🐧
+    </TabItem>
+    <TabItem label="Version Control">
+      [GitHub](https://github.com), [GitLab](https://gitlab.com) and [Bitbucket](https://bitbucket.org) all rely on a linux tool [git](https://git-scm.com) 🔨
+    </TabItem>
+    <TabItem label="User Interfaces">
+      {/* TODO: Doublecheck listing and add company-internal link for every company https://jaydevs.com/top-companies-using-react-js/ */}
+      [React](https://react.dev) was originally only developed by [Facebook](https://github.com/facebook/react) but nowadays 
+      [Netflix](https://netflixtechblog.com/tagged/react), 
+      Airbnb, 
+      Paypal, 
+      Uber, 
+      Walmart,
+      Twitch,
+      BBC,
+      Tesla,
+      Dropbox, 
+      Salesforce,
+      … use it to power their systems ⚡
+    </TabItem>
+    <TabItem label="Databases">
+      [PostgreSQL](https://www.postgresql.org), 
+      [MySQL](https://www.mysql.com),
+      [MariaDB](https://mariadb.org), 
+      [SQLite](https://www.sqlite.org), 
+      [MongoDB](https://www.mongodb.com), 
+      [Redis](https://redis.io), 
+      [Cassandra](https://cassandra.apache.org), 
+      [Neo4j](https://neo4j.com), 
+      [InfluxDB](https://www.influxdata.com), 
+      … have to be open for trust 👀
+    </TabItem>
+    <TabItem label="Programming Languages">
+      [Python](https://www.python.org), 
+      [Java](https://www.java.com), 
+      [JavaScript](https://www.javascript.com), 
+      [C++](https://isocpp.org), 
+      [C#](https://learn.microsoft.com/en-us/dotnet/csharp/), 
+      [Go](https://go.dev), 
+      [Rust](https://www.rust-lang.org), 
+      [PHP](https://www.php.net), 
+      … have all open specification and implementations 🐍
+    </TabItem>
+  </Tabs>
+</Aside>
 
-...
+### 🖱️ Manual over automated
 
-:::note[Semio Role]
-The rule that links two Ports in a Design.  
-Example: “Top of Piece A → Bottom of Piece B”.
-:::
+### 👥 Team over individual
+
+### ♻️ Composable over disposable
+
+### 🛠️ Implementation over specification
+
+### 🔀 Integration over generality
+
+### 🧩 Simple over complex
+
+### 📖 Example over theory
+
+### 🏛️ Architecture over modeling
+
+### 🏗️ Prefab over custom
+
+## 🤨 When should I design with semio?
+
+
+
 
