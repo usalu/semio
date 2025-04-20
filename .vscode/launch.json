@@ -52,23 +52,18 @@
         {
             "name": "dev js core",
             "preLaunchTask": "dev js core",
-            "type": "firefox",
+            "type": "chrome",
             "request": "launch",
             "url": "http://localhost:6006",
             "webRoot": "${workspaceRoot}/js/core",
         },
         {
             "name": "dev docs",
-            "type": "node",
+            "preLaunchTask": "dev docs",
+            "type": "chrome",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "dev",
-                "@semio/docs"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "url": "http://localhost:4321",
+            "webRoot": "${workspaceRoot}/js/docs",
         },
         {
             "name": "dev sketchpad",

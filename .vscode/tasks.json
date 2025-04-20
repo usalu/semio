@@ -68,6 +68,28 @@
             }
         },
         {
+            "label": "dev docs",
+            "type": "shell",
+            "isBackground": true,
+            "command": "npx nx dev @semio/docs",
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "astro", // When astro starts
+                    "endsPattern": "http://localhost:4321/" // When astro is ready
+                }
+            }
+        },
+        {
             "label": "build icons",
             "type": "shell",
             "command": "npx nx build @semio/icons",

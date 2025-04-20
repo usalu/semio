@@ -258,12 +258,15 @@ class StudioStore {
         yType.set('icon', type.icon || '');
         yType.set('image', type.image || '');
         yType.set('unit', type.unit || '');
-        yType.set('ports', new Y.Map());
-        yType.set('qualities', type.qualities?.map(q => this.createQuality(q)));
         yType.set('representations', new Y.Map());
+        yType.set('ports', new Y.Map());
+        yType.set('authors', type.authors?.map(a => this.createAuthor(a)));
+        yType.set('qualities', type.qualities?.map(q => this.createQuality(q)));
         variantMap.set(type.variant || '', yType);
         type.ports?.map(p => { this.createPort(kitUri, type.name, type.variant || '', p) });
         type.representations?.map(r => { this.createRepresentation(kitUri, type.name, type.variant || '', r) });
+        yType.set('created', new Date());
+        yType.set('updated', new Date());
     }
 
     getType(kitUri: string, name: string, variant: string = ''): Type {
@@ -273,14 +276,14 @@ class StudioStore {
         const yType = types.get(name)?.get(variant) as Y.Map<any> | undefined;
         if (!yType) throw new Error(`Type (${name}, ${variant}) not found in kit (${kitUri})`);
 
-        const yPortsMap = yType.get('ports') as Y.Map<Y.Map<any>>;
-        const ports = yPortsMap ? Array.from(yPortsMap.values()).map(pMap => this.getPort(kitUri, name, variant, pMap.get('id_'))).filter((p): p is Port => p !== null) : [];
-
-        const yQualitiesArray = yType.get('qualities') as Y.Array<Y.Map<any>>;
-        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
-
         const yRepresentationsMap = yType.get('representations') as Y.Map<Y.Map<any>>;
         const representations = yRepresentationsMap ? Array.from(yRepresentationsMap.values()).map(rMap => this.getRepresentation(kitUri, name, variant, rMap.get('mime'), rMap.get('tags'))).filter((r): r is Representation => r !== null) : [];
+        const yPortsMap = yType.get('ports') as Y.Map<Y.Map<any>>;
+        const ports = yPortsMap ? Array.from(yPortsMap.values()).map(pMap => this.getPort(kitUri, name, variant, pMap.get('id_'))).filter((p): p is Port => p !== null) : [];
+        const yAuthorsArray = yType.get('authors') as Y.Array<Y.Map<any>>;
+        const authors = yAuthorsArray ? yAuthorsArray.toArray().map(aMap => this.getAuthor(aMap)).filter((a): a is Author => a !== null) : [];
+        const yQualitiesArray = yType.get('qualities') as Y.Array<Y.Map<any>>;
+        const qualities = yQualitiesArray ? yQualitiesArray.toArray().map(qMap => this.getQuality(qMap)).filter((q): q is Quality => q !== null) : [];
 
         return {
             name: yType.get('name'),
@@ -292,9 +295,9 @@ class StudioStore {
             ports,
             qualities,
             representations,
-            updated: new Date(),
-            created: new Date(),
-            authors: [],
+            updated: yType.get('updated'),
+            created: yType.get('created'),
+            authors,
         };
     }
 
@@ -323,7 +326,12 @@ class StudioStore {
             const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitUri, type.name, type.variant || '', r)]));
             yType.set('representations', representations);
         }
+        if (type.authors !== undefined) {
+            const authors = new Y.Map(type.authors.map(a => [a.name, this.createAuthor(a)]));
+            yType.set('authors', authors);
+        }
 
+        yType.set('updated', new Date());
         return this.getType(kitUri, type.name, type.variant);
     }
 
@@ -368,6 +376,8 @@ class StudioStore {
         viewMap.set(design.view || '', yDesign);
         design.pieces?.map(p => this.createPiece(kitUri, design.name, design.variant, design.view, p));
         design.connections?.map(c => this.createConnection(kitUri, design.name, design.variant, design.view, c));
+        yDesign.set('created', new Date());
+        yDesign.set('updated', new Date());
     }
 
     getDesign(kitUri: string, name: string, variant: string = '', view: string = ''): Design {
@@ -377,9 +387,7 @@ class StudioStore {
         const yDesign = designs.get(name)?.get(variant)?.get(view) as Y.Map<any> | undefined;
         if (!yDesign) throw new Error(`Design (${name}, ${variant}, ${view}) not found in kit (${kitUri})`);
 
-        const pieces = yDesign.get('pieces');
-        const connections = yDesign.get('connections');
-        const qualities = yDesign.get('qualities');
+
 
         return {
             name: yDesign.get('name'),
@@ -389,8 +397,8 @@ class StudioStore {
             variant: yDesign.get('variant'),
             view: yDesign.get('view'),
             unit: yDesign.get('unit'),
-            created: new Date(),
-            updated: new Date(),
+            created: yDesign.get('created'),
+            updated: yDesign.get('updated'),
             authors: [],
             pieces,
             connections,
