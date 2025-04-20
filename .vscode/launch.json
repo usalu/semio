@@ -5,6 +5,7 @@
         {
             "name": "dev everything",
             "preLaunchTask": "dev",
+            "postDebugTask": "Kill Development Tasks",
             "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
             "request": "attach",
             "connect": {
@@ -21,6 +22,7 @@
         {
             "name": "dev engine",
             "preLaunchTask": "dev engine",
+            "postDebugTask": "Kill Development Tasks",
             "type": "debugpy",
             "request": "attach",
             "connect": {
@@ -46,12 +48,14 @@
                 "dev",
                 "--projects=@semio/js,@semio/docs,@semio/sketchpad"
             ],
+            "postDebugTask": "Kill Development Tasks",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
             "name": "dev js core",
             "preLaunchTask": "dev js core",
+            "postDebugTask": "Kill Development Tasks",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:6006",
@@ -60,6 +64,7 @@
         {
             "name": "dev docs",
             "preLaunchTask": "dev docs",
+            "postDebugTask": "Kill Development Tasks",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:4321",
@@ -75,6 +80,7 @@
                 "dev",
                 "@semio/sketchpad"
             ],
+            "postDebugTask": "Kill Development Tasks",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
