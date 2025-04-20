@@ -49,6 +49,7 @@ export default defineConfig({
                             'core-concepts',
                         ],
                     },
+                    'toolkit',
                     'installation',
                     'starter'
                 ],
