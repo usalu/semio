@@ -46,6 +46,7 @@ export default defineConfig({
                             'intro',
                             'design-information-modeling',
                             'kit-of-parts-architecture',
+                            'core-concepts',
                         ],
                     },
                     'installation',
