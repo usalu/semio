@@ -53,7 +53,7 @@ function StopProcessOnPort {
 function Compress-HDR {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$InputFile,  # Path to the input .exr file
+        [string]$InputFile, # Path to the input .exr file
         [Parameter(Mandatory = $true)]
         [string]$OutputFile, # Path to the output .exr.compressed file
         [string]$Resize = "512x512" # Resize dimensions (default: 512x512)
@@ -66,4 +66,49 @@ function Compress-HDR {
     Write-Host "Running: $command"
     Invoke-Expression $command
     Write-Host "Compression and resizing completed: $OutputFile"
+}
+
+function CropImageToCircle {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourcePath,
+        [Parameter(Mandatory = $true)]
+        [string]$TargetPath,
+        [Parameter(Mandatory = $true)]
+        [int]$Resolution
+    )
+
+    if (-Not (Test-Path $SourcePath)) {
+        Write-Error "Source image file not found: $SourcePath"
+        return
+    }
+
+    $sourceImage = [System.Drawing.Image]::FromFile($SourcePath)
+    
+    # Ensure the source image resolution matches the target resolution
+    if ($sourceImage.Width -ne $Resolution -or $sourceImage.Height -ne $Resolution) {
+        Write-Warning "Source image resolution ($($sourceImage.Width)x$($sourceImage.Height)) does not match target resolution ($($Resolution)x$($Resolution)). Resizing source image before cropping."
+        $resizedSource = $sourceImage.GetThumbnailImage($Resolution, $Resolution, $null, [System.IntPtr]::Zero)
+        $sourceImage.Dispose()
+        $sourceImage = $resizedSource # Use the resized image for cropping
+    }
+
+    $circularBitmap = New-Object System.Drawing.Bitmap $Resolution, $Resolution, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $graphics = [System.Drawing.Graphics]::FromImage($circularBitmap)
+    $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $path.AddEllipse(0, 0, $Resolution, $Resolution)
+    $graphics.SetClip($path)
+    $graphics.DrawImage($sourceImage, 0, 0, $Resolution, $Resolution)
+
+    $circularBitmap.Save($TargetPath, [System.Drawing.Imaging.ImageFormat]::Png)
+
+    # Dispose resources
+    $sourceImage.Dispose()
+    $circularBitmap.Dispose()
+    $graphics.Dispose()
+    $path.Dispose()
 }

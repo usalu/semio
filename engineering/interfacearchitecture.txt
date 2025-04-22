@@ -1,63 +1,84 @@
 kit : !Kit{
+    uri : !String
     name : !String
     description : ?String
-    icon : ?String
-    image : ?String
-    remote : ?String
-    homepage : ?String
+    icon : ?String // emoji | logogram | url
+    image : ?String // url
+    preview : ?String // url
+    version : ?String // empty is latest
+    remote : ?String // url for remote fetching
+    homepage : ?String // url
+    license : ?String // spdx id | url
+    created : !String // date
+    updated : !String // date
     types : +Type[
         name : !String
         description : ?String
-        icon : ?String
-        image : ?String
-        variant : ?String
-        unit : !String
-        representations : +Representations[
+        icon : ?String // emoji | logogram | url
+        image : ?String // url
+        variant : ?String // empty is default
+        stock : !Float // default is +infinity
+        virtual : ?Boolean // default false
+        unit : !String // e.g., mm, cm, m
+        created : !String // date
+        updated : !String // date
+        location : ?Location{
+            longitude : !Float
+            latitude : !Float
+        }
+        representations : +Representation[
             url : !String
-            mime : !String
-            lod : ?String
-            tags : *String[]
+            description : ?String
+            tags : *String[] // default is empty list (meaning default LOD)
+            qualities : *Quality[]
         ]
         ports : +Port[
-            id : !String
-            point : !{
+            id : !String // empty is default
+            description : ?String
+            mandatory : ?Boolean // default false
+            family : ?String // For explicit compatibility
+            compatibleFamilies : *String[] // Empty list means compatible with all
+            point : !Point{
                 x : !Float
                 y : !Float
                 z : !Float
             }
-            direction : !{
+            direction : !Vector{
                 x : !Float
                 y : !Float
                 z : !Float
             }
-            locators : *Locator[
-                group : !String
-                subgroup : !String
-            ]
-        ]
-        qualities : *Quality[
-            name : !String
-            value : !String
-            unit : ?String
-            definition : ?String
+            t : !Float // [0,1[ for diagram ring position
+            qualities : *Quality[]
         ]
         authors : *Author[
-            name : ?String
-            email: !String
+            name : !String
+            email : !String
+            rank : !Integer // for ordering
         ]
+        qualities : *Quality[]
     ]
     designs : +Design[
         name : !String
         description : ?String
-        icon : ?String
-        image : ?String
-        variant : ?String
-        unit : !String
-        pieces : !Piece[
+        icon : ?String // emoji | logogram | url
+        image : ?String // url
+        variant : ?String // empty is default
+        view : ?String // empty is default
+        unit : !String // e.g., mm, cm, m
+        created : !String // date
+        updated : !String // date
+        pieces : +Piece[
             id : !String
+            description : ?String
             type : !TypeId{
                 name : !String
                 variant : ?String
+            }
+            design : ?DesignId{
+                name : !String
+                variant : ?String
+                view : ?String
             }
             plane : ?Plane{
                 origin : !Point{
@@ -65,57 +86,54 @@ kit : !Kit{
                     y : !Float
                     z : !Float
                 }
-                x_axis : !Vector{
+                xAxis : !Vector{
                     x : !Float
                     y : !Float
                     z : !Float
                 }
-                y_axis : !Vector{
+                yAxis : !Vector{
                     x : !Float
                     y : !Float
                     z : !Float
                 }
             }
-            center :  ?DiagramPoint{
-                x : !Integer
-                y : !Integer
+            center : ?DiagramPoint{
+                x : !Float
+                y : !Float
             }
+            qualities : *Quality[]
         ]
         connections : +Connection[
             connected : !Side{
-                piece : !SidePiece{
-                    id : !String
-                    type : !SidePieceType{
-                        port : !PortId{
-                            id : !String
-                        }
-                    }
-                }
+                piece : !PieceId{ id : !String }
+                port : !PortId{ id : !String }
             }
             connecting : !Side{
-                piece : !SidePiece{
-                    id : !String
-                    type : !SidePieceType{
-                        port : !PortId{
-                            id : !String
-                        }
-                    }
-                }
+                piece : !PieceId{ id : !String }
+                port : !PortId{ id : !String }
             }
-            rotation : !Float
-            tilt : !Float
-            gap : !Float
-            x : !Float
-            y : !Float
-        ]
-        qualities : *Quality[
-            name : !String
-            value : !String
-            unit : ?String
+            description : ?String
+            gap : ?Float
+            shift : ?Float
+            raise : ?Float
+            rotation : ?Float // degrees
+            turn : ?Float // degrees
+            tilt : ?Float // degrees
+            x : ?Float // diagram offset x
+            y : ?Float // diagram offset y
+            qualities : *Quality[]
         ]
         authors : *Author[
-            name : ?String
-            email: !String
+            name : !String
+            email : !String
+            rank : !Integer
         ]
+        qualities : *Quality[]
+    ]
+    qualities : *Quality[
+        name : !String
+        value : ?String // No value means true
+        unit : ?String
+        definition : ?String // text | uri
     ]
 }

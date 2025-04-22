@@ -1,0 +1,104 @@
+{
+    "artificial-intelligence": {
+        "name": "Artificial Intelligence",
+        "abbreviation": "AI",
+        "description": "Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals. Leading AI textbooks define the field as the study of 'intelligent agents': any device that perceives its environment and takes actions that maximize its chance of successfully achieving its goals.",
+        "reference": "https://en.wikipedia.org/wiki/Artificial_intelligence"
+    },
+    "building-information-modeling": {
+        "name": "Building Information Modeling",
+        "abbreviation": "BIM",
+        "description": "Building Information Modeling (BIM) is a process involving the generation and management of digital representations of physical and functional characteristics of places. BIMs are digital files (often but not always in proprietary formats and containing proprietary data) which can be extracted, exchanged or networked to support decision-making regarding a built asset.",
+        "reference": "https://en.wikipedia.org/wiki/Building_information_modeling"
+    },
+    "computer-aided-architectural-design": {
+        "name": "Computer Aided Architectural Design",
+        "abbreviation": "CAAD",
+        "description": "Computer-aided architectural design (CAAD) software programs are the repository of information for building design and construction. CAAD software is used by architects and architectural companies for the purpose of reaching their design and administrational goals.",
+        "reference": "https://en.wikipedia.org/wiki/Computer-aided_architectural_design"
+    },
+    "parametric-design": {
+        "name": "Parametric Design",
+        "abbreviation": "PD",
+        "description": "Parametric design is a design method where features (such as building elements and engineering components) are shaped according to algorithmic processes, in contrast to more direct manipulation. In this approach, parameters and rules determine the relationship between design intent and design response.",
+        "reference": "https://en.wikipedia.org/wiki/Parametric_design"
+    },
+    "procedural-modeling": {
+        "name": "Procedural Modeling",
+        "abbreviation": "PM",
+        "description": "Procedural modeling is an umbrella term for a number of techniques in computer graphics to create 3D models and textures from sets of rules. L-Systems, fractals, and generative modeling are procedural modeling techniques since they apply algorithms for producing scenes.",
+        "reference": "https://en.wikipedia.org/wiki/Procedural_modeling"
+    },
+    "generative-design": {
+        "name": "Generative Design",
+        "abbreviation": "GD",
+        "description": "Generative design is an iterative design process that uses software to generate outputs that fulfill a set of constraints iteratively adjusted by a designer. Whether a human, test program, or artificial intelligence, the designer algorithmically or manually refines the feasible region of the program's inputs and outputs with each iteration to fulfill evolving design requirements.",
+        "reference": "https://en.wikipedia.org/wiki/Generative_design"
+    },
+    "kit-of-parts": {
+        "name": "Kit-of-Parts",
+        "abbreviation": "KOP",
+        "description": "A kit-of-parts is a collection of components that can be assembled in various configurations to create a structure or system. This approach allows for flexibility and adaptability in design, enabling architects and builders to create customized solutions using pre-defined elements.",
+        "reference": "https://en.wikipedia.org/wiki/Kit-of-parts"
+    },
+    "modular-extensible-scalable-reconfigurable": {
+        "name": "Modular Extensible Scalable Reconfigurable",
+        "abbreviation": "MESR",
+        "description": "A reconfigurable manufacturing system (RMS) is a system designed for rapid change in its structure, as well as its hardware and software components, to quickly adjust its production capacity and functionality within a part family in response to sudden market changes or intrinsic system change.",
+        "reference": "https://en.wikipedia.org/wiki/Reconfigurable_manufacturing_system"
+    },
+    "port-based-knowledge": {
+        "name": "Port Based Knowledge",
+        "abbreviation": "PBK",
+        "description": "Port-based knowledge refers to a design methodology that uses ports as interfaces for components in a system. This approach allows for modularity and reusability, enabling designers to create complex systems by connecting simpler components through well-defined interfaces.",
+        "reference": ""
+    },
+    "shape-grammar": {
+        "name": "Shape Grammar",
+        "abbreviation": "SG",
+        "description": "Shape grammars in computation are a specific class of production systems that generate geometric shapes. Typically, shapes are 2- or 3-dimensional, thus shape grammars are a way to study 2- and 3-dimensional languages.",
+        "reference": "https://en.wikipedia.org/wiki/Shape_grammar"
+    },
+    "graph-based-design": {
+        "name": "Graph Based Design",
+        "abbreviation": "GBD",
+        "description": "A design methodology representing systems or artifacts as graphs, where nodes are components/elements and edges are their relationships. This allows for formal analysis and manipulation of designs using graph theory.",
+        "reference": ""
+    },
+    "graph-transformations": {
+        "name": "Graph Transformations",
+        "abbreviation": "GT",
+        "description": "Graph transformation, also called graph rewriting, is the process of creating a new graph out of an original graph by applying graph rewrite rules. It has numerous applications, from software engineering to algorithm design.",
+        "reference": "https://en.wikipedia.org/wiki/Graph_rewriting"
+    },
+    "graph-rewriting": {
+        "name": "Graph Rewriting",
+        "abbreviation": "GR",
+        "description": "Graph rewriting, also called graph transformation, is the process of creating a new graph out of an original graph by applying graph rewrite rules. It is used in various fields like software engineering, model-driven engineering, and algorithm design.",
+        "reference": "https://en.wikipedia.org/wiki/Graph_rewriting"
+    },
+    "design-prototypes": {
+        "name": "Design Prototypes",
+        "abbreviation": "DP",
+        "description": "A prototype is an early sample, model, or release of a product built to test a concept or process. It is used to evaluate a new design to enhance precision by system analysts and users.",
+        "reference": "https://en.wikipedia.org/wiki/Prototype"
+    },
+    "design-systems": {
+        "name": "Design Systems",
+        "abbreviation": "DS",
+        "description": "A design system is a set of standards to manage design at scale by reducing redundancy while creating a shared language and visual consistency across different pages and channels.",
+        "reference": "https://en.wikipedia.org/wiki/Design_system"
+    },
+    "computer-based-design-synthesis": {
+        "name": "Computer Based Design Synthesis",
+        "abbreviation": "CBDS",
+        "description": "The application of computational algorithms to automatically or semi-automatically generate design solutions by exploring a defined solution space based on specified goals and constraints.",
+        "reference": ""
+    },
+    "computer-generated-architecture": {
+        "name": "Computer Generated Architecture",
+        "abbreviation": "CGA",
+        "description": "Generative design in architecture is an iterative process where software generates multiple design outputs meeting specific constraints. Architects use it to explore various forms and structures based on parameters like site conditions, materials, and performance requirements.",
+        "reference": "https://en.wikipedia.org/wiki/Generative_design#Architecture"
+    }
+}

@@ -20,7 +20,7 @@ CREATE TABLE plane (
 CREATE TABLE kit (
 	uri VARCHAR(2048) NOT NULL, 
 	name VARCHAR(64) NOT NULL, 
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
 	image VARCHAR(1024) NOT NULL, 
 	preview VARCHAR(1024) NOT NULL, 
@@ -36,14 +36,18 @@ CREATE TABLE kit (
 );
 CREATE TABLE type (
 	name VARCHAR(64) NOT NULL, 
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
 	image VARCHAR(1024) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
+	stock INTEGER NOT NULL, 
+	"virtual" BOOLEAN NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
 	created DATETIME NOT NULL, 
 	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
+	location_longitude FLOAT, 
+	location_latitude FLOAT, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
 	CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), 
@@ -51,7 +55,7 @@ CREATE TABLE type (
 );
 CREATE TABLE design (
 	name VARCHAR(64) NOT NULL, 
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
 	image VARCHAR(1024) NOT NULL, 
 	variant VARCHAR(64) NOT NULL, 
@@ -60,6 +64,8 @@ CREATE TABLE design (
 	created DATETIME NOT NULL, 
 	updated DATETIME NOT NULL, 
 	id INTEGER NOT NULL, 
+	location_longitude FLOAT, 
+	location_latitude FLOAT, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
 	UNIQUE (name, variant, "view", kit_id), 
@@ -67,15 +73,15 @@ CREATE TABLE design (
 );
 CREATE TABLE representation (
 	url VARCHAR(1024) NOT NULL, 
-	description VARCHAR(2560) NOT NULL, 
-	mime VARCHAR(64) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
 	type_id INTEGER, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(type_id) REFERENCES type (id)
 );
 CREATE TABLE port (
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
+	mandatory BOOLEAN NOT NULL, 
 	family VARCHAR(64) NOT NULL, 
 	t FLOAT NOT NULL, 
 	id INTEGER NOT NULL, 
@@ -103,7 +109,7 @@ CREATE TABLE author (
 	FOREIGN KEY(design_id) REFERENCES design (id)
 );
 CREATE TABLE piece (
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
 	local_id VARCHAR(128), 
 	type_id INTEGER, 
@@ -134,7 +140,7 @@ CREATE TABLE compatible_family (
 	FOREIGN KEY(port_id) REFERENCES port (id)
 );
 CREATE TABLE connection (
-	description VARCHAR(2560) NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
 	gap FLOAT NOT NULL, 
 	shift FLOAT NOT NULL, 
 	raise_ FLOAT NOT NULL, 
@@ -161,7 +167,7 @@ CREATE TABLE quality (
 	name VARCHAR(64) NOT NULL, 
 	value VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
-	definition VARCHAR(2560) NOT NULL, 
+	definition VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
 	representation_id INTEGER, 
 	port_id INTEGER, 

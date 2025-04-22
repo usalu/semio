@@ -1,0 +1,27 @@
+{
+  "name": "@semio/engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "py/engine",
+  "projectType": "application",
+  "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File ./dev.ps1",
+    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
+    "test": "powershell -ExecutionPolicy Bypass -File ./test.ps1"
+  },
+  "targets": {
+    "update": {
+      "executor": "@nxlv/python:update"
+    },
+    "lock": {
+      "executor": "@nxlv/python:lock"
+    }
+  },
+  "devDependencies": {
+    "@semio/assets": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

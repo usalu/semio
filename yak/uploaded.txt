@@ -17,3 +17,5 @@
 5.1.1-beta (yanked) [not functional]
 5.2.0-beta (yanked) [not functional]
 5.3.0-beta
+5.4.0-beta
+6.0.0

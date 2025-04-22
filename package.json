@@ -1,29 +1,65 @@
 {
   "name": "semio",
+  "version": "1.0.0",
+  "description": "🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️",
   "workspaces": [
     "assets/logo",
     "assets/icons",
     "assets",
-    "python/engine",
+    "py/engine",
     "js/core",
     "js/docs",
     "js/sketchpad",
-    "dotnet/Semio",
-    "dotnet/Semio.Grasshopper",
+    "net/Semio",
+    "net/Semio.Grasshopper",
     "yak"
   ],
-  "private": true,
   "engines": {
     "node": ">=18"
   },
   "packageManager": "npm@10.8.2",
   "scripts": {
     "build": "npx nx run-many -t dev",
-    "update": "npx nx run-many -t update"
+    "update": "npx nx run-many -t update",
+    "engine": "npx nx dev @semio/engine",
+    "js": "npx nx dev @semio/js",
+    "sketchpad": "npx nx dev @semio/sketchpad",
+    "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {
-    "@nx/eslint": "^20.8.0",
-    "@nxlv/python": "^20.10.0",
+    "@nx/eslint": "^20.8.2",
+    "@nxlv/python": "^20.15.1",
     "nx": "20.6.2"
+  },
+  "keywords": [
+    "kit-of-parts",
+    "port-based thinking",
+    "shape grammar",
+    "graph-based design",
+    "graph transformations",
+    "graph rewriting",
+    "design prototypes",
+    "design systems",
+    "computer-based design synthesis",
+    "computer-generated architecture",
+    "generative design",
+    "procedural modeling",
+    "parametric design",
+    "computer aided architectural design",
+    "building information modeling"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git"
+  },
+  "license": "AGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/usalu/semio/issues"
+  },
+  "homepage": "https://docs.semio-tech.com",
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }

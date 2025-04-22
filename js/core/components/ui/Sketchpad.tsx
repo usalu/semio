@@ -1,4 +1,4 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo, useReducer } from 'react';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
@@ -191,25 +191,36 @@ interface ViewProps {
 }
 
 const View: FC<ViewProps> = ({ }) => {
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
 
-    useEffect(() => {
-        studioStore.transact(() => {
-            studioStore.importKit("metabolism.json");
-        });
-        const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
-        setDesignEditorId(editorId);
-    }, [studioStore]);
 
     if (!designEditorId) {
-        return <div>Loading editor...</div>;
+        try {
+            // Consider moving this logic if it needs to react to props or other state changes
+            const editorId = studioStore.createDesignEditorStore("Metabolism", "r25.07-1", "Nakagin Capsule Tower", "", "");
+            setDesignEditorId(editorId);
+        } catch (error) {
+            console.error("Error creating design editor store:", error);
+        }
+    }
+
+    if (!designEditorId) {
+        return <Button onClick={() => {
+            forceUpdate()
+        }}>Refresh</Button>;
     }
 
     return (
-        <DesignEditorStoreProvider designEditorId={designEditorId}>
-            <DesignEditor />
-        </DesignEditorStoreProvider>
+        <>
+            <Button onClick={() => {
+                forceUpdate()
+            }}>Refresh</Button>;
+            <DesignEditorStoreProvider designEditorId={designEditorId}>
+                <DesignEditor />
+            </DesignEditorStoreProvider>
+        </>
     );
 }
 

@@ -1,0 +1,16 @@
+building-information-modeling
+procedural modeling
+computer-aided-architectural-design
+parametric-design
+generative design
+graph-based design
+kit-of-parts
+shape grammar
+graph transformations
+graph rewriting
+design prototypes
+design systems
+computer-based design synthesis
+computer-generated architecture
+port-based thinking
+semio

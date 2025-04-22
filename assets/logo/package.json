@@ -5,5 +5,10 @@
   "projectType": "library",
   "scripts": {
     "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }

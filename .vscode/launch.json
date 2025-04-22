@@ -5,7 +5,7 @@
         {
             "name": "dev everything",
             "preLaunchTask": "dev",
-            "postDebugTask": "Kill Development Tasks",
+            // "postDebugTask": "kill dev",
             "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
             "request": "attach",
             "connect": {
@@ -14,7 +14,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],
@@ -22,7 +22,7 @@
         {
             "name": "dev engine",
             "preLaunchTask": "dev engine",
-            "postDebugTask": "Kill Development Tasks",
+            // "postDebugTask": "kill dev",
             "type": "debugpy",
             "request": "attach",
             "connect": {
@@ -31,7 +31,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],
@@ -48,14 +48,14 @@
                 "dev",
                 "--projects=@semio/js,@semio/docs,@semio/sketchpad"
             ],
-            "postDebugTask": "Kill Development Tasks",
+            // "postDebugTask": "kill dev",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
-            "name": "dev js core",
-            "preLaunchTask": "dev js core",
-            "postDebugTask": "Kill Development Tasks",
+            "name": "dev js",
+            "preLaunchTask": "dev js",
+            // "postDebugTask": "kill dev",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:6006",
@@ -64,7 +64,7 @@
         {
             "name": "dev docs",
             "preLaunchTask": "dev docs",
-            "postDebugTask": "Kill Development Tasks",
+            // "postDebugTask": "kill dev",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:4321",
@@ -80,7 +80,7 @@
                 "dev",
                 "@semio/sketchpad"
             ],
-            "postDebugTask": "Kill Development Tasks",
+            // "postDebugTask": "kill dev",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -177,6 +177,20 @@
                 "@semio/sketchpad"
             ],
             "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "PowerShell",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
             "console": "integratedTerminal"
         },
     ]

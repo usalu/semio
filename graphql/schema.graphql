@@ -79,6 +79,8 @@ type Type implements Node {
   icon: String!
   image: String!
   variant: String!
+  stock: Int!
+  virtual: Boolean!
   unit: String!
   created: DateTime!
   updated: DateTime!
@@ -91,6 +93,7 @@ type Type implements Node {
 
   """The ID of the object"""
   id: ID!
+  location: Location!
   authors: [Author!]!
 }
 
@@ -114,7 +117,6 @@ type RepresentationNodeEdge {
 type Representation implements Node {
   url: String!
   description: String!
-  mime: String!
   qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
@@ -159,6 +161,7 @@ type Quality implements Node {
 
 type Port implements Node {
   description: String!
+  mandatory: Boolean!
   family: String!
   t: Float!
   id_: String
@@ -234,6 +237,7 @@ type Design implements Node {
 
   """The ID of the object"""
   id: ID!
+  location: Location!
   authors: [Author!]!
 }
 
@@ -333,6 +337,15 @@ type Author implements Node {
 
   """The ID of the object"""
   id: ID!
+}
+
+"""📍 A location on the earth surface (longitude, latitude)."""
+type Location {
+  """↔️ The longitude of the location in degrees."""
+  longitude: Float!
+
+  """↕️ The latitude of the location in degrees."""
+  latitude: Float!
 }
 
 """🧱 A side of a piece in a connection."""
@@ -450,13 +463,32 @@ input TypeInputNode {
   variant: String = ""
 
   """
+  📦 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.
+  """
+  stock: Int = 2147483647
+
+  """
+  👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
+  """
+  virtual: Boolean = false
+
+  """
   Ⓜ️ The length unit of the point and the direction of the ports of the type.
   """
   unit: String = ""
+  location: LocationInputNode = null
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
   authors: [AuthorInputNode] = null
   qualities: [QualityInputNode] = null
+}
+
+input LocationInputNode {
+  """↔️ The longitude of the location in degrees."""
+  longitude: Float!
+
+  """↕️ The latitude of the location in degrees."""
+  latitude: Float!
 }
 
 input RepresentationInputNode {
@@ -467,11 +499,6 @@ input RepresentationInputNode {
 
   """💬 The optional human-readable description of the representation."""
   description: String = ""
-
-  """
-  ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
-  """
-  mime: String!
 
   """🏷️ The optional tags to group representations. No tags means default."""
   tags: [String] = null
@@ -502,6 +529,11 @@ input PortInputNode {
 
   """💬 The optional human-readable description of the port."""
   description: String = ""
+
+  """
+  💯 Whether the port is mandatory. A mandatory port must be connected in a design.
+  """
+  mandatory: Boolean = false
 
   """
   👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
@@ -589,6 +621,7 @@ input DesignInputNode {
 
   """📏 The unit of the design."""
   unit: String = ""
+  location: LocationInputNode = null
   pieces: [PieceInputNode] = null
   connections: [ConnectionInputNode] = null
   authors: [AuthorInputNode] = null

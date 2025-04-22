@@ -45,11 +45,11 @@ export default defineConfig({
                         items: [
                             'intro',
                             'design-information-modeling',
-                            'kit-of-parts-architecture',
+                            'think-in-semio',
                         ],
                     },
                     'installation',
-                    'starter'
+                    'starter',
                 ],
                 translations: {
                     'de': 'Erste Schritte',
@@ -57,8 +57,12 @@ export default defineConfig({
             },
             {
                 label: '📝 Tutorials',
-                autogenerate: { directory: 'tutorials' }
-
+                items: [
+                    {
+                        label: '👋 Hello semio',
+                        autogenerate: { directory: 'tutorials/hello-semio' }
+                    }
+                ]
             },
             {
                 label: '🔀 Integrations',

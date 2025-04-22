@@ -11,14 +11,19 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdoc": "^0.13.1",
-    "@astrojs/mdx": "^4.2.0",
-    "@astrojs/react": "^4.2.1",
-    "@astrojs/sitemap": "^3.3.0",
-    "@astrojs/starlight": "^0.32.2",
+    "@astrojs/markdoc": "^0.13.4",
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/react": "^4.3.0",
+    "@astrojs/sitemap": "^3.4.1",
+    "@astrojs/starlight": "^0.32.6",
     "@astrojs/ts-plugin": "^1.10.4",
-    "@semio/js": "*",
-    "astro": "^5.1.5",
-    "sharp": "^0.32.5"
+    "@semio/js": "^0.1.0",
+    "astro": "^5.9.2",
+    "sharp": "^0.32.6"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }

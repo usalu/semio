@@ -1,115 +1,188 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-interface Artifact {
-    name : String
-    description : String
-    icon : String
-    image : String
-}
 
 class Kit {
-    url : String
-    homepage : String
-    remote : String
+  uri: str
+  name: str
+  description: str
+  icon: str
+  image: str
+  preview: str
+  version: str
+  remote: str
+  homepage: str
+  license: str
+  created: datetime
+  updated: datetime
+  types: list[Type]
+  designs: list[Design]
+  qualities: list[Quality]
 }
 
 class Type {
-}
-
-class Representation{
-    mime : String
-    lod : String
-    tags: String[]
-    url : String
-}
-
-class Point {
-    x : Float
-    y : Float
-    z : Float
-}
-
-class Vector {
-    x : Float
-    y : Float
-    z : Float
-}
-
-class Plane {
-}
-
-class Port {
-    id : String
-}
-
-class Quality {
-    name : String
-    value : String
-    unit : String
-    definition : String
-}
-
-class Author {
-    name : String
-    email : String
-}
-
-class Locator {
-    group : String
-    subgroup : String
-}
-
-class Piece{
-    id : String
-}
-
-class Root {
-
-}
-
-class Connection {
-    gap : Float
-    rotation : Float
-}
-
-class Side {
-
+  name: str
+  description: str
+  icon: str
+  image: str
+  variant: str
+  stock: float
+  virtual: bool
+  unit: str
+  created: datetime
+  updated: datetime
+  location: Location
+  representations: list[Representation]
+  ports: list[Port]
+  authors: list[Author]
+  qualities: list[Quality]
 }
 
 class Design {
+  name: str
+  description: str
+  icon: str
+  image: str
+  variant: str
+  view: str
+  unit: str
+  created: datetime
+  updated: datetime
+  pieces: list[Piece]
+  connections: list[Connection]
+  authors: list[Author]
+  qualities: list[Quality]
 }
 
+class Representation {
+  url: str
+  description: str
+  tags: list[str]
+  qualities: list[Quality]
+}
 
-Kit *-- "0..*" Type
-Kit *-- "0..*" Design
-Representation "1..*" --* Type
-Type *-- "1..*" Port
-Type *-- "0..*" Quality
-Type *-- "0..*" Author
-Design *-- "1..*" Piece
-Piece *-- "0..1" Root
-Root *-- Plane
-Design *-- "0..*" Connection
-Design *-- "0..*" Quality
-Design *-- "0..*" Author
-Connection *-- Side : connected
-Connection *-- Side : connecting
+class Port {
+  id: str
+  description: str
+  mandatory: bool
+  t: float
+  qualities: list[Quality]
+}
 
-Port *-- Plane
-Port *-- "0..*"  Locator
-Point --*  Plane : origin
-Plane *-- Vector : x_axis
-Plane *-- Vector : y_axis
-Plane *-- Vector : normal
+class PortFamily {
+  name: str
+  
+  ports: list[Port]
+}
 
-Type <-- Piece
-Piece <-- Side
-Port <-- Side
+class Piece {
+  id: str
+  description: str
+  plane: Plane
+  center: DiagramPoint
+  type: Type
+  design: Design
+  piece: Piece
+  qualities: list[Quality]
+}
 
-Artifact <|-- Kit
-Artifact <|-- Type
-Artifact <|-- Design
+class Plane {
+  origin: Point
+  xAxis: Vector
+  yAxis: Vector
+}
 
+class Connection {
+  connecting: Side
+  connected: Side
+  description: str
+  gap: float
+  shift: float
+  raise: float
+  rotation: float
+  turn: float
+  tilt: float
+  x: float
+  y: float
+  qualities: list[Quality]
+}
+
+class Side {
+  piece: Piece
+  port: Port
+}
+
+class Quality {
+  name: str
+  value: str
+  unit: str
+  definition: str
+}
+
+class Author {
+  name: str
+  email: str
+}
+
+class Point {
+  x: float
+  y: float
+  z: float
+}
+
+class Vector {
+  x: float
+  y: float
+  z: float
+}
+
+class DiagramPoint {
+  x: float
+  y: float
+}
+
+class Location {
+  longitude: float
+  latitude: float
+}
+
+Kit *-- "0..*" Type : contains >
+Kit *-- "0..*" Design : contains >
+Kit *-- "0..*" Quality : has >
+
+Design *-- "0..*" Piece : contains >
+Design *-- "0..*" Connection : contains >
+Design *-- "0..*" Author : authored by >
+Design *-- "0..*" Quality : has >
+
+Type *-- "0..1" Location : has >
+Type *-- "0..*" Representation : has >
+Type *-- "0..*" Port : has >
+Type *-- "0..*" Author : authored by >
+Type *-- "0..*" Quality : has >
+
+Piece *-- "1" Type : instance of >
+Piece o-- "0..1" Plane : located by >
+Piece *-- "0..*" Quality : has >
+Piece o-- "0..1" DiagramPoint : has center >
+
+Connection *-- "0..*" Quality : has >
+Connection o-- "1" Side : connected >
+Connection o-- "1" Side : connecting >
+
+Side o-- "1" Piece : refers to >
+Side o-- "1" Port : refers to >
+
+Representation *-- "0..*" Tag : tagged with >
+Representation *-- "0..*" Quality : has >
+
+Port *-- "0..*" Port : compatible with >
+Port *-- "0..*" Quality : has >
+Port *-- "1" Point : at >
+Port *-- "1" Vector : oriented by >
+
+Plane *-- "1" Point : origin >
+Plane *-- "1" Vector : xAxis >
+Plane *-- "1" Vector : yAxis >
 
 @enduml

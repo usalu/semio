@@ -23,6 +23,27 @@
             "title": "Author",
             "type": "object"
         },
+        "Location": {
+            "description": "\ud83d\udccd The output of a location.",
+            "properties": {
+                "longitude": {
+                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
+                    "title": "Latitude",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
         "Point": {
             "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
             "properties": {
@@ -63,9 +84,15 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the port.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Description",
                     "type": "string"
+                },
+                "mandatory": {
+                    "default": false,
+                    "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                    "title": "Mandatory",
+                    "type": "boolean"
                 },
                 "family": {
                     "default": "",
@@ -138,7 +165,7 @@
                 "definition": {
                     "default": "",
                     "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Definition",
                     "type": "string"
                 }
@@ -161,14 +188,8 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the representation.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Description",
-                    "type": "string"
-                },
-                "mime": {
-                    "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-                    "maxLength": 64,
-                    "title": "Mime",
                     "type": "string"
                 },
                 "tags": {
@@ -189,8 +210,7 @@
                 }
             },
             "required": [
-                "url",
-                "mime"
+                "url"
             ],
             "title": "Representation",
             "type": "object"
@@ -234,7 +254,7 @@
         "description": {
             "default": "",
             "description": "\ud83d\udcac The optional human-readable description of the type.",
-            "maxLength": 2560,
+            "maxLength": 512,
             "title": "Description",
             "type": "string"
         },
@@ -259,6 +279,18 @@
             "title": "Variant",
             "type": "string"
         },
+        "stock": {
+            "default": 2147483647,
+            "description": "\ud83d\udce6 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.",
+            "title": "Stock",
+            "type": "integer"
+        },
+        "virtual": {
+            "default": false,
+            "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+            "title": "Virtual",
+            "type": "boolean"
+        },
         "unit": {
             "default": "",
             "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
@@ -277,6 +309,17 @@
             "format": "date-time",
             "title": "Updated",
             "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         },
         "representations": {
             "items": {

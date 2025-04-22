@@ -1,0 +1,135 @@
+---
+title: 🧠 Think in semio
+description: 📖 An introduction to kit-of-parts architecture and how semio relates to it 🔀
+---
+
+import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
+
+##### 🧩 Understanding semio: The Anatomy of a Modular Design System
+
+Let’s say you’ve just bought a big LEGO box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box, and that’s how semio’s architecture works too.
+
+## <span id="kit">📦 Kit = The LEGO Box</span>
+
+<br />
+
+- A **Kit** is your complete LEGO set 🧰
+- It holds all the parts, instructions, and models you need to build anything 🧱
+- In semio, the Kit is your **project container** 📁
+- It includes everything related to your modular system:
+  - 📁 Designs, 🧱 Building Blocks, 🔗 Connection Logic, 📊 Various Data
+
+<br />
+
+:::note  
+**Kits** keep your whole system in one place 🧩  
+You can reuse Kit elements across multiple projects or teams 🔄  
+:::
+
+---
+
+## <span id="design">🧾 Design = The Model You Build</span>
+
+<br />
+
+- A **Design** is one specific thing you build
+  - Like a spaceship 🚀, a launchpad 🧱, or a tower 🏰
+- It’s made of multiple LEGO parts arranged with intention 🎯
+- You can build many different Designs from the same building components 🧰
+
+<br />
+
+:::note  
+A Kit can include multiple Designs 📚  
+:::
+
+---
+
+## <span id="type">🧱 Type = The Unique Brick Mold</span>
+
+<br />
+
+A **Type** in semio is your **brick mold** — the unique template behind a **distinct kind of brick** 🧱
+
+- 🧊 Each Type defines a **distinct** brick mold
+  - That means: a unique combination of shape, role, and connection logic
+  - For example: a 2×4 brick, a window brick, or a roof brick 🧱
+- 📐 It acts as the **blueprint** of that brick
+  - Describing **what it is**, **how it looks**, and **how it connects** 🔧
+- ♻️ Once defined, a Type can be **reused** to create many identical bricks
+  - Helping you build **modular**, **consistent**, and **scalable** systems 🧩
+
+<br />
+
+:::note[💡 A Common Mistake to Avoid]  
+It’s easy to think that a 2×4 red brick 🟥 and a 3×2 grey brick ⬜ should be different Types.  
+But in semio, they can be **variants of the same Type** if they follow the same **design logic**.
+
+✅ Differences in size, color, or detail are just variations, as long as the overall structure and the way these connect feel like part of the same family.
+
+🧱 Create a new Type only when the **design language changes**.  
+For example, a window 🪟 introduces a different rhythm, visual structure, and connection pattern. It doesn’t feel like the same kind of block anymore, so it should be its own Type.  
+:::
+
+---
+
+## <span id="piece">🔁 Piece = A Brick You Actually Use</span>
+
+<br />
+
+- A **Piece** is an individual brick you place in your design 🧱
+  - It’s a **distinct instance** of a Type — the brick mold it was made from 🧰
+- For example, if you use ten red 2×4 bricks, each one is a separate Piece — but they all come from the same mold
+- Each Piece inherits the following from its Type:  
+  🧬 **Geometry** – its shape  
+  🧠 **Design meaning** – what it represents  
+  🔌 **Connection Points** – where and how it snaps to others  
+  📄 **Metadata** – additional properties
+
+<br />
+
+:::note  
+Pieces are the actual **building blocks** in your design 🛠️  
+They turn your abstract molds into real configurations you can assemble and manipulate 🧩  
+:::
+
+---
+
+## <span id="port">⚓ Port = The Connection Point</span>
+
+<br />
+
+- A **Port** is a smart, intentional connector 🧲
+  - Like a LEGO stud or socket 🧱, but placed exactly where it’s needed 🎯
+- Each Port tells the system where and how a Piece connects 🔧
+- Ports are defined once on a **Type** and automatically inherited by all its **Pieces** 🧩
+
+<br />
+
+:::note[Minimal Ports, Maximum Clarity]  
+LEGO bricks have studs on every side 🔳, but in semio, you only add Ports where they’re needed.  
+To connect two pieces, one Port on top ⬆️ and one on the bottom ⬇️ is enough.
+
+You can place Ports all over if you want, or just in specific spots to guide the design.  
+:::
+
+---
+
+## <span id="connection">🔗 Connection = The Snapping Together</span>
+
+<br />
+
+- A **Connection** defines how two bricks fit together 🧷
+  - Like snapping a window piece onto a wall 🪟
+- It’s not a shape or object — it’s a **rule** 🧠
+- It tells the system which Ports to join and how they align ⚓
+
+📐 **Example:**  
+“Connect the top Port of Piece A ⬆️ to the bottom Port of Piece B ⬇️”
+
+<br />
+
+:::note  
+Connections define how your design is assembled 🔄  
+They don’t rely on fixed geometry. Instead, they let you build flexible, modular systems where parts can be rearranged, replaced, or repeated without breaking the structure 🧠  
+:::
