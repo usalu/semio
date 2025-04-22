@@ -45,7 +45,7 @@ export default defineConfig({
                         items: [
                             'intro',
                             'why-semio',
-                            'kit-of-parts-architecture',
+                            'think-in-semio',
                             'core-concepts',
                         ],
                     },
